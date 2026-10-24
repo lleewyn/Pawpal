@@ -14,6 +14,12 @@
  const optionNames = {explain:'Giải thích và phản hồi',reject:'Từ chối khiếu nại',refund:'Hoàn tiền',rma_refund:'Trả hàng và hoàn tiền',rma_exchange:'Đổi sản phẩm',redo_service:'Làm lại dịch vụ',change_staff:'Đổi kỹ thuật viên'};
  let renderVersion = 0;
  async function readAll(build){const rows=[];for(let offset=0;;offset+=500){const {data,error}=await build().range(offset,offset+499);if(error)throw error;rows.push(...data);if(data.length<500)return rows;}}
+ function readDetailResource(ticket, resource, fetcher) {
+  const store=window.PawpalDataStore;
+  return store ? store.fetch(`complaints:detail:${ticket.rawId}:${resource}:${store.buildKey(resource)}`,fetcher,{
+   ttlMs:store.TTL.OPERATIONAL,backgroundRevalidate:false
+  }) : fetcher();
+ }
  function captureModal(id) {
   const t=current(), modal=$(id); if (!t || !modal) return null;
   Object.assign(modal.dataset,{requestId:crypto.randomUUID(),ticketId:t.rawId,version:t.updated_at});
@@ -65,24 +71,30 @@
   show('btnLinkComplaintSource',!finished(t) && !t.bookingId && !t.orderId);
   text('viewTicketTimeline','Đang tải lịch sử…');text('complaintActionError','');
   try {
-   const messages=[];
+   const messages=await readDetailResource(t,'messages',async()=>{
+    const messages=[];
    for(let offset=0;;offset+=500){
     const {data,error}=await client().from('support_ticket_message').select('id,sender_type,sender_account_id,content,is_internal,created_at').eq('ticket_id',t.rawId).order('created_at').order('id').range(offset,offset+499);
     if(error)throw error;messages.push(...data);if(data.length<500)break;
    }
+    return messages;
+   });
    if(version!==renderVersion)return;
    $('viewTicketTimeline').innerHTML=messages.map(m=>{
     const author=mod.state.cachedStaff.find(s=>s.auth_user_id===m.sender_account_id)?.full_name || (['staff','cskh','nhan_vien'].includes(m.sender_type)?'Nhân viên':m.sender_type==='system'?'Hệ thống':['user','customer','khach_hang'].includes(m.sender_type)?t.customerName:'Người gửi');
     return `<article class="complaint-history-entry"><strong>${escapeHtml(author)}</strong> <span>${escapeHtml(mod.formatDateTime(m.created_at))} · ${m.is_internal?'Nội bộ':'Trao đổi'}</span><p>${escapeHtml(m.content)}</p></article>`;
    }).join('') || 'Chưa có lịch sử trao đổi.';
-   const attachments=[];
+   const attachments=await readDetailResource(t,'attachments',async()=>{
+    const attachments=[];
    for(let i=0;i<messages.length;i+=100){
     const {data,error}=await client().from('support_ticket_message_attachment').select('file_url,file_name').in('message_id',messages.slice(i,i+100).map(m=>m.id)).order('id');
     if(error)throw error;attachments.push(...data);
    }
+    return attachments;
+   });
    if(version!==renderVersion)return;
    $('complaintAttachments').innerHTML=attachments.filter(a=>{try{return new URL(a.file_url).protocol==='https:';}catch{return false;}}).map(a=>`<p><a href="${escapeHtml(a.file_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(a.file_name || 'Tệp đính kèm')}</a></p>`).join('') || 'Chưa có tệp đính kèm.';
-   const audit={data:await readAll(()=>client().from('audit_log').select('id,description,created_at').eq('entity_id',t.rawId).eq('action','COMPLAINT_ACTION').order('created_at',{ascending:false}).order('id',{ascending:false}))};
+   const audit={data:await readDetailResource(t,'audit',()=>readAll(()=>client().from('audit_log').select('id,description,created_at').eq('entity_id',t.rawId).eq('action','COMPLAINT_ACTION').order('created_at',{ascending:false}).order('id',{ascending:false})))};
    if(version!==renderVersion)return;
    const events=(audit.data || []).flatMap(a=>{try{return [JSON.parse(a.description)];}catch{return [];}});
    const proposal=events.find(e=>e.action==='propose');
@@ -94,10 +106,10 @@
  async function renderEvidence(t,version) {
   const appt=mod.state.cachedAppointments.find(a=>a.appointment_code===t.bookingId || a.id===t.bookingId);
   if(!appt){text('viewTicketCheckinHealth','Chưa liên kết lịch hẹn.');text('viewTicketStaffLogNote','—');return;}
-  const [records,logs]=await Promise.all([
+  const [records,logs]=await readDetailResource(t,'evidence',()=>Promise.all([
    readAll(()=>client().from('appointment_record').select('id,record_type,condition_note,safety_note_snapshot,allergy_note_snapshot,recorded_at,customer_confirmation_status').eq('appointment_id',appt.id).order('recorded_at',{ascending:false}).order('id')),
    readAll(()=>client().from('care_log').select('id,description,observed_condition,recorded_at').eq('appointment_id',appt.id).order('recorded_at',{ascending:false}).order('id'))
-  ]);
+  ]));
   if(version!==renderVersion)return;
   text('viewTicketCheckinHealth',records.map(r=>`${mod.formatDateTime(r.recorded_at)} · ${r.record_type==='checkin' || r.record_type==='check_in'?'Tiếp nhận':r.record_type==='handover'?'Bàn giao':'Biên bản'}: ${r.condition_note} · ${r.customer_confirmation_status==='confirmed'?'Khách đã xác nhận':'Chưa xác nhận'}`).join('\n') || 'Chưa có biên bản.');
   text('viewTicketStaffLogNote',logs.map(r=>`${mod.formatDateTime(r.recorded_at)}: ${r.description || ''}${r.observed_condition?' · '+r.observed_condition:''}`).join('\n') || 'Chưa có nhật ký.');

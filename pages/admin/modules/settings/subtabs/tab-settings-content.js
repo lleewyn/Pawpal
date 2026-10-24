@@ -81,7 +81,7 @@
         if (!tbody) return;
         if (PawpalSettings.state.loadError) {
             delete tbody.dataset.loadingSkeleton;
-            tbody.innerHTML = `<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" style="padding:28px;text-align:center;">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" class="settings-table-message settings-table-message--error">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;
             return;
         }
         if (!PawpalSettings.state.isLoaded) return;
@@ -111,7 +111,7 @@
 
         tbody.innerHTML = '';
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 24px; color: var(--text-muted);">Không tìm thấy bài viết nào phù hợp.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" class="settings-table-message">Không tìm thấy bài viết nào phù hợp.</td></tr>`;
             updateArticleKpis();
             return;
         }
@@ -130,14 +130,14 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><div class="article-thumb-img">Ảnh bìa</div></td>
-                <td><strong style="color: var(--text-main); font-size: 13.5px;">${esc(a.title)}</strong></td>
+                <td><strong class="settings-article-title">${esc(a.title)}</strong></td>
                 <td>${esc(a.author)}</td>
                 <td><span class="admin-badge badge-neutral">${esc(a.category)}</span></td>
                 <td>${(Number(a.views) || 0).toLocaleString('vi-VN')}</td>
                 <td>${ragBadge}</td>
                 <td>${statusBadge}</td>
                 <td>${esc(a.updatedAt)}</td>
-                <td style="text-align: center;">
+                <td class="settings-table-actions-cell">
                     <button type="button" class="btn-action-trigger btn-article-more" data-id="${esc(a.id)}" title="Tác vụ bài viết">•••</button>
                 </td>
             `;

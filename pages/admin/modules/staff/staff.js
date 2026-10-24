@@ -243,6 +243,7 @@
         if (window.PawpalDataStore) {
             return window.PawpalDataStore.fetch('staff:list', fetcher, {
                 ttlMs: window.PawpalDataStore.TTL_TIERS.CATALOG,
+                backgroundRevalidate: false,
                 force
             });
         }
@@ -267,19 +268,191 @@
         input.onfocus=render;input.oninput=()=>{select.value='';select.dispatchEvent(new Event('change',{bubbles:true}));render();};input.onblur=()=>setTimeout(()=>popover.style.display='none',120);input.onkeydown=e=>{if(e.key==='Escape')popover.style.display='none';};
         select.addEventListener('change',()=>{if(document.activeElement!==input)input.value=select.value?select.selectedOptions[0]?.textContent||'':'';});input.value=select.value?select.selectedOptions[0]?.textContent||'':'';
     };
-    async function fetchSchedulesRaw(){return readRows(()=>client().from('staff_schedule').select('*').order('start_at').order('id'));}
-    async function fetchShiftRequestsRaw(){return readRows(()=>client().from('staff_shift_request').select('*').order('created_at',{ascending:false}).order('id'));}
-    async function fetchAssessmentsRaw(){return readRows(()=>client().from('staff_assessment').select('*,assessor:assessed_by(full_name)').order('assessment_date',{ascending:false}).order('created_at',{ascending:false}).order('id'));}
+    function readStaffResource(name, fetcher, { force = false } = {}) {
+        const store = window.PawpalDataStore;
+        return store ? store.fetch('staff:' + name + ':' + store.buildKey(name), fetcher, {
+            force, ttlMs: store.TTL.OPERATIONAL, backgroundRevalidate: false
+        }) : fetcher();
+    }
+    function staffMonthRange() {
+        const local = new Date(Date.now() + 7 * 3600000);
+        const start = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), 1) - 7 * 3600000;
+        const end = Date.UTC(local.getUTCFullYear(), local.getUTCMonth() + 1, 1) - 7 * 3600000;
+        return { start: new Date(start).toISOString(), end: new Date(end).toISOString() };
+    }
+    let staffLoadSequence = 0;
+    const scheduleRangeReads = new Map();
+    const scheduleColumns = 'id,staff_id,start_at,end_at,schedule_status,availability_status,reason,updated_at,created_at';
+    function readScheduleRange(start, end, options) {
+        return readStaffResource('schedules:range:' + start + ':' + end, () => readRows(() => client().from('staff_schedule')
+            .select(scheduleColumns).lt('start_at', end).gt('end_at', start).order('start_at').order('id')), options);
+    }
+    async function fetchSchedulesRaw(options, people = PawpalStaff.state.staff || []) {
+        const range = staffMonthRange();
+        return readStaffResource('schedules:summary', async () => {
+            const now = new Date().toISOString();
+            const month = await readScheduleRange(range.start, range.end, options);
+            const rows = [...month];
+            // Two bounded summaries per person preserve nearest/last shift and assigned filters.
+            // Limit concurrency so a large directory does not flood the connection pool.
+            for (let index = 0; index < people.length; index += 5) {
+                const summaries = await Promise.all(people.slice(index, index + 5).map(async person => {
+                    const base = () => client().from('staff_schedule').select(scheduleColumns).eq('staff_id', person.rawId)
+                        .eq('schedule_status', 'active').eq('availability_status', 'available');
+                    const [next, last] = await Promise.all([
+                        base().gt('end_at', now).order('start_at').order('id').limit(1),
+                        base().lte('end_at', now).order('start_at', { ascending: false }).order('id', { ascending: false }).limit(1)
+                    ]);
+                    if (next.error) throw next.error;
+                    if (last.error) throw last.error;
+                    return [...(next.data || []), ...(last.data || [])];
+                }));
+                rows.push(...summaries.flat());
+            }
+            return [...new Map(rows.map(row => [row.id, row])).values()];
+        }, options);
+    }
+    PawpalStaff.ensureScheduleRange = async function(start, end) {
+        const key = window.PawpalDataStore?.buildKey('schedule-view', { start, end }) || start + ':' + end;
+        const previous = scheduleRangeReads.get(key);
+        if (previous?.promise) return previous.promise;
+        if (previous?.loadedAt && Date.now() - previous.loadedAt < 30000) return;
+        const version = staffLoadSequence;
+        const promise = readScheduleRange(start, end).then(rows => {
+            if (version !== staffLoadSequence) {
+                if (scheduleRangeReads.get(key)?.promise === promise) scheduleRangeReads.delete(key);
+                return;
+            }
+            const retained = (PawpalStaff.state.schedules || []).filter(row => !(Date.parse(row.start_at) < Date.parse(end) && Date.parse(row.end_at) > Date.parse(start)));
+            PawpalStaff.state.schedules = [...new Map([...retained, ...rows].map(row => [row.id, row])).values()];
+            scheduleRangeReads.set(key, { loadedAt: Date.now() });
+        }).catch(error => { scheduleRangeReads.delete(key); throw error; });
+        scheduleRangeReads.set(key, { promise });
+        return promise;
+    };
+    PawpalStaff.hasScheduleRange = (start, end) => {
+        const entry = scheduleRangeReads.get(window.PawpalDataStore?.buildKey('schedule-view', { start, end }) || start + ':' + end);
+        return Boolean(entry?.loadedAt && Date.now() - entry.loadedAt < 30000);
+    };
+    async function fetchShiftRequestsRaw(options) {
+        const count = await readStaffResource('shift_requests:pending-count', async () => {
+            const { count, error } = await client().from('staff_shift_request').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+            if (error) throw error;
+            return count || 0;
+        }, options);
+        PawpalStaff.state.pendingShiftRequestCount = count;
+        return [];
+    }
+    PawpalStaff.getShiftRequestPage = function(filter = 'ALL', page = 1, { force = false } = {}) {
+        const status = ({ PENDING: 'pending', APPROVED: 'approved', REJECTED: 'rejected' })[filter];
+        const requested = Math.max(1, Number(page) || 1);
+        return readStaffResource('shift_requests:page:' + filter + ':' + requested, async () => {
+            const make = () => {
+                let query = client().from('staff_shift_request').select('*', { count: 'exact' });
+                if (status) query = query.eq('status', status);
+                return query.order('created_at', { ascending: false }).order('id');
+            };
+            const { data, count, error } = await make().range((requested - 1) * 10, requested * 10 - 1);
+            if (error) throw error;
+            const actual = Math.min(requested, Math.max(1, Math.ceil((count || 0) / 10)));
+            if (actual !== requested) return PawpalStaff.getShiftRequestPage(filter, actual, { force });
+            const rows = data || [];
+            const ids = [...new Set(rows.flatMap(row => [row.shift, row.target_shift]).filter(id => typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id)))];
+            const linked = ids.length ? await readRows(() => client().from('staff_schedule').select(scheduleColumns).in('id', ids).order('id')) : [];
+            const person = id => PawpalStaff.state.staff.find(staff => staff.rawId === id);
+            const label = id => {
+                const row = linked.find(schedule => schedule.id === id);
+                return row ? PawpalStaff.formatStaffSchedule(row) : ({ ALL: 'Cả ngày', MORNING: 'Ca sáng', AFTERNOON: 'Ca chiều', EVENING: 'Ca tối' })[id] || 'Ca không còn trong danh sách';
+            };
+            return { page: actual, total: count || 0, rows: rows.map(row => ({
+                ...row, type: row.request_type, staffName: person(row.staff_id)?.name || 'Chưa tải được tên nhân viên',
+                swapWithName: person(row.target_staff_id)?.name || '',
+                date: row.request_type === 'SWAP' ? formatDateVN(row.start_date) + ' ? ' + formatDateVN(row.target_date)
+                    : row.start_date === row.end_date ? formatDateVN(row.start_date) : formatDateVN(row.start_date) + ' ? ' + formatDateVN(row.end_date),
+                shiftLabel: row.request_type === 'SWAP' ? label(row.shift) + ' ? ' + label(row.target_shift) : label(row.shift)
+            })) };
+        }, { force });
+    };
+    const assessmentHistoryReads = new Map();
+    const assessmentBase = () => client().from('staff_assessment').select('*,assessor:assessed_by(full_name)')
+        .order('assessment_date', { ascending: false }).order('created_at', { ascending: false }).order('id');
+    function assessmentScopeKey(staffId) {
+        return window.PawpalDataStore?.buildKey('assessment-history', { staffId: staffId || 'ALL' }) || staffId || 'ALL';
+    }
+    async function fetchAssessmentsRaw(options, people = []) {
+        if (PawpalStaff.state.assessmentsFullLoaded) return readStaffResource('assessments:all', () => readRows(assessmentBase), options);
+        return readStaffResource('assessments:summary', async () => {
+            const range = staffMonthRange();
+            const date = instant => new Date(Date.parse(instant) + 7 * 3600000).toISOString().slice(0, 10);
+            const rows = await readRows(() => assessmentBase().gte('assessment_date', date(range.start)).lt('assessment_date', date(range.end)));
+            for (let index = 0; index < people.length; index += 5) {
+                const latest = await Promise.all(people.slice(index, index + 5).map(async person => {
+                    const { data, error } = await assessmentBase().eq('staff_id', person.rawId).limit(1);
+                    if (error) throw error;
+                    return data || [];
+                }));
+                rows.push(...latest.flat());
+            }
+            return [...new Map(rows.map(row => [row.id, row])).values()].sort((a, b) => b.assessment_date.localeCompare(a.assessment_date) || b.created_at.localeCompare(a.created_at) || a.id.localeCompare(b.id));
+        }, options);
+    }
+    function mapStaffAssessments(rows) {
+        return rows.map(a => {
+            const staff = PawpalStaff.state.staff.find(s => s.rawId === a.staff_id);
+            return { id: a.id, raw: a, date: formatDateVN(a.assessment_date), staff_id: staff?.id || a.staff_id,
+                name: staff?.name || '?', position: staff?.position || '?', type: a.assessment_type, score: a.score,
+                result: a.result, evaluator: (Array.isArray(a.assessor) ? a.assessor[0] : a.assessor)?.full_name || '?', note: a.note || '' };
+        });
+    }
+    PawpalStaff.hasAssessmentHistory = staffId => {
+        const entry = assessmentHistoryReads.get(assessmentScopeKey(staffId));
+        return Boolean(entry?.loadedAt && Date.now() - entry.loadedAt < 30000);
+    };
+    PawpalStaff.ensureAssessmentHistory = async function(staffId = null) {
+        const key = assessmentScopeKey(staffId), previous = assessmentHistoryReads.get(key);
+        if (previous?.promise) return previous.promise;
+        if (PawpalStaff.hasAssessmentHistory(staffId)) return;
+        const version = staffLoadSequence;
+        const promise = readStaffResource('assessments:history:' + (staffId || 'ALL'), () => readRows(() => staffId ? assessmentBase().eq('staff_id', staffId) : assessmentBase())).then(rows => {
+            if (version !== staffLoadSequence) {
+                if (assessmentHistoryReads.get(key)?.promise === promise) assessmentHistoryReads.delete(key);
+                return;
+            }
+            const retained = staffId ? (PawpalStaff.state.assessments || []).filter(a => a.raw.staff_id !== staffId) : [];
+            PawpalStaff.state.assessments = [...retained, ...mapStaffAssessments(rows)].sort((a, b) => b.raw.assessment_date.localeCompare(a.raw.assessment_date) || b.raw.created_at.localeCompare(a.raw.created_at));
+            if (!staffId) PawpalStaff.state.assessmentsFullLoaded = true;
+            assessmentHistoryReads.set(key, { loadedAt: Date.now() });
+        }).catch(error => { assessmentHistoryReads.delete(key); throw error; });
+        assessmentHistoryReads.set(key, { promise });
+        return promise;
+    };
 
-    async function loadStaffModuleData({ force = false } = {}) {
+    async function loadStaffModuleData({ force = false, resources = null } = {}) {
+        const sequence = ++staffLoadSequence;
+        const refresh = name => ({ force: force && (!resources || resources.includes(name)) });
+        if (refresh('shift_requests').force) window.PawpalDataStore?.invalidate('staff:shift_requests*');
+        if (refresh('assessments').force) {
+            assessmentHistoryReads.clear();
+            window.PawpalDataStore?.invalidate('staff:assessments*');
+        }
+        if (refresh('schedules').force) {
+            scheduleRangeReads.clear();
+            window.PawpalDataStore?.invalidate('staff:schedules*');
+        }
         try {
-            const [staffData, schedules, requests, assessments] = await Promise.all([
-                fetchStaffRaw({ force }),
-                fetchSchedulesRaw({ force }),
-                fetchShiftRequestsRaw({ force }),
-                fetchAssessmentsRaw()
+            const staffData = await fetchStaffRaw(refresh('list'));
+            const [schedules, requests, assessments] = await Promise.all([
+                fetchSchedulesRaw(refresh('schedules'), staffData.map(entry => ({ rawId: entry.staff_record.id }))),
+                fetchShiftRequestsRaw(refresh('shift_requests')),
+                fetchAssessmentsRaw(refresh('assessments'), staffData.map(entry => ({ rawId: entry.staff_record.id })))
             ]);
 
+            const referenced = [...new Set(requests.flatMap(request => [request.shift, request.target_shift]).filter(id => typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id) && !schedules.some(row => row.id === id)))];
+            for (let offset = 0; offset < referenced.length; offset += 100) {
+                const ids = referenced.slice(offset, offset + 100);
+                schedules.push(...await readStaffResource('schedules:request-links:' + ids.slice().sort().join(','), () => readRows(() => client().from('staff_schedule').select(scheduleColumns).in('id', ids).order('id')), refresh('schedules')));
+            }
+            if (sequence !== staffLoadSequence) return;
             const state=PawpalStaff.state;
             state.staff=staffData.map(entry=>{
                 const s=entry.staff_record,latest=assessments.find(a=>a.staff_id===s.id);
@@ -293,7 +466,9 @@
                     serviceLocked:s.service_locked,note:s.specialization||'',requested_count:null,customer_reviews:[],authUserId:s.auth_user_id,
                     systemRole:primary?.code||'',roles,permissions:entry.permissions||[],lastLoginAt:entry.last_sign_in_at};
             });
-            state.assessments=assessments.map(a=>{const staff=state.staff.find(s=>s.rawId===a.staff_id);return {id:a.id,raw:a,date:formatDateVN(a.assessment_date),staff_id:staff?.id||a.staff_id,name:staff?.name||'—',position:staff?.position||'—',type:a.assessment_type,score:a.score,result:a.result,evaluator:(Array.isArray(a.assessor)?a.assessor[0]:a.assessor)?.full_name||'—',note:a.note||''};});
+            state.assessments = mapStaffAssessments(assessments);
+            assessmentHistoryReads.clear();
+            if (state.assessmentsFullLoaded) assessmentHistoryReads.set(assessmentScopeKey(null), { loadedAt: Date.now() });
             PawpalStaff.state.workstations = [];
 
             const requestStaff = id => PawpalStaff.state.staff.find(staff => staff.rawId === id);
@@ -312,6 +487,7 @@
             }));
 
             PawpalStaff.state.scheduleError = false;
+            scheduleRangeReads.clear();
             PawpalStaff.state.schedules = schedules || [];
             PawpalStaff.state.roster = {};
             PawpalStaff.state.isLoaded = true;
@@ -330,6 +506,7 @@
 
             window.dispatchEvent(new CustomEvent('pawpal:staff-data-loaded', { detail: { count: PawpalStaff.state.staff.length } }));
         } catch (err) {
+            if (sequence !== staffLoadSequence) return;
             Object.assign(PawpalStaff.state,{staff:[],assessments:[],schedules:[],shiftRequests:[],isLoaded:false});
             PawpalStaff.state.loadError = 'Không thể tải dữ liệu nhân sự.';
             window.dispatchEvent(new CustomEvent('pawpal:staff-data-loaded'));
@@ -529,19 +706,20 @@
 
         try {
             const triggerStaffSync = (pattern) => {
+                const resources = pattern === 'staff:*' ? null : [pattern.replace('staff:', '').replace('*', '')];
                 if (window.PawpalDataStore?.handleRealtimeChange) {
                     window.PawpalDataStore.handleRealtimeChange({
                         moduleName: 'Nhân sự',
                         invalidatePattern: pattern || 'staff:*',
                         onActiveRefresh: async () => {
-                            await loadStaffModuleData({ force: true });
+                            await loadStaffModuleData({ force: true, resources });
                             PawpalStaff.subtabs?.list?.renderStaffTable?.();
                             PawpalStaff.subtabs?.list?.updateStaffKPIs?.();
                         },
                         debounceMs: 300
                     });
                 } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Nhân sự') {
-                    loadStaffModuleData({ force: true }).then(() => {
+                    loadStaffModuleData({ force: true, resources }).then(() => {
                         PawpalStaff.subtabs?.list?.renderStaffTable?.();
                         PawpalStaff.subtabs?.list?.updateStaffKPIs?.();
                     });
@@ -551,12 +729,12 @@
             _staffRealtimeChannel = client.channel('admin-staff-live-sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff' }, () => triggerStaffSync('staff:list*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_schedule' }, () => triggerStaffSync('staff:schedules*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_shift_request' }, () => triggerStaffSync('staff:shifts*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_assessment' }, () => triggerStaffSync('staff:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_role' }, () => triggerStaffSync('staff:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_permission' }, () => triggerStaffSync('staff:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'access_role' }, () => triggerStaffSync('staff:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'role_permission' }, () => triggerStaffSync('staff:*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_shift_request' }, () => triggerStaffSync('staff:shift_requests*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_assessment' }, () => triggerStaffSync('staff:assessments*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_role' }, () => triggerStaffSync('staff:list*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_permission' }, () => triggerStaffSync('staff:list*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'access_role' }, () => triggerStaffSync('staff:list*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'role_permission' }, () => triggerStaffSync('staff:list*'))
                 .subscribe();
 
             window.PawpalDataStore?.recordMetric?.('channel-add', 'admin-staff-live-sync');

@@ -109,54 +109,24 @@
         if (!container) {
             container = document.createElement('div');
             container.id = 'adminToastContainer';
-            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
-            document.body.appendChild(container);
+            container.className = 'settings-toast-container';
+            const moduleRoot = document.querySelector('.settings-module-wrapper');
+            (moduleRoot || document.body).appendChild(container);
+        } else if (!container.closest('.settings-module-wrapper')) {
+            document.querySelector('.settings-module-wrapper')?.appendChild(container);
         }
+        container.classList.add('settings-toast-container');
 
         const toast = document.createElement('div');
-        const bgColors = {
-            success: '#DCEEE2',
-            warning: '#F5E8D3',
-            danger: '#F7DCDC',
-            info: '#DCEAF2'
-        };
-        const textColors = {
-            success: '#165335',
-            warning: '#734718',
-            danger: '#8F2424',
-            info: '#20495E'
-        };
-
-        const bg = bgColors[type] || bgColors.info;
-        const color = textColors[type] || textColors.info;
-
-        toast.style.cssText = `
-            background: ${bg};
-            color: ${color};
-            padding: 10px 16px;
-            border-radius: 9px;
-            font-size: 13px;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            pointer-events: auto;
-            transition: opacity 0.25s ease, transform 0.25s ease;
-            opacity: 0;
-            transform: translateY(-8px);
-            max-width: 380px;
-            line-height: 1.45;
-            white-space: pre-line;
-        `;
+        const toastType = ['success', 'warning', 'danger', 'info'].includes(type) ? type : 'info';
+        toast.className = `settings-toast settings-toast--${toastType}`;
         toast.textContent = message;
 
         container.appendChild(toast);
-        requestAnimationFrame(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateY(0)';
-        });
+        requestAnimationFrame(() => toast.classList.add('is-visible'));
 
         setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(-8px)';
+            toast.classList.remove('is-visible');
             setTimeout(() => toast.remove(), 250);
         }, 3500);
     }
@@ -184,18 +154,11 @@
         if (msgEl) msgEl.textContent = message;
         if (btnAccept) {
             btnAccept.textContent = confirmText;
-            if (isDanger) {
-                btnAccept.style.backgroundColor = '#DC2626';
-                btnAccept.style.color = '#FFFFFF';
-            } else {
-                btnAccept.style.backgroundColor = '';
-                btnAccept.style.color = '';
-            }
+            btnAccept.classList.toggle('is-danger', Boolean(isDanger));
         }
 
         const cleanup = () => {
             modal.classList.remove('active');
-            modal.style.display = 'none';
             if (btnAccept) btnAccept.onclick = null;
             if (btnCancel) btnCancel.onclick = null;
             if (btnClose) btnClose.onclick = null;
@@ -223,7 +186,6 @@
         }
 
         modal.classList.add('active');
-        modal.style.display = 'flex';
     }
     PawpalSettings.showSettingsConfirmModal = showSettingsConfirmModal;
 
@@ -257,7 +219,6 @@
 
         pendingImpactCallback = onConfirm;
         modal.classList.add('active');
-        modal.style.display = 'flex';
     }
     PawpalSettings.openImpactConfirmationModal = openImpactConfirmationModal;
 
@@ -268,7 +229,6 @@
         const modal = document.getElementById(modalId);
         if (!modal) return;
         modal.classList.add('active');
-        modal.style.display = 'flex';
         const firstInput = modal.querySelector('input:not([type="hidden"]), select, textarea');
         if (firstInput) {
             setTimeout(() => firstInput.focus(), 60);
@@ -281,7 +241,6 @@
         const modal = document.getElementById(modalId);
         if (!modal) return;
         modal.classList.remove('active');
-        modal.style.display = 'none';
     }
     PawpalSettings.closeModal = closeModal;
 

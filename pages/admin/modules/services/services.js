@@ -1226,3 +1226,147 @@
         initServicesModule();
     }
 })();
+
+/* ========================================================================
+   MODAL PRESENTATION & ACCESSIBILITY
+   Hợp nhất từ service-modal-v8.js; không thay đổi logic lưu dữ liệu/nghiệp vụ.
+   ======================================================================== */
+(function installServiceModalAccessibility() {
+    'use strict';
+
+    if (window.__serviceModalV8) return;
+    window.__serviceModalV8 = true;
+
+    const entries = new Map();
+    let scheduled = false;
+
+    const isVisible = (modal) => (
+        modal.isConnected &&
+        getComputedStyle(modal).display !== 'none' &&
+        modal.getClientRects().length > 0
+    );
+
+    const getFocusableElements = (modal) => [
+        ...modal.querySelectorAll(
+            'button:not(:disabled), input:not(:disabled):not([type="hidden"]), ' +
+            'select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]'
+        )
+    ].filter((element) => element.getClientRects().length > 0);
+
+    const isBusy = (modal) => modal.dataset.saving === 'true';
+
+    const closeModal = (modal) => {
+        if (isBusy(modal)) return;
+
+        const closeButton = modal.querySelector('[data-close-modal]');
+        if (closeButton) {
+            closeButton.click();
+        } else {
+            modal.style.display = 'none';
+        }
+    };
+
+    const syncModalAccessibility = () => {
+        scheduled = false;
+
+        document.querySelectorAll('.services-module .admin-modal-overlay').forEach((modal) => {
+            if (!isVisible(modal) || entries.has(modal)) return;
+
+            entries.set(modal, document.activeElement);
+
+            const card = modal.querySelector('.admin-modal-card');
+            if (!card) return;
+
+            card.tabIndex = -1;
+            card.setAttribute('role', 'dialog');
+            card.setAttribute('aria-modal', 'true');
+
+            const title = modal.querySelector('.admin-modal-title, .modal-title-clean');
+            if (title) {
+                title.id ||= `${modal.id}Title`;
+                card.setAttribute('aria-labelledby', title.id);
+            }
+
+            modal.querySelectorAll('.form-group, .form-group-item').forEach((group) => {
+                const label = group.querySelector('label');
+                const input = group.querySelector('input:not([type="hidden"]), select, textarea');
+
+                if (label && input?.id) {
+                    label.htmlFor = input.id;
+                }
+            });
+
+            const focusableElements = getFocusableElements(modal);
+            const preferredInput = focusableElements.find((element) => (
+                element.matches('input:not([readonly]), select, textarea')
+            ));
+            (preferredInput || focusableElements[0])?.focus();
+        });
+
+        for (const [modal, previousFocus] of entries) {
+            if (isVisible(modal)) continue;
+
+            entries.delete(modal);
+            if (previousFocus?.isConnected) previousFocus.focus();
+        }
+    };
+
+    const scheduleSync = () => {
+        if (scheduled) return;
+
+        scheduled = true;
+        requestAnimationFrame(syncModalAccessibility);
+    };
+
+    new MutationObserver(scheduleSync).observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+    });
+
+    document.addEventListener('keydown', (event) => {
+        const visibleModals = [...entries.keys()].filter(isVisible);
+        const modal = visibleModals.at(-1);
+        if (!modal) return;
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            closeModal(modal);
+            return;
+        }
+
+        if (event.key !== 'Tab') return;
+
+        const focusableElements = getFocusableElements(modal);
+        const first = focusableElements[0];
+        const last = focusableElements.at(-1);
+        if (!first || !last) return;
+
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    }, true);
+
+    document.addEventListener('click', (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+
+        const modal = target.closest('.services-module .admin-modal-overlay');
+        if (!modal) return;
+
+        const closing = target === modal || target.closest('[data-close-modal]');
+        if (closing && isBusy(modal)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return;
+        }
+
+        if (target === modal) closeModal(modal);
+    }, true);
+})();

@@ -90,6 +90,11 @@
         const alertMsg = document.getElementById('alertStripMessage');
         const btnFilter = document.getElementById('btnFilterZeroMiss');
 
+        if (strip) {
+            strip.classList.toggle('is-safe', totalIssues === 0);
+            strip.classList.toggle('is-attention', totalIssues > 0);
+        }
+
         if (alertMsg) {
             if (totalIssues > 0) {
                 const parts = [];
@@ -151,7 +156,7 @@
             card.className = 'banner-item-card';
 
             const alertTagHtml = isExpiring
-                ? `<div style="margin-top: 4px;"><span class="banner-alert-tag">Hết hạn trong 24h</span></div>`
+                ? `<div class="banner-expiry-wrap"><span class="banner-alert-tag">Hết hạn trong 24h</span></div>`
                 : '';
 
             const extendBtnHtml = b.status === 'active'
@@ -161,11 +166,11 @@
             const esc = PawpalSettings.escapeHtml || (s => s);
             const isImgUrl = b.imageUrl && /^(https?:\/\/|\/)[^\s]+$/i.test(b.imageUrl);
             const previewHtml = isImgUrl
-                ? `<img src="${esc(b.imageUrl)}" alt="Banner" style="width:100%; height:100%; object-fit:cover; border-radius:9px;"/>`
+                ? `<img src="${esc(b.imageUrl)}" alt="Banner"/>`
                 : `${esc(b.imageText)}`;
 
             card.innerHTML = `
-                <div class="banner-preview-img" style="overflow:hidden; display:flex; align-items:center; justify-content:center; background:#EDF4F0;">${previewHtml}</div>
+                <div class="banner-preview-img">${previewHtml}</div>
                 <div class="banner-card-info">
                     <span class="banner-card-title">${esc(b.title)}</span>
                     <span class="banner-card-meta">CTA: <strong>${esc(b.cta)}</strong> | Link: ${esc(b.url)}</span>
@@ -174,7 +179,7 @@
                 </div>
                 <div class="banner-card-actions">
                     <span class="admin-badge ${b.status === 'active' ? 'badge-active' : 'badge-neutral'}">${b.status === 'active' ? 'Đang bật' : 'Tạm tắt'}</span>
-                    <div style="display: flex; gap: 6px;">
+                    <div class="banner-card-inline-actions">
                         <button type="button" class="banner-action-btn btn-edit-banner" data-id="${esc(b.id)}">Sửa</button>
                         <button type="button" class="banner-action-btn btn-delete-banner" data-id="${esc(b.id)}">Xóa</button>
                         ${extendBtnHtml}
@@ -281,7 +286,7 @@
     function renderVouchers() {
         const tbody = document.getElementById('vouchersTableBody');
         if (!tbody) return;
-        if (PawpalSettings.state.loadError) {delete tbody.dataset.loadingSkeleton;tbody.innerHTML=`<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" style="padding:28px;text-align:center;">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;return;}
+        if (PawpalSettings.state.loadError) {delete tbody.dataset.loadingSkeleton;tbody.innerHTML=`<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" class="settings-table-message settings-table-message--error">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;return;}
         if (!PawpalSettings.state.isLoaded) return;
         delete tbody.dataset.loadingSkeleton;
 
@@ -344,7 +349,7 @@
 
         tbody.innerHTML = '';
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 24px; color: var(--text-muted);">Không tìm thấy voucher phù hợp.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="10" class="settings-table-message">Không tìm thấy voucher phù hợp.</td></tr>`;
             return;
         }
 
@@ -361,10 +366,10 @@
 
             if (v.limit!==null && v.used >= v.limit) {
                 rowAlertClass = 'row-alert-danger';
-                quotaDisplay = `<strong>${v.used}/${v.limit}</strong><span style="display:block; font-size:11.5px; color:#DC2626; font-weight:600;">Hết sạch lượt</span>`;
+                quotaDisplay = `<strong>${v.used}/${v.limit}</strong><span class="settings-quota-note settings-quota-note--exhausted">Hết sạch lượt</span>`;
             } else if (v.status === 'active' && (v.limit - v.used <= 10)) {
                 rowAlertClass = 'row-alert-warning';
-                quotaDisplay = `<strong>${v.used}/${v.limit}</strong><span style="display:block; font-size:11.5px; color:#D97706; font-weight:600;">Còn ${v.limit - v.used} lượt</span>`;
+                quotaDisplay = `<strong>${v.used}/${v.limit}</strong><span class="settings-quota-note settings-quota-note--low">Còn ${v.limit - v.used} lượt</span>`;
             }
 
             const esc = PawpalSettings.escapeHtml || (s => s);
@@ -372,7 +377,7 @@
             if (rowAlertClass) tr.className = rowAlertClass;
 
             tr.innerHTML = `
-                <td><strong style="color: #236B48;">${esc(v.code)}</strong></td>
+                <td><strong class="settings-voucher-code">${esc(v.code)}</strong></td>
                 <td>${esc(v.name)}</td>
                 <td>${v.type === 'percent' ? 'Giảm %' : 'Giảm tiền'}</td>
                 <td><span class="admin-badge badge-neutral">${esc(v.target)}</span></td>
@@ -381,7 +386,7 @@
                 <td>${quotaDisplay}</td>
                 <td>${esc(v.validDate)}</td>
                 <td>${statusBadge}</td>
-                <td style="text-align: center;">
+                <td class="settings-table-actions-cell">
                     <button type="button" class="btn-dots-action btn-voucher-dots" data-code="${esc(v.code)}" title="Tác vụ">•••</button>
                 </td>
             `;
@@ -422,7 +427,7 @@
         const notificationsList = PawpalSettings.state?.notificationsList || [];
         container.innerHTML = '';
         if (notificationsList.length === 0) {
-            container.innerHTML = '<div style="padding: 20px; color: var(--text-muted); text-align: center;">Chưa có thông báo nào được thiết lập.</div>';
+            container.innerHTML = '<div class="settings-empty-state">Chưa có thông báo nào được thiết lập.</div>';
             return;
         }
 
@@ -447,7 +452,7 @@
                 <div class="notice-body-text">${esc(n.content)}</div>
                 <div class="notice-status-row">
                     ${statusBadge}
-                    <div style="display: flex; gap: 8px;">
+                    <div class="notice-actions">
                         <button type="button" class="btn-notice-action btn-edit-notice" data-id="${esc(n.id)}">Sửa</button>
                         <button type="button" class="btn-notice-action btn-toggle-notice" data-id="${esc(n.id)}">${n.isActive ? 'Tắt' : 'Bật'}</button>
                         <button type="button" class="btn-notice-action btn-delete-notice" data-id="${esc(n.id)}">Xóa</button>
@@ -466,13 +471,15 @@
                 topbarTextEl.textContent = activeTopbarNotice.content;
                 if (topbarBadgeEl) {
                     topbarBadgeEl.textContent = 'Đang chạy';
-                    topbarBadgeEl.style.backgroundColor = '#236B48';
+                    topbarBadgeEl.classList.add('is-active');
+                    topbarBadgeEl.classList.remove('is-inactive');
                 }
             } else {
                 topbarTextEl.textContent = 'Hiện chưa có thông báo Top-bar nào đang chạy trên website.';
                 if (topbarBadgeEl) {
                     topbarBadgeEl.textContent = 'Đang tắt';
-                    topbarBadgeEl.style.backgroundColor = '#6B7280';
+                    topbarBadgeEl.classList.add('is-inactive');
+                    topbarBadgeEl.classList.remove('is-active');
                 }
             }
         }

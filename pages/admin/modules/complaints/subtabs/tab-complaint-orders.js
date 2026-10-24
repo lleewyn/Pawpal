@@ -83,11 +83,15 @@
         });
     }
 
-    function renderOrderComplaintsTable() {
+    let orderRenderSequence = 0;
+    let orderServerFilters = {};
+    async function renderOrderComplaintsTable() {
         const tbody = document.getElementById('orderComplaintsTableBody');
         if (!tbody) return;
-        if (PawpalComplaints.state?.loadError) { delete tbody.dataset.loadingSkeleton; tbody.innerHTML='<tr><td colspan="12" style="padding:28px;text-align:center;">Không thể tải khiếu nại. Vui lòng tải lại trang.</td></tr>';return; }
+        if (PawpalComplaints.state?.loadError) { delete tbody.dataset.loadingSkeleton; renderOrderPagination(0); tbody.innerHTML='<tr><td colspan="12" style="padding:28px;text-align:center;">Không thể tải khiếu nại. Vui lòng tải lại trang.</td></tr>';return; }
         if (!PawpalComplaints.state?.isLoaded) return;
+        if (!document.getElementById('subtab-tab-complaint-orders')?.classList.contains('active')) return;
+        const version = ++orderRenderSequence;
         delete tbody.dataset.loadingSkeleton;
 
         tbody.innerHTML = '';
@@ -105,7 +109,20 @@
         const selectedIssue = issueSelect ? issueSelect.value : 'ALL';
         const selectedStaff = staffSelect ? staffSelect.value : 'ALL';
 
-        const filtered = orderComplaints.filter(item => {
+        orderServerFilters = { query: searchTerm, status: selectedStatus, priority: selectedPriority, staff: selectedStaff, quick: currentOrderQuickFilter, issue: selectedIssue };
+        let serverPage;
+        try {
+            serverPage = await PawpalComplaints.ensureComplaintPage('order', orderServerFilters, orderCurrentPage);
+            if (version !== orderRenderSequence) return;
+            orderCurrentPage = serverPage.page;
+        } catch (error) {
+            if (version !== orderRenderSequence) return;
+            tbody.innerHTML = '<tr><td colspan="12">Không tải được danh sách khiếu nại. Vui lòng làm mới.</td></tr>';
+            renderOrderPagination(0);
+            return;
+        }
+        const visible = (PawpalComplaints.state.orderComplaints || []).filter(item => serverPage.pageIds.includes(item.rawId));
+        const filtered = visible.filter(item => {
             if (searchTerm) {
                 const match = (item.id && item.id.toLowerCase().includes(searchTerm)) ||
                               (item.customerName && item.customerName.toLowerCase().includes(searchTerm)) ||
@@ -132,7 +149,7 @@
 
         lastFilteredOrders = filtered;
 
-        const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+        const totalPages = Math.ceil(serverPage.total / ITEMS_PER_PAGE);
         if (orderCurrentPage > totalPages) orderCurrentPage = totalPages || 1;
         if (orderCurrentPage < 1) orderCurrentPage = 1;
 
@@ -165,7 +182,7 @@
         }
 
         const startIndex = (orderCurrentPage - 1) * ITEMS_PER_PAGE;
-        const pageList = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+        const pageList = filtered;
 
         tbody.innerHTML = pageList.map(item => {
             let priorityBadge = '';
@@ -293,8 +310,11 @@
         // Nút xuất file CSV
         const btnExport = document.getElementById('btnExportOrderComplaints');
         if (btnExport) {
-            btnExport.addEventListener('click', () => {
-                const exportList = lastFilteredOrders;
+            btnExport.addEventListener('click', async () => {
+                if (btnExport.disabled) return;
+                btnExport.disabled = true;
+                try {
+                const exportList = await PawpalComplaints.exportComplaintRows('order', orderServerFilters);
                 const headers = ['Mã ticket', 'Thời gian', 'Khách hàng', 'Số điện thoại', 'Mã đơn hàng', 'Nội dung', 'Mức độ', 'Trạng thái', 'Người phụ trách'];
                 const rows = exportList.map(t => [
                     sanitizeCsvCell(t.id),
@@ -321,6 +341,9 @@
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
                 PawpalComplaints.showToast(`Đã xuất thành công ${exportList.length} khiếu nại đơn hàng sang file CSV!`);
+                } catch (error) {
+                    PawpalComplaints.showToast('Không xuất được danh sách. Vui lòng thử lại.', 'danger');
+                } finally { btnExport.disabled = false; }
             });
         }
 

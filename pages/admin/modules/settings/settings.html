@@ -23,7 +23,7 @@
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Tỷ lệ quy đổi</span>
-                <span class="kpi-val text-neutral" style="font-size: 19px;" id="kpiPointRate">1đ = 100đ</span>
+                <span class="kpi-val text-neutral settings-kpi-rate" id="kpiPointRate">1đ = 100đ</span>
             </div>
         </div>
 
@@ -69,7 +69,7 @@
                     <div class="filter-row-bottom">
                         <div class="filter-dropdown-group">
                             <label class="filter-label">Đối tượng</label>
-                            <select class="admin-select" id="filterVoucherTarget" style="width: 155px;">
+                            <select class="admin-select settings-filter-select settings-filter-select--medium" id="filterVoucherTarget">
                                 <option value="all">Tất cả đối tượng</option>
                                 <option value="Spa">Dịch vụ Spa</option>
                                 <option value="Hotel">Pet Hotel</option>
@@ -80,7 +80,7 @@
                         </div>
                         <div class="filter-dropdown-group">
                             <label class="filter-label">Trạng thái</label>
-                            <select class="admin-select" id="filterVoucherStatus" style="width: 175px;">
+                            <select class="admin-select settings-filter-select settings-filter-select--wide" id="filterVoucherStatus">
                                 <option value="all">Tất cả trạng thái</option>
                                 <option value="zero-miss">Cần xử lý gấp</option>
                                 <option value="active">Hoạt động</option>
@@ -96,7 +96,7 @@
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th style="width: 120px;">Mã Voucher</th>
+                                <th class="settings-col-voucher-code">Mã Voucher</th>
                                 <th>Tên chương trình</th>
                                 <th>Loại ưu đãi</th>
                                 <th>Áp dụng</th>
@@ -105,7 +105,7 @@
                                 <th>Lượt dùng</th>
                                 <th>Thời hạn</th>
                                 <th>Trạng thái</th>
-                                <th style="text-align: center; width: 60px;">Thao tác</th>
+                                <th class="settings-col-actions">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="vouchersTableBody">
@@ -152,23 +152,23 @@
                         <span class="info-label">Tỷ lệ quy đổi điểm:</span>
                         <span class="info-value" id="dispPointValue">1 điểm = 100 VNĐ</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 10px;">
+                    <div class="info-pair settings-info-pair-spaced">
                         <span class="info-label">Điểm thưởng đăng ký tài khoản:</span>
                         <span class="info-value" id="dispRegisterPoints">+50 điểm</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 10px;">
+                    <div class="info-pair settings-info-pair-spaced">
                         <span class="info-label">Thưởng đơn hàng đầu tiên:</span>
                         <span class="info-value" id="dispFirstOrderPoints">+100 điểm</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 10px;">
+                    <div class="info-pair settings-info-pair-spaced">
                         <span class="info-label">Thưởng đặt lịch đầu tiên:</span>
                         <span class="info-value" id="dispFirstBookingPoints">+100 điểm</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 10px;">
+                    <div class="info-pair settings-info-pair-spaced">
                         <span class="info-label">Điểm sinh nhật khách hàng:</span>
                         <span class="info-value" id="dispBirthdayPoints">+200 điểm</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 10px;">
+                    <div class="info-pair settings-info-pair-spaced">
                         <span class="info-label">Trạng thái tích và đổi điểm:</span>
                         <span class="info-value">Không tự cộng điểm từ cấu hình</span>
                     </div>
@@ -190,7 +190,7 @@
                         <span class="topbar-preview-badge">—</span>
                     </div>
                 </div>
-                <div class="notifications-list" id="notificationsListContainer" style="margin-top: 14px;">
+                <div class="notifications-list settings-notifications-list" id="notificationsListContainer">
                     <!-- Render by JS -->
                 </div>
             </div>
@@ -242,7 +242,7 @@
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
                         <label class="filter-label">Danh mục</label>
-                        <select class="admin-select" id="filterArticleCategory" style="width: 155px;">
+                        <select class="admin-select settings-filter-select settings-filter-select--medium" id="filterArticleCategory">
                             <option value="all">Tất cả danh mục</option>
                             <option value="Chó">Chó cưng</option>
                             <option value="Mèo">Mèo cưng</option>
@@ -253,7 +253,7 @@
                     </div>
                     <div class="filter-dropdown-group">
                         <label class="filter-label">Trạng thái</label>
-                        <select class="admin-select" id="filterArticleStatus" style="width: 145px;">
+                        <select class="admin-select settings-filter-select settings-filter-select--compact" id="filterArticleStatus">
                             <option value="all">Tất cả trạng thái</option>
                             <option value="published">Công khai</option>
                             <option value="draft">Bản nháp</option>
@@ -268,7 +268,7 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th style="width: 80px;">Ảnh bìa</th>
+                            <th class="settings-col-article-cover">Ảnh bìa</th>
                             <th>Tiêu đề bài viết</th>
                             <th>Tác giả</th>
                             <th>Danh mục</th>
@@ -276,7 +276,7 @@
                             <th>Tri thức AI</th>
                             <th>Trạng thái</th>
                             <th>Ngày cập nhật</th>
-                            <th style="text-align: center; width: 60px;"></th>
+                            <th class="settings-col-actions"></th>
                         </tr>
                     </thead>
                     <tbody id="articlesTableBody">
@@ -301,13 +301,13 @@
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-system-config">
         <!-- DẢI ĐIỀU HÀNH KHÓA AN TOÀN VÀ TRẠNG THÁI SSOT -->
-        <div class="admin-card" style="padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; background-color: var(--surface-white); border: 1px solid var(--border-neutral); border-radius: var(--admin-radius);">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-heading);">Cơ chế bảo vệ thông số lõi</span>
+        <div class="admin-card settings-safe-mode-toolbar">
+            <div class="settings-safe-mode-copy">
+                <span class="settings-safe-mode-title">Cơ chế bảo vệ thông số lõi</span>
                 <span class="safe-mode-badge" id="safeModeBadge">Khóa an toàn: Đang bật</span>
-                <span style="font-size: 12.5px; color: var(--text-muted);">Mở khóa trước khi lưu thay đổi các chính sách vận hành</span>
+                <span class="settings-safe-mode-note">Mở khóa trước khi lưu thay đổi các chính sách vận hành</span>
             </div>
-            <button type="button" class="admin-btn admin-btn-secondary" id="btnToggleSafeMode" style="height: 32px; font-size: 12.5px; padding: 0 12px;">Mở khóa để sửa</button>
+            <button type="button" class="admin-btn admin-btn-secondary settings-safe-mode-toggle" id="btnToggleSafeMode">Mở khóa để sửa</button>
         </div>
 
         <div class="system-cards-grid">
@@ -325,19 +325,19 @@
                         <span class="info-label">Tên thương hiệu</span>
                         <span class="info-value" id="dispStoreBrand">PawPal Pet Center</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 6px;">
+                    <div class="info-pair settings-info-pair-spaced-small">
                         <span class="info-label">Hotline tiếp nhận</span>
-                        <span class="info-value" id="dispStoreHotline" style="font-weight: 700; color: var(--text-heading);">1900 888 999</span>
+                        <span class="info-value settings-emphasis-value" id="dispStoreHotline">1900 888 999</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 6px;">
+                    <div class="info-pair settings-info-pair-spaced-small">
                         <span class="info-label">Email hỗ trợ</span>
                         <span class="info-value" id="dispStoreEmail">cskh@pawpal.vn</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 6px;">
+                    <div class="info-pair settings-info-pair-spaced-small">
                         <span class="info-label">Địa chỉ cơ sở</span>
                         <span class="info-value" id="dispStoreAddress">120 Nguyễn Thị Minh Khai, P.6, Q.3, TP.HCM</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 6px;">
+                    <div class="info-pair settings-info-pair-spaced-small">
                         <span class="info-label">Mã số thuế VAT</span>
                         <span class="info-value" id="dispStoreTaxId">0316889988</span>
                     </div>
@@ -391,17 +391,17 @@
                 <div class="system-card-body">
                     <div class="info-pair">
                         <span class="info-label">Phạm vi áp dụng</span>
-                        <span class="info-value" id="dispFreeShipThreshold" style="color: var(--text-heading); font-weight: 700;">Đơn từ 300,000 đ</span>
+                        <span class="info-value settings-emphasis-value" id="dispFreeShipThreshold">Đơn từ 300,000 đ</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 6px;">
+                    <div class="info-pair settings-info-pair-spaced-small">
                         <span class="info-label">Biểu phí</span>
                         <span class="info-value" id="dispStandardShippingFees">25,000 đ / 35,000 đ</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 6px;">
+                    <div class="info-pair settings-info-pair-spaced-small">
                         <span class="info-label">Kết nối giao vận</span>
                         <span class="info-value" id="dispExpressShippingFee">45,000 đ (Grab / Aha)</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 6px;">
+                    <div class="info-pair settings-info-pair-spaced-small">
                         <span class="info-label">Đối tác API tích hợp</span>
                         <span class="info-value" id="dispShippingApiStatus">GHN (Shop ID: PAWPAL_Q1)</span>
                     </div>
@@ -425,15 +425,15 @@
                         <span class="info-label">Giờ phục vụ chi nhánh</span>
                         <span class="info-value" id="dispOperatingHours">08:00 - 20:00 (T7/CN: 21:00)</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 6px;">
+                    <div class="info-pair settings-info-pair-spaced-small">
                         <span class="info-label">Khung giờ Pet Hotel</span>
                         <span class="info-value" id="dispHotelCheckInOut">Nhận sau 14:00 • Trả trước 12:00</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 6px;">
+                    <div class="info-pair settings-info-pair-spaced-small">
                         <span class="info-label">Công suất tối đa mỗi ca</span>
                         <span class="info-value" id="dispSlotCapacity">Tối đa 4 bé / Khung giờ</span>
                     </div>
-                    <div class="info-pair" style="margin-top: 6px;">
+                    <div class="info-pair settings-info-pair-spaced-small">
                         <span class="info-label">Hủy miễn phí và phí trễ</span>
                         <span class="info-value" id="dispCancelPolicy">Trước 4 giờ • Phí trễ 50,000 đ</span>
                     </div>
@@ -457,11 +457,11 @@
                         <span>GHN Express API</span>
                         <span class="admin-badge badge-active" id="pingGhnBadge">Chưa kiểm chứng kết nối</span>
                     </div>
-                    <div class="partner-status-row" style="margin-top: 8px;">
+                    <div class="partner-status-row settings-partner-status-spaced">
                         <span>MoMo Merchant Gateway</span>
                         <span class="admin-badge badge-active" id="pingMomoBadge">Chưa kiểm chứng kết nối</span>
                     </div>
-                    <div class="partner-status-row" style="margin-top: 8px;">
+                    <div class="partner-status-row settings-partner-status-spaced">
                         <span>VNPay Payment Engine</span>
                         <span class="admin-badge badge-active" id="pingVnpayBadge">Chưa kiểm chứng kết nối</span>
                     </div>
@@ -478,7 +478,7 @@
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-audit-logs">
         <!-- 4 THẺ KPI NHẬT KÝ AUDIT LOG -->
-        <div class="settings-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="settings-kpi-grid settings-audit-kpi-grid">
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Tổng nhật ký</span>
                 <span class="kpi-val text-heading" id="statTotalAuditLogs"><span class="skeleton-kpi"></span></span>
@@ -489,11 +489,11 @@
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Phân hệ tác động gần nhất</span>
-                <span class="kpi-val text-heading" id="statLastModule" style="font-size: 17px;">Khách hàng và Bán hàng</span>
+                <span class="kpi-val text-heading settings-kpi-value-compact" id="statLastModule">Khách hàng và Bán hàng</span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Trạng thái Khóa an toàn</span>
-                <span class="kpi-val text-warning" id="statSafeModeStatus" style="font-size: 17px;">Đang bật</span>
+                <span class="kpi-val text-warning settings-kpi-value-compact" id="statSafeModeStatus">Đang bật</span>
             </div>
         </div>
 
@@ -512,7 +512,7 @@
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
                         <label class="filter-label">Phân hệ tác động</label>
-                        <select class="admin-select" id="filterAuditTargetModule" style="width: 175px;">
+                        <select class="admin-select settings-filter-select settings-filter-select--wide" id="filterAuditTargetModule">
                             <option value="all">Tất cả phân hệ</option>
                             <option value="Cấu hình">Cấu hình</option>
                             <option value="Khách hàng">Khách hàng</option>
@@ -531,11 +531,11 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th style="width: 160px;">Thời gian</th>
-                            <th style="width: 150px;">Người thực hiện</th>
-                            <th style="width: 220px;">Phân hệ tác động</th>
+                            <th class="settings-col-audit-time">Thời gian</th>
+                            <th class="settings-col-audit-actor">Người thực hiện</th>
+                            <th class="settings-col-audit-module">Phân hệ tác động</th>
                             <th>Nội dung thay đổi</th>
-                            <th style="width: 150px;">Trạng thái ghi nhận</th>
+                            <th class="settings-col-audit-status">Trạng thái ghi nhận</th>
                         </tr>
                     </thead>
                     <tbody id="auditLogTableBody">
@@ -565,11 +565,11 @@
             <form novalidate onsubmit="return false;">
                 <div class="modal-body-clean">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Tiêu đề banner <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label-clean">Tiêu đề banner <span class="settings-required-mark">*</span></label>
                         <input type="text" class="admin-input" id="inputBannerTitle" placeholder="Ví dụ: Ưu đãi Spa Mùa Hè 30%">
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Ảnh banner URL <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label-clean">Ảnh banner URL <span class="settings-required-mark">*</span></label>
                         <input type="text" class="admin-input" id="inputBannerImage" placeholder="Nhập đường dẫn ảnh hoặc tên tệp...">
                     </div>
                     <div class="form-row-2col">
@@ -615,14 +615,14 @@
                 <div class="modal-body-clean">
                     <div class="form-row-2col">
                         <div class="form-group-item">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label class="form-label-clean">Mã voucher <span style="color: #DC2626;">*</span></label>
+                            <div class="settings-inline-between">
+                                <label class="form-label-clean">Mã voucher <span class="settings-required-mark">*</span></label>
                                 <button type="button" class="btn-text-action" id="btnAutoGenerateVoucherCode">Tạo mã tự động</button>
                             </div>
-                            <input type="text" class="admin-input" id="inputVoucherCode" placeholder="Ví dụ: PAWPAL30K" style="text-transform: uppercase;">
+                            <input type="text" class="admin-input settings-uppercase-input" id="inputVoucherCode" placeholder="Ví dụ: PAWPAL30K">
                         </div>
                         <div class="form-group-item">
-                            <label class="form-label-clean">Tên chương trình <span style="color: #DC2626;">*</span></label>
+                            <label class="form-label-clean">Tên chương trình <span class="settings-required-mark">*</span></label>
                             <input type="text" class="admin-input" id="inputVoucherName" placeholder="Tên chương trình ưu đãi...">
                         </div>
                     </div>
@@ -636,7 +636,7 @@
                             </select>
                         </div>
                         <div class="form-group-item">
-                            <label class="form-label-clean">Giá trị giảm <span style="color: #DC2626;">*</span></label>
+                            <label class="form-label-clean">Giá trị giảm <span class="settings-required-mark">*</span></label>
                             <input type="number" class="admin-input" id="inputVoucherValue" placeholder="30000 hoặc 15">
                         </div>
                     </div>
@@ -717,7 +717,7 @@
             <form novalidate onsubmit="return false;">
                 <div class="modal-body-clean">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Giá trị 1 điểm quy đổi (VNĐ) <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label-clean">Giá trị 1 điểm quy đổi (VNĐ) <span class="settings-required-mark">*</span></label>
                         <input type="number" class="admin-input" id="inputCfgPointValue" value="100">
                     </div>
                     <div class="form-row-2col">
@@ -759,7 +759,7 @@
             <form novalidate onsubmit="return false;">
                 <div class="modal-body-clean">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Nội dung thông báo <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label-clean">Nội dung thông báo <span class="settings-required-mark">*</span></label>
                         <textarea class="admin-input" id="inputNoticeContent" rows="3" placeholder="Nhập thông báo gửi khách hàng..."></textarea>
                     </div>
                     <div class="form-row-2col">
@@ -797,12 +797,12 @@
             <form novalidate onsubmit="return false;">
                 <div class="modal-body-clean">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Tiêu đề bài viết <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label-clean">Tiêu đề bài viết <span class="settings-required-mark">*</span></label>
                         <input type="text" class="admin-input" id="inputArticleTitle" placeholder="Tiêu đề bài viết hấp dẫn...">
                     </div>
                     <div class="form-row-2col">
                         <div class="form-group-item">
-                            <label class="form-label-clean">Danh mục <span style="color: #DC2626;">*</span></label>
+                            <label class="form-label-clean">Danh mục <span class="settings-required-mark">*</span></label>
                             <select class="admin-select" id="inputArticleCategory">
                                 <option value="Chó">Chó cưng</option>
                                 <option value="Mèo">Mèo cưng</option>
@@ -821,11 +821,11 @@
                         </div>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Tóm tắt ngắn <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label-clean">Tóm tắt ngắn <span class="settings-required-mark">*</span></label>
                         <textarea class="admin-input" id="inputArticleSummary" rows="2" placeholder="Tóm tắt ngắn 1-2 câu hiển thị ở danh sách bài viết..."></textarea>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Nội dung chi tiết bài viết <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label-clean">Nội dung chi tiết bài viết <span class="settings-required-mark">*</span></label>
                         <textarea class="admin-input" id="inputArticleContent" rows="6" placeholder="Nội dung cẩm nang chia sẻ kiến thức chăm sóc thú cưng..."></textarea>
                     </div>
                 </div>
@@ -848,7 +848,7 @@
                 <div class="modal-body-clean">
                     <div class="form-row-2col">
                         <div class="form-group-item">
-                            <label class="form-label-clean">Tên thương hiệu <span style="color: #DC2626;">*</span></label>
+                            <label class="form-label-clean">Tên thương hiệu <span class="settings-required-mark">*</span></label>
                             <input type="text" class="admin-input" id="inputStoreBrandName" value="PawPal Pet Center">
                         </div>
                         <div class="form-group-item">
@@ -858,7 +858,7 @@
                     </div>
                     <div class="form-row-2col">
                         <div class="form-group-item">
-                            <label class="form-label-clean">Hotline tiếp nhận 24/7 <span style="color: #DC2626;">*</span></label>
+                            <label class="form-label-clean">Hotline tiếp nhận 24/7 <span class="settings-required-mark">*</span></label>
                             <input type="text" class="admin-input" id="inputStoreHotline" value="1900 888 999">
                         </div>
                         <div class="form-group-item">
@@ -868,7 +868,7 @@
                     </div>
                     <div class="form-row-2col">
                         <div class="form-group-item">
-                            <label class="form-label-clean">Email CSKH tiếp nhận <span style="color: #DC2626;">*</span></label>
+                            <label class="form-label-clean">Email CSKH tiếp nhận <span class="settings-required-mark">*</span></label>
                             <input type="email" class="admin-input" id="inputStoreEmail" value="cskh@pawpal.vn">
                         </div>
                         <div class="form-group-item">
@@ -877,7 +877,7 @@
                         </div>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Địa chỉ trụ sở và cơ sở chính <span style="color: #DC2626;">*</span></label>
+                        <label class="form-label-clean">Địa chỉ trụ sở và cơ sở chính <span class="settings-required-mark">*</span></label>
                         <input type="text" class="admin-input" id="inputStoreAddress" value="120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP. Hồ Chí Minh">
                     </div>
                     <div class="form-row-2col">
@@ -908,30 +908,30 @@
             </div>
             <form novalidate onsubmit="return false;">
                 <div class="modal-body-clean">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">Trạng thái bật/tắt các cổng thanh toán</div>
-                    <div class="form-row-2col" style="margin-bottom: 12px;">
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                    <div class="settings-form-section-title">Trạng thái bật/tắt các cổng thanh toán</div>
+                    <div class="form-row-2col settings-form-row-spaced-sm">
+                        <label class="settings-payment-toggle">
                             <input type="checkbox" id="toggleCodEnabled" checked>
                             <span>Thanh toán COD</span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                        <label class="settings-payment-toggle">
                             <input type="checkbox" id="toggleBankEnabled" checked>
                             <span>QR Banking</span>
                         </label>
                     </div>
-                    <div class="form-row-2col" style="margin-bottom: 16px;">
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                    <div class="form-row-2col settings-form-row-spaced">
+                        <label class="settings-payment-toggle">
                             <input type="checkbox" id="toggleMomoEnabled" checked>
                             <span>Ví điện tử MoMo</span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                        <label class="settings-payment-toggle">
                             <input type="checkbox" id="toggleVnpayEnabled" checked>
                             <span>Cổng VNPay</span>
                         </label>
                     </div>
 
-                    <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px;">
-                        <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">Thông tin thụ hưởng chuyển khoản QR</div>
+                    <div class="settings-form-section settings-form-section--no-gap">
+                        <div class="settings-form-section-title">Thông tin thụ hưởng chuyển khoản QR</div>
                         <div class="form-group-item">
                             <label class="form-label-clean">Ngân hàng thụ hưởng QR Banking</label>
                             <select class="admin-select" id="inputPaymentBank">
@@ -976,8 +976,8 @@
             <form novalidate onsubmit="return false;">
                 <div class="modal-body-clean">
                     <div class="form-group-item"><label class="form-label-clean">Biểu phí theo hình thức giao hàng</label><div id="shippingDeliveryOptions"></div></div>
-                    <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
-                        <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">2. Tích hợp đối tác vận chuyển 3PL</div>
+                    <div class="settings-form-section">
+                        <div class="settings-form-section-title">2. Tích hợp đối tác vận chuyển 3PL</div>
                         <div class="form-group-item">
                             <label class="form-label-clean">Đơn vị vận chuyển chính</label>
                             <select class="admin-select" id="inputShippingProvider">
@@ -1016,11 +1016,11 @@
             </div>
             <form novalidate onsubmit="return false;">
                 <div class="modal-body-clean">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">1. Khung giờ phục vụ chi nhánh</div>
+                    <div class="settings-form-section-title">1. Khung giờ phục vụ chi nhánh</div>
                     <div class="form-row-2col">
                         <div class="form-group-item">
                             <label class="form-label-clean">Ngày thường (Thứ 2 - Thứ 6)</label>
-                            <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="settings-time-range">
                                 <input type="time" class="admin-input" id="inputWeekdayOpen" value="08:00">
                                 <span>đến</span>
                                 <input type="time" class="admin-input" id="inputWeekdayClose" value="20:00">
@@ -1028,7 +1028,7 @@
                         </div>
                         <div class="form-group-item">
                             <label class="form-label-clean">Cuối tuần (Thứ 7 - Chủ Nhật)</label>
-                            <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="settings-time-range">
                                 <input type="time" class="admin-input" id="inputWeekendOpen" value="08:00">
                                 <span>đến</span>
                                 <input type="time" class="admin-input" id="inputWeekendClose" value="21:00">
@@ -1036,8 +1036,8 @@
                         </div>
                     </div>
 
-                    <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
-                        <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">2. Quy định lưu trú khách sạn thú cưng (Pet Hotel)</div>
+                    <div class="settings-form-section">
+                        <div class="settings-form-section-title">2. Quy định lưu trú khách sạn thú cưng (Pet Hotel)</div>
                         <div class="form-row-2col">
                             <div class="form-group-item">
                                 <label class="form-label-clean">Giờ Check-in quy định</label>
@@ -1054,11 +1054,11 @@
                         </div>
                     </div>
 
-                    <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
-                        <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">3. Quy tắc đặt lịch Spa và hủy ca</div>
+                    <div class="settings-form-section">
+                        <div class="settings-form-section-title">3. Quy tắc đặt lịch Spa và hủy ca</div>
                         <div class="form-row-2col">
                             <div class="form-group-item">
-                                <label class="form-label-clean">Công suất tối đa (số bé / khung giờ) <span style="color: #DC2626;">*</span></label>
+                                <label class="form-label-clean">Công suất tối đa (số bé / khung giờ) <span class="settings-required-mark">*</span></label>
                                 <input type="number" class="admin-input" id="inputSlotCapacity" value="4">
                             </div>
                             <div class="form-group-item">
@@ -1091,16 +1091,16 @@
 
     <!-- MODAL 10: XÁC NHẬN TÁC ĐỘNG ĐA PHÂN HỆ (SSOT IMPACT CONFIRMATION) -->
     <div class="admin-modal-overlay" id="impactConfirmModalOverlay">
-        <div class="admin-modal-card" style="width: 540px; max-width: 92vw;">
+        <div class="admin-modal-card settings-modal-card--impact">
             <div class="modal-header-clean">
                 <div class="modal-title-clean">Xác nhận thay đổi cấu hình hệ thống</div>
                 <button type="button" class="modal-btn-close-text" id="btnCancelImpactModal" data-close-modal="impactConfirmModalOverlay">Đóng</button>
             </div>
             <div class="modal-body-clean">
-                <div id="impactModalDesc" style="font-size: 13.5px; color: var(--text-main); line-height: 1.5;">
+                <div id="impactModalDesc" class="settings-impact-description">
                     <!-- Nội dung cảnh báo tác động -->
                 </div>
-                <div id="impactAffectedModulesBox" style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+                <div id="impactAffectedModulesBox" class="settings-impact-modules-list">
                     <!-- Chi tiết các phân hệ bị ảnh hưởng -->
                 </div>
             </div>
@@ -1121,18 +1121,18 @@
             <div class="modal-body-clean">
                 <div class="rag-info-banner">
                     <span class="rag-banner-title" id="ragArticleTitle">Tiêu đề bài viết</span>
-                    <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
+                    <div class="settings-rag-meta-row">
                         <span class="admin-badge badge-neutral" id="ragArticleCategory">Chó cưng</span>
                         <span class="admin-badge badge-active" id="ragArticleStatus">Đã nạp RAG</span>
                     </div>
                 </div>
-                <div class="form-group-item" style="margin-top: 14px;">
+                <div class="form-group-item settings-rag-field-spaced">
                     <label class="form-label-clean">Từ khóa</label>
                     <div class="rag-keywords-box" id="ragKeywordsBox">
                         <!-- Render tags -->
                     </div>
                 </div>
-                <div class="form-group-item" style="margin-top: 12px;">
+                <div class="form-group-item settings-rag-field-compact">
                     <label class="form-label-clean">Nội dung cung cấp cho trợ lý</label>
                     <div class="rag-content-box" id="ragContentBox">
                         <!-- Nội dung trích dẫn -->
@@ -1148,13 +1148,13 @@
 
     <!-- MODAL 12: XÁC NHẬN THAO TÁC CẤU HÌNH (CUSTOM CONFIRM DIALOG) -->
     <div class="admin-modal-overlay" id="modalConfirmSettingsAction">
-        <div class="admin-modal-card" style="width: 480px; max-width: 92vw;">
+        <div class="admin-modal-card settings-modal-card--confirm">
             <div class="modal-header-clean">
                 <div class="modal-title-clean" id="confirmSettingsActionTitle">Xác nhận thao tác</div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseConfirmSettingsModal" data-close-modal="modalConfirmSettingsAction">Đóng</button>
             </div>
-            <div class="modal-body-clean" style="padding-top: 10px; padding-bottom: 20px;">
-                <div id="confirmSettingsActionMessage" style="font-size: 13.5px; color: var(--text-main); line-height: 1.6;">
+            <div class="modal-body-clean settings-confirm-modal-body">
+                <div id="confirmSettingsActionMessage" class="settings-confirm-message">
                     Bạn có chắc chắn muốn thực hiện thao tác này không?
                 </div>
             </div>

@@ -22,12 +22,26 @@
         return shifted.toISOString().slice(0,16);
     };
     function scheduleError(error){return ({staff_schedule_changed:'Ca đã thay đổi. Đóng và mở lại để kiểm tra.',staff_schedule_forbidden:'Bạn chưa có quyền phân ca.',staff_has_service_booking:'Nhân viên đang có lịch dịch vụ trong khoảng này. Cần xử lý lịch dịch vụ trước khi ghi nghỉ.',invalid_staff_schedule:'Chọn nhân viên, nhập đủ giờ bắt đầu/kết thúc và lý do nếu nghỉ hoặc hủy.',staff_request_conflict:'Yêu cầu đã được ghi với nội dung khác. Mở lại ca để đối chiếu.'})[error?.message]||(error?.code==='23P01'?'Khoảng thời gian bị trùng với ca đang có.':'Không thể lưu ca. Kiểm tra thông tin và thử lại.');}
+    let scheduleReadVersion = 0;
     function renderScheduleTable(){
         if(!PawpalStaff.state.isLoaded)return;
         const picker=el('scheduleDatePicker');if(picker&&!picker.value)picker.value=currentScheduleDate;
         el('scheduleDayViewWrapper').hidden=currentScheduleView!=='DAY';el('scheduleWeekViewWrapper').hidden=currentScheduleView!=='WEEK';
         let start=currentScheduleDate;if(currentScheduleView==='WEEK'){const d=new Date(start+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);start=d.toISOString().slice(0,10);}
         const end=dayOffset(start,currentScheduleView==='WEEK'?7:1),from=Date.parse(start+'T00:00:00+07:00'),to=Date.parse(end+'T00:00:00+07:00');
+        const rangeStart = new Date(from).toISOString(), rangeEnd = new Date(to).toISOString();
+        if (PawpalStaff.ensureScheduleRange && !PawpalStaff.hasScheduleRange(rangeStart, rangeEnd)) {
+            if (!el('subtab-tab-staff-schedule')?.classList.contains('active')) return;
+            const target = el('scheduleTableBody');
+            if (target) target.textContent = 'Đang tải lịch làm việc…';
+            const version = ++scheduleReadVersion;
+            PawpalStaff.ensureScheduleRange(rangeStart, rangeEnd).then(() => {
+                if (version === scheduleReadVersion) renderScheduleTable();
+            }).catch(() => {
+                if (version === scheduleReadVersion && target) target.textContent = 'Không tải được lịch làm việc. Chọn lại ngày để thử lại.';
+            });
+            return;
+        }
         const role=el('scheduleFilterPosition')?.value||'ALL';
         const availability=el('scheduleFilterShift')?.value||'ALL';
         const rows=PawpalStaff.state.schedules.filter(s=>Date.parse(s.start_at)<to&&Date.parse(s.end_at)>from).filter(s=>role==='ALL'||PawpalStaff.state.staff.find(v=>v.rawId===s.staff_id)?.role===role).filter(s=>availability==='ALL'||s.availability_status===availability).sort((a,b)=>Date.parse(a.start_at)-Date.parse(b.start_at)||a.id.localeCompare(b.id));
@@ -162,16 +176,21 @@
     }
 
     let currentTrayFilter = 'ALL';
+    let requestPage = 1;
+    let requestReadVersion = 0;
 
-    function renderLeaveRequestsList(filterStatus = 'ALL') {
+    async function renderLeaveRequestsList(filterStatus = 'ALL', page = requestPage) {
+        if (filterStatus !== currentTrayFilter) page = 1;
         currentTrayFilter = filterStatus;
+        requestPage = page;
+        const version = ++requestReadVersion;
         const container = document.getElementById('leaveRequestsListContainer');
         const countPendingEl = document.getElementById('countFilterReqPending');
         const trayPendingCountEl = document.getElementById('trayPendingCount');
 
         PawpalStaff.state.shiftRequests ||= [];
         const requests = PawpalStaff.state.shiftRequests;
-        const pendingCount = requests.filter(r => r.status?.toLowerCase() === 'pending' || r.status === 'cho_duyet').length;
+        const pendingCount = PawpalStaff.state.pendingShiftRequestCount ?? requests.filter(r => r.status?.toLowerCase() === 'pending' || r.status === 'cho_duyet').length;
 
         if (countPendingEl) countPendingEl.textContent = pendingCount;
         if (trayPendingCountEl) trayPendingCountEl.textContent = pendingCount;
@@ -179,18 +198,54 @@
         if (!container) return;
         if(!PawpalStaff.state.isLoaded){container.textContent='Đang tải đơn nghỉ và đổi ca…';return;}
         if(PawpalStaff.state.requestError){container.textContent=/permission denied|row.level security/i.test(PawpalStaff.state.requestError) ? 'Phiên quản trị chưa được phép đọc đơn. Vui lòng đăng nhập lại tại /admin/login; nếu vẫn lỗi, kiểm tra liên kết Auth và quyền nhân sự.' : /schema cache|does not exist/i.test(PawpalStaff.state.requestError) ? 'Chưa có bảng đơn nghỉ/đổi ca. Cần chạy migration staff_shift_request.' : 'Không tải được đơn nghỉ/đổi ca. Vui lòng tải lại và kiểm tra kết nối.';return;}
+        const tray = document.getElementById('leaveRequestsTrayModal');
+        if (!tray?.classList.contains('active')) return;
+        let result;
+        try {
+            container.textContent = 'Đang tải đơn nghỉ và đổi ca…';
+            result = await PawpalStaff.getShiftRequestPage(filterStatus, requestPage);
+            if (version !== requestReadVersion || !tray.classList.contains('active')) return;
+            requestPage = result.page;
+        } catch (error) {
+            if (version !== requestReadVersion) return;
+            container.textContent = 'Không tải được danh sách. Chọn lại bộ lọc để thử lại.';
+            document.getElementById('staffRequestPager')?.remove();
+            return;
+        }
+        let pager = document.getElementById('staffRequestPager');
+        if (!pager) {
+            pager = document.createElement('div');
+            pager.id = 'staffRequestPager';
+            pager.className = 'admin-pagination-container';
+            container.after(pager);
+        }
+        pager.replaceChildren();
+        const pages = Math.ceil(result.total / 10);
+        const add = (label, target, active = false, disabled = false) => {
+            const button = document.createElement('button');
+            button.type = 'button'; button.textContent = label;
+            button.className = 'btn-pagination' + (active ? ' active' : '');
+            button.disabled = disabled;
+            button.onclick = () => renderLeaveRequestsList(currentTrayFilter, target);
+            pager.append(button);
+        };
+        if (pages > 1) {
+            add('<', requestPage - 1, false, requestPage === 1);
+            for (let number = Math.max(1, requestPage - 2); number <= Math.min(pages, requestPage + 2); number++) add(String(number), number, number === requestPage);
+            add('>', requestPage + 1, false, requestPage === pages);
+        }
         const safe=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
-        let filtered = requests;
+        let filtered = result.rows;
         if (filterStatus !== 'ALL') {
             if (filterStatus === 'PENDING') {
-                filtered = requests.filter(r => r.status?.toLowerCase() === 'pending' || r.status === 'cho_duyet');
+                filtered = result.rows.filter(r => r.status?.toLowerCase() === 'pending' || r.status === 'cho_duyet');
             } else if (filterStatus === 'APPROVED') {
-                filtered = requests.filter(r => r.status?.toLowerCase() === 'approved' || r.status === 'da_duyet');
+                filtered = result.rows.filter(r => r.status?.toLowerCase() === 'approved' || r.status === 'da_duyet');
             } else if (filterStatus === 'REJECTED') {
-                filtered = requests.filter(r => r.status?.toLowerCase() === 'rejected' || r.status === 'tu_choi');
+                filtered = result.rows.filter(r => r.status?.toLowerCase() === 'rejected' || r.status === 'tu_choi');
             } else {
-                filtered = requests.filter(r => r.status === filterStatus);
+                filtered = result.rows.filter(r => r.status === filterStatus);
             }
         }
 

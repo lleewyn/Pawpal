@@ -22,7 +22,7 @@
         if(PawpalSettings.state.loadError){root?.querySelectorAll('.info-value, [id^="disp"]').forEach(el=>el.textContent='Không tải được cấu hình');return;}
         if (!PawpalSettings.state.isLoaded || !PawpalSettings.state.hasSystemConfig) {
             root?.querySelectorAll('.info-value, [id^="disp"]').forEach(el => {
-                if (!PawpalSettings.state.isLoaded) el.innerHTML = '<span class="skeleton-text" style="width:120px;"></span>';
+                if (!PawpalSettings.state.isLoaded) el.innerHTML = '<span class="skeleton-text skeleton-text--value"></span>';
                 else el.textContent = 'Chưa có cấu hình được lưu';
             });
             return;
@@ -334,7 +334,7 @@
             const options=PawpalSettings.state.deliveryOptions||[];
             if(!options.length)container.textContent='Chưa có hình thức giao hàng.';
             for(const option of options){
-                const row=document.createElement('div');row.className='shipping-option-row';row.dataset.id=option.id;row.style.cssText='display:grid;grid-template-columns:minmax(0,1fr) 130px 80px;gap:16px;align-items:center;margin-bottom:16px';
+                const row=document.createElement('div');row.className='shipping-option-row';row.dataset.id=option.id;
                 const name=document.createElement('label');name.textContent=option.name;name.htmlFor='shipping-fee-'+option.id;
                 const fee=document.createElement('input');fee.type='number';fee.className='admin-input shipping-option-fee';fee.id=name.htmlFor;fee.min='0';fee.step='0.01';fee.value=option.fee;fee.setAttribute('aria-label','Phí '+option.name);
                 const label=document.createElement('label'),available=document.createElement('input');available.type='checkbox';available.className='shipping-option-available';available.checked=option.available;label.append(available,document.createTextNode(' Bật'));

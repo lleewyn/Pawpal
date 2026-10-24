@@ -70,6 +70,15 @@
         const tbody = document.getElementById('assessmentListTableBody') || document.getElementById('assessmentTableBody');
         updateAssessmentKPIs();
         if (!tbody) return;
+        if (PawpalStaff.ensureAssessmentHistory && !PawpalStaff.hasAssessmentHistory()) {
+            if (!document.getElementById('subtab-tab-staff-assessment')?.classList.contains('active')) return;
+            tbody.replaceChildren();
+            const row = tbody.insertRow(), cell = row.insertCell();
+            cell.colSpan = 9;
+            cell.textContent = 'Đang tải lịch sử đánh giá…';
+            PawpalStaff.ensureAssessmentHistory().then(renderAssessmentList).catch(() => { cell.textContent = 'Không tải được đánh giá. Thử lại bằng nút làm mới.'; });
+            return;
+        }
         const assessments = PawpalStaff.state?.assessments || [];
         const searchInput = document.getElementById('assessmentSearchInput');
         const query = searchInput ? searchInput.value.trim().toLowerCase() : '';

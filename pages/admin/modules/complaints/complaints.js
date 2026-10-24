@@ -224,7 +224,14 @@
     // ====================================================================
     // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
     // ====================================================================
-    async function loadComplaintsModuleData({ force = false } = {}) {
+    async function loadComplaintsModuleData({ force = false, resources = null, directoryFull = false, pageRequest = null } = {}) {
+        const fullDirectory = directoryFull || Boolean(PawpalComplaints.state.fullDirectoryLoaded);
+        const defaultKind = sessionStorage.getItem('pawpal_admin_complaint_active_subtab') === 'tab-complaint-orders' ? 'order' : 'service';
+        const request = pageRequest || PawpalComplaints.state.lastPageRequest || { kind: defaultKind, filters: {}, page: 1 };
+        PawpalComplaints.state.lastPageRequest = request;
+        const requestKey = JSON.stringify(request);
+
+        if (force && !resources) window.PawpalDataStore?.invalidate('complaints:detail:*');
         const requestSequence = ++complaintsLoadSequence;
         try {
             let client = getComplaintsDbClient();
@@ -241,7 +248,7 @@
 
             // Sử dụng cache nếu dữ liệu còn mới VÀ đã có dữ liệu thực tế
             const totalComplaintsCount = (PawpalComplaints.state.serviceComplaints?.length || 0) + (PawpalComplaints.state.orderComplaints?.length || 0);
-            if (!force && totalComplaintsCount > 0 && Date.now() - _complLastFetchedAt < COMPL_CACHE_TTL_MS) {
+            if (!pageRequest && !force && (!fullDirectory || PawpalComplaints.state.fullDirectoryLoaded) && totalComplaintsCount > 0 && Date.now() - _complLastFetchedAt < COMPL_CACHE_TTL_MS) {
                 console.log('[Complaints] Dùng cache, bỏ qua fetch.');
                 updateComplaintsKpis();
                 PawpalComplaints.subtabs.services?.renderServiceComplaintsTable();
@@ -250,29 +257,69 @@
             }
 
             const fetchComplaintsData = async () => {
-                const readAll = async (table, columns, key = 'id') => {
-                    const rows = [];
-                    for (let offset = 0; ; offset += 500) {
-                        const { data, error } = await client.from(table).select(columns)
-                            .order(key, { ascending: true }).range(offset, offset + 499);
-                        if (error) throw error;
-                        rows.push(...(data || []));
-                        if (!data || data.length < 500) return rows;
-                    }
+                const readAll = async (table, columns, key = 'id', scope = null) => {
+                    if (scope && !scope.ids.length) return [];
+                    const ids = scope ? [...new Set(scope.ids)].sort() : null;
+                    const fetchRows = async () => {
+                        const rows = [];
+                        const batches = ids ? Array.from({ length: Math.ceil(ids.length / 100) }, (_, i) => ids.slice(i * 100, (i + 1) * 100)) : [null];
+                        for (const batch of batches) {
+                            for (let offset = 0; ; offset += 500) {
+                                let query = client.from(table).select(columns).order(key, { ascending: true });
+                                if (batch) query = query.in(scope.column, batch);
+                                const { data, error } = await query.range(offset, offset + 499);
+                                if (error) throw error;
+                                rows.push(...(data || []));
+                                if (!data || data.length < 500) break;
+                            }
+                        }
+                        return rows;
+                    };
+                    const store = window.PawpalDataStore;
+                    const scopeKey = scope ? JSON.stringify([scope.column, ids]) : 'all';
+                    return store ? store.fetch('complaints:resource:' + table + ':' + store.buildKey(table, { scope: scopeKey }), fetchRows, {
+                        force: force && (!resources || resources.includes(table)),
+                        ttlMs: store.TTL.OPERATIONAL,
+                        backgroundRevalidate: false
+                    }) : fetchRows();
                 };
-                const [tickets, customers, phones, profiles, pets, appointments, orders, staffList, products] = await Promise.all([
-                    readAll('support_ticket', '*'),
-                    readAll('customer', 'id,contact_email,customer_status'),
-                    readAll('customer_phone', 'id,customer_id,phone_number,is_primary'),
-                    readAll('customer_profile', 'customer_id,full_name,gender', 'customer_id'),
-                    readAll('pet_profile', 'id,customer_id,pet_code,pet_name,avatar_url,routine,allergy,safety_note,breed:pet_breed(breed_name,species:pet_species(species_name))'),
-                    readAll('appointment', 'id,appointment_code,customer_id,pet_id,scheduled_start_at,scheduled_end_at,appointment_status,note,staff:staff_id(full_name),items:appointment_item(id,is_primary,name_snapshot,service:service_id(service_name,category:service_category(category_code)))'),
-                    readAll('sales_order', 'id,order_code,customer_id,order_status,shipping_status,tracking_code,created_at,carrier:shipping_provider(provider_name)'),
-                    readAll('staff', 'id,full_name,job_title,employment_status,auth_user_id'),
-                    readAll('product', 'id,product_name,status,product_variant(id,sku_variant,sale_price)')
+                const { data: pageMeta, error: pageError } = await client.rpc('admin_complaint_page', {
+                    p_kind: request.kind, p_filters: request.filters || {}, p_page: request.page || 1,
+                    p_size: 10, p_context: PawpalComplaints.state.currentTicketId || null
+                });
+                if (pageError) throw pageError;
+                if (!pageMeta || !Array.isArray(pageMeta.tickets)) throw new Error('Invalid complaint page response');
+                const tickets = pageMeta.tickets;
+                const customerIds = [...new Set(tickets.map(ticket => ticket.customer_id).filter(Boolean))];
+                const scope = column => fullDirectory ? null : { column, ids: customerIds };
+                const [customers, phones, profiles, pets, appointments, orders, staffList] = await Promise.all([
+                    readAll('customer', 'id,contact_email,customer_status', 'id', scope('id')),
+                    readAll('customer_phone', 'id,customer_id,phone_number,is_primary', 'id', scope('customer_id')),
+                    readAll('customer_profile', 'customer_id,full_name,gender', 'customer_id', scope('customer_id')),
+                    readAll('pet_profile', 'id,customer_id,pet_code,pet_name,avatar_url,routine,allergy,safety_note,breed:pet_breed(breed_name,species:pet_species(species_name))', 'id', scope('customer_id')),
+                    readAll('appointment', 'id,appointment_code,customer_id,pet_id,scheduled_start_at,scheduled_end_at,appointment_status,note,staff:staff_id(full_name),items:appointment_item(id,is_primary,name_snapshot,service:service_id(service_name,category:service_category(category_code)))', 'id', scope('customer_id')),
+                    readAll('sales_order', 'id,order_code,customer_id,order_status,shipping_status,tracking_code,created_at,carrier:shipping_provider(provider_name)', 'id', scope('customer_id')),
+                    readAll('staff', 'id,full_name,job_title,employment_status,auth_user_id')
                 ]);
+                const sourceColumns = {
+                    appointment: 'id,appointment_code,customer_id,pet_id,scheduled_start_at,scheduled_end_at,appointment_status,note,staff:staff_id(full_name),items:appointment_item(id,is_primary,name_snapshot,service:service_id(service_name,category:service_category(category_code)))',
+                    sales_order: 'id,order_code,customer_id,order_status,shipping_status,tracking_code,created_at,carrier:shipping_provider(provider_name)'
+                };
+                for (const [table, rows, references, codeColumn] of [
+                    ['appointment', appointments, tickets.map(t => t.appointment_id), 'appointment_code'],
+                    ['sales_order', orders, tickets.map(t => t.sales_order_id || t.order_id), 'order_code']
+                ]) {
+                    const missing = [...new Set(references.filter(Boolean))].filter(id => !rows.some(row => row.id === id || row[codeColumn] === id));
+                    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                    for (const column of ['id', codeColumn]) {
+                        const ids = missing.filter(id => (column === 'id') === uuid.test(id));
+                        if (ids.length) rows.push(...await readAll(table, sourceColumns[table], 'id', { column, ids }));
+                    }
+                }
+                const missingPets = appointments.map(a => a.pet_id).filter(id => id && !pets.some(pet => pet.id === id));
+                if (missingPets.length) pets.push(...await readAll('pet_profile', 'id,customer_id,pet_code,pet_name,avatar_url,routine,allergy,safety_note,breed:pet_breed(breed_name,species:pet_species(species_name))', 'id', { column: 'id', ids: missingPets }));
                 return {
-                    tickets, profiles, staffList,
+                    tickets, profiles, staffList, pageMeta,
                     customers: customers.map(c => ({ ...c, email: c.contact_email,
                         phone_main: phones.find(p => p.customer_id === c.id && p.is_primary)?.phone_number || null })),
                     pets: pets.map(p => ({ ...p, species: p.breed?.species?.species_name,
@@ -285,14 +332,14 @@
                             service_type: category.includes('hotel') ? 'hotel' : category.includes('taxi') ? 'taxi' : category ? 'spa' : 'contact' };
                     }),
                     orders: orders.map(o => ({ ...o, carrier: o.carrier?.provider_name })),
-                    products: products.map(p => ({ ...p, sku: p.product_variant?.[0]?.sku_variant || null,
-                        sale_price: p.product_variant?.[0]?.sale_price ?? null }))
+                    products: []
                 };
             };
 
             const cachedPayload = window.PawpalDataStore?.fetch
-                ? await window.PawpalDataStore.fetch('complaints:data', fetchComplaintsData, {
+                ? await window.PawpalDataStore.fetch('complaints:data:' + (fullDirectory ? 'full:' : 'related:') + window.PawpalDataStore.buildKey('page', { requestKey, context: PawpalComplaints.state.currentTicketId || '' }), fetchComplaintsData, {
                     ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
+                    backgroundRevalidate: false,
                     force
                 })
                 : await fetchComplaintsData();
@@ -304,6 +351,10 @@
             PawpalComplaints.state.loadError = null;
             PawpalComplaints.state.unclassifiedTickets = [];
 
+            PawpalComplaints.state.fullDirectoryLoaded = fullDirectory;
+            PawpalComplaints.state.serverPages ||= {};
+            PawpalComplaints.state.serverStats = cachedPayload.pageMeta.stats;
+            PawpalComplaints.state.serverPages[request.kind] = { ...cachedPayload.pageMeta, requestKey, loadedAt: Date.now() };
             const tickets = cachedPayload.tickets || [];
             const messages = []; // Tải on-demand theo ticket_id khi mở chi tiết khiếu nại (PERF-03.K02)
             const customers = cachedPayload.customers || [];
@@ -672,8 +723,9 @@
             serviceComplaints.sort(sortComplaintsByUrgencyAndSla);
             orderComplaints.sort(sortComplaintsByUrgencyAndSla);
 
-            PawpalComplaints.state.serviceComplaints = serviceComplaints;
-            PawpalComplaints.state.orderComplaints = orderComplaints;
+            const mergeContext = (existing, incoming) => [...new Map([...existing, ...incoming].map(ticket => [ticket.rawId, ticket])).values()];
+            PawpalComplaints.state.serviceComplaints = request.kind === 'service' ? serviceComplaints : mergeContext(PawpalComplaints.state.serviceComplaints, serviceComplaints);
+            PawpalComplaints.state.orderComplaints = request.kind === 'order' ? orderComplaints : mergeContext(PawpalComplaints.state.orderComplaints, orderComplaints);
 
             if (!PawpalComplaints.state.currentActiveTicket || !serviceComplaints.concat(orderComplaints).some(x => x.id === PawpalComplaints.state.currentActiveTicket.id)) {
                 PawpalComplaints.state.currentActiveTicket = serviceComplaints[0] || orderComplaints[0] || null;
@@ -705,6 +757,8 @@
             PawpalComplaints.state.serviceComplaints = [];
             PawpalComplaints.state.orderComplaints = [];
             PawpalComplaints.state.currentActiveTicket = null;
+            PawpalComplaints.state.serverStats = null;
+            PawpalComplaints.state.serverPages = {};
             PawpalComplaints.state.isLoaded = false;
             _complLastFetchedAt = 0;
             PawpalComplaints.state.loadError = 'Không thể tải khiếu nại. Vui lòng tải lại trang.';
@@ -717,6 +771,39 @@
         }
     }
     PawpalComplaints.loadComplaintsModuleData = loadComplaintsModuleData;
+    PawpalComplaints.ensureComplaintPage = async function(kind, filters, page = 1) {
+        filters = Object.fromEntries(Object.entries(filters).filter(([, value]) => value != null && value !== '' && value !== 'ALL'));
+        const request = { kind, filters, page }, key = JSON.stringify(request);
+        const existing = PawpalComplaints.state.serverPages?.[kind];
+        if (PawpalComplaints.state.lastPageRequest?.kind === kind && existing?.requestKey === key && Date.now() - existing.loadedAt < 30000 && !PawpalComplaints.state.loadError) return existing;
+        await loadComplaintsModuleData({ pageRequest: request });
+        if (PawpalComplaints.state.loadError) throw new Error(PawpalComplaints.state.loadError);
+        return PawpalComplaints.state.serverPages[kind];
+    };
+    PawpalComplaints.exportComplaintRows = async function(kind, filters) {
+        const client = getComplaintsDbClient();
+        const rows = [];
+        for (let page = 1; ; page++) {
+            const { data, error } = await client.rpc('admin_complaint_page', { p_kind: kind, p_filters: filters, p_page: page, p_size: 100, p_context: null });
+            if (error) throw error;
+            const ids = data.pageIds || [];
+            if (!ids.length) break;
+            rows.push(...data.tickets.filter(ticket => ids.includes(ticket.id)).map(ticket => {
+                const priority = String(ticket.priority || '').toLowerCase();
+                const status = String(ticket.status || '').toLowerCase();
+                const normalized = ({pending:'new',mo:'new',in_progress:'processing',dang_xu_ly:'processing',cho_khach_hang:'waiting_customer',completed:'resolved',da_giai_quyet:'resolved',da_dong:'closed',tu_choi:'closed',rejected:'closed'})[status] || status;
+                const issue = ['wrong_item','damaged','quality','return_request','missing_item','payment','delivery'].includes(ticket.category) ? ticket.category
+                    : ['wrong_item','damaged','quality','return_request','missing_item','payment'].includes(ticket.type) ? ticket.type : 'other';
+                return { ...ticket._export, id: ticket.ticket_code || ticket.id, createdAt: formatDateTime(ticket.created_at),
+                    title: ticket.subject, productName: ticket.subject || 'Chưa liên kết sản phẩm', issueType: issue,
+                    status: normalized || 'new', priority: ['khan_cap','urgent'].includes(priority) ? 'khan_cap'
+                        : priority.includes('cao') || priority === 'high' ? 'high' : ['low','thap'].includes(priority) || priority.includes('thấp') ? 'low' : 'medium' };
+            }));
+            if (page * 100 >= data.total) break;
+        }
+        return rows;
+    };
+
 
     // Helper lazy-fetch tin nhắn khi mở 1 ticket cụ thể (PERF-03.K02)
     PawpalComplaints.fetchTicketMessages = async function(ticketId, { force = false } = {}) {
@@ -760,10 +847,10 @@
         serviceComplaints.forEach(calculateSla);
         orderComplaints.forEach(calculateSla);
 
-        const sNew = serviceComplaints.filter(i => i.status === 'new').length;
-        const sProc = serviceComplaints.filter(i => i.status === 'processing').length;
-        const sWait = serviceComplaints.filter(i => i.status === 'waiting_customer').length;
-        const sHigh = serviceComplaints.filter(i => ['high','khan_cap'].includes(i.priority) && i.status !== 'resolved' && i.status !== 'closed').length;
+        const sNew = PawpalComplaints.state.serverStats?.sNew ?? (serviceComplaints.filter(i => i.status === 'new').length);
+        const sProc = PawpalComplaints.state.serverStats?.sProc ?? (serviceComplaints.filter(i => i.status === 'processing').length);
+        const sWait = PawpalComplaints.state.serverStats?.sWait ?? (serviceComplaints.filter(i => i.status === 'waiting_customer').length);
+        const sHigh = PawpalComplaints.state.serverStats?.sHigh ?? (serviceComplaints.filter(i => ['high','khan_cap'].includes(i.priority) && i.status !== 'resolved' && i.status !== 'closed').length);
         const sOver = serviceComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed').length;
 
         const elSNew = document.getElementById('statServiceNew');
@@ -778,11 +865,11 @@
         if (elSHigh) elSHigh.textContent = sHigh;
         if (elSOver) elSOver.textContent = '—';
 
-        const oNew = orderComplaints.filter(i => i.status === 'new').length;
-        const oProc = orderComplaints.filter(i => i.status === 'processing').length;
-        const oRma = orderComplaints.filter(i => i.issueType === 'return_request').length;
-        const oWait = orderComplaints.filter(i => i.status === 'waiting_return').length;
-        const oRef = orderComplaints.filter(i => i.status === 'refunding').length;
+        const oNew = PawpalComplaints.state.serverStats?.oNew ?? (orderComplaints.filter(i => i.status === 'new').length);
+        const oProc = PawpalComplaints.state.serverStats?.oProc ?? (orderComplaints.filter(i => i.status === 'processing').length);
+        const oRma = PawpalComplaints.state.serverStats?.oRma ?? (orderComplaints.filter(i => i.issueType === 'return_request').length);
+        const oWait = PawpalComplaints.state.serverStats?.oWait ?? (orderComplaints.filter(i => i.status === 'waiting_return').length);
+        const oRef = PawpalComplaints.state.serverStats?.oRef ?? (orderComplaints.filter(i => i.status === 'refunding').length);
         const oOver = orderComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed').length;
 
         const elONew = document.getElementById('statOrderNew');
@@ -847,25 +934,25 @@
             }
 
             const waitMgrService = serviceComplaints.filter(i => i.status === 'waiting_manager_approval');
-            if (waitMgrService.length > 0) {
+            if ((PawpalComplaints.state.serverStats?.waitMgrService ?? waitMgrService.length) > 0) {
                 alerts.push({
                     type: 'warning',
-                    prefix: `${waitMgrService.length} ca`,
+                    prefix: `${(PawpalComplaints.state.serverStats?.waitMgrService ?? waitMgrService.length)} ca`,
                     main: 'Chờ quản lý duyệt bồi hoàn',
                     sub: '',
-                    text: `${waitMgrService.length} khiếu nại dịch vụ chờ Quản lý phê duyệt ngân sách/tài sản`,
+                    text: `${(PawpalComplaints.state.serverStats?.waitMgrService ?? waitMgrService.length)} khiếu nại dịch vụ chờ Quản lý phê duyệt ngân sách/tài sản`,
                     filter: 'WAITING_MANAGER'
                 });
             }
 
             const overdueService = serviceComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed');
-            if (overdueService.length > 0) {
+            if ((PawpalComplaints.state.serverStats?.overdueService ?? overdueService.length) > 0) {
                 alerts.push({
                     type: 'danger',
-                    prefix: `${overdueService.length} ca`,
+                    prefix: `${(PawpalComplaints.state.serverStats?.overdueService ?? overdueService.length)} ca`,
                     main: 'Quá hạn SLA',
                     sub: '',
-                    text: `${overdueService.length} khiếu nại dịch vụ quá hạn SLA`,
+                    text: `${(PawpalComplaints.state.serverStats?.overdueService ?? overdueService.length)} khiếu nại dịch vụ quá hạn SLA`,
                     filter: 'OVERDUE'
                 });
             }
@@ -889,37 +976,37 @@
         if (orderContainer) {
             const alerts = [];
             const reprocessOrder = orderComplaints.filter(i => i.status === 'reprocessing');
-            if (reprocessOrder.length > 0) {
+            if ((PawpalComplaints.state.serverStats?.reprocessOrder ?? reprocessOrder.length) > 0) {
                 alerts.push({
                     type: 'danger',
                     prefix: 'Cảnh báo',
                     main: 'Khách chấm < 3 sao (Xử lý lần 2)',
                     sub: '',
-                    text: `Có ${reprocessOrder.length} khiếu nại đơn hàng cần Quản lý gọi điện xử lý lần 2`,
+                    text: `Có ${(PawpalComplaints.state.serverStats?.reprocessOrder ?? reprocessOrder.length)} khiếu nại đơn hàng cần Quản lý gọi điện xử lý lần 2`,
                     filter: 'REPROCESSING'
                 });
             }
 
             const waitMgrOrder = orderComplaints.filter(i => i.status === 'waiting_manager_approval');
-            if (waitMgrOrder.length > 0) {
+            if ((PawpalComplaints.state.serverStats?.waitMgrOrder ?? waitMgrOrder.length) > 0) {
                 alerts.push({
                     type: 'warning',
-                    prefix: `${waitMgrOrder.length} ca`,
+                    prefix: `${(PawpalComplaints.state.serverStats?.waitMgrOrder ?? waitMgrOrder.length)} ca`,
                     main: 'Chờ quản lý duyệt hoàn tiền/đổi trả',
                     sub: '',
-                    text: `${waitMgrOrder.length} khiếu nại đơn hàng chờ Quản lý duyệt`,
+                    text: `${(PawpalComplaints.state.serverStats?.waitMgrOrder ?? waitMgrOrder.length)} khiếu nại đơn hàng chờ Quản lý duyệt`,
                     filter: 'WAITING_MANAGER'
                 });
             }
 
             const overdueOrder = orderComplaints.filter(i => i.slaStatus === 'OVERDUE' && i.status !== 'resolved' && i.status !== 'closed');
-            if (overdueOrder.length > 0) {
+            if ((PawpalComplaints.state.serverStats?.overdueOrder ?? overdueOrder.length) > 0) {
                 alerts.push({
                     type: 'danger',
-                    prefix: `${overdueOrder.length} ca`,
+                    prefix: `${(PawpalComplaints.state.serverStats?.overdueOrder ?? overdueOrder.length)} ca`,
                     main: 'Quá hạn SLA',
                     sub: '',
-                    text: `${overdueOrder.length} khiếu nại đơn hàng quá hạn SLA`,
+                    text: `${(PawpalComplaints.state.serverStats?.overdueOrder ?? overdueOrder.length)} khiếu nại đơn hàng quá hạn SLA`,
                     filter: 'OVERDUE'
                 });
             }
@@ -998,10 +1085,12 @@
         renderComplaintsAlertBar();
         updateComplaintsKpis();
     }
-    function openTicketDetail(ticketId) {
+    async function openTicketDetail(ticketId) {
         if (!ticketId) return;
         PawpalComplaints.state.currentTicketId = ticketId;
         sessionStorage.setItem('pawpal_admin_complaint_selected_id', ticketId);
+        await loadComplaintsModuleData({ pageRequest: PawpalComplaints.state.lastPageRequest || { kind: 'service', filters: {}, page: 1 } });
+        if (PawpalComplaints.state.currentTicketId !== ticketId) return;
         switchSubtab('tab-complaint-detail');
         if (PawpalComplaints.subtabs.detail?.renderTicketDetail) {
             PawpalComplaints.subtabs.detail.renderTicketDetail(ticketId);
@@ -1023,13 +1112,38 @@
                 window.PawpalDataStore?.recordMetric?.('channel-remove', 'admin_complaints_live_sync');
             }
 
-            const triggerComplaintsSync = (invalidatePattern, refreshFn) => {
+            const pendingResources = new Set();
+            let pendingDataRefresh = false;
+            const triggerComplaintsSync = (invalidatePattern, refreshFn, resources = ['support_ticket']) => {
+                const messagesOnly = Boolean(invalidatePattern?.startsWith('complaints:messages:'));
+                window.PawpalDataStore?.invalidate('complaints:detail:*');
+                if (!messagesOnly) {
+                    pendingDataRefresh = true;
+                    for (const page of Object.values(PawpalComplaints.state.serverPages || {})) page.loadedAt = 0;
+                    _complLastFetchedAt = 0;
+                    for (const resource of resources) {
+                        pendingResources.add(resource);
+                        window.PawpalDataStore?.invalidate('complaints:resource:' + resource + ':*');
+                    }
+                }
+                const refreshData = async () => {
+                    if (!pendingDataRefresh) return;
+                    const changed = [...pendingResources];
+                    pendingResources.clear();
+                    pendingDataRefresh = false;
+                    try { await loadComplaintsModuleData({ force: true, resources: changed }); }
+                    catch (error) {
+                        pendingDataRefresh = true;
+                        changed.forEach(resource => pendingResources.add(resource));
+                        throw error;
+                    }
+                };
                 if (window.PawpalDataStore?.handleRealtimeChange) {
                     window.PawpalDataStore.handleRealtimeChange({
                         moduleName: 'Khiếu nại',
-                        invalidatePattern: invalidatePattern || 'complaints:*',
+                        invalidatePattern: messagesOnly ? invalidatePattern : 'complaints:data',
                         onActiveRefresh: async () => {
-                            await loadComplaintsModuleData({ force: true });
+                            await refreshData();
                             if (typeof refreshFn === 'function') {
                                 refreshFn();
                             } else {
@@ -1045,9 +1159,8 @@
                         debounceMs: 300
                     });
                 } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Khiếu nại') {
-                    loadComplaintsModuleData({ force: true }).then(() => {
-                        if (refreshFn) refreshFn();
-                    });
+                    const refresh = refreshData();
+                    refresh.then(() => { if (refreshFn) refreshFn(); });
                 }
             };
 
@@ -1066,7 +1179,9 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_message' }, (payload) => {
                     // PERF-04.09: Bảo vệ thứ tự sự kiện - tin nhắn của ticket khác không làm nhảy UI ticket đang mở
                     const msgTicketId = payload.new?.ticket_id || payload.old?.ticket_id;
-                    const isTargetingOpenTicket = msgTicketId && (PawpalComplaints.state.currentTicketId === msgTicketId);
+                    const openId = PawpalComplaints.state.currentTicketId;
+                    const openTicket = [...PawpalComplaints.state.serviceComplaints, ...PawpalComplaints.state.orderComplaints].find(ticket => ticket.id === openId || ticket.rawId === openId);
+                    const isTargetingOpenTicket = msgTicketId && (openId === msgTicketId || openTicket?.rawId === msgTicketId);
 
                     triggerComplaintsSync(msgTicketId ? `complaints:messages:${msgTicketId}` : 'complaints:*', () => {
                         updateComplaintsKpis();
@@ -1077,12 +1192,16 @@
                         }
                     });
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'refund_transaction' }, () => triggerComplaintsSync('complaints:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'return_request' }, () => triggerComplaintsSync('complaints:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment_record' }, () => triggerComplaintsSync('complaints:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'care_log' }, () => triggerComplaintsSync('complaints:*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_message_attachment' }, () => triggerComplaintsSync('complaints:*'))
-                .subscribe((status) => {
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'refund_transaction' }, () => triggerComplaintsSync('complaints:*', null, []))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'return_request' }, () => triggerComplaintsSync('complaints:*', null, []))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment_record' }, () => triggerComplaintsSync('complaints:*', null, []))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'care_log' }, () => triggerComplaintsSync('complaints:*', null, []))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_message_attachment' }, () => triggerComplaintsSync('complaints:*', null, []));
+            for (const table of ['customer', 'customer_phone', 'customer_profile', 'pet_profile', 'appointment', 'sales_order', 'staff', 'product', 'product_variant', 'appointment_item', 'pet_breed', 'pet_species', 'shipping_provider']) {
+                const resource = ({ product_variant: 'product', appointment_item: 'appointment', pet_breed: 'pet_profile', pet_species: 'pet_profile', shipping_provider: 'sales_order' })[table] || table;
+                channel.on('postgres_changes', { event: '*', schema: 'public', table }, () => triggerComplaintsSync('complaints:*', null, [resource]));
+            }
+            channel.subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
                         console.log('[Complaints Realtime] Đã kết nối kênh Realtime Channel cho Khiếu nại ✓');
                     }
@@ -1248,7 +1367,14 @@
     // MODAL 1: TIẾP NHẬN KHIẾU NẠI DỊCH VỤ / ĐƠN HÀNG (740px)
     // Custom Autocomplete Popover & Smart Entity Auto-Fill (AGENTS.md)
     // ====================================================================
-    function openCreateTicketModal(type = 'service', presetRefId = null) {
+    async function openCreateTicketModal(type = 'service', presetRefId = null) {
+        if (!PawpalComplaints.state.fullDirectoryLoaded) {
+            await loadComplaintsModuleData({ directoryFull: true });
+            if (PawpalComplaints.state.loadError) {
+                PawpalComplaints.showToast('Không tải được danh sách để tạo phiếu. Vui lòng thử lại.', 'danger');
+                return;
+            }
+        }
         const modal = document.getElementById('createTicketModalOverlay');
         if (!modal) return;
 

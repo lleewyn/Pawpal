@@ -116,7 +116,10 @@
         const safety=root.querySelector('#viewStaffSafetyBadge');if(safety){safety.style.display=staff.serviceLocked?'':'none';safety.textContent='Đang khóa phân công';}
         if(assessmentStaffId!==staff.id){assessmentStaffId=staff.id;assessmentPage=1;}
         const history=root.querySelector('#viewStaffAssessmentHistory'),assessments=(PawpalStaff.state.assessments||[]).filter(a=>a.staff_id===staff.id||a.raw?.staff_id===staff.rawId);
-        if(history){
+        if (history && PawpalStaff.ensureAssessmentHistory && !PawpalStaff.hasAssessmentHistory(staff.rawId) && root.classList.contains('active')) {
+            history.textContent = 'Đang tải lịch sử đánh giá…';
+            PawpalStaff.ensureAssessmentHistory(staff.rawId).then(() => renderStaffProfile(PawpalStaff.state.selectedStaffId || staff.id)).catch(() => { if (PawpalStaff.state.selectedStaffId === staff.id) history.textContent = 'Không tải được lịch sử đánh giá. Mở lại hồ sơ để thử lại.'; });
+        } else if(history){
             history.replaceChildren();const pages=Math.max(1,Math.ceil(assessments.length/10));assessmentPage=Math.min(assessmentPage,pages);
             const text=(tag,content,css)=>{const node=document.createElement(tag);node.textContent=content;node.className=css||'';return node;};
             if(!assessments.length)history.append(text('p','Chưa có lịch sử đánh giá.','staff-profile-history-meta'));
