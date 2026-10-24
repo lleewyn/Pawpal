@@ -2,7 +2,7 @@
     <!-- ====================================================================
          SUB-TAB 1: ĐƠN HÀNG (DANH SÁCH VÀ TIẾP NHẬN ĐƠN HÀNG)
          ==================================================================== -->
-    <section class="subtab-content active" id="subtab-tab-order-list">
+    <section class="subtab-content active admin-ui-standard" id="subtab-tab-order-list">
 
 
         <!-- KHU VỰC 2: 6 THẺ THỐNG KÊ KPI NHANH -->
@@ -39,6 +39,7 @@
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
                     <div class="search-box-wrapper">
+                        <label class="admin-visually-hidden" for="orderSearchInput">Tìm kiếm đơn hàng</label>
                         <input type="text" class="admin-input" id="orderSearchInput" placeholder="Tìm mã đơn ORD, tên khách, số điện thoại, mã vận đơn...">
                     </div>
                     <div class="filter-actions-right">
@@ -49,7 +50,7 @@
 
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Trạng thái đơn</label>
+                        <label class="filter-label" for="orderFilterStatus">Trạng thái đơn</label>
                         <select class="admin-select" id="orderFilterStatus">
                             <option value="ALL">Tất cả</option>
                             <option value="pending">Chờ xác nhận</option>
@@ -63,7 +64,7 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Thanh toán</label>
+                        <label class="filter-label" for="orderFilterPayment">Thanh toán</label>
                         <select class="admin-select" id="orderFilterPayment">
                             <option value="ALL">Tất cả</option>
                             <option value="cod">Tiền mặt COD</option>
@@ -74,7 +75,7 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Đối soát</label>
+                        <label class="filter-label" for="orderFilterPayStatus">Đối soát</label>
                         <select class="admin-select" id="orderFilterPayStatus">
                             <option value="ALL">Tất cả đối soát</option>
                             <option value="paid">Đã thanh toán và Đối soát</option>
@@ -121,22 +122,22 @@
             </div>
 
             <!-- BẢNG DỮ LIỆU ĐƠN HÀNG -->
-            <div class="table-responsive-wrapper">
+            <div class="table-responsive-wrapper" tabindex="0" role="region" aria-label="Bảng đơn hàng">
                 <table class="admin-table" id="ordersTable">
                     <thead>
                         <tr>
-                            <th style="width: 42px; text-align: center;">
+                            <th scope="col" style="width: 42px; text-align: center;">
                                 <input type="checkbox" class="admin-checkbox" id="checkSelectAllOrders" title="Chọn tất cả">
                             </th>
-                            <th>Mã đơn</th>
-                            <th>Khách hàng</th>
-                            <th>Sản phẩm và Số lượng</th>
-                            <th>Tổng tiền</th>
-                            <th>Thanh toán</th>
-                            <th>Vận chuyển</th>
-                            <th>Trạng thái</th>
-                            <th>Cảnh báo và SLA</th>
-                            <th style="text-align: center; width: 60px;">Thao tác</th>
+                            <th scope="col">Mã đơn</th>
+                            <th scope="col">Khách hàng</th>
+                            <th scope="col">Sản phẩm và Số lượng</th>
+                            <th scope="col">Tổng tiền</th>
+                            <th scope="col">Thanh toán</th>
+                            <th scope="col">Vận chuyển</th>
+                            <th scope="col">Trạng thái</th>
+                            <th scope="col">Cảnh báo và SLA</th>
+                            <th scope="col" style="text-align: center; width: 60px;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
@@ -222,11 +223,11 @@
                         <table class="order-items-table">
                             <thead>
                                 <tr>
-                                    <th>Sản phẩm</th>
-                                    <th>Mã SKU</th>
-                                    <th>Đơn giá</th>
-                                    <th style="text-align: center;">Số lượng</th>
-                                    <th style="text-align: right;">Thành tiền</th>
+                                    <th scope="col">Sản phẩm</th>
+                                    <th scope="col">Mã SKU</th>
+                                    <th scope="col">Đơn giá</th>
+                                    <th scope="col" style="text-align: center;">Số lượng</th>
+                                    <th scope="col" style="text-align: right;">Thành tiền</th>
                                 </tr>
                             </thead>
                             <tbody id="detailOrderItemsBody">
@@ -333,7 +334,7 @@
     <!-- ====================================================================
          SUB-TAB 3: SẢN PHẨM VÀ KHO
          ==================================================================== -->
-    <section class="subtab-content" id="subtab-tab-order-products">
+    <section class="subtab-content admin-ui-standard" id="subtab-tab-order-products">
         <!-- 5 THẺ CHỈ SỐ KHO HÀNG (GIAI ĐOẠN 3) -->
         <div class="orders-kpi-grid" style="grid-template-columns: repeat(5, 1fr);">
             <div class="admin-card kpi-card">
@@ -363,7 +364,8 @@
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
                     <div class="search-box-wrapper">
-                        <input type="text" class="admin-input" id="productSearchInput" placeholder="Tìm tên sản phẩm, mã SKU, thương hiệu...">
+                        <label class="admin-visually-hidden" for="productSearchInput">Tìm kiếm sản phẩm</label>
+                        <input type="text" class="admin-input" id="productSearchInput" maxlength="200" placeholder="Tìm tên sản phẩm, mã SKU, thương hiệu...">
                     </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenGoodsReceiptModal">Nhập hàng NCC</button>
@@ -375,7 +377,7 @@
 
                 <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Danh mục</label>
+                        <label class="filter-label" for="productFilterCategory">Danh mục</label>
                         <select class="admin-select" id="productFilterCategory">
                             <option value="ALL">Tất cả danh mục</option>
                             <option value="Thực phẩm">Thực phẩm</option>
@@ -390,7 +392,7 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Tình trạng tồn</label>
+                        <label class="filter-label" for="productFilterStockStatus">Tình trạng tồn</label>
                         <select class="admin-select" id="productFilterStockStatus">
                             <option value="ALL">Tất cả</option>
                             <option value="LOW">Sắp hết hàng</option>
@@ -401,22 +403,22 @@
                 </div>
             </div>
 
-            <div class="table-responsive-wrapper">
+            <div class="table-responsive-wrapper" tabindex="0" role="region" aria-label="Bảng sản phẩm">
                 <table class="admin-table" id="productsTable">
                     <thead>
                         <tr>
-                            <th>Mã SKU</th>
-                            <th>Tên sản phẩm</th>
-                            <th>Danh mục</th>
-                            <th>Thương hiệu</th>
-                            <th>Giá niêm yết</th>
-                            <th style="text-align: center;">Đánh giá</th>
-                            <th style="text-align: center;">Tổng tồn</th>
-                            <th style="text-align: center;">Tạm giữ</th>
-                            <th style="text-align: center;">Khả dụng</th>
-                            <th>Cảnh báo tồn</th>
-                            <th>Trạng thái</th>
-                            <th style="text-align: center; width: 60px;">Thao tác</th>
+                            <th scope="col">Mã SKU</th>
+                            <th scope="col">Tên sản phẩm</th>
+                            <th scope="col">Danh mục</th>
+                            <th scope="col">Thương hiệu</th>
+                            <th scope="col">Giá niêm yết</th>
+                            <th scope="col" style="text-align: center;">Đánh giá</th>
+                            <th scope="col" style="text-align: center;">Tổng tồn</th>
+                            <th scope="col" style="text-align: center;">Tạm giữ</th>
+                            <th scope="col" style="text-align: center;">Khả dụng</th>
+                            <th scope="col">Cảnh báo tồn</th>
+                            <th scope="col">Trạng thái</th>
+                            <th scope="col" style="text-align: center; width: 60px;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="productsTableBody">
@@ -434,7 +436,7 @@
     <!-- ====================================================================
          SUB-TAB 4: KHUYẾN MÃI
          ==================================================================== -->
-    <section class="subtab-content" id="subtab-tab-order-promos">
+    <section class="subtab-content admin-ui-standard" id="subtab-tab-order-promos">
         <!-- 3 THẺ CHỈ SỐ KHUYẾN MÃI -->
         <div class="orders-kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
             <div class="admin-card kpi-card">
@@ -456,6 +458,7 @@
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
                     <div class="search-box-wrapper">
+                        <label class="admin-visually-hidden" for="promoSearchInput">Tìm kiếm khuyến mãi</label>
                         <input type="text" class="admin-input" id="promoSearchInput" placeholder="Tìm mã voucher, tên chương trình khuyến mãi...">
                     </div>
                     <div class="filter-actions-right">
@@ -465,19 +468,19 @@
                 </div>
             </div>
 
-            <div class="table-responsive-wrapper">
+            <div class="table-responsive-wrapper" tabindex="0" role="region" aria-label="Bảng khuyến mãi">
                 <table class="admin-table" id="vouchersTable">
                     <thead>
                         <tr>
-                            <th>Mã voucher</th>
-                            <th>Tên chương trình</th>
-                            <th>Mức giảm giá</th>
-                            <th>Đơn tối thiểu</th>
-                            <th>Điểm đổi</th>
-                            <th>Thời hạn</th>
-                            <th>Lượt đã dùng</th>
-                            <th>Trạng thái</th>
-                            <th style="text-align: center; width: 60px;">Thao tác</th>
+                            <th scope="col">Mã voucher</th>
+                            <th scope="col">Tên chương trình</th>
+                            <th scope="col">Mức giảm giá</th>
+                            <th scope="col">Đơn tối thiểu</th>
+                            <th scope="col">Điểm đổi</th>
+                            <th scope="col">Thời hạn</th>
+                            <th scope="col">Lượt đã dùng</th>
+                            <th scope="col">Trạng thái</th>
+                            <th scope="col" style="text-align: center; width: 60px;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="vouchersTableBody">
@@ -509,125 +512,125 @@
          MODAL 1: TẠO ĐƠN HÀNG TẠI QUẦY (POS và PHONE ORDER)
          Quy chuẩn: 680px thoáng rộng, padding 24px 28px, bo góc 9px, không kẻ ngang cắt xén
          ==================================================================== -->
-    <div class="admin-modal-overlay" id="modalCreateOrder">
-        <div class="admin-modal-card wide-modal" style="width: 720px; max-width: 95vw;">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Tạo đơn hàng tại quầy</div>
+    <div class="admin-modal-overlay admin-modal-standard orders-pos" id="modalCreateOrder">
+        <div class="admin-modal-card wide-modal" role="dialog" aria-modal="true" aria-labelledby="modalCreateOrderTitle">
+            <div class="modal-header-clean admin-modal__header">
+                <div class="modal-title-clean" id="modalCreateOrderTitle">Tạo đơn hàng tại quầy</div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseCreateOrder" data-close-modal="modalCreateOrder" onclick="PawpalOrdersModule.closeModal('modalCreateOrder')">Đóng</button>
             </div>
 
-            <form id="formCreateOrder" class="modal-body-clean" novalidate onsubmit="return false;">
+            <form id="formCreateOrder" aria-describedby="posPricingNotice" class="modal-body-clean admin-modal__body" novalidate onsubmit="return false;">
                 <!-- THẺ XÁC NHẬN KHÁCH HÀNG ĐÃ CHỌN (100% FLAT TEXT-ONLY VỚI NÚT ✕ BỎ CHỌN) -->
-                <div class="pos-customer-selected-card" id="posCustomerSelectedCard" style="display: none; background: #EEF5F1; border-radius: var(--admin-radius); padding: 8px 12px; margin-bottom: 12px; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-weight: 600; color: #236B48;" id="posCustCardName">—</span>
-                        <span style="font-size: 12px; color: #4F7A65;" id="posCustCardPhone">—</span>
-                        <span id="posCustCardRank" style="color: #236B48; font-size: 11px;">—</span>
-                        <span id="posCustCardPoints" style="color:#4F7A65;font-size:11px">—</span>
+                <div class="pos-customer-selected-card" id="posCustomerSelectedCard" style="display: none;">
+                    <div>
+                        <span id="posCustCardName">—</span>
+                        <span id="posCustCardPhone">—</span>
+                        <span id="posCustCardRank">—</span>
+                        <span id="posCustCardPoints">—</span>
                     </div>
-                    <button type="button" class="btn-clear-selection-text" id="btnClearSelectedCustomer" style="background: none; border: none; color: #236B48; cursor: pointer; font-size: 12px; font-weight: 600;">✕ Bỏ chọn</button>
+                    <button type="button" class="btn-clear-selection-text" id="btnClearSelectedCustomer">✕ Bỏ chọn</button>
                 </div>
 
                 <div class="form-row-2col">
                     <div class="form-group-item customer-autocomplete-wrapper">
-                        <label class="form-label-clean">Số điện thoại khách hàng <span style="color: #DC2626;">*</span></label>
-                        <input type="text" class="admin-input" id="createOrderPhone" placeholder="Nhập SĐT khách hàng..." maxlength="20" autocomplete="off">
+                        <label for="createOrderPhone" class="form-label-clean">Khách hàng <span class="admin-form-required">*</span></label>
+                        <input type="text" class="admin-input" id="createOrderPhone" aria-describedby="createOrderPhoneError posPricingNotice" placeholder="Tìm tên hoặc số điện thoại khách..." maxlength="200" autocomplete="off">
                         <div class="customer-autocomplete-popover" id="createOrderCustomerDropdown" style="display: none;"></div>
-                        <div class="field-error-text" id="createOrderPhoneError" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
+                        <div class="field-error-text admin-field-error" role="alert" id="createOrderPhoneError" style="display: none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean" id="createOrderNameLabel">Họ và tên khách hàng <span id="createOrderNameRequiredStar" style="display: none; color: #DC2626;">*</span></label>
-                        <input type="text" class="admin-input" id="createOrderName" placeholder="Tên khách hàng để thêm nhanh" autocomplete="off">
-                        <div class="field-error-text" id="createOrderNameError" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
+                        <label for="createOrderName" class="form-label-clean" id="createOrderNameLabel">Họ và tên khách hàng <span class="admin-form-required" id="createOrderNameRequiredStar" style="display: none;">*</span></label>
+                        <input type="text" class="admin-input" id="createOrderName" aria-describedby="createOrderNameError posPricingNotice" placeholder="Tên khách hàng để thêm nhanh" autocomplete="off">
+                        <div class="field-error-text admin-field-error" role="alert" id="createOrderNameError" style="display: none;"></div>
                     </div>
                 </div>
 
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnPosQuickCustomer">Thêm nhanh khách</button>
-                <p id="posPricingNotice" role="alert" style="color:#DC2626;background:transparent;border:none;margin:6px 0"></p>
+                <p class="admin-form-notice" id="posPricingNotice" role="status" aria-live="polite"></p>
                 <!-- BANNER THÔNG TIN HẠNG THÀNH VIÊN VÀ ĐIỂM PAWPOINT -->
                 <div class="pos-member-banner" id="createOrderMemberBanner" style="display: none;">
                     <div class="pos-member-banner-left">
                         <span>Hạng thành viên</span>
-                        <strong id="createOrderRankLabel" style="color: #236B48;">Kim Cương (Giảm 10%)</strong>
+                        <strong id="createOrderRankLabel">—</strong>
                     </div>
                     <div class="pos-member-banner-right">
                         <span>Điểm tích lũy</span>
-                        <strong id="createOrderPointsLabel">1.250 điểm</strong>
+                        <strong id="createOrderPointsLabel">—</strong>
                     </div>
                 </div>
 
                 <!-- BANNER LIÊN KẾT CA DỊCH VỤ SPA / HOTEL / TAXI CẦN THANH TOÁN -->
-                <div class="pos-service-checkout-banner" id="posServiceCheckoutBanner" style="display: none; background: #F4FAF6; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 10px 14px; margin-bottom: 12px; font-size: 13px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <span style="font-weight: 700; color: #236B48;" id="posServiceBannerTitle">🧾 Thanh toán ca dịch vụ: BKG-1001</span>
-                        <span class="admin-badge badge-info" id="posServiceBannerCategory">Spa và Grooming</span>
+                <div class="pos-service-checkout-banner" id="posServiceCheckoutBanner" style="display: none;">
+                    <div>
+                        <span id="posServiceBannerTitle">Ca dịch vụ</span>
+                        <span class="admin-badge badge-info" id="posServiceBannerCategory">—</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; color: var(--text-main); font-size: 12px;">
-                        <span id="posServiceBannerDetails">Gói Tắm Vệ Sinh Cơ Bản (Bé Miu Con)</span>
-                        <span>Phí dịch vụ <strong id="posServiceBannerCost" style="color: #236B48; font-size: 13px;">250.000 đ</strong></span>
+                    <div>
+                        <span id="posServiceBannerDetails">—</span>
+                        <span>Phí dịch vụ <strong id="posServiceBannerCost">—</strong></span>
                     </div>
                 </div>
 
-                <div class="form-group-item">
-                    <label class="form-label-clean">Hình thức nhận hàng</label>
+                <fieldset class="form-group-item admin-modal__fieldset">
+                    <legend class="form-label-clean">Hình thức nhận hàng</legend>
                     <div class="address-select-group">
                         <div class="address-item-card selected" id="cardAddrInStore">
                             <input type="radio" name="addrSelect" id="radioAddrInStore" class="address-item-radio" checked>
                             <div class="address-item-content">
-                            <span class="address-person-line">Nhận tại quầy</span>
+                            <label class="address-person-line" for="radioAddrInStore">Nhận tại quầy</label>
                             <span class="address-street-line">Xuất hàng khi xác nhận bàn giao.</span>
                             </div>
                         </div>
                         <div class="address-item-card" id="cardAddrDelivery">
                             <input type="radio" name="addrSelect" id="radioAddrDelivery" class="address-item-radio">
-                            <div class="address-item-content" style="width: 100%;">
-                                <span class="address-person-line">Đặt giao hàng tận nơi</span>
-                                <span class="address-street-line" style="display: block; margin-bottom: 4px;">Giữ hàng cho đến khi bàn giao vận chuyển.</span>
-                                <div id="deliveryDetailFields" style="display: none; margin-top: 8px;">
-                                    <label class="form-label-clean" for="createOrderReceiverName">Người nhận <span style="color:#DC2626">*</span></label><input class="admin-input" id="createOrderReceiverName" maxlength="300">
-                                    <label class="form-label-clean" for="createOrderReceiverPhone" style="margin-top:12px">Số điện thoại người nhận <span style="color:#DC2626">*</span></label><input class="admin-input" id="createOrderReceiverPhone" maxlength="20">
-                                    <label class="form-label-clean" id="createOrderAddressLabel" style="font-size: 12px; margin-bottom: 4px; display: block;">Địa chỉ giao hàng <span style="color: #DC2626;">*</span></label>
-                                    <input type="text" class="admin-input" id="createOrderCustomAddress" placeholder="Nhập số nhà, tên đường, phường xã..." style="height: 32px; width: 100%;">
-                                    <div class="field-error-text" id="createOrderAddressError" style="display: none; color: #DC2626; font-size: 12px; margin-top: 4px; line-height: 1.4;"></div>
-                                    <label class="form-label-clean" for="createOrderProvince" style="margin-top:12px">Tỉnh hoặc thành phố <span style="color:#DC2626">*</span></label><input type="text" class="admin-input" id="createOrderProvince">
-                                    <label class="form-label-clean" for="createOrderDeliveryOption" style="margin-top:12px">Hình thức giao hàng <span style="color:#DC2626">*</span></label><select class="admin-select" id="createOrderDeliveryOption"></select>
+                            <div class="address-item-content">
+                                <label class="address-person-line" for="radioAddrDelivery">Đặt giao hàng tận nơi</label>
+                                <span class="address-street-line">Giữ hàng cho đến khi bàn giao vận chuyển.</span>
+                                <div id="deliveryDetailFields" style="display: none;">
+                                    <label class="form-label-clean" for="createOrderReceiverName">Người nhận <span class="admin-form-required">*</span></label><input class="admin-input" id="createOrderReceiverName" aria-required="true" aria-describedby="createOrderReceiverNameError posPricingNotice" maxlength="300"><div class="field-error-text admin-field-error" role="alert" id="createOrderReceiverNameError" style="display: none;"></div>
+                                    <label class="form-label-clean" for="createOrderReceiverPhone">Số điện thoại người nhận <span class="admin-form-required">*</span></label><input class="admin-input" id="createOrderReceiverPhone" aria-required="true" aria-describedby="createOrderReceiverPhoneError posPricingNotice" maxlength="20"><div class="field-error-text admin-field-error" role="alert" id="createOrderReceiverPhoneError" style="display: none;"></div>
+                                    <label for="createOrderCustomAddress" class="form-label-clean" id="createOrderAddressLabel">Địa chỉ giao hàng <span class="admin-form-required">*</span></label>
+                                    <input type="text" class="admin-input" id="createOrderCustomAddress" aria-required="true" maxlength="1000" aria-describedby="createOrderAddressError posPricingNotice" placeholder="Nhập số nhà, tên đường, phường xã...">
+                                    <div class="field-error-text admin-field-error" role="alert" id="createOrderAddressError" style="display: none;"></div>
+                                    <label class="form-label-clean" for="createOrderProvince">Tỉnh hoặc thành phố <span class="admin-form-required">*</span></label><input type="text" class="admin-input" id="createOrderProvince" aria-required="true" maxlength="200" aria-describedby="createOrderProvinceError posPricingNotice"><div class="field-error-text admin-field-error" role="alert" id="createOrderProvinceError" style="display: none;"></div>
+                                    <label class="form-label-clean" for="createOrderDeliveryOption">Hình thức giao hàng <span class="admin-form-required">*</span></label><select class="admin-select" id="createOrderDeliveryOption" aria-required="true" aria-describedby="createOrderDeliveryOptionError posPricingNotice"></select><div class="field-error-text admin-field-error" role="alert" id="createOrderDeliveryOptionError" style="display: none;"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </fieldset>
 
                 <!-- KHU VỰC CHỌN SẢN PHẨM & GIỎ HÀNG NHIỀU MÓN (MULTI-ITEM POS CART) -->
                 <div class="pos-cart-section">
-                    <label class="form-label-clean">Thêm mặt hàng vào giỏ hàng</label>
-                    <div class="pos-add-item-bar" style="display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start;">
-                        <div class="customer-autocomplete-wrapper" style="flex: 1; position: relative;">
-                            <input type="text" class="admin-input" id="createOrderProductSearchInput" placeholder="Tìm theo tên sản phẩm, mã SKU hoặc danh mục..." autocomplete="off" style="width: 100%;">
+                    <label for="createOrderProductSearchInput" class="form-label-clean">Thêm mặt hàng vào giỏ hàng</label>
+                    <div class="pos-add-item-bar">
+                        <div class="customer-autocomplete-wrapper">
+                            <input type="text" class="admin-input" id="createOrderProductSearchInput" maxlength="200" placeholder="Tìm tên sản phẩm hoặc mã SKU..." autocomplete="off">
                             <div class="customer-autocomplete-popover" id="createOrderProductDropdown" style="display: none;"></div>
                             <input type="hidden" id="createOrderSelectedProductSku" value="">
                             <select class="admin-select" id="createOrderProductSelect" style="display: none;">
                                 <option value="">-- Chọn mặt hàng từ kho --</option>
                             </select>
                         </div>
-                        <input type="number" class="admin-input" id="createOrderQty" value="1" min="1" style="width: 70px; text-align: center;" title="Số lượng">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnPosAddToCart" style="white-space: nowrap; height: 36px; padding: 0 14px;">Thêm món</button>
+                        <input type="number" class="admin-input" id="createOrderQty" aria-label="Số lượng sản phẩm" value="1" min="1" title="Số lượng">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnPosAddToCart">Thêm món</button>
                     </div>
 
                     <!-- BẢNG GIỎ HÀNG POS -->
-                    <div class="pos-cart-table-wrapper" style="border: 1px solid var(--border-neutral); border-radius: var(--admin-radius); overflow: hidden; margin-bottom: 14px;">
-                        <table class="pos-cart-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <div class="pos-cart-table-wrapper">
+                        <table class="pos-cart-table admin-modal__table">
                             <thead>
-                                <tr style="background-color: var(--table-header-bg); color: var(--table-header-text); font-weight: 600; text-align: left; height: 34px;">
-                                    <th style="padding: 6px 12px;">Sản phẩm</th>
-                                    <th style="padding: 6px 10px; text-align: right; width: 100px;">Đơn giá</th>
-                                    <th style="padding: 6px 10px; text-align: center; width: 110px;">Số lượng</th>
-                                    <th style="padding: 6px 12px; text-align: right; width: 110px;">Thành tiền</th>
-                                    <th style="padding: 6px 8px; text-align: center; width: 44px;"></th>
+                                <tr>
+                                    <th scope="col">Sản phẩm</th>
+                                    <th scope="col">Đơn giá</th>
+                                    <th scope="col">Số lượng</th>
+                                    <th scope="col">Thành tiền</th>
+                                    <th scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody id="posCartItemsList">
                                 <tr>
-                                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 18px 12px;">
+                                    <td colspan="5">
                                         Chưa có món nào trong giỏ hàng. Vui lòng chọn sản phẩm và bấm "Thêm món" ở trên.
                                     </td>
                                 </tr>
@@ -639,42 +642,43 @@
                 <div class="form-group-item"><label class="form-label-clean" for="createOrderDiscountMode">Ưu đãi áp dụng</label><select class="admin-select" id="createOrderDiscountMode"><option value="none">Không áp dụng</option><option value="tier">Theo hạng thành viên</option><option value="voucher">Mã khuyến mãi</option><option value="points">Quy đổi điểm</option></select></div>
                 <div class="form-row-2col">
                     <div class="form-group-item customer-autocomplete-wrapper">
-                        <label class="form-label-clean">Mã giảm giá Voucher</label>
+                        <label for="createOrderVoucherCode" class="form-label-clean">Mã khuyến mãi</label>
                         <input type="text" class="admin-input" id="createOrderVoucherCode" placeholder="Nhập mã hoặc tìm khuyến mãi..." autocomplete="off">
-                        <div class="customer-autocomplete-popover" id="createOrderVoucherDropdown" style="display: none; min-width: 320px;"></div>
+                        <div class="customer-autocomplete-popover" id="createOrderVoucherDropdown" style="display: none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Đổi điểm Pawpoint (100đ = 10k)</label>
+                        <label for="createOrderPointsInput" class="form-label-clean">Đổi điểm Pawpoint</label>
                         <input type="number" class="admin-input" id="createOrderPointsInput" placeholder="Nhập số điểm muốn đổi..." min="0" step="1">
-                        <div class="points-quick-chips" id="createOrderPointsChips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;"></div>
+                        <p class="admin-form-help" id="createOrderPointsRate"></p>
+                        <div class="points-quick-chips" id="createOrderPointsChips"></div>
                     </div>
                 </div>
 
                 <div class="form-group-item">
-                    <label class="form-label-clean">Phương thức thanh toán dự kiến</label>
+                    <label for="createOrderPaymentMethod" class="form-label-clean">Phương thức thanh toán dự kiến</label>
                     <select class="admin-select" id="createOrderPaymentMethod"></select>
-                    <p style="color:var(--text-muted);margin:6px 0 0">Thu tiền được xác nhận riêng tại thu ngân sau khi tạo đơn.</p>
+                    <p class="admin-form-help">Thu tiền được xác nhận riêng tại thu ngân sau khi tạo đơn.</p>
                 </div>
 
                 <!-- MÁY TÍNH TIỀN MẶT VÀ TIỀN THỪA (CHỈ HIỂN THỊ KHI CHỌN TIỀN MẶT) -->
-                <div class="pos-cash-calc-box" id="posCashCalcSection" style="background-color: #F4FAF6; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 12px 16px; margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-                        <span style="font-weight: 600; color: #236B48; font-size: 13px;">Tính tiền khách đưa</span>
-                        <div class="pos-quick-cash-btns" style="display: flex; gap: 6px;">
-                            <button type="button" class="pos-cash-chip" id="btnCashExact" style="background: #FFFFFF; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 2px 8px; font-size: 12px; cursor: pointer; color: #236B48; font-weight: 600;">Đủ tiền</button>
-                            <button type="button" class="pos-cash-chip" onclick="PawpalOrdersModule.addCashTendered(100000)" style="background: #FFFFFF; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 2px 8px; font-size: 12px; cursor: pointer; color: #236B48;">+100k</button>
-                            <button type="button" class="pos-cash-chip" onclick="PawpalOrdersModule.addCashTendered(200000)" style="background: #FFFFFF; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 2px 8px; font-size: 12px; cursor: pointer; color: #236B48;">+200k</button>
-                            <button type="button" class="pos-cash-chip" onclick="PawpalOrdersModule.addCashTendered(500000)" style="background: #FFFFFF; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 2px 8px; font-size: 12px; cursor: pointer; color: #236B48;">+500k</button>
+                <div class="pos-cash-calc-box" id="posCashCalcSection">
+                    <div>
+                        <span>Tính tiền khách đưa</span>
+                        <div class="pos-quick-cash-btns">
+                            <button type="button" class="pos-cash-chip" id="btnCashExact">Đủ tiền</button>
+                            <button type="button" class="pos-cash-chip" onclick="PawpalOrdersModule.addCashTendered(100000)">+100k</button>
+                            <button type="button" class="pos-cash-chip" onclick="PawpalOrdersModule.addCashTendered(200000)">+200k</button>
+                            <button type="button" class="pos-cash-chip" onclick="PawpalOrdersModule.addCashTendered(500000)">+500k</button>
                         </div>
                     </div>
-                    <div class="form-row-2col" style="margin-bottom: 0;">
-                        <div class="form-group-item" style="margin-bottom: 0;">
-                            <label class="form-label-clean" style="font-size: 12px;">Tiền khách đưa (VND)</label>
-                            <input type="number" class="admin-input" id="createOrderCashTendered" placeholder="Nhập số tiền..." min="0" step="10000" style="font-size: 14px; font-weight: 600; color: #203A2C;">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label for="createOrderCashTendered" class="form-label-clean">Tiền khách đưa</label>
+                            <input type="number" class="admin-input" id="createOrderCashTendered" placeholder="Nhập số tiền..." min="0" step="10000">
                         </div>
-                        <div class="form-group-item" style="margin-bottom: 0;">
-                            <label class="form-label-clean" style="font-size: 12px;">Tiền thừa trả khách</label>
-                            <div class="pos-change-display" id="posLiveCashChange" style="height: 36px; display: flex; align-items: center; font-size: 15px; font-weight: 700; color: #236B48;">0 đ</div>
+                        <div class="form-group-item">
+                            <label for="posLiveCashChange" class="form-label-clean">Tiền thừa trả khách</label>
+                            <output class="pos-change-display" id="posLiveCashChange">0 đ</output>
                         </div>
                     </div>
                 </div>
@@ -683,23 +687,23 @@
                 <div class="pos-financial-live-summary" id="createOrderLiveSummary">
                     <div class="pos-summary-row">
                         <span>Tiền hàng tạm tính (<span id="posCartItemCount">0</span> món)</span>
-                        <strong id="posLiveSubtotal" style="color: var(--text-main);">0 đ</strong>
+                        <strong id="posLiveSubtotal">0 đ</strong>
                     </div>
                     <div class="pos-summary-row" id="posRowShippingFee" style="display: none;">
                         <span>Phí giao hàng</span>
-                        <strong id="posLiveShippingFee" style="color: var(--text-main);">0 đ</strong>
+                        <strong id="posLiveShippingFee">0 đ</strong>
                     </div>
                     <div class="pos-summary-row" id="posRowTierDiscount" style="display: none;">
                         <span>Chiết khấu hạng thành viên</span>
-                        <strong id="posLiveTierDiscount" style="color: #166534;">- 0 đ</strong>
+                        <strong id="posLiveTierDiscount">- 0 đ</strong>
                     </div>
                     <div class="pos-summary-row" id="posRowVoucherDiscount" style="display: none;">
                         <span>Giảm giá Voucher</span>
-                        <strong id="posLiveVoucherDiscount" style="color: #166534;">- 0 đ</strong>
+                        <strong id="posLiveVoucherDiscount">- 0 đ</strong>
                     </div>
                     <div class="pos-summary-row" id="posRowPointsDiscount" style="display: none;">
                         <span>Đổi điểm thưởng Pawpoint</span>
-                        <strong id="posLivePointsDiscount" style="color: #166534;">- 0 đ</strong>
+                        <strong id="posLivePointsDiscount">- 0 đ</strong>
                     </div>
                     <div class="pos-summary-row total">
                         <span>Tổng tiền thanh toán</span>
@@ -707,13 +711,13 @@
                     </div>
                 </div>
 
-                <div class="form-group-item" style="margin-top: 10px;">
-                    <label class="form-label-clean">Ghi chú đơn hàng</label>
+                <div class="form-group-item">
+                    <label for="createOrderNote" class="form-label-clean">Ghi chú đơn hàng</label>
                     <input type="text" class="admin-input" id="createOrderNote" placeholder="Ghi chú đóng gói hoặc giao hàng...">
                 </div>
             </form>
 
-            <div class="modal-footer-clean">
+            <div class="modal-footer-clean admin-modal__footer">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCreateOrder" data-close-modal="modalCreateOrder" onclick="PawpalOrdersModule.closeModal('modalCreateOrder')">Hủy</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitCreateOrder">Tạo đơn giữ hàng</button>
             </div>
@@ -724,16 +728,16 @@
          MODAL IN HÓA ĐƠN BILL NHIỆT POS K80 (80MM)
          Quy chuẩn: Khổ in dọc nhiệt, không icon, bo góc 9px, sắc nét
          ==================================================================== -->
-    <div class="admin-modal-overlay" id="modalPosReceipt">
-        <div class="admin-modal-card" style="width: 440px; max-width: 94vw;">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Phiếu bán hàng</div>
+    <div class="admin-modal-overlay admin-modal-standard orders-receipt" id="modalPosReceipt">
+        <div class="admin-modal-card" role="dialog" aria-modal="true" aria-labelledby="posReceiptTitle">
+            <div class="modal-header-clean admin-modal__header">
+                <div class="modal-title-clean" id="posReceiptTitle">Phiếu bán hàng</div>
                 <button type="button" class="modal-btn-close-text" data-close-modal="modalPosReceipt" onclick="PawpalOrdersModule.closeModal('modalPosReceipt')">Đóng</button>
             </div>
 
-            <div class="modal-body-clean receipt-print-wrapper" id="posReceiptPrintArea"></div>
+            <div class="modal-body-clean receipt-print-wrapper admin-modal__body" id="posReceiptPrintArea"></div>
 
-            <div class="modal-footer-clean">
+            <div class="modal-footer-clean admin-modal__footer">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelPosReceipt" data-close-modal="modalPosReceipt" onclick="PawpalOrdersModule.closeModal('modalPosReceipt')">Đóng</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnPrintPosReceipt" onclick="PawpalOrdersModule.printReceiptDirectly()">In phiếu</button>
             </div>
@@ -876,7 +880,7 @@
                         <select class="admin-select" id="batchCarrierSelect"></select>
                     </div>
 
-                    <div class="table-responsive-wrapper"><table class="admin-table" style="min-width:0;width:100%;table-layout:fixed"><thead><tr><th>Mã đơn</th><th>Khách</th><th>Mã vận đơn thực tế</th></tr></thead><tbody id="salesBatchDispatchBody"></tbody></table></div><div id="salesBatchDispatchPager" style="display:flex;justify-content:center;gap:12px"></div>
+                    <div class="table-responsive-wrapper"><table class="admin-table" style="min-width:0;width:100%;table-layout:fixed"><thead><tr><th scope="col">Mã đơn</th><th scope="col">Khách</th><th scope="col">Mã vận đơn thực tế</th></tr></thead><tbody id="salesBatchDispatchBody"></tbody></table></div><div id="salesBatchDispatchPager" style="display:flex;justify-content:center;gap:12px"></div>
 
 
                     <div class="form-group-item">
@@ -973,11 +977,11 @@
                             <table class="admin-table rma-items-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 36px; text-align: center;">Chọn</th>
-                                        <th>Tên sản phẩm</th>
-                                        <th style="width: 60px; text-align: center;">Mua</th>
-                                        <th style="width: 75px; text-align: center;">SL Trả</th>
-                                        <th style="width: 100px; text-align: right;">Đơn giá</th>
+                                        <th scope="col" style="width: 36px; text-align: center;">Chọn</th>
+                                        <th scope="col">Tên sản phẩm</th>
+                                        <th scope="col" style="width: 60px; text-align: center;">Mua</th>
+                                        <th scope="col" style="width: 75px; text-align: center;">SL Trả</th>
+                                        <th scope="col" style="width: 100px; text-align: right;">Đơn giá</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rmaItemsTableBody">
@@ -1291,15 +1295,15 @@
                                 <table class="admin-table variant-matrix-table" id="variantMatrixTable">
                                     <thead>
                                         <tr>
-                                            <th id="thAttr1" style="width: 13%;">Hương vị</th>
-                                            <th id="thAttr2" style="width: 13%;">Quy cách</th>
-                                            <th style="width: 15%;">Mã SKU <span style="color: #DC2626;">*</span></th>
-                                            <th style="width: 12%;">Giá vốn <span style="color: #DC2626;">*</span></th>
-                                            <th style="width: 12%;">Giá bán <span style="color: #DC2626;">*</span></th>
-                                            <th style="width: 11%;">Giá gốc</th>
-                                            <th style="width: 10%;">Tồn kho <span style="color: #DC2626;">*</span></th>
-                                            <th style="width: 12%;">Hình ảnh</th>
-                                            <th style="width: 4%; text-align: center;">Xóa</th>
+                                            <th scope="col" id="thAttr1" style="width: 13%;">Hương vị</th>
+                                            <th scope="col" id="thAttr2" style="width: 13%;">Quy cách</th>
+                                            <th scope="col" style="width: 15%;">Mã SKU <span style="color: #DC2626;">*</span></th>
+                                            <th scope="col" style="width: 12%;">Giá vốn <span style="color: #DC2626;">*</span></th>
+                                            <th scope="col" style="width: 12%;">Giá bán <span style="color: #DC2626;">*</span></th>
+                                            <th scope="col" style="width: 11%;">Giá gốc</th>
+                                            <th scope="col" style="width: 10%;">Tồn kho <span style="color: #DC2626;">*</span></th>
+                                            <th scope="col" style="width: 12%;">Hình ảnh</th>
+                                            <th scope="col" style="width: 4%; text-align: center;">Xóa</th>
                                         </tr>
                                     </thead>
                                     <tbody id="productVariantsTableBody">
@@ -1514,13 +1518,13 @@
                     <table class="admin-table" style="font-size: 12.5px; width: 100%;">
                         <thead>
                             <tr>
-                                <th style="white-space: nowrap;">Thời gian</th>
-                                <th style="white-space: nowrap;">Loại nghiệp vụ</th>
-                                <th style="text-align: center; white-space: nowrap;">Thay đổi</th>
-                                <th style="text-align: center; white-space: nowrap;">Tồn trước</th>
-                                <th style="text-align: center; white-space: nowrap;">Tồn sau</th>
-                                <th style="white-space: nowrap;">Chứng từ tham chiếu</th>
-                                <th style="white-space: nowrap;">Người thực hiện</th>
+                                <th scope="col" style="white-space: nowrap;">Thời gian</th>
+                                <th scope="col" style="white-space: nowrap;">Loại nghiệp vụ</th>
+                                <th scope="col" style="text-align: center; white-space: nowrap;">Thay đổi</th>
+                                <th scope="col" style="text-align: center; white-space: nowrap;">Tồn trước</th>
+                                <th scope="col" style="text-align: center; white-space: nowrap;">Tồn sau</th>
+                                <th scope="col" style="white-space: nowrap;">Chứng từ tham chiếu</th>
+                                <th scope="col" style="white-space: nowrap;">Người thực hiện</th>
                             </tr>
                         </thead>
                         <tbody id="stockLogsTableBody">
@@ -1584,12 +1588,12 @@
                             <table class="admin-table" style="font-size: 12.5px; width: 100%;">
                                 <thead>
                                     <tr>
-                                        <th style="width: 120px; white-space: nowrap;">Mã SKU</th>
-                                        <th>Tên sản phẩm</th>
-                                        <th style="width: 120px; text-align: center; white-space: nowrap;">Số lượng nhập</th>
-                                        <th style="width: 140px; text-align: right; white-space: nowrap;">Đơn giá nhập</th>
-                                        <th style="width: 150px; text-align: right; white-space: nowrap;">Thành tiền</th>
-                                        <th style="width: 60px; text-align: center; white-space: nowrap;">Xóa</th>
+                                        <th scope="col" style="width: 120px; white-space: nowrap;">Mã SKU</th>
+                                        <th scope="col">Tên sản phẩm</th>
+                                        <th scope="col" style="width: 120px; text-align: center; white-space: nowrap;">Số lượng nhập</th>
+                                        <th scope="col" style="width: 140px; text-align: right; white-space: nowrap;">Đơn giá nhập</th>
+                                        <th scope="col" style="width: 150px; text-align: right; white-space: nowrap;">Thành tiền</th>
+                                        <th scope="col" style="width: 60px; text-align: center; white-space: nowrap;">Xóa</th>
                                     </tr>
                                 </thead>
                                 <tbody id="grnItemsTableBody">
@@ -1656,12 +1660,12 @@
                         <table class="admin-table" style="font-size: 12.5px;">
                             <thead>
                                 <tr>
-                                    <th>Mã SKU</th>
-                                    <th>Tên sản phẩm</th>
-                                    <th style="text-align: center; width: 90px;">Tồn sổ</th>
-                                    <th style="text-align: center; width: 110px;">Thực tế</th>
-                                    <th style="text-align: center; width: 100px;">Chênh lệch</th>
-                                    <th>Lý do chênh lệch</th>
+                                    <th scope="col">Mã SKU</th>
+                                    <th scope="col">Tên sản phẩm</th>
+                                    <th scope="col" style="text-align: center; width: 90px;">Tồn sổ</th>
+                                    <th scope="col" style="text-align: center; width: 110px;">Thực tế</th>
+                                    <th scope="col" style="text-align: center; width: 100px;">Chênh lệch</th>
+                                    <th scope="col">Lý do chênh lệch</th>
                                 </tr>
                             </thead>
                             <tbody id="stocktakeTableBody">

@@ -134,6 +134,7 @@
         const isBookingUpcoming = PawpalServices.isBookingUpcoming || (() => false);
 
         if (!PawpalServices.state.isLoaded) return;
+        if(PawpalServices.state.serverBookingPagination){Object.entries(PawpalServices.state.bookingPageMeta?.counts||{}).forEach(([id,value])=>{const el=document.getElementById(id);if(el)el.textContent=PawpalServices.state.loadError?'—':String(value);});return;}
         const today = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
         const todayBookings = bookingsData.filter(booking => booking.date?.slice(0,10) === today);
         const total = todayBookings.length;
@@ -165,7 +166,7 @@
 
         const bookingsData = PawpalServices.state?.bookingsData || [];
         const isBookingUpcoming = PawpalServices.isBookingUpcoming || (() => false);
-        const upcomingList = bookingsData.filter(isBookingUpcoming);
+        const upcomingList = PawpalServices.state.serverBookingPagination?(PawpalServices.state.loadError?[]:PawpalServices.state.bookingPageMeta?.upcoming||[]):bookingsData.filter(isBookingUpcoming);
 
         if (upcomingList.length === 0) {
             if (bar) bar.style.display = 'none';
@@ -175,12 +176,15 @@
         if (bar) bar.style.display = 'flex';
 
         container.innerHTML = upcomingList.map(item => `
-            <div class="upcoming-item-tag ${item.status === 'pending' || !item.staff ? 'urgent' : ''}" data-booking-id="${item.id}" title="Xem chi tiết ${item.customerName}">
-                <span class="tag-time">${item.time}</span>
-                <span class="tag-cust">${item.customerName}</span>
-                <span class="tag-pet">(${item.petName})</span>
+            <div class="upcoming-item-tag ${item.status === 'pending' || !item.staff ? 'urgent' : ''}" data-booking-id="${escapeBookingText(item.id)}" title="Xem chi tiết ${escapeBookingText(item.customerName)}">
+                <span class="tag-time">${escapeBookingText(item.time)}</span>
+                <span class="tag-cust">${escapeBookingText(item.customerName)}</span>
+                <span class="tag-pet">(${escapeBookingText(item.petName)})</span>
             </div>
         `).join('');
+
+        const upcomingCount=PawpalServices.state.bookingPageMeta?.counts?.statUpcomingBookings||0;
+        if(PawpalServices.state.serverBookingPagination&&upcomingCount>upcomingList.length){const more=document.createElement('button');more.type='button';more.className='btn-strip-filter';more.textContent='Xem thêm '+(upcomingCount-upcomingList.length)+' lịch';more.onclick=()=>document.getElementById('btnFilterUpcomingQuick')?.click();container.append(more);}
 
         container.querySelectorAll('.upcoming-item-tag').forEach(el => {
             el.addEventListener('click', (e) => {
@@ -193,10 +197,20 @@
         });
     }
 
-    function renderBookingsTable() {
+    async function renderBookingsTable({skipFetch=false}={}) {
         closeBookingGlobalDropdown();
         const tbody = document.getElementById('servicesBookingTableBody');
         if (!tbody) return;
+        if(PawpalServices.state.serverBookingPagination&&!skipFetch){
+            tbody.inert=true;tbody.setAttribute('aria-busy','true');
+            const filters={query:currentSearchTerm,category:currentFilterCategory,status:currentFilterStatus,staff:currentFilterStaff,upcoming:isUpcomingFilterActive,allergy:isAllergyFilterActive,sla:isSlaFilterActive};
+            const success=await PawpalServices.loadServicesData({filters,page:currentBookingPage,render:false,prefetch:false});
+            if(success===null)return;
+            tbody.inert=false;tbody.removeAttribute('aria-busy');
+            if(success)currentBookingPage=PawpalServices.state.bookingPageMeta.page;
+        }
+        if(skipFetch){tbody.inert=false;tbody.removeAttribute('aria-busy');}
+        if(PawpalServices.state.serverBookingPagination){updateKPIs();renderUpcomingBar();const select=document.getElementById('serviceFilterStaff');if(select){const names=[...new Set([...(PawpalServices.state.bookingPageMeta?.staffOptions||[]),...(!['ALL','UNASSIGNED'].includes(currentFilterStaff)?[currentFilterStaff]:[])])];select.replaceChildren(new Option('Tất cả KTV','ALL'),new Option('Chưa phân công','UNASSIGNED'),...names.map(name=>new Option(name,name)));select.value=currentFilterStaff;}}
         if (PawpalServices.state.loadError || !PawpalServices.state.isLoaded) {
             exportBookings=[];
             renderBookingsPagination(0);
@@ -209,7 +223,7 @@
         delete tbody.dataset.loadingSkeleton;
 
 
-        const bookingsData = PawpalServices.state?.bookingsData || [];
+        const bookingsData = PawpalServices.state.serverBookingPagination?(PawpalServices.state.pageBookings||[]):PawpalServices.state?.bookingsData||[];
         const toUnaccent = PawpalServices.toUnaccent || (str => str);
         const getServiceSlaInfo = PawpalServices.getServiceSlaInfo || (() => ({ level: 'ok', label: 'Bình thường' }));
         const isBookingUpcoming = PawpalServices.isBookingUpcoming || (() => false);
@@ -217,7 +231,7 @@
         const getAlertBadge = PawpalServices.getAlertBadge || (() => '—');
         const formatCurrency = PawpalServices.formatCurrency || (num => `${num} đ`);
 
-        let filtered = bookingsData.filter(item => {
+        let filtered = PawpalServices.state.serverBookingPagination?bookingsData:bookingsData.filter(item => {
             if (currentSearchTerm) {
                 const termUnaccent = toUnaccent(currentSearchTerm);
                 const termRaw = currentSearchTerm.toLowerCase().trim();
@@ -258,7 +272,7 @@
         });
 
         exportBookings=filtered;
-        const totalRecords = filtered.length;
+        const totalRecords = PawpalServices.state.serverBookingPagination?PawpalServices.state.bookingPageMeta.total:filtered.length;
         const totalPages = Math.ceil(totalRecords / BOOKINGS_PER_PAGE);
 
         const btnToolbarReset = document.getElementById('btnToolbarResetFilters');
@@ -303,7 +317,7 @@
         if (currentBookingPage < 1) currentBookingPage = 1;
 
         const startIndex = (currentBookingPage - 1) * BOOKINGS_PER_PAGE;
-        const pagedBookings = filtered.slice(startIndex, startIndex + BOOKINGS_PER_PAGE);
+        const pagedBookings = PawpalServices.state.serverBookingPagination?filtered:filtered.slice(startIndex, startIndex + BOOKINGS_PER_PAGE);
 
         tbody.innerHTML = pagedBookings.map(item => {
             const sla = getServiceSlaInfo(item);
@@ -702,11 +716,12 @@
         // Xuất file CSV báo cáo lịch hẹn
         const btnExport = document.getElementById('btnExportServiceReport');
         if (btnExport) {
-            btnExport.addEventListener('click', () => {
+            btnExport.addEventListener('click', async event => {
                 const bookingsData = PawpalServices.state?.bookingsData || [];
                 const headers = ['Mã lịch hẹn', 'Thời gian', 'Ngày', 'Khách hàng', 'Số điện thoại', 'Thú cưng', 'Dịch vụ', 'Kỹ thuật viên', 'Tổng tiền', 'Thanh toán', 'Trạng thái'];
                 if(PawpalServices.state.loadError||!PawpalServices.state.isLoaded){PawpalServices.showToast('Chưa tải xong dữ liệu để xuất.','warning');return;}
-                const rows=exportBookings.map(b=>[b.id,b.time,b.date,b.customerName,b.phone,b.petName,b.serviceName,b.staff||'Chưa phân công',b.total??0,b.paymentStatus||'Chưa thu',PawpalServices.getStatusBadge(b.status).replace(/<[^>]*>/g,'')]);
+                const button=event.currentTarget;button.disabled=true;
+                let rows;try{rows=PawpalServices.state.serverBookingPagination?await PawpalServices.exportFilteredBookings({query:currentSearchTerm,category:currentFilterCategory,status:currentFilterStatus,staff:currentFilterStaff,upcoming:isUpcomingFilterActive,allergy:isAllergyFilterActive,sla:isSlaFilterActive}):exportBookings.map(b=>[b.id,b.time,b.date,b.customerName,b.phone,b.petName,b.serviceName,b.staff||'Chưa phân công',b.total??0,b.paymentStatus||'Chưa thu',PawpalServices.getStatusBadge(b.status).replace(/<[^>]*>/g,'')]);}catch(error){PawpalServices.showToast('Không thể tải dữ liệu xuất file.','warning');return;}finally{button.disabled=false;}
                 const cell=value=>{let text=String(value??'');if(/^[=+\-@\t\r]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"';};
                 const csvContent='\uFEFF'+[headers,...rows].map(row=>row.map(cell).join(',')).join('\r\n');
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -742,7 +757,8 @@
             renderBookingsTable(); updateKPIs(); renderUpcomingBar();
             if (PawpalServices.state.selectedBookingId === booking.id) PawpalServices.subtabs.detail?.renderBookingDetail?.(booking.id);
 
-            await PawpalServices.loadServicesData({ force: true });
+            await PawpalServices.loadServicesData({force:true,forceDirectory:false,forceStaff:false,prefetch:false});
+            await PawpalServices.ensureBooking(booking.dbId,{force:true});
             renderBookingsTable(); updateKPIs(); renderUpcomingBar();
             if (PawpalServices.state.selectedBookingId === booking.id) PawpalServices.subtabs.detail?.renderBookingDetail?.(booking.id);
             const labels = { confirmed:'Đã xác nhận',checked_in:'Đã đến',no_show:'Vắng mặt',cancelled:'Đã hủy' };
@@ -1162,7 +1178,8 @@
                 const db=window.getSupabaseClient(),shifts=[];
                 for(let offset=0;;offset+=500){const {data,error}=await db.from('staff_schedule').select('id,staff_id,start_at,end_at,availability_status,reason').eq('schedule_status','active').gt('end_at',start.toISOString()).lt('start_at',end.toISOString()).order('id').range(offset,offset+499);if(error)throw error;shifts.push(...data);if(data.length<500)break;}
                 if(request!==scheduleRequest)return;
-                const staff=PawpalServices.state.liveStaffList||[],bookings=(PawpalServices.state.bookingsData||[]).filter(b=>!['cancelled','no_show'].includes(b.status)&&Date.parse(b.scheduledStartAt)<to&&Date.parse(b.scheduledEndAt)>from);
+                const staff=PawpalServices.state.liveStaffList||[],bookings=await PawpalServices.fetchStaffScheduleBookings(from,to);
+                if(request!==scheduleRequest)return;
                 let conflicts=0;const clock=value=>new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'}).format(new Date(value));
                 const cards=staff.map(person=>{
                     const work=shifts.filter(w=>w.staff_id===person.id&&Date.parse(w.start_at)<to&&Date.parse(w.end_at)>from),assigned=bookings.filter(b=>b.staffId===person.id);
@@ -1385,7 +1402,8 @@
                     if(data!==modalCreateBooking.dataset.requestId)throw Error('Không xác minh được lịch hẹn đã lưu.');
                     newId='BKG-'+data.replace(/-/g,'').toUpperCase();
                     delete modalCreateBooking.dataset.requestSignature;delete modalCreateBooking.dataset.requestId;
-                    await PawpalServices.loadServicesData({ force: true });
+                    await PawpalServices.loadServicesData({force:true,forceStaff:false,prefetch:false});
+                    try{const created=await PawpalServices.ensureBooking(data);if(created)newId=created.id;}catch(error){/* The booking was saved; do not encourage a duplicate submission. */}
                 } catch (err) {
                     PawpalServices.showToast('Không thể lưu lịch hẹn: ' + PawpalServices.errorMessage(err), 'danger');
                     return;
@@ -2013,7 +2031,8 @@
                         const {data,error}=await client.rpc('update_admin_service_booking',{p_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_action:'assign',p_value:candidates[0].id,p_reason:reason});
                         if(error)throw error;
                         if(data!==booking.dbId)throw Error('Không xác minh được nhân viên đã lưu.');
-                        await PawpalServices.loadServicesData({ force: true });
+                        await PawpalServices.loadServicesData({force:true,forceDirectory:false,forceStaff:false,prefetch:false});
+                        await PawpalServices.ensureBooking(booking.dbId,{force:true});
                     } catch (err) {
                         PawpalServices.showToast('Không thể điều phối: ' + PawpalServices.errorMessage(err), 'danger');
                         return;

@@ -120,7 +120,7 @@
                 <tr>
                     <td>
                         <div class="prod-item-row">
-                            <img src="${escapeText(p.image)}" alt="${escapeText(p.name)}" class="prod-thumb" onerror="this.style.display='none'">
+                            <img src="${escapeText(p.image)}" alt="${escapeText(p.name)}" class="prod-thumb" loading="lazy" decoding="async" onerror="this.style.display='none'">
                             <div class="prod-info-cell">
                                 <span class="prod-title">${escapeText(p.name)}</span>
                                 <span class="prod-sku-tag">Quy cách: ${escapeText(p.spec || '—')}</span>

@@ -39,13 +39,13 @@
 .orders-module .admin-card,.orders-module .orders-kpi-grid,.orders-module .admin-modal-card {background:rgba(255,255,255,.70);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .orders-module .orders-kpi-grid .kpi-card {background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
 .orders-module .admin-table th {background:rgba(238,245,241,.75);color:#236B48}
-.orders-module .admin-badge {display:inline-flex;align-items:center;height:24px;min-height:24px;padding:0 9px;border-radius:9px!important;border:none!important;font-size:12px;font-weight:500;line-height:1;background:#E2ECE5!important;color:#2D483B}
-.orders-module .admin-badge:is(.badge-success,.badge-paid,.badge-completed,.badge-delivered) {background:#DCEEE2!important;color:#165335}
-.orders-module .admin-badge:is(.badge-warning,.badge-pending,.badge-unpaid) {background:#F5E8D3!important;color:#734718}
-.orders-module .admin-badge:is(.badge-danger,.badge-cancelled,.badge-alert) {background:#F7DCDC!important;color:#8F2424}
-.orders-module .admin-badge:is(.badge-info,.badge-shipping,.badge-confirmed) {background:#DCEAF2!important;color:#20495E}
 .orders-module .admin-pagination-container {justify-content:center;background:transparent;border:0;padding:2px 0;margin-top:-6px;gap:6px;flex-wrap:wrap}
 .orders-module .btn-pagination {background:transparent;border:0;box-shadow:none;border-radius:9px;color:#236B48}
 .orders-module .btn-pagination.active {background:#236B48;color:#fff}
 .orders-module .btn-pagination:disabled {opacity:.35;cursor:default}
 .orders-module .detail-box {background:transparent;border:0;box-shadow:none}
+
+/* Business column counts require different scroll widths; shared table metrics stay unchanged. */
+.orders-module #ordersTable { min-width: 1240px; }
+.orders-module #productsTable { min-width: 1350px; }
+.orders-module #vouchersTable { min-width: 1100px; }

@@ -4,38 +4,54 @@
  const number=v=>v==null?null:Number(v);
  async function rows(make){const all=[];for(let offset=0;;offset+=500){const {data,error}=await make().range(offset,offset+499);if(error)throw error;all.push(...data);if(data.length<500)return all;}}
  const db=()=>window.getSupabaseClient();
+ // Actor-scoped, single-flight reads. Stale business data is never returned while revalidating.
+ const cacheKey=resource=>'orders:'+resource+':'+(window.PawpalDataStore?.buildKey?.(resource)||'session');
+ const cached=(resource,fetcher,{force=false,ttlMs=30000}={})=>{
+  const store=window.PawpalDataStore;
+  return store?store.fetch(cacheKey(resource),fetcher,{force,ttlMs,backgroundRevalidate:false}):fetcher();
+ };
+
  const profile=c=>one(c?.customer_profile)||{};
  const phone=c=>(c?.customer_phone||[]).find(p=>p.is_primary)?.phone_number||'';
  const spec=value=>value&&typeof value==='object'?Object.entries(value).map(([k,v])=>k+': '+String(v)).join('; '):String(value||'');
  const images=list=>[...(list||[])].sort((a,b)=>Number(b.is_thumbnail)-Number(a.is_thumbnail)||a.display_order-b.display_order).map(x=>x.image_url);
  const net=p=>Number(p.amount)-(p.refunds||[]).filter(r=>r.refund_status==='succeeded').reduce((n,r)=>n+Number(r.refunded_amount),0);
- async function products(){
-  const [categories,source,reviews,reservations]=await Promise.all([
-   rows(()=>db().from('product_category').select('id,category_name,description').order('id')),
-   rows(()=>db().from('product').select('*,category:category_id(id,category_name),media:product_media(*),variants:product_variant(*,inventory(quantity_in_stock,minimum_stock,last_updated_at),size:size_id(id,size_name),color:color_id(id,color_name,hex_code),flavor:flavor_id(id,flavor_name),media:product_variant_media(*))').order('id')),
-   rows(()=>db().from('review').select('id,rating,sales_order_detail_id,line:sales_order_detail_id(product_variant:product_variant_id(product_id))').not('sales_order_detail_id','is',null).order('id')),
-   rows(()=>db().from('stock_reservation').select('id,product_variant_id,quantity,expires_at').eq('status','active').gt('expires_at',new Date().toISOString()).order('id'))
-  ]);
+ async function products({ids,ratings=[],detail=false}={}){
+  const categories=await cached('categories',()=>rows(()=>db().from('product_category').select('id,category_name,description').order('id')),{ttlMs:600000});
+  if(ids&&!ids.length)return {categories,products:[]};
+  const summaryOnly=Boolean(ids&&!detail);
+  const source=await rows(()=>{let query=summaryOnly?db().from('product').select('id,product_name,status,brand_name,updated_at,category:category_id(id,category_name),media:product_media(image_url,is_thumbnail,display_order),variants:product_variant(id,sku_variant,cost_price,sale_price,compare_at_price,status,updated_at,inventory(quantity_in_stock,minimum_stock,last_updated_at))').order('id').order('is_thumbnail',{foreignTable:'media',ascending:false}).limit(1,{foreignTable:'media'}):db().from('product').select('*,category:category_id(id,category_name),media:product_media(*),variants:product_variant(*,inventory(quantity_in_stock,minimum_stock,last_updated_at),size:size_id(id,size_name),color:color_id(id,color_name,hex_code),flavor:flavor_id(id,flavor_name),media:product_variant_media(*))').order('id');return ids?query.in('id',ids):query;});
+  const variantIds=source.flatMap(p=>p.variants.map(v=>v.id));
+  const reservations=ids&&variantIds.length?await rows(()=>db().from('stock_reservation').select('product_variant_id,quantity').in('product_variant_id',variantIds).eq('status','active').gt('expires_at',new Date().toISOString()).order('id')):[];
   return {categories,products:source.map(p=>{
    const variants=[...p.variants].sort((a,b)=>a.id.localeCompare(b.id)),active=variants.filter(v=>v.status==='active'),prices=active.map(v=>Number(v.sale_price));
    const mapped=variants.map(v=>{const inv=one(v.inventory);return {image:images(v.media)[0]||'',images:images(v.media),id:v.id,sku:v.sku_variant,attr1:v.flavor?.flavor_name||v.size?.size_name||v.color?.color_name||'',attr2:v.flavor?v.size?.size_name||v.color?.color_name||'':v.size?v.color?.color_name||'':'',name:[v.flavor?.flavor_name,v.size?.size_name,v.color?.color_name].filter(Boolean).join(' · ')||v.sku_variant,costPrice:Number(v.cost_price),price:Number(v.sale_price),originalPrice:number(v.compare_at_price),stock:inv?Number(inv.quantity_in_stock):null,minStock:inv?Number(inv.minimum_stock):null,status:v.status,raw:v};});
    const stock=mapped.length&&mapped.every(v=>v.stock!==null)?mapped.reduce((n,v)=>n+v.stock,0):null;
    const minima=mapped.map(v=>v.minStock).filter(v=>v!==null),minStock=minima.length?minima.reduce((n,v)=>n+v,0):null;
-   const ratings=reviews.filter(r=>one(one(r.line)?.product_variant)?.product_id===p.id&&r.rating>=1&&r.rating<=5),media=images(p.media),defaultVariant=mapped[0];
-   return {reserved:reservations.filter(r=>variants.some(v=>v.id===r.product_variant_id)).reduce((n,r)=>n+Number(r.quantity),0),id:p.id,updatedAt:p.updated_at,raw:p,variant_id:defaultVariant?.id||null,default_variant_id:defaultVariant?.id||null,sku:defaultVariant?.sku||'',name:p.product_name,category:p.category?.category_name||'Chưa phân loại',brand:p.brand_name||'',petType:p.target_pet||'',description:p.description||'',ingredients:p.ingredients||'',benefits:p.benefits||'',usage:p.usage_instructions||'',features:p.specs?.features||'',feedingGuide:p.specs?.feeding_guide||'',expiry:p.specs?.expiry||'',storage:p.specs?.storage||'',origin:p.origin||'',unit:p.unit,spec:p.specs?.quy_cach||spec(p.specs),badge:p.badge||'',costPrice:mapped.length?Math.min(...mapped.map(v=>v.costPrice)):null,rating:ratings.length?ratings.reduce((n,r)=>n+Number(r.rating),0)/ratings.length:null,reviewCount:ratings.length,price:prices.length?Math.min(...prices):null,originalPrice:defaultVariant?.originalPrice??defaultVariant?.price??null,memberPrice:prices.length?Math.min(...prices):null,stock,minStock,images:media.join(', '),image:media[0]||'',status:p.status!=='active'?'Tạm ngưng':stock===0?'Hết hàng':stock!==null&&minStock!==null&&stock<=minStock?'Sắp hết':'Còn hàng',hasVariants:mapped.length>1,attr1Name:variants.some(v=>v.flavor)?'Hương vị':variants.some(v=>v.size)?'Kích thước':'Màu sắc',attr2Name:variants.some(v=>v.flavor&&v.size)?'Kích thước':'Màu sắc',variants:mapped};
+   const summary=ratings.find(r=>r.id===p.id),media=images(p.media),defaultVariant=mapped[0];
+   return {summary:summaryOnly,reserved:reservations.filter(r=>variants.some(v=>v.id===r.product_variant_id)).reduce((n,r)=>n+Number(r.quantity),0),id:p.id,updatedAt:p.updated_at,raw:p,variant_id:defaultVariant?.id||null,default_variant_id:defaultVariant?.id||null,sku:defaultVariant?.sku||'',name:p.product_name,category:p.category?.category_name||'Chưa phân loại',brand:p.brand_name||'',petType:p.target_pet||'',description:p.description||'',ingredients:p.ingredients||'',benefits:p.benefits||'',usage:p.usage_instructions||'',features:p.specs?.features||'',feedingGuide:p.specs?.feeding_guide||'',expiry:p.specs?.expiry||'',storage:p.specs?.storage||'',origin:p.origin||'',unit:p.unit,spec:p.specs?.quy_cach||spec(p.specs),badge:p.badge||'',costPrice:mapped.length?Math.min(...mapped.map(v=>v.costPrice)):null,rating:summary?Number(summary.rating):null,reviewCount:summary?Number(summary.count):0,price:prices.length?Math.min(...prices):null,originalPrice:defaultVariant?.originalPrice??defaultVariant?.price??null,memberPrice:prices.length?Math.min(...prices):null,stock,minStock,images:media.join(', '),image:media[0]||'',status:p.status!=='active'?'Tạm ngưng':stock===0?'Hết hàng':stock!==null&&minStock!==null&&stock<=minStock?'Sắp hết':'Còn hàng',hasVariants:mapped.length>1,attr1Name:variants.some(v=>v.flavor)?'Hương vị':variants.some(v=>v.size)?'Kích thước':'Màu sắc',attr2Name:variants.some(v=>v.flavor&&v.size)?'Kích thước':'Màu sắc',variants:mapped};
   })};
  }
- async function orders(){
-  const [source,totals,returns,redemptions]=await Promise.all([
-   rows(()=>db().from('sales_order').select('*,customer:customer_id(id,customer_profile(full_name),customer_phone(phone_number,is_primary)),provider:shipping_provider_id(provider_name),lines:sales_order_detail(*,variant:product_variant_id(id,sku_variant,product_id,product:product_id(specs),media:product_variant_media(*))),payments:payment(*,method:payment_method_config_id(name,short_name),refunds:refund_transaction(*))').order('created_at',{ascending:false}).order('id')),
-   rows(()=>db().from('sales_order_totals').select('*').order('order_id')),
-   rows(()=>db().from('return_request').select('*,lines:return_request_detail(*,line:sales_order_detail_id(product_name_snapshot,sku_snapshot,unit_price,discount_amount,quantity,product_variant_id))').order('created_at',{ascending:false}).order('id')),
-   rows(()=>db().from('voucher_redemption').select('order_id,discount_amount_snapshot,status').not('order_id','is',null).order('id'))
+ async function orders({ids,id}={}){
+  if(ids && !ids.length)return [];
+  const source=await rows(()=>{
+   let query=db().from('sales_order').select('*,customer:customer_id(id,customer_profile(full_name),customer_phone(phone_number,is_primary)),provider:shipping_provider_id(provider_name),lines:sales_order_detail(*,variant:product_variant_id(id,sku_variant,product_id,product:product_id(specs),media:product_variant_media(image_url,is_thumbnail,display_order))),payments:payment(id,amount,transaction_status,method:payment_method_config_id(name),refunds:refund_transaction(refund_status,refunded_amount))').order('created_at',{ascending:false}).order('id');
+   if(ids)query=query.in('id',ids);
+   if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'order_code',id);
+   return query;
+  });
+  if(!source.length)return [];
+  const selectedIds=source.map(o=>o.id);
+  const scoped=query=>(ids||id)?query.in('order_id',selectedIds):query;
+  const [totals,returns,redemptions]=await Promise.all([
+   rows(()=>scoped(db().from('sales_order_totals').select('order_id,total_amount').order('order_id'))),
+   rows(()=>{let query=db().from('return_request').select('id,sales_order_id,resolution_type,reason,return_type,description,request_status,created_at,updated_at,lines:return_request_detail(id,quantity,sales_order_detail_id,line:sales_order_detail_id(product_name_snapshot,sku_snapshot,unit_price,discount_amount,quantity,product_variant_id))').order('created_at',{ascending:false}).order('id');return (ids||id)?query.in('sales_order_id',selectedIds):query;}),
+   rows(()=>scoped(db().from('voucher_redemption').select('order_id,discount_amount_snapshot,status').not('order_id','is',null).order('id')))
   ]);
   const totalMap=new Map(totals.map(t=>[t.order_id,Number(t.total_amount)]));
   return source.map(o=>{
    const amount=totalMap.get(o.id);if(amount===undefined)throw Error('Thiếu tổng đơn hàng V1.');
-   const payments=o.payments.filter(p=>p.transaction_status==='succeeded'),gross=payments.reduce((n,p)=>n+Number(p.amount),0),collected=payments.reduce((n,p)=>n+net(p),0),refunds=gross-collected;
+   const payments=o.payments.filter(p=>p.transaction_status==='succeeded').sort((a,b)=>a.id.localeCompare(b.id)),gross=payments.reduce((n,p)=>n+Number(p.amount),0),collected=payments.reduce((n,p)=>n+net(p),0),refunds=gross-collected;
    const status=({draft:'pending',pending:'pending',packing:'confirmed',confirmed:'confirmed',shipped:'shipping',shipping:'shipping',delivered:'completed',completed:'completed',cancelled:'cancelled',returned:'returned'})[o.order_status]||o.order_status;
    const requests=returns.filter(r=>r.sales_order_id===o.id),r=requests[0],returnsTotal=payments.reduce((n,p)=>n+(p.refunds||[]).filter(v=>v.refund_status==='succeeded').reduce((s,v)=>s+Number(v.refunded_amount),0),0);
    const paymentStatus=collected>=amount&&amount>0?'paid':collected>0?'partial':gross>0&&refunds>=gross?'refunded':'unpaid';
@@ -47,14 +63,13 @@
    return {id:o.order_code,rawId:o.id,rawStatus:o.order_status,updatedAt:o.updated_at,userId:o.customer_id,customerName:profile(o.customer).full_name||o.receiver_name_snapshot||'Chưa có tên khách',phone:phone(o.customer)||o.receiver_phone_snapshot||'',receiverName:o.receiver_name_snapshot||'',receiverPhone:o.receiver_phone_snapshot||'',address:[o.street_address_snapshot,o.province_snapshot,o.postal_code_snapshot].filter(Boolean).join(', ')||'Chưa ghi nhận địa chỉ giao hàng',status,paymentStatus,paymentMethod,paymentMethodName:method||'Chưa ghi nhận',collected,refunded:refunds,remaining:Math.max(amount-collected,0),payments:o.payments,carrier:o.provider?.provider_name||'Chưa phân công',trackingNumber:o.tracking_code||'—',createdAt:o.created_at,subtotal:o.lines.reduce((n,d)=>n+Number(d.unit_price)*Number(d.quantity),0),shippingFee:Number(o.shipping_fee_snapshot),discount:o.lines.reduce((n,d)=>n+Number(d.discount_amount),0)+redemptions.filter(v=>v.order_id===o.id&&v.status==='applied').reduce((n,v)=>n+Number(v.discount_amount_snapshot),0),pawPointsUsed:null,total:amount,customerNote:o.note||'',internalNote:'',alertType:hasOpenReturn||overdue?'danger':null,alertMessage:hasOpenReturn?'Có yêu cầu đổi trả':overdue?'Chờ xác nhận quá 30 phút':null,rmaInfo,returnRequests:requests,delivery:null,products:items,timeline:[{title:'Tạo đơn hàng',time:o.created_at,desc:'Đơn được ghi nhận trong hệ thống',done:true},...(o.shipped_at?[{title:'Bàn giao vận chuyển',time:o.shipped_at,desc:o.provider?.provider_name||'Chưa ghi nhận đơn vị vận chuyển',done:true}]:[]),...(o.delivered_at?[{title:'Giao hàng',time:o.delivered_at,desc:'Đã ghi nhận thời điểm giao hàng',done:true}]:[])]};
   });
  }
- async function customers(){const [list,balances]=await Promise.all([rows(()=>db().from('customer').select('id,customer_profile(full_name),customer_phone(phone_number,is_primary),customer_address(*),customer_membership(membership_tier(tier_name,discount_percent,is_active)),pet_profile(id,pet_name)').order('id')),rows(()=>db().from('customer_point_balance').select('*').order('customer_id'))]);return list.map(c=>({id:c.id,rawName:profile(c).full_name||null,name:profile(c).full_name||'Chưa có tên khách',phone:phone(c),rank:one(one(c.customer_membership)?.membership_tier)?.tier_name||'Chưa có hạng',defaultAddress:c.customer_address.find(a=>a.is_default)||null,discountPercent:one(one(c.customer_membership)?.membership_tier)?.discount_percent??null,points:Number(balances.find(b=>b.customer_id===c.id)?.total_paw_points||0),address:[c.customer_address.find(a=>a.is_default)?.street_address,c.customer_address.find(a=>a.is_default)?.province].filter(Boolean).join(', '),pets:c.pet_profile||[]}));}
- async function stockLogs(){
-  const list=await rows(()=>db().from('inventory_transaction').select('id,product_variant_id,quantity,transaction_type,note,created_at,recorded_at,idempotency_key,variant:product_variant_id(sku_variant,product:product_id(product_name)),staff:staff_id(full_name)').order('created_at').order('id'));
-  // The ledger is authoritative; never derive historical balances from today's stock.
-  const balance=new Map();
-  return list.map(t=>{const before=balance.get(t.product_variant_id)||0,after=before+Number(t.quantity);balance.set(t.product_variant_id,after);return {id:t.id,sku:t.variant?.sku_variant||'',name:t.variant?.product?.product_name||'',date:t.recorded_at||t.created_at,type:t.quantity>0?'IN':'OUT',typeLabel:t.transaction_type,change:(t.quantity>0?'+':'')+t.quantity,beforeStock:before,afterStock:after,reason:t.note||'',refCode:t.idempotency_key,staff:t.staff?.full_name||'Chưa ghi nhận'};}).reverse();
- }
- window.PawpalOrderV1={rows,products,orders,customers,stockLogs,one,net};
+ async function customers({id}={}){if(!id)throw Error('sales_customer_id_required');const [list,balances]=await Promise.all([rows(()=>db().from('customer').select('id,customer_profile(full_name),customer_phone(phone_number,is_primary),customer_address(*),customer_membership(membership_tier(tier_name,discount_percent,is_active)),pet_profile(id,pet_name)').eq('id',id).eq('customer_status','active').order('id')),rows(()=>db().from('customer_point_balance').select('customer_id,total_paw_points').eq('customer_id',id).order('customer_id'))]);return list.map(c=>({id:c.id,rawName:profile(c).full_name||null,name:profile(c).full_name||'Chưa có tên khách',phone:phone(c),rank:one(one(c.customer_membership)?.membership_tier)?.tier_name||'Chưa có hạng',defaultAddress:c.customer_address.find(a=>a.is_default)||null,discountPercent:one(one(c.customer_membership)?.membership_tier)?.discount_percent??null,points:Number(balances.find(b=>b.customer_id===c.id)?.total_paw_points||0),address:[c.customer_address.find(a=>a.is_default)?.street_address,c.customer_address.find(a=>a.is_default)?.province].filter(Boolean).join(', '),pets:c.pet_profile||[]}));}
+ window.PawpalOrderV1={rows,products,orders,cached,cacheKey,
+  customers:(options={})=>cached('customers:detail:'+options.id,()=>customers(options),{ttlMs:30000,...options}),
+  searchCustomers:query=>cached('customers:search:'+query,async()=>{const {data,error}=await db().rpc('search_admin_sales_customers',{p_query:query});if(error)throw error;return data;},{ttlMs:30000}),
+  searchVariants:query=>cached('products:search:'+query,async()=>{const {data,error}=await db().rpc('search_admin_sales_variants',{p_query:query});if(error)throw error;return data;},{ttlMs:30000}),
+  inventoryChoices:()=>cached('products:inventory',async()=>{const {data,error}=await db().rpc('get_admin_sales_inventory_choices');if(error)throw error;return data;}),
+  stockLogPage:(productId,page=1,options)=>cached('stock-logs:'+productId+':'+page,async()=>{const {data,error}=await db().rpc('get_admin_sales_stock_history_page',{p_product_id:productId,p_page:page});if(error)throw error;if(!data||!Array.isArray(data.rows)||data.rows.length>10)throw Error('invalid_stock_history_page');return data;},options),one,net};
 })();
 
 ;
@@ -337,23 +352,38 @@
     };
 
     // Đồng bộ Supabase Live Database qua PawpalDataStore
-    async function fetchProductsData() {
-        try {
-            const [result, logs] = await Promise.all([window.PawpalOrderV1.products(), window.PawpalOrderV1.stockLogs()]);
-            currentStockLogsList = logs;
-            window.PawpalOrders.state.stockLogs = logs;
-            currentProductsList = result.products;
-            window.PawpalOrders.state.categories = result.categories;
-            Object.assign(window.PawpalOrders.state, {products: currentProductsList, productsLoaded: true, productsError: false});
+    let productsReadVersion=0;
+    window.PawpalOrders.state.serverProductPagination=true;
+    async function fetchProductsData({force=false,filters,page,render=true}={}){
+        const state=window.PawpalOrders.state;
+        if(force){window.PawpalDataStore?.invalidate('orders:products*');window.PawpalDataStore?.invalidate('orders:stock-logs*');}
+        filters=filters||state.productFilters||{query:'',category:'ALL',stock:'ALL'};
+        page=page||state.productPageMeta?.page||Number(sessionStorage.getItem('pawpal_admin_products_page'))||1;
+        state.productFilters=filters;const version=++productsReadVersion;
+        try{
+            const result=await window.PawpalOrderV1.cached('products:page:'+JSON.stringify({filters,page}),async()=>{
+                const {data,error}=await window.getSupabaseClient().rpc('get_admin_sales_product_page',{p_query:filters.query,p_category:filters.category,p_stock:filters.stock,p_page:page});
+                if(error)throw error;
+                if(!data||!Array.isArray(data.ids)||data.ids.length>10)throw Error('invalid_catalog_page');
+                return {...await window.PawpalOrderV1.products({ids:data.ids,ratings:data.ratings}),meta:data};
+            },{force});
+            if(version!==productsReadVersion)return null;
+            currentProductsList=result.products;
+            Object.assign(state,{products:result.products,categories:result.categories,productPageMeta:result.meta,productsLoaded:true,productsError:false});
             window.PawpalOrders.updateCategoryFilterDropdown(result.categories);
-        } catch (err) {
-            currentProductsList = [];
-            Object.assign(window.PawpalOrders.state, {products: [], productsError: true});
-            console.warn('[Orders V1] Products:', err);
-        }
-        window.PawpalOrders.renderProductsTable();
-        return currentProductsList;
+        }catch(error){if(version!==productsReadVersion)return null;state.productsError=true;console.warn('[Orders V1] Products:',error);}
+        if(render)window.PawpalOrders.controllers.products?.renderProductsTable({skipFetch:true});
+        return !state.productsError;
     }
+
+    window.PawpalOrders.ensureProduct=async sku=>{
+        const state=window.PawpalOrders.state,product=state.products.find(p=>p.sku===sku);
+        if(!product)return null;
+        const result=await window.PawpalOrderV1.cached('products:detail:'+product.id,()=>window.PawpalOrderV1.products({ids:[product.id],detail:true,ratings:[{id:product.id,rating:product.rating,count:product.reviewCount}]}));
+        const full=result.products[0];
+        if(full)state.products=state.products.map(p=>p.id===full.id?full:p);
+        return full||null;
+    };
 
     async function fetchVouchersData({ force = false } = {}) {
         const fetcher = async () => {
@@ -423,33 +453,80 @@
         }
     }
 
-    async function fetchOrdersData() {
+    let ordersReadVersion = 0;
+    const defaultOrderFilters = {query:'',status:'ALL',payment:'ALL',payStatus:'ALL',complaint:false,urgent:false,overdue:false};
+    window.PawpalOrders.state.serverPagination = true;
+    async function ensureOrder(id,{force=false}={}) {
+        if(!id)return null;
+        const found=window.PawpalOrders.state.orders.find(o=>o.id===id||o.rawId===id);
+        if(found&&!force&&window.PawpalOrders.state.pageOrders?.some(o=>o.rawId===found.rawId))return found;
+        const rows=await window.PawpalOrderV1.cached('list:detail:'+id,()=>window.PawpalOrderV1.orders({id}),{force});
+        const order=rows[0];
+        if(order)window.PawpalOrders.state.orders=[...window.PawpalOrders.state.orders.filter(o=>o.rawId!==order.rawId),order];
+        else window.PawpalOrders.state.orders=window.PawpalOrders.state.orders.filter(o=>o.id!==id&&o.rawId!==id);
+        return order||null;
+    }
+    window.PawpalOrders.ensureOrder=ensureOrder;
+    window.PawpalOrders.refreshSelectedOrders=async selected=>{
+        const state=window.PawpalOrders.state;
+        const wanted=new Set(selected||state.selectedBatchOrderIds||[]);
+        const ids=state.orders.filter(o=>wanted.has(o.id)).map(o=>o.rawId);
+        if(ids.length!==wanted.size||ids.length>100)throw Error('sales_order_not_found');
+        const rows=await window.PawpalOrderV1.orders({ids});
+        if(rows.length!==ids.length)throw Error('sales_order_not_found');
+        state.orders=[...state.orders.filter(o=>!wanted.has(o.id)),...rows];
+        return rows;
+    };
+    async function fetchOrdersData({ force = false, filters, page, render = true } = {}) {
+        if (force) {
+            window.PawpalDataStore?.invalidate('orders:list*');
+            window.PawpalDataStore?.invalidate('orders:customers*');
+        }
+        const state=window.PawpalOrders.state;
+        filters={...defaultOrderFilters,...(filters||state.orderFilters||{})};
+        page=page||state.orderPageMeta?.page||Number(sessionStorage.getItem('pawpal_admin_orders_page'))||1;
+        const version=++ordersReadVersion;
+        state.orderFilters=filters;
         try {
-            currentOrdersList = await window.PawpalOrderV1.orders();
-            Object.assign(window.PawpalOrders.state, {orders: currentOrdersList, ordersLoaded: true, ordersError: false});
+            const result=await window.PawpalOrderV1.cached('list:page:'+JSON.stringify({filters,page}),async()=>{
+                const {data,error}=await window.getSupabaseClient().rpc('get_admin_sales_order_page',{p_filters:filters,p_page:page});
+                if(error)throw error;
+                if(!data||!Array.isArray(data.ids)||data.ids.length>10)throw Error('invalid_sales_page');
+                const rows=await window.PawpalOrderV1.orders({ids:data.ids});
+                const byId=new Map(rows.map(row=>[row.rawId,row]));
+                return {meta:data,rows:data.ids.map(id=>byId.get(id)).filter(Boolean)};
+            },{force});
+            if(version!==ordersReadVersion)return false;
+            const retained=new Set([...(state.selectedBatchOrderIds||[]),state.selectedOrderId].filter(Boolean));
+            const pageIds=new Set(result.rows.map(o=>o.id));
+            currentOrdersList=[...state.orders.filter(o=>retained.has(o.id)&&!pageIds.has(o.id)),...result.rows];
+            Object.assign(state,{orders:currentOrdersList,pageOrders:result.rows,orderPageMeta:result.meta,ordersLoaded:true,ordersError:false});
+            if(state.selectedOrderId&&!pageIds.has(state.selectedOrderId))await ensureOrder(state.selectedOrderId,{force});
+            if(version!==ordersReadVersion)return false;
         } catch (err) {
-            currentOrdersList = [];
-            Object.assign(window.PawpalOrders.state, {orders: [], ordersError: true});
+            if(version!==ordersReadVersion)return false;
+            Object.assign(state,{pageOrders:[],ordersError:true});
             console.warn('[Orders V1] Orders:', err);
         }
-        window.PawpalOrders.renderOrdersTable();
-        if (window.PawpalOrders.state.selectedOrderId) window.PawpalOrders.renderOrderDetail(window.PawpalOrders.state.selectedOrderId);
-        await window.PawpalOrders.controllers.list?.loadPosCustomerDirectory?.();
-        return currentOrdersList;
+        if(render)window.PawpalOrders.controllers.list?.renderOrdersTable({skipFetch:true});
+        if(state.selectedOrderId)window.PawpalOrders.renderOrderDetail(state.selectedOrderId);
+        return !state.ordersError;
     }
 
     window.PawpalOrders.fetchProductsData = fetchProductsData;
     window.PawpalOrders.fetchVouchersData = fetchVouchersData;
     window.PawpalOrders.fetchOrdersData = fetchOrdersData;
 
-    async function syncOrdersAndProductsFromSupabase({ force = false } = {}) {
-        if (force && window.PawpalDataStore) {
-            window.PawpalDataStore.invalidate('orders:*');
+    async function syncOrdersAndProductsFromSupabase({ force = false, resources = ['list', 'products', 'vouchers'] } = {}) {
+        const selected = new Set(resources);
+        if (force) {
+            window.PawpalDataStore?.invalidate('orders:stock-logs*');
+            window.PawpalDataStore?.invalidate('orders:customers*');
         }
         await Promise.allSettled([
-            fetchOrdersData({ force }),
-            fetchProductsData({ force }),
-            fetchVouchersData({ force })
+            selected.has('list') ? fetchOrdersData({ force }) : null,
+            selected.has('products') ? fetchProductsData({ force }) : null,
+            selected.has('vouchers') ? fetchVouchersData({ force }) : null
         ]);
         console.log(`[Orders Core] Đã đồng bộ từ Supabase: ${currentOrdersList.length} đơn hàng, ${currentProductsList.length} sản phẩm.`);
     }
@@ -461,6 +538,9 @@
                 window.PawpalDataStore.invalidate('orders:list*');
             } else if (mutation.entity === 'product' || mutation.entity === 'inventory' || mutation.entity === 'inventory_log') {
                 window.PawpalDataStore.invalidate('orders:products*');
+                window.PawpalDataStore.invalidate('orders:stock-logs*');
+            } else if (['customer','customer_profile','customer_phone','customer_address','customer_membership','customer_point_balance'].includes(mutation.entity)) {
+                window.PawpalDataStore.invalidate('orders:customers*');
             } else if (mutation.entity === 'voucher') {
                 window.PawpalDataStore.invalidate('orders:vouchers*');
             }
@@ -511,29 +591,16 @@
         if (targetSubtab === 'tab-order-detail') {
             const targetId = window.PawpalOrders.state.selectedOrderId || sessionStorage.getItem('pawpal_admin_order_selected_id') || null;
             window.PawpalOrders.state.selectedOrderId = targetId;
-            window.PawpalOrders.renderOrderDetail(targetId);
+            ensureOrder(targetId).then(()=>{if(window.PawpalOrders.state.selectedOrderId!==targetId)return;window.PawpalOrders.state.ordersLoaded=true;window.PawpalOrders.renderOrderDetail(targetId);}).catch(()=>{window.PawpalOrders.state.ordersError=true;window.PawpalOrders.renderOrderDetail(targetId);});
             updateBreadcrumb(targetId || '');
         } else {
             updateBreadcrumb('');
             if (targetSubtab === 'tab-order-list') {
-                if (!window.PawpalOrders.state.ordersLoaded) {
-                    fetchOrdersData().then(() => window.PawpalOrders.renderOrdersTable());
-                } else {
-                    window.PawpalOrders.renderOrdersTable();
-                }
+                fetchOrdersData();
             } else if (targetSubtab === 'tab-order-products') {
-                const needsFresh = !window.PawpalOrders.state.productsLoaded;
-                if (needsFresh) {
-                    fetchProductsData({ force: true }).then(() => window.PawpalOrders.renderProductsTable());
-                } else {
-                    window.PawpalOrders.renderProductsTable();
-                }
+                fetchProductsData();
             } else if (targetSubtab === 'tab-order-promos') {
-                if (!window.PawpalOrders.state.vouchersLoaded) {
-                    fetchVouchersData().then(() => window.PawpalOrders.renderVouchersTable());
-                } else {
-                    window.PawpalOrders.renderVouchersTable();
-                }
+                fetchVouchersData();
             }
         }
 
@@ -581,7 +648,9 @@
         });
 
         setupOrdersRealtimeSync();
-        syncOrdersAndProductsFromSupabase();
+        // Only hydrate the restored workspace; POS loads its own catalog on demand.
+        const resource = targetTab === 'tab-order-products' ? 'products' : targetTab === 'tab-order-promos' ? 'vouchers' : 'list';
+        syncOrdersAndProductsFromSupabase({resources:[resource]});
 
         // Hỗ trợ kiểm thử tự động cho modal17
         if (window.location.search.includes('v=modal17')) {
@@ -602,24 +671,41 @@
         if (!client || typeof client.channel !== 'function') return;
 
         try {
-            const triggerOrderSync = (pattern) => {
+            const dirty = new Set();
+            let fallbackTimer;
+            const flush = async () => {
+                const resources = [...dirty].filter(resource => window.PawpalOrders.state[resource === 'list' ? 'ordersLoaded' : resource+'Loaded']);
+                dirty.clear();
+                if (resources.length) await syncOrdersAndProductsFromSupabase({resources});
+            };
+            const triggerOrderSync = table => {
+                const groups = new Set();
+                if (['sales_order','sales_order_detail','payment','refund_transaction','return_request','return_request_detail','shipping_provider','customer_profile','customer_phone'].includes(table)) groups.add('list');
+                if (['product','product_variant','product_media','product_variant_media','product_category','inventory','inventory_transaction','stock_reservation','review','variant_color','variant_size','variant_flavor'].includes(table)) groups.add('products');
+                if (['voucher','voucher_redemption'].includes(table)) groups.add('vouchers');
+                if (table === 'voucher_redemption') groups.add('list');
+                if (['customer','pet_profile','customer_profile','customer_phone','customer_address','customer_membership','membership_tier','paw_point_transaction'].includes(table)) window.PawpalDataStore?.invalidate('orders:customers*');
+                if (['review','review_response','review_media'].includes(table)) window.PawpalDataStore?.invalidate('orders:reviews*');
+                if (table === 'inventory_transaction') window.PawpalDataStore?.invalidate('orders:stock-logs*');
+                if (table === 'product_category') window.PawpalDataStore?.invalidate('orders:categories*');
+                for (const resource of groups) {
+                    dirty.add(resource);
+                    window.PawpalDataStore?.invalidate('orders:'+resource+'*');
+                }
+                if (!groups.size) return;
                 if (window.PawpalDataStore?.handleRealtimeChange) {
                     window.PawpalDataStore.handleRealtimeChange({
-                        moduleName: 'Bán hàng',
-                        invalidatePattern: pattern || 'orders:*',
-                        onActiveRefresh: async () => {
-                            await syncOrdersAndProductsFromSupabase({ force: true });
-                        },
-                        debounceMs: 300
+                        moduleName: 'Bán hàng', onActiveRefresh: flush, debounceMs: 400
                     });
-                } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Bán hàng') {
-                    syncOrdersAndProductsFromSupabase({ force: true });
+                } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Bán hàng' && !document.hidden) {
+                    clearTimeout(fallbackTimer);
+                    fallbackTimer = setTimeout(flush, 400);
                 }
             };
 
             _ordersRealtimeChannel = client.channel('admin-orders-live-sync');
-            for (const table of ['sales_order','sales_order_detail','product','product_variant','product_media','product_variant_media','product_category','inventory','inventory_transaction','stock_reservation','voucher','voucher_redemption','payment','refund_transaction','return_request','return_request_detail','review','review_response','customer_profile','customer_phone','customer_address','customer_membership','membership_tier','variant_color','variant_size','variant_flavor','shipping_provider','delivery_option_config']) {
-                _ordersRealtimeChannel.on('postgres_changes', {event:'*',schema:'public',table}, () => triggerOrderSync('orders:*'));
+            for (const table of ['sales_order','sales_order_detail','product','product_variant','product_media','product_variant_media','product_category','inventory','inventory_transaction','stock_reservation','voucher','voucher_redemption','payment','refund_transaction','return_request','return_request_detail','review','review_response','review_media','customer','pet_profile','customer_profile','customer_phone','customer_address','customer_membership','membership_tier','variant_color','variant_size','variant_flavor','shipping_provider','paw_point_transaction']) {
+                _ordersRealtimeChannel.on('postgres_changes', {event:'*',schema:'public',table}, () => triggerOrderSync(table));
             }
             _ordersRealtimeChannel.subscribe();
 

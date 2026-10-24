@@ -641,8 +641,11 @@
             }
 
             chatbotRealtimeChannel = supabase.channel('admin-chatbot-global-sync')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, () => {
-                    if(PawpalChatbot.state.currentConversation)PawpalChatbot.state.currentConversation.messagesLoaded=false;
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, payload => {
+                    const changedId=payload?.new?.id||payload?.old?.id;
+                    for(const conversation of PawpalChatbot.state.liveConversations||[])if(!changedId||conversation.id===changedId)conversation.messagesLoaded=false;
+                    const current=PawpalChatbot.state.currentConversation;
+                    if(current&&(!changedId||current.id===changedId))current.messagesLoaded=false;
                     refreshInboxDebounced(350);
                 })
                 .subscribe((status) => {

@@ -1,0 +1,48 @@
+﻿const fs=require('fs'),assert=require('node:assert/strict');
+const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+ const p=await browser.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));
+ await p.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));await p.goto('http://localhost:3001/');
+ await p.evaluate(()=>{
+  sessionStorage.clear();sessionStorage.setItem('pawpal_admin_active_module','B\u00e1n h\u00e0ng');sessionStorage.setItem('pawpal_admin_user',JSON.stringify({id:'actor-a'}));
+  window.calls={orders:0,products:0,queries:[],rpc:[]};window.events={};
+  window.getSupabaseClient=()=>({rpc:async(name,args)=>{calls.rpc.push({name,args});return {data:name==='get_admin_sales_stock_history_page'?{rows:[],total:0,page:1}:{ids:[],total:0,page:1,counts:{}}}},from:table=>{const query={table};const builder={};for(const name of ['select','order','not','eq','gt','in'])builder[name]=(...args)=>{query[name]=args;return builder};builder.range=async()=>{calls.queries.push(query);return {data:[],error:null}};return builder},channel:()=>({on(type,filter,callback){events[filter.table]=callback;return this},subscribe(){return this}}),removeChannel(){}});
+ });
+ await p.addScriptTag({content:fs.readFileSync('pages/admin/admin-data-store.js','utf8')});
+ let core=fs.readFileSync('pages/admin/modules/orders/orders.js','utf8');core=core.slice(0,core.lastIndexOf('    setTimeout(() => {'))+'window.setupOrdersTest=setupOrdersRealtimeSync;})();';await p.addScriptTag({content:core});
+ await p.evaluate(()=>{PawpalOrderV1.orders=async()=>{calls.orders++;return []};PawpalOrderV1.products=async()=>{calls.products++;return {products:[],categories:[]}}});
+ await p.evaluate(()=>Promise.all([PawpalOrders.fetchOrdersData(),PawpalOrders.fetchOrdersData(),PawpalOrders.fetchProductsData(),PawpalOrders.fetchProductsData()]));
+ assert.deepEqual(await p.evaluate(()=>[calls.orders,calls.products,calls.queries.length]),[1,1,0]);
+ await p.evaluate(()=>Promise.all([PawpalOrders.fetchOrdersData(),PawpalOrders.fetchProductsData()]));assert.deepEqual(await p.evaluate(()=>[calls.orders,calls.products]),[1,1]);
+ await p.evaluate(()=>Promise.all([PawpalOrderV1.customers({id:'customer-a'}),PawpalOrderV1.customers({id:'customer-a'})]));assert.equal(await p.evaluate(()=>calls.queries.length),2);
+ await p.evaluate(()=>PawpalOrderV1.customers({id:'customer-a'}));assert.equal(await p.evaluate(()=>calls.queries.length),2);
+ await p.evaluate(()=>PawpalOrderV1.customers({id:'customer-a',force:true}));assert.equal(await p.evaluate(()=>calls.queries.length),4);
+ const ledgerBefore=await p.evaluate(()=>calls.rpc.length);
+ await p.evaluate(()=>PawpalOrderV1.stockLogPage('product-a',1));
+ const log=await p.evaluate(()=>calls.rpc.at(-1));assert.equal(log.name,'get_admin_sales_stock_history_page');assert.deepEqual(log.args,{p_product_id:'product-a',p_page:1});
+ await p.evaluate(()=>PawpalOrderV1.stockLogPage('product-a',1));assert.equal(await p.evaluate(()=>calls.rpc.length),ledgerBefore+1);
+ await p.evaluate(()=>{setupOrdersTest();events.review();events.product();events.inventory()});await p.waitForTimeout(700);
+ assert.deepEqual(await p.evaluate(()=>[calls.orders,calls.products]),[1,2]);
+ await p.evaluate(()=>{events.payment();events.inventory()});await p.waitForTimeout(700);assert.deepEqual(await p.evaluate(()=>[calls.orders,calls.products]),[2,3]);
+ await p.evaluate(()=>events.customer_address());await p.waitForTimeout(500);assert.deepEqual(await p.evaluate(()=>[calls.orders,calls.products]),[2,3]);
+ await p.evaluate(()=>PawpalOrderV1.customers({id:'customer-a'}));assert.equal(await p.evaluate(()=>calls.queries.length),6);
+ await p.evaluate(()=>{sessionStorage.setItem('pawpal_admin_active_module','other');events.payment()});await p.waitForTimeout(600);assert.equal(await p.evaluate(()=>calls.orders),2);
+ await p.evaluate(()=>{sessionStorage.setItem('pawpal_admin_active_module','B\u00e1n h\u00e0ng');return PawpalOrders.fetchOrdersData()});assert.equal(await p.evaluate(()=>calls.orders),3);
+ await p.evaluate(()=>{sessionStorage.setItem('pawpal_admin_user',JSON.stringify({id:'actor-b'}));return PawpalOrders.fetchOrdersData()});assert.equal(await p.evaluate(()=>calls.orders),4);
+ await p.setContent(fs.readFileSync('pages/admin/modules/orders/orders.html','utf8'),{waitUntil:'domcontentloaded'});
+ const productSource=fs.readFileSync('pages/admin/modules/orders/subtabs/tab-order-products.js','utf8');
+ const modalStart=productSource.lastIndexOf("(function(){");await p.addScriptTag({content:productSource.slice(modalStart)});
+ await p.evaluate(()=>{
+  PawpalOrders.state.products=[{id:'product-a',sku:'SKU-A',name:'Product A',stock:5,minStock:1,variants:[{id:'variant-a',sku:'SKU-A'}]}];
+  window.requestedVariants=[];
+  PawpalOrderV1.stockLogPage=async (id,page)=>{requestedVariants.push({id,page});return {page:1,total:1,rows:[{sku:'SKU-A',date:'2026-10-24',refCode:'receipt',typeLabel:'purchase_receipt',change:'+5',beforeStock:0,afterStock:5,staff:'Staff',reason:'Receipt'}]}};
+  return PawpalOrdersModule.openStockLogsModal('SKU-A');
+ });
+ assert.deepEqual(await p.evaluate(()=>requestedVariants),[{id:'product-a',page:1}]);assert.equal(await p.locator('#stockLogsTableBody tr').count(),1);
+ assert.equal(await p.locator('#stockLogsTableBody td').nth(4).textContent(),'0');assert.equal(await p.locator('#stockLogsTableBody td').nth(5).textContent(),'5');
+ await p.evaluate(()=>{PawpalOrderV1.stockLogPage=async()=>{throw Error('test')};return PawpalOrdersModule.openStockLogsModal('SKU-A')});
+ assert.equal(await p.locator('#stockLogsTableBody td').count(),1);assert.equal(await p.locator('#salesStockHistoryPager button').count(),0);
+ await p.evaluate(()=>{PawpalOrderV1.stockLogPage=()=>new Promise(resolve=>window.finishLedger=resolve);PawpalOrdersModule.openStockLogsModal('SKU-A');document.getElementById('modalStockLogs').classList.remove('active');finishLedger({rows:[],page:1,total:0})});
+ await p.waitForTimeout(30);assert.equal(await p.locator('#modalStockLogs').evaluate(e=>e.classList.contains('active')),false);
+ assert.deepEqual(errors,[]);console.log('PASS egress: cache/single-flight/actor scope, lazy scoped stock ledger, POS directory cache, targeted/coalesced Realtime, inactive invalidation; no live requests.');
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});

@@ -67,11 +67,12 @@
    for(const id of ['btnSubmitCreateOrder','btnFinalizePosOrder','btnCashExact'])if(el(id))el(id).disabled=!q||saving;
    if(el('posCartItemCount'))el('posCartItemCount').textContent=getCart().reduce((n,i)=>n+Number(i.qty||0),0);
    el('btnPosQuickCustomer').style.display=getCustomer()?'none':'';
+   el('createOrderNameRequiredStar').style.display=getCustomer()?'none':'';el('createOrderName').setAttribute('aria-required',String(!getCustomer()));el('createOrderPhone').setAttribute('aria-required','true');
    const mode=value('createOrderDiscountMode');el('createOrderVoucherCode').closest('.form-group-item').style.display=mode==='voucher'?'':'none';el('createOrderPointsInput').closest('.form-group-item').style.display=mode==='points'?'':'none';
    el('deliveryDetailFields').style.display=el('radioAddrDelivery').checked?'block':'none';
    el('posCashCalcSection').style.display=methods.find(m=>m.id===value('createOrderPaymentMethod'))?.name==='Tiền mặt'?'block':'none';
    const cash=Number(value('createOrderCashTendered')||0);el('posLiveCashChange').textContent=q?format(Math.max(0,cash-q.total)):'—';
-   const notice=el('posPricingNotice');notice.style.color=errorText?'#DC2626':'#4F7A65';
+   const notice=el('posPricingNotice');notice.classList.toggle('is-error',Boolean(errorText));
    notice.textContent=errorText||reviewText||(q?.warning?window.PawpalSalesCheckout.message({message:q.warning}):q?'Đơn giữ hàng chưa ghi nhận thu tiền.':ready?'Chọn khách và thêm sản phẩm để tính giá.':'Đang tải cấu hình bán hàng…');
    return {subtotal:q?.subtotal||0,tierDiscount:amounts.posLiveTierDiscount||0,voucherDiscount:q?.voucher_discount||0,pointsDiscount:amounts.posLivePointsDiscount||0,
     shippingFee:q?.shipping_fee||0,grandTotal:q?.total||0,pointsUsed:q?.points_used||0,cashTendered:cash,cashChange:q?Math.max(0,cash-q.total):0};
@@ -93,6 +94,7 @@
    clearTimeout(timer);generation++;quote=null;signature='';quotedSignature='';errorText='';reviewText='';ready=false;saving=false;methods=[];paint();
    try{
     const config=await window.PawpalSalesCheckout.config();methods=config.methods;
+    if(el('createOrderPointsRate'))el('createOrderPointsRate').textContent=config.pointValue?'Giá trị quy đổi: '+window.PawpalOrders.helpers.formatVND(config.pointValue)+' / điểm.':'Cửa hàng chưa cấu hình giá trị quy đổi điểm.';
     el('createOrderDeliveryOption').replaceChildren(new Option('Chọn hình thức giao',''),...config.delivery.map(v=>new Option(v.name+' · '+window.PawpalOrders.helpers.formatVND(v.fee),v.id)));
     el('createOrderPaymentMethod').replaceChildren(new Option('Chọn phương thức dự kiến',''),...methods.map(v=>new Option(v.name,v.id)));el('createOrderPaymentMethod').value=methods.find(v=>v.name==='Tiền mặt')?.id||'';
     window.PawpalOrders.enhanceEntitySelects?.();ready=true;update(true);
@@ -110,7 +112,7 @@
   }
   const voucher=el('createOrderVoucherCode'),popover=el('createOrderVoucherDropdown');
   const renderVouchers=()=>{popover.replaceChildren();for(const v of window.PawpalOrders.state.vouchers||[]){if(!['all','shop'].includes(v.target)||v.status!=='active'||!window.PawpalOrders.helpers.matchSearch(v.code+' '+v.name,voucher.value))continue;
-   const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';button.style.cssText='display:block;width:100%;text-align:left;border:none;background:transparent;padding:9px 12px;color:#203A2C';button.textContent=v.dbCode+' · '+v.name+' · '+v.discount;button.onmousedown=e=>e.preventDefault();button.onclick=()=>{voucher.value=v.dbCode;popover.style.display='none';update();};popover.append(button);
+   const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';button.textContent=v.dbCode+' · '+v.name+' · '+v.discount;button.onmousedown=e=>e.preventDefault();button.onclick=()=>{voucher.value=v.dbCode;popover.style.display='none';update();};popover.append(button);
   }popover.style.display=popover.childElementCount?'block':'none';};
   voucher.addEventListener('input',renderVouchers);voucher.addEventListener('focus',renderVouchers);voucher.addEventListener('blur',()=>setTimeout(()=>popover.style.display='none',100));
   return {update,reset,save};
@@ -240,9 +242,20 @@
     }
 
     // Render bảng danh sách đơn hàng
-    function renderOrdersTable() {
+    async function renderOrdersTable({skipFetch=false}={}) {
         const tbody = document.getElementById('ordersTableBody');
         if (!tbody) return;
+        const pendingStatus = sessionStorage.getItem('pawpal_admin_order_filter_status');
+        if(pendingStatus){sessionStorage.removeItem('pawpal_admin_order_filter_status');currentFilterStatus=pendingStatus;ordersCurrentPage=1;const select=document.getElementById('orderFilterStatus');if(select)select.value=pendingStatus;}
+        if(state.serverPagination&&!skipFetch){
+            tbody.inert=true;tbody.setAttribute('aria-busy','true');
+            const filters={query:(document.getElementById('orderSearchInput')?.value||'').trim(),status:currentFilterStatus,payment:currentFilterPayment,payStatus:currentFilterPayStatus,complaint:filterComplaintOnly,urgent:filterUrgentOnly,overdue:filterSlaOverdueOnly};
+            const success=await PawpalOrders.fetchOrdersData({filters,page:ordersCurrentPage,render:false});
+            if(success===false&&!state.ordersError)return;
+            tbody.inert=false;tbody.removeAttribute('aria-busy');
+            if(success)ordersCurrentPage=state.orderPageMeta.page;
+        }
+        if(skipFetch){tbody.inert=false;tbody.removeAttribute('aria-busy');}
         if (state.ordersError) {
             renderOrdersPagination(0);
             for (const id of ['batchActionToolbar', 'codReconcileSummaryStrip']) {
@@ -257,7 +270,7 @@
         }
 
 
-        const ordersList = state.orders || [];
+        const ordersList = state.serverPagination ? (state.pageOrders||[]) : (state.orders || []);
         if (!state.ordersLoaded) return;
 
         // Tự động nhận diện bộ lọc trạng thái chuyển tiếp từ Dashboard
@@ -285,6 +298,8 @@
         if (statCompletedOrdersEl) statCompletedOrdersEl.textContent = ordersList.filter(o => ['completed', 'delivered', 'da_giao_hang', 'da_giao'].includes(o.status)).length;
         if (statCancelledOrdersEl) statCancelledOrdersEl.textContent = ordersList.filter(o => ['cancelled', 'returned', 'da_huy', 'da_tra_hang'].includes(o.status)).length;
 
+        if(state.serverPagination)Object.entries(state.orderPageMeta?.counts||{}).forEach(([id,value])=>{const element=document.getElementById(id);if(element)element.textContent=String(value);});
+
         const searchVal = (document.getElementById('orderSearchInput')?.value || '').trim();
         const btnOrderClearFilters = document.getElementById('btnOrderClearFilters');
 
@@ -301,7 +316,7 @@
             btnOrderClearFilters.style.display = isAnyFilterActive ? 'inline-flex' : 'none';
         }
 
-        const filtered = ordersList.filter(o => {
+        const filtered = state.serverPagination ? ordersList : ordersList.filter(o => {
             const sla = getOrderSlaInfo(o);
 
             if (currentFilterStatus !== 'ALL' && o.status !== currentFilterStatus) return false;
@@ -366,13 +381,13 @@
         }
 
         // Tính toán phân trang
-        const totalOrdersPages = Math.ceil(filtered.length / ORDERS_PER_PAGE) || 1;
+        const totalOrdersPages = Math.ceil((state.serverPagination ? state.orderPageMeta.total : filtered.length) / ORDERS_PER_PAGE) || 1;
         if (ordersCurrentPage > totalOrdersPages) ordersCurrentPage = totalOrdersPages;
         if (ordersCurrentPage < 1) ordersCurrentPage = 1;
         sessionStorage.setItem('pawpal_admin_orders_page', ordersCurrentPage);
 
         const startIdx = (ordersCurrentPage - 1) * ORDERS_PER_PAGE;
-        const pagedOrders = filtered.slice(startIdx, startIdx + ORDERS_PER_PAGE);
+        const pagedOrders = state.serverPagination ? filtered : filtered.slice(startIdx, startIdx + ORDERS_PER_PAGE);
         if (checkAllEl) {
             const selectedOnPage = pagedOrders.filter(o => selectedBatchOrderIds.includes(o.id)).length;
             checkAllEl.checked = pagedOrders.length > 0 && selectedOnPage === pagedOrders.length;
@@ -530,25 +545,70 @@
     }});
     let posCartItems = [];
     let posCustomerDirectory = [];
-
-    async function loadPosCustomerDirectory() {
-        try { posCustomerDirectory = await window.PawpalOrderV1.customers(); }
-        catch (err) { posCustomerDirectory = []; console.warn('[Orders V1] Customers:', err); }
+    function setPosFieldError(inputId,errorId,message=''){
+        const input=document.getElementById(inputId),error=document.getElementById(errorId);
+        input?.setAttribute('aria-invalid',String(Boolean(message)));
+        if(error){error.textContent=message;error.style.display=message?'':'none';}
     }
-
-    function renderCreateOrderCustomerDropdown(query='') {
-        const root=document.getElementById('createOrderCustomerDropdown');root.replaceChildren();
-        for(const customer of posCustomerDirectory.filter(c=>matchSearch(c.name+' '+c.phone,query)).slice(0,10)){
-            const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';button.style.cssText='display:block;width:100%;text-align:left;background:transparent;border:none;padding:9px 12px;color:#203A2C';
-            const name=document.createElement('strong');name.textContent=customer.name;
-            const info=document.createElement('div');info.style.cssText='color:#4F7A65;font-size:11.5px';info.textContent=customer.phone+' \u00b7 '+customer.rank;
-            button.append(name,info);button.onmousedown=e=>e.preventDefault();button.onclick=()=>selectPosCustomer(customer);root.append(button);
+    const posDeliveryErrors={createOrderReceiverName:['createOrderReceiverNameError','Nhập tên người nhận.'],createOrderReceiverPhone:['createOrderReceiverPhoneError','Kiểm tra số điện thoại người nhận.'],createOrderCustomAddress:['createOrderAddressError','Nhập địa chỉ giao hàng.'],createOrderProvince:['createOrderProvinceError','Nhập tỉnh hoặc thành phố.'],createOrderDeliveryOption:['createOrderDeliveryOptionError','Chọn hình thức giao hàng.']};
+    function validatePosDeliveryField(id){
+        const input=document.getElementById(id),value=input.value.trim(),[errorId,message]=posDeliveryErrors[id];
+        const invalid=document.getElementById('radioAddrDelivery').checked&&(!value||(id==='createOrderReceiverPhone'&&!/^\+?[0-9][0-9 .()-]{7,19}$/.test(value)));
+        setPosFieldError(id,errorId,invalid?message:'');
+    }
+    let posDisabledSnapshot=null,posPreviousFocus=null;
+    function setPosPending(pending){
+        const modal=document.getElementById('modalCreateOrder'),form=document.getElementById('formCreateOrder');
+        modal.dataset.saving=String(pending);form.setAttribute('aria-busy',String(pending));form.inert=pending;
+        if(pending){
+            posPreviousFocus=document.activeElement;
+            posDisabledSnapshot=new Map([...modal.querySelectorAll('input,select,textarea,button')].map(input=>[input,input.disabled]));
+            posDisabledSnapshot.forEach((disabled,input)=>input.disabled=true);
+            modal.querySelector('.admin-modal-card').focus();
+        }else{
+            const quoteDisabled=new Map(['btnSubmitCreateOrder','btnFinalizePosOrder','btnCashExact'].map(id=>document.getElementById(id)).filter(Boolean).map(button=>[button,button.disabled]));
+            posDisabledSnapshot?.forEach((disabled,input)=>input.disabled=disabled);posDisabledSnapshot=null;quoteDisabled.forEach((disabled,button)=>button.disabled=disabled);
+            if(modal.classList.contains('active'))(posPreviousFocus?.getClientRects().length&&!posPreviousFocus.disabled?posPreviousFocus:modal.querySelector('.admin-modal-card')).focus();
+            posPreviousFocus=null;
         }
-        if(!root.childElementCount){const empty=document.createElement('div');empty.style.padding='10px 12px';empty.textContent='Ch\u01b0a t\u00ecm th\u1ea5y kh\u00e1ch ph\u00f9 h\u1ee3p.';root.append(empty);}
-        root.style.display='block';
     }
 
-    function selectPosCustomer(customer){
+    let customerSearchTimer,productSearchTimer,customerSearchVersion=0,productSearchVersion=0;
+    let posProductChoices=[];
+    async function loadPosCustomerDirectory({query=''}={}) {
+        posCustomerDirectory=await window.PawpalOrderV1.searchCustomers(query.trim().slice(0,200));
+        return posCustomerDirectory;
+    }
+    function renderCreateOrderCustomerDropdown(query='') {
+        clearTimeout(customerSearchTimer);const version=++customerSearchVersion;
+        const root=document.getElementById('createOrderCustomerDropdown');root.replaceChildren();root.style.display='block';root.textContent='Đang tìm khách hàng...';
+        customerSearchTimer=setTimeout(async()=>{
+            try{
+                const rows=await window.PawpalOrderV1.searchCustomers(query.trim().slice(0,200));
+                if(version!==customerSearchVersion||document.activeElement!==document.getElementById('createOrderPhone'))return;
+                posCustomerDirectory=rows;root.replaceChildren();
+                for(const customer of rows){
+                    const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';
+                    const name=document.createElement('strong');name.textContent=customer.name||'Chưa có tên khách';
+                    const info=document.createElement('div');info.className='sub-meta-text';info.textContent=[customer.phone,customer.rank].filter(Boolean).join(' · ');
+                    button.append(name,info);button.onmousedown=e=>e.preventDefault();button.onclick=()=>selectPosCustomer(customer);root.append(button);
+                }
+                if(!rows.length&&!query.trim()){root.style.display='none';return;}
+                if(!rows.length)root.textContent='Chưa tìm thấy khách phù hợp.';
+            }catch(error){if(version===customerSearchVersion)root.textContent='Không thể tìm khách. Vui lòng thử lại.';}
+        },300);
+    }
+
+    async function selectPosCustomer(customer){
+        clearTimeout(customerSearchTimer);const version=++customerSearchVersion;
+        document.getElementById('createOrderCustomerDropdown').style.display='none';
+        try{
+            const details=await window.PawpalOrderV1.customers({id:customer.id});
+            if(version!==customerSearchVersion)return;
+            customer=details[0];if(!customer)throw Error('sales_customer_not_found');
+        }catch(error){if(version===customerSearchVersion)document.getElementById('posPricingNotice').textContent='Không thể tải hồ sơ khách. Vui lòng chọn lại.';return;}
+
+        setPosFieldError('createOrderPhone','createOrderPhoneError');setPosFieldError('createOrderName','createOrderNameError');
         activePosCustomer=customer;document.getElementById('createOrderName').value=customer.rawName||'';document.getElementById('createOrderName').readOnly=true;document.getElementById('createOrderPhone').value=customer.phone;
         document.getElementById('createOrderCustomerDropdown').style.display='none';
         for(const [id,text] of [['posCustCardName',customer.name],['posCustCardPhone',customer.phone],['posCustCardRank',customer.rank],['posCustCardPoints',customer.points+' \u0111i\u1ec3m']])document.getElementById(id).textContent=text;
@@ -557,7 +617,7 @@
         document.getElementById('createOrderCustomAddress').value=address?.street_address||'';document.getElementById('createOrderProvince').value=address?.province||'';
         document.getElementById('createOrderReceiverName').value=address?.receiver_name||customer.rawName||'';document.getElementById('createOrderReceiverPhone').value=address?.receiver_phone||customer.phone;
         document.getElementById('btnClearSelectedCustomer').onclick=()=>{
-            activePosCustomer=null;document.getElementById('createOrderName').readOnly=false;
+            ++customerSearchVersion;activePosCustomer=null;document.getElementById('createOrderName').readOnly=false;
             for(const id of ['createOrderName','createOrderPhone','createOrderCustomAddress','createOrderProvince','createOrderReceiverName','createOrderReceiverPhone'])document.getElementById(id).value='';
             document.getElementById('posCustomerSelectedCard').style.display='none';updatePosLiveCalculation();
         };
@@ -570,19 +630,15 @@
         state.posCartPage=Math.min(state.posCartPage||1,Math.max(1,Math.ceil(posCartItems.length/10)));
         for(const item of posCartItems.slice((state.posCartPage-1)*10,state.posCartPage*10)){
             const index=posCartItems.indexOf(item),row=tbody.insertRow(),name=row.insertCell();const title=document.createElement('strong');title.textContent=item.name;const sku=document.createElement('div');sku.className='sub-meta-text';sku.textContent=item.sku;name.append(title,sku);
-            row.insertCell().textContent=formatVND(item.price);const count=document.createElement('input');count.type='number';count.min=1;count.step=1;count.className='admin-input';count.style.width='70px';count.value=item.qty;count.onchange=()=>updatePosCartQty(index,Number(count.value));row.insertCell().append(count);
+            row.insertCell().textContent=formatVND(item.price);const count=document.createElement('input');count.type='number';count.min=1;count.step=1;count.className='admin-input orders-pos__cart-quantity';count.setAttribute('aria-label','S\u1ed1 l\u01b0\u1ee3ng '+item.name);count.value=item.qty;count.onchange=()=>updatePosCartQty(index,Number(count.value));row.insertCell().append(count);
             row.insertCell().textContent=formatVND(item.price*item.qty);const remove=document.createElement('button');remove.type='button';remove.className='admin-btn';remove.textContent='X\u00f3a';remove.onclick=()=>removePosCartItem(index);row.insertCell().append(remove);
         }
-        let pager=document.getElementById('salesPosCartPager');if(!pager){pager=document.createElement('div');pager.id='salesPosCartPager';pager.style.cssText='display:flex;justify-content:center;gap:12px';tbody.closest('.pos-cart-table-wrapper').after(pager);}pager.replaceChildren();
-        if(posCartItems.length>10)for(const [label,page] of [['<',state.posCartPage-1],[String(state.posCartPage),state.posCartPage],['>',state.posCartPage+1]]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.style.cssText='background:transparent;border:none';button.textContent=label;button.disabled=page<1||page>Math.ceil(posCartItems.length/10);button.onclick=()=>{state.posCartPage=page;renderPosCartTable();};pager.append(button);}
+        let pager=document.getElementById('salesPosCartPager');if(!pager){pager=document.createElement('div');pager.id='salesPosCartPager';pager.className='admin-pagination-container';tbody.closest('.pos-cart-table-wrapper').after(pager);}pager.replaceChildren();
+        if(posCartItems.length>10)for(const [label,page] of [['<',state.posCartPage-1],[String(state.posCartPage),state.posCartPage],['>',state.posCartPage+1]]){const button=document.createElement('button');button.type='button';button.className='btn-pagination'+(page===state.posCartPage?' active':'');button.textContent=label;button.disabled=page<1||page>Math.ceil(posCartItems.length/10);button.onclick=()=>{state.posCartPage=page;renderPosCartTable();};pager.append(button);}
         updatePosLiveCalculation();
     }
 
-    function getAvailableProducts() {
-        return (state.products || []).filter(p => p.raw.status === 'active').flatMap(p =>
-            p.variants.filter(v => v.status === 'active').map(v => ({...p, ...v, variantId:v.id, name:p.name + (p.variants.length>1?' - '+v.name:''), image:p.image}))
-        );
-    }
+    function getAvailableProducts() {return posProductChoices;}
 
     function addToPosCart(sku,qty=1){
         const product=getAvailableProducts().find(p=>p.sku===sku);if(!product)return;
@@ -598,14 +654,25 @@
     }
 
     function renderCreateOrderProductDropdown(query=''){
-        const root=document.getElementById('createOrderProductDropdown');root.replaceChildren();
-        for(const product of getAvailableProducts().filter(p=>matchSearch(p.name+' '+p.sku,query)).slice(0,10)){
-            const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';button.style.cssText='display:block;width:100%;text-align:left;background:transparent;border:none;padding:9px 12px;color:#203A2C';const name=document.createElement('strong');name.textContent=product.name;
-            const info=document.createElement('div');info.style.cssText='color:#4F7A65;font-size:11.5px';info.textContent=product.sku+' \u00b7 '+formatVND(product.price);button.append(name,info);button.onmousedown=e=>e.preventDefault();button.onclick=()=>selectPosProduct(product.sku);root.append(button);
-        }root.style.display='block';
+        clearTimeout(productSearchTimer);const version=++productSearchVersion;
+        const root=document.getElementById('createOrderProductDropdown');root.replaceChildren();root.style.display='block';root.textContent='Đang tìm sản phẩm...';
+        productSearchTimer=setTimeout(async()=>{
+            try{
+                const rows=await window.PawpalOrderV1.searchVariants(query.trim().slice(0,200));
+                if(version!==productSearchVersion||document.activeElement!==document.getElementById('createOrderProductSearchInput'))return;
+                posProductChoices=rows.map(v=>({...v,price:Number(v.price)}));root.replaceChildren();
+                for(const product of posProductChoices){
+                    const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';const name=document.createElement('strong');name.textContent=product.name;
+                    const info=document.createElement('div');info.className='sub-meta-text';info.textContent=product.sku+' · '+formatVND(product.price);button.append(name,info);button.onmousedown=e=>e.preventDefault();button.onclick=()=>selectPosProduct(product.sku);root.append(button);
+                }
+                if(!rows.length&&!query.trim()){root.style.display='none';return;}
+                if(!rows.length)root.textContent='Chưa tìm thấy sản phẩm phù hợp.';
+            }catch(error){if(version===productSearchVersion)root.textContent='Không thể tìm sản phẩm. Vui lòng thử lại.';}
+        },300);
     }
 
     function selectPosProduct(sku) {
+        ++productSearchVersion;clearTimeout(productSearchTimer);
         const prod = getAvailableProducts().find(p => p.sku === sku);
         if (!prod) return;
         const searchInput = document.getElementById('createOrderProductSearchInput');
@@ -704,7 +771,7 @@
                 if (e.target.checked) selected.add(id);
                 else selected.delete(id);
             }
-            state.selectedBatchOrderIds = [...selected];
+            state.selectedBatchOrderIds = [...selected].slice(0,100);
             renderOrdersTable();
         });
 
@@ -726,8 +793,13 @@
         });
 
         // Xuất file báo cáo đơn hàng Excel
-        document.getElementById('btnExportOrderReport')?.addEventListener('click', () => {
-            const ordersList = state.orders || [];
+        document.getElementById('btnExportOrderReport')?.addEventListener('click', async event => {
+            const button=event.currentTarget;if(button.disabled)return;
+            if(!window.XLSX){showToast('Th\u01b0 vi\u1ec7n xu\u1ea5t file ch\u01b0a s\u1eb5n s\u00e0ng. Vui l\u00f2ng th\u1eed l\u1ea1i.','info');return;}
+            button.disabled=true;
+            try {
+            let ordersList;
+            try {ordersList=state.serverPagination?await window.PawpalOrderV1.orders():state.orders||[];}catch(error){showToast('Kh\u00f4ng th\u1ec3 t\u1ea3i d\u1eef li\u1ec7u xu\u1ea5t file.','warning');return;}
             if (ordersList.length === 0) {
                 showToast('Không có dữ liệu đơn hàng để xuất file.', 'warning');
                 return;
@@ -754,6 +826,7 @@
             } else {
                 showToast('Đang nạp thư viện xuất file, vui lòng thử lại sau giây lát...', 'info');
             }
+            } finally {button.disabled=false;}
         });
 
         document.getElementById('btnQuickReconcileAllCod')?.addEventListener('click',()=>{
@@ -764,16 +837,31 @@
 
         // POS Listeners
         document.getElementById('btnOpenCreateOrderModal')?.addEventListener('click',async()=>{
-            document.getElementById('formCreateOrder').reset();posCartItems=[];activePosCustomer=null;state.posOrderId=crypto.randomUUID();state.posCartPage=1;document.getElementById('createOrderName').readOnly=false;
+            document.getElementById('formCreateOrder').reset();for(const [id,[errorId]] of Object.entries(posDeliveryErrors))setPosFieldError(id,errorId);setPosFieldError('createOrderPhone','createOrderPhoneError');setPosFieldError('createOrderName','createOrderNameError');posCartItems=[];activePosCustomer=null;state.posOrderId=crypto.randomUUID();state.posCartPage=1;document.getElementById('createOrderName').readOnly=false;
             document.getElementById('posCustomerSelectedCard').style.display='none';document.getElementById('createOrderMemberBanner').style.display='none';document.getElementById('modalCreateOrder').classList.add('active');
-            renderPosCartTable();await Promise.all([loadPosCustomerDirectory(),posPricing.reset()]);
+            const search=document.getElementById('createOrderProductSearchInput');
+            search.disabled=true;
+            try {
+                ++customerSearchVersion;++productSearchVersion;posProductChoices=[];
+                renderPosCartTable();
+                await Promise.all([window.PawpalOrders.fetchVouchersData(),posPricing.reset()]);
+                if(state.vouchersError) document.getElementById('posPricingNotice').textContent='Không thể tải đủ dữ liệu bán hàng. Đóng và mở lại để thử lại.';
+            } catch(error) {
+                document.getElementById('posPricingNotice').textContent='Không thể tải dữ liệu bán hàng. Đóng và mở lại để thử lại.';
+            } finally { search.disabled=false; }
         });
         document.getElementById('btnPosQuickCustomer')?.addEventListener('click',async event=>{
-            const button=event.currentTarget;button.disabled=true;
+            const button=event.currentTarget;
+            const name=document.getElementById('createOrderName').value.trim().replace(/\s+/g,' '),phone=document.getElementById('createOrderPhone').value.trim();
+            const nameError=name.length<2||name.length>200?'Họ và tên cần từ 2 đến 200 ký tự.':'',phoneError=!/^0[0-9]{9}$/.test(phone)?'Nhập số điện thoại 10 chữ số, bắt đầu bằng 0.':'';
+            setPosFieldError('createOrderName','createOrderNameError',nameError);setPosFieldError('createOrderPhone','createOrderPhoneError',phoneError);
+            if(nameError||phoneError){document.getElementById(nameError?'createOrderName':'createOrderPhone').focus();return;}
+            if(button.disabled||document.getElementById('modalCreateOrder').dataset.saving==='true')return;
+            setPosPending(true);button.disabled=true;const text=button.textContent;button.textContent='Đang thêm…';
             try{const {data,error}=await window.getSupabaseClient().rpc('create_customer_quick',{p_full_name:document.getElementById('createOrderName').value.trim(),p_phone:document.getElementById('createOrderPhone').value.trim()});if(error)throw error;
-                await loadPosCustomerDirectory();const created=posCustomerDirectory.find(c=>c.id===data);if(!created)throw Error('customer_reload_required');selectPosCustomer(created);showToast('\u0110\u00e3 th\u00eam v\u00e0 ch\u1ecdn kh\u00e1ch h\u00e0ng.');
+                await selectPosCustomer({id:data});if(!activePosCustomer||activePosCustomer.id!==data)throw Error('customer_reload_required');showToast('\u0110\u00e3 th\u00eam v\u00e0 ch\u1ecdn kh\u00e1ch h\u00e0ng.');
             }catch(error){document.getElementById('posPricingNotice').textContent='Kh\u00f4ng th\u1ec3 th\u00eam nhanh. Ki\u1ec3m tra t\u00ean v\u00e0 s\u1ed1 \u0111i\u1ec7n tho\u1ea1i; n\u1ebfu \u0111\u00e3 t\u1ed3n t\u1ea1i h\u00e3y ch\u1ecdn t\u1eeb danh s\u00e1ch.';}
-            finally{button.disabled=false;}
+            finally{button.disabled=false;button.textContent=text;setPosPending(false);}
         });
 
         const handleAddProductToPos = () => {
@@ -806,7 +894,16 @@
             renderCreateOrderProductDropdown(e.target.value);
         });
 
+        for(const [id,[errorId]] of Object.entries(posDeliveryErrors)){
+            const input=document.getElementById(id);
+            input.addEventListener('blur',()=>validatePosDeliveryField(id));
+            input.addEventListener('input',()=>{if(input.getAttribute('aria-invalid')==='true')validatePosDeliveryField(id);});
+            input.addEventListener('change',()=>{if(input.getAttribute('aria-invalid')==='true')validatePosDeliveryField(id);});
+            document.getElementById('radioAddrInStore').addEventListener('change',()=>setPosFieldError(id,errorId));
+        }
+        document.getElementById('createOrderName')?.addEventListener('input',()=>setPosFieldError('createOrderName','createOrderNameError'));
         document.getElementById('createOrderPhone')?.addEventListener('input', (e) => {
+            setPosFieldError('createOrderPhone','createOrderPhoneError');
             if(activePosCustomer&&e.target.value!==activePosCustomer.phone){activePosCustomer=null;document.getElementById('createOrderName').readOnly=false;document.getElementById('createOrderName').value='';document.getElementById('posCustomerSelectedCard').style.display='none';updatePosLiveCalculation();}
             renderCreateOrderCustomerDropdown(e.target.value);
         });
@@ -851,14 +948,14 @@
 
         let isPosFinalizing=false;
         const handleFinalizePosOrder=async()=>{
-            if(isPosFinalizing)return;isPosFinalizing=true;
+            if(isPosFinalizing||document.getElementById('modalCreateOrder').dataset.saving==='true')return;isPosFinalizing=true;setPosPending(true);const submit=document.getElementById('btnSubmitCreateOrder'),text=submit.textContent;submit.textContent='Đang tạo đơn…';
             try{
                 const id=await posPricing.save(state.posOrderId);document.getElementById('modalCreateOrder').classList.remove('active');
-                await syncOrdersAndProductsFromSupabase({force:true});const order=state.orders.find(o=>o.rawId===id);
+                await syncOrdersAndProductsFromSupabase({force:true});const order=await PawpalOrders.ensureOrder(id,{force:true});
                 if(order){state.selectedOrderId=order.id;PawpalOrders.switchSubtab('tab-order-detail');PawpalOrders.renderOrderDetail(order.id);}
                 showToast('\u0110\u00e3 t\u1ea1o \u0111\u01a1n v\u00e0 gi\u1eef t\u1ed3n. Ch\u01b0a ghi nh\u1eadn thu ti\u1ec1n.');
-            }catch(error){showToast(window.PawpalSalesCheckout.message(error),'warning');}
-            finally{isPosFinalizing=false;}
+            }catch(error){const message=window.PawpalSalesCheckout.message(error),notice=document.getElementById('posPricingNotice');notice.textContent=message;notice.classList.add('is-error');showToast(message,'warning');}
+            finally{isPosFinalizing=false;setPosPending(false);submit.textContent=text;}
         };
 
         document.getElementById('btnSubmitCreateOrder')?.addEventListener('click', handleFinalizePosOrder);
@@ -949,7 +1046,7 @@
         state.selectedBatchOrderIds = state.selectedBatchOrderIds || [];
         if (state.selectedBatchOrderIds.includes(orderId)) {
             state.selectedBatchOrderIds = state.selectedBatchOrderIds.filter(id => id !== orderId);
-        } else {
+        } else if (state.selectedBatchOrderIds.length < 100) {
             state.selectedBatchOrderIds.push(orderId);
         }
         renderOrdersTable();
@@ -1045,25 +1142,27 @@
         document.getElementById('modalPackingSlip')?.classList.add('active');
     };
 
-    window.PawpalOrdersModule.printBatchPackingSlips = function() {
+    window.PawpalOrdersModule.printBatchPackingSlips = async function() {
         const selected = state.selectedBatchOrderIds || [];
         if (selected.length === 0) {
             showToast('Vui lòng chọn ít nhất một đơn hàng để in phiếu đóng gói.', 'warning');
             return;
         }
         const container = document.getElementById('packingSlipContainer');
-        const selectedOrders = (state.orders || []).filter(o => selected.includes(o.id));
+        let selectedOrders;
+        try {selectedOrders=state.serverPagination?await PawpalOrders.refreshSelectedOrders(selected):(state.orders||[]).filter(o=>selected.includes(o.id));}catch(error){showToast('Kh\u00f4ng th\u1ec3 t\u1ea3i c\u00e1c \u0111\u01a1n \u0111\u00e3 ch\u1ecdn.','warning');return;}
         if (container) {
             container.innerHTML = selectedOrders.map(o => PawpalOrders.helpers.generatePackingSlipHtml(o)).join('');
         }
         document.getElementById('modalPackingSlip')?.classList.add('active');
     };
 
-    window.PawpalOrdersModule.exportDispatchManifest = function() {
+    window.PawpalOrdersModule.exportDispatchManifest = async function() {
         const selected = state.selectedBatchOrderIds || [];
-        const targetOrders = selected.length > 0
-            ? (state.orders || []).filter(o => selected.includes(o.id))
-            : (state.orders || []).filter(o => o.status === 'shipping' || o.status === 'confirmed');
+        let source=state.orders||[];
+        if(selected.length&&state.serverPagination){try{source=await PawpalOrders.refreshSelectedOrders(selected);}catch(error){showToast('Kh\u00f4ng th\u1ec3 t\u1ea3i c\u00e1c \u0111\u01a1n \u0111\u00e3 ch\u1ecdn.','warning');return;}}
+        if(!selected.length&&state.serverPagination){try{source=await window.PawpalOrderV1.orders();}catch(error){showToast('Kh\u00f4ng th\u1ec3 t\u1ea3i b\u1ea3ng k\u00ea.','warning');return;}}
+        const targetOrders=source.filter(o=>selected.length?selected.includes(o.id):o.status==='shipping'||o.status==='confirmed');
 
         if (targetOrders.length === 0) {
             showToast('Không có đơn hàng nào để xuất bảng kê bàn giao vận chuyển.', 'warning');
@@ -1133,7 +1232,7 @@
     };
 
     window.PawpalOrdersModule.closeModal = function(modalId) {
-        document.getElementById(modalId)?.classList.remove('active');
+        const modal=document.getElementById(modalId);if(modal?.dataset.saving==='true')return;modal?.classList.remove('active');
     };
 
     window.PawpalOrdersModule.selectPosCustomer = function(custId) {
@@ -1175,16 +1274,16 @@
         for(const id of ['salesCashierMethod','salesCashierPayment','grnSupplierSelect','grnProductPicker','createOrderDeliveryOption','createOrderPaymentMethod','shipCarrierSelect','batchCarrierSelect']) {
             const select=document.getElementById(id);if(!select)continue;
             if(select._entityInput){select._entityInput.disabled=select.disabled;if(document.activeElement!==select._entityInput)select._entityInput.value=select.value?select.selectedOptions[0]?.textContent||'':'';continue;}
-            const wrapper=document.createElement('div');wrapper.style.cssText='position:relative;width:100%;';
+            const standard=Boolean(select.closest('.admin-modal-standard')),wrapper=document.createElement('div');wrapper.className='admin-autocomplete';if(!standard)wrapper.style.cssText='position:relative;width:100%;';
             const input=document.createElement('input');input.type='text';input.className='admin-input';input.autocomplete='off';input.id=id+'Search';input.placeholder='Tìm và chọn từ danh sách';input.setAttribute('aria-label',select.closest('.form-group-item')?.querySelector('label')?.textContent||'Chọn thông tin');
-            const popover=document.createElement('div');popover.className='customer-autocomplete-popover';popover.style.cssText='display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:240px;overflow-y:auto;overscroll-behavior:contain;z-index:2500;border:1px solid #ECF2EE;border-radius:9px;background:#FFF;box-shadow:0 10px 28px rgba(35,107,72,.14);';
+            const popover=document.createElement('div');popover.className='customer-autocomplete-popover';if(standard)popover.style.display='none';else popover.style.cssText='display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:240px;overflow-y:auto;overscroll-behavior:contain;z-index:2500;border:1px solid #ECF2EE;border-radius:9px;background:#FFF;box-shadow:0 10px 28px rgba(35,107,72,.14);';
             select.before(wrapper);wrapper.append(select,input,popover);select.hidden=true;select.style.display='none';input.disabled=select.disabled;select._entityInput=input;input.value=select.value?select.selectedOptions[0]?.textContent||'':'';
             const render=()=>{
                 popover.replaceChildren();const q=input.value.trim().toLocaleLowerCase('vi');
                 const options=[...select.options].filter(o=>o.value&&!o.disabled&&o.textContent.trim().toLocaleLowerCase('vi').includes(q));
-                for(const option of options){const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';button.style.cssText='display:block;width:100%;text-align:left;padding:9px 12px;border:none;background:transparent;color:#203A2C;font-weight:600;';button.textContent=option.textContent;
+                for(const option of options){const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';if(!standard)button.style.cssText='display:block;width:100%;text-align:left;padding:9px 12px;border:none;background:transparent;color:#203A2C;font-weight:600;';button.textContent=option.textContent;
                     button.addEventListener('mousedown',e=>e.preventDefault());button.addEventListener('click',()=>{select.value=option.value;input.value=option.textContent;popover.style.display='none';select.dispatchEvent(new Event('change',{bubbles:true}));});popover.append(button);}
-                if(!options.length){const text=document.createElement('div');text.style.padding='10px 12px';text.textContent='Không có lựa chọn phù hợp.';popover.append(text);}
+                if(!options.length){const text=document.createElement('div');text.className='admin-autocomplete__empty';if(!standard)text.style.padding='10px 12px';text.textContent='Không có lựa chọn phù hợp.';popover.append(text);}
                 popover.style.display='block';
             };
             input.addEventListener('focus',render);input.addEventListener('input',()=>{select.value='';select.dispatchEvent(new Event('change',{bubbles:true}));render();});input.addEventListener('keydown',e=>{if(e.key==='Escape')popover.style.display='none';if(e.key==='Enter'){e.preventDefault();popover.querySelector('button')?.click();}});
@@ -1316,6 +1415,7 @@
  }
  api.openBatchDispatchModal=async()=>{
   const selected=m.state.selectedBatchOrderIds||[];if(!selected.length||selected.length>100){m.helpers.showToast('Chọn từ 1 đến 100 đơn để bàn giao.','warning');return;}
+  try{await m.refreshSelectedOrders(selected);}catch(error){m.helpers.showToast(message(error),'warning');return;}
   const orders=selected.map(order);if(orders.some(o=>!o||!['confirmed','packing'].includes(o.rawStatus))){m.helpers.showToast('Chỉ chọn các đơn đã xác nhận và đang chuẩn bị hàng.','warning');return;}
   batch={id:crypto.randomUUID(),orders:structuredClone(orders),tracking:new Map(orders.map(o=>[o.rawId,o.trackingNumber==='—'?'':o.trackingNumber]))};batchPage=1;el('formBatchDispatch').reset();el('batchDispatchCount').textContent=orders.length+' đơn';el('batchDispatchWarningBox').textContent='';el('batchDispatchWarningBox').style.display='none';renderBatch();el('modalBatchDispatch').classList.add('active');el('btnSubmitBatchDispatch').disabled=true;
   try{await providers('batchCarrierSelect');}catch(error){el('batchDispatchWarningBox').textContent='Không tải được đơn vị vận chuyển.';el('batchDispatchWarningBox').style.display='block';}
@@ -1338,7 +1438,7 @@
  const m=window.PawpalOrders,api=window.PawpalOrdersModule,fmt=m.helpers.formatVND;
  const esc=value=>String(value??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const cells=values=>'<tr>'+values.map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>';
- const table=(headers,rows)=>'<table class="slip-items-table"><thead><tr>'+headers.map(v=>'<th>'+esc(v)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table>';
+ const table=(headers,rows)=>'<table class="slip-items-table"><thead><tr>'+headers.map(v=>'<th scope="col">'+esc(v)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table>';
  function packing(o){return '<section class="packing-slip-sheet"><h2>Phiếu đóng gói</h2><p>Pawpal · '+esc(o.id)+'</p><p>Người nhận '+esc(o.receiverName||o.customerName)+' · '+esc(o.receiverPhone||o.phone)+'</p><p>'+esc(o.address)+'</p><p>Đơn vị vận chuyển '+esc(o.carrier)+' · Mã vận đơn '+esc(o.trackingNumber)+'</p>'+table(['SKU','Sản phẩm','Số lượng'],o.products.map(p=>cells([p.sku,p.name,p.quantity])).join(''))+'<p>Ghi chú '+esc(o.customerNote||'—')+'</p><p>Người đóng gói ____________________ Người nhận bàn giao ____________________</p></section>';}
  function manifest(orders){return '<section class="manifest-sheet"><h2>Bảng kê vận chuyển</h2><p>Thời gian in '+esc(new Date().toLocaleString('vi-VN'))+'</p>'+table(['Mã đơn','Đơn vị vận chuyển','Mã vận đơn','Người nhận','Địa chỉ','Số sản phẩm'],orders.map(o=>cells([o.id,o.carrier,o.trackingNumber,(o.receiverName||o.customerName)+' · '+(o.receiverPhone||o.phone),o.address,o.products.reduce((n,p)=>n+p.quantity,0)])).join(''))+'<p>Tổng số đơn '+orders.length+'</p><p>Người bàn giao ____________________ Người tiếp nhận ____________________</p></section>';}
  // Replace the legacy generators before the list module captures helper references.
@@ -1348,13 +1448,13 @@
   if(!o)return;
   const root=document.getElementById('posReceiptPrintArea');
   if(!root)return;
-  root.innerHTML='<h2>Phiếu bán hàng</h2><p>Pawpal · '+esc(o.id)+'</p><p>Ngày lập '+esc(m.helpers.formatDateTime(o.createdAt))+'</p><p>Khách '+esc(o.customerName)+' · '+esc(o.phone)+'</p>'+table(['Sản phẩm','SKU','Số lượng','Đơn giá','Thành tiền'],o.products.map(p=>cells([p.name,p.sku,p.quantity,fmt(p.price),fmt(p.total)])).join(''))+'<p>Tiền hàng '+esc(fmt(o.subtotal))+'</p><p>Giảm giá '+esc(fmt(o.discount))+'</p><p>Phí giao '+esc(fmt(o.shippingFee))+'</p><p><strong>Tổng đơn '+esc(fmt(o.total))+'</strong></p><p>Đã thu sau hoàn '+esc(fmt(o.collected))+'</p><p>Đã hoàn '+esc(fmt(o.refunded))+'</p><p>Còn phải thu '+esc(fmt(o.remaining))+'</p><p>Phương thức đã ghi nhận '+esc(o.paymentMethodName)+'</p><p>Phiếu bán hàng dùng để đối chiếu đơn và thu tiền.</p>';
+  root.innerHTML='<p>Pawpal · '+esc(o.id)+'</p><p>Ngày lập '+esc(m.helpers.formatDateTime(o.createdAt))+'</p><p>Khách '+esc(o.customerName)+' · '+esc(o.phone)+'</p>'+'<div class="orders-receipt__table" tabindex="0" role="region" aria-labelledby="posReceiptTitle">'+table(['Sản phẩm','SKU','Số lượng','Đơn giá','Thành tiền'],o.products.map(p=>cells([p.name,p.sku,p.quantity,fmt(p.price),fmt(p.total)])).join(''))+'</div><p class="orders-receipt__amount"><span>Tiền hàng</span><span>'+esc(fmt(o.subtotal))+'</span></p><p class="orders-receipt__amount"><span>Giảm giá</span><span>'+esc(fmt(o.discount))+'</span></p><p class="orders-receipt__amount"><span>Phí giao</span><span>'+esc(fmt(o.shippingFee))+'</span></p><p><strong>Tổng đơn '+esc(fmt(o.total))+'</strong></p><p class="orders-receipt__amount"><span>Đã thu sau hoàn</span><span>'+esc(fmt(o.collected))+'</span></p><p class="orders-receipt__amount"><span>Đã hoàn</span><span>'+esc(fmt(o.refunded))+'</span></p><p class="orders-receipt__amount"><span>Còn phải thu</span><span>'+esc(fmt(o.remaining))+'</span></p><p>Phương thức đã ghi nhận '+esc(o.paymentMethodName)+'</p><p>Phiếu bán hàng dùng để đối chiếu đơn và thu tiền.</p>';
   document.getElementById('modalPosReceipt').classList.add('active');
  };
  api.printReceiptDirectly=()=>{
   const source=document.getElementById('posReceiptPrintArea');if(!source)return;
   const frame=document.createElement('iframe');frame.style.cssText='position:fixed;width:1px;height:1px;opacity:0;pointer-events:none';document.body.append(frame);
-  const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Phiếu bán hàng</title><style>body{font:14px Arial;color:#203A2C;padding:24px}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px;overflow-wrap:anywhere}th{color:#236B48}h2{color:#236B48}</style></head><body>'+source.innerHTML+'</body></html>');doc.close();
+  const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Phiếu bán hàng</title><style>body{font:14px Arial;color:#203A2C;padding:24px}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px;overflow-wrap:anywhere}th{color:#236B48}h2{color:#236B48}</style></head><body><h2>'+document.getElementById('posReceiptTitle').textContent+'</h2>'+source.innerHTML+'</body></html>');doc.close();
   frame.contentWindow.focus();frame.contentWindow.print();setTimeout(()=>frame.remove(),60000);
  };
 })();

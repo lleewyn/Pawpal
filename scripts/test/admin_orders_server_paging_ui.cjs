@@ -1,0 +1,38 @@
+﻿const fs=require('fs'),assert=require('node:assert/strict');
+const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+ const p=await browser.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));
+ await p.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));await p.goto('http://localhost:3001/');await p.setContent(fs.readFileSync('pages/admin/modules/orders/orders.html','utf8'),{waitUntil:'domcontentloaded'});
+ await p.evaluate(()=>{
+  sessionStorage.clear();sessionStorage.setItem('pawpal_admin_user',JSON.stringify({id:'paging-actor'}));
+  window.rpcCalls=[];window.detailCalls=[];
+  window.fixtures=Array.from({length:64},(_,i)=>({id:'ORD-'+i,rawId:'uuid-'+i,rawStatus:i%2?'confirmed':'pending',status:i%2?'confirmed':'pending',customerName:'Customer '+i,phone:'0901234567',createdAt:'2026-10-24T08:00:00+07:00',total:100000,paymentStatus:'unpaid',paymentMethod:'cash',paymentMethodName:'Cash',products:[],updatedAt:'version'}));
+  window.getSupabaseClient=()=>({rpc:async(name,args)=>{rpcCalls.push({name,args});if(window.failRequest)return {error:{message:'test failure'}};if(window.delayRequest)await new Promise(r=>setTimeout(r,args.p_filters.query==='Customer 1'?80:5));const f=args.p_filters;const filtered=fixtures.filter(o=>(!f.query||o.customerName.includes(f.query))&&(f.status==='ALL'||o.status===f.status));const page=Math.min(args.p_page,Math.max(1,Math.ceil(filtered.length/10)));return {data:{total:filtered.length,page,ids:filtered.slice((page-1)*10,page*10).map(o=>o.rawId),counts:{statTotalOrders:64,statPendingOrders:32}}}}});
+ });
+ await p.addScriptTag({content:fs.readFileSync('pages/admin/admin-data-store.js','utf8')});
+ let core=fs.readFileSync('pages/admin/modules/orders/orders.js','utf8');core=core.slice(0,core.lastIndexOf('    setTimeout(() => {'))+'})();';await p.addScriptTag({content:core});
+ await p.evaluate(()=>{PawpalOrderV1.orders=async (options={})=>{detailCalls.push(options);if(options.ids)return fixtures.filter(o=>options.ids.includes(o.rawId));if(options.id)return fixtures.filter(o=>o.id===options.id||o.rawId===options.id);if(window.allowFullSnapshot)return fixtures;throw Error('unexpected full snapshot')};});
+ const source=fs.readFileSync('pages/admin/modules/orders/subtabs/tab-order-list.js','utf8');const start=source.indexOf('    const ORDERS_PER_PAGE');const end=source.indexOf('    let activePosCustomer',start);const a=source.indexOf("        document.getElementById('checkSelectAllOrders')?.addEventListener");const b=source.indexOf("        document.getElementById('btnBatchDeselectAll')",a);
+ await p.addScriptTag({content:`(()=>{const PawpalOrders=window.PawpalOrders,{state,helpers}=PawpalOrders,{formatVND,getOrderSlaInfo,matchSearch}=helpers;${source.slice(start,end)}${source.slice(a,b)}PawpalOrders.controllers.list={renderOrdersTable};window.testOrders={render:renderOrdersTable,clear:clearAllOrderFilters,filter:value=>{currentFilterStatus=value;ordersCurrentPage=1;return renderOrdersTable()}};})();`});
+ await p.evaluate(()=>testOrders.render());assert.equal(await p.locator('#ordersTableBody .order-row-checkbox').count(),10);assert.equal(await p.locator('#statTotalOrders').textContent(),'64');assert.equal(await p.evaluate(()=>rpcCalls.length),1);
+ await p.evaluate(()=>testOrders.render());assert.equal(await p.evaluate(()=>rpcCalls.length),1);
+ await p.check('#checkSelectAllOrders');await p.click('#ordersPagination [data-page="5"]');await p.waitForFunction(()=>document.querySelector('#ordersTableBody .order-row-checkbox')?.dataset.id==='ORD-40');await p.check('#checkSelectAllOrders');
+ assert.equal(await p.evaluate(()=>PawpalOrders.state.selectedBatchOrderIds.length),20);assert.equal(await p.evaluate(()=>PawpalOrders.state.orders.length),20);
+ await p.evaluate(()=>testOrders.filter('pending'));assert.equal(await p.locator('#ordersTableBody .order-row-checkbox').count(),10);assert.equal(await p.evaluate(()=>PawpalOrders.state.orderPageMeta.total),32);
+ await p.fill('#orderSearchInput','Customer 62');await p.evaluate(()=>testOrders.render());assert.equal(await p.locator('#ordersTableBody .order-row-checkbox').count(),1);
+ await p.evaluate(()=>PawpalOrders.ensureOrder('ORD-63'));assert.equal(await p.evaluate(()=>PawpalOrders.state.orders.some(o=>o.id==='ORD-63')),true);
+ await p.fill('#orderSearchInput','missing');await p.evaluate(()=>testOrders.render());assert.equal(await p.locator('#ordersPagination').isVisible(),false);
+ await p.evaluate(()=>{window.failRequest=true});await p.fill('#orderSearchInput','failure');await p.evaluate(()=>testOrders.render());assert.equal(await p.locator('#ordersTableBody .order-row-checkbox').count(),0);assert.equal(await p.locator('#batchActionToolbar').isVisible(),false);
+ await p.evaluate(()=>{window.failRequest=false;window.delayRequest=true});await p.fill('#orderSearchInput','Customer 1');await p.evaluate(()=>{testOrders.render();document.getElementById('orderSearchInput').value='Customer 62';return testOrders.render()});await p.waitForTimeout(100);assert.equal(await p.locator('#ordersTableBody .order-row-checkbox').first().getAttribute('data-id'),'ORD-62');
+ assert.equal(await p.evaluate(()=>detailCalls.every(c=>c.id||c.ids.length<=10)),true);
+ const bulkStart=source.indexOf('    window.PawpalOrdersModule.printBatchPackingSlips =');const bulkEnd=source.indexOf('    window.PawpalOrdersModule.openReturnRefundModal',bulkStart);
+ const exportStart=source.indexOf("        document.getElementById('btnExportOrderReport')");const exportEnd=source.indexOf("        document.getElementById('btnQuickReconcileAllCod')",exportStart);
+ await p.addScriptTag({content:`(()=>{const PawpalOrders=window.PawpalOrders,state=PawpalOrders.state,{showToast,formatDateTime}=PawpalOrders.helpers;${source.slice(bulkStart,bulkEnd)}${source.slice(exportStart,exportEnd)}})();`});
+ await p.evaluate(()=>{PawpalOrders.helpers.generatePackingSlipHtml=o=>'<div>'+o.id+'</div>';PawpalOrders.helpers.generateManifestHtml=rows=>'COUNT '+rows.length;return PawpalOrdersModule.printBatchPackingSlips()});
+ assert.equal(await p.locator('#packingSlipContainer > div').count(),20);
+ assert.equal(await p.evaluate(()=>detailCalls.at(-1).ids.length),20);
+ await p.evaluate(()=>{window.allowFullSnapshot=true;PawpalOrders.state.selectedBatchOrderIds=[];return PawpalOrdersModule.exportDispatchManifest()});assert.equal(await p.locator('#manifestContentContainer').textContent(),'COUNT 32');
+ await p.evaluate(()=>{window.XLSX={utils:{json_to_sheet:rows=>{window.exportedRows=rows;return rows},book_new:()=>({}),book_append_sheet(){}},writeFile(){}};document.getElementById('btnExportOrderReport').click()});
+ await p.waitForFunction(()=>window.exportedRows?.length===64);assert.deepEqual(errors,[]);
+ console.log('PASS server paging UI: 10 rows, global counts, page cache, cross-page selection, filters/search, deep detail, errors and late-response guard; mocked transport only.');
+ }finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});

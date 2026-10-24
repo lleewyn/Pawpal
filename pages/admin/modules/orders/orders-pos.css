@@ -1,0 +1,47 @@
+/* POS business layout. Shared form/modal metrics live in admin-components.css. */
+.orders-pos .admin-modal-card { width: var(--admin-modal-wide); }
+.orders-pos .pos-customer-selected-card { align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: transparent; border: 0; padding: 0; margin: 0; }
+.orders-pos .pos-customer-selected-card > div { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.orders-pos .pos-customer-selected-card span { color: var(--text-muted); font-size: 12px; }
+.orders-pos #posCustCardName { color: var(--text-heading); font-weight: 600; }
+.orders-pos .btn-clear-selection-text { background: transparent; border: 0; color: var(--text-heading); cursor: pointer; font: 600 12px var(--admin-modal-font); }
+.orders-pos .address-select-group { display: grid; gap: 14px; }
+.orders-pos .address-item-card { display: flex; align-items: flex-start; gap: 10px; padding: 0; border: 0; background: transparent; box-shadow: none; }
+.orders-pos .address-item-card.selected { border: 0; background: transparent; }
+.orders-pos .address-item-content { min-width: 0; flex: 1; }
+.orders-pos .address-street-line { display: block; margin-top: 3px; color: var(--text-muted); }
+.orders-pos #deliveryDetailFields { margin-top: 12px; }
+.orders-pos #deliveryDetailFields > label:not(:first-child) { margin-top: 12px; }
+.orders-pos .pos-add-item-bar { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
+.orders-pos .pos-add-item-bar .customer-autocomplete-wrapper { flex: 1; min-width: 0; }
+.orders-pos #createOrderQty { width: 76px; text-align: center; }
+.orders-pos .pos-cart-table-wrapper { overflow: auto; margin: 0; border: 0; overscroll-behavior: contain; }
+.orders-pos .pos-cart-table { min-width: 520px; }
+.orders-pos .pos-cart-table th:nth-child(2),.orders-pos .pos-cart-table td:nth-child(2),.orders-pos .pos-cart-table th:nth-child(4),.orders-pos .pos-cart-table td:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; }
+.orders-pos .pos-cart-table th:nth-child(3),.orders-pos .pos-cart-table td:nth-child(3) { text-align: center; width: 100px; }
+.orders-pos .pos-cart-table th:last-child,.orders-pos .pos-cart-table td:last-child { width: 48px; text-align: center; }
+.orders-pos .pos-cart-table td[colspan] { text-align: center; padding: 18px 12px; color: var(--text-muted); }
+.orders-pos .pos-cash-calc-box,.orders-pos .pos-financial-live-summary,.orders-pos .pos-member-banner,.orders-pos .pos-service-checkout-banner { background: transparent; border: 0; box-shadow: none; padding: 0; margin: 0; }
+.orders-pos .pos-cash-calc-box > div:first-child { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+.orders-pos .pos-quick-cash-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.orders-pos .pos-cash-chip { border: 0; border-radius: var(--admin-radius); padding: 5px 9px; background: #eef5f1; color: var(--text-heading); font: 500 12px var(--admin-modal-font); cursor: pointer; }
+.orders-pos .pos-change-display { display: flex; align-items: center; min-height: 40px; color: var(--text-heading); font-weight: 600; font-variant-numeric: tabular-nums; }
+.orders-pos .pos-summary-row { display: flex; justify-content: space-between; gap: 16px; padding: 5px 0; }
+.orders-pos .pos-summary-row.total { border: 0; margin-top: 8px; color: var(--text-heading); font-weight: 600; }
+.orders-pos .pos-summary-row strong { font-variant-numeric: tabular-nums; }
+.orders-pos #createOrderPointsChips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.orders-pos #btnPosQuickCustomer { margin: 0; justify-self: start; }
+@media(max-width:600px){.orders-pos .pos-add-item-bar{flex-wrap:wrap}.orders-pos .pos-add-item-bar .customer-autocomplete-wrapper{flex-basis:100%}.orders-pos #createOrderQty{flex:1;max-width:100px}}
+
+.orders-pos .orders-pos__cart-quantity { width: 70px; }
+
+/* Receipt document layout; shared modal handles spacing and controls. */
+.orders-receipt .admin-modal-card { width: 760px; }
+.orders-receipt .admin-modal__body p { margin: 0; overflow-wrap: anywhere; }
+.orders-receipt__table { min-width: 0; overflow-x: auto; overscroll-behavior: contain; }
+.orders-receipt .slip-items-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 12px; }
+.orders-receipt .slip-items-table th { background: #f1f4f1; color: #536a59; font-size: 11px; font-weight: 650; }
+.orders-receipt .slip-items-table :is(th,td) { padding: 10px 11px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.orders-receipt .slip-items-table :is(th,td):nth-child(n+3) { text-align: right; font-variant-numeric: tabular-nums; }
+
+.orders-receipt .orders-receipt__amount { display: flex; justify-content: space-between; gap: 16px; font-variant-numeric: tabular-nums; }

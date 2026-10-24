@@ -154,11 +154,12 @@
             confirmationStatus:r.customer_confirmation_status,safetyNote:r.safety_note_snapshot,allergy:r.allergy_note_snapshot,note:r.note,proofPhotos:[]};
     }
     async function refreshBooking(booking) {
-        window.PawpalDataStore?.invalidate('services:*');
+        window.PawpalDataStore?.invalidate('services:bookings*');
+        window.PawpalDataStore?.invalidate('services:carelogs:'+booking.dbId);
         window.PawpalDataStore?.invalidate('dashboard:*');
         window.PawpalDataStore?.emitMutation({entity:'appointment',type:'UPDATE',id:booking.dbId});
-        await PawpalServices.loadServicesData({force:true});
-        const current=PawpalServices.state.bookingsData.find(b=>b.dbId===booking.dbId);
+        await PawpalServices.loadServicesData({force:true,forceStaff:false,prefetch:false});
+        const current=await PawpalServices.ensureBooking(booking.dbId,{force:true});
         if(current){const logs=await PawpalServices.fetchBookingCareLogs(current.dbId,{force:true});current.careLogs=logs;current.carelogs=logs;current._careLogsLoaded=true;}
         PawpalServices.subtabs.bookings?.renderBookingsTable();PawpalServices.subtabs.bookings?.updateKPIs();
         PawpalServices.subtabs.detail?.renderBookingDetail(booking.id);
@@ -408,7 +409,7 @@
             const time = booking.time || booking.appointment_time;
             if (date && time) {
                 const scheduledStart = Date.parse(`${String(date).slice(0, 10)}T${String(time).slice(0, 5)}:00+07:00`);
-                const durationMinutes = Number(booking.duration) || 60;
+                const durationMinutes = Number.parseFloat(booking.duration) || 60;
                 const expectedEnd = scheduledStart + (durationMinutes * 60000);
                 if (Number.isFinite(expectedEnd) && now > expectedEnd) {
                     const lateMin = Math.floor((now - expectedEnd) / 60000);
@@ -482,29 +483,43 @@
     }
     const customerFields='id,customer_status,customer_profile(full_name),customer_phone(phone_number,is_primary)';
     const petFields='id,customer_id,pet_code,pet_name,breed_id,date_of_birth,allergy,routine,safety_note,avatar_url,status,breed:breed_id(breed_name,species:species_id(species_name))';
-    async function fetchBookingsRaw({ force = false } = {}) {
+    async function fetchBookingDirectoryRaw({force=false}={}){
         const fetcher=async()=>{
             const db=window.getSupabaseClient();
-            const [appointments,totals,weights,payments,customers,pets,measurements,rooms]=await Promise.all([
-                allRows(()=>db.from('appointment').select('*,customer:customer_id('+customerFields+'),pet_profile:pet_id('+petFields+'),staff:staff_id(id,full_name,job_title),items:appointment_item(*,service:service_id(id,service_code,service_name,estimated_duration,category:category_id(category_code))),records:appointment_record(*,recorder:recorded_by(full_name)),adjustments:appointment_adjustment(*),taxi:taxi_trip(*),hotel:hotel_booking(*,room:room_id(room_number,type:room_type_id(room_type)))').order('created_at',{ascending:false}).order('id')),
-                allRows(()=>db.from('appointment_totals').select('*').order('appointment_id')),
+            const [weights,customers,pets,measurements,rooms]=await Promise.all([
                 allRows(()=>db.from('pet_current_weight').select('pet_id,weight').order('pet_id')),
-                allRows(()=>db.from('payment').select('id,appointment_id,amount,transaction_status,refund_transaction(refund_status,refunded_amount)').not('appointment_id','is',null).order('id')),
                 allRows(()=>db.from('customer').select(customerFields).order('id')),
                 allRows(()=>db.from('pet_profile').select(petFields).order('id')),
                 allRows(()=>db.from('pet_weight_history').select('pet_id,weight,measured_at').order('id')),
                 allRows(()=>db.from('hotel_room').select('id,room_number,status,type:room_type_id(id,room_type,daily_price,status)').order('id'))
             ]);
-            PawpalServices.state.liveRooms=rooms;
-            PawpalServices.state.weightMeasurements=measurements;
-            const weightMap=new Map(weights.map(w=>[w.pet_id,Number(w.weight)]));
-            const adaptPet=p=>({...p,breed:one(p.breed)?.breed_name||'',species:one(one(p.breed)?.species)?.species_name||'',weight:weightMap.get(p.id)??null});
-            const petDirectory=pets.map(p=>{
-                const c=customers.find(c=>c.id===p.customer_id);
-                return {...adaptPet(p),customer:{id:c?.id,phone_main:primaryPhone(c),customer_profile:one(c?.customer_profile)}};
-            });
-            PawpalServices.state.livePetDirectory=petDirectory;
-            PawpalServices.state.liveCustomerDirectory=customers.filter(c=>c.customer_status==='active').map(c=>({...c,phone_main:primaryPhone(c),pet_profile:petDirectory.filter(p=>p.customer_id===c.id&&p.status==='active')}));
+            return {weights,customers,pets,measurements,rooms};
+        };
+        const store=window.PawpalDataStore,key='services:directory:'+(store?.buildKey?.('booking-directory')||'session');
+        return store?store.fetch(key,fetcher,{ttlMs:store.TTL_TIERS.LIST,force,backgroundRevalidate:false}):fetcher();
+    }
+    async function fetchBookingsRaw({ force = false, forceDirectory = force, ids, id } = {}) {
+        const {weights,customers,pets,measurements,rooms}=await fetchBookingDirectoryRaw({force:forceDirectory});
+        PawpalServices.state.liveRooms=rooms;
+        PawpalServices.state.weightMeasurements=measurements;
+        const weightMap=new Map(weights.map(w=>[w.pet_id,Number(w.weight)]));
+        const adaptPet=p=>({...p,breed:one(p.breed)?.breed_name||'',species:one(one(p.breed)?.species)?.species_name||'',weight:weightMap.get(p.id)??null});
+        const petDirectory=pets.map(p=>{
+            const c=customers.find(c=>c.id===p.customer_id);
+            return {...adaptPet(p),customer:{id:c?.id,phone_main:primaryPhone(c),customer_profile:one(c?.customer_profile)}};
+        });
+        PawpalServices.state.livePetDirectory=petDirectory;
+        PawpalServices.state.liveCustomerDirectory=customers.filter(c=>c.customer_status==='active').map(c=>({...c,phone_main:primaryPhone(c),pet_profile:petDirectory.filter(p=>p.customer_id===c.id&&p.status==='active')}));
+        const fetcher=async()=>{
+            const db=window.getSupabaseClient();
+            if(ids&&!ids.length)return [];
+            const appointments=await allRows(()=>{let query=db.from('appointment').select('*,customer:customer_id('+customerFields+'),pet_profile:pet_id('+petFields+'),staff:staff_id(id,full_name,job_title),items:appointment_item(*,service:service_id(id,service_code,service_name,estimated_duration,category:category_id(category_code))),records:appointment_record(*,recorder:recorded_by(full_name)),adjustments:appointment_adjustment(*),taxi:taxi_trip(*),hotel:hotel_booking(*,room:room_id(room_number,type:room_type_id(room_type)))').order('created_at',{ascending:false}).order('id');if(ids)query=query.in('id',ids);if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'appointment_code',id);return query;});
+            if(!appointments.length)return [];
+            const selectedIds=appointments.map(a=>a.id),scoped=query=>(ids||id)?query.in('appointment_id',selectedIds):query;
+            const [totals,payments]=await Promise.all([
+                allRows(()=>scoped(db.from('appointment_totals').select('appointment_id,total_price').order('appointment_id'))),
+                allRows(()=>scoped(db.from('payment').select('id,appointment_id,amount,transaction_status,refund_transaction(refund_status,refunded_amount)').not('appointment_id','is',null).order('id')))
+            ]);
             const totalsMap=new Map(totals.map(t=>[t.appointment_id,Number(t.total_price)]));
             return appointments.map(a=>{
                 const item=a.items.find(i=>i.is_primary&&i.status!=='cancelled')||a.items.find(i=>i.is_primary);
@@ -517,12 +532,12 @@
                     total_price:totalsMap.get(a.id)??0,collected,payment_status:collected>0&&collected>=(totalsMap.get(a.id)??0)?'paid':collected>0?'partial':'unpaid'};
             });
         };
-        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:bookings',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.OPERATIONAL,force}) : fetcher();
+        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:bookings:raw:'+JSON.stringify({ids,id})+':'+window.PawpalDataStore.buildKey('booking-raw'),fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.OPERATIONAL,force,backgroundRevalidate:false}) : fetcher();
     }
 
     async function fetchStaffRaw({ force = false } = {}) {
         const fetcher=()=>allRows(()=>window.getSupabaseClient().from('staff').select('id,full_name,job_title,specialization,phone_number,staff_level_id,service_locked').eq('employment_status','active').order('id'));
-        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:staff',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.CATALOG,force}) : fetcher();
+        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:staff',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.CATALOG,force,backgroundRevalidate:false}) : fetcher();
     }
 
     async function fetchCatalogRaw({ force = false } = {}) {
@@ -537,7 +552,7 @@
             PawpalServices.state.liveSpecies=species;PawpalServices.state.liveLevels=levels;
             return {services:services.map(s=>({...s,service_category:categoryCode(s)})),prices,priceError:null};
         };
-        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:catalog',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.CATALOG,force}) : fetcher();
+        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:catalog',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.CATALOG,force,backgroundRevalidate:false}) : fetcher();
     }
 
     async function fetchReviewsRaw({ force = false } = {}) {
@@ -550,7 +565,7 @@
                     customer:{...appointment?.customer,phone_main:primaryPhone(appointment?.customer)},shop_reply:response?.response_content||'',responseId:response?.id||null,responseUpdatedAt:response?.updated_at||null};
             });
         };
-        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:reviews',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.LIST,force}) : fetcher();
+        return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:reviews',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.LIST,force,backgroundRevalidate:false}) : fetcher();
     }
 
     async function fetchBookingCareLogs(bookingDbId,{force=false}={}) {
@@ -757,26 +772,14 @@
     }
     PawpalServices.loadReviewsData = loadReviewsData;
 
-    async function loadServicesData({ force = false } = {}) {
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) { PawpalServices.state.loadError = 'Không thể kết nối cơ sở dữ liệu.'; return; }
-
-        try {
-            PawpalServices.state.loadError = null;
-            const [rawBookings, rawStaff] = await Promise.all([
-                fetchBookingsRaw({ force }),
-                fetchStaffRaw({ force })
-            ]);
-
-            PawpalServices.state.liveStaffList = rawStaff;
-
+    function mapBookings(rawBookings){
             const getCustomerProfileName = (customer) => {
                 const profile = customer?.customer_profile;
                 if (Array.isArray(profile)) return profile.find(p => p?.full_name)?.full_name || '';
                 return profile?.full_name || '';
             };
 
-            PawpalServices.state.bookingsData = (rawBookings || []).map((item, idx) => {
+            return (rawBookings || []).map((item, idx) => {
                 let cat = 'Spa';
                 const catRaw = String(item.service?.service_category || '').toUpperCase();
                 const serviceLabel = item.service?.service_name || '';
@@ -812,6 +815,7 @@
                     id: item.appointment_code || (item.id ? `BKG-${item.id.replace(/-/g, '').slice(0, 8).toUpperCase()}` : `BKG-${1000 + idx}`),
                     dbId: item.id,
                     rawStatus: item.appointment_status,
+                    created_at: item.created_at,
                     updatedAt: item.updated_at,
                     primaryItem: item.items.find(i=>i.is_primary),
                     collected: item.collected,
@@ -869,19 +873,55 @@
                 };
             });
 
-            PawpalServices.state.isLoaded = true;
-
-            // Nạp trước danh mục và đánh giá nếu rảnh tay
-            if (PawpalServices.state.servicesData.length === 0) {
-                loadCatalogData({ force: false }).catch(() => {});
-            }
-            if (PawpalServices.state.reviewsData.length === 0) {
-                loadReviewsData({ force: false }).catch(() => {});
-            }
-        } catch (err) {
-            PawpalServices.state.loadError = 'Không thể tải dữ liệu dịch vụ. Vui lòng tải lại trang.';
-            console.error('[PawpalServices] Lỗi kết nối Supabase:', err);
-        }
+    }
+    let bookingReadVersion=0;
+    PawpalServices.state.serverBookingPagination=true;
+    const defaultBookingFilters={query:'',category:'ALL',status:'ALL',staff:'ALL',upcoming:false,allergy:false,sla:false};
+    async function ensureBooking(id,{force=false}={}){
+        if(!id)return null;
+        const state=PawpalServices.state,found=state.bookingsData.find(b=>b.id===id||b.dbId===id);
+        if(found&&!force&&state.pageBookings?.some(b=>b.dbId===found.dbId))return found;
+        const rows=mapBookings(await fetchBookingsRaw({id,force,forceDirectory:false}));
+        const booking=rows[0];
+        state.bookingsData=state.bookingsData.filter(b=>b.id!==id&&b.dbId!==id);
+        if(booking)state.bookingsData=[...state.bookingsData.filter(b=>b.dbId!==booking.dbId),booking];
+        return booking||null;
+    }
+    PawpalServices.ensureBooking=ensureBooking;
+    PawpalServices.exportFilteredBookings=async filters=>{
+        const {data,error}=await window.getSupabaseClient().rpc('get_admin_service_booking_page',{p_filters:{...defaultBookingFilters,...filters},p_page:1,p_export:true});
+        if(error)throw error;
+        if(!Array.isArray(data?.exportRows))throw Error('invalid_booking_export');
+        return data.exportRows;
+    };
+    async function loadServicesData({force=false,forceDirectory=force,forceStaff=force,prefetch=true,filters,page,render=true}={}){
+        const db=window.getSupabaseClient?.()||window.SupabaseClient,state=PawpalServices.state;
+        if(!db){state.loadError='Không thể kết nối cơ sở dữ liệu.';return false;}
+        if(force)window.PawpalDataStore?.invalidate('services:bookings*');
+        const version=++bookingReadVersion;
+        filters={...defaultBookingFilters,...(filters||state.bookingFilters||{})};page=page||state.bookingPageMeta?.page||1;state.bookingFilters=filters;
+        try{
+            state.loadError=null;
+            const fetcher=async()=>{
+                const {data,error}=await db.rpc('get_admin_service_booking_page',{p_filters:filters,p_page:page,p_export:false});
+                if(error)throw error;
+                if(!data||!Array.isArray(data.ids)||data.ids.length>10)throw Error('invalid_booking_page');
+                return {meta:data,rows:await fetchBookingsRaw({ids:data.ids,force,forceDirectory})};
+            };
+            const store=window.PawpalDataStore,key='services:bookings:page:'+(store?.buildKey?.('booking-page',{filters:JSON.stringify(filters),page})||JSON.stringify({filters,page}));
+            const [result,staff]=await Promise.all([store?store.fetch(key,fetcher,{force,ttlMs:store.TTL_TIERS.OPERATIONAL,backgroundRevalidate:false}):fetcher(),fetchStaffRaw({force:forceStaff})]);
+            if(version!==bookingReadVersion)return null;
+            state.liveStaffList=staff;
+            const mapped=mapBookings(result.rows),pageIds=new Set(mapped.map(b=>b.dbId));
+            state.bookingsData=[...state.bookingsData.filter(b=>(b.id===state.selectedBookingId||b.dbId===state.selectedBookingId)&&!pageIds.has(b.dbId)),...mapped];
+            state.pageBookings=mapped;state.bookingPageMeta=result.meta;state.isLoaded=true;
+            if(state.selectedBookingId&&!mapped.some(b=>b.id===state.selectedBookingId||b.dbId===state.selectedBookingId))await ensureBooking(state.selectedBookingId,{force});
+            if(version!==bookingReadVersion)return null;
+            if(prefetch&&!state.servicesData.length)loadCatalogData().catch(()=>{});
+            if(prefetch&&!state.reviewsData.length)loadReviewsData().catch(()=>{});
+        }catch(error){if(version!==bookingReadVersion)return null;state.loadError='Không thể tải dữ liệu dịch vụ. Vui lòng thử lại.';state.pageBookings=[];console.error('[PawpalServices] Booking page:',error);}
+        if(render){PawpalServices.subtabs.bookings?.renderBookingsTable({skipFetch:true});PawpalServices.subtabs.bookings?.renderUpcomingBar();PawpalServices.subtabs.bookings?.updateKPIs();}
+        return !state.loadError;
     }
     PawpalServices.loadServicesData = loadServicesData;
 
@@ -895,6 +935,9 @@
                 }
             } else if (mutation.entity === 'service' || mutation.entity === 'service_price_matrix') {
                 window.PawpalDataStore.invalidate('services:catalog*');
+            } else if (['customer','customer_profile','customer_phone','pet_profile','pet_weight_history','hotel_room','room_type'].includes(mutation.entity)) {
+                window.PawpalDataStore.invalidate('services:directory*');
+                window.PawpalDataStore.invalidate('services:bookings*');
             } else if (mutation.entity === 'staff') {
                 window.PawpalDataStore.invalidate('services:staff*');
             }
@@ -954,7 +997,10 @@
             const bId = PawpalServices.state.selectedBookingId || null;
             updateBreadcrumb(bId);
             if (PawpalServices.subtabs.detail?.renderBookingDetail) {
-                PawpalServices.subtabs.detail.renderBookingDetail(bId);
+                PawpalServices.state.detailError=false;
+                if(PawpalServices.state.bookingsData.some(b=>b.id===bId||b.dbId===bId))PawpalServices.subtabs.detail.renderBookingDetail(bId);
+                else{const card=document.querySelector('#subtab-tab-service-detail .service-detail-card'),state=document.getElementById('serviceDetailState');if(card)card.style.display='none';if(state){state.style.display='block';state.textContent='Đang tải hồ sơ lịch hẹn…';}}
+                ensureBooking(bId).then(()=>{if(PawpalServices.state.selectedBookingId===bId)PawpalServices.subtabs.detail.renderBookingDetail(bId);}).catch(()=>{if(PawpalServices.state.selectedBookingId!==bId)return;PawpalServices.state.detailError=true;PawpalServices.subtabs.detail.renderBookingDetail(bId);});
             }
         } else {
             updateBreadcrumb(null);
@@ -994,6 +1040,11 @@
         switchSubtab('tab-service-detail');
     }
     PawpalServices.openBookingDetail = openBookingDetail;
+
+    PawpalServices.fetchStaffScheduleBookings=async(from,to)=>{
+        const rows=await allRows(()=>window.getSupabaseClient().from('appointment').select('id,appointment_code,appointment_status,staff_id,scheduled_start_at,scheduled_end_at,pet:pet_id(pet_name)').not('appointment_status','in','(cancelled,no_show)').gt('scheduled_end_at',new Date(from).toISOString()).lt('scheduled_start_at',new Date(to).toISOString()).order('id'));
+        return rows.map(a=>({id:a.appointment_code,dbId:a.id,status:a.appointment_status,staffId:a.staff_id,scheduledStartAt:a.scheduled_start_at,scheduledEndAt:a.scheduled_end_at,petName:one(a.pet)?.pet_name||'—'}));
+    };
 
     let _isServicesInit = false;
     async function initServicesModule() {
@@ -1103,57 +1154,52 @@
         if (!client || typeof client.channel !== 'function') return;
 
         try {
-            const triggerServiceSync = (invalidatePattern, refreshFn) => {
-                if (window.PawpalDataStore?.handleRealtimeChange) {
-                    window.PawpalDataStore.handleRealtimeChange({
-                        moduleName: 'Dịch vụ',
-                        invalidatePattern: invalidatePattern || 'services:*',
-                        onActiveRefresh: async () => {
-                            const pattern=invalidatePattern||'services:*';
-                            const jobs=[];
-                            if(pattern==='services:*'||pattern.startsWith('services:bookings'))jobs.push(loadServicesData({force:true}));
-                            if(pattern==='services:*'||pattern.startsWith('services:catalog'))jobs.push(loadCatalogData({force:true}));
-                            if(pattern==='services:*'||pattern.startsWith('services:reviews'))jobs.push(loadReviewsData({force:true}));
-                            await Promise.all(jobs);
-                            if(pattern==='services:*'||pattern.startsWith('services:catalog'))PawpalServices.subtabs.catalog?.renderCatalogTable?.();
-                            if(pattern==='services:*'||pattern.startsWith('services:reviews')){PawpalServices.subtabs.reviews?.renderReviewsTable?.();PawpalServices.subtabs.reviews?.updateReviewKPIs?.();}
-                            PawpalServices.refreshStaffSchedule?.();
-                            if (typeof refreshFn === 'function') {
-                                refreshFn();
-                            } else {
-                                PawpalServices.subtabs?.bookings?.renderBookingsTable?.();
-                                PawpalServices.subtabs?.bookings?.updateKPIs?.();
-                            }
-                        },
-                        debounceMs: 300
-                    });
-                } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Dịch vụ') {
-                    loadServicesData({ force: true }).then(() => {
-                        PawpalServices.refreshStaffSchedule?.();
-                        PawpalServices.subtabs?.bookings?.renderBookingsTable?.();
-                        PawpalServices.subtabs?.bookings?.updateKPIs?.();
-                    });
-                }
+            const dirty=new Set();let fallbackTimer,refreshRunning=false;
+            const flush=async()=>{
+                if(refreshRunning||!dirty.size||sessionStorage.getItem('pawpal_admin_active_module')!=='Dịch vụ'||document.hidden)return;refreshRunning=true;
+                try{
+                const groups=new Set(dirty);dirty.clear();
+                await Promise.all([
+                    groups.has('bookings')?loadServicesData({force:true,forceDirectory:false,forceStaff:false,prefetch:false}):null,
+                    groups.has('catalog')?loadCatalogData({force:true}):null,
+                    groups.has('reviews')?loadReviewsData({force:true}):null
+                ]);
+                if(groups.has('catalog'))PawpalServices.subtabs.catalog?.renderCatalogTable?.();
+                if(groups.has('reviews')){PawpalServices.subtabs.reviews?.renderReviewsTable?.();PawpalServices.subtabs.reviews?.updateReviewKPIs?.();}
+                if(groups.has('bookings')){PawpalServices.refreshStaffSchedule?.();PawpalServices.subtabs?.bookings?.renderBookingsTable?.();PawpalServices.subtabs?.bookings?.updateKPIs?.();}
+                }finally{refreshRunning=false;if(dirty.size){clearTimeout(fallbackTimer);fallbackTimer=setTimeout(flush,400);}}
             };
+            const triggerServiceSync=pattern=>{
+                for(const group of ['bookings','catalog','reviews'])if(pattern==='services:*'||pattern.startsWith('services:'+group))dirty.add(group);
+                if(window.PawpalDataStore?.handleRealtimeChange)window.PawpalDataStore.handleRealtimeChange({moduleName:'Dịch vụ',invalidatePattern:pattern,onActiveRefresh:flush,debounceMs:400});
+                else if(sessionStorage.getItem('pawpal_admin_active_module')==='Dịch vụ'&&!document.hidden){clearTimeout(fallbackTimer);fallbackTimer=setTimeout(flush,400);}
+            };
+            const directoryChanged=()=>{window.PawpalDataStore?.invalidate('services:directory*');triggerServiceSync('services:bookings*');};
 
             _servicesRealtimeChannel = client.channel('admin-services-live-sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, () => triggerServiceSync('services:bookings*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'service' }, () => triggerServiceSync('services:catalog*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'service_price_matrix' }, () => triggerServiceSync('services:catalog*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'review' }, () => triggerServiceSync('services:reviews*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'appointment_item'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'appointment_record'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'appointment_adjustment'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'payment'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'refund_transaction'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'taxi_trip'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'hotel_booking'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'care_log'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'review_response'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'service_care_action'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'service_supported_species'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'pet_weight_history'},()=>triggerServiceSync('services:*'))
-                .on('postgres_changes', {event:'*',schema:'public',table:'customer_phone'},()=>triggerServiceSync('services:*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'appointment_item'},()=>{triggerServiceSync('services:bookings*');triggerServiceSync('services:reviews*');})
+                .on('postgres_changes', {event:'*',schema:'public',table:'appointment_record'},()=>triggerServiceSync('services:bookings*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'appointment_adjustment'},()=>triggerServiceSync('services:bookings*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'payment'},()=>triggerServiceSync('services:bookings*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'refund_transaction'},()=>triggerServiceSync('services:bookings*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'taxi_trip'},()=>triggerServiceSync('services:bookings*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'hotel_booking'},()=>triggerServiceSync('services:bookings*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'care_log'},()=>{window.PawpalDataStore?.invalidate('services:carelogs*');triggerServiceSync('services:bookings*');})
+                .on('postgres_changes', {event:'*',schema:'public',table:'review_response'},()=>triggerServiceSync('services:reviews*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'service_care_action'},()=>triggerServiceSync('services:catalog*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'service_supported_species'},()=>triggerServiceSync('services:catalog*'))
+                .on('postgres_changes', {event:'*',schema:'public',table:'pet_weight_history'},directoryChanged)
+                .on('postgres_changes', {event:'*',schema:'public',table:'customer_phone'},()=>{directoryChanged();triggerServiceSync('services:reviews*');})
+                .on('postgres_changes', {event:'*',schema:'public',table:'customer'},directoryChanged)
+                .on('postgres_changes', {event:'*',schema:'public',table:'customer_profile'},()=>{directoryChanged();triggerServiceSync('services:reviews*');})
+                .on('postgres_changes', {event:'*',schema:'public',table:'pet_profile'},directoryChanged)
+                .on('postgres_changes', {event:'*',schema:'public',table:'hotel_room'},directoryChanged)
+                .on('postgres_changes', {event:'*',schema:'public',table:'room_type'},directoryChanged)
+                .on('postgres_changes', {event:'*',schema:'public',table:'staff'},()=>{window.PawpalDataStore?.invalidate('services:staff');triggerServiceSync('services:bookings*');})
                 .on('postgres_changes', {event:'*',schema:'public',table:'staff_schedule'},()=>PawpalServices.refreshStaffSchedule?.())
                 .on('postgres_changes', {event:'*',schema:'public',table:'support_ticket'},()=>triggerServiceSync('services:reviews*'))
                 .subscribe();

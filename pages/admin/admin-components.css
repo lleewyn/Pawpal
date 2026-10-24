@@ -1,0 +1,148 @@
+/* Shared components, opted into per workspace after checking Customer reference styles.
+   Customer pages intentionally do not opt in. Keep business-specific column widths in modules. */
+.admin-ui-standard {
+    --admin-ui-font: Inter, "Segoe UI", Arial, sans-serif;
+    --admin-ui-control-font: Inter, "Segoe UI", sans-serif;
+    --admin-ui-text: #30483a;
+    --admin-ui-muted: #6f8176;
+    --admin-ui-brand: #275e49;
+    --admin-ui-line: #e9eee9;
+    --admin-ui-header-bg: #f1f4f1;
+    --admin-ui-header-text: #536a59;
+    --admin-ui-text-size: 12px;
+    --admin-ui-label-size: 11px;
+    --admin-ui-secondary-size: 11.5px;
+    --admin-ui-control-height: 38px;
+    --admin-ui-cell-y: 10px;
+    --admin-ui-cell-x: 11px;
+    --admin-ui-toolbar-x: 14px;
+    --admin-ui-control-gap: 8px;
+    font-family: var(--admin-ui-font);
+}
+.admin-ui-standard .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font: 400 var(--admin-ui-text-size)/1.35 var(--admin-ui-font);
+    color: var(--admin-ui-text);
+}
+.admin-ui-standard .admin-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: var(--admin-ui-cell-y) var(--admin-ui-cell-x);
+    font: 650 var(--admin-ui-label-size)/1.46 var(--admin-ui-font);
+    text-transform: none;
+    color: var(--admin-ui-header-text);
+    background: var(--admin-ui-header-bg);
+    border-bottom: 1px solid #dae2db;
+}
+.admin-ui-standard .admin-table td {
+    padding: var(--admin-ui-cell-y) var(--admin-ui-cell-x);
+    line-height: 1.35;
+    color: var(--admin-ui-text);
+    border-bottom: 1px solid var(--admin-ui-line);
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+.admin-ui-standard .admin-table th:first-child,
+.admin-ui-standard .admin-table td:first-child { padding-left: 15px; }
+.admin-ui-standard .admin-table tbody tr:hover { background: #f8faf8; }
+.admin-ui-standard .table-responsive-wrapper {
+    max-width: 100%;
+    max-height: min(64vh, 620px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+.admin-ui-standard .table-responsive-wrapper:focus-visible { outline: 2px solid var(--admin-ui-brand); outline-offset: 2px; }
+.admin-ui-standard .admin-table__primary,
+.admin-ui-standard .user-name-link { color: var(--admin-ui-brand); font-weight: 600; }
+.admin-ui-standard .user-name-link { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-ui-standard .admin-table__secondary,
+.admin-ui-standard .sub-meta-text { font: 400 var(--admin-ui-secondary-size)/1.35 var(--admin-ui-font); color: var(--admin-ui-muted); }
+.admin-ui-standard .admin-table__code,
+.admin-ui-standard .voucher-code-badge { font-size: var(--admin-ui-text-size); font-weight: 550; background: transparent; border: 0; padding: 0; }
+.admin-ui-standard .admin-badge {
+    display: inline;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    font: 500 var(--admin-ui-secondary-size)/1.35 var(--admin-ui-font);
+    white-space: normal;
+    background: transparent;
+}
+.admin-ui-standard .admin-badge:is(.badge-success,.badge-paid,.badge-completed,.badge-delivered) { color: #345d46; }
+.admin-ui-standard .admin-badge:is(.badge-warning,.badge-pending,.badge-unpaid) { color: #987324; }
+.admin-ui-standard .admin-badge:is(.badge-danger,.badge-cancelled,.badge-alert) { color: #ba4745; }
+.admin-ui-standard .admin-badge:is(.badge-info,.badge-shipping,.badge-confirmed) { color: #20495e; }
+.admin-ui-standard .admin-input,
+.admin-ui-standard .admin-select {
+    height: var(--admin-ui-control-height);
+    min-height: var(--admin-ui-control-height);
+    border-radius: var(--admin-radius);
+    border-color: #e2e8e2;
+    font: 400 var(--admin-ui-text-size) var(--admin-ui-control-font);
+    color: #24382f;
+    box-shadow: none;
+}
+.admin-ui-standard .admin-btn {
+    min-height: var(--admin-ui-control-height);
+    padding: 7px 11px;
+    border-radius: var(--admin-radius);
+    font: 600 var(--admin-ui-text-size)/1.4 var(--admin-ui-control-font);
+    box-shadow: none;
+}
+.admin-ui-standard .admin-btn-primary { background: var(--admin-ui-brand); border-color: var(--admin-ui-brand); color: #fff; }
+.admin-ui-standard .admin-btn-secondary { background: #fff; color: #526359; border-color: #dce4dd; }
+.admin-ui-standard .filter-row-top { padding: 10px var(--admin-ui-toolbar-x); gap: 20px; border: 0; }
+.admin-ui-standard .filter-row-bottom { padding: 1px var(--admin-ui-toolbar-x) 8px; gap: 10px; align-items: center; flex-wrap: wrap; border: 0; }
+.admin-ui-standard .filter-label { font-size: var(--admin-ui-label-size); font-weight: 500; color: var(--admin-ui-muted); }
+.admin-ui-standard .filter-dropdown-group,
+.admin-ui-standard .filter-actions-right { gap: var(--admin-ui-control-gap); }
+.admin-ui-standard .admin-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Opt-in modal foundation measured against Customer forms. Other modals remain unchanged. */
+.admin-modal-standard { --admin-modal-font: Inter, "Segoe UI", Arial, sans-serif; --admin-modal-wide: 760px; --admin-modal-gap: 16px; }
+.admin-modal-standard .admin-modal-card { display: flex; flex-direction: column; max-width: 95vw; max-height: 90dvh; padding: 26px 30px; overflow: hidden; font: 13px/1.5 var(--admin-modal-font); border-radius: var(--admin-radius); background: #fff; }
+.admin-modal-standard .admin-modal__header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex: 0 0 auto; margin: 0 0 22px; padding: 0; border: 0; }
+.admin-modal-standard .modal-title-clean { font: 650 20px/1.4 var(--admin-modal-font); color: #26392f; }
+.admin-modal-standard .admin-modal__body { display: grid; grid-template-columns: minmax(0,1fr); gap: var(--admin-modal-gap); min-height: 0; margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain; }
+.admin-modal-standard .form-row-2col { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--admin-modal-gap); margin: 0; }
+.admin-modal-standard .form-group-item { min-width: 0; margin: 0; }
+.admin-modal-standard .form-label-clean { display: block; margin: 0 0 7px; font: 550 12px/1.5 var(--admin-modal-font); color: #526d59; }
+.admin-modal-standard .admin-input,.admin-modal-standard .admin-select { width: 100%; height: 40px; min-height: 40px; padding: 8px 11px; box-sizing: border-box; border: 1px solid #d7dfd9; border-radius: var(--admin-radius); background: #fff; font: 13px var(--admin-modal-font); color: #354b3d; box-shadow: none; }
+.admin-modal-standard .admin-input[aria-invalid=true] { border-color: #ba4745; }
+.admin-modal-standard .admin-modal__footer { display: flex; justify-content: flex-end; gap: 8px; flex: 0 0 auto; margin: 0; padding: 16px 0 0; border: 0; background: transparent; }
+.admin-modal-standard .admin-btn { padding: 8px 12px; min-height: 36px; border-radius: var(--admin-radius); font: 600 12px/1.5 var(--admin-modal-font); box-shadow: none; }
+.admin-modal-standard .admin-btn-primary { background: #275e49; border-color: #275e49; color: #fff; }
+.admin-modal-standard .admin-form-required { color: #dc2626; font-weight: 700; }
+.admin-modal-standard .admin-field-error { color: #ba4745; font-size: 12px; line-height: 1.4; margin-top: 6px; }
+.admin-modal-standard .admin-form-help { color: var(--text-muted); margin: 6px 0 0; font-size: 12px; }
+.admin-modal-standard .admin-form-notice { margin: 0; border: 0; background: transparent; color: var(--text-muted); }
+.admin-modal-standard .admin-form-notice.is-error { color: #ba4745; }
+.admin-modal-standard .admin-modal__table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.admin-modal-standard .admin-modal__table th { padding: 10px 11px; font-size: 11px; font-weight: 650; color: #536a59; background: #f1f4f1; }
+.admin-modal-standard .admin-modal__table td { padding: 10px 11px; border-bottom: 1px solid #e9eee9; }
+@media(max-width:600px){.admin-modal-standard .admin-modal-card{padding:24px 20px}.admin-modal-standard .form-row-2col{grid-template-columns:1fr}}
+
+.admin-modal-standard .admin-modal__fieldset { border: 0; padding: 0; min-width: 0; }
+.admin-modal-standard .admin-modal__fieldset > legend { padding: 0; }
+
+.admin-modal-standard .admin-autocomplete,.admin-modal-standard .customer-autocomplete-wrapper { position: relative; width: 100%; }
+.admin-modal-standard .customer-autocomplete-popover { position: absolute; top: calc(100% + 4px); left: 0; right: 0; max-height: 240px; overflow-y: auto; overscroll-behavior: contain; z-index: 2500; border: 1px solid #ecf2ee; border-radius: var(--admin-radius); background: #fff; box-shadow: 0 10px 28px rgb(35 107 72 / 14%); }
+.admin-modal-standard .customer-autocomplete-item { display: block; width: 100%; text-align: left; padding: 9px 12px; border: 0; background: transparent; color: #203a2c; font: 500 12px/1.5 var(--admin-modal-font); cursor: pointer; }
+.admin-modal-standard .customer-autocomplete-item:hover,.admin-modal-standard .customer-autocomplete-item:focus-visible { background: #eef5f1; }
+.admin-modal-standard .admin-autocomplete__empty { padding: 10px 12px; color: var(--text-muted); }
+.admin-modal-standard .admin-pagination-container { display: flex; justify-content: center; gap: 6px; border: 0; background: transparent; padding: 4px 0; margin: 0; }
+
+.admin-modal-standard .admin-modal__body > * { min-width: 0; }

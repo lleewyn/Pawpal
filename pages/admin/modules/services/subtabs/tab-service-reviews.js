@@ -477,15 +477,14 @@
         // Nút Chuyển thành khiếu nại (đối với đánh giá <= 3 sao)
         const btnEscalate = document.getElementById('btnEscalateToComplaint');
         if (btnEscalate) {
-            btnEscalate.addEventListener('click', () => {
+            btnEscalate.addEventListener('click', async () => {
                 const modal = document.getElementById('modalReplyReview');
                 const rId = modal?.getAttribute('data-review-id');
                 const reviewsData = PawpalServices.state?.reviewsData || [];
                 const review = reviewsData.find(r => r.id === rId);
 
                 closeReplyReviewModal();
-                const booking=PawpalServices.state.bookingsData.find(b=>b.dbId===review?.appointmentId);
-                PawpalServices.openServiceTicket(booking,review);
+                try{const booking=await PawpalServices.ensureBooking(review?.appointmentId);PawpalServices.openServiceTicket(booking,review);}catch(error){PawpalServices.showToast('Không thể tải lịch hẹn liên quan.','warning');}
             });
         }
 
