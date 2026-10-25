@@ -124,7 +124,27 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
   let body=req.body||{};try{if(typeof body==='string')body=JSON.parse(body);}catch{return fail(400,'Dữ liệu không hợp lệ.');}
   try{
    if(req.method==='GET'){
+    if(req.query?.view==='sessions'){
+     const page=Number(req.query?.page||1),query=String(req.query?.query||'');
+     if(!Number.isSafeInteger(page)||page<1||query.length>2000)return fail(400,'Trang không hợp lệ.');
+     const {data,error}=await caller.rpc('admin_copilot_session_page',{p_query:query,p_page:page});
+     if(error)throw error;return res.json({ok:true,...data});
+    }
     const offset=Number(req.query?.offset||0);if(!Number.isSafeInteger(offset)||offset<0)return fail(400,'Trang không hợp lệ.');
+    if(req.query?.sessionId!==undefined){
+     if(!uuid(req.query.sessionId))return fail(400,'Phiên không hợp lệ.');
+     const {data,error}=await caller.from('admin_copilot_history').select('id,session_id,role,content,metadata,created_at')
+      .eq('staff_id',staff.id).eq('session_id',req.query.sessionId).order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+30);
+     if(error)throw error;
+     let title;
+     if(req.query.withTitle==='1'){
+      const first=await caller.from('admin_copilot_history').select('content,metadata').eq('staff_id',staff.id).eq('session_id',req.query.sessionId)
+       .order('created_at').order('id').limit(1);
+      if(first.error)throw first.error;
+      title=first.data[0]?.metadata?.session_title||first.data[0]?.content?.slice(0,80);
+     }
+     return res.json({ok:true,history:data.slice(0,30).reverse(),hasMore:data.length>30,...(title?{title}:{})});
+    }
     let query=caller.from('admin_copilot_history').select('id,session_id,role,content,metadata,created_at').eq('staff_id',staff.id).order('created_at').order('id').range(offset,offset+199);
     const {data,error}=await query;if(error)throw error;return res.json({ok:true,history:data});
    }

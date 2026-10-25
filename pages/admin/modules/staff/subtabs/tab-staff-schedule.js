@@ -32,7 +32,7 @@
         const rangeStart = new Date(from).toISOString(), rangeEnd = new Date(to).toISOString();
         if (PawpalStaff.ensureScheduleRange && !PawpalStaff.hasScheduleRange(rangeStart, rangeEnd)) {
             if (!el('subtab-tab-staff-schedule')?.classList.contains('active')) return;
-            const target = el('scheduleTableBody');
+            const target = el(currentScheduleView === 'WEEK' ? 'scheduleWeekViewWrapper' : 'scheduleTableBody');
             if (target) target.textContent = 'Đang tải lịch làm việc…';
             const version = ++scheduleReadVersion;
             PawpalStaff.ensureScheduleRange(rangeStart, rangeEnd).then(() => {
@@ -52,7 +52,7 @@
         const week=el('scheduleWeekViewWrapper');week.replaceChildren();
         const make=(tag,css,text)=>{const node=document.createElement(tag);node.className=css;if(text!==undefined)node.textContent=text;return node;};
         const hours=milliseconds=>new Intl.NumberFormat('vi-VN',{maximumFractionDigits:2}).format(milliseconds/3600000)+' giờ';
-        const dayLabel=value=>new Date(value+'T00:00:00+07:00').toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'});
+        const dayLabel=value=>new Date(value+'T00:00:00+07:00').toLocaleDateString('vi-VN',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit'});
         const shiftCard=(schedule,showName=false)=>{
             const staff=PawpalStaff.state.staff.find(s=>s.rawId===schedule.staff_id),card=make('div','staff-calendar-shift'+(schedule.schedule_status!=='active'?' is-cancelled':''));card.dataset.scheduleId=schedule.id;
             if(showName)card.append(make('strong','staff-calendar-name',staff?.name||'—'));

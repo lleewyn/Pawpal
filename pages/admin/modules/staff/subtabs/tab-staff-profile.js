@@ -24,7 +24,9 @@
     }
 
     let assessmentPage=1,assessmentStaffId=null;
-    function renderStaffProfile(staffId) {
+    let profileRenderSequence = 0;
+    async function renderStaffProfile(staffId) {
+        const sequence = ++profileRenderSequence;
         if (!PawpalStaff.state.isLoaded) return;
         const staffList = PawpalStaff.state.staff || [];
         const staff = staffId ? staffList.find(s => s.id === staffId || s.rawId === staffId) : null;
@@ -42,6 +44,13 @@
             return;
         }
 
+        if (!root.classList.contains('active')) return;
+        try {
+            if (!await PawpalStaff.ensureStaffDetails([staff.rawId]) || sequence !== profileRenderSequence) return;
+        } catch (error) {
+            if (sequence === profileRenderSequence) root.querySelector('#viewStaffName').textContent = 'Không tải được hồ sơ nhân viên. Vui lòng thử lại.';
+            return;
+        }
         const status = {ACTIVE:'Đang làm việc',LEAVE:'Nghỉ phép',PAUSE:'Tạm nghỉ',RESIGNED:'Nghỉ việc'}[staff?.status] || 'Chưa cập nhật';
         const hasAcc = Boolean(staff?.authUserId);
         const isAccActive = staff?.accountStatus === 'ACTIVE' || staff?.accountStatus === 'dang_hoat_dong';
@@ -115,15 +124,23 @@
         });
         const safety=root.querySelector('#viewStaffSafetyBadge');if(safety){safety.style.display=staff.serviceLocked?'':'none';safety.textContent='Đang khóa phân công';}
         if(assessmentStaffId!==staff.id){assessmentStaffId=staff.id;assessmentPage=1;}
-        const history=root.querySelector('#viewStaffAssessmentHistory'),assessments=(PawpalStaff.state.assessments||[]).filter(a=>a.staff_id===staff.id||a.raw?.staff_id===staff.rawId);
-        if (history && PawpalStaff.ensureAssessmentHistory && !PawpalStaff.hasAssessmentHistory(staff.rawId) && root.classList.contains('active')) {
-            history.textContent = 'Đang tải lịch sử đánh giá…';
-            PawpalStaff.ensureAssessmentHistory(staff.rawId).then(() => renderStaffProfile(PawpalStaff.state.selectedStaffId || staff.id)).catch(() => { if (PawpalStaff.state.selectedStaffId === staff.id) history.textContent = 'Không tải được lịch sử đánh giá. Mở lại hồ sơ để thử lại.'; });
-        } else if(history){
-            history.replaceChildren();const pages=Math.max(1,Math.ceil(assessments.length/10));assessmentPage=Math.min(assessmentPage,pages);
+        const history=root.querySelector('#viewStaffAssessmentHistory');
+        if (history && root.classList.contains('active')) {
+            let response;
+            try {
+                response = await PawpalStaff.getAssessmentPage({ staffId: staff.rawId, page: assessmentPage });
+            } catch (error) {
+                if (sequence === profileRenderSequence) history.textContent = '\u004b\u0068\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c l\u1ecbch s\u1eed \u0111\u00e1nh gi\u00e1.';
+                return;
+            }
+            if (sequence !== profileRenderSequence) return;
+            const assessments = response.rows;
+            assessmentPage = response.page;
+            history.replaceChildren();
+            const pages = Math.max(1, Math.ceil(response.total / 10));
             const text=(tag,content,css)=>{const node=document.createElement(tag);node.textContent=content;node.className=css||'';return node;};
             if(!assessments.length)history.append(text('p','Chưa có lịch sử đánh giá.','staff-profile-history-meta'));
-            for(const item of assessments.slice((assessmentPage-1)*10,assessmentPage*10)){
+            for(const item of assessments){
                 const row=document.createElement('article');row.className='staff-profile-assessment';row.dataset.assessmentId=item.id;
                 const title=text('div',item.date+' · '+item.type,'staff-profile-history-title');
                 const result=({PASS:'Đạt tiêu chuẩn',RETRAIN:'Cần đào tạo lại',FAIL:'Không đạt'})[item.result]||item.result;

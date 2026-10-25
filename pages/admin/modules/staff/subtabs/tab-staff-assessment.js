@@ -60,7 +60,9 @@
         });
     }
 
-    function renderAssessmentList() {
+    let assessmentRenderSequence = 0;
+    async function renderAssessmentList() {
+        const sequence = ++assessmentRenderSequence;
         if (PawpalStaff.state.loadError) {
             const target=document.getElementById('assessmentTableBody');
             if(target)target.innerHTML='<tr><td colspan="9" style="padding:28px;text-align:center;">Không thể tải dữ liệu nhân sự. Vui lòng tải lại trang.</td></tr>';
@@ -70,35 +72,27 @@
         const tbody = document.getElementById('assessmentListTableBody') || document.getElementById('assessmentTableBody');
         updateAssessmentKPIs();
         if (!tbody) return;
-        if (PawpalStaff.ensureAssessmentHistory && !PawpalStaff.hasAssessmentHistory()) {
-            if (!document.getElementById('subtab-tab-staff-assessment')?.classList.contains('active')) return;
+        if (!document.getElementById('subtab-tab-staff-assessment')?.classList.contains('active')) return;
+        const searchInput = document.getElementById('assessmentSearchInput');
+        let response;
+        try {
+            response = await PawpalStaff.getAssessmentPage({
+                query: searchInput?.value || '', type: assessmentFilterType,
+                result: assessmentFilterResult, page: currentAssessmentPage
+            });
+        } catch (error) {
+            if (sequence !== assessmentRenderSequence) return;
             tbody.replaceChildren();
-            const row = tbody.insertRow(), cell = row.insertCell();
+            const cell = tbody.insertRow().insertCell();
             cell.colSpan = 9;
-            cell.textContent = 'Đang tải lịch sử đánh giá…';
-            PawpalStaff.ensureAssessmentHistory().then(renderAssessmentList).catch(() => { cell.textContent = 'Không tải được đánh giá. Thử lại bằng nút làm mới.'; });
+            cell.textContent = '\u004b\u0068\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c \u0111\u00e1nh gi\u00e1. Th\u1eed l\u1ea1i b\u1eb1ng n\u00fat l\u00e0m m\u1edbi.';
+            renderAssessmentPagination(0);
             return;
         }
-        const assessments = PawpalStaff.state?.assessments || [];
-        const searchInput = document.getElementById('assessmentSearchInput');
-        const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
-        const toUnaccent = PawpalStaff.toUnaccent || (str => str);
-
-        let filtered = assessments.filter(item => {
-            if (query) {
-                const qUnaccent = toUnaccent(query);
-                const matchName = toUnaccent(item.name || '').includes(qUnaccent) || (item.name || '').toLowerCase().includes(query);
-                const matchId = (item.staff_id || '').toLowerCase().includes(query) || (item.id || '').toLowerCase().includes(query);
-                if (!matchName && !matchId) return false;
-            }
-            if (assessmentFilterType !== 'ALL' && item.type !== assessmentFilterType) return false;
-            if (assessmentFilterResult !== 'ALL' && item.result !== assessmentFilterResult) return false;
-            return true;
-        });
-
-        const totalPages = Math.ceil(filtered.length / ASSESSMENT_PAGE_SIZE);
-        if (currentAssessmentPage > totalPages && totalPages > 0) currentAssessmentPage = totalPages;
-        if (currentAssessmentPage < 1) currentAssessmentPage = 1;
+        if (sequence !== assessmentRenderSequence) return;
+        currentAssessmentPage = response.page;
+        const filtered = response.rows;
+        const totalPages = Math.ceil(response.total / ASSESSMENT_PAGE_SIZE);
 
         if (filtered.length === 0) {
             tbody.innerHTML = `
@@ -112,8 +106,7 @@
             return;
         }
 
-        const startIndex = (currentAssessmentPage - 1) * ASSESSMENT_PAGE_SIZE;
-        const pageList = filtered.slice(startIndex, startIndex + ASSESSMENT_PAGE_SIZE);
+        const pageList = filtered;
 
         tbody.innerHTML = pageList.map(item => {
             let resultBadge = '';

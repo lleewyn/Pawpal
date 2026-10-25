@@ -37,7 +37,7 @@
         const key=JSON.stringify([table,id,values,remove]);
         if(!ruleRequests.has(key))ruleRequests.set(key,crypto.randomUUID());
         const result=await supabase.rpc('save_admin_chat_rule',{p_table:table,p_id:id||ruleRequests.get(key),p_expected:original||null,p_values:values,p_delete:remove});
-        if(!result.error){ruleRequests.delete(key);await loadAllRulesDataFromSupabase();}
+        if(!result.error){ruleRequests.delete(key);if(table==='chatbot_canned_response')window.PawpalDataStore?.invalidate('chatbot:canned-live*');await loadAllRulesDataFromSupabase({ tables: [table], force: true });}
         return result;
     }
     const ruleDb={from:table=>({
@@ -48,57 +48,101 @@
     })};
     let rulesHubInitialized = false;
     const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    async function fetchRules(table,sort,ascending=true){
-        const rows=[];for(let offset=0;;offset+=500){const result=await supabase.from(table).select('*').order(sort,{ascending}).order('id').range(offset,offset+499);if(result.error)return result;rows.push(...result.data);if(result.data.length<500)break;}return {data:rows,error:null};
+    const pendingRuleTables = new Set();
+    const allRuleTables = ['chatbot_knowledge_faq','chatbot_profanity_filter','chatbot_canned_response','chatbot_compensation_policy','chatbot_handover_rule','chatbot_scenario_matrix'];
+    const ruleCounts = {};
+    const tablesForView = () => ({faq:[allRuleTables[0]],profanity:[allRuleTables[1]],canned:[allRuleTables[2]],
+        policy:[allRuleTables[currentPolicySubView==='comp'?3:4]],matrix:[allRuleTables[5]],guidelines:[]})[currentRulesView] || [];
+    async function loadRuleCounts(forceTables,skipTables=new Set()) {
+        const store=window.PawpalDataStore;
+        await Promise.all(allRuleTables.filter(table=>!skipTables.has(table)).map(async table=>{
+            const read=async()=>{
+                const result=await supabase.from(table).select('id',{count:'exact',head:true});
+                if(result.error)throw result.error;
+                return result.count || 0;
+            };
+            try { ruleCounts[table]=store ? await store.fetch('chatbot:rule-count:'+table+':'+store.buildKey(table),read,
+                {force:forceTables.has(table),ttlMs:60000,backgroundRevalidate:false}) : await read(); }
+            catch { delete ruleCounts[table]; }
+        }));
     }
-
     const ruleLoads = {};
     const ruleTableIds = ['faqTableBody','profanityTableBody','cannedTableBody','compPolicyTableBody','handoverRuleTableBody','matrixTableBody'];
-    function canRenderRule(tbody) {
-        const status=ruleLoads[tbody.id];
-        if(status==='ready'){delete tbody.dataset.loadingSkeleton;return true;}
-        if(status==='error'){
-            delete tbody.dataset.loadingSkeleton;
-            const columns=tbody.closest('table')?.querySelectorAll('thead th').length || 1;
-            tbody.innerHTML=`<tr><td colspan="${columns}" style="text-align:center;padding:28px;">Không thể tải quy định này. Vui lòng tải lại trang.</td></tr>`;
-        } else if(!tbody.querySelector('.skeleton-row')) window.PawpalAdmin?.renderTableSkeleton?.(tbody);
-        return false;
+    const pageMeta = {}, ruleCategories = {}, pageRevision = {};
+    function rulePageRequest(table) {
+        const value=(id,fallback='all')=>document.getElementById(id)?.value || fallback;
+        const query=id=>value(id,'').toLowerCase().trim();
+        const configs={
+            chatbot_knowledge_faq:{page:faqPage,filters:{query:query('inputFaqSearch'),category:value('selectFaqCategoryFilter'),status:value('selectFaqStatusFilter')}},
+            chatbot_profanity_filter:{page:profanityPage,filters:{query:query('inputProfanitySearch'),severity:value('selectProfanitySeverityFilter'),action:value('selectProfanityActionFilter'),status:value('selectProfanityStatusFilter')}},
+            chatbot_canned_response:{page:cannedPage,filters:{query:query('inputCannedSearch'),category:value('selectCannedCategoryFilter'),status:value('selectCannedStatusFilter')}},
+            chatbot_compensation_policy:{page:policyPage,filters:{query:query('inputPolicySearch')}},
+            chatbot_handover_rule:{page:policyPage,filters:{query:query('inputPolicySearch')}},
+            chatbot_scenario_matrix:{page:matrixPage,filters:{query:query('inputMatrixSearch'),status:value('selectMatrixStatusFilter')}}
+        };
+        return configs[table];
     }
-
-    async function loadAllRulesDataFromSupabase() {
-        if (!supabase) { ruleTableIds.forEach(id=>{ruleLoads[id]='error';});renderActiveRulesView();return; }
-        try {
-            ruleTableIds.forEach(id=>{ruleLoads[id]='loading';});
-            ['badgeFaqCount','badgeProfanityCount','badgeCannedCount','badgePolicyCount','badgeMatrixCount'].forEach(id=>{
-                const element=document.getElementById(id);
-                if(element)element.innerHTML='<span class="skeleton-text" style="width:20px;height:12px;"></span>';
-            });
-            renderActiveRulesView();
-            const [faqRes, profRes, cannedRes, compRes, handRes, matRes] = await Promise.all([
-                fetchRules('chatbot_knowledge_faq','priority'),
-                fetchRules('chatbot_profanity_filter','created_at',false),
-                fetchRules('chatbot_canned_response','usage_count',false),
-                fetchRules('chatbot_compensation_policy','max_points',false),
-                fetchRules('chatbot_handover_rule','sla_seconds'),
-                fetchRules('chatbot_scenario_matrix','created_at')
-            ]);
-
-            [faqRes,profRes,cannedRes,compRes,handRes,matRes].forEach((result,index)=>{ruleLoads[ruleTableIds[index]]=result.error ? 'error' : 'ready';});
-            if (faqRes && faqRes.data) rulesFaqData = faqRes.data;
-            if (profRes && profRes.data) rulesProfanityData = profRes.data;
-            if (cannedRes && cannedRes.data) rulesCannedData = cannedRes.data;
-            if (compRes && compRes.data) rulesCompPolicyData = compRes.data;
-            if (handRes && handRes.data) rulesHandoverRuleData = handRes.data;
-            if (matRes && matRes.data) rulesMatrixData = matRes.data;
-
-            updateRulesBadges();
-            populateRulesCategories();
-            renderActiveRulesView();
-        } catch (err) {
-            ruleTableIds.forEach(id=>{ruleLoads[id]='error';});
-            renderActiveRulesView();
-            console.error('[Chatbot Rules Hub] Lỗi nạp dữ liệu từ Supabase:', err);
+    function applyRulePage(table,response) {
+        pageMeta[table]=response;ruleCounts[table]=response.count;ruleCategories[table]=response.categories || [];
+        switch(table){
+            case 'chatbot_knowledge_faq':rulesFaqData=response.rows;faqPage=response.page;break;
+            case 'chatbot_profanity_filter':rulesProfanityData=response.rows;profanityPage=response.page;break;
+            case 'chatbot_canned_response':rulesCannedData=response.rows;cannedPage=response.page;break;
+            case 'chatbot_compensation_policy':rulesCompPolicyData=response.rows;policyPage=response.page;break;
+            case 'chatbot_handover_rule':rulesHandoverRuleData=response.rows;policyPage=response.page;break;
+            case 'chatbot_scenario_matrix':rulesMatrixData=response.rows;matrixPage=response.page;break;
         }
+    }
+    async function canRenderRule(tbody) {
+        const module=sessionStorage.getItem('pawpal_admin_active_module');
+        if(document.hidden || (module && module!=='Chatbot') || !document.getElementById('subtab-tab-chatbot-rules')?.classList.contains('active'))return false;
+        const table=allRuleTables[ruleTableIds.indexOf(tbody.id)],request=rulePageRequest(table);
+        const signature=JSON.stringify(request),revision=(pageRevision[table]||0)+1;
+        pageRevision[table]=revision;
+        const columns=tbody.closest('table')?.querySelectorAll('thead th').length || 1;
+        const force=pendingRuleTables.has(table);pendingRuleTables.delete(table);
+        tbody.setAttribute('aria-busy','true');
+        const loadingCell=document.createElement('td');loadingCell.colSpan=columns;
+        loadingCell.textContent='Đang tải quy tắc…';loadingCell.style.textAlign='center';loadingCell.style.padding='28px';
+        const loadingRow=document.createElement('tr');loadingRow.append(loadingCell);tbody.replaceChildren(loadingRow);
+        try {
+            const read=async()=>{
+                const {data,error}=await supabase.rpc('admin_chat_rule_page',{p_table:table,p_filters:request.filters,p_page:request.page});
+                if(error)throw error;
+                return data;
+            };
+            const store=window.PawpalDataStore;
+            const result=store ? await store.fetch('chatbot:rules:'+table+':'+store.buildKey(table,{page:request.page,...request.filters}),read,{force,ttlMs:60000,backgroundRevalidate:false}) : await read();
+            if(revision!==pageRevision[table] || signature!==JSON.stringify(rulePageRequest(table)))return false;
+            applyRulePage(table,result);ruleLoads[tbody.id]='ready';delete tbody.dataset.loadingSkeleton;
+            updateRulesBadges();populateRulesCategories();
+            return true;
+        } catch(error) {
+            if(revision!==pageRevision[table])return false;
+            ruleLoads[tbody.id]='error';delete tbody.dataset.loadingSkeleton;
+            const cell=document.createElement('td');cell.colSpan=columns;cell.textContent='Không tải được quy định. Vui lòng làm mới.';
+            const row=document.createElement('tr');row.append(cell);tbody.replaceChildren(row);
+            return false;
+        } finally {
+            if(revision===pageRevision[table])tbody.removeAttribute('aria-busy');
+        }
+    }
+    async function loadAllRulesDataFromSupabase({tables=tablesForView(),force=false}={}) {
+        const module=sessionStorage.getItem('pawpal_admin_active_module');
+        if(document.hidden || (module && module!=='Chatbot') || !document.getElementById('subtab-tab-chatbot-rules')?.classList.contains('active')) {
+            if(force)tables.forEach(table=>pendingRuleTables.add(table));
+            return;
+        }
+        if(force)tables.forEach(table=>{
+            pendingRuleTables.add(table);
+            window.PawpalDataStore?.invalidate('chatbot:rules:'+table+'*');
+        });
+        const renderers=[renderFaqTable,renderProfanityTable,renderCannedTable,renderPolicyTable,renderPolicyTable,renderMatrixTable];
+        await Promise.all([
+            loadRuleCounts(force?new Set(tables):new Set(),new Set(tables)),
+            Promise.all([...new Set(tables.map(table=>renderers[allRuleTables.indexOf(table)]))].map(render=>render()))
+        ]);
+        updateRulesBadges();
     }
 
     function updateRulesBadges() {
@@ -108,18 +152,18 @@
         const bPol = document.getElementById('badgePolicyCount');
         const bMat = document.getElementById('badgeMatrixCount');
 
-        if (bFaq) bFaq.textContent = rulesFaqData.length;
-        if (bProf) bProf.textContent = rulesProfanityData.length;
-        if (bCanned) bCanned.textContent = rulesCannedData.length;
-        if (bPol) bPol.textContent = rulesCompPolicyData.length + rulesHandoverRuleData.length;
-        if (bMat) bMat.textContent = rulesMatrixData.length;
+        if (bFaq) bFaq.textContent = ruleCounts[allRuleTables[0]] ?? rulesFaqData.length;
+        if (bProf) bProf.textContent = ruleCounts[allRuleTables[1]] ?? rulesProfanityData.length;
+        if (bCanned) bCanned.textContent = ruleCounts[allRuleTables[2]] ?? rulesCannedData.length;
+        if (bPol) bPol.textContent = (ruleCounts[allRuleTables[3]] ?? rulesCompPolicyData.length) + (ruleCounts[allRuleTables[4]] ?? rulesHandoverRuleData.length);
+        if (bMat) bMat.textContent = ruleCounts[allRuleTables[5]] ?? rulesMatrixData.length;
     }
 
     function populateRulesCategories() {
         const faqCatSelect = document.getElementById('selectFaqCategoryFilter');
         if (faqCatSelect) {
             const currentVal = faqCatSelect.value;
-            const cats = Array.from(new Set(rulesFaqData.map(f => f.category))).filter(Boolean);
+            const cats = ruleCategories.chatbot_knowledge_faq || [];
             faqCatSelect.innerHTML = '<option value="all">Tất cả danh mục</option>' +
                 cats.map(c => `<option value="${escapeHtml(c)}" ${c === currentVal ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
         }
@@ -127,18 +171,18 @@
         const cannedCatSelect = document.getElementById('selectCannedCategoryFilter');
         if (cannedCatSelect) {
             const currentVal = cannedCatSelect.value;
-            const cats = Array.from(new Set(rulesCannedData.map(c => c.category))).filter(Boolean);
+            const cats = ruleCategories.chatbot_canned_response || [];
             cannedCatSelect.innerHTML = '<option value="all">Tất cả chủ đề</option>' +
                 cats.map(c => `<option value="${escapeHtml(c)}" ${c === currentVal ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
         }
     }
 
     function renderActiveRulesView() {
-        if (currentRulesView === 'faq') renderFaqTable();
-        else if (currentRulesView === 'profanity') renderProfanityTable();
-        else if (currentRulesView === 'canned') renderCannedTable();
-        else if (currentRulesView === 'policy') renderPolicyTable();
-        else if (currentRulesView === 'matrix') renderMatrixTable();
+        if (currentRulesView === 'faq') return renderFaqTable();
+        else if (currentRulesView === 'profanity') return renderProfanityTable();
+        else if (currentRulesView === 'canned') return renderCannedTable();
+        else if (currentRulesView === 'policy') return renderPolicyTable();
+        else if (currentRulesView === 'matrix') return renderMatrixTable();
     }
 
     function renderPaginationControls(containerId, currentPage, totalPages, onPageChange) {
@@ -174,31 +218,13 @@
     }
 
     // 1. FAQ TABLE
-    function renderFaqTable() {
+    async function renderFaqTable() {
         const tbody = document.getElementById('faqTableBody');
         if (!tbody) return;
-        if (!canRenderRule(tbody)) return;
+        if (!await canRenderRule(tbody)) return;
 
-        const searchVal = (document.getElementById('inputFaqSearch')?.value || '').toLowerCase().trim();
-        const catVal = document.getElementById('selectFaqCategoryFilter')?.value || 'all';
-        const statusVal = document.getElementById('selectFaqStatusFilter')?.value || 'all';
-
-        const filtered = rulesFaqData.filter(item => {
-            const matchSearch = !searchVal ||
-                (item.question && item.question.toLowerCase().includes(searchVal)) ||
-                (item.answer && item.answer.toLowerCase().includes(searchVal)) ||
-                (Array.isArray(item.keywords) && item.keywords.some(k => k.toLowerCase().includes(searchVal)));
-            const matchCat = catVal === 'all' || item.category === catVal;
-            const matchStatus = statusVal === 'all' ||
-                (statusVal === 'active' && item.is_active) ||
-                (statusVal === 'inactive' && !item.is_active);
-            return matchSearch && matchCat && matchStatus;
-        });
-
-        const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
-        if (faqPage > totalPages) faqPage = totalPages;
-        const start = (faqPage - 1) * RULES_PAGE_SIZE;
-        const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+        const totalPages = Math.max(1, Math.ceil(pageMeta.chatbot_knowledge_faq.total / RULES_PAGE_SIZE));
+        const pageItems = rulesFaqData;
 
         if (pageItems.length === 0) {
             tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy câu hỏi FAQ phù hợp</td></tr>`;
@@ -337,30 +363,13 @@
     }
 
     // 2. TOXIC SHIELD PROFANITY FILTER TABLE
-    function renderProfanityTable() {
+    async function renderProfanityTable() {
         const tbody = document.getElementById('profanityTableBody');
         if (!tbody) return;
-        if (!canRenderRule(tbody)) return;
+        if (!await canRenderRule(tbody)) return;
 
-        const searchVal = (document.getElementById('inputProfanitySearch')?.value || '').toLowerCase().trim();
-        const sevVal = document.getElementById('selectProfanitySeverityFilter')?.value || 'all';
-        const actVal = document.getElementById('selectProfanityActionFilter')?.value || 'all';
-        const statusVal = document.getElementById('selectProfanityStatusFilter')?.value || 'all';
-
-        const filtered = rulesProfanityData.filter(item => {
-            const matchSearch = !searchVal || (item.keyword && item.keyword.toLowerCase().includes(searchVal));
-            const matchSev = sevVal === 'all' || item.severity === sevVal;
-            const matchAct = actVal === 'all' || item.action === actVal;
-            const matchStatus = statusVal === 'all' ||
-                (statusVal === 'active' && item.is_active) ||
-                (statusVal === 'inactive' && !item.is_active);
-            return matchSearch && matchSev && matchAct && matchStatus;
-        });
-
-        const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
-        if (profanityPage > totalPages) profanityPage = totalPages;
-        const start = (profanityPage - 1) * RULES_PAGE_SIZE;
-        const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+        const totalPages = Math.max(1, Math.ceil(pageMeta.chatbot_profanity_filter.total / RULES_PAGE_SIZE));
+        const pageItems = rulesProfanityData;
 
         if (pageItems.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy từ ngữ vi phạm phù hợp</td></tr>`;
@@ -504,31 +513,13 @@
     }
 
     // 3. CANNED RESPONSES TABLE
-    function renderCannedTable() {
+    async function renderCannedTable() {
         const tbody = document.getElementById('cannedTableBody');
         if (!tbody) return;
-        if (!canRenderRule(tbody)) return;
+        if (!await canRenderRule(tbody)) return;
 
-        const searchVal = (document.getElementById('inputCannedSearch')?.value || '').toLowerCase().trim();
-        const catVal = document.getElementById('selectCannedCategoryFilter')?.value || 'all';
-        const statusVal = document.getElementById('selectCannedStatusFilter')?.value || 'all';
-
-        const filtered = rulesCannedData.filter(item => {
-            const matchSearch = !searchVal ||
-                (item.title && item.title.toLowerCase().includes(searchVal)) ||
-                (item.shortcut && item.shortcut.toLowerCase().includes(searchVal)) ||
-                (item.content && item.content.toLowerCase().includes(searchVal));
-            const matchCat = catVal === 'all' || item.category === catVal;
-            const matchStatus = statusVal === 'all' ||
-                (statusVal === 'active' && item.is_active) ||
-                (statusVal === 'inactive' && !item.is_active);
-            return matchSearch && matchCat && matchStatus;
-        });
-
-        const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
-        if (cannedPage > totalPages) cannedPage = totalPages;
-        const start = (cannedPage - 1) * RULES_PAGE_SIZE;
-        const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+        const totalPages = Math.max(1, Math.ceil(pageMeta.chatbot_canned_response.total / RULES_PAGE_SIZE));
+        const pageItems = rulesCannedData;
 
         if (pageItems.length === 0) {
             tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy mẫu câu phù hợp</td></tr>`;
@@ -660,7 +651,7 @@
     }
 
     // 4. POLICY TABLE
-    function renderPolicyTable() {
+    async function renderPolicyTable() {
         const compWrapper = document.getElementById('compPolicyTableWrapper');
         const handWrapper = document.getElementById('handoverRuleTableWrapper');
         const searchVal = (document.getElementById('inputPolicySearch')?.value || '').toLowerCase().trim();
@@ -671,18 +662,10 @@
 
             const tbody = document.getElementById('compPolicyTableBody');
             if (!tbody) return;
-        if (!canRenderRule(tbody)) return;
+        if (!await canRenderRule(tbody)) return;
 
-            const filtered = rulesCompPolicyData.filter(item => {
-                return !searchVal ||
-                    (item.issue_type && item.issue_type.toLowerCase().includes(searchVal)) ||
-                    (item.description && item.description.toLowerCase().includes(searchVal));
-            });
-
-            const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
-            if (policyPage > totalPages) policyPage = totalPages;
-            const start = (policyPage - 1) * RULES_PAGE_SIZE;
-            const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+            const totalPages = Math.max(1, Math.ceil(pageMeta.chatbot_compensation_policy.total / RULES_PAGE_SIZE));
+            const pageItems = rulesCompPolicyData;
 
             if (pageItems.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy hạn mức bồi hoàn phù hợp</td></tr>`;
@@ -715,19 +698,10 @@
 
             const tbody = document.getElementById('handoverRuleTableBody');
             if (!tbody) return;
-        if (!canRenderRule(tbody)) return;
+        if (!await canRenderRule(tbody)) return;
 
-            const filtered = rulesHandoverRuleData.filter(item => {
-                return !searchVal ||
-                    (item.condition_name && item.condition_name.toLowerCase().includes(searchVal)) ||
-                    (item.threshold_value && String(item.threshold_value).toLowerCase().includes(searchVal)) ||
-                    (item.auto_assign_role && item.auto_assign_role.toLowerCase().includes(searchVal));
-            });
-
-            const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
-            if (policyPage > totalPages) policyPage = totalPages;
-            const start = (policyPage - 1) * RULES_PAGE_SIZE;
-            const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+            const totalPages = Math.max(1, Math.ceil(pageMeta.chatbot_handover_rule.total / RULES_PAGE_SIZE));
+            const pageItems = rulesHandoverRuleData;
 
             if (pageItems.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy quy tắc chuyển ca phù hợp</td></tr>`;
@@ -756,26 +730,13 @@
     }
 
     // 5. MATRIX TABLE
-    function renderMatrixTable() {
+    async function renderMatrixTable() {
         const tbody = document.getElementById('matrixTableBody');
         if (!tbody) return;
-        if (!canRenderRule(tbody)) return;
+        if (!await canRenderRule(tbody)) return;
 
-        const searchVal = (document.getElementById('inputMatrixSearch')?.value || '').toLowerCase().trim();
-        const statusVal = document.getElementById('selectMatrixStatusFilter')?.value || 'all';
-
-        const filtered = rulesMatrixData.filter(item => {
-            const matchSearch = !searchVal || 
-                (item.scenario_name && item.scenario_name.toLowerCase().includes(searchVal)) ||
-                (item.sample_user_input && item.sample_user_input.toLowerCase().includes(searchVal));
-            const matchStatus = statusVal === 'all' || item.benchmark_status === statusVal;
-            return matchSearch && matchStatus;
-        });
-
-        const totalPages = Math.ceil(filtered.length / RULES_PAGE_SIZE) || 1;
-        if (matrixPage > totalPages) matrixPage = totalPages;
-        const start = (matrixPage - 1) * RULES_PAGE_SIZE;
-        const pageItems = filtered.slice(start, start + RULES_PAGE_SIZE);
+        const totalPages = Math.max(1, Math.ceil(pageMeta.chatbot_scenario_matrix.total / RULES_PAGE_SIZE));
+        const pageItems = rulesMatrixData;
 
         if (pageItems.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">Không tìm thấy kịch bản kiểm thử phù hợp</td></tr>`;
@@ -826,7 +787,7 @@
             const session=(await supabase.auth.getSession()).data.session;if(!session)throw Error('Phiên đăng nhập đã hết hạn.');
             const response=await fetch('/api/admin-chat',{method:'POST',headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({action:'benchmark'})});
             const data=await response.json();if(!response.ok||!data.ok)throw Error(data.error||'Không chạy được kiểm tra.');
-            await loadAllRulesDataFromSupabase();const s=data.summary;
+            await loadAllRulesDataFromSupabase({tables:['chatbot_scenario_matrix'],force:true});const s=data.summary;
             PawpalChatbot.showToast?.('Quy tắc: '+s.passed+' đạt, '+s.failed+' chưa đạt, '+s.pending+' chưa đo công cụ.','info');
         }catch(error){PawpalChatbot.showToast?.(error.message,'error');}finally{button.disabled=false;}
     }
@@ -896,8 +857,9 @@
             setupRulesHubEventListeners();
             rulesHubInitialized = true;
             let timer;let channel=supabase?.channel('admin-chat-rules-v1');
-            for(const table of ['chatbot_knowledge_faq','chatbot_profanity_filter','chatbot_canned_response','chatbot_compensation_policy','chatbot_handover_rule','chatbot_scenario_matrix'])channel=channel?.on('postgres_changes',{event:'*',schema:'public',table},()=>{clearTimeout(timer);timer=setTimeout(loadAllRulesDataFromSupabase,350);});
+            for(const table of ['chatbot_knowledge_faq','chatbot_profanity_filter','chatbot_canned_response','chatbot_compensation_policy','chatbot_handover_rule','chatbot_scenario_matrix'])channel=channel?.on('postgres_changes',{event:'*',schema:'public',table},()=>{clearTimeout(timer);pendingRuleTables.add(table);window.PawpalDataStore?.invalidate('chatbot:rules:'+table+'*');window.PawpalDataStore?.invalidate('chatbot:rule-count:'+table+'*');if(table==='chatbot_canned_response')window.PawpalDataStore?.invalidate('chatbot:canned-live*');timer=setTimeout(()=>loadAllRulesDataFromSupabase(),350);});
             channel?.subscribe();window.addEventListener('beforeunload',()=>{clearTimeout(timer);if(channel)supabase.removeChannel(channel);},{once:true});
+            document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadAllRulesDataFromSupabase();});
         }
         const savedView=sessionStorage.getItem('pawpal_chat_rules_view');
         if(['faq','profanity','canned','policy','matrix','guidelines'].includes(savedView))document.querySelectorAll('.rules-hub-tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.rulesView===savedView));
@@ -911,6 +873,13 @@
             });
         }
         loadAllRulesDataFromSupabase();
+    }
+
+    const ruleSearchTimers = new Map();
+    function deferRuleSearch(render) {
+        clearTimeout(ruleSearchTimers.get(render));
+        allRuleTables.forEach(table=>pageRevision[table]=(pageRevision[table]||0)+1);
+        ruleSearchTimers.set(render,setTimeout(()=>render(),250));
     }
 
     function setupRulesHubEventListeners() {
@@ -945,13 +914,14 @@
                 }
 
                 renderActiveRulesView();
+                loadAllRulesDataFromSupabase();
             });
         });
 
         // FAQ Filters & Add
         document.getElementById('inputFaqSearch')?.addEventListener('input', () => {
             faqPage = 1;
-            renderFaqTable();
+            deferRuleSearch(renderFaqTable);
         });
         document.getElementById('selectFaqCategoryFilter')?.addEventListener('change', () => {
             faqPage = 1;
@@ -968,7 +938,7 @@
         // Profanity Filters & Add
         document.getElementById('inputProfanitySearch')?.addEventListener('input', () => {
             profanityPage = 1;
-            renderProfanityTable();
+            deferRuleSearch(renderProfanityTable);
         });
         document.getElementById('selectProfanitySeverityFilter')?.addEventListener('change', () => {
             profanityPage = 1;
@@ -989,7 +959,7 @@
         // Canned Filters & Add
         document.getElementById('inputCannedSearch')?.addEventListener('input', () => {
             cannedPage = 1;
-            renderCannedTable();
+            deferRuleSearch(renderCannedTable);
         });
         document.getElementById('selectCannedCategoryFilter')?.addEventListener('change', () => {
             cannedPage = 1;
@@ -1022,13 +992,13 @@
         });
         document.getElementById('inputPolicySearch')?.addEventListener('input', () => {
             policyPage = 1;
-            renderPolicyTable();
+            deferRuleSearch(renderPolicyTable);
         });
 
         // Matrix Filters & Run Benchmark
         document.getElementById('inputMatrixSearch')?.addEventListener('input', () => {
             matrixPage = 1;
-            renderMatrixTable();
+            deferRuleSearch(renderMatrixTable);
         });
         document.getElementById('selectMatrixStatusFilter')?.addEventListener('change', () => {
             matrixPage = 1;

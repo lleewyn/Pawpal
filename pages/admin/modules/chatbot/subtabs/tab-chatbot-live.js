@@ -25,11 +25,18 @@
     let defaultSmartSuggestions = [];
     let cannedResponsesDatabase = [];
     async function loadLiveCannedResponses() {
-        let rows=[];
-        for(let offset=0;;offset+=500){
-            const {data,error}=await supabase.from('chatbot_canned_response').select('id,shortcut,title,content,category').eq('is_active',true).order('id').range(offset,offset+499);
-            if(error)throw error;rows.push(...data);if(data.length<500)break;
-        }
+        const fetcher = async () => {
+            const rows=[];
+            for(let offset=0;;offset+=500){
+                const {data,error}=await supabase.from('chatbot_canned_response').select('id,shortcut,title,content,category').eq('is_active',true).order('id').range(offset,offset+499);
+                if(error)throw error;
+                rows.push(...data);
+                if(data.length<500)break;
+            }
+            return rows;
+        };
+        const store=window.PawpalDataStore;
+        const rows=store ? await store.fetch('chatbot:canned-live:'+store.buildKey('active-canned'),fetcher,{ttlMs:60000,backgroundRevalidate:false}) : await fetcher();
         cannedResponsesDatabase=rows;
         defaultSmartSuggestions=rows.map(r=>({tag:r.title,text:r.content}));
         return rows;

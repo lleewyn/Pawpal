@@ -1791,27 +1791,52 @@
 .staff-module #staffAccessDetails summary::-webkit-details-marker {
     display: none;
 }
-.staff-module .staff-schedule-panel {
-    background: transparent !important;
-    border: none !important;
+.staff-module #subtab-tab-staff-schedule .staff-schedule-panel {
+    background: transparent;
+    border: none;
+    border-radius: 0;
     box-shadow: none !important;
     backdrop-filter: none;
     overflow: visible;
 }
 .staff-module .staff-schedule-panel .table-toolbar-section {
-    padding: 12px 0 16px;
+    padding: 12px 16px;
+    background: var(--staff-surface, #ffffff);
+    border: 1px solid var(--staff-border, #ECF2EE);
+    border-radius: 9px;
+}
+.staff-module .staff-schedule-panel .filter-row-top,
+.staff-module .staff-schedule-panel .filter-actions-right {
+    flex-wrap: wrap;
+}
+.staff-module .staff-schedule-panel .date-navigator {
+    min-width: 0;
+    flex-wrap: wrap;
+}
+.staff-module .staff-schedule-panel .filter-dropdown-group {
+    min-width: 0;
+    max-width: 100%;
+}
+.staff-module .staff-schedule-panel .filter-dropdown-group .admin-select {
+    min-width: 0;
+    max-width: 100%;
+}
+.staff-module #scheduleDayViewWrapper,
+.staff-module #scheduleWeekViewWrapper {
+    padding: 16px 0;
 }
 .staff-module .staff-calendar-people {
     display: grid;
-    grid-template-columns: repeat(auto-fill,minmax(min(100%,290px),1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
     gap: 16px;
     align-items: start;
 }
 .staff-module .staff-calendar-person {
-    padding: 18px;
+    padding: 16px;
+    border: 1px solid var(--staff-border, #ECF2EE);
     border-radius: 9px;
-    background: rgba(255,255,255,.70);
-    backdrop-filter: blur(10px);
+    background: var(--staff-surface, #ffffff);
+    backdrop-filter: none;
     min-width: 0;
 }
 .staff-module .staff-calendar-person-header, .staff-module .staff-calendar-identity {
@@ -2188,10 +2213,10 @@
     gap: 10px;
 }
 .staff-module .staff-calendar-day {
-    padding: 10px;
-    border: 1px solid var(--staff-border);
-    border-radius: 7px;
-    background: #fff;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
 }
 .staff-module .staff-calendar-day-title {
     color: var(--staff-green-strong);
@@ -2199,10 +2224,10 @@
     font-weight: 650;
 }
 .staff-module .staff-calendar-week .staff-calendar-shift {
-    padding: 10px;
-    border: 1px solid var(--staff-border);
-    border-radius: 7px;
-    background: #f8faf8;
+    padding: 10px 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
     backdrop-filter: none;
 }
 .staff-module .staff-calendar-shift {

@@ -114,18 +114,40 @@
 
  function init(){
   const send=document.getElementById('btnSendCopilot'),input=document.getElementById('copilotInput'),timeline=document.getElementById('copilotMessagesArea'),list=document.getElementById('copilotSessionsList');
-  if(!send||send.dataset.copilotBound)return;send.dataset.copilotBound='true';
+  if(!send||!document.getElementById('subtab-tab-ai-copilot')?.classList.contains('active'))return;
+  if(send.dataset.copilotBound){app.subtabs.copilot.reload?.();return;}send.dataset.copilotBound='true';
   const client=window.getSupabaseClient();let sessions=[],active=sessionStorage.getItem('pawpal_copilot_active_session_id'),busy=false,request,page=1;
   localStorage.removeItem('pawpal_copilot_sessions');sessionStorage.removeItem('pawpal_copilot_sessions');
 
-  async function api(method,body,offset){
+  const reads=new Map(),details=new Map();let totalSessions=0,loadVersion=0;
+  async function api(method,body,params={},force=false){
    const session=(await client.auth.getSession()).data.session;if(!session)throw Error('Phiên đăng nhập đã hết hạn.');
-   const response=await fetch('/api/admin-chat'+(offset===undefined?'':'?offset='+offset),{method,headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
-   const result=await response.json();if(!response.ok||!result.ok)throw Error(result.error||'Không thể kết nối trợ lý.');return result;
+   const suffix=new URLSearchParams(typeof params==='number'?{offset:params}:params).toString();
+   const key=session.user.id+':'+suffix;
+   const previous=reads.get(key);
+   if(method==='GET'&&!force&&previous){if(previous.promise)return previous.promise;if(Date.now()-previous.at<30000)return previous.data;}
+   const job=(async()=>{
+    const response=await fetch('/api/admin-chat'+(suffix?'?'+suffix:''),{method,headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
+    const result=await response.json();if(!response.ok||!result.ok)throw Error(result.error||'Không thể kết nối trợ lý.');
+    if(method==='GET')reads.set(key,{at:Date.now(),data:result});
+    else {reads.clear();if(method==='DELETE'){details.delete(body.sessionId);if(active===body.sessionId)active=null;}}
+    return result;
+   })();
+   if(method==='GET')reads.set(key,{promise:job});
+   try{return await job;}catch(error){reads.delete(key);throw error;}
+  }
+
+  async function openSession(id,{force=false,older=false}={}){
+   const previous=details.get(id);
+   const result=await api('GET',null,{sessionId:id,offset:older?(previous?.messages.length||0):0,withTitle:!sessions.some(s=>s.id===id)?'1':'0'},force);
+   const summary=sessions.find(s=>s.id===id);
+   details.set(id,{id,title:summary?.title||result.title||previous?.title||'Phiên mới',updated:summary?.updated,
+    messages:older?[...new Map([...result.history,...(previous?.messages||[])].map(row=>[row.id,row])).values()]:result.history,hasMore:result.hasMore});
+   if(id===active)render();
   }
 
   function render(){
-   timeline.replaceChildren();const current=sessions.find(s=>s.id===active);
+   timeline.replaceChildren();const current=details.get(active)||sessions.find(s=>s.id===active);
    document.getElementById('currentCopilotSessionTitle').textContent=current?.title||'Phiên mới';
    const messages=current?.messages||[];
    if(!messages.length){
@@ -133,6 +155,11 @@
     emptyNotice.style.cssText='display:flex;align-items:center;justify-content:center;height:100%;min-height:200px;color:#4F7A65;font-size:13.5px;text-align:center;padding:24px;';
     emptyNotice.textContent='Nhập câu hỏi hoặc chọn gợi ý tác vụ bên dưới để tra cứu dữ liệu PawPal.';
     timeline.append(emptyNotice);
+   }
+   if(current?.hasMore){
+    const more=document.createElement('button');more.type='button';more.className='admin-btn admin-btn-secondary';more.textContent='Tải tin nhắn cũ hơn';
+    more.onclick=async()=>{more.disabled=true;try{await openSession(active,{older:true});}catch(error){app.showToast?.(error.message,'error');more.disabled=false;}};
+    timeline.append(more);
    }
    for(const row of messages){
     const card=document.createElement('div');card.className='copilot-msg '+(row.role==='user'?'msg-user':'msg-ai');
@@ -148,21 +175,17 @@
    }
    timeline.scrollTop=timeline.scrollHeight;list.replaceChildren();
 
-   const searchEl=document.getElementById('inputCopilotSessionSearch');
-   const query=(searchEl?searchEl.value:'').toLowerCase();
-   const filtered=sessions.filter(s=>s.title.toLowerCase().includes(query));
-   const total=Math.max(1,Math.ceil(filtered.length/10));
-   page=Math.min(page,total);
-
+   const filtered=sessions;
+   const total=Math.max(1,Math.ceil(totalSessions/10));
    if(!filtered.length){
     const empty=document.createElement('div');empty.className='copilot-session-empty';empty.textContent='Không tìm thấy phiên chat phù hợp.';list.append(empty);
    }else{
-    for(const s of filtered.slice((page-1)*10,page*10)){
+    for(const s of filtered){
      const item=document.createElement('div');
      item.className='copilot-session-item '+(s.id===active?'active':'');
      item.addEventListener('click',()=>{
       if(busy)return;
-      active=s.id;sessionStorage.setItem('pawpal_copilot_active_session_id',active);render();
+      active=s.id;sessionStorage.setItem('pawpal_copilot_active_session_id',active);render();openSession(active).catch(error=>app.showToast?.(error.message,'error'));
      });
 
      const rowTop=document.createElement('div');rowTop.className='copilot-session-row-top';
@@ -172,13 +195,13 @@
       e.stopPropagation();if(busy)return;
       app.showChatbotConfirmModal?.({
        title:'Xóa phiên trợ lý',message:'Xóa lịch sử phiên chat này?',confirmText:'Xóa phiên',isDanger:true,
-       onConfirm:async()=>{try{await api('DELETE',{sessionId:s.id});await load();}catch(err){app.showToast?.(err.message,'error');}}
+       onConfirm:async()=>{try{await api('DELETE',{sessionId:s.id});await load({force:true});}catch(err){app.showToast?.(err.message,'error');}}
       });
      });
      rowTop.append(titleEl,delBtn);
 
      const metaEl=document.createElement('div');metaEl.className='copilot-session-meta';
-     const countSpan=document.createElement('span');countSpan.textContent=s.messages.length+' tin nhắn';
+     const countSpan=document.createElement('span');countSpan.textContent=(s.message_count??s.messages?.length??0)+' tin nhắn';
      const timeSpan=document.createElement('span');timeSpan.textContent=formatTimeAgo(s.updated);
      metaEl.append(countSpan,timeSpan);
 
@@ -192,19 +215,32 @@
     const b=document.createElement('button');b.type='button';
     b.className='rules-page-btn '+(isActive?'active':'');
     b.textContent=text;b.disabled=disabled||busy;
-    if(delta!==0){b.onclick=(e)=>{e.stopPropagation();page+=delta;render();};}
+    if(delta!==0){b.onclick=(e)=>{e.stopPropagation();page+=delta;load().catch(error=>app.showToast?.(error.message,'error'));};}
     pager.append(b);
    }
    list.append(pager);
   }
 
-  async function load(){
-   const rows=[];for(let offset=0;;offset+=200){const result=await api('GET',null,offset);rows.push(...result.history);if(result.history.length<200)break;}
-   const map=new Map();for(const row of rows){if(!map.has(row.session_id))map.set(row.session_id,{id:row.session_id,title:row.metadata?.session_title||row.content.slice(0,80),messages:[],updated:row.created_at});const s=map.get(row.session_id);s.messages.push(row);s.updated=row.created_at;}
-   sessions=[...map.values()].sort((a,b)=>b.updated.localeCompare(a.updated));if(!sessions.some(s=>s.id===active))active=sessions[0]?.id||crypto.randomUUID();sessionStorage.setItem('pawpal_copilot_active_session_id',active);render();
+  async function load({force=false}={}){
+   const activeModule=sessionStorage.getItem('pawpal_admin_active_module');
+   if(document.hidden||(activeModule&&activeModule!=='Chatbot')||!document.getElementById('subtab-tab-ai-copilot')?.classList.contains('active'))return;
+   const version=++loadVersion;
+   const query=document.getElementById('inputCopilotSessionSearch')?.value||'';
+   const result=await api('GET',null,{view:'sessions',page,query},force);
+   if(version!==loadVersion)return;
+   sessions=result.sessions;page=result.page;totalSessions=result.total;
+   if(!active)active=sessions[0]?.id||crypto.randomUUID();
+   sessionStorage.setItem('pawpal_copilot_active_session_id',active);
+   render();
+   if(document.hidden)return;
+   if(sessions.some(s=>s.id===active)||!details.has(active)){
+    await openSession(active,{force});
+    if(version===loadVersion&&!details.get(active)?.messages.length&&sessions.length){active=sessions[0].id;sessionStorage.setItem('pawpal_copilot_active_session_id',active);await openSession(active,{force});}
+   } else if(force)await openSession(active,{force});
   }
+  app.subtabs.copilot.reload=load;
 
-  function fresh(){if(busy)return;active=crypto.randomUUID();sessionStorage.setItem('pawpal_copilot_active_session_id',active);input.value='';request=null;render();input.focus();}
+  function fresh(){if(busy)return;active=crypto.randomUUID();details.set(active,{id:active,title:'Phiên mới',messages:[]});sessionStorage.setItem('pawpal_copilot_active_session_id',active);input.value='';request=null;render();input.focus();}
 
   async function submit(){
    const question=input.value.trim();if(busy||!question)return;if(question.length>2000)return app.showToast?.('Câu hỏi tối đa 2.000 ký tự.','error');
@@ -212,10 +248,10 @@
    busy=true;send.disabled=true;
    input.value='';
 
-   let currSession=sessions.find(s=>s.id===active);
+   let currSession=details.get(active);
    if(!currSession){
     currSession={id:active,title:question.slice(0,80),messages:[],updated:new Date().toISOString()};
-    sessions.unshift(currSession);
+    details.set(active,currSession);
    }
    currSession.messages.push({role:'user',content:question,created_at:new Date().toISOString()});
    render();
@@ -242,7 +278,7 @@
 
     await typewriteText(contentBubble,timeline,replyText);
     request=null;
-    await load();
+    await load({force:true});
    }
    catch(error){
     thinkingCard.remove();
@@ -255,16 +291,17 @@
 
   send.addEventListener('click',submit);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit();}});
   document.getElementById('btnNewCopilotSession')?.addEventListener('click',fresh);
-  document.getElementById('inputCopilotSessionSearch')?.addEventListener('input',()=>{page=1;render();});
+  let searchTimer;document.getElementById('inputCopilotSessionSearch')?.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{page=1;load().catch(error=>app.showToast?.(error.message,'error'));},250);});
   document.getElementById('btnClearCopilotChat')?.addEventListener('click',()=>{
-   if(busy||!sessions.some(s=>s.id===active))return;
+   if(busy||!details.get(active)?.messages.length)return;
    const target=active;app.showChatbotConfirmModal?.({title:'Xóa phiên trợ lý',message:'Xóa lịch sử phiên này của bạn?',confirmText:'Xóa phiên',isDanger:true,onConfirm:async()=>{
-    try{await api('DELETE',{sessionId:target});await load();}catch(error){app.showToast?.(error.message,'error');}
+    try{await api('DELETE',{sessionId:target});await load({force:true});}catch(error){app.showToast?.(error.message,'error');}
    }});
   });
-  document.getElementById('btnSyncRagData')?.addEventListener('click',async()=>{try{await load();app.showToast?.('Đã tải lại lịch sử.','success');}catch(error){app.showToast?.(error.message,'error');}});
+  document.getElementById('btnSyncRagData')?.addEventListener('click',async()=>{try{await load({force:true});app.showToast?.('Đã tải lại lịch sử.','success');}catch(error){app.showToast?.(error.message,'error');}});
   document.querySelectorAll('.copilot-pill-btn').forEach(b=>b.addEventListener('click',()=>{if(!busy){input.value=b.dataset.prompt;input.focus();}}));
   const badge=document.getElementById('copilotModelBadge');if(badge)badge.textContent='Chỉ tra cứu';
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)load().catch(error=>app.showToast?.(error.message,'error'));});
   load().catch(error=>{timeline.textContent=error.message;list.textContent='Không tải được lịch sử.';});
  }
 
