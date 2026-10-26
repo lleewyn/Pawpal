@@ -1,0 +1,731 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "cleanUrls": false,
+  "functions": {
+    "api/admin-chat.js": {
+      "maxDuration": 60
+    }
+  },
+  "redirects": [
+    {
+      "source": "/pages/public/landing/landing.html",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/pages/public/landing/landing",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/shop.html",
+      "destination": "/shop",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/shop",
+      "destination": "/shop",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/cart/cart.html",
+      "destination": "/cart",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/cart/cart",
+      "destination": "/cart",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/checkout/checkout.html",
+      "destination": "/checkout",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/checkout/checkout",
+      "destination": "/checkout",
+      "permanent": false
+    },
+    {
+      "source": "/pages/services/services.html",
+      "destination": "/services",
+      "permanent": false
+    },
+    {
+      "source": "/pages/services/services",
+      "destination": "/services",
+      "permanent": false
+    },
+    {
+      "source": "/pages/services/booking/booking.html",
+      "destination": "/booking",
+      "permanent": false
+    },
+    {
+      "source": "/pages/services/booking/booking",
+      "destination": "/booking",
+      "permanent": false
+    },
+    {
+      "source": "/pages/public/about/about.html",
+      "destination": "/about",
+      "permanent": false
+    },
+    {
+      "source": "/pages/public/about/about",
+      "destination": "/about",
+      "permanent": false
+    },
+    {
+      "source": "/pages/public/contact/contact.html",
+      "destination": "/contact",
+      "permanent": false
+    },
+    {
+      "source": "/pages/public/contact/contact",
+      "destination": "/contact",
+      "permanent": false
+    },
+    {
+      "source": "/pages/public/blog/blog.html",
+      "destination": "/blog",
+      "permanent": false
+    },
+    {
+      "source": "/pages/public/blog/blog",
+      "destination": "/blog",
+      "permanent": false
+    },
+    {
+      "source": "/pages/public/login/login.html",
+      "destination": "/login",
+      "permanent": false
+    },
+    {
+      "source": "/pages/public/login/login",
+      "destination": "/login",
+      "permanent": false
+    },
+    {
+      "source": "/pages/public/return-guest/return-guest.html",
+      "destination": "/return-guest",
+      "permanent": false
+    },
+    {
+      "source": "/pages/public/return-guest/return-guest",
+      "destination": "/return-guest",
+      "permanent": false
+    },
+    {
+      "source": "/pages/services/booking-success/booking-success.html",
+      "destination": "/booking-success",
+      "permanent": false
+    },
+    {
+      "source": "/pages/services/booking-success/booking-success",
+      "destination": "/booking-success",
+      "permanent": false
+    },
+    {
+      "source": "/booking-success/booking-success.html",
+      "destination": "/booking-success",
+      "permanent": false
+    },
+    {
+      "source": "/booking-success.html",
+      "destination": "/booking-success",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/payment-success/payment-success.html",
+      "destination": "/payment-success",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/payment-success/payment-success",
+      "destination": "/payment-success",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/payment-success.html",
+      "destination": "/payment-success",
+      "permanent": false
+    },
+    {
+      "source": "/payment-success.html",
+      "destination": "/payment-success",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/payment-failed/payment-failed.html",
+      "destination": "/payment-failed",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/payment-failed/payment-failed",
+      "destination": "/payment-failed",
+      "permanent": false
+    },
+    {
+      "source": "/payment-failed.html",
+      "destination": "/payment-failed",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/vnpay-sandbox/vnpay-sandbox.html",
+      "destination": "/vnpay-sandbox",
+      "permanent": false
+    },
+    {
+      "source": "/pages/shop/vnpay-sandbox/vnpay-sandbox",
+      "destination": "/vnpay-sandbox",
+      "permanent": false
+    },
+    {
+      "source": "/vnpay-sandbox.html",
+      "destination": "/vnpay-sandbox",
+      "permanent": false
+    },
+    {
+      "source": "/pages/admin/index.html",
+      "destination": "/admin",
+      "permanent": false
+    },
+    {
+      "source": "/pages/admin/index",
+      "destination": "/admin",
+      "permanent": false
+    },
+    {
+      "source": "/pages/admin/admin.html",
+      "destination": "/admin",
+      "permanent": false
+    },
+    {
+      "source": "/pages/admin/admin",
+      "destination": "/admin",
+      "permanent": false
+    },
+    {
+      "source": "/pages/admin/login/login.html",
+      "destination": "/admin/login",
+      "permanent": false
+    },
+    {
+      "source": "/pages/admin/login/login",
+      "destination": "/admin/login",
+      "permanent": false
+    },
+    {
+      "source": "/pages/admin/login.html",
+      "destination": "/admin/login",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/index.html",
+      "destination": "/user",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/index",
+      "destination": "/user",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/user.html",
+      "destination": "/user",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/user",
+      "destination": "/user",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/dashboard",
+      "destination": "/user#profile",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/settings",
+      "destination": "/user#settings",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/bookings",
+      "destination": "/user#bookings",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/booking-detail",
+      "destination": "/user#bookings",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/orders",
+      "destination": "/user#orders",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/order-detail",
+      "destination": "/user#orders",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/pet-profile",
+      "destination": "/user#pets",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/pet-diary",
+      "destination": "/user#diary",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/wishlist",
+      "destination": "/user#wishlist",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/loyalty",
+      "destination": "/user#loyalty",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/support-tickets",
+      "destination": "/user#support",
+      "permanent": false
+    },
+    {
+      "source": "/pages/user/support",
+      "destination": "/user#support",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/admin/staff/:action",
+      "destination": "/api/staff-auth?action=:action"
+    },
+    {
+      "source": "/api/admin/auth/complete-password-change",
+      "destination": "/api/staff-auth"
+    },
+    {
+      "source": "/api/customer/auth/:path*",
+      "destination": "/api/customer-auth?action=:path*"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/landing",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/home",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/shop",
+      "destination": "/pages/shop/index.html"
+    },
+    {
+      "source": "/cart",
+      "destination": "/pages/shop/cart/cart.html"
+    },
+    {
+      "source": "/checkout",
+      "destination": "/pages/shop/checkout/checkout.html"
+    },
+    {
+      "source": "/product-detail",
+      "destination": "/pages/shop/product-detail/product-detail.html"
+    },
+    {
+      "source": "/services",
+      "destination": "/pages/services/index.html"
+    },
+    {
+      "source": "/services.css",
+      "destination": "/pages/services/services.css"
+    },
+    {
+      "source": "/services.js",
+      "destination": "/pages/services/services.js"
+    },
+    {
+      "source": "/shop.css",
+      "destination": "/pages/shop/shop.css"
+    },
+    {
+      "source": "/shop.js",
+      "destination": "/pages/shop/shop.js"
+    },
+    {
+      "source": "/booking",
+      "destination": "/pages/services/booking/booking.html"
+    },
+    {
+      "source": "/booking.css",
+      "destination": "/pages/services/booking/booking.css"
+    },
+    {
+      "source": "/booking.js",
+      "destination": "/pages/services/booking/booking.js"
+    },
+    {
+      "source": "/booking-success",
+      "destination": "/pages/services/booking-success/booking-success.html"
+    },
+    {
+      "source": "/booking-success.html",
+      "destination": "/pages/services/booking-success/booking-success.html"
+    },
+    {
+      "source": "/booking-success/booking-success.html",
+      "destination": "/pages/services/booking-success/booking-success.html"
+    },
+    {
+      "source": "/booking-success.css",
+      "destination": "/pages/services/booking-success/booking-success.css"
+    },
+    {
+      "source": "/booking-success.js",
+      "destination": "/pages/services/booking-success/booking-success.js"
+    },
+    {
+      "source": "/payment-success",
+      "destination": "/pages/shop/payment-success/payment-success.html"
+    },
+    {
+      "source": "/payment-success.css",
+      "destination": "/pages/shop/payment-success/payment-success.css"
+    },
+    {
+      "source": "/payment-success.js",
+      "destination": "/pages/shop/payment-success/payment-success.js"
+    },
+    {
+      "source": "/payment-failed",
+      "destination": "/pages/shop/payment-failed/payment-failed.html"
+    },
+    {
+      "source": "/payment-failed.css",
+      "destination": "/pages/shop/payment-failed/payment-failed.css"
+    },
+    {
+      "source": "/payment-failed.js",
+      "destination": "/pages/shop/payment-failed/payment-failed.js"
+    },
+    {
+      "source": "/vnpay-sandbox",
+      "destination": "/pages/shop/vnpay-sandbox/vnpay-sandbox.html"
+    },
+    {
+      "source": "/vnpay-sandbox.css",
+      "destination": "/pages/shop/vnpay-sandbox/vnpay-sandbox.css"
+    },
+    {
+      "source": "/vnpay-sandbox.js",
+      "destination": "/pages/shop/vnpay-sandbox/vnpay-sandbox.js"
+    },
+    {
+      "source": "/about",
+      "destination": "/pages/public/about/about.html"
+    },
+    {
+      "source": "/about.css",
+      "destination": "/pages/public/about/about.css"
+    },
+    {
+      "source": "/contact",
+      "destination": "/pages/public/contact/contact.html"
+    },
+    {
+      "source": "/contact.css",
+      "destination": "/pages/public/contact/contact.css"
+    },
+    {
+      "source": "/contact.js",
+      "destination": "/pages/public/contact/contact.js"
+    },
+    {
+      "source": "/blog",
+      "destination": "/pages/public/blog/blog.html"
+    },
+    {
+      "source": "/blog.css",
+      "destination": "/pages/public/blog/blog.css"
+    },
+    {
+      "source": "/blog.js",
+      "destination": "/pages/public/blog/blog.js"
+    },
+    {
+      "source": "/blog-detail",
+      "destination": "/pages/public/blog-detail/blog-detail.html"
+    },
+    {
+      "source": "/blog-detail.html",
+      "destination": "/pages/public/blog-detail/blog-detail.html"
+    },
+    {
+      "source": "/blog-detail/blog-detail.html",
+      "destination": "/pages/public/blog-detail/blog-detail.html"
+    },
+    {
+      "source": "/blog-detail.css",
+      "destination": "/pages/public/blog-detail/blog-detail.css"
+    },
+    {
+      "source": "/blog-detail.js",
+      "destination": "/pages/public/blog-detail/blog-detail.js"
+    },
+    {
+      "source": "/service-detail",
+      "destination": "/pages/services/service-detail/service-detail.html"
+    },
+    {
+      "source": "/service-detail.html",
+      "destination": "/pages/services/service-detail/service-detail.html"
+    },
+    {
+      "source": "/service-detail/service-detail.html",
+      "destination": "/pages/services/service-detail/service-detail.html"
+    },
+    {
+      "source": "/service-detail.css",
+      "destination": "/pages/services/service-detail/service-detail.css"
+    },
+    {
+      "source": "/service-detail.js",
+      "destination": "/pages/services/service-detail/service-detail.js"
+    },
+    {
+      "source": "/cart.css",
+      "destination": "/pages/shop/cart/cart.css"
+    },
+    {
+      "source": "/cart.js",
+      "destination": "/pages/shop/cart/cart.js"
+    },
+    {
+      "source": "/checkout.css",
+      "destination": "/pages/shop/checkout/checkout.css"
+    },
+    {
+      "source": "/checkout.js",
+      "destination": "/pages/shop/checkout/checkout.js"
+    },
+    {
+      "source": "/product-detail.html",
+      "destination": "/pages/shop/product-detail/product-detail.html"
+    },
+    {
+      "source": "/product-detail/product-detail.html",
+      "destination": "/pages/shop/product-detail/product-detail.html"
+    },
+    {
+      "source": "/product-detail.css",
+      "destination": "/pages/shop/product-detail/product-detail.css"
+    },
+    {
+      "source": "/product-detail.js",
+      "destination": "/pages/shop/product-detail/product-detail.js"
+    },
+    {
+      "source": "/login",
+      "destination": "/pages/public/login/login.html"
+    },
+    {
+      "source": "/login.css",
+      "destination": "/pages/public/login/login.css"
+    },
+    {
+      "source": "/login.js",
+      "destination": "/pages/public/login/login.js"
+    },
+    {
+      "source": "/return-guest",
+      "destination": "/pages/public/return-guest/return-guest.html"
+    },
+    {
+      "source": "/return-guest.html",
+      "destination": "/pages/public/return-guest/return-guest.html"
+    },
+    {
+      "source": "/return-guest/return-guest.html",
+      "destination": "/pages/public/return-guest/return-guest.html"
+    },
+    {
+      "source": "/return-guest.css",
+      "destination": "/pages/public/return-guest/return-guest.css"
+    },
+    {
+      "source": "/return-guest.js",
+      "destination": "/pages/public/return-guest/return-guest.js"
+    },
+    {
+      "source": "/user",
+      "destination": "/pages/user/index.html"
+    },
+    {
+      "source": "/admin/login",
+      "destination": "/pages/admin/login/login.html"
+    },
+    {
+      "source": "/admin/login/login.css",
+      "destination": "/pages/admin/login/login.css"
+    },
+    {
+      "source": "/admin/login/login.js",
+      "destination": "/pages/admin/login/login.js"
+    },
+    {
+      "source": "/admin",
+      "destination": "/pages/admin/index.html"
+    },
+    {
+      "source": "/admin/",
+      "destination": "/pages/admin/index.html"
+    },
+    {
+      "source": "/admin.css",
+      "destination": "/pages/admin/admin.css"
+    },
+    {
+      "source": "/admin.js",
+      "destination": "/pages/admin/admin.js"
+    },
+    {
+      "source": "/modules/:path*",
+      "destination": "/pages/admin/modules/:path*"
+    },
+    {
+      "source": "/admin/modules/:path*",
+      "destination": "/pages/admin/modules/:path*"
+    },
+    {
+      "source": "/user/",
+      "destination": "/pages/user/index.html"
+    },
+    {
+      "source": "/pages/public/landing",
+      "destination": "/pages/public/landing/landing.html"
+    },
+    {
+      "source": "/pages/shop",
+      "destination": "/pages/shop/index.html"
+    },
+    {
+      "source": "/pages/shop/",
+      "destination": "/pages/shop/index.html"
+    },
+    {
+      "source": "/pages/shop/product-detail",
+      "destination": "/pages/shop/product-detail/product-detail.html"
+    },
+    {
+      "source": "/pages/services",
+      "destination": "/pages/services/index.html"
+    },
+    {
+      "source": "/pages/services/",
+      "destination": "/pages/services/index.html"
+    },
+    {
+      "source": "/pages/services/booking",
+      "destination": "/pages/services/booking/booking.html"
+    },
+    {
+      "source": "/pages/public",
+      "destination": "/pages/public/index.html"
+    },
+    {
+      "source": "/pages/public/",
+      "destination": "/pages/public/index.html"
+    },
+    {
+      "source": "/pages/public/about",
+      "destination": "/pages/public/about/about.html"
+    },
+    {
+      "source": "/pages/public/blog",
+      "destination": "/pages/public/blog/blog.html"
+    },
+    {
+      "source": "/pages/public/contact",
+      "destination": "/pages/public/contact/contact.html"
+    },
+    {
+      "source": "/pages/public/login",
+      "destination": "/pages/public/login/login.html"
+    },
+    {
+      "source": "/pages/public/return-guest",
+      "destination": "/pages/public/return-guest/return-guest.html"
+    },
+    {
+      "source": "/return-guest/",
+      "destination": "/pages/public/return-guest/return-guest.html"
+    },
+    {
+      "source": "/pages/user",
+      "destination": "/pages/user/index.html"
+    },
+    {
+      "source": "/pages/user/",
+      "destination": "/pages/user/index.html"
+    },
+    {
+      "source": "/pages/shop/cart",
+      "destination": "/pages/shop/cart/cart.html"
+    },
+    {
+      "source": "/pages/shop/checkout",
+      "destination": "/pages/shop/checkout/checkout.html"
+    },
+    {
+      "source": "/pages/shop/payment-success",
+      "destination": "/pages/shop/payment-success/payment-success.html"
+    },
+    {
+      "source": "/pages/shop/payment-failed",
+      "destination": "/pages/shop/payment-failed/payment-failed.html"
+    },
+    {
+      "source": "/pages/services/booking-success",
+      "destination": "/pages/services/booking-success/booking-success.html"
+    },
+    {
+      "source": "/admin/login/",
+      "destination": "/pages/admin/login/login.html"
+    },
+    {
+      "source": "/pages/admin",
+      "destination": "/pages/admin/index.html"
+    },
+    {
+      "source": "/pages/admin/",
+      "destination": "/pages/admin/index.html"
+    },
+    {
+      "source": "/pages/admin/login",
+      "destination": "/pages/admin/login/login.html"
+    },
+    {
+      "source": "/pages/public/blog-detail",
+      "destination": "/pages/public/blog-detail/blog-detail.html"
+    },
+    {
+      "source": "/pages/services/service-detail",
+      "destination": "/pages/services/service-detail/service-detail.html"
+    }
+  ]
+}
