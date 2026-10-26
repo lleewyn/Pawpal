@@ -10,10 +10,12 @@ Yêu cầu Node.js và npm.
 
 ```sh
 npm install
-npm run dev
+npm start
 ```
 
-Mở [localhost:3000](http://localhost:3000). Trước khi chạy, tạo `.env` với cấu hình Cloud do người quản lý dự án cung cấp:
+Mở địa chỉ được in trong terminal (mặc định [localhost:3000](http://localhost:3000), hoặc cổng `PORT` trong `.env`). Trước khi chạy, tạo `.env` với cấu hình Cloud do người quản lý dự án cung cấp:
+
+`npm run dev` cũng khởi động cùng máy chủ phát triển. Máy chủ web chạy trên máy, CSDL vẫn dùng Supabase Cloud; không cần Docker hoặc CSDL local.
 
 - Khách hàng và API: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
 - Quản trị: `PAWPAL_ADMIN_SUPABASE_URL`, `PAWPAL_ADMIN_SUPABASE_ANON_KEY`, `PAWPAL_ADMIN_SUPABASE_SERVICE_ROLE_KEY`.

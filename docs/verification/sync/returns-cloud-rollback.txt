@@ -1,0 +1,68 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T03:41:53.690Z",
+  "scope": "One synthetic paid order, return, receipt and partial refund; RPC/RLS only; rollback; no external money or Logs",
+  "checks": [
+    {
+      "name": "Admin collection retry records one synthetic succeeded payment",
+      "status": "PASS"
+    },
+    {
+      "name": "User authoritative totals show Admin collection",
+      "status": "PASS"
+    },
+    {
+      "name": "User cannot self-confirm receipt or stock return",
+      "status": "PASS"
+    },
+    {
+      "name": "User return retry creates one pending request and detail visible to Admin",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read A return or create return on A order",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot invoke Admin return receipt or refund",
+      "status": "PASS"
+    },
+    {
+      "name": "Inspected saleable receipt retry restores one stock unit once",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads received return state",
+      "status": "PASS"
+    },
+    {
+      "name": "Refund exceeding source payment is rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Refund retry creates one 50000 refund; changed replay conflicts",
+      "status": "PASS"
+    },
+    {
+      "name": "User totals reflect net 55000 after Admin partial refund",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot request private return",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes return, refund, payment, order and fixture actors/catalog/config",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "bb20358a-10a2-47cf-b75f-21c8717a8166",
+    "customerB": "bc341356-e4a3-4774-b899-809de609e700",
+    "product": "d4391963-74e9-4329-a071-aafa3876bc4a",
+    "variant": "8b2895dd-c43c-4717-8ebb-a92b2faf93b3",
+    "order": "81825bfc-8fb2-468d-b467-2d5db2cee399"
+  },
+  "status": "PASS",
+  "queries": 112
+}

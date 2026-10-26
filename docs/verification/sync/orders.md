@@ -47,6 +47,22 @@ Bài browser dùng harness chức năng, không phải toàn bộ UI portal ho�
 
 ## Tài nguyên và phần chưa làm
 
+### Bổ sung chi tiết đơn User — 26/10/2026
+
+Sửa local `order-detail.js`: owner và version cùng chặn response cũ, init đã dispose không tạo lại watcher; auth/storage đổi phiên xóa currentOrder và dialog/channel cũ, thay nội dung bằng lời yêu cầu mở lại. Mua lại kiểm tra owner/order trước và sau đọc giỏ; hủy/nhận hàng kiểm tra owner/order trước submit và sau RPC. Ngày giờ dùng Việt Nam. Không đổi RPC/schema/policy.
+
+`node scripts/test/user_order_detail_actor_ui.cjs`: Chrome offline PASS với HTML/module thật, API/channel giả, request intercepted. Đơn A hiển thị ban đầu; đổi B xóa nội dung riêng và tháo channel. Response A chậm sau đổi auth hoặc dispose không render, không tạo channel. Test danh sách `user_orders_actor_ui.cjs` vẫn PASS. Action modules trả hàng/đánh giá được stub; chưa kiểm thử submit hủy/nhận/mua lại hoặc quyền server trong bài browser này. Chưa kiểm tra chi tiết lịch, Auth/HTTP/commit/reload, Realtime delivery thật hoặc tổng egress. Không có truy vấn Cloud trong đợt.
+
+### Bổ sung danh sách đơn User — 26/10/2026
+
+Sửa local `pages/user/modules/orders/orders.js`: kiểm tra owner cùng load version trước query và sau các lượt đọc đơn/return/review; đổi auth/storage dọn channel, xóa state/danh sách/thống kê; AbortController tháo listener tìm kiếm/lọc/phân trang khi dispose hoặc init lại. Mount đã dispose không tiếp tục bind listener sau request chậm. Không đổi bố cục hoặc query Cloud trong đợt này.
+
+`node scripts/test/user_orders_actor_ui.cjs`: **Chrome offline PASS**, HTML/module danh sách thật, transport giả và mọi request bị intercept. Đơn PRIVATE-A hiển thị ban đầu; đổi B xóa A và đưa thống kê về 0; mở lại hiển thị B. Response A chậm sau đổi phiên hoặc dispose không render. Channel cũ được dọn. Return/review action modules được stub vì ngoài phạm vi case danh sách; chưa kiểm tra các hành động đó. Assertion tiền ban đầu được sửa để chấp nhận định dạng tiền Việt Nam có khoảng trắng/ký hiệu đồng, không đổi production theo fixture.
+
+Regression `node scripts/test/user_return_detail_ui.cjs` cũng PASS. Không Cloud/Logs/stress-test. Chưa kiểm chứng login/HTTP/commit/reload, tab ẩn/reconnect hoặc delivery thật của danh sách đơn; không đánh PASS toàn chuỗi từ browser offline.
+
+Bổ sung 26/10: [áp voucher/hủy COD](voucher-order.md) và [đổi trả/hoàn tiền một phần](returns.md) đã được kiểm tra riêng ở lớp RPC/RLS, fixture rollback sạch. Các giới hạn toàn chuỗi bên dưới vẫn áp dụng; hoàn điểm/chi tiêu xét hạng và gateway còn chưa kiểm tra.
+
 Chỉ một lần đọc metadata RPC/cột bắt buộc, một lượt fixture Cloud; các lần hồi quy sau sửa chỉ offline. Không dùng Supabase Logs, không stress-test, không SELECT toàn bộ đơn khách. Recovery chỉ đọc một ID với scope customer; không có truy vấn recovery cho checkout mới chưa từng gửi request. 113 SQL statements là số câu trong test, không phải số request portal hoặc số thao tác ghi. Chưa đo tổng egress/p95.
 
 Còn thiếu: full UI → HTTP/Auth → DB commit → UI Admin/User → reload; notification, đổi trả/hoàn tiền thực tế, voucher/điểm và rollback các ưu đãi khi hủy; lỗi gateway thanh toán; cạnh tranh tồn giữa nhiều phiên; trạng thái đóng gói riêng nếu có. Không suy các mục này PASS từ fixture COD hoặc test offline.

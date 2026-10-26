@@ -1,0 +1,52 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T03:53:14.162Z",
+  "scope": "One synthetic order/return, savepoint rejection and unsaleable branches; RPC/RLS only; always rollback; no money or Logs",
+  "checks": [
+    {
+      "name": "Zero, fractional and above-sold return quantities rejected without partial requests",
+      "status": "PASS"
+    },
+    {
+      "name": "Pending return quantities count toward cumulative sold-quantity limit",
+      "status": "PASS"
+    },
+    {
+      "name": "Reject requires current revision and nonempty reason",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin reject retry stores reason without restocking",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads rejection state and reason",
+      "status": "PASS"
+    },
+    {
+      "name": "Unsaleable inspected receipt retry never adds sellable stock",
+      "status": "PASS"
+    },
+    {
+      "name": "Resolved unsaleable return cannot be received again as saleable",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads unsaleable receipt resolution",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes all return/order/catalog/config and actor fixtures",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "57220783-ecdb-4e16-9813-311c9f5a0f85",
+    "customerB": "68b57058-52dc-47f4-93c3-b1a79356bc88",
+    "product": "cdbd2f59-c172-4044-b903-4949ccddc70c",
+    "variant": "f7a375c2-72ef-4f89-bb21-c3531425718c",
+    "order": "4ac3bdd5-f51a-4b0e-88fc-6c838cf8a5a9"
+  },
+  "status": "PASS",
+  "queries": 94
+}

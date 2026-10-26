@@ -1,0 +1,56 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T03:36:33.760Z",
+  "scope": "One synthetic COD order, SKU, voucher and wallet; quote/apply/cancel RPC only; rollback; no Logs",
+  "checks": [
+    {
+      "name": "Server ignores forged total/discount/price and applies only the owned 10000 voucher",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot apply A owned voucher even with the same public code",
+      "status": "PASS"
+    },
+    {
+      "name": "Minimum order requirement is enforced at quote",
+      "status": "PASS"
+    },
+    {
+      "name": "Expired voucher rejected before order creation",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed voucher invalidates checkout quote without creating a partial order",
+      "status": "PASS"
+    },
+    {
+      "name": "Create retry records one redemption with server discount, used wallet and correct pending payment",
+      "status": "PASS"
+    },
+    {
+      "name": "Used owned voucher cannot be reused for a new quote",
+      "status": "PASS"
+    },
+    {
+      "name": "User cancel retry reverses the usage once and restores wallet availability visible to Admin",
+      "status": "PASS"
+    },
+    {
+      "name": "Cancellation restores voucher use without refunding the separate point-redemption cost or duplicating ledger",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes order, wallet/voucher, catalog/config and all synthetic actors",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "38b25258-b670-4ecb-87b7-29530a34585f",
+    "customerB": "02f96af1-daec-48ca-b21d-88b874fb3aba",
+    "product": "8999c8de-3fad-4dc3-b376-1972e8f5cf46",
+    "variant": "a461ac7f-6ead-42b2-838b-d0f95741deb4",
+    "order": "d64fbe84-0930-4449-aa5f-7bf028e02433"
+  },
+  "status": "PASS",
+  "queries": 89
+}

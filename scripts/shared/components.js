@@ -62,24 +62,14 @@
 
     function ensureHeaderAuth() {
         var rootPath = getRootPath();
-        var currentUser = null;
-        try {
-            currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        } catch (e) {
-            currentUser = null;
-        }
         if (!document.querySelector('script[src*="header.js"]')) {
             var authScript = document.createElement('script');
             authScript.src = rootPath + 'components/header/header.js';
             authScript.defer = true;
             document.head.appendChild(authScript);
         }
-        if (currentUser && !currentUser.is_temporary && !document.querySelector('script[src*="notifications-handler.js"]')) {
-            var notiScript = document.createElement('script');
-            notiScript.src = rootPath + 'scripts/shared/notifications-handler.js';
-            notiScript.defer = true;
-            document.head.appendChild(notiScript);
-        }
+        // Header owns the live notification snapshot and subscription.
+        // Loading the legacy helper here duplicates reads and overwrites its UI.
         if (!document.querySelector('script[src*="support-handler.js"]')) {
             var supportScript = document.createElement('script');
             supportScript.src = rootPath + 'scripts/shared/support-handler.js';

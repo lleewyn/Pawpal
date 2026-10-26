@@ -1,5 +1,7 @@
 # Kiểm tra đồng bộ hỗ trợ khách hàng — 26/10/2026
 
+Bổ sung retry local: ID phản hồi được giữ trong sessionStorage theo owner/ticket/SHA-256 nội dung, không lưu nội dung hoặc token; kiểm tra ghi journal trước RPC, ack đúng mới xóa. `user_support_sync_ui.cjs` PASS với lỗi ghi → stop/nạp lại helper (mất Map trong bộ nhớ) → retry cùng ID; ý định gửi cùng nội dung sau ack dùng ID mới. Đây là tái nạp helper trong browser, chưa phải reload toàn portal hoặc mất response sau commit thật. SHA-256 chỉ dùng định danh nội dung, không coi là mã hóa bảo mật. Các giới hạn ID chỉ nằm trong bộ nhớ ghi trước đây đã được sửa ở phạm vi helper; E2E reload vẫn cần kiểm tra.
+
 Phạm vi: mã local và RPC/RLS Supabase Cloud; chưa push/deploy hoặc nghiệm thu đầy đủ hai portal qua HTTP/Auth, commit, Realtime và reload.
 
 ## Kết quả

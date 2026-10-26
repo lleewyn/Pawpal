@@ -18,14 +18,23 @@ const ordersState = {
 
 let ordersLoadVersion = 0;
 let stopOrdersRealtime;
+let ordersListeners;
+let ordersMountVersion=0;
+const ordersOwner=()=>{try{return JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id || null;}catch{return null;}};
 export function dispose() {
+    ++ordersMountVersion;
     ++ordersLoadVersion;
     stopOrdersRealtime?.();
+    stopOrdersRealtime=null;
+    ordersListeners?.abort();
+    ordersListeners=null;
     clearInterval(pendingOrdersTicker);
 }
 
 async function loadOrders() {
     const loadVersion = ++ordersLoadVersion;
+    const owner=ordersOwner();
+    const valid=()=>loadVersion===ordersLoadVersion && owner===ordersOwner();
     try {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         
@@ -37,9 +46,10 @@ async function loadOrders() {
         if (!window.SupabaseClient) {
             await new Promise(r => setTimeout(r, 300));
         }
+        if(!valid())return;
 
         const remoteOrders = await API.getUserOrders(currentUser.id);
-        if (loadVersion !== ordersLoadVersion) return;
+        if (!valid()) return;
         // Live data is authoritative; never merge browser copies over server state.
         const mergedList = remoteOrders.map(order => {
             const products = Array.isArray(order.products) && order.products.length > 0
@@ -90,7 +100,7 @@ async function loadOrders() {
                         .select('sales_order_id')
                         .in('sales_order_id', orderUuids);
                     if(returnError)throw returnError;
-                    if (loadVersion !== ordersLoadVersion) return;
+                    if (!valid()) return;
                     if (returnRows) ordersState.returns = returnRows.map(r => r.sales_order_id);
                 }
             } catch(e) {
@@ -103,18 +113,18 @@ async function loadOrders() {
         if(db&&lineIds.length){
             const reviewed=await db.from('review').select('sales_order_detail_id').in('sales_order_detail_id',lineIds);
             if(reviewed.error)throw reviewed.error;
-            if(loadVersion!==ordersLoadVersion)return;
+            if(!valid())return;
             const ids=new Set((reviewed.data||[]).map(r=>r.sales_order_detail_id));
             ordersState.reviews=ordersState.allOrders.filter(o=>o.products.length&&o.products.every(p=>ids.has(p.lineId))).map(o=>o.id);
         }
         checkAndExpirePendingOrders();
-        if (loadVersion !== ordersLoadVersion) return;
+        if (!valid()) return;
         updateStats();
         updateTabCounts();
         applyFilters();
         startPendingOrdersTicker();
     } catch (error) {
-        if (loadVersion !== ordersLoadVersion) return;
+        if (!valid()) return;
         console.error('Lỗi load đơn hàng:', error);
         showEmptyState('Không thể tải đơn hàng. Vui lòng thử lại sau.');
     }
@@ -613,6 +623,20 @@ let isInitRunning = false;
 
 export async function initOrders() {
     if (isInitRunning) return;
+    dispose();
+    const mount=ordersMountVersion;
+    const owner=ordersOwner();
+    ordersListeners=new AbortController();
+    const signal=ordersListeners.signal;
+    const changed=()=>{
+        dispose();
+        ordersState.allOrders=[];ordersState.filteredOrders=[];ordersState.returns=[];ordersState.reviews=[];
+        updateStats();updateTabCounts();
+        showEmptyState('Phiên tài khoản đã thay đổi. Vui lòng mở lại danh sách đơn hàng.');
+    };
+    document.addEventListener('auth_state_changed',changed,{signal});
+    window.addEventListener('storage',event=>{if(event.key==='pawpal_current_user')changed();},{signal});
+    const bind=(target,type,handler)=>target.addEventListener(type,handler,{signal});
     isInitRunning = true;
     try {
         const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
@@ -639,9 +663,10 @@ export async function initOrders() {
         }
 
         await loadOrders();
+        if(mount!==ordersMountVersion || owner!==ordersOwner())return;
 
         document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((button) => {
-            button.addEventListener('click', (event) => {
+            bind(button,'click', (event) => {
                 document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((item) => {
                     item.classList.remove('active');
                     item.setAttribute('aria-selected', 'false');
@@ -656,11 +681,11 @@ export async function initOrders() {
         const searchBtn = document.getElementById('search-btn');
 
         if (searchBtn && searchInput) {
-            searchBtn.addEventListener('click', () => {
+            bind(searchBtn,'click', () => {
                 searchOrders(searchInput.value);
             });
 
-            searchInput.addEventListener('keypress', (event) => {
+            bind(searchInput,'keypress', (event) => {
                 if (event.key === 'Enter') {
                     searchOrders(searchInput.value);
                 }
@@ -669,14 +694,14 @@ export async function initOrders() {
 
         const prevBtn = document.getElementById('prev-page');
         if (prevBtn) {
-            prevBtn.addEventListener('click', () => {
+            bind(prevBtn,'click', () => {
                 if (ordersState.currentPage > 1) goToPage(ordersState.currentPage - 1);
             });
         }
 
         const nextBtn = document.getElementById('next-page');
         if (nextBtn) {
-            nextBtn.addEventListener('click', () => {
+            bind(nextBtn,'click', () => {
                 const totalPages = Math.ceil(ordersState.filteredOrders.length / ordersState.ordersPerPage);
                 if (ordersState.currentPage < totalPages) goToPage(ordersState.currentPage + 1);
             });

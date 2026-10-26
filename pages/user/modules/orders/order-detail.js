@@ -5,9 +5,11 @@ import './return-handler.js';
 import './review-handler.js';
 
 let currentOrder=null,stopRealtime,loadVersion=0,actionDialog=null,actionPending=false;
+let stopAuth,mountedOwner=null;
+const ownerId=()=>{try{return JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id || null;}catch{return null;}};
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=value=>new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(Number(value)||0);
-const date=value=>value?new Date(value).toLocaleString('vi-VN'):'—';
+const date=value=>value?new Date(value).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}):'—';
 const text=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
 const client=()=>window.getSupabaseClient?.()||window.SupabaseClient;
 function orderId(){const query=window.location.hash.split('?')[1]||window.location.search;const p=new URLSearchParams(query);return p.get('orderId')||p.get('id');}
@@ -18,11 +20,11 @@ async function loadOrderDetail(){
     if(!user?.id||user.is_temporary){showError('Vui lòng đăng nhập để xem đơn hàng.');return;}
     try{
         const orders=await API.getUserOrders(user),id=orderId();
-        if(version!==loadVersion)return;
+        if(version!==loadVersion || user.id!==ownerId())return;
         currentOrder=orders.find(o=>[o.id,o._supabaseId].includes(id));
         if(!currentOrder){showError('Không tìm thấy đơn hàng thuộc tài khoản của bạn.');return;}
         render();
-    }catch(error){if(version===loadVersion)showError('Không thể tải đơn hàng. Vui lòng tải lại trang.');}
+    }catch(error){if(version===loadVersion && user.id===ownerId())showError('Không thể tải đơn hàng. Vui lòng tải lại trang.');}
 }
 function render(){
     const o=currentOrder;
@@ -66,9 +68,9 @@ function render(){
 }
 
 function openOrderAction(action){
-    if(actionPending||!currentOrder)return;
+    if(actionPending||!currentOrder || mountedOwner!==ownerId())return;
     actionDialog?.close();actionDialog?.remove();
-    const order=currentOrder,request=crypto.randomUUID(),cancel=action==='cancel';
+    const order=currentOrder,owner=mountedOwner,request=crypto.randomUUID(),cancel=action==='cancel';
     const dialog=document.createElement('dialog');actionDialog=dialog;dialog.id='order-detail-action-dialog';
     dialog.style.cssText='position:fixed;inset:0;margin:auto;width:540px;height:fit-content;max-height:92vh;overflow:auto;max-width:92vw;background:#fff;border:1px solid #ECF2EE;border-radius:9px;padding:26px 30px;color:#203A2C';
     dialog.innerHTML=`<h3 style="color:#236B48">${cancel?'Hủy đơn hàng':'Xác nhận nhận hàng'}</h3><p>${escapeHtml(order.id)}</p>
@@ -81,6 +83,7 @@ function openOrderAction(action){
     dialog.onclick=e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}};
     dialog.querySelector('#detail-action-confirm').onclick=async()=>{
         if(actionPending)return;
+        if(owner!==ownerId() || order!==currentOrder)return;
         const errorElement=dialog.querySelector('#detail-action-error'),button=dialog.querySelector('#detail-action-confirm');
         const reason=dialog.querySelector('#detail-cancel-reason')?.value.trim();
         if(cancel&&(!reason||reason.length<2)){errorElement.textContent='Vui lòng nhập lý do hủy đơn.';return;}
@@ -88,6 +91,7 @@ function openOrderAction(action){
         try{
             const args={p_request:request,p_order:order._supabaseId,p_expected:order.updatedAt};if(cancel)args.p_reason=reason;
             const result=await client().rpc(cancel?'cancel_own_sales_order':'receive_own_sales_order',args);
+            if(owner!==ownerId() || order!==currentOrder)return;
             if(result.error)throw result.error;
             actionPending=false;close();await loadOrderDetail();
         }catch(error){errorElement.textContent=error.code==='PT409'?'Đơn đã thay đổi. Vui lòng đóng và tải lại thông tin.':error.message==='sales_refund_required'?'Đơn đã thu tiền. Vui lòng liên hệ cửa hàng để hoàn tiền trước khi hủy.':'Không thể thực hiện. Vui lòng tải lại thông tin hoặc liên hệ cửa hàng.';}
@@ -96,20 +100,28 @@ function openOrderAction(action){
     dialog.showModal();
 }
 async function reorder(){
-    if(!currentOrder)return;
+    if(!currentOrder || mountedOwner!==ownerId())return;
+    const order=currentOrder,owner=mountedOwner;
     try{
         const user=JSON.parse(localStorage.getItem('pawpal_current_user')||'null');
         const existing=await API.getUserCart(user.id);
-        const additions=currentOrder.products.map(p=>({id:p.variantId,variantId:p.variantId,name:p.name,quantity:p.quantity}));
+        if(owner!==ownerId() || order!==currentOrder)return;
+        const additions=order.products.map(p=>({id:p.variantId,variantId:p.variantId,name:p.name,quantity:p.quantity}));
         await API.saveUserCart(user.id,[...existing,...additions]);window.location.href='/cart';
     }catch(error){notify(error.message||'Không thể thêm sản phẩm vào giỏ hàng.');}
 }
-function showError(message){const element=document.querySelector('.order-detail-module-container');if(element){element.innerHTML='<p role="alert"></p><a href="#orders">Quay lại danh sách đơn hàng</a>';element.querySelector('p').textContent=message;}}
-export function dispose(){++loadVersion;stopRealtime?.();stopRealtime=null;if(!actionPending){actionDialog?.close();actionDialog?.remove();actionDialog=null;}}
+function showError(message){const element=document.querySelector('.order-detail-module-container');if(element){element.classList.remove('user-order-loading');element.setAttribute('aria-busy','false');element.innerHTML='<p role="alert"></p><a href="#orders">Quay lại danh sách đơn hàng</a>';element.querySelector('p').textContent=message;}}
+export function dispose(){++loadVersion;stopRealtime?.();stopRealtime=null;stopAuth?.();stopAuth=null;currentOrder=null;mountedOwner=null;actionDialog?.close();actionDialog?.remove();actionDialog=null;}
 export async function initOrderDetail(){
     dispose();
+    mountedOwner=ownerId();const owner=mountedOwner,version=loadVersion+1;
+    const changed=()=>{dispose();showError('Phiên tài khoản đã thay đổi. Vui lòng mở lại đơn hàng.');};
+    const storage=event=>{if(event.key==='pawpal_current_user')changed();};
+    document.addEventListener('auth_state_changed',changed);window.addEventListener('storage',storage);
+    stopAuth=()=>{document.removeEventListener('auth_state_changed',changed);window.removeEventListener('storage',storage);};
     const container=document.querySelector('.order-detail-module-container');
     await loadOrderDetail();
+    if(version!==loadVersion || owner!==ownerId() || !container?.isConnected)return;
     container?.classList.remove('user-order-loading');container?.setAttribute('aria-busy','false');container?.querySelector('.user-order-skeleton')?.remove();
     const user=JSON.parse(localStorage.getItem('pawpal_current_user')||'null');
     stopRealtime=watchCustomerTables(client(),user?.id,['sales_order','sales_order_detail','payment','review'],loadOrderDetail);

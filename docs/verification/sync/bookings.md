@@ -1,5 +1,21 @@
 # Đồng bộ lịch hẹn — 26/10/2026
 
+## Bổ sung vòng đời chi tiết lịch — 26/10/2026
+
+Bổ sung retry qua reload: giữ riêng UUID request trong sessionStorage theo owner/booking/line trước khi gửi, kiểm tra ghi thành công; đúng acknowledgement mới xóa ID. Không lưu rating/content/token. Harness Chrome thực hiện lỗi RPC rồi navigation/reload module và nhập lại cùng nội dung: request mới dùng đúng ID cũ, PASS. Nếu nội dung đổi sau một lần có thể commit, RPC server vẫn đối chiếu và từ chối khác payload; chưa có UX phục hồi tự động nội dung hoặc E2E mất response sau commit. Gateway thật được người dùng loại khỏi phạm vi, không phải tiêu chí chặn nghiệm thu.
+
+Bổ sung gửi review offline: `user_booking_detail_actor_ui.cjs` PASS form thật cho một dòng completed; lỗi RPC giữ nhận xét và cho retry cùng UUID, hai click lúc đang gửi chỉ một request bổ sung, ack trả đúng IDs chuyển form sang review chờ duyệt. Đổi account trong lúc submit không dựng lại section sau response. Production thêm kiểm tra button.disabled trong handler; không đổi server/RLS. Mock dùng hai lượt submit (một lỗi, một thành công); không gọi Cloud, không chứng minh idempotency server hoặc moderation thật. ID mới giữ trong closure, chưa bảo đảm retry qua reload. Không nghiệm thu lưu review qua HTTP/Auth/commit hoặc công bố review.
+
+Bổ sung hotel/taxi/review offline: harness Chrome dùng origin localhost (crypto context an toàn), RPC giả trả thông tin phòng và taxi khứ hồi; xác minh 03:00Z thành 10:00 và nội dung chứa thẻ HTML chỉ hiện chữ. Lịch completed có một dòng dịch vụ và review đã lưu hiển thị nội dung an toàn, không có nút gửi lại. Phát hiện production thiếu định nghĩa `escapeHtml` được gọi khi render dòng dịch vụ/nhật ký; đã bổ sung hàm escape trong module và chạy lại PASS. Nhánh confirmed trước dùng items rỗng nên không phát hiện lỗi này. Chưa kiểm tra gửi review, approval/publication thật, toàn bộ trường hotel/taxi, gateway hoặc hai portal. Không gọi Cloud; sửa code còn local.
+
+Bổ sung tiếp `user_booking_detail_actor_ui.cjs`: Chrome offline PASS cho lịch confirmed hợp lệ, mã PRIVATE-A/dịch vụ Spa, scheduled 03:00Z thành 10:00 trong browser UTC; truy vấn execution được gọi và một channel được tạo. Đổi auth khi logistics còn chờ hoặc đổi tài khoản khi execution còn chờ dọn nội dung và không tạo channel sau response. API/query/channel là mock, logistics/execution dùng dữ liệu rỗng; chưa kiểm tra nội dung nhật ký phong phú, hotel/taxi hoặc review submit. 8 test Node `booking_time.test.mjs` và `customer_booking_read.test.mjs` vẫn PASS. Không gọi Cloud; kết quả mở rộng phạm vi bài browser trước, không thay nghiệm thu hai portal.
+
+Sửa local `booking-detail.js`: export dispose, vô hiệu hóa lượt tải khi hash/auth/storage đổi, dọn channel/listener và trạng thái booking/pet/care log. Guard owner, mount version và read version sau các bước initData, danh sách lịch, logistics, pet, care log, execution và review; callback từ phiên cũ không render hoặc dựng lại channel. Form đánh giá chặn submit/kết quả khi context đã hết hiệu lực. Không thay schema/RPC/policy.
+
+`node scripts/test/user_booking_detail_actor_ui.cjs`: **Chrome offline PASS**, HTML/module chi tiết thật, API/channel mock, request intercepted. ID không nằm trong danh sách owner hiển thị không tìm thấy và không tạo channel; response lịch khớp đang chờ khi đổi tài khoản hoặc dispose không render dữ liệu cũ/không tạo channel. Booking-list helpers được stub; chưa kiểm tra đầy đủ màn hình lịch hợp lệ, logistics/execution/review UI hoặc thao tác submit. Không gọi Cloud/Logs/stress-test; không coi kết quả này là bằng chứng RLS, Auth/HTTP/Realtime thật hoặc toàn chuỗi hai portal.
+
+Thay đổi sau commit đã push `0ef89a39` còn local. Các kết quả lịch hẹn SQL trước đó được giữ riêng dưới đây.
+
 Phạm vi: mã local và RPC/RLS Cloud `cpzuvaplseielhgcnqrn`. Nhánh nền `main`, SHA `d8bb56e918105865d38d01592e4255d480f65849`, cộng working tree chưa commit. Người kiểm tra: Codex. Chưa push/deploy; chưa nghiệm thu luồng UI → HTTP Auth/API → commit → portal phía kia → reload.
 
 ## Kiểm tra Cloud

@@ -1,6 +1,6 @@
 # PAWPAL --- CHECKLIST KIỂM THỬ ĐỒNG BỘ 2 CHIỀU USER ↔ ADMIN
 
-**Phiên bản:** 1.6 · **Cập nhật:** 26/10/2026 · **Trạng thái tổng:** ĐANG KIỂM TRA MỘT PHẦN · **Timezone:**
+**Phiên bản:** 1.29 · **Cập nhật:** 26/10/2026 · **Trạng thái tổng:** ĐANG KIỂM TRA MỘT PHẦN · **Timezone:**
 Asia/Ho_Chi_Minh (UTC+7)
 
 **Mục tiêu:** phát hiện lỗi khi User thao tác nhưng Admin không nhận cập
@@ -18,6 +18,35 @@ Supabase.
 **Dấu hoàn thành:** `[x]` ở các đầu việc con xác nhận đúng phần SQL/RLS hoặc offline đã có bằng chứng. Ô cha `[ ]` giữ trống khi chưa kiểm tra đủ chuỗi hai portal; không đồng nghĩa các phần bên trong chưa làm. Các mục chưa chạy không đánh dấu.
 
 ### Các đợt đã thực hiện
+
+### Phạm vi chốt theo yêu cầu người dùng
+
+- [x] Chuẩn bị migration 103 RPC phân trang thông báo additive: 9 kiểm tra/61 SQL statements trong transaction rollback PASS; Chrome 23 dòng/3 trang và lọc unread PASS, 18 test header/scheduler PASS.
+- [x] Sau xác nhận người dùng, đã áp dụng migration 103 trên Cloud và đọc metadata xác minh cả RPC phân trang/RPC cũ tồn tại. Bật mặc định phân trang trong header local; Chrome + 18 test Node PASS. Không sửa/xóa notification hoặc dùng Logs. Website đã deploy chưa nhận code frontend mới vì chưa push/deploy; chưa nghiệm thu Auth/Realtime E2E. [Bằng chứng](docs/verification/sync/notifications.md).
+
+- [x] Hồi quy gộp `node scripts/test/sync_offline_batch.cjs`: 9 bài Chrome offline, 75 test Node, Copilot business và loyalty service PASS; báo cáo [offline-batch.txt](docs/verification/sync/offline-batch.txt). Không gọi fixture Cloud, Logs hoặc deploy. Inbox 10 dòng/trang, cache và invalidation theo conversation PASS; sửa SLA deadline không hợp lệ tránh NaN, 3 test SLA PASS.
+- [ ] Các hạng mục vẫn cần triển khai/nghiệm thu: payload snapshot có phân trang server; workflow đối soát/thu hồi điểm; đổi/gửi bù; E2E Auth/commit/Realtime hai portal; moderation/handoff và quyền Storage nếu triển khai upload. Ticket hiện không có luồng upload trong form: ghi là chưa triển khai, không tự đánh PASS hoặc N/A. Không dùng batch offline để đóng các ô này.
+
+- [x] Retry phản hồi ticket sau nạp lại helper: journal session theo owner/ticket/SHA-256 nội dung giữ đúng ID, ack đúng mới xóa; không lưu content/token. Chrome offline PASS lỗi → nạp lại helper → retry cùng ID và lần gửi mới có ID mới. Chưa kiểm tra reload toàn portal/commit thật.
+
+- [x] Retry đánh giá dịch vụ qua reload: giữ UUID theo owner/booking/line trong sessionStorage trước gửi; xác nhận đúng IDs mới xóa. Chrome offline PASS sau lỗi → reload → nhập lại → retry cùng ID. Không lưu content/token, không gọi Cloud. Chưa nghiệm thu mất response sau commit thật.
+
+- N/A — Gateway thanh toán/hoàn tiền thật không áp dụng. Không dùng các ghi chú “chưa test gateway” bên dưới làm điều kiện chặn nghiệm thu; vẫn kiểm tra thu/hoàn tiền thủ công và quyền, số dư, retry tương ứng.
+- Các phần còn lại được gom thành một đợt xử lý tiếp; chỉ đánh `[x]` khi có bằng chứng. Full E2E/Auth/commit, giới hạn payload, ledger hoàn điểm, đổi/gửi bù, ticket/upload/handoff/SLA, retry reload và moderation vẫn cần hoàn thành hoặc ghi rõ giới hạn thực tế.
+
+- [x] Gửi đánh giá dịch vụ Chrome offline PASS: lỗi ghi giữ draft, retry cùng ID, double-click không gửi trùng, ack thành công hiển thị review và đổi tài khoản khi đang gửi không dựng lại giao diện cũ. Thêm khóa disabled trong handler; không gọi Cloud. Chưa kiểm tra reload giữ ID, moderation/publication hoặc HTTP/Auth thật.
+
+- [x] Chrome offline bổ sung hotel/taxi và đánh giá đã lưu: thông tin/giờ Việt Nam và HTML an toàn PASS. Sửa thiếu định nghĩa escapeHtml khiến lịch có dòng dịch vụ lỗi render. Chưa kiểm tra submit đánh giá hoặc Auth/Cloud thật. [Bằng chứng lịch](docs/verification/sync/bookings.md).
+
+- [x] Bổ sung Chrome offline lịch hợp lệ: mã/dịch vụ/giờ UTC+7 hiển thị, tải execution và chỉ một channel; response logistics/execution chậm sau đổi phiên không render hoặc tạo lại channel. 8 test Node lịch/giờ vẫn PASS; không gọi Cloud. Còn hotel/taxi/review đầy đủ và hai portal/Auth/Realtime thật.
+
+- [x] Chi tiết lịch User: thêm dispose/guard tài khoản và vòng đời xuyên các lượt đọc, dọn auth/storage/channel; chặn tải cũ sau đổi phiên/rời trang và phản hồi đánh giá từ phiên cũ. Chrome offline PASS cho ID không khớp và response chậm sau đổi tài khoản/dispose; không gọi Cloud. Chưa kiểm tra đầy đủ màn hình lịch hợp lệ hoặc Auth/RLS/HTTP thật. [Bằng chứng](docs/verification/sync/bookings.md).
+
+- [x] Chi tiết đơn User: thêm guard owner/lifecycle, dọn dữ liệu/dialog/channel khi đổi phiên; request chậm sau dispose không dựng lại subscription. Chrome offline với HTML/module thật PASS; regression danh sách đơn PASS. Không gọi Cloud; còn chi tiết lịch và quyền trang đích qua HTTP/Auth thật. [Bằng chứng](docs/verification/sync/orders.md).
+
+- [x] Danh sách đơn User: sửa chốt tài khoản/version trước và sau query; đổi auth/storage xóa đơn và thống kê cũ, dọn channel/listener; init lại không giữ handler cũ. Chrome offline với HTML/module thật PASS cho response chậm/đổi tài khoản/dispose. Không gọi Cloud, chưa thay nghiệm thu HTTP/Auth/Realtime thật. [Bằng chứng](docs/verification/sync/orders.md).
+
+- [x] Sửa khởi động 26/10: thêm `npm start`, khôi phục `server.js` cho web trên máy, giữ Supabase Cloud. Smoke HTTP offline tại PORT cấu hình 4000: `/`, `/shop`, `/services`, `/user`, `/admin` và helper `.mjs` trả 200; `/.env` trả 404. Không gọi nghiệp vụ Cloud hoặc nghiệm thu đăng nhập/E2E từ smoke này. Windows có thể dùng `npm.cmd start` nếu PowerShell chặn `npm.ps1`.
 
 - [x] Hồ sơ: hoàn tất đợt kiểm tra RPC/RLS và offline — [bằng chứng](docs/verification/sync/README.md).
 - [x] Thú cưng: hoàn tất đợt kiểm tra RPC/RLS, service và form offline — [bằng chứng](docs/verification/sync/pets.md).
@@ -310,14 +339,28 @@ biết cách đối chiếu record.
     - [x] SQL/RLS: Admin hủy COD chưa thu tiền, User đọc cancelled, reservation active về 0; chưa kiểm thử hoàn tiền đã thu.
 -   [ ] **SYNC-04-10 \| P0** User gửi yêu cầu đổi/trả/hoàn tiền; Admin
     thấy đúng đơn và yêu cầu.
+    - [x] RPC/RLS: một yêu cầu trả một sản phẩm, retry không trùng; Admin thấy pending/detail; B/Guest bị chặn. [Bằng chứng đổi trả](docs/verification/sync/returns.md).
 -   [ ] **SYNC-04-11 \| P0** Admin duyệt/từ chối; User thấy kết quả và
     lý do nếu có.
+    - [x] RPC nhận hàng kiểm định và retry nhập lại kho đúng +1; User thấy received. Bổ sung nhánh từ chối có lý do/revision và hàng không bán lại không nhập kho; còn đổi hàng và UI hai portal.
+    - [x] Sửa local User detail bỏ sót resolution_type: hiển thị lý do từ chối trên timeline, escape HTML; 3 test offline PASS. [Bằng chứng nhánh đổi trả](docs/verification/sync/return-branches.md).
+    - [x] Chrome offline với HTML/module User thật: lý do hiển thị an toàn, UTC+7, xóa dữ liệu khi đổi tài khoản, không tạo lại channel sau dispose hoặc phiên đổi khi request chậm. Còn UI Admin/Auth/HTTP/commit/Realtime thật.
 -   [ ] **SYNC-04-12 \| P0** Chỉ báo hoàn tiền thành công khi giao dịch
     thực tế thành công; tổng hoàn không vượt số tiền đã thanh toán.
+    - [x] RPC tiền mặt giả: thu 105.000đ, hoàn 50.000đ đúng một lần, chặn vượt khoản thu và replay đổi số tiền; User/Admin cùng thấy ròng 55.000đ. Chưa test gateway/HTTP/UI thật.
 -   [ ] **SYNC-04-13 \| P1** Danh sách, chi tiết, notification, lịch sử
     và KPI liên quan không mâu thuẫn.
 -   [ ] **SYNC-04-14 \| P1** Một chuyển trạng thái chỉ tạo notification
     một lần, không nhân đôi khi F5.
+
+### Đợt đổi trả/hoàn tiền — 26/10/2026
+
+- [x] 13 kiểm tra Cloud/112 SQL statements PASS; một đơn/return/payment/refund tổng hợp luôn rollback, xác minh sạch fixture.
+- [x] Kiểm tra quyền A/B/Guest và chặn User tự nhận hàng/nhập kho/gọi hoàn tiền Admin; không Logs/stress-test hoặc chuyển tiền thật.
+- [ ] Còn hoàn tiền có điểm thưởng/chi tiêu xét hạng, từ chối/đổi/gửi bù, gateway, đồng thời và E2E hai portal. Các ô toàn chuỗi giữ trống; chưa push/deploy thay đổi mới.
+- [x] Bổ sung 8 kiểm tra Cloud/82 SQL statements: hoàn nhanh bị chặn khi nguồn có điểm/eligible spend; snapshot tính chi tiêu ròng đúng trên refund fixture; trigger chặn hoàn eligible vượt mức. Fixture rollback sạch, không Logs/tiền thật. [Bằng chứng](docs/verification/sync/refund-ledger.md).
+- [ ] Chưa nghiệm thu workflow đối soát/thu hồi điểm và tính lại hạng; kiểm tra chốt chặn không thay thế hoàn tiền đầy đủ cho nguồn có ledger.
+- [x] Bổ sung 9 kiểm tra Cloud/94 SQL statements PASS: chặn số lượng trả sai/vượt tổng, từ chối có lý do, nhận hàng không bán lại không tăng tồn bán được và không xử lý lại request đã giải quyết. Một fixture/sau cùng rollback sạch.
 
 ## 7. GĐ-05 --- Khiếu nại, hỗ trợ và chat
 
@@ -360,6 +403,16 @@ Tiếp theo: notification, sau đó điểm/voucher và đổi trả/hoàn tiề
 
 ## 8. GĐ-06 --- Notification
 
+Tiến độ 26/10: bản trước đã push lên `origin/main` tại commit `0ef89a39`. Phần mới dưới đây còn local, chưa nằm trong commit đó.
+
+- [x] Bỏ tự nạp helper thông báo cũ trong `components.js`: header là nơi duy nhất sở hữu tải snapshot/subscription của luồng nạp component. Tránh helper đọc trực tiếp, cache cũ và ghi đè giao diện header.
+- [x] 10 test header offline PASS, gồm kiểm tra loader chỉ nạp header/support và không nạp helper thông báo trùng; không gọi Cloud, Logs hoặc stress-test.
+- [x] Header gom sự kiện trong 200 ms, hoãn tải khi ẩn tab; sự kiện trong lúc đọc tạo đúng một lượt bù; reconnect gom tải lại. Dọn timer/channel khi rời trang, khôi phục khi quay lại từ bộ nhớ trình duyệt, chặn phản hồi cũ cả khi A → B → A.
+- [x] Tổng 14 test offline PASS (`header_notifications.test.js`, `notification_sync.test.cjs`); không gọi Cloud. [Bằng chứng và giới hạn](docs/verification/sync/notifications.md).
+- [x] Đánh dấu đọc chờ ack hợp lệ, gom double-click, dùng expected owner/cutoff và lấy snapshot sau ghi; chặn kết quả ghi phiên cũ. Tổng 18 test offline PASS.
+- [x] RPC/RLS Cloud: 8 kiểm tra/54 SQL statements PASS, ba thông báo tổng hợp/hai owner; đã rollback và xác minh sạch fixture. Không Logs/stress-test, không thay schema/RPC/policy.
+- [ ] Còn persistence sau commit/reload, Auth/HTTP/Realtime thật và giới hạn snapshot; chưa xác nhận toàn bộ thông báo hai chiều hoặc egress thực tế.
+
 -   [ ] **SYNC-06-01 \| P0** Sự kiện nghiệp vụ đã commit tạo
     notification đúng người nhận nếu tính năng được hỗ trợ.
 -   [ ] **SYNC-06-02 \| P0** Admin thao tác cần thông báo User;
@@ -369,12 +422,16 @@ Tiếp theo: notification, sau đó điểm/voucher và đổi trả/hoàn tiề
     localStorage của trình duyệt User.
 -   [ ] **SYNC-06-04 \| P0** Đánh dấu đã đọc; trạng thái giữ sau
     reload/đăng nhập lại.
+    - [x] RPC ghi read_at và snapshot đọc lại đúng; retry không ghi lại. Offline chờ ack và chặn snapshot cũ; còn commit/reload/login thật.
 -   [ ] **SYNC-06-05 \| P1** Đọc tất cả; số chưa đọc và danh sách khớp
     sau khi đọc lại.
+    - [x] RPC xử lý theo cutoff snapshot, chặn cutoff thiếu/tương lai, retry không đổi thêm; offline gửi đúng cutoff và gom double-click.
 -   [ ] **SYNC-06-06 \| P0** User A không thấy notification cá nhân của
     B; kiểm tra owner/RLS.
+    - [x] Snapshot A/B cách ly; RPC chặn đánh dấu ID khác owner, expected owner sai và Guest. Còn URL/HTTP/Auth thật.
 -   [ ] **SYNC-06-07 \| P1** Click notification mở đúng chi tiết
     đơn/lịch/ticket và kiểm tra quyền trước khi hiển thị.
+    - [x] Chrome offline popup thông báo: link đơn/lịch/ticket đúng route/query, encode ID; HTML hiển thị an toàn, giờ UTC+7; đổi tài khoản đóng popup cũ. Sửa mở lần đầu trước tải badge và xóa lỗi sau refresh thành công. Còn quyền trang đích/HTTP/Auth thật. [Bằng chứng](docs/verification/sync/notifications.md).
 -   [ ] **SYNC-06-08 \| P1** Reload/đổi tab không tạo notification
     trùng.
 -   [ ] **SYNC-06-09 \| P1** Notification công khai Topbar/Popup tách
@@ -388,24 +445,43 @@ Tiếp theo: notification, sau đó điểm/voucher và đổi trả/hoàn tiề
 
 ## 9. GĐ-07 --- Paw Points, membership và voucher
 
+Tiến độ 26/10 — [bằng chứng điểm/voucher](docs/verification/sync/loyalty.md):
+
+- [x] Lọc Realtime ba bảng theo customer, gom sự kiện/đọc snapshot, hoãn tải khi ẩn tab và cập nhật bù khi reconnect; không polling.
+- [x] Dọn timer/channel/listener khi dispose/đổi phiên; xóa giao diện cũ và chặn snapshot sai owner hoặc phản hồi cũ sau đổi tài khoản.
+- [x] 7 test Node và bài kiểm tra service PASS, cú pháp/diff đạt; không phát sinh truy vấn Cloud trong đợt này.
+- [x] RPC/RLS Cloud: 13 kiểm tra/98 SQL statements PASS cho cộng điểm Admin, đổi điểm User, ledger/ack/retry, version/hiệu lực/thiếu điểm và cách ly B/Guest. Một voucher/đổi điểm tổng hợp đã rollback và xác minh sạch fixture.
+- [x] Áp voucher/hủy COD: 10 kiểm tra Cloud/89 SQL statements PASS; server tính lại giảm giá, chặn quote cũ/điều kiện sai, retry không trùng, hủy hoàn lượt dùng; fixture rollback sạch. [Bằng chứng](docs/verification/sync/voucher-order.md).
+- [ ] Còn giới hạn payload, đổi trả/hoàn tiền, hoàn điểm dùng trực tiếp khi checkout, giao dịch đồng thời và nghiệm thu browser/E2E. Thay đổi mới còn local.
+
 -   [ ] **SYNC-07-01 \| P0** Số dư điểm User và Admin khớp ledger.
+    - [x] SQL: User snapshot và ledger Admin cùng 100 → 60 sau đổi voucher 40 điểm; history cộng đúng số dư. Còn hai UI/commit/reload.
 -   [ ] **SYNC-07-02 \| P0** Một giao dịch cộng/trừ điểm được ghi một
     lần; số dư và lịch sử khớp.
+    - [x] RPC cộng và đổi điểm retry chỉ tạo một credit/một debit, một wallet item; kiểm tra lại số dư sau các request bị từ chối.
 -   [ ] **SYNC-07-03 \| P0** Admin tặng/điều chỉnh điểm đúng quyền; User
     thấy số dư/lý do theo thiết kế.
+    - [x] RPC Admin cộng 100 điểm cho fixture, User đọc được cùng giao dịch qua snapshot; chưa nghiệm thu form Admin và thông báo.
 -   [ ] **SYNC-07-04 \| P0** User không thể tự tăng điểm bằng gọi API
     trực tiếp.
+    - [x] Role User bị chặn gọi RPC Admin và chèn trực tiếp ledger (42501); còn HTTP/Auth thật.
 -   [ ] **SYNC-07-05 \| P0** Retry/double-click không cộng điểm trùng.
+    - [x] Retry tuần tự cùng request cộng/đổi điểm không trùng; payload khác bị PT409. Chưa test tranh chấp nhiều transaction.
 -   [ ] **SYNC-07-06 \| P1** User chỉ thấy voucher hiệu lực và đủ điều
     kiện.
 -   [ ] **SYNC-07-07 \| P0** User dùng voucher; server tính lại giảm
     giá, Admin thấy đúng tổng đơn.
+    - [x] RPC quote/create COD bỏ giá/discount/total client giả; Admin đọc một redemption và payment đúng tổng sau giảm. Còn hai UI/HTTP/commit/reload.
 -   [ ] **SYNC-07-08 \| P0** Voucher hết hạn/không đủ điều kiện bị từ
     chối; không áp dụng giảm giá giả.
+    - [x] RPC đổi điểm chặn voucher vô hiệu/hết hạn và thiếu điểm; chưa kiểm tra giảm giá checkout.
+    - [x] Quote checkout chặn voucher hết hạn/đơn dưới tối thiểu/không sở hữu/voucher đã dùng; quote cũ bị PT409 khi mức giảm đổi.
 -   [ ] **SYNC-07-09 \| P1** Admin sửa điều kiện voucher; User không
     tiếp tục dùng cấu hình cũ sau khi cập nhật.
+    - [x] Đổi điều kiện fixture làm version cũ bị PT409; chưa kiểm tra đường sửa voucher qua UI/RPC Admin.
 -   [ ] **SYNC-07-10 \| P1** Hủy đơn/hoàn tiền cập nhật điểm và voucher
     đúng chính sách hiện hành.
+    - [x] User hủy COD và retry: đảo lượt dùng một lần, trả voucher về ví khả dụng; không hoàn thêm điểm đã đổi lấy voucher riêng. Chưa kiểm tra hoàn tiền hoặc điểm dùng trực tiếp tại checkout.
 
 ## 10. GĐ-08 --- Admin cập nhật dữ liệu công khai ảnh hưởng User
 

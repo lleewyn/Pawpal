@@ -106,11 +106,21 @@
         return {id,rawId:id};
     }
     async function sbSendTicketReply(ticketId,text) {
-        const key=JSON.stringify([adoptOwner(),'reply',ticketId,text]);
-        if (!requestIds.has(key)) requestIds.set(key,crypto.randomUUID());
+        const owner=adoptOwner(),version=epoch;
+        const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))),b=>b.toString(16).padStart(2,'0')).join('');
+        if(owner!==currentOwner() || version!==epoch)throw Error('Phiên đăng nhập đã thay đổi. Vui lòng tải lại.');
+        const key=JSON.stringify([owner,'reply',ticketId,digest]);
+        const storageKey=`pawpal_support_reply:${owner}:${ticketId}:${digest}`;
+        if (!requestIds.has(key)) {
+            const stored=sessionStorage.getItem(storageKey);
+            requestIds.set(key,/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(stored||'')?stored:crypto.randomUUID());
+        }
+        sessionStorage.setItem(storageKey,requestIds.get(key));
+        if(sessionStorage.getItem(storageKey)!==requestIds.get(key))throw Error('Không thể giữ mã phản hồi để thử lại an toàn.');
         const id=requestIds.get(key),saved=await rpc('reply_own_support_ticket',{p_id:id,p_ticket:ticketId,p_content:text});
         if (saved!==id) throw Error('Chưa xác nhận được phản hồi. Vui lòng thử lại.');
         if (requestIds.get(key) === id) requestIds.delete(key);
+        if(sessionStorage.getItem(storageKey)===id)sessionStorage.removeItem(storageKey);
         await loadTickets().catch(loadError); return saved;
     }
     async function sbCloseAndRateTicket(ticketId,rating,comment='') {

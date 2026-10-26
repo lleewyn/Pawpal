@@ -1,0 +1,56 @@
+// One synthetic voucher order/SKU, transaction-only fixtures. No actual money or delivery.
+const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
+const {connect}=require('../database/v1/service_import_connection.cjs');
+if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded voucher checkout checks; otherwise no network.');process.exit(0);}
+(async()=>{const db=await connect();let queries=0;
+ const report={environment:'Supabase Cloud cpzuvaplseielhgcnqrn',timestamp:new Date().toISOString(),scope:'One synthetic COD order/SKU; RPC/RLS only; always ROLLBACK; no Logs',checks:[]};
+ const q=async(sql,args)=>{queries++;return db.query(sql,args);};
+ const actor=async(id,role='authenticated')=>{await q('RESET ROLE');await q("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role',$2,true)",[id,role]);await q(role==='anon'?'SET LOCAL ROLE anon':'SET LOCAL ROLE authenticated');};
+ const denied=async(fn,codes)=>{await q('SAVEPOINT expected_denial');let error;try{await fn();}catch(e){error=e;}await q('ROLLBACK TO SAVEPOINT expected_denial');await q('RELEASE SAVEPOINT expected_denial');assert.ok(error,'Expected denial');assert.ok(codes.includes(error.code),'Unexpected SQLSTATE '+error.code);};
+ const pass=name=>report.checks.push({name,status:'PASS'});
+ const order=async id=>(await q('SELECT id,customer_id,order_status,shipping_status,tracking_code,updated_at::text FROM public.sales_order WHERE id=$1',[id])).rows[0];
+ try{
+  await q("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
+  const a=randomUUID(),b=randomUUID(),sa=randomUUID(),staff=randomUUID(),ca=randomUUID(),cb=randomUUID(),product=randomUUID(),variant=randomUUID(),id=randomUUID(),method=randomUUID(),delivery=randomUUID(),provider=randomUUID();
+  report.fixtureIds={customerA:ca,customerB:cb,product,variant,order:id};
+  const voucher=randomUUID(),wallet=randomUUID();
+  const category=(await q('SELECT id FROM public.product_category ORDER BY id LIMIT 1')).rows[0]?.id;assert.ok(category);
+  await q('INSERT INTO auth.users(id) VALUES($1),($2),($3)',[a,b,sa]);
+  await q('INSERT INTO public.customer(id,auth_user_id,customer_code) VALUES($1,$2,$3),($4,$5,$6)',[ca,a,'E2E-ORD-A-'+ca,cb,b,'E2E-ORD-B-'+cb]);
+  await q("INSERT INTO public.customer_profile(customer_id,full_name) VALUES($1,'E2E Order A'),($2,'E2E Order B') ON CONFLICT(customer_id) DO UPDATE SET full_name=excluded.full_name",[ca,cb]);
+  await q("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES($1,$2,'E2E Order Admin','QA','active',false)",[staff,sa]);
+  await q("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[staff]);
+  await q("INSERT INTO public.product(id,category_id,product_name,unit,slug) VALUES($1,$2,'E2E Order Product','Cai',$3)",[product,category,'e2e-order-'+product]);
+  await q('INSERT INTO public.product_variant(id,product_id,sku_variant,cost_price,sale_price) VALUES($1,$2,$3,30000,50000)',[variant,product,'E2E-'+variant]);
+  await q("INSERT INTO public.inventory_transaction(product_variant_id,transaction_type,quantity,note,idempotency_key) VALUES($1,'opening',5,'E2E rollback only',$2)",[variant,'e2e-opening:'+variant]);
+  await q("INSERT INTO public.payment_method_config(id,name,short_name,fee,available) VALUES($1,'E2E COD','cod',0,true)",[method]);
+  await q("INSERT INTO public.delivery_option_config(id,name,fee,available) VALUES($1,'E2E Delivery',5000,true)",[delivery]);
+  await q("INSERT INTO public.shipping_provider(id,provider_name,provider_code,status) VALUES($1,'E2E Provider',$2,'active')",[provider,'E2E-'+provider]);
+  await q("INSERT INTO public.voucher(id,voucher_code,voucher_name,discount_value,required_points,start_date,end_date,type,applicable_for) VALUES($1,$2,'E2E Checkout Voucher',10000,40,current_date-1,current_date+1,'fixed','shop')",[voucher,'E2E-'+voucher]);
+  await q("INSERT INTO public.paw_point_transaction(customer_id,points,sequence_no,idempotency_key,description) VALUES($1,100,1,$2,'E2E opening')",[ca,'e2e:'+ca]);
+  const version=(await q('SELECT md5(to_jsonb(v)::text) value FROM public.voucher v WHERE id=$1',[voucher])).rows[0].value;
+  const details={delivery:true,delivery_option_id:delivery,receiver_name:'E2E Receiver',receiver_phone:'0000000000',province:'E2E Province',street_address:'E2E Street',discount_mode:'voucher',voucher_code:'E2E-'+voucher,discount:999999,total:1};
+  const lines=[{variant_id:variant,quantity:2,unit_price:1}];
+  const quote=async()=>(await q('SELECT public.quote_own_sales_order($1::jsonb,$2::jsonb) value',[JSON.stringify(details),JSON.stringify(lines)])).rows[0].value;
+  const create=async expected=>(await q('SELECT public.create_own_sales_order($1,$2,$3::jsonb,$4::jsonb,$5) value',[id,expected,JSON.stringify(details),JSON.stringify(lines),method])).rows[0].value;
+  await actor(a);await q('SELECT public.redeem_own_loyalty_voucher($1,$2,$3)',[wallet,voucher,version]);
+  const priced=await quote();assert.equal(Number(priced.total),95000);assert.equal(Number(priced.voucher_discount),10000);assert.equal(priced.customer_voucher_id,wallet);assert.equal(Number(priced.lines[0].unit_price),50000);pass('Server ignores forged total/discount/price and applies only the owned 10000 voucher');
+  await actor(b);await denied(()=>quote(),['22023']);pass('B cannot apply A owned voucher even with the same public code');
+  await q('RESET ROLE');await q('UPDATE public.voucher SET minimum_order_amount=200000 WHERE id=$1',[voucher]);await actor(a);await denied(()=>quote(),['22023']);pass('Minimum order requirement is enforced at quote');
+  await q('RESET ROLE');await q("UPDATE public.voucher SET minimum_order_amount=0,end_date=current_date-1,start_date=current_date-2 WHERE id=$1",[voucher]);await actor(a);await denied(()=>quote(),['22023']);pass('Expired voucher rejected before order creation');
+  await q('RESET ROLE');await q('UPDATE public.voucher SET end_date=current_date+1,start_date=current_date-1,discount_value=5000,updated_at=clock_timestamp() WHERE id=$1',[voucher]);await actor(a);await denied(()=>create(priced.version),['PT409']);assert.equal(await order(id),undefined);pass('Changed voucher invalidates checkout quote without creating a partial order');
+  const fresh=await quote();assert.equal(Number(fresh.total),100000);assert.equal(await create(fresh.version),id);assert.equal(await create(fresh.version),id);
+  await actor(sa);let row=await order(id);assert.equal(row.customer_id,ca);
+  const redemptions=(await q('SELECT customer_voucher_id,status,discount_amount_snapshot FROM public.voucher_redemption WHERE order_id=$1',[id])).rows;assert.equal(redemptions.length,1);assert.equal(redemptions[0].customer_voucher_id,wallet);assert.equal(redemptions[0].status,'applied');assert.equal(Number(redemptions[0].discount_amount_snapshot),5000);
+  assert.equal(Number((await q('SELECT amount FROM public.payment WHERE order_id=$1',[id])).rows[0].amount),100000);assert.equal((await q('SELECT voucher_status FROM public.customer_voucher WHERE id=$1',[wallet])).rows[0].voucher_status,'used');pass('Create retry records one redemption with server discount, used wallet and correct pending payment');
+  await actor(a);await denied(()=>quote(),['22023']);pass('Used owned voucher cannot be reused for a new quote');
+  const cancel=randomUUID();for(let i=0;i<2;i++)await q("SELECT public.cancel_own_sales_order($1,$2,$3,'E2E voucher cancel')",[cancel,id,row.updated_at]);
+  await actor(sa);assert.equal((await order(id)).order_status,'cancelled');
+  const reversed=(await q('SELECT status,reversed_at FROM public.voucher_redemption WHERE order_id=$1',[id])).rows;assert.equal(reversed.length,1);assert.equal(reversed[0].status,'reversed');assert.ok(reversed[0].reversed_at);assert.equal((await q('SELECT voucher_status FROM public.customer_voucher WHERE id=$1',[wallet])).rows[0].voucher_status,'available');pass('User cancel retry reverses the usage once and restores wallet availability visible to Admin');
+  await actor(a);const state=(await q('SELECT public.own_loyalty_snapshot() value')).rows[0].value;assert.equal(Number(state.points),60);assert.equal(state.history.length,2);assert.equal(state.wallet.find(w=>w.id===wallet).status,'available');assert.equal(Number((await quote()).total),100000);pass('Cancellation restores voucher use without refunding the separate point-redemption cost or duplicating ledger');
+  await q('RESET ROLE');await q('ROLLBACK');
+  const remains=(await q('SELECT EXISTS(SELECT 1 FROM public.sales_order WHERE id=$1) OR EXISTS(SELECT 1 FROM public.product WHERE id=$2) OR EXISTS(SELECT 1 FROM public.customer WHERE id=ANY($3::uuid[])) OR EXISTS(SELECT 1 FROM auth.users WHERE id=ANY($4::uuid[])) OR EXISTS(SELECT 1 FROM public.voucher WHERE id=$5) OR EXISTS(SELECT 1 FROM public.customer_voucher WHERE id=$6) OR EXISTS(SELECT 1 FROM public.payment_method_config WHERE id=$7) OR EXISTS(SELECT 1 FROM public.delivery_option_config WHERE id=$8) OR EXISTS(SELECT 1 FROM public.shipping_provider WHERE id=$9) remains',[id,product,[ca,cb],[a,b,sa],voucher,wallet,method,delivery,provider])).rows[0].remains;assert.equal(remains,false);pass('Rollback removes order, wallet/voucher, catalog/config and all synthetic actors');
+  report.status='PASS';report.queries=queries;report.scope='One synthetic COD order, SKU, voucher and wallet; quote/apply/cancel RPC only; rollback; no Logs';
+  fs.writeFileSync('docs/verification/sync/voucher-order-cloud-rollback.txt',JSON.stringify(report,null,2)+'\n');console.log('PASS',report.checks.length,'voucher checkout checks;',queries,'SQL statements; rollback verified. Not UI E2E.');
+ }catch(e){await db.query('ROLLBACK').catch(()=>{});console.error('Voucher order integration failed:',e.code||'',e.message);process.exitCode=1;}finally{await db.end();}
+})().catch(e=>{console.error(e.code||'connection_failed');process.exitCode=1;});

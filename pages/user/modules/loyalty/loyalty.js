@@ -1,4 +1,6 @@
 import { withDeadline } from '/scripts/shared/request-deadline.mjs';
+import { createLoyaltySync } from '/scripts/shared/loyalty-sync.mjs';
+const currentOwner=()=>{try{return JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id || null;}catch{return null;}};
 const db=()=>window.getSupabaseClient?.() || window.SupabaseClient;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=v=>new Intl.NumberFormat('vi-VN').format(Number(v)||0);
@@ -9,7 +11,9 @@ const walletEnd=w=>day(new Date(Math.min(new Date(w.voucher.end_date+'T23:59:59+
 let cleanup=()=>{};
 export function dispose(){cleanup();cleanup=()=>{};}
 async function rpc(name,args){
+ const owner=currentOwner();
  const auth=await db()?.auth?.getUser();if(auth?.error || !auth?.data?.user)throw Error('Vui lòng đăng nhập lại.');
+ if(!owner || currentOwner()!==owner)throw Error('Phiên tài khoản đã thay đổi. Vui lòng tải lại.');
  const r=await withDeadline(()=>db().rpc(name,args),20000,'Kết nối chậm. Vui lòng kiểm tra kết quả trước khi gửi lại.');
  if(r.error){const error=Error(r.error.code==='PT409'?'Ưu đãi hoặc yêu cầu đã thay đổi. Vui lòng tải lại để đối soát.':r.error.message || 'Không thể xử lý yêu cầu.');error.code=r.error.code;throw error;}return r.data;
 }
@@ -46,11 +50,14 @@ export async function initLoyalty(){
   nav.querySelector('[data-prev]')?.addEventListener('click',()=>{onPage(current-1);render();document.getElementById(regionId).scrollIntoView({block:'start'});});
   nav.querySelector('[data-next]')?.addEventListener('click',()=>{onPage(current+1);render();document.getElementById(regionId).scrollIntoView({block:'start'});});
  }
- cleanup=()=>{active=false;if(channel)db()?.removeChannel(channel);document.querySelector('#loyalty-dialog [data-close-modal]')?.click();};
- async function refresh(){
-  try{const data=await rpc('own_loyalty_snapshot');if(!active || !root.isConnected)return;snapshot=data;render();}
-  catch(error){if(!active || !root.isConnected)return;snapshot=null;document.getElementById('loyalty-history')?.remove();document.querySelector('#loyalty-dialog [data-close-modal]')?.click();for(const id of ['loyalty-card-wrapper','my-vouchers-list','vouchers-grid']){const region=document.getElementById(id);region.innerHTML=`<p role="alert">${esc(error.message)}</p>`;region.setAttribute('aria-busy','false');}document.getElementById('myVouchersCountLabel').textContent='Không thể tải';}
- }
+ const sync=createLoyaltySync({owner:currentOwner,hidden:()=>document.visibilityState==='hidden',load:()=>rpc('own_loyalty_snapshot'),apply:data=>{if(!root.isConnected)return;snapshot=data;render();},fail:showError});
+ function showError(error){if(!active || !root.isConnected)return;snapshot=null;document.getElementById('loyalty-history')?.remove();document.querySelector('#loyalty-dialog [data-close-modal]')?.click();for(const id of ['loyalty-card-wrapper','my-vouchers-list','vouchers-grid']){const region=document.getElementById(id);region.innerHTML=`<p role="alert">${esc(error.message)}</p>`;region.setAttribute('aria-busy','false');}document.getElementById('myVouchersCountLabel').textContent='Không thể tải';}
+ const visible=()=>sync.visible();
+ const authChanged=()=>{cleanup();snapshot=null;if(root.isConnected){root.innerHTML='<p role="alert">Phiên tài khoản đã thay đổi. Vui lòng mở lại trang điểm và ưu đãi.</p>';document.getElementById('my-vouchers-list')?.replaceChildren();document.getElementById('vouchers-grid')?.replaceChildren();document.getElementById('loyalty-history')?.remove();const count=document.getElementById('myVouchersCountLabel');if(count)count.textContent='';}};
+ const storageChanged=event=>{if(event.key==='pawpal_current_user')authChanged();};
+ document.addEventListener('visibilitychange',visible);document.addEventListener('auth_state_changed',authChanged);window.addEventListener('storage',storageChanged);
+ cleanup=()=>{active=false;sync.dispose();if(channel)db()?.removeChannel(channel);document.removeEventListener('visibilitychange',visible);document.removeEventListener('auth_state_changed',authChanged);window.removeEventListener('storage',storageChanged);document.querySelector('#loyalty-dialog [data-close-modal]')?.click();};
+ const refresh=()=>sync.refresh();
  function render(){
   const tier=snapshot.tier;
   root.innerHTML=`<div class="loyalty-top-flex"><div class="pawpass-card-wrapper"><div id="pawpassVirtualCard" class="pawpass-virtual-card tier-silver"><div class="card-header-brand"><span class="brand-name">PawPal PawPass</span></div><div class="card-body-info"><span id="virtualCardTier" class="card-tier-label">${esc(tier?.name || 'Chưa có hạng')}</span><div class="pet-owner-info"><span id="virtualCardOwner" class="owner-name">${esc(snapshot.name)}</span></div></div><div class="card-footer-metrics"><span>${tier?'Mức giảm theo hạng '+num(tier.discount_percent)+'%':'Chưa có chính sách hạng được gán'}</span></div></div></div><div class="loyalty-card-details-panel"><span>Điểm tích lũy hiện tại</span><strong id="current-points-display">${num(snapshot.points)} <span class="points-unit">Paw Points</span></strong><p>${esc(tier?.description || 'Hạng thành viên do cửa hàng quản lý. Không tự xét hạng hoặc cộng điểm từ trang này.')}</p></div></div>`;
@@ -89,9 +96,11 @@ export async function initLoyalty(){
    if(button.disabled)return;button.disabled=true;button.textContent='Đang đổi...';
    const error=overlay.querySelector('#loyaltyRedeemError');error.textContent='';
    try{
+    if(!sync.valid())throw Error('Phiên tài khoản đã thay đổi. Vui lòng tải lại.');
     let request;try{request=JSON.parse(sessionStorage.getItem(key));}catch{}
     if(!request){request={id:crypto.randomUUID(),version:v.version};sessionStorage.setItem(key,JSON.stringify(request));}
     const saved=await rpc('redeem_own_loyalty_voucher',{p_id:request.id,p_voucher:v.id,p_expected:request.version});
+    if(!sync.valid())return;
     if(saved!==request.id)throw Error('Chưa xác nhận được kết quả. Vui lòng thử lại cùng yêu cầu.');
     sessionStorage.removeItem(key);close();if(!active)return;
     const banner=document.getElementById('loyalty-warning-banner');banner.textContent='Đã đổi ưu đãi và ghi nhận điểm trên hệ thống.';banner.classList.remove('d-none');banner.setAttribute('role','status');await refresh();
@@ -99,7 +108,7 @@ export async function initLoyalty(){
    finally{button.disabled=false;button.textContent='Xác nhận đổi';}
   };
  }
- await refresh();if(!active)return;
- channel=db().channel('loyalty-'+crypto.randomUUID());for(const table of ['paw_point_transaction','customer_voucher','customer_membership'])channel.on('postgres_changes',{event:'*',schema:'public',table},refresh);channel.subscribe();
+ await refresh();if(!active || !sync.valid())return;
+ channel=db().channel('loyalty-'+crypto.randomUUID());for(const table of ['paw_point_transaction','customer_voucher','customer_membership'])channel.on('postgres_changes',{event:'*',schema:'public',table,filter:'customer_id=eq.'+sync.owner},sync.schedule);let subscribed=false;channel.subscribe(status=>{if(status==='SUBSCRIBED'){if(subscribed)sync.schedule();subscribed=true;}});
 }
 export const init=initLoyalty;window.initLoyalty=initLoyalty;

@@ -1,9 +1,18 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+test('component loader leaves notifications to the Cloud header owner',()=>{
+ const source=fs.readFileSync('scripts/shared/components.js','utf8');
+ const start=source.indexOf('    function ensureHeaderAuth()');
+ const end=source.indexOf('    function ensureFabJS()',start);
+ const appended=[];
+ const context={getRootPath:()=> '/',document:{querySelector:()=>null,createElement:()=>({}),head:{appendChild:el=>appended.push(el.src)}}};
+ vm.runInNewContext(source.slice(start,end)+'\nensureHeaderAuth();',context);
+ assert.deepEqual(appended,['/components/header/header.js','/scripts/shared/support-handler.js']);
+});
 function fixture(count,{fail=false}={}){
  const badge={style:{},textContent:''};let owner='owner',removed=0;const values=new Map([['pawpal_current_user',JSON.stringify({id:owner})],['pawpal_notifications',JSON.stringify([{id:'POISON'}])]]);
  const channel={on(){return this;},subscribe(){return this;}};
  const db={rpc:async()=>({data:{customer_id:owner,snapshot_at:new Date().toISOString(),rows:Array.from({length:owner==='owner'?count:1},(_,i)=>({id:owner+i,title:'Notice',content:'Body',sent_at:new Date().toISOString(),read_at:null}))},error:fail?Error('Rejected'):null}),channel:()=>channel,removeChannel(){removed++;}};
- const context={crypto:{randomUUID:()=> 'test'},CustomEvent:class{},localStorage:{getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)},document:{readyState:'loading',querySelector:()=>null,addEventListener(){},dispatchEvent(){},getElementById:id=>id==='notificationBadge'?badge:null},window:{addEventListener(){},getSupabaseClient:()=>db}};
+ const context={setTimeout,clearTimeout,crypto:{randomUUID:()=> 'test'},CustomEvent:class{},localStorage:{getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)},document:{readyState:'loading',querySelector:()=>null,addEventListener(){},dispatchEvent(){},getElementById:id=>id==='notificationBadge'?badge:null},window:{addEventListener(){},getSupabaseClient:()=>db}};
  vm.runInNewContext(fs.readFileSync('components/header/header.js','utf8'),context);
  return {badge,async update(){context.window.updateNotificationBadge();await new Promise(setImmediate);},switch(){owner='other';values.set('pawpal_current_user',JSON.stringify({id:owner}));},removed:()=>removed};
 }

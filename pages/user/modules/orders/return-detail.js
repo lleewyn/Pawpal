@@ -2,6 +2,7 @@ import { API } from '/scripts/api/api.js';
 import {watchCustomerTables} from '/scripts/shared/customer-realtime.mjs';
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let returnLoadVersion=0;
+const returnOwner=()=>{try{return JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id || null;}catch{return null;}};
 
 async function loadReturnRequestFromSupabase(orderId) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -69,6 +70,7 @@ function normalizeReturnRequestRow(row) {
         reason: row.reason || 'change_mind',
         type: ['hoan_tien', 'refund'].includes(String(row.return_type).toLowerCase()) ? 'refund' : 'exchange',
         description: row.description || '',
+        resolution: row.resolution_type || '',
         refundAccount: row.refund_account || '',
         products,
         pointsDeducted: row.points_deducted || false,
@@ -77,10 +79,11 @@ function normalizeReturnRequestRow(row) {
 
 async function initReturnDetail() {
     const version=++returnLoadVersion;
+    const owner=returnOwner();
     const root=document.querySelector('.return-detail-module-container');
     if(!root)return;
     await API.initData();
-    if(version!==returnLoadVersion||!root.isConnected)return;
+    if(version!==returnLoadVersion||!root.isConnected||owner!==returnOwner())return;
 
     const urlParams = new URLSearchParams(window.location.search);
     let orderId = urlParams.get('orderId') || urlParams.get('id');
@@ -103,7 +106,7 @@ async function initReturnDetail() {
         }
     }
 
-    if(version!==returnLoadVersion||!root.isConnected)return;
+    if(version!==returnLoadVersion||!root.isConnected||owner!==returnOwner())return;
     if (!rmaData) {
         showReturnLoadError('Không tìm thấy yêu cầu đổi trả cho đơn hàng này.');
         return;
@@ -116,7 +119,7 @@ async function initReturnDetail() {
 
     const dateObj = new Date(rmaData.createdAt);
     document.getElementById('rma-date').textContent =
-        `Ngày tạo: ${dateObj.toLocaleDateString('vi-VN')} lúc ${dateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+        `Ngày tạo: ${dateObj.toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})} lúc ${dateObj.toLocaleTimeString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' })}`;
 
     const badge = document.getElementById('rma-status-badge');
     badge.textContent = getStatusLabel(rmaData.status);
@@ -174,7 +177,7 @@ async function initReturnDetail() {
         { key: 'received', title: 'Đã nhận hàng trả', desc: 'Nhân viên đã xác nhận nhận hàng; trạng thái này không xác nhận đã hoàn tiền.' }
     ];
     if(['rejected','cancelled'].includes(rmaData.status))timelineSteps.splice(1,timelineSteps.length-1,
-        {key:rmaData.status,title:getStatusLabel(rmaData.status),desc:'Yêu cầu không được tiếp tục xử lý.'});
+        {key:rmaData.status,title:getStatusLabel(rmaData.status),desc:getReturnResolutionMessage(rmaData)});
 
     const statusOrder = timelineSteps.map(s => s.key);
     let activeIdx = statusOrder.indexOf(rmaData.status);
@@ -191,40 +194,55 @@ async function initReturnDetail() {
                 <div class="rma-timeline-dot"></div>
                 <div class="rma-timeline-content">
                     <div class="rma-timeline-title">${step.title}</div>
-                    <div class="rma-timeline-desc">${step.desc}</div>
+                    <div class="rma-timeline-desc">${escapeHtml(step.desc)}</div>
                 </div>
             </div>
         `;
     }).join('');
 }
 
+function getReturnResolutionMessage(data) {
+    if(data.status==='rejected' && data.resolution)return data.resolution;
+    return 'Yêu cầu không được tiếp tục xử lý.';
+}
+
 function showReturnLoadError(message) {
     const container = document.querySelector('.return-detail-module-container');
     if (!container) return;
+    container.classList.remove('return-detail-loading');
+    container.setAttribute('aria-busy','false');
     container.innerHTML = '<div class="text-center py-5" role="status"><p class="text-muted"></p><a href="#orders">Quay lại danh sách đơn hàng</a></div>';
     container.querySelector('p').textContent = message;
 }
 
 let isInitRunning = false;
 let stopRealtime;
-export function dispose(){++returnLoadVersion;stopRealtime?.();stopRealtime=null;isInitRunning=false;}
+let stopAuth;
+export function dispose(){++returnLoadVersion;stopRealtime?.();stopRealtime=null;stopAuth?.();stopAuth=null;isInitRunning=false;}
 
 export async function init() {
     if (isInitRunning) return;
     isInitRunning = true;
+    const owner=returnOwner();
+    const onAuth=()=>{dispose();showReturnLoadError('Phiên tài khoản đã thay đổi. Vui lòng mở lại yêu cầu đổi trả.');};
+    const onStorage=event=>{if(event.key==='pawpal_current_user')onAuth();};
+    stopAuth?.();document.addEventListener('auth_state_changed',onAuth);window.addEventListener('storage',onStorage);
+    stopAuth=()=>{document.removeEventListener('auth_state_changed',onAuth);window.removeEventListener('storage',onStorage);};
+    const mountVersion=returnLoadVersion+1;
     const loadingContainer = document.querySelector('.return-detail-module-container');
     try {
         await initReturnDetail();
-        if(!loadingContainer?.isConnected)return;
-        dispose();
+        if(!loadingContainer?.isConnected || mountVersion!==returnLoadVersion || owner!==returnOwner())return;
+        stopRealtime?.();
         const user=JSON.parse(localStorage.getItem('pawpal_current_user')||'null');
         const client=window.getSupabaseClient?.()||window.SupabaseClient;
         stopRealtime=watchCustomerTables(client,user?.id,['return_request','return_request_detail'],()=>initReturnDetail().catch(()=>{if(loadingContainer.isConnected)showReturnLoadError('Không thể cập nhật yêu cầu đổi trả. Vui lòng tải lại trang.');}));
     } catch (error) {
         console.error('[ReturnDetail] Không thể tải yêu cầu:', error);
-        if(loadingContainer?.isConnected)showReturnLoadError('Không thể tải yêu cầu đổi trả. Vui lòng tải lại trang.');
+        if(loadingContainer?.isConnected && mountVersion===returnLoadVersion && owner===returnOwner())showReturnLoadError('Không thể tải yêu cầu đổi trả. Vui lòng tải lại trang.');
     } finally {
         requestAnimationFrame(() => requestAnimationFrame(() => {
+            if(mountVersion!==returnLoadVersion || owner!==returnOwner())return;
             loadingContainer?.classList.remove('return-detail-loading');
             loadingContainer?.setAttribute('aria-busy', 'false');
             setTimeout(() => loadingContainer?.querySelector('.return-detail-skeleton')?.remove(), 260);

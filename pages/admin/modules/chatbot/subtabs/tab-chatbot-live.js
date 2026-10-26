@@ -46,7 +46,9 @@
         if(['resolved','closed','completed'].includes(c.status))return {text:'Đã hoàn tất',className:'sla-done'};
         if(c.isHandover)return {text:'Đang tiếp nhận',className:'sla-done'};
         if(!c.slaDeadline)return {text:'Chưa có hạn phản hồi',className:'sla-normal'};
-        const remaining=Math.ceil((new Date(c.slaDeadline)-Date.now())/1000),seconds=Math.abs(remaining);
+        const deadline=new Date(c.slaDeadline).getTime();
+        if(!Number.isFinite(deadline))return {text:'Chưa có hạn phản hồi',className:'sla-normal'};
+        const remaining=Math.ceil((deadline-Date.now())/1000),seconds=Math.abs(remaining);
         return {text:(remaining<0?'Quá hạn ':'Còn ')+Math.floor(seconds/60)+' phút '+seconds%60+' giây',className:remaining<0?'sla-danger':'sla-normal'};
     }
 

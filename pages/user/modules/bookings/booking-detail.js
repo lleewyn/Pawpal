@@ -3,6 +3,7 @@ import { API } from '/scripts/api/api.js';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 import { parseVietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
 import { statusLabels, formatDate, formatPrice, openBookingCancelModal, openBookingMoveModal } from './bookings.js';
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
 
 function mapBookingStatus(status) {
@@ -41,6 +42,8 @@ let currentPet = null;
 let currentCareLog = null;
 let bannerTimeout = null;
 let currentServiceReviewRating = 0;
+let detailVersion=0,detailReadVersion=0,stopDetailAuth;
+const detailOwner=()=>{try{return JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id || null;}catch{return null;}};
 
 function getBookingIdFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -61,16 +64,23 @@ function getBookingIdFromUrl() {
 function showBookingLoadError(message) {
     const container = document.querySelector('.booking-detail-module-container');
     if (!container) return;
+    container.classList.remove('booking-detail-loading');container.setAttribute('aria-busy','false');
     container.innerHTML = '<div class="text-center py-5" role="status"><p class="text-muted"></p><a href="#bookings">Quay lại danh sách lịch hẹn</a></div>';
     container.querySelector('p').textContent = message;
 }
 
 let isInitRunning = false;
 let stopDetailRealtime = null;
-window.addEventListener('hashchange', () => { stopDetailRealtime?.(); stopDetailRealtime = null; });
+export function dispose(){++detailVersion;++detailReadVersion;stopDetailRealtime?.();stopDetailRealtime=null;stopDetailAuth?.();stopDetailAuth=null;clearTimeout(bannerTimeout);currentBooking=null;currentPet=null;currentCareLog=null;}
+window.addEventListener('hashchange',dispose);
 
 export async function init() {
     if (isInitRunning) return;
+    dispose();const version=detailVersion,owner=detailOwner();
+    const changed=()=>{dispose();showBookingLoadError('Phiên tài khoản đã thay đổi. Vui lòng mở lại lịch hẹn.');};
+    const storage=event=>{if(event.key==='pawpal_current_user')changed();};
+    document.addEventListener('auth_state_changed',changed);window.addEventListener('storage',storage);
+    stopDetailAuth=()=>{document.removeEventListener('auth_state_changed',changed);window.removeEventListener('storage',storage);};
     isInitRunning = true;
     const loadingContainer = document.querySelector('.booking-detail-module-container');
     try {
@@ -82,20 +92,22 @@ export async function init() {
         }
 
         await loadBookingDetail(bookingId);
+        if(version!==detailVersion || owner!==detailOwner() || !loadingContainer?.isConnected)return;
         stopDetailRealtime?.();
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (currentBooking && loadingContainer?.isConnected) {
             stopDetailRealtime = watchCustomerTables(db, currentBooking.userId, ['appointment','appointment_item','payment','review','hotel_booking','taxi_trip','appointment_record','appointment_adjustment','care_log'], async () => {
                 if (!loadingContainer.isConnected) { stopDetailRealtime?.(); stopDetailRealtime = null; return; }
                 const dirty = [...loadingContainer.querySelectorAll('#serviceReviewForm textarea')].some(el => el.value.trim());
-                try { await loadBookingDetail(bookingId, dirty); } catch { showToast('Không thể cập nhật lịch hẹn. Vui lòng tải lại trang.', 'error'); }
+                try { await loadBookingDetail(bookingId, dirty); } catch { if(version===detailVersion && owner===detailOwner())showToast('Không thể cập nhật lịch hẹn. Vui lòng tải lại trang.', 'error'); }
             });
         }
     } catch (error) {
         console.error('[BookingDetail] Không thể tải lịch hẹn:', error);
-        showBookingLoadError('Không thể tải chi tiết lịch hẹn. Vui lòng tải lại trang.');
+        if(version===detailVersion && owner===detailOwner())showBookingLoadError('Không thể tải chi tiết lịch hẹn. Vui lòng tải lại trang.');
     } finally {
         requestAnimationFrame(() => requestAnimationFrame(() => {
+            if(version!==detailVersion || owner!==detailOwner())return;
             loadingContainer?.classList.remove('booking-detail-loading');
             loadingContainer?.setAttribute('aria-busy', 'false');
             setTimeout(() => loadingContainer?.querySelector('.booking-detail-skeleton')?.remove(), 260);
@@ -108,11 +120,15 @@ export const initBookingDetail = init;
 window.initBookingDetail = init;
 
 async function loadBookingDetail(bookingId, preserveReview = false) {
+    const version=detailVersion,read=++detailReadVersion,owner=detailOwner();
+    const valid=()=>version===detailVersion && read===detailReadVersion && owner===detailOwner() && document.querySelector('.booking-detail-module-container')?.isConnected;
     await API.initData();
+    if(!valid())return;
 
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
 
     const remoteBookings = currentUser ? await API.getUserBookings(currentUser) : [];
+    if(!valid())return;
 
     currentBooking = (remoteBookings || []).find(b => [b.id,b._id,b._supabaseId,b.code,b.appointment_code].some(id=>id!=null&&String(id)===String(bookingId)));
 
@@ -122,6 +138,7 @@ async function loadBookingDetail(bookingId, preserveReview = false) {
     }
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     const logistics = await db.rpc('own_service_booking_logistics', {p_booking: currentBooking._supabaseId});
+    if(!valid())return;
     if (logistics.error) throw logistics.error;
     currentBooking.logistics = logistics.data;
 
@@ -130,8 +147,10 @@ async function loadBookingDetail(bookingId, preserveReview = false) {
     }
 
     const userPets = currentUser ? await API.getUserPets(currentUser.id) : [];
+    if(!valid())return;
     currentPet = userPets.find((pet) => String(pet._id || pet.id) === String(currentBooking.petId)) || null;
     const careLogs = await API.getCareLogs();
+    if(!valid())return;
     currentCareLog = currentBooking.petId ? (careLogs[currentBooking.petId] || null) : null;
 
     const careLogButton = document.getElementById('btnViewCareLog');
@@ -150,8 +169,10 @@ async function loadBookingDetail(bookingId, preserveReview = false) {
     }
 
     renderBookingDetail(currentBooking);
-    await loadBookingExecution(db, currentBooking);
-    if (!preserveReview) await renderServiceReviewSection(currentBooking);
+    await loadBookingExecution(db, currentBooking,valid);
+    if(!valid())return;
+    if (!preserveReview) await renderServiceReviewSection(currentBooking,valid);
+    if(!valid())return;
     checkBookingModifiability(currentBooking);
     const cancelButton=document.getElementById('btnCancelBooking');
     if(cancelButton)cancelButton.onclick=handleCancelBooking;
@@ -273,7 +294,7 @@ function renderBookingDetail(booking) {
     }
 }
 
-async function loadBookingExecution(db, booking) {
+async function loadBookingExecution(db, booking,valid=()=>true) {
     let section = document.getElementById('bookingExecutionDetails');
     if (!section) {
         section = document.createElement('section'); section.id = 'bookingExecutionDetails';
@@ -288,6 +309,7 @@ async function loadBookingExecution(db, booking) {
     const money = value => Number(value || 0).toLocaleString('vi-VN') + 'đ';
     try {
         const result = await db.rpc('own_service_booking_execution', {p_booking:booking._supabaseId});
+        if(!valid() || !section.isConnected)return;
         if (result.error) throw result.error;
         const data = result.data || {};
         if(!data.check_in_at&&!data.check_out_at&&!(data.records||[]).length&&!(data.updates||[]).length){
@@ -309,6 +331,7 @@ async function loadBookingExecution(db, booking) {
             (data.adjustments || []).map(a=>row(a.reason || 'Điều chỉnh đã duyệt',`${Number(a.amount_delta)>0?'+':''}${money(a.amount_delta)}${a.duration_delta_minutes?' · '+a.duration_delta_minutes+' phút':''}`)).join('')+
             row('Còn cần thanh toán',money(Math.max(0,Number(booking.price)-Number(booking.netPaid||0))));
     } catch {
+        if(!valid() || !section.isConnected)return;
         section.innerHTML='<h4 class="card-section-title">Tiếp nhận và chăm sóc</h4><p role="alert">Chưa tải được thông tin tiếp nhận và nhật ký. Vui lòng tải lại trang.</p>';
     }
 }
@@ -347,7 +370,7 @@ function renderBookingLogistics(data) {
     }
 }
 
-async function renderServiceReviewSection(booking) {
+async function renderServiceReviewSection(booking,valid=()=>true) {
     const section = document.getElementById('serviceReviewSection');
     if (!section) return;
     section.classList.toggle('d-none', resolveBookingStatus(booking) !== 'completed');
@@ -355,7 +378,7 @@ async function renderServiceReviewSection(booking) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!section.querySelector('#serviceReviewForm')) section.querySelector('.service-review-body').textContent = 'Đang tải đánh giá…';
     const {data: reviews, error} = await db.rpc('own_service_reviews', {p_booking: booking._supabaseId});
-    if (!section.isConnected) return;
+    if (!section.isConnected || !valid()) return;
     if (error) {
         section.querySelector('.service-review-body').textContent = 'Không thể tải đánh giá. Vui lòng tải lại trang.';
         return;
@@ -376,8 +399,15 @@ async function renderServiceReviewSection(booking) {
     form.addEventListener('submit', e => e.preventDefault());
     form.addEventListener('input', () => { section.querySelector('#serviceReviewError').textContent = ''; });
     const button = section.querySelector('#btnSubmitServiceReview');
-    const ids = new Map(pending.map(line => [line.id, crypto.randomUUID()]));
+    const reviewOwner=detailOwner();
+    const reviewKey=line=>`pawpal_service_review_request:${reviewOwner}:${booking._supabaseId}:${line.id}`;
+    const ids = new Map(pending.map(line => {
+        let id;try{id=sessionStorage.getItem(reviewKey(line));}catch{}
+        if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''))id=crypto.randomUUID();
+        return [line.id,id];
+    }));
     if (button) button.onclick = async () => {
+        if(button.disabled || !valid() || !section.isConnected)return;
         const errorEl = section.querySelector('#serviceReviewError');
         errorEl.textContent = '';
         button.disabled = true;
@@ -388,10 +418,13 @@ async function renderServiceReviewSection(booking) {
                 if (!Number.isInteger(rating) || rating < 1 || rating > 5 || !content || content.length > 3000) throw Error('Vui lòng chọn mức đánh giá và nhập nhận xét cho từng dịch vụ.');
                 return {id: ids.get(line.id), line_id: line.id, rating, content};
             });
+            for(const line of pending){sessionStorage.setItem(reviewKey(line),ids.get(line.id));if(sessionStorage.getItem(reviewKey(line))!==ids.get(line.id))throw Error('Không thể giữ mã đánh giá để thử lại an toàn.');}
             const result = await db.rpc('submit_own_service_reviews', {p_booking: booking._supabaseId, p_reviews: payload});
+            if(!valid() || !section.isConnected)return;
             if (result.error) throw Error(result.error.code === 'PT409' ? 'Dịch vụ đã được đánh giá. Vui lòng tải lại để xem kết quả.' : 'Không thể gửi đánh giá. Nội dung đã nhập được giữ lại để bạn thử lại.');
             if (!Array.isArray(result.data) || result.data.length !== payload.length || payload.some(item => !result.data.includes(item.id))) throw Error('Chưa xác nhận được kết quả lưu. Vui lòng thử lại với nội dung hiện tại.');
-            await renderServiceReviewSection(booking);
+            for(const line of pending)if(sessionStorage.getItem(reviewKey(line))===ids.get(line.id))sessionStorage.removeItem(reviewKey(line));
+            await renderServiceReviewSection(booking,valid);
             window.dispatchEvent(new CustomEvent('pawpal:reviewSubmitted', {detail:{bookingId: booking._supabaseId}}));
         } catch (error) {
             errorEl.textContent = error.message;

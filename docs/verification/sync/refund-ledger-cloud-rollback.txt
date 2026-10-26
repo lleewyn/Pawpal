@@ -1,0 +1,48 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T03:48:25.428Z",
+  "scope": "Refund ledger safety boundary and eligible-spend arithmetic only; synthetic rollback; no external money or Logs",
+  "checks": [
+    {
+      "name": "Admin collection retry records one synthetic succeeded payment",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads eligible fixture payment without invented reward points",
+      "status": "PASS"
+    },
+    {
+      "name": "Quick refund requires ledger review for eligible payment and leaves no partial refund",
+      "status": "PASS"
+    },
+    {
+      "name": "Reward ledger independently blocks quick refund; reward stays unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "Snapshot subtracts succeeded eligible refund without generating points",
+      "status": "PASS"
+    },
+    {
+      "name": "B does not inherit A eligible spending or refund",
+      "status": "PASS"
+    },
+    {
+      "name": "Integrity rejects cumulative eligible refunds above eligible spending",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes synthetic payment/refund/reward and supporting fixtures",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "6a2f8203-80ed-4b03-bf58-748a024792a7",
+    "customerB": "94e0c449-8e0b-424c-8e56-a37df2375811",
+    "product": "5355bd4e-7fff-45be-b881-1093cf9c5093",
+    "variant": "497c175e-6699-4be3-bfb4-9a5fc5842215",
+    "order": "bfa3113b-3f12-48bf-b460-595822284d3b"
+  },
+  "status": "PASS",
+  "queries": 82
+}

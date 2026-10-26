@@ -10,6 +10,20 @@
 
 ## Phạm vi và môi trường
 
+Đợt hồi quy gộp 26/10: [kết quả và khoảng trống còn lại](batch-review.md), 9 bài Chrome/75 test Node cùng Copilot/loyalty service PASS; chỉ offline, không thay nghiệm thu E2E.
+
+Đợt nhánh đổi trả 26/10: [từ chối và hàng không bán lại](return-branches.md), 9 kiểm tra Cloud/3 test offline PASS, fixture rollback; sửa local lý do từ chối trên User timeline.
+
+Đợt ledger khi hoàn tiền 26/10: [8 kiểm tra chốt chặn và chi tiêu ròng](refund-ledger.md), fixture rollback sạch; chưa nghiệm thu workflow tự thu hồi/hoàn điểm.
+
+Đợt đổi trả/hoàn tiền 26/10: [13 kiểm tra RPC/RLS](returns.md), một đơn/return/refund tổng hợp đã rollback; chưa test gateway hoặc điểm thưởng/chi tiêu xét hạng khi hoàn tiền.
+
+Đợt áp voucher/hủy COD 26/10: [10 kiểm tra RPC Cloud](voucher-order.md), một đơn/voucher tổng hợp rollback sạch. Chưa kiểm tra hoàn tiền sau thanh toán hoặc E2E hai portal.
+
+Tiến độ điểm/voucher 26/10: [Realtime, ledger và đổi điểm](loyalty.md), 7 test Node/kiểm tra service và 13 kiểm tra RPC/RLS Cloud PASS; fixture đã rollback. Chưa nghiệm thu E2E hoặc áp voucher vào đơn.
+
+Tiến độ thông báo 26/10: [gom sự kiện, vòng đời header và đánh dấu đọc](notifications.md), 18 test offline và 8 kiểm tra RPC/RLS Cloud PASS; fixture đã rollback. Chưa nghiệm thu E2E thông báo.
+
 Người thực hiện: Codex. Nhánh nền `main`, SHA `d8bb56e918105865d38d01592e4255d480f65849`, kèm working tree chưa commit. Người dùng giao quyền chọn môi trường: chọn mã local và kiểm tra tích hợp RPC/RLS trên Supabase Cloud `cpzuvaplseielhgcnqrn`, bằng fixture trong transaction luôn hoàn tác. Không push/deploy.
 
 Đây là đợt đầu của checklist đồng bộ. Chưa xác nhận toàn hệ thống hoặc bản website đang deploy. Browser offline dùng origin giả `http://pawpal.test` với mọi request bị chặn; bài SQL dùng Cloud thật với role `authenticated`/`anon` và JWT claims mô phỏng trong transaction. Bài SQL không kiểm tra Supabase Auth qua HTTP, WebSocket Realtime hay hai màn hình sau commit.

@@ -48,7 +48,27 @@
         return trimmed;
     }
 
-    const noticeState={owner:null,rows:[],cutoff:null,loaded:false,pending:null,channel:null,error:null};
+    const noticeState={owner:null,rows:[],cutoff:null,loaded:false,pending:null,channel:null,error:null,page:1,total:0,unread:0,onlyUnread:false};
+    // Migration 103 is installed; allow an explicit rollback switch.
+    const noticePagingEnabled=window.PAWPAL_NOTIFICATION_PAGING_ENABLED!==false;
+    let noticeEpoch=0,noticeTimer=null,noticeDirty=false;
+    function stopNoticeChannel(){
+        noticeEpoch++;clearTimeout(noticeTimer);noticeTimer=null;noticeDirty=false;
+        if(noticeState.channel)(window.getSupabaseClient?.() || window.SupabaseClient)?.removeChannel(noticeState.channel);
+        noticeState.channel=null;noticeState.pending=null;
+    }
+    function scheduleNoticeRefresh(){
+        noticeDirty=true;
+        if(document.visibilityState==='hidden' || noticeTimer!==null)return;
+        const epoch=noticeEpoch;
+        noticeTimer=setTimeout(async()=>{
+            noticeTimer=null;
+            if(epoch!==noticeEpoch || document.visibilityState==='hidden')return;
+            const pending=noticeState.pending;
+            if(pending){await pending;if(epoch===noticeEpoch && noticeDirty)scheduleNoticeRefresh();return;}
+            noticeDirty=false;await refreshNotices();
+        },200);
+    }
     function getSharedNotifications(){return noticeState.rows;}
     function renderNotifications(){return '<p>Đang tải thông báo.</p>';}
     function noticeLink(row){
@@ -59,40 +79,57 @@
     }
     function noticeError(message){const target=document.getElementById('noticeCloudError') || document.getElementById('headerNotificationList');if(target){if(target.id==='noticeCloudError'){target.textContent=message;return;}const text=document.createElement('p');text.setAttribute('role','alert');text.style.color='#DC2626';text.textContent=message;target.prepend(text);}}
     function paintNotices(){
-        const unread=noticeState.rows.filter(n=>!n.read_at).length,badge=document.getElementById('notificationBadge');
+        const unread=noticeState.unread,badge=document.getElementById('notificationBadge');
         if(badge){badge.textContent=unread>9?'9+':String(unread);badge.style.display=unread?'flex':'none';}
         const list=document.getElementById('headerNotificationList');
-        if(list){list.innerHTML=noticeState.error?'<p role="alert">Không thể tải thông báo. Vui lòng mở lại để thử.</p>':noticeState.rows.slice(0,10).map(n=>`<button type="button" style="width:100%;text-align:left;background:transparent;border:0;padding:12px;display:grid;gap:4px;border-radius:9px" class="notification-item-dropdown ${n.read_at?'':'unread'}" data-id="${escapeHtml(n.id)}"><span class="item-content"><span class="item-title">${escapeHtml(n.title)}</span><span class="item-text">${escapeHtml(n.content)}</span><span class="item-time">${escapeHtml(new Date(n.sent_at).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}))}</span></button>`).join('') || '<p>Chưa có thông báo.</p>';
+        if(list){list.innerHTML=noticeState.error?'<p role="alert">Không thể tải thông báo. Vui lòng mở lại để thử.</p>':noticeState.rows.slice(0,10).map(n=>`<button type="button" style="width:100%;text-align:left;background:transparent;border:0;padding:12px;display:grid;gap:4px;border-radius:9px" class="notification-item-dropdown ${n.read_at?'':'unread'}" data-id="${escapeHtml(n.id)}"><span class="item-content"><span class="item-title">${escapeHtml(n.title)}</span><span class="item-text">${escapeHtml(n.content)}</span><span class="item-time">${escapeHtml(new Date(n.sent_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}))}</span></button>`).join('') || '<p>Chưa có thông báo.</p>';
             list.querySelectorAll('[data-id]').forEach(button=>button.onclick=()=>openAllNotificationsModal(noticeState.rows.find(n=>n.id===button.dataset.id)));
         }
         document.dispatchEvent(new CustomEvent('header_notifications_rendered'));
     }
     async function refreshNotices(){
         const user=getCurrentUser(),client=window.getSupabaseClient?.() || window.SupabaseClient;
-        if(noticeState.owner!==user?.id){document.querySelector('#notificationsCloudModal [data-close-modal]')?.click();noticeState.owner=user?.id || null;noticeState.rows=[];noticeState.loaded=false;noticeState.error=null;noticeState.pending=null;if(noticeState.channel)client?.removeChannel(noticeState.channel);noticeState.channel=null;paintNotices();}
+        if(noticeState.owner!==(user?.id || null)){stopNoticeChannel();document.querySelector('#notificationsCloudModal [data-close-modal]')?.click();noticeState.owner=user?.id || null;noticeState.rows=[];noticeState.page=1;noticeState.total=0;noticeState.unread=0;noticeState.onlyUnread=false;noticeState.cutoff=null;noticeState.loaded=false;noticeState.error=null;paintNotices();}
         if(!user?.id || !client)return;
         if(noticeState.pending)return noticeState.pending;
-        const owner=user.id;
+        const owner=user.id,epoch=noticeEpoch;
         const work=(async()=>{try{
-            const result=await client.rpc('own_notifications_snapshot');if(getCurrentUser()?.id!==owner)return;
+            const result=await client.rpc('own_notifications_snapshot',...(noticePagingEnabled?[{p_page:noticeState.page,p_size:10,p_unread:noticeState.onlyUnread}]:[]));if(getCurrentUser()?.id!==owner || epoch!==noticeEpoch)return;
             if(result.error || result.data?.customer_id!==owner)throw Error('Không thể tải thông báo.');
             noticeState.rows=result.data.rows || [];noticeState.cutoff=result.data.snapshot_at;noticeState.error=null;
-            if(!noticeState.channel)noticeState.channel=client.channel('notices-'+crypto.randomUUID()).on('postgres_changes',{event:'*',schema:'public',table:'notification',filter:'customer_id=eq.'+owner},()=>{refreshNotices().then(()=>renderNoticeModal());}).subscribe();
-        }catch(error){if(getCurrentUser()?.id===owner){noticeState.rows=[];noticeState.error=error.message;}}
-        finally{if(getCurrentUser()?.id===owner){noticeState.loaded=true;paintNotices();renderNoticeModal();}}})();
+            noticeState.page=result.data.page || 1;noticeState.total=Number(result.data.total ?? noticeState.rows.length);noticeState.unread=Number(result.data.unread_count ?? noticeState.rows.filter(n=>!n.read_at).length);
+            if(!noticeState.channel){let subscribed=false;noticeState.channel=client.channel('notices-'+crypto.randomUUID()).on('postgres_changes',{event:'*',schema:'public',table:'notification',filter:'customer_id=eq.'+owner},()=>{if(epoch===noticeEpoch)scheduleNoticeRefresh();}).subscribe(status=>{if(status==='SUBSCRIBED'){if(subscribed && epoch===noticeEpoch)scheduleNoticeRefresh();subscribed=true;}});}
+        }catch(error){if(getCurrentUser()?.id===owner && epoch===noticeEpoch){noticeState.rows=[];noticeState.error=error.message;}}
+        finally{if(getCurrentUser()?.id===owner && epoch===noticeEpoch){noticeState.loaded=true;paintNotices();renderNoticeModal();}}})();
         noticeState.pending=work;try{await work;}finally{if(noticeState.pending===work)noticeState.pending=null;}
     }
+    const noticeWrites=new Map();
     async function markNoticeRead(id){
-        const client=window.getSupabaseClient?.() || window.SupabaseClient,owner=noticeState.owner;
+        const client=window.getSupabaseClient?.() || window.SupabaseClient,owner=noticeState.owner,epoch=noticeEpoch;
         if(!owner || getCurrentUser()?.id!==owner)throw Error('Vui lòng đăng nhập lại.');
-        const result=await client.rpc('mark_own_notifications_read',{p_id:id,p_before:id?null:noticeState.cutoff,p_expected_owner:owner});
-        if(result.error)throw Error('Chưa đánh dấu được thông báo. Vui lòng thử lại.');
-        await refreshNotices();renderNoticeModal();
+        const cutoff=id?null:noticeState.cutoff;
+        if(!id && !cutoff)throw Error('Vui lòng tải lại thông báo trước khi đánh dấu tất cả.');
+        const key=JSON.stringify([epoch,owner,id,cutoff]);
+        if(noticeWrites.has(key))return noticeWrites.get(key);
+        const work=(async()=>{
+            const result=await client.rpc('mark_own_notifications_read',{p_id:id,p_before:cutoff,p_expected_owner:owner});
+            if(epoch!==noticeEpoch || getCurrentUser()?.id!==owner)return;
+            if(result.error || !Number.isInteger(result.data) || result.data<0)throw Error('Chưa đánh dấu được thông báo. Vui lòng thử lại.');
+            // A read started before this write may contain the old unread state.
+            if(noticeState.pending)await noticeState.pending;
+            if(epoch!==noticeEpoch || getCurrentUser()?.id!==owner)return;
+            await refreshNotices();renderNoticeModal();
+        })();
+        noticeWrites.set(key,work);
+        try{return await work;}finally{if(noticeWrites.get(key)===work)noticeWrites.delete(key);}
     }
     window.updateNotificationBadge=()=>{paintNotices();if(!noticeState.loaded || noticeState.owner!==getCurrentUser()?.id)refreshNotices();};
-    document.addEventListener('notifications_updated',()=>{refreshNotices().then(()=>renderNoticeModal());});
-    document.addEventListener('auth_state_changed',()=>{noticeState.loaded=false;refreshNotices();});
-    window.addEventListener('pagehide',()=>{if(noticeState.channel)(window.getSupabaseClient?.() || window.SupabaseClient)?.removeChannel(noticeState.channel);});
+    document.addEventListener('notifications_updated',scheduleNoticeRefresh);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='hidden' && noticeDirty)scheduleNoticeRefresh();});
+    document.addEventListener('auth_state_changed',()=>{stopNoticeChannel();noticeState.loaded=false;refreshNotices();});
+    window.addEventListener('storage',event=>{if(event.key==='pawpal_current_user'){stopNoticeChannel();noticeState.loaded=false;refreshNotices();}});
+    window.addEventListener('pagehide',stopNoticeChannel);
+    window.addEventListener('pageshow',event=>{if(event.persisted){noticeState.loaded=false;refreshNotices();}});
 
     let cartBadgeRevision=0;
     window.updateCartBadge = async function() {
@@ -501,23 +538,36 @@
     let selectedNotice=null,noticeFilter='all';
     function renderNoticeModal(){
         const modal=document.getElementById('notificationsCloudModal');if(!modal)return;
+        if(noticeState.owner!==getCurrentUser()?.id){modal.querySelector('[data-close-modal]')?.click();return;}
         if(noticeState.error){modal.querySelector('#noticeCloudError').textContent='Không thể tải thông báo. Vui lòng mở lại để thử.';modal.querySelector('#noticeCloudRows').replaceChildren();modal.querySelector('#noticeCloudDetail').replaceChildren();return;}
+        modal.querySelector('#noticeCloudError').textContent='';
+        let navigation=modal.querySelector('#noticePages');
+        if(!navigation){navigation=document.createElement('nav');navigation.id='noticePages';navigation.style.cssText='display:flex;justify-content:center;gap:12px';modal.querySelector('#noticeCloudRows').after(navigation);}
+        const pages=noticePagingEnabled?Math.max(1,Math.ceil(noticeState.total/10)):1;
+        navigation.innerHTML=pages<=1?'':`<button type="button" data-page-back ${noticeState.page===1?'disabled':''}>&lt;</button><span>${noticeState.page} / ${pages}</span><button type="button" data-page-next ${noticeState.page===pages?'disabled':''}>&gt;</button>`;
+        const move=async delta=>{if(noticeState.pending)return;noticeState.page+=delta;selectedNotice=null;await refreshNotices();};
+        navigation.querySelector('[data-page-back]')?.addEventListener('click',()=>move(-1));navigation.querySelector('[data-page-next]')?.addEventListener('click',()=>move(1));
         const rows=noticeState.rows.filter(n=>noticeFilter!=='unread'||!n.read_at);
-        modal.querySelector('#noticeCloudRows').innerHTML=rows.map(n=>`<button type="button" style="width:100%;text-align:left;background:transparent;border:0;padding:12px;display:grid;gap:4px;border-radius:9px" class="notification-item-dropdown ${n.read_at?'':'unread'}" data-notice="${escapeHtml(n.id)}"><strong>${escapeHtml(n.title)}</strong><span>${escapeHtml(new Date(n.sent_at).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}))}</span></button>`).join('') || '<p>Chưa có thông báo phù hợp.</p>';
+        modal.querySelector('#noticeCloudRows').innerHTML=rows.map(n=>`<button type="button" style="width:100%;text-align:left;background:transparent;border:0;padding:12px;display:grid;gap:4px;border-radius:9px" class="notification-item-dropdown ${n.read_at?'':'unread'}" data-notice="${escapeHtml(n.id)}"><strong>${escapeHtml(n.title)}</strong><span>${escapeHtml(new Date(n.sent_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}))}</span></button>`).join('') || '<p>Chưa có thông báo phù hợp.</p>';
         modal.querySelectorAll('[data-notice]').forEach(button=>button.onclick=async()=>{selectedNotice=button.dataset.notice;try{await markNoticeRead(selectedNotice);}catch(error){noticeError(error.message);}renderNoticeModal();});
         const row=noticeState.rows.find(n=>n.id===selectedNotice),detail=modal.querySelector('#noticeCloudDetail');
         detail.innerHTML=row?`<h4>${escapeHtml(row.title)}</h4><p style="white-space:pre-wrap">${escapeHtml(row.content)}</p><a href="${noticeLink(row)}">Mở nội dung liên quan</a>`:'<p>Chọn thông báo để xem nội dung.</p>';
     }
     async function openAllNotificationsModal(initialNoti=null){
+        if(noticeState.pending)await noticeState.pending;
+        noticeState.page=1;noticeState.onlyUnread=false;
+        const owner=getCurrentUser()?.id;
+        await refreshNotices();
+        if(!owner || owner!==getCurrentUser()?.id)return;
         document.getElementById('notificationsCloudModal')?.querySelector('[data-close-modal]')?.click();
         const modal=document.createElement('div');modal.id='notificationsCloudModal';modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,30,.4);display:flex;align-items:center;justify-content:center;z-index:10000;padding:16px;';
         modal.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="noticeCloudTitle" style="background:white;border-radius:9px;width:760px;max-width:95vw;max-height:90vh;overflow:auto;padding:26px 30px"><div style="display:flex;justify-content:space-between"><h3 id="noticeCloudTitle">Thông báo</h3><button type="button" data-close-modal="notificationsCloudModal">Đóng</button></div><p id="noticeCloudError" role="alert" style="color:#DC2626"></p><div style="display:flex;gap:12px;flex-wrap:wrap"><button type="button" data-notice-filter="all">Tất cả</button><button type="button" data-notice-filter="unread">Chưa đọc</button><button type="button" id="noticeCloudMarkAll">Đọc tất cả</button></div><div id="noticeCloudRows"></div><div id="noticeCloudDetail"></div><button type="button" data-close-modal="notificationsCloudModal">Để sau</button></section>';
         const previous=document.activeElement,overflow=document.body.style.overflow,close=()=>{modal.remove();document.body.style.overflow=overflow;document.removeEventListener('keydown',key);if(previous?.isConnected)previous.focus();},key=event=>{if(event.key==='Escape')close();};
         modal.onclick=event=>{if(event.target===modal || event.target.closest('[data-close-modal]'))close();};document.addEventListener('keydown',key);document.body.append(modal);document.body.style.overflow='hidden';modal.querySelectorAll('button').forEach(button=>{button.classList.add('btn','btn-sm','btn-outline-success');button.style.borderRadius='9px';});modal.querySelector('button').focus();
         selectedNotice=initialNoti?.id || null;noticeFilter='all';
-        modal.querySelectorAll('[data-notice-filter]').forEach(button=>button.onclick=()=>{noticeFilter=button.dataset.noticeFilter;renderNoticeModal();});
+        modal.querySelectorAll('[data-notice-filter]').forEach(button=>button.onclick=async()=>{if(noticeState.pending)return;noticeFilter=button.dataset.noticeFilter;noticeState.onlyUnread=noticeFilter==='unread';noticeState.page=1;selectedNotice=null;await refreshNotices();});
         modal.querySelector('#noticeCloudMarkAll').onclick=async event=>{const button=event.target;button.disabled=true;try{await markNoticeRead(null);}catch(error){noticeError(error.message);}finally{button.disabled=false;}};
-        await refreshNotices();if(!modal.isConnected)return;renderNoticeModal();
+        if(!modal.isConnected)return;renderNoticeModal();
         if(selectedNotice)try{await markNoticeRead(selectedNotice);}catch(error){noticeError(error.message);}
     }
     window.openAllNotificationsModal=openAllNotificationsModal;

@@ -1,0 +1,45 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T06:20:11.128Z",
+  "scope": "3 synthetic notices, 2 owners; RPC/RLS only; always rollback; no Logs",
+  "status": "PASS",
+  "queries": 61,
+  "checks": [
+    {
+      "name": "Paged snapshot bounds payload, counts all own rows and rejects oversized pages",
+      "status": "PASS"
+    },
+    {
+      "name": "A snapshot contains only own notices in time order",
+      "status": "PASS"
+    },
+    {
+      "name": "Single read persists across RPC snapshots; retry changes zero rows",
+      "status": "PASS"
+    },
+    {
+      "name": "Foreign notification and stale expected owner rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Mark all requires a valid loaded snapshot cutoff",
+      "status": "PASS"
+    },
+    {
+      "name": "Mark all respects cutoff and retry, preserving already read rows",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read A through snapshot or mark A by ID; B remains unread",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot execute private notification RPCs",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes all synthetic notices and actors",
+      "status": "PASS"
+    }
+  ]
+}

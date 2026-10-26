@@ -71,6 +71,9 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  await page.evaluate(()=>PawPalSupport.loadTickets());assert.equal(await page.locator('#supportSyncError').count(),0);
  await page.evaluate(()=>{failWrite=true;});await page.locator('#replyTextarea').fill('E2E retry draft');await page.locator('#btnSendReply').click();await page.waitForFunction(()=>!document.getElementById('btnSendReply').disabled);
  assert.equal(await page.locator('#replyTextarea').inputValue(),'E2E retry draft');assert.equal(dialogs.length,1);
+ // Reload the helper's in-memory journal while keeping browser sessionStorage.
+ await page.evaluate(()=>PawPalSupport.stopRealtime());
+ await page.addScriptTag({content:fs.readFileSync('scripts/shared/support-handler.js','utf8')});
  await page.evaluate(()=>{failWrite=false;});await page.locator('#btnSendReply').click();await page.waitForFunction(()=>!document.getElementById('btnSendReply').disabled);
  const retries=await page.evaluate(()=>calls.filter(c=>c.name==='reply_own_support_ticket'&&c.args.p_content==='E2E retry draft'));
  assert.equal(retries.length,2);assert.equal(retries[0].args.p_id,retries[1].args.p_id);
