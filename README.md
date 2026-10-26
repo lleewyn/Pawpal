@@ -20,7 +20,7 @@ Mở [localhost:3000](http://localhost:3000). Trước khi chạy, tạo `.env` 
 
 Các URL phải trỏ tới project hiện tại `cpzuvaplseielhgcnqrn`. Giữ khóa đặc quyền ở phía máy chủ, không đưa `.env` hoặc thông tin đăng nhập vào Git.
 
-Web local và Vercel dùng Supabase Cloud; không cần bật Supabase local hoặc tunnel để sử dụng web. Công cụ SQL Cloud có thể dùng Docker để chạy PostgreSQL CLI dùng một lần, tách biệt với database local.
+Web chạy trên máy và Vercel đều dùng Supabase Cloud. Các script CSDL local cũ đã được gỡ; dự án không còn phụ thuộc Docker. Công cụ SQL Cloud dùng PostgreSQL client trực tiếp (`psql`, `pg_dump` trong PATH hoặc thư mục `PAWPAL_PG_BIN`); đây là công cụ kết nối Cloud, không phải CSDL local. Xem [hướng dẫn CSDL](scripts/database/v1/README.md).
 
 ## Chức năng
 

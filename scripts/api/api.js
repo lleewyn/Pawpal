@@ -1,4 +1,5 @@
 import { normalizeOrderStatus } from '/scripts/shared/order-status.mjs';
+import { vietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
 import { resolveAuthenticatedCustomerId } from '/scripts/shared/customer-identity.mjs';
 import { normalizeCartItems, publishCart } from '/scripts/shared/cart-state.mjs';
 
@@ -164,16 +165,9 @@ export const API = {
                 const paymentStatus = total > 0 && netPaid >= total ? 'paid' : netPaid > 0 ? 'partial' :
                     (b.appointment_status === 'cancelled' ? 'cancelled' : 'pending');
 
-                const localStart = b.scheduled_start_at ? new Date(b.scheduled_start_at) : null;
-                const dateStr = localStart && !Number.isNaN(localStart.getTime()) ?
-                    `${localStart.getFullYear()}-${String(localStart.getMonth()+1).padStart(2,'0')}-${String(localStart.getDate()).padStart(2,'0')}` : '';
-                let timeStr = '';
-                if (b.scheduled_start_at) {
-                    try {
-                        const d = new Date(b.scheduled_start_at);
-                        timeStr = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
-                    } catch (_) {}
-                }
+                const localStart = b.scheduled_start_at ? vietnamDateTimeInput(b.scheduled_start_at) : '';
+                const dateStr = localStart.slice(0,10);
+                const timeStr = localStart.slice(11,16);
 
                 return {
                     id:              b.appointment_code || b.id,
@@ -694,6 +688,7 @@ export const API = {
             const {data,error}=await db.rpc('create_own_sales_order',{p_id:orderData.requestId,p_expected_quote:prepared.quote.version,
                 p_details:prepared.details,p_lines:prepared.lines,p_payment_method:orderData.payment.configId});
             if(error)throw error;
+            if(data!==orderData.requestId)throw new Error('Chưa nhận được xác nhận đúng mã đơn hàng. Vui lòng kiểm tra trước khi thử lại.');
             return {success:true,orderId:data};
         } catch(error){return {success:false,error};}
     },

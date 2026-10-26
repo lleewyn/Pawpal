@@ -1,0 +1,68 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T01:13:00.027Z",
+  "scope": "One synthetic COD order/SKU; RPC/RLS only; always ROLLBACK; no Logs",
+  "checks": [
+    {
+      "name": "Server ignores forged unit price and computes SKU price, shipping and total",
+      "status": "PASS"
+    },
+    {
+      "name": "Server rejects quantity above available stock",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed quote does not leave a partial order",
+      "status": "PASS"
+    },
+    {
+      "name": "Create retry gives one order, one detail/payment and one quantity reservation; Admin sees exact owner/price",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale Admin version cannot confirm order",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads Admin confirmed state",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read/cancel A order or invoke Admin fulfillment",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin cancel releases reservation and User reads cancelled",
+      "status": "PASS"
+    },
+    {
+      "name": "User cancel retry is visible to Admin with one fulfillment audit",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin shipping retry issues stock once and User sees tracking/state",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads completed state; COD is not falsely marked paid",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot quote private order",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes order and synthetic catalog/config/actors",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "957f0e7e-a68d-4c4d-bdff-53ef94d1a297",
+    "customerB": "885ea6bd-cff8-4198-bee1-c379d4fd0dd3",
+    "product": "bf79c0c6-7c56-49e9-85ce-01b0b70314a6",
+    "variant": "2ac81b95-acef-4c62-a4f6-df361a64048a",
+    "order": "dce32600-f820-43d0-b05c-37f47c45ef52"
+  },
+  "status": "PASS",
+  "queries": 113
+}

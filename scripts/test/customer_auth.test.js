@@ -41,7 +41,7 @@ function fixture({ simulated = true, locked = false, staff = false, temporary = 
     };
     const store = createTestStore(() => time);
     const createApi = () => createCustomerAuth({ admin, store, mode, allowedTestPhones: allowedPhones, randomCode: () => '123456', deliver: (phone, code) => codes.push(code), clientFactory: token => ({
-        async rpc(name, args) { profileCalls.push({name,args,token}); return failUpdate ? {error: new Error('Atomic profile rejected')} : {data: {id: 'customer-1', revision: 'db-revision', addresses: []}}; },
+        async rpc(name, args) { profileCalls.push({name,args,token}); return failUpdate ? {error: new Error('Atomic profile rejected')} : {data: name==='reply_own_support_ticket'?args.p_id:{id: 'customer-1', revision: 'db-revision', addresses: []}}; },
         auth: {
         async signInWithPassword(credentials) { credentialsUsed.push(credentials); const { password } = credentials; if (mode === 'demo' && (!credentials.email || credentials.phone)) return { data: {}, error: new Error('Phone provider disabled') }; if (!['OldPass123!', 'NewPass123!'].includes(password)) return { data: {}, error: new Error('Wrong password') }; return { data: { user: { id: 'auth-1' }, session: { access_token: 'safe-token', refresh_token: 'refresh' } } }; },
         async signInWithOtp() { return { error: null }; },
@@ -73,6 +73,15 @@ test('profile API refuses forged sessions before invoking any profile RPC', asyn
     const f=fixture();
     assert.equal((await f.call('me',{action:'profile-snapshot'},'forged')).code,400);
     assert.equal(f.profileCalls.length,0);
+});
+
+test('support reply API forwards verified caller JWT to atomic RPC, never service-role writes',async()=>{
+    const f=fixture(),ticketId='10000000-0000-4000-8000-000000000001',requestId='20000000-0000-4000-8000-000000000001';
+    const result=await f.call('me',{action:'support-reply',ticketId,requestId,content:'E2E reply'},'valid-token');
+    assert.equal(result.code,200);assert.equal(result.body.message.id,requestId);
+    assert.deepEqual(f.profileCalls,[{name:'reply_own_support_ticket',args:{p_id:requestId,p_ticket:ticketId,p_content:'E2E reply'},token:'valid-token'}]);
+    assert.equal(f.writes.length,0);
+    const before=f.profileCalls.length;assert.equal((await f.call('me',{action:'support-reply',ticketId,requestId,content:'E2E reply'},'forged')).code,400);assert.equal(f.profileCalls.length,before);
 });
 
 test('demo login and password change use internal identity when phone provider is disabled', async () => {

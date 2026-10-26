@@ -1,5 +1,6 @@
 const {createClient}=require('@supabase/supabase-js');
 const {verifyStaffCaller}=require('../scripts/api/staff_auth.js');
+const copilot=require('../scripts/api/admin_copilot.js');
 const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const limits=new Map();
 function allow(key,maximum){const now=Date.now(),recent=(limits.get(key)||[]).filter(t=>now-t<60000);if(recent.length>=maximum)return false;recent.push(now);limits.set(key,recent);if(limits.size>10000)for(const [k,rows]of limits)if(rows.every(t=>now-t>=60000))limits.delete(k);return true;}
@@ -180,47 +181,22 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
    const now=Date.now(),window=limits.get(staff.id)||[];const recent=window.filter(t=>now-t<60000);
    if(recent.length>=10)return fail(429,'Vui lòng chờ trước khi gửi thêm câu hỏi.');
    recent.push(now);limits.set(staff.id,recent);if(limits.size>10000)for(const [key,values]of limits)if(values.every(t=>now-t>60000))limits.delete(key);
-   const context={};
-   const specs=[
-    ['chatbot_knowledge_faq','question,answer,category'],
-    ['service','service_name,description,status'],
-    ['product','product_name,status'],
-    ['inventory','quantity_in_stock,minimum_stock,product_variant(sku_variant,product(product_name))']
-   ];
-   await Promise.all(specs.map(async([table,columns])=>{
-    if(!staff.permissions.includes(table+'.read'))return;
-    let q=caller.from(table).select(columns,{count:'exact'}).order('id').limit(40);if(table==='chatbot_knowledge_faq')q=q.eq('is_active',true);
-    const {data,error,count}=await q;if(error)throw error;
-    if(table==='inventory'){
-     const sample=(data||[]).map(inv=>({
-      product_name:inv.product_variant?.product?.product_name||'Sản phẩm',
-      sku:inv.product_variant?.sku_variant||'—',
-      quantity_in_stock:inv.quantity_in_stock,
-      minimum_stock:inv.minimum_stock
-     }));
-     context[table]={total:count,sample};
-    }else{
-     context[table]={total:count,sample:data};
-    }
-   }));
-   const localDate=new Date(Date.now()+7*3600000).toISOString().slice(0,10),start=localDate+'T00:00:00+07:00',end=new Date(Date.parse(start)+86400000).toISOString();
-   if(staff.permissions.includes('appointment.read')){
-    const r=await caller.from('appointment').select('id,appointment_code,appointment_status,scheduled_start_at').gte('scheduled_start_at',start).lt('scheduled_start_at',end).limit(50);
-    if(r.error)throw r.error;
-    const items=(r.data||[]).map(a=>({
-     code:a.appointment_code,
-     status:a.appointment_status==='pending'?'Chờ duyệt':a.appointment_status==='confirmed'?'Đang chờ phục vụ':a.appointment_status==='in_progress'?'Đang làm dịch vụ':a.appointment_status==='completed'?'Đã hoàn thành':a.appointment_status,
-     time:new Date(a.scheduled_start_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Ho_Chi_Minh'})
-    }));
-    context.appointment_today={date:localDate,time_zone:'Asia/Ho_Chi_Minh',total:items.length,appointments:items};
+   if(body.conversationId!=null&&!uuid(body.conversationId))return fail(400,'Mã hội thoại không hợp lệ.');
+   const route=copilot.plan(question);let history=[];
+   if(['draft.reply','workflow.guide','conversation.summary'].includes(route.intent)){
+    const result=await caller.rpc('admin_copilot_recent_context',{p_session:body.sessionId});
+    if(result.error)throw result.error;history=result.data||[];
    }
-   if(staff.permissions.includes('support_ticket.read')){const r=await caller.from('support_ticket').select('id',{count:'exact',head:true}).not('status','in','(completed,resolved,closed,rejected)');if(r.error)throw r.error;context.open_support_tickets={total:r.count,scope:'Tất cả phiếu chưa kết thúc, không giới hạn 24 giờ'};}
-   const {data:history,error:historyError}=await caller.from('admin_copilot_history').select('role,content').eq('staff_id',staff.id).eq('session_id',body.sessionId).order('created_at',{ascending:false}).order('id',{ascending:false}).limit(8);if(historyError)throw historyError;
-   let timer;let reply;try{reply=await Promise.race([generateReply(question,context,history.reverse()),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('ai_timeout')),25000);})]);}finally{clearTimeout(timer);}
-   if(typeof reply!=='string'||!reply.trim()||reply.length>16000)throw new Error('invalid_ai_response');
+   let timer,answer;
+   try{answer=await Promise.race([copilot.answer({question,caller,staff,conversationId:body.conversationId,generateReply,history}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('ai_timeout')),25000);})]);}finally{clearTimeout(timer);}
+   const reply=answer.reply;
    const saved=await service.rpc('save_admin_copilot_exchange',{p_actor:user.id,p_request:body.requestId,p_session:body.sessionId,p_question:question,p_answer:reply,p_title:question.slice(0,80)});if(saved.error)throw saved.error;
-   return res.json({ok:true,reply:saved.data});
-  }catch(error){return fail(error.code==='42501'?403:error.code==='PT409'?409:503,'Chưa thể xử lý trợ lý. Nội dung chưa được xác nhận lưu; vui lòng thử lại.');}
+   return res.json({...answer,ok:true,reply:saved.data,request_id:body.requestId});
+  }catch(error){
+   const status=error.code==='42501'?403:error.code==='PT409'?409:error.code==='22023'?400:503;
+   const message=status===403?'Bạn chưa có quyền xem dữ liệu được yêu cầu.':status===409?'Yêu cầu đã thay đổi hoặc trùng với nội dung khác. Hãy kiểm tra và tải lại.':status===400?'Điều kiện tra cứu chưa hợp lệ. Hãy ghi rõ mã hoặc ngày cần xem.':error.message==='ai_timeout'?'Trợ lý phản hồi quá lâu. Câu hỏi chưa được xác nhận lưu; bạn có thể thử lại.':'Nguồn dữ liệu hoặc AI chưa sẵn sàng. Không thể kết luận số liệu; câu hỏi chưa được xác nhận lưu.';
+   return fail(status,message);
+  }
  };
 }
 module.exports=createHandler();module.exports.createHandler=createHandler;module.exports.createGenerator=createGenerator;

@@ -1,0 +1,68 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T00:58:48.416Z",
+  "scope": "Single Spa booking; RPC/RLS only; synthetic actors; rollback; no Logs",
+  "checks": [
+    {
+      "name": "Past time and unavailable preferred staff are rejected by server quote",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed quote cannot create a partial booking",
+      "status": "PASS"
+    },
+    {
+      "name": "Create plus same-ID retry returns one authoritative booking",
+      "status": "PASS"
+    },
+    {
+      "name": "Same create ID with changed payload is rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin reads matching customer, pet, service, price and pending state",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads Admin confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "User cannot invoke Admin status mutation directly",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads Admin cancellation",
+      "status": "PASS"
+    },
+    {
+      "name": "User move plus retry updates one booking once; Admin sees pending approval/new time",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read, reschedule or cancel A booking by ID",
+      "status": "PASS"
+    },
+    {
+      "name": "User cancel plus retry is visible to Admin with one cancellation audit",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot execute private booking quote",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes booking and all synthetic fixtures",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "f8c59eea-5eb0-4087-be7b-dbb4593364d7",
+    "customerB": "c38a0fbd-f89e-45ac-93d8-94ed83745daf",
+    "pet": "b320ff1c-84f0-45c5-b475-b3e65f1fb631",
+    "service": "d81e1f63-6cee-469d-82ca-22d580d20b9d",
+    "booking": "e4560096-0a0d-4acf-8af1-d9acf1698701"
+  },
+  "status": "PASS",
+  "queries": 112
+}

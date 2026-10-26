@@ -1,4 +1,18 @@
-# Schema 3NF V1 — Cloud hiện tại và kiểm thử phục hồi
+# Schema 3NF V1 — Supabase Cloud
+
+> **Cập nhật 25/10/2026:** đã xóa 92 script triển khai/kiểm thử CSDL local và các tệp phụ thuộc chúng. `cloud_connection.cjs` dùng PostgreSQL client trực tiếp, không chạy container. Các mục sau phần hướng dẫn hiện tại bên dưới chỉ là lịch sử, không chạy các lệnh local được nhắc trong đó.
+
+## Hướng dẫn hiện tại
+
+- Ứng dụng và công cụ nhập sản phẩm/dịch vụ đều kết nối project `cpzuvaplseielhgcnqrn` trên Supabase Cloud.
+- `cloud_connection.cjs`: dùng `psql` và `pg_dump` cài trực tiếp. Thêm chúng vào PATH hoặc đặt biến `PAWPAL_PG_BIN` trỏ tới thư mục PostgreSQL `bin`. Không cần cài/chạy PostgreSQL server trên máy.
+- Thông tin kết nối vẫn đọc từ tệp cấu hình Cloud riêng hiện có. Thư mục ngoài repo có tên `supabase-local` chỉ là vị trí lưu cấu hình/ảnh kiểm tra cũ; tên thư mục không có nghĩa là đang dùng CSDL local.
+- `service_import_connection.cjs`: kết nối PostgreSQL Cloud trực tiếp qua thư viện pg, có kiểm tra chứng chỉ TLS, được importer CSV sử dụng.
+- Giữ migrations SQL, thiết kế schema, kiểm thử Cloud và công cụ nhập CSV đang dùng. Không tự chạy migration/nhập dữ liệu chỉ để kiểm tra kết nối.
+- Kiểm tra transport không cần mạng: `node scripts/test/cloud_connection_native.cjs`.
+- Danh sách script đã gỡ: [báo cáo dọn script local](../../../docs/database/local-scripts-removal-2026-10-25.md).
+
+## Lịch sử triển khai — không phải hướng dẫn chạy hiện tại
 
 > Cập nhật 23/10/2026: ứng dụng chạy với Cloud mới. Bộ tương thích self-host `001–004`, `deploy_local.cjs`, preview/tunnel và các test `self_host_*` đã đưa ra kho lưu trữ ngoài repo. Các lệnh liên quan ở phần lịch sử bên dưới không còn là hướng dẫn chạy hiện tại. Giữ migrations V1 và công cụ phục hồi còn được test dùng; `cloud_connection.cjs` chạy PostgreSQL CLI dùng một lần, không cần database Supabase local. Không xóa hoặc thay đổi database Cloud/local trong đợt dọn repo.
 

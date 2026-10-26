@@ -1,6 +1,7 @@
 
 import { API } from '/scripts/api/api.js';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
+import { parseVietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
 import { statusLabels, formatDate, formatPrice, openBookingCancelModal, openBookingMoveModal } from './bookings.js';
 
 
@@ -219,7 +220,7 @@ function renderBookingDetail(booking) {
     const dateTimeEl = document.getElementById('dateTimeInfo');
     if (dateTimeEl) dateTimeEl.textContent = dateTimeText;
     if (dateTimeEl && booking.scheduledStartAt && booking.scheduledEndAt) {
-        const stamp = value => new Date(value).toLocaleString('vi-VN', {hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'});
+        const stamp = value => new Date(value).toLocaleString('vi-VN', {timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'});
         dateTimeEl.textContent = `${stamp(booking.scheduledStartAt)} — ${stamp(booking.scheduledEndAt)}`;
     }
     const serviceLines = document.getElementById('bookingServiceLines');
@@ -318,7 +319,7 @@ function renderBookingLogistics(data) {
     if (!section || !content) return;
     section.classList.toggle('d-none', !data?.hotel && !data?.taxi);
     content.replaceChildren();
-    const stamp = value => value ? new Date(value).toLocaleString('vi-VN', {hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}) : 'Chưa xác định';
+    const stamp = value => value ? new Date(value).toLocaleString('vi-VN', {timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}) : 'Chưa xác định';
     const status = {pending:'Chờ xác nhận',reserved:'Đã giữ phòng',confirmed:'Đã xác nhận',checked_in:'Đang lưu trú',in_house:'Đang lưu trú',checked_out:'Đã trả phòng',closed:'Đã trả phòng',in_progress:'Đang thực hiện',completed:'Hoàn thành',cancelled:'Đã hủy',assigned:'Đã phân công',dispatched:'Đã điều xe',picked_up:'Đã đón',arrived:'Đã đến nơi',outbound:'Đang đi',returning:'Đang về'};
     const row = (label, value) => {
         const item = document.createElement('div'); item.className = 'booking-spec-row';
@@ -505,11 +506,14 @@ function resolveBookingStatus(booking) {
 }
 
 function getBookingScheduledAt(booking) {
+    if (booking?.scheduledStartAt) {
+        const instant = new Date(booking.scheduledStartAt);
+        if (!Number.isNaN(instant.getTime())) return instant;
+    }
     if (!booking?.date) return null;
     const isHotel = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase() === 'hotel' || String(booking?.service || booking?.serviceName || '').toLowerCase().includes('hotel');
     const time = booking.timeStart || booking.time || (isHotel ? '12:00' : '09:00');
-    const scheduled = new Date(`${booking.date}T${time}:00`);
-    return Number.isNaN(scheduled.getTime()) ? null : scheduled;
+    return parseVietnamDateTimeInput(`${booking.date}T${time}`);
 }
 
 document.addEventListener('keydown', (e) => {

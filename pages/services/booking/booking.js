@@ -1,10 +1,14 @@
 import {editBookingOwner,editBookingPet} from './booking-inline.mjs';
+import {vietnamDateTimeInput,parseVietnamDateTimeInput} from '/scripts/shared/booking-time.mjs';
 const state={step:1,pet:null,service:null,room:null,quote:null,details:null,busy:false,pets:[],profile:null,preferredStaff:null,availability:null,catalog:{services:[],rooms:[]}};
 let db,requestId,journalKey;
 const el=id=>document.getElementById(id);
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=value=>Number(value).toLocaleString('vi-VN')+' đ';
-const date=value=>new Date(value).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const date=value=>{
+ const parsed=typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)?parseVietnamDateTimeInput(value):new Date(value);
+ return parsed?.toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})||'Chưa có thời gian';
+};
 const categories={grooming_spa:'Tắm và cắt tỉa',pet_hotel:'Khách sạn thú cưng',pet_taxi:'Đưa đón thú cưng'};
 async function rpc(name,args){const r=await db.rpc(name,args);if(r.error)throw r.error;return r.data;}
 function message(error){return ({outside_operating_hours:'Giờ đã chọn nằm ngoài giờ phục vụ hoặc không đủ thời gian hoàn thành dịch vụ.',booking_slot_full:'Khung giờ này đã đủ lịch. Vui lòng chọn giờ khác.',no_scheduled_staff:'Chưa có nhân viên đủ điều kiện được phân ca trống trong thời gian này. Vui lòng chọn giờ khác.',preferred_staff_unavailable:'Nhân viên ưu tiên không còn trống. Vui lòng kiểm tra lại giờ.',booking_hours_unconfigured:'Cửa hàng chưa cấu hình giờ phục vụ. Vui lòng liên hệ hỗ trợ.',booking_capacity_unconfigured:'Chưa cấu hình số lịch có thể tiếp nhận. Vui lòng liên hệ hỗ trợ.',service_species_not_supported:'Gói dịch vụ chưa được cấu hình hỗ trợ loài của bé. Vui lòng liên hệ cửa hàng.',
@@ -91,7 +95,7 @@ function renderServices(){
  state.service=null;state.quote=null;
  el('step2').innerHTML=heading('Chọn dịch vụ')+`<div class="booking-form"><label for="bookingServiceSearch">Tìm dịch vụ cho ${escape(state.pet.name)}</label><input id="bookingServiceSearch" type="search" placeholder="Tên gói hoặc nhu cầu chăm sóc"><div class="booking-service-filters"><button type="button" data-category="all" class="active">Tất cả</button>${Object.entries(categories).map(([key,label])=>`<button type="button" data-category="${key}">${label}</button>`).join('')}</div><div id="bookingServiceCards" class="booking-service-cards"></div><div id="bookingAddons"></div><p id="bookingServiceSelected" class="field-note"></p></div>`+navigation(2);
  const choose=service=>{
-  state.service=service;state.quote=null;state.room=null;el('step2Next').disabled=!service;el('bookingServiceSelected').textContent=service?`${categories[service.category] || ''} · ${service.duration} phút · ${service.description || ''}`:'';
+  state.service=service;state.quote=null;state.room=null;el('step2Next').disabled=!service;el('bookingServiceSelected').textContent=service?`${categories[service.category] || ''} · ${service.duration_label || service.duration+' phút'} · ${service.description || ''}`:'';
   el('bookingAddons').innerHTML=(service?.addons || []).map(a=>`<label class="d-block my-3"><input type="checkbox" class="booking-addon" value="${escape(a.id)}" ${a.required?'checked disabled':''}> ${escape(a.name)} · ${money(a.price)}${a.required?' <span class="required">*</span>':''}</label>`).join('');summary();
  };
  const supported=()=>state.catalog.services.filter(s=>(s.species_ids || []).includes(state.pet.species_id));
@@ -105,7 +109,7 @@ function renderServices(){
  el('bookingServiceSearch').oninput=renderCards;
  el('step2').querySelectorAll('[data-category]').forEach(btn=>btn.onclick=()=>{category=btn.dataset.category;el('step2').querySelectorAll('[data-category]').forEach(b=>b.classList.toggle('active',b===btn));renderCards();});
  const params=new URLSearchParams(location.search),preferred=params.get('service') || params.get('serviceId') || params.get('id');
- const preset=supported().find(s=>[s.id,s.code].includes(preferred));
+ const preset=supported().find(s=>[s.id,s.code,s.code.replace(/^SVC-/,'').replaceAll('-','').replace(/^TAX/,'TXI')].includes(preferred));
  if(preset && (preset.category==='pet_hotel'||Number(state.pet.weight)>0))choose(preset);
  renderCards();
  el('step2Back').onclick=()=>show(1);el('step2Next').disabled=!state.service;el('step2Next').onclick=()=>{if(state.service){renderSchedule();show(3);}};
@@ -117,10 +121,11 @@ function renderSchedule(){
  ${kind==='pet_taxi'?`${field('bookingPickup','Địa chỉ đón','text','maxlength="1000"')}${field('bookingDropoff','Địa chỉ trả','text','maxlength="1000"')}${field('bookingDistance','Quãng đường dự kiến mỗi lượt (km)','number','min="0.01" step="0.01"')}<div class="form-group"><label for="bookingTrip">Hành trình</label><select id="bookingTrip"><option value="one_way">Một chiều</option><option value="round_trip">Khứ hồi</option></select></div><div id="bookingReturnGroup" hidden>${field('bookingReturn','Thời gian lượt về','datetime-local')}</div>`:''}
  <div class="form-group"><label for="bookingNote">Ghi chú cho cửa hàng</label><textarea id="bookingNote" rows="3" maxlength="4000"></textarea></div><p class="field-error" role="alert" id="bookingQuoteError"></p></form>`+navigation(3,'Xem giá và xác nhận');
  el('bookingScheduleForm').addEventListener('submit',e=>e.preventDefault());el('bookingScheduleForm').addEventListener('input',()=>{state.quote=null;el('bookingQuoteError').textContent='';});
- if(kind==='pet_hotel')autocomplete('bookingRoom',()=>state.catalog.rooms,r=>`${r.name} · ${r.type} · ${money(r.daily_price)}/ngày`,room=>{state.room=room;state.quote=null;});
+ if(kind==='pet_hotel')autocomplete('bookingRoom',()=>state.catalog.rooms.filter(r=>r.service_id===state.service.id),r=>`${r.name} · ${r.type} · ${money(r.daily_price)}/${r.billing_minutes===60?'giờ':'ngày'}`,room=>{state.room=room;state.quote=null;});
  if(kind==='pet_taxi')el('bookingTrip').onchange=()=>{const back=el('bookingTrip').value==='round_trip';el('bookingReturnGroup').hidden=!back;el('bookingReturn').required=back;if(!back)el('bookingReturn').value='';state.quote=null;};
+ if(kind==='pet_taxi'&&state.service.trip_type){el('bookingTrip').value=state.service.trip_type;el('bookingTrip').disabled=true;el('bookingTrip').onchange();}
  el('step3Back').onclick=()=>show(2);el('step3Next').onclick=loadQuote;
- el('bookingStart').min=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+ el('bookingStart').min=vietnamDateTimeInput(Date.now());
  const availability=document.createElement('div');availability.className='booking-availability';
  availability.innerHTML='<button type="button" class="btn-green-outline" id="bookingCheckSlots">Xem giờ có thể đặt</button><p id="bookingAvailabilityMessage" class="field-note" aria-live="polite">Bạn có thể gửi yêu cầu trước; cửa hàng sẽ duyệt lịch và phân nhân viên sau.</p><div id="bookingDaySlots" class="booking-day-slots"></div><div id="bookingStaffPreferences"></div>';
  el('bookingNote').closest('.form-group').before(availability);
@@ -141,7 +146,7 @@ function renderSchedule(){
     :noStaff?'Ngày này chưa có nhân viên được phân ca phù hợp với dịch vụ. Vui lòng chọn ngày khác hoặc liên hệ cửa hàng để được sắp xếp.':`Ngày này không còn khung giờ phù hợp với thời lượng dịch vụ trong giờ phục vụ ${result.open}–${result.close}. Vui lòng chọn ngày khác.`;
    el('bookingDaySlots').innerHTML=(result.slots||[]).map((slot,index)=>`<button type="button" data-slot="${index}" ${slot.available?'':'disabled'} title="${slot.available?'Còn khả dụng':escape(message({message:slot.reason}))}">${new Date(slot.start_at).toLocaleTimeString('vi-VN',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'})}</button>`).join('') || '<p>Không còn giờ khả dụng trong ngày này.</p>';
    el('bookingDaySlots').querySelectorAll('[data-slot]').forEach(btn=>btn.onclick=()=>{
-    const slot=result.slots[Number(btn.dataset.slot)],d=new Date(slot.start_at);el('bookingStart').value=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    const slot=result.slots[Number(btn.dataset.slot)];el('bookingStart').value=vietnamDateTimeInput(slot.start_at);
     state.availability=slot;state.preferredStaff=null;state.quote=null;
     el('bookingDaySlots').querySelectorAll('button').forEach(b=>b.classList.toggle('selected',b===btn));
     const staff=slot.staff||[];
@@ -166,9 +171,13 @@ function details(){
   const error=el(input.id+'Error'),hidden=Boolean(input.closest('[hidden]')),okay=hidden || Boolean(input.checkValidity()&&input.value.trim());input.setAttribute('aria-invalid',okay?'false':'true');if(error)error.textContent=okay?'':'Vui lòng nhập thông tin hợp lệ.';if(!okay)valid=false;
  }
  if(state.service.category==='pet_hotel'&&!state.room){el('bookingRoomError').textContent='Vui lòng chọn phòng từ danh sách.';valid=false;}if(!valid)return null;
- const payload={pet_id:state.pet.id,service_id:state.service.id,scheduled_start_at:new Date(el('bookingStart').value).toISOString(),note:el('bookingNote').value.trim(),addon_ids:[...el('step2').querySelectorAll('.booking-addon:checked')].map(a=>a.value).sort(),preferred_staff_id:state.preferredStaff?.id||null};
- if(state.service.category==='pet_hotel')Object.assign(payload,{check_out_at:new Date(el('bookingEnd').value).toISOString(),room_id:state.room.id,diet_notes:el('bookingDiet').value.trim(),care_notes:el('bookingCare').value.trim()});
- if(state.service.category==='pet_taxi')Object.assign(payload,{pickup_address:el('bookingPickup').value.trim(),dropoff_address:el('bookingDropoff').value.trim(),distance_km:Number(el('bookingDistance').value),trip_type:el('bookingTrip').value,return_at:el('bookingTrip').value==='round_trip'?new Date(el('bookingReturn').value).toISOString():null});return payload;
+ const times={bookingStart:parseVietnamDateTimeInput(el('bookingStart').value)};
+ if(state.service.category==='pet_hotel')times.bookingEnd=parseVietnamDateTimeInput(el('bookingEnd').value);
+ if(state.service.category==='pet_taxi'&&el('bookingTrip').value==='round_trip')times.bookingReturn=parseVietnamDateTimeInput(el('bookingReturn').value);
+ for(const [id,value]of Object.entries(times))if(!value){el(id+'Error').textContent='Vui lòng nhập ngày giờ hợp lệ theo giờ Việt Nam.';el(id).focus();return null;}
+ const payload={pet_id:state.pet.id,service_id:state.service.id,scheduled_start_at:times.bookingStart.toISOString(),note:el('bookingNote').value.trim(),addon_ids:[...el('step2').querySelectorAll('.booking-addon:checked')].map(a=>a.value).sort(),preferred_staff_id:state.preferredStaff?.id||null};
+ if(state.service.category==='pet_hotel')Object.assign(payload,{check_out_at:times.bookingEnd.toISOString(),room_id:state.room.id,diet_notes:el('bookingDiet').value.trim(),care_notes:el('bookingCare').value.trim()});
+ if(state.service.category==='pet_taxi')Object.assign(payload,{pickup_address:el('bookingPickup').value.trim(),dropoff_address:el('bookingDropoff').value.trim(),distance_km:Number(el('bookingDistance').value),trip_type:el('bookingTrip').value,return_at:times.bookingReturn?.toISOString()||null});return payload;
 }
 async function loadQuote(){
  if(state.busy)return;const payload=details();if(!payload)return;state.busy=true;el('step3Next').disabled=true;

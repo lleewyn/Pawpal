@@ -1,0 +1,57 @@
+// Real pet form source/HTML, offline transport. Never connects to Supabase or uploads images.
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+ const page=await browser.newPage({viewport:{width:1366,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/*',route=>{
+  const u=new URL(route.request().url());
+  if(u.origin!=='http://localhost')return route.abort();
+  if(u.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><head><meta charset="utf-8"><link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/pets/pets.css"><style>.d-none{display:none!important}</style></head><body>'+fs.readFileSync('pages/user/modules/pets/pets.html','utf8')+'</body>'});
+  if(u.pathname==='/scripts/api/api.js')return route.fulfill({contentType:'text/javascript',body:'export const API={initData:async()=>{},getUserBookings:async()=>[]};'});
+  if(u.pathname==='/scripts/api/petService.js')return route.fulfill({contentType:'text/javascript',body:'export const getPets=(...a)=>window.getPetsForTest(...a);export const savePets=(...a)=>window.savePetsForTest(...a);export const deletePet=async()=>true;export const restorePet=async()=>true;'});
+  if(u.pathname.startsWith('/assets/'))return route.fulfill({status:204});
+  const filename=path.join(process.cwd(),decodeURIComponent(u.pathname));
+  let body=fs.readFileSync(filename,'utf8');
+  if(u.pathname.endsWith('/pets/pets.js'))body+='\nexport {setupForm};';
+  return route.fulfill({contentType:u.pathname.endsWith('.css')?'text/css':'text/javascript',body});
+ });
+ await page.goto('http://localhost/');
+ await page.evaluate(async()=>{
+  window.actor={id:'10000000-0000-4000-8000-000000000001',name:'E2E owner'};
+  localStorage.setItem('pawpal_current_user',JSON.stringify(actor));
+  window.fixture={id:'PET-E2E',_supabaseId:'20000000-0000-4000-8000-000000000001',_updatedAt:'original-version',userId:actor.id,name:'E2E pet',species:'dog',breed:'Known breed',gender:'male',weight:5,weightNum:5,color:'Brown',allergies:'E2E allergy',notes:'E2E routine',safetyNote:'E2E admin safety',alert:'E2E admin safety',weightHistory:[]};
+  window.reads=0;window.writes=[];window.hold=false;window.failSave=true;
+  window.getPetsForTest=async()=>{reads++;if(hold)await new Promise(r=>{window.releaseRead=r;});return [structuredClone(fixture)];};
+  window.savePetsForTest=async pets=>{writes.push(structuredClone(pets));if(failSave)throw Error('E2E source unavailable');return true;};
+  window.mod=await import('/pages/user/modules/pets/pets.js');mod.setupForm();await mod.switchToPetFormScreen(fixture.id);
+ });
+ await page.locator('#petName').fill('E2E user edit');await page.locator('#allergies').fill('E2E new allergy');
+ const before=await page.evaluate(()=>reads);
+ await page.evaluate(()=>{hold=true;const form=document.getElementById('petForm');form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
+ await page.waitForFunction(()=>!!window.releaseRead);
+ assert.equal(await page.evaluate(()=>reads),before+1,'Double submit must perform one duplicate-name read');
+ assert.equal(await page.locator('#saveBtn').isDisabled(),true);
+ await page.evaluate(()=>{hold=false;releaseRead();});
+ await page.waitForFunction(()=>document.getElementById('petForm').dataset.saving==='false');
+ assert.equal(await page.locator('#petName').inputValue(),'E2E user edit','Failed write must retain draft');
+ assert.equal(await page.locator('#saveBtn').isDisabled(),false);
+ assert.equal(await page.evaluate(()=>writes.length),1);
+ const saved=await page.evaluate(()=>writes[0][0]);
+ assert.equal(saved.safetyNote,'E2E admin safety');assert.equal(saved.allergies,'E2E new allergy');assert.equal(saved._updatedAt,'original-version');
+ assert.equal(await page.evaluate(()=>reads),before+1,'Editing does not refetch pets a second time for createdAt');
+ await page.evaluate(()=>{hold=true;document.getElementById('petForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
+ await page.waitForFunction(()=>document.getElementById('petForm').dataset.saving==='true');
+ await page.evaluate(()=>{localStorage.setItem('pawpal_current_user',JSON.stringify({id:'user-B'}));hold=false;releaseRead();});
+ await page.waitForFunction(()=>document.getElementById('petForm').dataset.saving==='false');
+ assert.equal(await page.evaluate(()=>writes.length),1,'Changing actor during duplicate check must not write');
+ await page.evaluate(async()=>{localStorage.setItem('pawpal_current_user',JSON.stringify(actor));await mod.switchToPetFormScreen();});
+ await page.locator('#petName').fill('E2E new pet');await page.locator('label').filter({has:page.locator('#dog')}).click();await page.locator('#breed').fill('Known breed');await page.locator('#weight').fill('4');
+ await page.evaluate(()=>document.getElementById('petForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
+ await page.waitForFunction(()=>document.getElementById('petForm').dataset.saving==='false');
+ await page.evaluate(()=>document.getElementById('petForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
+ await page.waitForFunction(()=>document.getElementById('petForm').dataset.saving==='false');
+ const attempts=await page.evaluate(()=>writes.slice(1));assert.equal(attempts.length,2);assert.ok(attempts[0][0]._pendingId);assert.equal(attempts[0][0]._pendingId,attempts[1][0]._pendingId,'New pet retry keeps one creation ID');
+ assert.deepEqual(errors,[]);
+ fs.mkdirSync('docs/verification/sync',{recursive:true});await page.screenshot({path:'docs/verification/sync/pets-form-offline.png',fullPage:true});
+ console.log('PASS offline pet UI: one read/write on double submit, failed save keeps draft, safety note preserved, no redundant createdAt read, actor switch blocks write, create retry keeps ID. No Cloud calls.');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

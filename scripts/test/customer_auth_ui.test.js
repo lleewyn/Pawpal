@@ -26,13 +26,13 @@ test('failed password change keeps form values and does not report success or ch
     vm.createContext(context);
     vm.runInContext(fs.readFileSync('pages/user/modules/settings/settings.js', 'utf8').replace(/^import .*?;/gm, 'const withDeadline = async (fn) => fn();').replace(/^export /gm, ''), context);
     vm.runInContext('globalThis.toasts=[];showToast=(type,message)=>toasts.push({type,message});initChangePasswordForm();', context);
-    await elements.changePasswordForm.submit({ preventDefault() {} });
+    await elements.btnUpdateSecurity.click({ preventDefault() {} });
     assert.equal(context.toasts.length, 1); assert.equal(context.toasts[0].type, 'error');
     assert.equal(elements.newPassword.value, 'NewPassword123!'); assert.equal(resets, 0); assert.equal(accepts, 0);
     assert.equal(context.localStorage.getItem('pawpal_current_user'), original);
 });
 test('missing/forged auth session cannot access the portal using only cached user data', async () => {
-    const context = { localStorage: storage({ pawpal_current_user: '{"id":"forged","role":"customer"}' }), sessionStorage: storage(), alert() {}, window: { location: { href: '/user' }, PawpalCustomerAuth: { request: async () => { throw new Error('No valid session'); } } } };
+    const context = { console: {warn() {}}, localStorage: storage({ pawpal_current_user: '{"id":"forged","role":"customer"}' }), sessionStorage: storage(), alert() {}, window: { addEventListener() {}, location: { href: '/user' }, PawpalCustomerAuth: { request: async () => { throw new Error('No valid session'); } } } };
     vm.createContext(context);
     await vm.runInContext(fs.readFileSync('pages/user/user.js', 'utf8'), context);
     assert.equal(context.window.location.href, '/login'); assert.equal(context.localStorage.getItem('pawpal_current_user'), null);

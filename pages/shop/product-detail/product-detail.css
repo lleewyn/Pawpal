@@ -2148,7 +2148,7 @@ body.product-detail-public{background:#fff;color:#274b39;font-family:Inter,syste
 .product-detail-public .pd-gallery-card{padding:0;background:transparent;border:0;box-shadow:none;gap:16px;height:auto}
 .product-detail-public .pd-gallery-card .product-main-image{aspect-ratio:6/5;height:auto;background:#f5f8f1;border:1px solid #e4eadd;border-radius:9px;overflow:hidden}
 .product-detail-public .pd-gallery-card .product-main-image .main-image{width:100%;height:100%;object-fit:contain;padding:24px;transform:none}
-.product-detail-public .pd-gallery-card .product-thumbnails{gap:10px;overflow-x:auto;padding:0 0 4px}
+.product-detail-public .pd-gallery-card .product-thumbnails{display:flex;flex-wrap:wrap;justify-content:flex-start;align-content:flex-start;gap:10px;overflow-x:visible;padding:0 0 4px}
 .product-detail-public .pd-gallery-card .product-thumbnails .thumbnail{width:88px;height:70px;flex:0 0 88px;border:1px solid #dce5d8;border-radius:7px;background:#fff;box-shadow:none}
 .product-detail-public .pd-gallery-card .product-thumbnails .thumbnail.active{border-color:#315d46}
 .product-detail-public .product-wishlist-btn-large{top:16px;right:16px;width:42px;height:42px;background:#fff;border:1px solid #dce5d8;color:#31553f;box-shadow:0 2px 8px #21493912}

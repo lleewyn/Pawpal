@@ -517,7 +517,7 @@
 
             return `
                 <tr class="variant-row-item" data-attr-1="${escapeValue(c.v1)}" data-attr-2="${escapeValue(c.v2)}">
-                    <td style="font-weight: 600; color: #236B48;">${escapeValue(c.v1 || '--')}${(attr1Name==='M\u00e0u s\u1eafc'||attr2Name==='M\u00e0u s\u1eafc')?'<input class="admin-input variant-color-hex" placeholder="#RRGGBB" value="'+escapeValue(saved.colorHex||'')+'">':''}</td>
+                    <td style="font-weight: 600; color: #236B48;"><div class="variant-label-cell"><span>${escapeValue(c.v1 || '--')}</span>${(attr1Name==='M\u00e0u s\u1eafc'||(attr2Vals.length>0&&attr2Name==='M\u00e0u s\u1eafc'))?'<input class="admin-input variant-color-hex" aria-label="Mã màu" placeholder="#RRGGBB" value="'+escapeValue(saved.colorHex||'')+'">':''}</div></td>
                     ${attr2Vals.length > 0 ? `<td style="font-weight: 500;">${escapeValue(c.v2)}</td>` : ''}
                     <td>
                         <input type="text" class="admin-input variant-sku-input" value="${escapeValue(autoSku)}" placeholder="Mã SKU *" style="height: 28px; font-size: 11.5px; padding: 0 6px; font-family: monospace;">
@@ -639,7 +639,7 @@
             const numeric = id => value(id)==='' ? null : Number(value(id));
             const previous = state.productEditSnapshot;
             const variants = [];
-            const attrKey = label => ({'H\u01b0\u01a1ng v\u1ecb':'flavor_name','K\u00edch th\u01b0\u1edbc':'size_name','M\u00e0u s\u1eafc':'color_name'})[label];
+            const attrKey = label => ({'Ph\u00e2n lo\u1ea1i':'variant_name','H\u01b0\u01a1ng v\u1ecb':'flavor_name','K\u00edch th\u01b0\u1edbc':'size_name','M\u00e0u s\u1eafc':'color_name'})[label];
             if (document.getElementById('chkEnableVariants').checked) {
                 const key1=attrKey(value('attr1Name')),key2=attrKey(value('attr2Name'));
                 if (!key1 || (attr2TagValues.length && (!key2 || key1===key2))) { showToast('Ch\u1ecdn nh\u00f3m thu\u1ed9c t\u00ednh: H\u01b0\u01a1ng v\u1ecb, K\u00edch th\u01b0\u1edbc ho\u1eb7c M\u00e0u s\u1eafc.', 'warning'); return; }
@@ -649,14 +649,14 @@
                     const old=previous?.variants.find(v => v.sku===sku || (v.attr1===row.getAttribute('data-attr-1') && v.attr2===row.getAttribute('data-attr-2')));
                     const v={id:old?.id||crypto.randomUUID(),sku,cost_price:read('.variant-cost-input')===''?null:Number(read('.variant-cost-input')),sale_price:read('.variant-price-input')===''?null:Number(read('.variant-price-input')),compare_at_price:read('.variant-orig-input')||null,stock:read('.variant-stock-input')===''?null:Number(read('.variant-stock-input')),minimum_stock:numeric('newProdMinStock'),status:old?.status||'active',color_id:old?.raw.color_id||null,size_id:old?.raw.size_id||null,flavor_id:old?.raw.flavor_id||null};
                     v.color_hex=read('.variant-color-hex');
-                    v.images=read('.variant-img-input').split(',').map(v=>v.trim()).filter(Boolean);
+                    v.images=old?.images?.length&&read('.variant-img-input')===old.image?[...old.images]:read('.variant-img-input').split(',').map(v=>v.trim()).filter(Boolean);
                     v[key1]=row.getAttribute('data-attr-1');
                     if (attr2TagValues.length) v[key2]=row.getAttribute('data-attr-2');
                     variants.push(v);
                 }
             } else {
                 const old=previous?.variants[0];
-                variants.push({id:old?.id||state.singleVariantId,sku:value('newProdSku'),cost_price:numeric('newProdCostPrice'),sale_price:numeric('newProdPrice'),compare_at_price:value('newProdOriginalPrice')||null,stock:numeric('newProdInitialStock'),minimum_stock:numeric('newProdMinStock'),status:old?.status||'active',color_id:old?.raw.color_id||null,size_id:old?.raw.size_id||null,flavor_id:old?.raw.flavor_id||null});
+                variants.push({id:old?.id||state.singleVariantId,sku:value('newProdSku'),variant_name:old?.raw?.variant_name||'M\u1eb7c \u0111\u1ecbnh',cost_price:numeric('newProdCostPrice'),sale_price:numeric('newProdPrice'),compare_at_price:value('newProdOriginalPrice')||null,stock:numeric('newProdInitialStock'),minimum_stock:numeric('newProdMinStock'),status:old?.status||'active',color_id:old?.raw.color_id||null,size_id:old?.raw.size_id||null,flavor_id:old?.raw.flavor_id||null});
             }
             const category=globalDbCategories.find(c=>c.category_name===value('newProdCategory'));
             const specs={...(previous?.raw.specs && typeof previous.raw.specs==='object'?previous.raw.specs:{})};

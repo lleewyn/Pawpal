@@ -452,6 +452,16 @@
 
     function renderCurrentChat() {
         const timeline=document.getElementById('chatMessagesTimeline');
+        const selected=PawpalChatbot.state?.currentConversation;
+        const unavailable=!selected||['closed','resolved','completed','blocked'].includes(selected.status);
+        for(const id of ['btnRewardPoints','btnConvertToTicket','btnEscalateManager','btnResolveChatAction','btnHeaderResolveChat','btnToggleTakeover','btnSendLiveMessage']){
+            const button=document.getElementById(id);if(button)button.disabled=unavailable;
+        }
+        if(!selected){
+            unsubscribeConversationRoom();
+            const input=document.getElementById('chatMessageInput');if(input)input.disabled=true;
+            const name=document.getElementById('currentChatCustomerName');if(name)name.textContent='Chưa chọn hội thoại';
+        }
         const info=document.getElementById('chatCustomerInfoData');
         const placeholder=document.getElementById('chatCustomerInfoLoading');
         const ready=PawpalChatbot.state.liveLoaded && !PawpalChatbot.state.liveLoadError && PawpalChatbot.state.currentConversation;
@@ -1172,10 +1182,16 @@
             if (PawpalChatbot.state?.currentConversation && PawpalChatbot.state.currentConversation.id) {
                 return PawpalChatbot.state.currentConversation;
             }
-            if (PawpalChatbot.state?.liveConversations && PawpalChatbot.state.liveConversations.length > 0) {
-                return PawpalChatbot.state.liveConversations[0];
-            }
             return null;
+        }
+
+        function targetStillSelected(target, customer) {
+            const c = getCurrentConversationSafe();
+            if (!c || c.id !== target || (customer && c.customerId !== customer) || ['closed', 'resolved', 'completed', 'blocked'].includes(c.status)) {
+                PawpalChatbot.showToast?.('Hội thoại đã đổi hoặc đã kết thúc. Hãy chọn lại ca và mở lại thao tác.', 'error');
+                return false;
+            }
+            return true;
         }
 
         // ====================================================================
@@ -1184,24 +1200,41 @@
 
         let rewardTarget;
         const btnReward=document.getElementById('btnConfirmRewardPoints');
-        document.getElementById('btnRewardPoints')?.addEventListener('click',()=>{
-            const c=getCurrentConversationSafe();if(!c?.customerId)return PawpalChatbot.showToast?.('Cần chọn khách hàng.', 'error');
-            rewardTarget={customer:c.customerId,conversation:c.id,request:crypto.randomUUID()};
+        document.getElementById('btnRewardPoints')?.addEventListener('click',async()=>{
+            const c=getCurrentConversationSafe();if(!c?.customerId||!c.isHandover)return PawpalChatbot.showToast?.('Cần chọn khách hàng và nhận ca trước.', 'error');
+            rewardTarget={customer:c.customerId,conversation:c.id,version:c.updatedAtRaw,request:crypto.randomUUID()};
+            const target=rewardTarget;
             document.getElementById('rewardCustomerName').value=c.customerName;
             document.getElementById('inputCustomRewardPoints').value='';
+            const select=document.getElementById('selectRewardReason');
+            select.replaceChildren(new Option('Đang tải chính sách…',''));btnReward.disabled=true;
             PawpalChatbot.openModal?.('rewardPointsModalOverlay');
+            try {
+                const {data,error}=await supabase.from('chatbot_compensation_policy').select('id,issue_type,max_points,approval_required').eq('is_active',true).order('issue_type').limit(50);
+                if(error)throw error;
+                if(rewardTarget!==target)return;
+                select.replaceChildren(new Option('Chọn chính sách bồi hoàn',''),...(data||[]).map(p=>{
+                    const o=new Option(p.issue_type+' · tối đa '+Number(p.max_points||0).toLocaleString('vi-VN')+' điểm'+(p.approval_required?' · cần phê duyệt':''),p.id);
+                    o.disabled=Boolean(p.approval_required);return o;
+                }));
+                btnReward.disabled=false;
+            } catch {
+                select.replaceChildren(new Option('Không thể tải chính sách. Hãy mở lại thao tác.',''));
+            }
         });
         document.querySelectorAll('.btn-preset-point').forEach(b=>b.addEventListener('click',()=>{document.getElementById('inputCustomRewardPoints').value=b.dataset.point;}));
         btnReward?.addEventListener('click',async()=>{
             if(!rewardTarget||btnReward.disabled)return;
+            if(!targetStillSelected(rewardTarget.conversation,rewardTarget.customer))return;
             const points=Number(document.getElementById('inputCustomRewardPoints').value);
             const select=document.getElementById('selectRewardReason');
             const reason=select.options[select.selectedIndex].text;
+            if(!select.value)return PawpalChatbot.showToast?.('Vui lòng chọn chính sách đang áp dụng.', 'error');
             if(!Number.isSafeInteger(points)||points<=0||points>10000000)return PawpalChatbot.showToast?.('Số điểm không hợp lệ.', 'error');
             const key=JSON.stringify([points,reason]);if(rewardTarget.key&&rewardTarget.key!==key)rewardTarget.request=crypto.randomUUID();rewardTarget.key=key;
             btnReward.disabled=true;
             try{
-                const {error}=await supabase.rpc('adjust_customer_points',{p_customer_id:rewardTarget.customer,p_points:points,p_reason:reason+' | Chat '+rewardTarget.conversation,p_request_id:rewardTarget.request});if(error)throw error;
+                const {error}=await supabase.rpc('adjust_admin_chat_points',{p_request:rewardTarget.request,p_conversation:rewardTarget.conversation,p_expected_updated_at:rewardTarget.version,p_policy:select.value,p_points:points});if(error)throw error;
                 const c=getCurrentConversationSafe();if(c?.id===rewardTarget.conversation)c.contextLoaded=false;
                 PawpalChatbot.closeModal?.('rewardPointsModalOverlay');await PawpalChatbot.loadInboxSummary();
                 PawpalChatbot.showToast?.('Đã lưu điều chỉnh điểm.', 'success');
@@ -1255,6 +1288,7 @@
         document.querySelector('#convertTicketModalOverlay form')?.addEventListener('submit',e=>e.preventDefault());
         convertButton?.addEventListener('click', async () => {
             if (!convertTarget || convertButton.disabled) return;
+            if(!targetStillSelected(convertTarget.id))return;
             const subject=convertTitle.value.trim(), ref=convertRef.value.trim();
             if(subject.length<2 || subject.length>250 || (ref && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref))) {
                 PawpalChatbot.showToast?.('Kiểm tra tiêu đề và mã giao dịch.', 'error');return;
@@ -1301,6 +1335,7 @@
         });
         transferButton?.addEventListener('click',async()=>{
             if(!transferTarget||transferButton.disabled)return;
+            if(!targetStillSelected(transferTarget.id))return;
             if(!selectedHandler)return PawpalChatbot.showToast?.('Chọn nhân viên tiếp nhận.', 'error');
             const reason=document.getElementById('selectEscalateReason');
             const note=reason.options[reason.selectedIndex].text+' | '+document.getElementById('inputEscalateNotes').value.trim();
@@ -1429,6 +1464,7 @@
         document.querySelector('#modalResolveChatOverlay form')?.addEventListener('submit', e => e.preventDefault());
         btnConfirmResolve?.addEventListener('click', async () => {
             if (!resolveTarget || btnConfirmResolve.disabled) return;
+            if(!targetStillSelected(resolveTarget.id))return;
             const target = resolveTarget, reason = selectResolveReason.value, notes = textareaResolveNotes.value.trim();
             const survey=document.getElementById('checkboxSendCsatSurvey').checked;
             const payload = JSON.stringify([reason, notes, survey]);

@@ -491,7 +491,7 @@
                 allRows(()=>db.from('customer').select(customerFields).order('id')),
                 allRows(()=>db.from('pet_profile').select(petFields).order('id')),
                 allRows(()=>db.from('pet_weight_history').select('pet_id,weight,measured_at').order('id')),
-                allRows(()=>db.from('hotel_room').select('id,room_number,status,type:room_type_id(id,room_type,daily_price,status)').order('id'))
+                allRows(()=>db.from('hotel_room').select('id,room_number,status,type:room_type_id(id,room_type,daily_price,status,service_id,billing_minutes)').order('id'))
             ]);
             return {weights,customers,pets,measurements,rooms};
         };
@@ -543,14 +543,16 @@
     async function fetchCatalogRaw({ force = false } = {}) {
         const fetcher=async()=>{
             const db=window.getSupabaseClient();
-            const [services,prices,species,levels]=await Promise.all([
-                allRows(()=>db.from('service').select('*,category:category_id(id,category_code,category_name),level:staff_level_required_id(id,level_name),supported:service_supported_species(species:species_id(id,species_name)),actions:service_care_action(display_order,estimated_duration,care_action:care_action_id(id,action_name,is_active))').order('id')),
+            const [services,prices,species,levels,hotelPrices,taxiPrices]=await Promise.all([
+                allRows(()=>db.from('service').select('*,images:service_image(image_url,display_order,is_thumbnail),category:category_id(id,category_code,category_name),level:staff_level_required_id(id,level_name),supported:service_supported_species(species:species_id(id,species_name)),actions:service_care_action(display_order,estimated_duration,care_action:care_action_id(id,action_name,is_active))').order('id')),
                 allRows(()=>db.from('service_price_matrix').select('*').order('id')),
                 readRows(db.from('pet_species').select('id,species_name').eq('is_active',true).order('species_name')),
-                readRows(db.from('staff_level').select('id,level_name').eq('is_active',true).order('rank_order'))
+                readRows(db.from('staff_level').select('id,level_name').eq('is_active',true).order('rank_order')),
+                allRows(()=>db.from('hotel_room_type').select('*').order('id')),
+                allRows(()=>db.from('taxi_price_rule').select('*').order('id'))
             ]);
             PawpalServices.state.liveSpecies=species;PawpalServices.state.liveLevels=levels;
-            return {services:services.map(s=>({...s,service_category:categoryCode(s)})),prices,priceError:null};
+            return {services:services.map(s=>({...s,service_category:categoryCode(s)})),prices:[...prices,...hotelPrices.map(p=>({...p,unit_price:p.daily_price})),...taxiPrices.map(p=>({...p,unit_price:Number(p.base_price)+Number(p.surcharge)}))],priceError:null};
         };
         return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:catalog',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.CATALOG,force,backgroundRevalidate:false}) : fetcher();
     }
@@ -624,8 +626,10 @@
                     group = 'taxi';
                 }
 
-                const svcPrices = (prices || []).filter(p => p.service_id === svc.id && p.status === 'active' && Date.parse(p.effective_from) <= Date.now() && (!p.effective_to || Date.parse(p.effective_to) > Date.now()));
+                const svcPrices = (prices || []).filter(p => p.service_id === svc.id && p.status === 'active' && Date.parse(p.effective_from) <= Date.now() && (!p.effective_to || Date.parse(p.effective_to) > Date.now())).sort((a,b)=>Number(a.weight_from)-Number(b.weight_from)||Number(a.distance_from||0)-Number(b.distance_from||0));
                 const defaultPriceLabel = priceError ? 'Lỗi tải giá' : 'Chưa có giá';
+                const durations=svcPrices.map(p=>Number(p.duration_minutes)).filter(n=>Number.isFinite(n)&&n>0);
+                const durationLabel=durations.length?`${Math.min(...durations)}${Math.max(...durations)!==Math.min(...durations)?'–'+Math.max(...durations):''} phút`:svc.duration_label;
                 const pricesObj = {
                     under5: defaultPriceLabel,
                     to10: defaultPriceLabel,
@@ -653,7 +657,9 @@
                     group: group,
                     category: group,
                     name: svc.service_name,
-                    duration: svc.estimated_duration ? `${svc.estimated_duration} phút` : 'Chưa cập nhật',
+                    duration: durationLabel || (svc.estimated_duration ? `${svc.estimated_duration} phút` : 'Chưa cập nhật'),
+                    durationMinutes:svc.estimated_duration,tripType:svc.trip_type,packageName:svc.package_name,
+                    benefits:svc.benefits||'',amenities:svc.amenities||'',
                     updatedAt: svc.updated_at,
                     categoryId: svc.category_id,
                     staffLevelId: svc.staff_level_required_id,
@@ -666,7 +672,7 @@
                     minPrice: minPriceVal,
                     desc: svc.description || '',
                     status: (svc.status === 'active') ? 'Đang phục vụ' : 'Tạm ẩn',
-                    image: svc.thumbnail_url || '',
+                    image: [...(svc.images||[])].sort((a,b)=>Number(b.is_thumbnail)-Number(a.is_thumbnail)||a.display_order-b.display_order)[0]?.image_url || '',
                     reviewCount: 0,
                     averageRating: null
                 };
@@ -1180,6 +1186,9 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, () => triggerServiceSync('services:bookings*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'service' }, () => triggerServiceSync('services:catalog*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'service_price_matrix' }, () => triggerServiceSync('services:catalog*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'hotel_room_type' }, () => triggerServiceSync('services:catalog*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'taxi_price_rule' }, () => triggerServiceSync('services:catalog*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'service_image' }, () => triggerServiceSync('services:catalog*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'review' }, () => triggerServiceSync('services:reviews*'))
                 .on('postgres_changes', {event:'*',schema:'public',table:'appointment_item'},()=>{triggerServiceSync('services:bookings*');triggerServiceSync('services:reviews*');})
                 .on('postgres_changes', {event:'*',schema:'public',table:'appointment_record'},()=>triggerServiceSync('services:bookings*'))

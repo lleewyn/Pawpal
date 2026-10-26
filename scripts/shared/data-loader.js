@@ -178,11 +178,11 @@ async function loadProducts() {
                         && Number.isFinite(Number(variant.sale_price)) && Number(variant.sale_price) >= 0;
                 })
                 .sort((a, b) => Number(a.sale_price) - Number(b.sale_price));
-            const baseVariant = pricedVariants[0] || variants[0] || null;
+            const baseVariant = pricedVariants.find(v=>Number(v.available_quantity)>0) || pricedVariants[0] || null;
             const price = baseVariant && baseVariant.sale_price != null ? Number(baseVariant.sale_price) : (Number(item.sale_price) || 0);
             const compareAtPrice = baseVariant?.compare_at_price != null
                 ? Number(baseVariant.compare_at_price)
-                : (baseVariant?.cost_price != null ? Number(baseVariant.cost_price) : (Number(item.cost_price) || null));
+                : null;
             const sale = price !== null && Number.isFinite(compareAtPrice) && compareAtPrice > price;
             const effectiveSku = baseVariant?.sku_variant || item.sku || '';
             let images = [];
@@ -236,15 +236,20 @@ async function loadProducts() {
                 ingredients: item.ingredients || '',
                 benefits: item.benefits || item.description || '',
                 usage: item.usage_instructions || '',
-                specs: item.specs || '',
+                specs: typeof item.specs==='object' ? item.specs?.quy_cach || '' : item.specs || '',
+                expiry:item.specs?.expiry || '',storage:item.specs?.storage || '',
+                features:item.specs?.features || '',productCode:item.product_code || '',
                 description: item.description || '',
-                variants: variants.map(v => ({
+                variants: pricedVariants.map(v => ({
                     id: v.id,
                     sku: v.sku_variant,
-                    name: v.sku_variant,
+                    name: v.variant_name || [v.flavor_name,v.size_name,v.color_name].filter(Boolean).join(' · ') || v.sku_variant,
                     price: Number(v.sale_price) || 0,
                     stock: Number(v.available_quantity) || 0,
-                    comparePrice: v.compare_at_price ? Number(v.compare_at_price) : null
+                    comparePrice: v.compare_at_price != null ? Number(v.compare_at_price) : null,
+                    packaging:v.packaging || '',grossWeight:v.gross_weight_text || '',features:v.features || '',
+                    description:v.description || '',ingredients:v.ingredients || '',
+                    images:(v.image_urls || []).map(url=>/^https?:\/\//i.test(url)||url.startsWith('/')?url:rootPath+url)
                 }))
             };
         });
@@ -331,11 +336,15 @@ async function loadServices() {
     return (data || []).map(svc => {
         const category = ({grooming_spa:'spa',pet_hotel:'hotel',pet_taxi:'taxi'})[svc.category_code] || '';
         const prices = {};
-        for (const p of (category === 'spa' ? svc.prices || [] : [])) {
-            const label = p.weight_to == null ? `Từ ${Number(p.weight_from)} kg` : `${Number(p.weight_from)} – ${Number(p.weight_to)} kg`;
+        for (const p of (svc.prices || [])) {
+            const weight = p.weight_to == null ? `Từ ${Number(p.weight_from)} kg` : `${Number(p.weight_from)} – ${p.weight_to_inclusive ? '' : 'dưới '}${Number(p.weight_to)} kg`;
+            const distance = p.distance_from == null ? '' : ` · ${Number(p.distance_from)} – ${p.distance_to_inclusive ? '' : 'dưới '}${Number(p.distance_to)} km`;
+            const label = category === 'hotel' ? `${p.room_type} · ${p.capacity} bé` : weight + distance;
             prices[label] = Number(p.unit_price);
         }
         const amounts = Object.values(prices).filter(value => Number.isFinite(value) && value >= 0);
+        const durations = (svc.prices || []).map(p=>Number(p.duration_minutes)).filter(n=>Number.isFinite(n)&&n>0);
+        const durationLabel = durations.length ? `${Math.min(...durations)}${Math.max(...durations)!==Math.min(...durations)?'–'+Math.max(...durations):''} phút` : svc.duration_label;
         // Existing presentation assets; service identities, availability and prices remain database-owned.
         const artwork = {
             SPA01:'spa/process/spa01.webp',SPA02:'spa/process/spa01.webp',SPA03:'spa/process/spa03.webp',
@@ -344,15 +353,18 @@ async function loadServices() {
             SPA11:'spa/process/spa11.webp',SPA12:'spa/process/spa10.webp',SPA13:'spa/process/spa13.webp',SPA14:'spa/process/spa14.webp',
             HTL01:'htl01.webp',HTL02:'htl02.jpg',HTL03:'htl03.jpg',HTL04:'htl04.jfif',HTL05:'htl05.webp',HTL06:'htl06.jpg',HTL07:'htl07.jfif',HTL08:'htl08.jfif',TXI01:'txi01.webp'
         };
-        const image = '/assets/images/services/' + (artwork[svc.service_code] || (category === 'taxi' ? 'txi01.webp' : category === 'hotel' ? 'hotel.png' : 'spa.png'));
+        const legacyCode = svc.service_code.replace(/^SVC-/, '').replaceAll('-', '').replace(/^TAX/, 'TXI');
+        const images = (svc.images || []).filter(url => typeof url === 'string' && (/^https:\/\//i.test(url) || url.startsWith('/')));
+        const image = images[0] || '/assets/images/services/' + (artwork[legacyCode] || (category === 'taxi' ? 'txi01.webp' : category === 'hotel' ? 'hotel.png' : 'spa.png'));
         return {
             id:svc.id,dbId:svc.id,serviceId:svc.service_code,name:svc.service_name,description:svc.description || '',
             category,rawCategory:svc.category_code,petType:(svc.species || []).join(', ') || 'Chưa cấu hình loài',
             weightClass:amounts.length ? 'Theo cân nặng' : 'Theo thông tin đặt lịch',
-            price:amounts.length ? Math.min(...amounts) : 0,hasPrice:amounts.length > 0,prices,priceDisplay:'',memberPrice:'',
-            duration:svc.estimated_duration ? `${svc.estimated_duration} phút` : '',
+            price:amounts.length ? Math.min(...amounts) : 0,hasPrice:amounts.length > 0,prices,priceDisplay:svc.prices?.[0]?.billing_unit || '',memberPrice:'',
+            duration:durationLabel || (svc.estimated_duration ? `${svc.estimated_duration} phút` : ''),
+            priceRows:svc.prices || [],tripType:svc.trip_type,packageName:svc.package_name,
             rating:Number(svc.rating),reviewCount:Number(svc.review_count),
-            benefits:'',checklist:(svc.care_actions || []).join(';'),amenities:'',groomerLevel:'',image,images:[image],status:'Đang phục vụ'
+            benefits:svc.benefits || '',checklist:(svc.care_actions || []).join(';'),amenities:svc.amenities || '',groomerLevel:svc.groomer_level || '',image,images:images.length ? images : [image],status:'Đang phục vụ'
         };
     });
 }
@@ -377,7 +389,8 @@ async function getServiceById(serviceId) {
     if (!service) {
         service = services.find(s => {
             const sCode = String(s.serviceId || '').toLowerCase().replace(/[-_\s]/g, '');
-            return sCode === cleanQuery;
+            const legacyCode = String(s.serviceId || '').replace(/^SVC-/, '').replaceAll('-', '').replace(/^TAX/, 'TXI').toLowerCase();
+            return sCode === cleanQuery || legacyCode === cleanQuery;
         });
     }
 

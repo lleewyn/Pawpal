@@ -1,0 +1,26 @@
+[
+  {
+    "intent": "inventory.low_stock",
+    "total": 0,
+    "shown": 0,
+    "bytes": 266,
+    "milliseconds": 527,
+    "oracle": "PASS"
+  },
+  {
+    "intent": "appointment.list",
+    "total": 2,
+    "shown": 2,
+    "bytes": 625,
+    "milliseconds": 522,
+    "oracle": "PASS"
+  },
+  {
+    "intent": "ticket.open",
+    "total": 21,
+    "shown": 20,
+    "bytes": 4250,
+    "milliseconds": 533,
+    "oracle": "PASS"
+  }
+]

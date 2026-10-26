@@ -12,7 +12,19 @@
     let currentEditingServiceSteps = [];
     let selectedPetTypes = [];
     let availablePetSpecies = [];
+    let editingVariantRows = [];
     const esc = (s) => (PawpalServices.escapeHtml ? PawpalServices.escapeHtml(s) : String(s || ''));
+
+    function renderVariantEditor(service) {
+        editingVariantRows = service?.priceRows || [];
+        const editor = document.getElementById('serviceVariantEditor');
+        const legacy = document.getElementById('formReplaceServicePrices').closest('.form-group-item');
+        legacy.hidden = editingVariantRows.length > 0;
+        legacy.style.display = editingVariantRows.length ? 'none' : '';
+        editor.hidden = !editingVariantRows.length;
+        editor.style.display = editingVariantRows.length ? '' : 'none';
+        editor.innerHTML = editingVariantRows.length ? `<label class="form-label-clean">Biến thể và giá dịch vụ</label><div style="overflow-x:auto;overscroll-behavior:contain"><table class="admin-table" style="min-width:0;width:100%;table-layout:fixed"><thead><tr><th style="width:44%">Biến thể</th><th>Giá niêm yết</th>${service.group==='spa'?'<th>Thời lượng (phút)</th>':''}</tr></thead><tbody>${editingVariantRows.map((p,i)=>`<tr><td><strong>${esc(p.variant_code||'')}</strong><div style="color:var(--text-muted);font-size:11.5px">${esc(p.variant_condition||'')}${p.distance_from!=null?` · ${Number(p.distance_from)}–${Number(p.distance_to)} km`:''}</div></td><td><input type="number" min="0" step="1" class="admin-input" aria-label="Giá ${esc(p.variant_code)}" data-variant-price="${i}" value="${Number(p.unit_price)}"/></td>${service.group==='spa'?`<td><input type="number" min="1" max="10080" step="1" class="admin-input" aria-label="Thời lượng ${esc(p.variant_code)}" data-variant-duration="${i}" value="${Number(p.duration_minutes||service.durationMinutes)}"/></td>`:''}</tr>`).join('')}</tbody></table></div>` : '';
+    }
 
     function parsePetTypes(str) {
         if (!str) return [];
@@ -411,6 +423,9 @@
         }
 
         document.getElementById('formServiceDuration').value='';
+        document.getElementById('formServiceBenefits').value='';
+        document.getElementById('formServiceAmenities').value='';
+        renderVariantEditor(null);
         for(const id of ['formPriceUnder5','formPrice5To10','formPrice10To20','formPriceOver20','formServiceCommission'])document.getElementById(id).value='';
         document.getElementById('formReplaceServicePrices').checked=false;
         currentEditingServiceSteps=[];renderServiceSteps();selectedPetTypes=[];
@@ -448,7 +463,10 @@
             if (idInput) idInput.value = svc.code || svc.id || '';
             if (groupSelect) groupSelect.value = svc.group === 'hotel' ? 'Hotel' : (svc.group === 'taxi' ? 'Taxi' : 'Spa');
             if (nameInput) nameInput.value = svc.name || '';
-            if (durationInput) durationInput.value = svc.duration || '';
+            if (durationInput) durationInput.value = svc.durationMinutes || '';
+            document.getElementById('formServiceBenefits').value=svc.benefits||'';
+            document.getElementById('formServiceAmenities').value=svc.amenities||'';
+            renderVariantEditor(svc);
             if (descInput) descInput.value = svc.desc || '';
             if (commInput) commInput.value = svc.commission ?? '';
             if (staffLevelSelect) staffLevelSelect.value = svc.staffLevelId || '';
@@ -464,7 +482,7 @@
             const p10To20 = document.getElementById('formPrice10To20');
             const pOver20 = document.getElementById('formPriceOver20');
 
-            if (pUnder5) pUnder5.value = prices.under5 || '120.000';
+            if (pUnder5) pUnder5.value = /^\d/.test(prices.under5||'') ? prices.under5 : '';
             if (p5To10) p5To10.value = /^\d/.test(prices.to10||'') ? prices.to10 : '';
             if (p10To20) p10To20.value = /^\d/.test(prices.to20||'') ? prices.to20 : '';
             if (pOver20) pOver20.value = /^\d/.test(prices.over20||'') ? prices.over20 : '';
@@ -487,6 +505,16 @@
             const duration=input('formServiceDuration');if(!/^\d+\s*(phút)?$/i.test(duration))throw Error('Thời lượng phải là số phút nguyên dương.');
             const group=input('formServiceGroup');
             const details={service_code:code,service_name:input('formServiceName'),duration_minutes:parseInt(duration,10),category_code:group==='Hotel'?'pet_hotel':group==='Taxi'?'pet_taxi':'grooming_spa',description:input('formServiceDesc'),status:input('formServiceStatus')==='Đang phục vụ'?'active':'inactive',commission_rate:input('formServiceCommission')||null,staff_level_id:input('formServiceStaffLevel')||null,steps:currentEditingServiceSteps,species_ids:selectedPetTypes.map(name=>PawpalServices.state.liveSpecies.find(s=>s.species_name===name)?.id)};
+            details.benefits=input('formServiceBenefits');details.amenities=input('formServiceAmenities');
+            if(editingVariantRows.length){
+                if(old?.group!==(group==='Hotel'?'hotel':group==='Taxi'?'taxi':'spa'))throw Error('Dịch vụ đã có biến thể; vui lòng giữ đúng nhóm dịch vụ.');
+                details.variant_updates=editingVariantRows.map((p,i)=>{
+                    const raw=document.querySelector(`[data-variant-price="${i}"]`).value;
+                    const mins=document.querySelector(`[data-variant-duration="${i}"]`)?.value;
+                    if(!/^\d+$/.test(raw)||(mins!==undefined&&!/^\d+$/.test(mins)))throw Error('Giá và thời lượng phải là số nguyên hợp lệ.');
+                    return {id:p.id,updated_at:p.updated_at,unit_price:Number(raw),duration_minutes:mins===undefined?null:Number(mins)};
+                });
+            }
             if(!details.species_ids.length||details.species_ids.some(id=>!id))throw Error('Vui lòng chọn loài được hỗ trợ từ danh mục.');
             let prices=null;
             if(document.getElementById('formReplaceServicePrices').checked){

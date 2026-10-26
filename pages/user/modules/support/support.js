@@ -2,6 +2,7 @@
  * modules/support/support.js - Module logic cho Trung tâm hỗ trợ PawPal (độc lập 100%)
  */
 import '/scripts/shared/support-handler.js';
+import {vietnamDateTimeInput} from '/scripts/shared/booking-time.mjs';
 let disposeSupportView=()=>{};
 export function dispose(){disposeSupportView();disposeSupportView=()=>{};}
 
@@ -28,7 +29,7 @@ export function initSupportTickets() {
     dispose();
     ensureSupportReady(async () => {
         let activeTicketId = null;
-        let activeRealtimeChannel = null;
+        let viewOwnerId = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id;
         let currentSelectedRating = 5;
         let currentFilter = 'all';
 
@@ -181,27 +182,19 @@ export function initSupportTickets() {
                 return `${parts[0]} • ${parts[1]}`;
             }
             try {
-                const d = new Date(timeStr);
-                if (isNaN(d.getTime())) return timeStr;
-                const hh = String(d.getHours()).padStart(2, '0');
-                const mm = String(d.getMinutes()).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                const mo = String(d.getMonth() + 1).padStart(2, '0');
-                const yyyy = d.getFullYear();
-                return `${hh}:${mm} • ${dd}/${mo}/${yyyy}`;
+                const value = vietnamDateTimeInput(timeStr);
+                if (!value) return timeStr;
+                return `${value.slice(11,16)} • ${value.slice(8,10)}/${value.slice(5,7)}/${value.slice(0,4)}`;
             } catch (e) {
                 return timeStr;
             }
         }
 
         function closeTicketModal() {
-            if (activeRealtimeChannel) {
-                try {
-                    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                    if (db) db.removeChannel(activeRealtimeChannel);
-                } catch (e) {}
-                activeRealtimeChannel = null;
-            }
+            const reply = document.getElementById('replyTextarea');
+            const comment = document.getElementById('ratingComment');
+            if (reply) reply.value = '';
+            if (comment) comment.value = '';
             if (detailModalOverlay) {
                 detailModalOverlay.classList.add('d-none');
             }
@@ -301,7 +294,13 @@ export function initSupportTickets() {
             }
         }
 
-        disposeSupportView=()=>{closeTicketModal();detailModalOverlay?.remove();window.PawPalSupport?.stopRealtime?.();document.removeEventListener('tickets_updated',onTicketsUpdated);document.removeEventListener('keydown',onSupportEscape);};
+        disposeSupportView=()=>{
+            closeTicketModal(); detailModalOverlay?.remove(); window.PawPalSupport?.stopRealtime?.();
+            document.removeEventListener('tickets_updated',onTicketsUpdated);
+            document.removeEventListener('support_load_error',onSupportLoadError);
+            document.removeEventListener('keydown',onSupportEscape);
+            document.getElementById('supportSyncError')?.remove();
+        };
 
         function renderTimelineMessages(ticket) {
             if (!ticketTimelineMessages) return;
@@ -340,64 +339,6 @@ export function initSupportTickets() {
             ticketTimelineMessages.scrollTop = ticketTimelineMessages.scrollHeight;
         }
 
-        function subscribeTicketRealtime(ticketId) {
-            if (activeRealtimeChannel) {
-                try {
-                    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-                    if (db) db.removeChannel(activeRealtimeChannel);
-                } catch (e) {}
-                activeRealtimeChannel = null;
-            }
-
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (!db || !ticketId) return;
-
-            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ticketId);
-            if (!isUuid) return;
-
-            try {
-                activeRealtimeChannel = db
-                    .channel(`user_ticket_${ticketId}`)
-                    .on('postgres_changes', {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'support_ticket_message',
-                        filter: `ticket_id=eq.${ticketId}`
-                    }, async (payload) => {
-                        const newMsg = payload.new;
-                        if (!newMsg) return;
-                        if (newMsg.is_internal || newMsg.sender_type === 'internal_note') return;
-
-                        await window.PawPalSupport.loadTickets();
-                        const updatedTickets = window.PawPalSupport.getTickets();
-                        const current = updatedTickets.find(t => t.id === ticketId || t.rawId === ticketId);
-                        if (current && activeTicketId === ticketId) {
-                            if(newMsg.sender_type==='system')showTicketDetail(ticketId);else renderTimelineMessages(current);
-                        }
-                        renderTable();
-                    })
-                    .on('postgres_changes', {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: 'support_ticket',
-                        filter: `id=eq.${ticketId}`
-                    }, async () => {
-                        await window.PawPalSupport.loadTickets();
-                        if (activeTicketId === ticketId) {
-                            showTicketDetail(ticketId);
-                        }
-                        renderTable();
-                    })
-                    .subscribe((status) => {
-                        if (status === 'SUBSCRIBED') {
-                            console.log(`[Support Realtime] Kết nối kênh Realtime vé #${ticketId} thành công ✓`);
-                        }
-                    });
-            } catch (err) {
-                console.warn('[Support Realtime] Lỗi đăng ký kênh:', err);
-            }
-        }
-
         function showTicketDetail(ticketId) {
             if (!detailTicketTitle || !ticketTimelineMessages || !replyEditorArea || !ratingFeedbackArea || !detailModalOverlay) {
                 return;
@@ -407,6 +348,11 @@ export function initSupportTickets() {
             const ticket = tickets.find(t => t.id === ticketId);
             if (!ticket) return;
 
+            if (activeTicketId !== ticketId) {
+                const reply = document.getElementById('replyTextarea');
+                if (reply) reply.value = '';
+                currentSelectedRating = 5;
+            }
             activeTicketId = ticketId;
 
             const displayId = getDisplayTicketId(ticket.id);
@@ -459,7 +405,7 @@ export function initSupportTickets() {
             if (detailTicketSubmeta) {
                 const createdTime = ticket.createdAt || (ticket.messages?.[0]?.time) || '';
                 const timeStr = formatDisplayTime(createdTime);
-                detailTicketSubmeta.innerHTML = `${parsed.sub ? parsed.sub + ' &bull; ' : ''}${timeStr ? 'Gửi lúc: ' + timeStr : ''}`;
+                detailTicketSubmeta.innerHTML = `${parsed.sub ? escapeHtml(parsed.sub) + ' &bull; ' : ''}${timeStr ? 'Gửi lúc: ' + escapeHtml(timeStr) : ''}`;
             }
 
             // 2. Render Thẻ Ngữ cảnh Dịch vụ / Đơn hàng
@@ -664,8 +610,7 @@ export function initSupportTickets() {
             document.body.classList.add('ticket-modal-open');
             ticketTimelineMessages.scrollTop = ticketTimelineMessages.scrollHeight;
 
-            // Đăng ký Supabase Realtime 2 chiều cho hội thoại vé này
-            subscribeTicketRealtime(ticket.rawId || ticket.id);
+            // The shared support channel owns invalidation for list and open detail.
         }
 
         // Lắng nghe sự kiện đóng Popup Modal
@@ -690,6 +635,7 @@ export function initSupportTickets() {
 
         if (btnSendReply) {
             btnSendReply.addEventListener('click', async () => {
+                if (btnSendReply.disabled) return;
                 const textarea = document.getElementById('replyTextarea');
                 if (!textarea) return;
                 const text = textarea.value.trim();
@@ -699,13 +645,16 @@ export function initSupportTickets() {
                 btnSendReply.textContent = 'Đang gửi...';
 
                 const finalContent = text;
+                const targetTicketId = activeTicketId;
 
                 try {
-                    await window.PawPalSupport.sendTicketReply(activeTicketId, finalContent);
+                    await window.PawPalSupport.sendTicketReply(targetTicketId, finalContent);
+                    if (activeTicketId !== targetTicketId || !textarea.isConnected) return;
                     textarea.value = '';
                     showTicketDetail(activeTicketId);
                     renderTable();
                 } catch (error) {
+                    if (activeTicketId !== targetTicketId || !textarea.isConnected) return;
                     console.error('[Support] Không thể gửi phản hồi:', error);
                     window.alert(error.message || 'Không thể gửi phản hồi. Vui lòng thử lại.');
                 } finally {
@@ -764,15 +713,17 @@ export function initSupportTickets() {
 
         if (btnSubmitRating) {
             btnSubmitRating.addEventListener('click', async () => {
-                if (!activeTicketId) return;
+                if (!activeTicketId || btnSubmitRating.disabled) return;
                 const commentInput = document.getElementById('ratingComment');
                 const comment = commentInput ? commentInput.value.trim() : '';
 
                 btnSubmitRating.disabled = true;
                 btnSubmitRating.textContent = 'Đang lưu...';
+                const targetTicketId = activeTicketId;
 
                 try {
-                    await window.PawPalSupport.closeAndRateTicket(activeTicketId, currentSelectedRating, comment);
+                    await window.PawPalSupport.closeAndRateTicket(targetTicketId, currentSelectedRating, comment);
+                    if (activeTicketId !== targetTicketId || !btnSubmitRating.isConnected) return;
                     renderTable();showTicketDetail(activeTicketId);
                 } catch(error) { alert(error.message || 'Không thể lưu đánh giá. Vui lòng thử lại.'); }
                 finally {const saved=window.PawPalSupport.getTickets().find(t=>t.id===activeTicketId);btnSubmitRating.disabled=Boolean(saved?.rating);btnSubmitRating.textContent=saved?.rating?'Đã đánh giá':'Gửi đánh giá';}
@@ -780,8 +731,32 @@ export function initSupportTickets() {
         }
 
         // Cập nhật bảng dữ liệu khi có thay đổi (triệt tiêu vòng lặp gọi lại loadTickets)
-        function onTicketsUpdated(){renderTable();}
+        function onTicketsUpdated(){
+            document.getElementById('supportSyncError')?.remove();
+            const owner = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id;
+            if (owner !== viewOwnerId) {
+                viewOwnerId = owner; closeTicketModal();
+                for (const node of [ticketTimelineMessages,detailTicketTitle,detailTicketSubmeta,detailTicketIdPill,detailTicketContextCard,detailTicketResolutionCard]) node?.replaceChildren();
+            }
+            renderTable();
+            if (activeTicketId && !detailModalOverlay?.classList.contains('d-none')) {
+                const ticket = window.PawPalSupport.getTickets().find(t => t.id === activeTicketId);
+                if (!ticket) { closeTicketModal(); return; }
+                const comment = document.getElementById('ratingComment');
+                const draft = comment?.value || '';
+                showTicketDetail(activeTicketId);
+                if (!ticket.rating && comment?.isConnected) comment.value = draft;
+            }
+        }
+        function onSupportLoadError(){
+            if (document.getElementById('supportSyncError') || !ticketsTableArea?.isConnected) return;
+            const message = document.createElement('p');
+            message.id = 'supportSyncError'; message.className = 'text-danger small'; message.setAttribute('role','alert');
+            message.textContent = 'Chưa tải được cập nhật mới. Dữ liệu đang hiển thị có thể chưa đầy đủ. Vui lòng tải lại để kiểm tra.';
+            ticketsTableArea.before(message);
+        }
         document.addEventListener('tickets_updated',onTicketsUpdated);
+        document.addEventListener('support_load_error',onSupportLoadError);
 
         // Lắng nghe sự kiện lưu trữ giữa các Tab (Admin và User)
         renderSkeletonRows();

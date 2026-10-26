@@ -1452,7 +1452,8 @@
         function updateCategoryOptions() {
             const val = catSelect ? catSelect.value : 'Spa';
             const rooms=document.getElementById('newBookingHotelRoomType');
-            if(rooms){const selected=rooms.value;rooms.replaceChildren(new Option('Chọn phòng từ danh mục',''),...(PawpalServices.state.liveRooms||[]).filter(r=>['active','available'].includes(r.status)&&r.type?.status==='active').map(r=>new Option(r.room_number+' · '+r.type.room_type+' · '+Number(r.type.daily_price).toLocaleString('vi-VN')+' đ/ngày',r.id)));rooms.value=selected;}
+            if(rooms)rooms.replaceChildren(new Option('Chọn gói dịch vụ trước',''));
+            const trip=document.getElementById('newBookingTaxiTripType');if(trip)trip.disabled=false;
             updateTaxiReturnFields();
             if (hotelFields) hotelFields.style.display = (val === 'Hotel') ? 'block' : 'none';
             if (taxiFields) taxiFields.style.display = (val === 'Taxi') ? 'block' : 'none';
@@ -1775,6 +1776,10 @@
             if (serviceInput) serviceInput.value = s.name;
             if (serviceHidden) serviceHidden.value = s.name;
             if (serviceHidden) serviceHidden.dataset.serviceId=s.dbId;
+            const rooms=document.getElementById('newBookingHotelRoomType');
+            if(rooms)rooms.replaceChildren(new Option('Chọn phòng từ danh mục',''),...(PawpalServices.state.liveRooms||[]).filter(r=>['active','available'].includes(r.status)&&r.type?.status==='active'&&r.type.service_id===s.dbId).map(r=>new Option(r.room_number+' · '+r.type.room_type+' · '+Number(r.type.daily_price).toLocaleString('vi-VN')+' đ/'+(r.type.billing_minutes===60?'giờ':'ngày'),r.id)));
+            const trip=document.getElementById('newBookingTaxiTripType');
+            if(trip){trip.disabled=Boolean(s.tripType);if(s.tripType)trip.value=s.tripType;updateTaxiReturnFields();}
             updateGroomingFields();
 
             if (serviceSelectedCard) {

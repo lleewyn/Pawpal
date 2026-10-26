@@ -270,7 +270,7 @@ let selectedVariantState = {
 };
 
 function getProductAttributeGroups(product) {
-    const options=(product.variants||[]).filter(v=>Number(v.stock)>0).map(v=>({label:v.name||v.sku,variantId:v.id,stock:v.stock,priceDelta:Number(v.price)-Number(product.price)}));
+    const options=(product.variants||[]).map(v=>({label:(v.name||v.sku)+(Number(v.stock)>0?'':' · Hết hàng'),variantId:v.id,stock:v.stock,variant:v,priceDelta:Number(v.price)-Number(product.price)}));
     return options.length?[{name:'Phân loại',options}]:[];
 }
 
@@ -290,7 +290,7 @@ function renderProductVariants(product) {
 
     const selectedOptions = {};
     attrGroups.forEach((group, idx) => {
-        selectedOptions[idx] = group.options[0];
+        selectedOptions[idx] = group.options.find(v=>Number(v.stock)>0) || group.options[0];
     });
 
     function updateCalculatedPrice() {
@@ -313,6 +313,9 @@ function renderProductVariants(product) {
             id: selectedOptions[0]?.variantId,
             name: variantName,
             price: finalPrice,
+            stock:selectedOptions[0]?.stock || 0,
+            sku:selectedOptions[0]?.variant?.sku,
+            image:selectedOptions[0]?.variant?.images?.[0] || product.image,
             attributes: { ...selectedOptions }
         };
 
@@ -320,6 +323,11 @@ function renderProductVariants(product) {
         if (priceEl) {
             priceEl.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(finalPrice).replace('₫', 'đ');
         }
+        const variant=selectedOptions[0]?.variant;
+        if(variant)renderProductDetails({...product,price:finalPrice,oldPrice:variant.comparePrice,sku:variant.sku,stock:variant.stock,
+            description:variant.description||product.description,ingredients:variant.ingredients||product.ingredients,
+            specs:variant.packaging||product.specs,image:variant.images?.[0]||product.image,
+            images:[...new Set([...(product.images||[]),...(product.variants||[]).flatMap(v=>v.images||[])])]}, {preserveVariants:true});
     }
 
     attrGroups.forEach((group, gIdx) => {
@@ -336,7 +344,8 @@ function renderProductVariants(product) {
         group.options.forEach((opt, oIdx) => {
             const chipBtn = document.createElement('button');
             chipBtn.type = 'button';
-            chipBtn.className = `pd-variant-chip ${oIdx === 0 ? 'active' : ''}`;
+            chipBtn.className = `pd-variant-chip ${selectedOptions[gIdx]===opt ? 'active' : ''}`;
+            chipBtn.disabled=Number(opt.stock)<=0;
             chipBtn.textContent = opt.label;
 
             chipBtn.addEventListener('click', (e) => {
@@ -372,8 +381,8 @@ async function handleAddToCart() {
         return;
     }
     
-    if (quantity > product.stock) {
-        showToast(`Chỉ còn ${product.stock} sản phẩm trong kho`, 'error');
+    if (quantity > (selectedVariantState.stock ?? product.stock)) {
+        showToast(`Chỉ còn ${selectedVariantState.stock ?? product.stock} sản phẩm trong kho`, 'error');
         return;
     }
 
@@ -386,6 +395,8 @@ async function handleAddToCart() {
     const itemToAdd = {
         ...product,
         variantId: selectedVariantState.id || product.variantId,
+        sku:selectedVariantState.sku || product.sku,
+        image:selectedVariantState.image || product.image,
         price: selectedVariantState.price ?? product.price,
         selectedVariant: selectedVariantState.name || 'Tiêu chuẩn'
     };
@@ -413,8 +424,8 @@ function handleBuyNow() {
         return;
     }
     
-    if (quantity > product.stock) {
-        showToast(`Chỉ còn ${product.stock} sản phẩm trong kho`, 'error');
+    if (quantity > (selectedVariantState.stock ?? product.stock)) {
+        showToast(`Chỉ còn ${selectedVariantState.stock ?? product.stock} sản phẩm trong kho`, 'error');
         return;
     }
     
@@ -434,8 +445,8 @@ function handleBuyNow() {
             price: finalPrice,
             selectedVariant: finalVariant,
             quantity: quantity,
-            image: product.image,
-            stock: product.stock
+            image: selectedVariantState.image || product.image,
+            stock: selectedVariantState.stock ?? product.stock
         }];
         
         sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
@@ -694,7 +705,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-function renderProductDetails(product) {
+function renderProductDetails(product, {preserveVariants=false}={}) {
     const breadcrumbCategory = document.getElementById('breadcrumbCategory');
     const breadcrumbProduct = document.getElementById('breadcrumbProduct');
     if (breadcrumbCategory) breadcrumbCategory.textContent = product.categoryName || 'Sản phẩm';
@@ -712,10 +723,12 @@ function renderProductDetails(product) {
         const gallery = (product.images && product.images.length > 0) 
             ? product.images 
             : [product.image];
+        const activeIndex = Math.max(0, gallery.indexOf(product.image));
+        currentGalleryIndex = activeIndex;
         
         gallery.forEach((imgSrc, index) => {
             const thumb = document.createElement('div');
-            thumb.className = `thumbnail ${index === 0 ? 'active' : ''}`;
+            thumb.className = `thumbnail ${index === activeIndex ? 'active' : ''}`;
             
             const img = document.createElement('img');
             img.src = imgSrc;
@@ -870,10 +883,10 @@ function renderProductDetails(product) {
                 detailsHtml += `<tr><th>Xuất xứ</th><td>${escapeHtml(product.origin)}</td></tr>`;
             }
             if (product.specs || product.spec) {
-                detailsHtml += `<tr><th>Quy cách đóng gói</th><td>${product.specs || product.spec}</td></tr>`;
+                detailsHtml += `<tr><th>Quy cách đóng gói</th><td>${escapeHtml(product.specs || product.spec)}</td></tr>`;
             }
-            const expiryText = product.expiry || '18 – 24 tháng kể từ ngày sản xuất';
-            const storageText = product.storage || 'Nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp';
+            const expiryText = escapeHtml(product.expiry || 'Chưa có thông tin');
+            const storageText = escapeHtml(product.storage || 'Chưa có thông tin');
             detailsHtml += `<tr><th>Hạn sử dụng</th><td>${expiryText}</td></tr>
                             <tr><th>Bảo quản</th><td>${storageText}</td></tr>
                             </table></div></div>`;
@@ -886,16 +899,14 @@ function renderProductDetails(product) {
         dynamicDetailsContainer.innerHTML = detailsHtml;
     }
     
-    loadPublicProductDetails(product);
-
-    renderProductVariants(product);
+    if(!preserveVariants){loadPublicProductDetails(product);renderProductVariants(product);}
 
     const addToCartBtn = document.getElementById('addToCartBtn');
     const buyNowBtn = document.getElementById('buyNowBtn');
-    if (product.stock <= 0) {
-        if (addToCartBtn) addToCartBtn.disabled = true;
-        if (buyNowBtn) buyNowBtn.disabled = true;
-    }
+    if (addToCartBtn) addToCartBtn.disabled = product.stock<=0;
+    if (buyNowBtn) buyNowBtn.disabled = product.stock<=0;
+    const qty=document.getElementById('quantity');
+    if(qty){qty.max=String(Math.max(0,product.stock));if(Number(qty.value)>product.stock)qty.value=String(product.stock>0?product.stock:1);}
 }
 function escapeHtml(value) { return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 

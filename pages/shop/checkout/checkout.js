@@ -1,5 +1,6 @@
 
 import { voucherBelongsToUser } from '/scripts/shared/cart-state.mjs';
+import { readCheckoutRequest, writeCheckoutRequest } from '/scripts/shared/checkout-request.mjs';
 
 const checkoutState = {
     cart: [],
@@ -19,6 +20,7 @@ const checkoutState = {
     pointsUsed: 0,
     pointValue: 0,
     requestId: crypto.randomUUID(),
+    processing: false,
     totals: {
         subtotal: 0,
         shippingFee: 0,
@@ -150,6 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         checkoutState.user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (!checkoutState.user?.id || checkoutState.user.is_temporary) { window.location.href='/login'; return; }
         PENDING_POINTS_KEY='pawpal_checkout_points_used:'+checkoutState.user.id;
+        if (await recoverCheckoutOrder()) return;
         
         const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
         
@@ -1253,7 +1256,30 @@ async function finalizeCheckoutCart() {
     sessionStorage.removeItem('pawpal_checkout_selection');
 }
 
+function checkoutActorIsCurrent() {
+    return JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id === checkoutState.user?.id;
+}
+
+async function recoverCheckoutOrder() {
+    const pending = readCheckoutRequest(sessionStorage, checkoutState.user.id);
+    if (!pending) return false;
+    checkoutState.requestId = pending.id;
+    const db = window.getSupabaseClient?.() || window.SupabaseClient;
+    if (!db) throw new Error('Chưa kết nối để kiểm tra yêu cầu đặt hàng trước.');
+    const result = await db.from('sales_order').select('id').eq('id', pending.id)
+        .eq('customer_id', checkoutState.user.id).maybeSingle();
+    if (result.error) throw new Error('Chưa xác minh được đơn hàng trước. Vui lòng kiểm tra lại trước khi đặt tiếp.');
+    if (!checkoutActorIsCurrent()) throw new Error('Phiên đăng nhập đã thay đổi. Vui lòng tải lại trang.');
+    if (!result.data) return false;
+    if (result.data.id !== pending.id) throw new Error('Chưa xác minh được mã đơn hàng.');
+    writeCheckoutRequest(sessionStorage, checkoutState.user.id, pending.id, {confirmed: true, cartCleaned: pending.cartCleaned});
+    // A lost cart response may already have applied its mutation. Do not subtract twice.
+    window.location.href = '/payment-success?orderId=' + encodeURIComponent(pending.id) + (pending.cartCleaned ? '' : '&cartReview=1');
+    return true;
+}
+
 async function handleCheckout() {
+    if (checkoutState.processing) return;
     const btnCheckout = document.getElementById('btn-checkout');
     if (btnCheckout) {
         if (btnCheckout.disabled) return;      
@@ -1261,13 +1287,22 @@ async function handleCheckout() {
         btnCheckout.dataset.originalText = btnCheckout.textContent;
         btnCheckout.textContent = 'Đang xử lý...';
     }
+    checkoutState.processing = true;
 
     const restoreBtn = () => {
+        checkoutState.processing = false;
         if (btnCheckout) {
             btnCheckout.disabled = false;
             btnCheckout.textContent = btnCheckout.dataset.originalText || 'Xác nhận đặt hàng';
         }
     };
+
+    try {
+        if (!checkoutActorIsCurrent()) throw new Error('Phiên đăng nhập đã thay đổi. Vui lòng tải lại trang.');
+        if (await recoverCheckoutOrder()) return;
+    } catch (error) {
+        showToast(error.message, 'error'); restoreBtn(); return;
+    }
 
     // Kiểm tra điều kiện tiên quyết: Giỏ hàng và Kho hàng
     const cartValidation = validateCheckoutCart();
@@ -1341,6 +1376,7 @@ async function handleCheckout() {
     try {
         if(!orderData.payment.configId)throw new Error('Vui lòng chọn phương thức thanh toán.');
         const prepared=await window.API.prepareOwnOrder(orderData);
+        if (!checkoutActorIsCurrent()) throw new Error('Phiên đăng nhập đã thay đổi. Vui lòng tải lại trang.');
         const quote=prepared.quote;
         if(Number(checkoutState.totals.grandTotal)!==Number(quote.total)) {
             const prices=new Map((quote.lines||[]).map(line=>[line.variant_id,Number(line.unit_price)]));
@@ -1355,11 +1391,21 @@ async function handleCheckout() {
             restoreBtn();return;
         }
         orderData._prepared=prepared;
+        writeCheckoutRequest(sessionStorage, checkoutState.user.id, checkoutState.requestId);
         const response=await window.API.submitOrder(orderData);
         if(!response.success)throw response.error||new Error('Không thể tạo đơn hàng.');
-        await finalizeCheckoutCart();
+        if(response.orderId!==checkoutState.requestId)throw new Error('Chưa xác minh được mã đơn hàng. Vui lòng kiểm tra lại trước khi đặt tiếp.');
+        if (!checkoutActorIsCurrent()) return;
+        writeCheckoutRequest(sessionStorage, checkoutState.user.id, response.orderId, {confirmed: true});
+        let cartReview = false;
+        try {
+            await finalizeCheckoutCart();
+            if (!checkoutActorIsCurrent()) return;
+            writeCheckoutRequest(sessionStorage, checkoutState.user.id, response.orderId, {confirmed: true, cartCleaned: true});
+        } catch { cartReview = true; }
+        if (!checkoutActorIsCurrent()) return;
         localStorage.removeItem('pawpal_applied_voucher_code');localStorage.removeItem(PENDING_POINTS_KEY);
-        window.location.href='/payment-success?orderId='+encodeURIComponent(response.orderId);
+        window.location.href='/payment-success?orderId='+encodeURIComponent(response.orderId)+(cartReview?'&cartReview=1':'');
     } catch(error) {
         showToast(error.message||'Không thể đặt hàng. Vui lòng thử lại.','error');restoreBtn();
     }

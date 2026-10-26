@@ -1,51 +1,23 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { createCustomerSupportService } = require('../api/customer_support');
-
-const TICKET_ID = '10000000-0000-4000-8000-000000000001';
-
-function fixture({ owner = true, closed = false, insertError = null, updateError = null } = {}) {
-    const writes = [];
-    const admin = {
-        from(table) {
-            if (table === 'support_ticket_message') {
-                return {
-                    insert(rows) {
-                        writes.push({ table, rows });
-                        return { select() { return { async single() { return { data: { id: 'message-1', ...rows[0] }, error: insertError }; } }; } };
-                    }
-                };
-            }
-            return {
-                select() { return this; }, eq() { return this; },
-                async maybeSingle() { return { data: owner ? { id: TICKET_ID, status: closed ? 'completed' : 'pending' } : null, error: null }; },
-                update(values) { writes.push({ table, values }); return { eq() { return this; }, then(resolve) { return Promise.resolve({ error: updateError }).then(resolve); } }; }
-            };
-        }
-    };
-    return { service: createCustomerSupportService(admin), writes };
-}
-
-test('ghi phản hồi User vào CSDL và chuyển phiếu sang đang xử lý', async () => {
-    const { service, writes } = fixture();
-    const message = await service.reply('customer-1', { ticketId: TICKET_ID, content: '  Tôi bổ sung thông tin.  ' });
-    assert.equal(message.content, 'Tôi bổ sung thông tin.');
-    assert.equal(writes[0].rows[0].sender_type, 'user');
-    assert.equal(writes[1].values.status, 'processing');
+const test=require('node:test'),assert=require('node:assert/strict');
+const {createCustomerSupportService}=require('../api/customer_support');
+const ticketId='10000000-0000-4000-8000-000000000001',requestId='20000000-0000-4000-8000-000000000001';
+function fixture(error=null,ack=requestId){const calls=[];const service=createCustomerSupportService({
+ from(){throw Error('Direct table access forbidden');},async rpc(name,args){calls.push({name,args});return {data:ack,error};}
+});return {service,calls};}
+test('support reply uses one caller-scoped atomic RPC with a stable request ID',async()=>{
+ const f=fixture();const message=await f.service.reply('customer-A',{ticketId,requestId,content:'  E2E reply  '});
+ assert.equal(message.id,requestId);assert.equal(message.content,'E2E reply');assert.equal(f.calls.length,1);
+ assert.deepEqual(f.calls[0],{name:'reply_own_support_ticket',args:{p_id:requestId,p_ticket:ticketId,p_content:'E2E reply'}});
+ assert.equal('p_customer_id' in f.calls[0].args,false);
 });
-
-test('không ghi phản hồi cho phiếu của tài khoản khác', async () => {
-    const { service, writes } = fixture({ owner: false });
-    await assert.rejects(() => service.reply('customer-1', { ticketId: TICKET_ID, content: 'Nội dung' }), /không thuộc tài khoản/);
-    assert.equal(writes.length, 0);
+test('foreign ticket, closed state and replay conflicts are rejected by server',async()=>{
+ for(const code of ['support_owner_required','support_reply_closed','support_reply_conflict']){
+  const f=fixture({message:code});await assert.rejects(()=>f.service.reply('customer-A',{ticketId,requestId,content:'E2E reply'}));assert.equal(f.calls.length,1);
+ }
 });
-
-test('trả lỗi thật khi CSDL không ghi được tin nhắn', async () => {
-    const { service } = fixture({ insertError: new Error('DB rejected') });
-    await assert.rejects(() => service.reply('customer-1', { ticketId: TICKET_ID, content: 'Nội dung' }), /DB rejected/);
+test('validation rejects missing request ID or invalid content before RPC',async()=>{
+ const f=fixture();for(const input of [{ticketId,content:'E2E'}, {ticketId,requestId,content:''},{ticketId,requestId,content:'x'.repeat(4001)}])await assert.rejects(()=>f.service.reply('customer-A',input));assert.equal(f.calls.length,0);
 });
-
-test('không nhận thêm phản hồi khi phiếu đã đóng', async () => {
-    const { service } = fixture({ closed: true });
-    await assert.rejects(() => service.reply('customer-1', { ticketId: TICKET_ID, content: 'Nội dung' }), /đã đóng/);
+test('null or different acknowledgement is never successful',async()=>{
+ for(const ack of [null,ticketId]){const f=fixture(null,ack);await assert.rejects(()=>f.service.reply('customer-A',{ticketId,requestId,content:'E2E'}));}
 });

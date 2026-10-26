@@ -1,5 +1,7 @@
 # Database V1 đã triển khai trên Supabase local
 
+> Tài liệu lịch sử ngày 21/10/2026. Hiện dự án dùng Supabase Cloud; các script local được nhắc bên dưới đã được gỡ ngày 25/10/2026. Hướng dẫn hiện tại: [Supabase Cloud](../../scripts/database/v1/README.md).
+
 Ngày: 21/10/2026. Môi trường: Supabase self-host trên máy hiện tại, database `postgres`, schema `public`. Thiết kế nguồn: [3NF V1](PAWPAL_THIET_KE_DATABASE_3NF_V1.md).
 
 **Trạng thái mới nhất — đã hoàn tất phân hệ Khách hàng trên admin local:** danh sách/lọc/CSV, thêm/sửa khách, địa chỉ, khóa/mở khóa, ghi chú, cộng/trừ và lịch sử điểm, thêm/sửa/gỡ/khôi phục thú cưng, hồ sơ đơn/lịch/phiếu và Realtime đã kiểm tra. Migration 008–011 đã áp dụng, không thêm bảng/cột. Đã thử quyền caller, chống lặp, sửa đồng thời, trừ điểm đồng thời và rollback khi audit lỗi. Xem [bảng nghiệm thu và giới hạn phạm vi](../acceptance/PAWPAL_KHACH_HANG_V1_NGHIEM_THU.md). Các đoạn “khóa khách/điều chỉnh điểm chưa chuyển” phía dưới là mốc trước đợt hoàn tất này. Các phân hệ Dịch vụ, Bán hàng, Khiếu nại và Thú cưng độc lập vẫn cần nghiệm thu riêng.

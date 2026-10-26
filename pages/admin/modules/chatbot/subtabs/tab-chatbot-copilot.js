@@ -21,7 +21,7 @@
 
   const formatInline=(text)=>{
    let s=escape(text);
-   s=s.replace(/`([^`]+)`/g,'<code style="background:#EEF5F1;padding:2px 6px;border-radius:4px;font-size:12.5px;color:#236B48;font-family:monospace;">$1</code>');
+   s=s.replace(/`([^`]+)`/g,'<code class="copilot-inline-code">$1</code>');
    s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
    s=s.replace(/(^|[^*])\*([^*]+)\*/g,'$1<em>$2</em>');
    return s;
@@ -95,20 +95,7 @@
  }
 
  async function typewriteText(container,timelineEl,fullText){
-  if(!fullText){container.innerHTML='';return;}
-  const words=fullText.split(/(\s+)/);
-  const total=words.length;
-  const speedMs=Math.max(6,Math.min(18,Math.floor(1200/Math.max(1,total))));
-  let current='';
-  for(let i=0;i<total;i++){
-   current+=words[i];
-   if(i%2===0||i===total-1){
-    container.innerHTML=renderMarkdown(current);
-    if(timelineEl)timelineEl.scrollTop=timelineEl.scrollHeight;
-    await new Promise(r=>setTimeout(r,speedMs));
-   }
-  }
-  container.innerHTML=renderMarkdown(fullText);
+  container.innerHTML=renderMarkdown(fullText||'');
   if(timelineEl)timelineEl.scrollTop=timelineEl.scrollHeight;
  }
 
@@ -127,7 +114,11 @@
    const previous=reads.get(key);
    if(method==='GET'&&!force&&previous){if(previous.promise)return previous.promise;if(Date.now()-previous.at<30000)return previous.data;}
    const job=(async()=>{
-    const response=await fetch('/api/admin-chat'+(suffix?'?'+suffix:''),{method,headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
+    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),30000);
+    let response;
+    try{response=await fetch('/api/admin-chat'+(suffix?'?'+suffix:''),{method,signal:controller.signal,headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});}
+    catch(error){throw Error(error.name==='AbortError'?'Trợ lý phản hồi quá lâu. Câu hỏi vẫn được giữ để bạn thử lại.':'Mất kết nối. Câu hỏi vẫn được giữ để bạn thử lại.');}
+    finally{clearTimeout(timer);}
     const result=await response.json();if(!response.ok||!result.ok)throw Error(result.error||'Không thể kết nối trợ lý.');
     if(method==='GET')reads.set(key,{at:Date.now(),data:result});
     else {reads.clear();if(method==='DELETE'){details.delete(body.sessionId);if(active===body.sessionId)active=null;}}
@@ -152,7 +143,7 @@
    const messages=current?.messages||[];
    if(!messages.length){
     const emptyNotice=document.createElement('div');
-    emptyNotice.style.cssText='display:flex;align-items:center;justify-content:center;height:100%;min-height:200px;color:#4F7A65;font-size:13.5px;text-align:center;padding:24px;';
+    emptyNotice.className='copilot-empty-notice';
     emptyNotice.textContent='Nhập câu hỏi hoặc chọn gợi ý tác vụ bên dưới để tra cứu dữ liệu PawPal.';
     timeline.append(emptyNotice);
    }
@@ -167,7 +158,7 @@
     heading.textContent=(row.role==='user'?'Bạn':'Trợ lý')+' · '+new Date(row.created_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
     const content=document.createElement('div');content.className='copilot-msg-bubble';
     if(row.role==='user'){
-     content.style.whiteSpace='pre-wrap';content.textContent=row.content;
+     content.classList.add('copilot-user-content');content.textContent=row.content;
     }else{
      content.innerHTML=renderMarkdown(row.content);
     }
@@ -210,7 +201,7 @@
    }
 
    const pager=document.createElement('div');pager.className='rules-pagination-wrap';
-   pager.style.cssText='margin-top:auto;padding-top:10px;flex-shrink:0;';
+   pager.classList.add('copilot-session-pager');
    for(const [text,disabled,delta,isActive] of [['<',page===1,-1,false],[String(page),false,0,true],['>',page===total,1,false]]){
     const b=document.createElement('button');b.type='button';
     b.className='rules-page-btn '+(isActive?'active':'');
@@ -246,29 +237,29 @@
    const question=input.value.trim();if(busy||!question)return;if(question.length>2000)return app.showToast?.('Câu hỏi tối đa 2.000 ký tự.','error');
    active=active||crypto.randomUUID();const key=JSON.stringify([active,question]);if(request?.key!==key)request={key,id:crypto.randomUUID()};
    busy=true;send.disabled=true;
-   input.value='';
 
    let currSession=details.get(active);
    if(!currSession){
     currSession={id:active,title:question.slice(0,80),messages:[],updated:new Date().toISOString()};
     details.set(active,currSession);
    }
-   currSession.messages.push({role:'user',content:question,created_at:new Date().toISOString()});
+   const pendingMessage={role:'user',content:question,created_at:new Date().toISOString()};
    render();
 
    const thinkingCard=document.createElement('div');
    thinkingCard.className='copilot-msg msg-ai copilot-thinking-card';
-   thinkingCard.innerHTML=`<div class="copilot-msg-header">Trợ lý · Vừa xong</div><div class="copilot-msg-bubble" style="display:flex;align-items:center;gap:6px;padding:12px 16px;background-color:#F8FAF9;border:1px solid var(--border-neutral);border-radius:var(--admin-radius);color:#4F7A65;font-size:13.5px;"><span class="typing-dot-pulse" style="animation-delay:0s;"></span><span class="typing-dot-pulse" style="animation-delay:0.2s;"></span><span class="typing-dot-pulse" style="animation-delay:0.4s;"></span><span style="margin-left:6px;">Trợ lý đang tra cứu dữ liệu và soạn thảo câu trả lời...</span></div>`;
+   thinkingCard.textContent='Trợ lý đang kiểm tra yêu cầu…';
    timeline.append(thinkingCard);
    timeline.scrollTop=timeline.scrollHeight;
 
    try{
-    const result=await api('POST',{sessionId:active,requestId:request.id,question});
+    const result=await api('POST',{sessionId:active,requestId:request.id,question,conversationId:app.state?.currentConversation?.id||null});
     thinkingCard.remove();
     const replyText=result.reply||'';
 
     const aiMsg={role:'assistant',content:replyText,created_at:new Date().toISOString()};
-    currSession.messages.push(aiMsg);
+    currSession.messages.push(pendingMessage,aiMsg);
+    if(input.value.trim()===question)input.value='';
 
     const aiCard=document.createElement('div');aiCard.className='copilot-msg msg-ai';
     const heading=document.createElement('div');heading.className='copilot-msg-header';heading.textContent='Trợ lý · Vừa xong';
@@ -278,7 +269,11 @@
 
     await typewriteText(contentBubble,timeline,replyText);
     request=null;
-    await load({force:true});
+    currSession.updated=aiMsg.created_at;
+    const existing=sessions.find(s=>s.id===active);
+    if(existing){existing.updated=aiMsg.created_at;existing.message_count=currSession.messages.length;}
+    else if(!document.getElementById('inputCopilotSessionSearch')?.value){sessions.unshift({id:active,title:currSession.title,updated:aiMsg.created_at,message_count:currSession.messages.length});sessions=sessions.slice(0,10);totalSessions++;}
+    render();
    }
    catch(error){
     thinkingCard.remove();

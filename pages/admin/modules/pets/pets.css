@@ -3064,7 +3064,7 @@
     text-align: center;
 }
 
-.pets-module .admin-table .admin-badge {
+.pets-module .admin-table .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {
     display: inline;
     height: auto;
     min-height: 0;
@@ -4227,43 +4227,45 @@
     display: none;
 }
 
-/* Forest profile palette and compact rhythm. Keep these values local to the profile. */
+/* Quiet Enterprise profile palette and compact rhythm. Keep these values local to the profile. */
 .pets-module #subtab-tab-pet-profile {
-    --admin-primary: #236B48;
+    --admin-primary: #275e49;
     --admin-radius: 9px;
-    --text-heading: #236B48;
-    --text-main: #203A2C;
-    --text-muted: #4F7A65;
-    --table-header-text: #236B48;
-    --table-header-bg: rgba(238, 245, 241, 0.75);
-    --border-neutral: #ECF2EE;
-    --pet-ink: #203A2C;
+    --text-heading: #275e49;
+    --text-main: #24382f;
+    --text-muted: #6f8176;
+    --table-header-text: #275e49;
+    --table-header-bg: #f0f4f1;
+    --border-neutral: #dce4de;
+    --pet-ink: #24382f;
+    color: #24382f;
+    font: 400 13px / 1.48 Inter, "Segoe UI", sans-serif;
 }
 
 .pets-module #subtab-tab-pet-profile .profile-drawer-container {
-    color: #203A2C;
-    background: rgba(255, 255, 255, 0.70);
-    border: 1px solid #ECF2EE;
+    color: #24382f;
+    background: #ffffff;
+    border: 1px solid #dce4de;
     border-radius: 9px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     gap: 16px;
 }
 
 .pets-module #subtab-tab-pet-profile :is(.headline-name, .detail-box-title, .user-name-link) {
-    color: #236B48;
+    color: #275e49;
 }
 
 .pets-module #subtab-tab-pet-profile :is(.data-val, .pet-text-main, .weight-mini-table td, .pet-profile-note-read) {
-    color: #203A2C;
+    color: #24382f;
 }
 
 .pets-module #subtab-tab-pet-profile :is(.data-key, .pet-meta-small, .pet-profile-meta, .drawer-tab-btn) {
-    color: #4F7A65;
+    color: #6f8176;
 }
 
 .pets-module #subtab-tab-pet-profile .data-val.text-danger {
-    color: #DC2626;
+    color: #BA4745;
 }
 
 .pets-module #subtab-tab-pet-profile :is(.drawer-subtabs-row, .drawer-subtabs-bar, .drawer-tab-body, .weight-mini-table, .weight-mini-table tbody, .weight-mini-table tr, .weight-mini-table td) {
@@ -4271,15 +4273,15 @@
 }
 
 .pets-module #subtab-tab-pet-profile .drawer-tab-btn.active {
-    color: #236B48;
-    border-bottom-color: #236B48;
+    color: #275e49;
+    border-bottom-color: #275e49;
     font-weight: 700;
 }
 
 .pets-module #subtab-tab-pet-profile .weight-mini-table th {
-    color: #236B48;
-    background: rgba(238, 245, 241, 0.75);
-    border-color: #ECF2EE;
+    color: #275e49;
+    background: #f0f4f1;
+    border-color: #dce4de;
 }
 
 .pets-module #subtab-tab-pet-profile .data-pair-row {
@@ -4297,8 +4299,8 @@
 
 .pets-module #subtab-tab-pet-profile :is(.action-btn-pill, .admin-btn, .admin-input) {
     border-radius: 9px;
-    border-color: #ECF2EE;
-    color: #236B48;
+    border-color: #dce4de;
+    color: #275e49;
     transform: none;
 }
 
@@ -4307,13 +4309,13 @@
 }
 
 .pets-module #subtab-tab-pet-profile :is(.btn-primary-pill, .admin-btn-primary) {
-    background: #236B48;
+    background: #275e49;
     color: #ffffff;
-    border-color: #236B48;
+    border-color: #275e49;
 }
 
 .pets-module #subtab-tab-pet-profile .emergency-alert-banner {
-    color: #DC2626;
+    color: #BA4745;
     border: none;
     background: transparent;
 }
@@ -4341,7 +4343,7 @@
     justify-content: start;
     gap: 12px;
     min-height: 0;
-    padding: 8px 0;
+    padding: 12px 0;
     line-height: 1.5;
 }
 
@@ -4364,4 +4366,381 @@
 
 .pets-module #subtab-tab-pet-profile .pet-profile-note-read {
     margin: 10px 0 6px;
+}
+
+/* Match the approved customer profile hierarchy without changing profile workflows. */
+.pets-module #subtab-tab-pet-profile .admin-input {
+    color: #24382f;
+    background: #ffffff;
+    font: 400 13px / 1.5 Inter, "Segoe UI", sans-serif;
+}
+
+.pets-module #subtab-tab-pet-profile .pet-profile-note-editor summary {
+    color: #275e49;
+}
+
+.pets-module #subtab-tab-pet-profile .headline-name {
+    color: #26392f;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.48;
+    letter-spacing: -0.25px;
+}
+
+.pets-module #subtab-tab-pet-profile .detail-box-title {
+    color: #275e49;
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.pets-module #subtab-tab-pet-profile .drawer-subtabs-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 24px;
+    min-height: 48px;
+    background: transparent;
+    border: none;
+}
+
+.pets-module #subtab-tab-pet-profile .drawer-tab-btn {
+    padding: 12px 0;
+    color: #61796c;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    font: 600 13px / 1.5 Inter, "Segoe UI", sans-serif;
+    white-space: nowrap;
+}
+
+.pets-module #subtab-tab-pet-profile .drawer-tab-btn.active {
+    color: #275e49;
+    border-bottom-color: #275e49;
+}
+
+.pets-module #subtab-tab-pet-profile :is(.action-btn-pill, .admin-btn) {
+    min-height: 35px;
+    padding: 8px 12px;
+    color: #284637;
+    background: #ffffff;
+    border: 1px solid #d6ded8;
+    border-radius: 9px;
+    box-shadow: none;
+    font: 600 13px / 1.3 Inter, "Segoe UI", sans-serif;
+}
+
+.pets-module #subtab-tab-pet-profile :is(.btn-primary-pill, .admin-btn-primary) {
+    color: #ffffff;
+    background: #275e49;
+    border-color: #275e49;
+}
+
+.pets-module #subtab-tab-pet-profile .weight-mini-table th {
+    color: #526b5b;
+    background: #f0f4f1;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pets-module #subtab-tab-pet-profile .weight-mini-table td {
+    color: #24382f;
+    background: transparent;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* ==========================================================================
+   PAWPAL ADMIN — SHARED STATUS / PRIORITY / SLA CONTRACT
+   Quiet Enterprise — Data-first Admin
+   Ordinary status = text only. Priority/SLA = restrained outlined chips.
+   ========================================================================== */
+
+/* Ordinary lifecycle/account/payment/content status: text only, never pills. */
+.pets-module .admin-badge:is(
+    .badge-success,
+    .badge-active,
+    .badge-info,
+    .badge-primary,
+    .badge-warning,
+    .badge-danger,
+    .badge-neutral,
+    .badge-secondary,
+    .badge-pending,
+    .badge-confirmed,
+    .badge-completed,
+    .badge-cancelled,
+    .badge-in-progress,
+    .badge-shipping,
+    .badge-delivered,
+    .badge-paid,
+    .badge-unpaid,
+    .badge-cod-pending,
+    .badge-pass,
+    .badge-fail,
+    .badge-leave,
+    .badge-pause,
+    .badge-locked,
+    .badge-resigned,
+    .badge-retrain,
+    .badge-req-approved,
+    .badge-req-pending,
+    .badge-req-rejected,
+    .badge-reprocessing,
+    .badge-waiting-approval
+):not(.priority-chip):not(.sla-chip) {
+    display: inline;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+
+    font-size: 12.5px !important;
+    font-weight: 550 !important;
+    line-height: 1.45 !important;
+    white-space: normal;
+}
+
+/* Semantic colors sampled from the existing PawPal customer-admin palette. */
+.pets-module .admin-badge:is(
+    .badge-success,
+    .badge-active,
+    .badge-completed,
+    .badge-paid,
+    .badge-delivered,
+    .badge-pass,
+    .badge-req-approved
+):not(.priority-chip):not(.sla-chip) {
+    color: #345D46 !important;
+}
+
+.pets-module .admin-badge:is(
+    .badge-info,
+    .badge-primary,
+    .badge-confirmed,
+    .badge-in-progress,
+    .badge-shipping
+):not(.priority-chip):not(.sla-chip) {
+    color: #526A78 !important;
+}
+
+.pets-module .admin-badge:is(
+    .badge-warning,
+    .badge-pending,
+    .badge-cod-pending,
+    .badge-leave,
+    .badge-retrain,
+    .badge-req-pending,
+    .badge-waiting-approval
+):not(.priority-chip):not(.sla-chip) {
+    color: #987324 !important;
+}
+
+.pets-module .admin-badge:is(
+    .badge-danger,
+    .badge-cancelled,
+    .badge-unpaid,
+    .badge-fail,
+    .badge-locked,
+    .badge-resigned,
+    .badge-req-rejected,
+    .badge-reprocessing
+):not(.priority-chip):not(.sla-chip) {
+    color: #BA4745 !important;
+}
+
+.pets-module .admin-badge:is(
+    .badge-neutral,
+    .badge-secondary,
+    .badge-pause
+):not(.priority-chip):not(.sla-chip) {
+    color: #697A70 !important;
+}
+
+/* Priority: same quiet outlined chip shape; semantic emphasis is mostly text. */
+.pets-module .admin-badge.priority-chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+    padding: 2px 6px;
+
+    background: #FFFFFF !important;
+    border: 1px solid #DCE4DE !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+
+    color: #59675E !important;
+    font-size: 11.5px;
+    font-weight: 550;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.pets-module .admin-badge.priority-chip.priority-critical {
+    color: #A74643 !important;
+    border-color: #D9C2BF !important;
+}
+
+.pets-module .admin-badge.priority-chip.priority-high {
+    color: #80652D !important;
+    border-color: #DDD2BD !important;
+}
+
+.pets-module .admin-badge.priority-chip.priority-medium {
+    color: #626F66 !important;
+    border-color: #DCE4DE !important;
+}
+
+.pets-module .admin-badge.priority-chip.priority-low {
+    color: #697A70 !important;
+    border-color: #E2E7E3 !important;
+}
+
+/* SLA: outlined, neutral background; color signals only urgent exceptions. */
+.pets-module .admin-badge:is(
+    .badge-sla-ok,
+    .badge-sla-urgent,
+    .badge-sla-warning
+),
+.pets-module .sla-badge,
+.pets-module .admin-badge.sla-chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+    padding: 2px 6px;
+
+    background: #FFFFFF !important;
+    border: 1px solid #DCE4DE !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+
+    color: #697A70 !important;
+    font-size: 11.5px;
+    font-weight: 550;
+    line-height: 1.4;
+    white-space: normal;
+}
+
+.pets-module .admin-badge.badge-sla-ok,
+.pets-module .sla-badge.sla-done {
+    color: #345D46 !important;
+    border-color: #D1DDD4 !important;
+}
+
+.pets-module .admin-badge:is(.badge-sla-warning, .badge-sla-urgent),
+.pets-module .sla-badge.sla-urgent {
+    color: #80652D !important;
+    border-color: #DDD2BD !important;
+}
+
+.pets-module .sla-badge.sla-overdue {
+    color: #A74643 !important;
+    border-color: #D9C2BF !important;
+}
+
+.pets-module .sla-badge.sla-normal {
+    color: #697A70 !important;
+    border-color: #E2E7E3 !important;
+}
+
+/* Preserve conditional visibility for dynamic status labels. */
+.pets-module .admin-badge[hidden],
+.pets-module .sla-badge[hidden] {
+    display: none !important;
+}
+
+/* Table column alignment: matching headers and data cells */
+.pets-module #petDataTable > thead > tr > th:not([colspan]),
+.pets-module #petDataTable > tbody > tr > td:not([colspan]),
+.pets-module table:has(> tbody#petWeightHistoryTbody) > thead > tr > th:not([colspan]),
+.pets-module table:has(> tbody#petWeightHistoryTbody) > tbody > tr > td:not([colspan]),
+.pets-module table:has(> tbody#petCarelogTbody) > thead > tr > th:not([colspan]),
+.pets-module table:has(> tbody#petCarelogTbody) > tbody > tr > td:not([colspan]),
+.pets-module table:has(> tbody#petHistoryTbody) > thead > tr > th:not([colspan]),
+.pets-module table:has(> tbody#petHistoryTbody) > tbody > tr > td:not([colspan]),
+.pets-module table:has(> tbody#petCarelogsListTbody) > thead > tr > th:not([colspan]),
+.pets-module table:has(> tbody#petCarelogsListTbody) > tbody > tr > td:not([colspan]),
+.pets-module table:has(> tbody#reminderTableTbody) > thead > tr > th:not([colspan]),
+.pets-module table:has(> tbody#reminderTableTbody) > tbody > tr > td:not([colspan]) {
+    text-align: left !important;
+    vertical-align: middle;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+
+.pets-module #petDataTable > thead > tr > th:nth-child(5):not([colspan]),
+.pets-module #petDataTable > tbody > tr > td:nth-child(5):not([colspan]) {
+    text-align: right !important;
+}
+
+.pets-module #petDataTable > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.pets-module #petDataTable > thead > tr > th:nth-child(1):not([colspan]),
+.pets-module #petDataTable > tbody > tr > td:nth-child(1):not([colspan]),
+.pets-module #petDataTable > thead > tr > th:nth-child(9):not([colspan]),
+.pets-module #petDataTable > tbody > tr > td:nth-child(9):not([colspan]) {
+    text-align: center !important;
+}
+
+.pets-module #petDataTable > tbody > tr > td:nth-child(1):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.pets-module #petDataTable > tbody > tr > td:nth-child(9):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.pets-module table:has(> tbody#petWeightHistoryTbody) > thead > tr > th:nth-child(2):not([colspan]),
+.pets-module table:has(> tbody#petWeightHistoryTbody) > tbody > tr > td:nth-child(2):not([colspan]) {
+    text-align: right !important;
+}
+
+.pets-module table:has(> tbody#petWeightHistoryTbody) > tbody > tr > td:nth-child(2):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.pets-module table:has(> tbody#petCarelogTbody) > thead > tr > th:nth-child(3):not([colspan]),
+.pets-module table:has(> tbody#petCarelogTbody) > tbody > tr > td:nth-child(3):not([colspan]),
+.pets-module table:has(> tbody#petCarelogTbody) > thead > tr > th:nth-child(6):not([colspan]),
+.pets-module table:has(> tbody#petCarelogTbody) > tbody > tr > td:nth-child(6):not([colspan]) {
+    text-align: center !important;
+}
+
+.pets-module table:has(> tbody#petCarelogTbody) > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.pets-module table:has(> tbody#petCarelogTbody) > tbody > tr > td:nth-child(6):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.pets-module table:has(> tbody#petHistoryTbody) > thead > tr > th:nth-child(4):not([colspan]),
+.pets-module table:has(> tbody#petHistoryTbody) > tbody > tr > td:nth-child(4):not([colspan]),
+.pets-module table:has(> tbody#petHistoryTbody) > thead > tr > th:nth-child(5):not([colspan]),
+.pets-module table:has(> tbody#petHistoryTbody) > tbody > tr > td:nth-child(5):not([colspan]) {
+    text-align: right !important;
+}
+
+.pets-module table:has(> tbody#petHistoryTbody) > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.pets-module table:has(> tbody#petHistoryTbody) > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.pets-module table:has(> tbody#reminderTableTbody) > thead > tr > th:nth-child(6):not([colspan]),
+.pets-module table:has(> tbody#reminderTableTbody) > tbody > tr > td:nth-child(6):not([colspan]) {
+    text-align: center !important;
+}
+
+.pets-module table:has(> tbody#reminderTableTbody) > tbody > tr > td:nth-child(6):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
 }

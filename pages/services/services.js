@@ -433,7 +433,7 @@ function renderServices() {
         else if (service.category === 'taxi') displayCategory = 'Taxi đưa đón';
 
         const formattedPrice = service.price.toLocaleString('vi-VN');
-        const priceUnit = service.priceDisplay.includes('đêm') ? ' / đêm' : '';
+        const priceUnit = service.priceDisplay ? ` / ${service.priceDisplay}` : '';
 
         const sanitizedDesc = escapeServiceHTML(service.description);
         const sanitizedName = escapeServiceHTML(service.name);

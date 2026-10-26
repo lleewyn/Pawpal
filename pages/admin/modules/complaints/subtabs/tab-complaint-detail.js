@@ -55,6 +55,27 @@
   sessionStorage.setItem('pawpal_admin_complaint_selected_id',t.id); mod.updateBreadcrumb(t.id);
   text('viewTicketCode',t.id);text('detailTicketTitle',t.title);text('viewTicketStatusBadge',statusNames[t.status] || t.status);
   text('viewTicketPriorityBadge',({khan_cap:'Khẩn cấp',high:'Cao',medium:'Trung bình',low:'Thấp'})[t.priority]);
+  const statusBadgeEl = $('viewTicketStatusBadge');
+  const statusBadgeClass = {
+    new: 'badge-warning',
+    open: 'badge-warning',
+    processing: 'badge-info',
+    in_progress: 'badge-info',
+    waiting_customer: 'badge-warning',
+    waiting_manager_approval: 'badge-warning',
+    reprocessing: 'badge-danger',
+    resolved: 'badge-success',
+    closed: 'badge-neutral'
+  };
+  if (statusBadgeEl) statusBadgeEl.className = `admin-badge ${statusBadgeClass[t.status] || 'badge-neutral'}`;
+  const priorityBadgeEl = $('viewTicketPriorityBadge');
+  const priorityBadgeClass = {
+    khan_cap: 'priority-critical',
+    high: 'priority-high',
+    medium: 'priority-medium',
+    low: 'priority-low'
+  };
+  if (priorityBadgeEl) priorityBadgeEl.className = `admin-badge priority-chip ${priorityBadgeClass[t.priority] || 'priority-medium'}`;
   text('viewTicketCustomerName',t.customerName);text('viewTicketCustomerPhone',t.phone);
   text('viewTicketCustomerContent',t.content);text('detailComplaintCreatedTime',t.createdAt);
   text('viewTicketRefInfo',t.bookingId || t.orderId || 'Chưa liên kết giao dịch');

@@ -4,23 +4,76 @@
 
     let cachedTickets = [];
     let ticketsChannel = null;
-    function stopRealtime() { if(ticketsChannel){client()?.removeChannel(ticketsChannel);ticketsChannel=null;} }
+    let activeOwner = null, epoch = 0, ticketLoad = null, refreshTimer = null;
+    let dirty = false, waitingForLoad = false;
+    const currentOwner = () => { try { return JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id || null; } catch { return null; } };
+    const supportView = () => location.hash.split('?')[0] === '#support';
+    function stopRealtime() {
+        ++epoch; clearTimeout(refreshTimer); refreshTimer = null; dirty = false; ticketLoad = null; waitingForLoad = false;
+        if(ticketsChannel){client()?.removeChannel(ticketsChannel);ticketsChannel=null;}
+    }
+    function adoptOwner() {
+        const owner = currentOwner();
+        if (owner !== activeOwner) {
+            stopRealtime(); cachedTickets = []; requestIds.clear(); ticketLoad = null; activeOwner = owner;
+        }
+        return owner;
+    }
+    function loadError() { document.dispatchEvent(new CustomEvent('support_load_error')); }
+    function scheduleRefresh() {
+        if (!dirty || refreshTimer || document.hidden || !supportView() || !currentOwner()) return;
+        if (ticketLoad) {
+            if (!waitingForLoad) {
+                waitingForLoad = true;
+                ticketLoad.promise.finally(() => { waitingForLoad = false; scheduleRefresh(); }).catch(() => {});
+            }
+            return;
+        }
+        refreshTimer = setTimeout(() => {
+            refreshTimer = null;
+            if (document.hidden || !supportView() || !dirty) return;
+            dirty = false;
+            loadTickets().catch(loadError);
+        }, 200);
+    }
+    function requestRefresh() { dirty = true; scheduleRefresh(); }
     window.addEventListener('hashchange',()=>{
-        if (!location.hash.startsWith('#support') && ticketsChannel) { client()?.removeChannel(ticketsChannel); ticketsChannel=null; }
+        if (!supportView()) stopRealtime();
     });
+    document.addEventListener('visibilitychange',scheduleRefresh);
+    const onActorChange = () => {
+        adoptOwner();
+        document.dispatchEvent(new CustomEvent('tickets_updated'));
+    };
+    document.addEventListener('auth_state_changed',onActorChange);
+    window.addEventListener('storage',event=>{if(!event.key || event.key==='pawpal_current_user')onActorChange();});
     const requestIds = new Map();
     const client = () => window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     async function rpc(name,args) {
+        const owner = adoptOwner(), version = epoch;
         const db = client();
         const auth = await db?.auth?.getUser();
         if (!auth?.data?.user || auth.error) throw Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        const expectedAuth = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.auth_user_id;
+        if (expectedAuth && expectedAuth !== auth.data.user.id) throw Error('Hồ sơ không thuộc phiên đăng nhập hiện tại. Vui lòng tải lại.');
+        if (!owner || currentOwner() !== owner || version !== epoch) throw Error('Phiên đăng nhập đã thay đổi. Vui lòng tải lại.');
         const result = await db.rpc(name,args);
+        if (currentOwner() !== owner || version !== epoch) throw Error('Phiên đăng nhập đã thay đổi. Vui lòng tải lại.');
         if (result.error) throw Error(result.error.code === 'PT409' ? 'Yêu cầu đã được lưu với thông tin khác. Vui lòng tải lại để đối soát.' : 'Không thể lưu dữ liệu hỗ trợ. Vui lòng thử lại.');
         return result.data;
     }
-    async function loadTickets() {
+    function loadTickets() {
+        const owner = adoptOwner(), version = epoch;
+        if (ticketLoad?.owner === owner) return ticketLoad.promise;
+        const request = {owner, promise: null};
+        request.promise = fetchTickets(owner, version).finally(() => { if (ticketLoad === request) ticketLoad = null; });
+        ticketLoad = request;
+        return request.promise;
+    }
+    async function fetchTickets(owner, version) {
         try {
             const rows = await rpc('own_support_tickets');
+            if (owner !== currentOwner() || version !== epoch) throw Error('Phiên hỗ trợ đã thay đổi.');
             cachedTickets = (rows || []).map(t => ({
                 id:t.id,rawId:t.id,ticketCode:t.ticket_code,title:t.subject,description:t.description,
                 type:t.category,status:t.status,priority:['high','urgent'].includes(t.priority)?'Cao':'Trung bình',
@@ -29,19 +82,17 @@
                 context:{bookingId:t.appointment_id,orderId:t.order_id,serviceName:t.service_name,petName:t.pet_name},
                 messages:t.messages || []
             }));
-            if (!ticketsChannel && location.hash.startsWith('#support')) {
-                ticketsChannel=client().channel('customer-support-'+crypto.randomUUID()).on('postgres_changes',{event:'*',schema:'public',table:'support_ticket_message'},()=>{
-                    loadTickets().catch(()=>{ document.dispatchEvent(new CustomEvent('support_load_error')); });
-                }).subscribe();
+            if (!ticketsChannel && supportView()) {
+                ticketsChannel=client().channel('customer-support-'+crypto.randomUUID()).on('postgres_changes',{event:'*',schema:'public',table:'support_ticket_message'},requestRefresh).subscribe();
             }
             document.dispatchEvent(new CustomEvent('tickets_updated'));
             return cachedTickets;
-        } catch(error) { cachedTickets=[]; throw error; }
+        } catch(error) { throw error; }
     }
-    function sbGetTickets() { return cachedTickets; }
+    function sbGetTickets() { adoptOwner(); return cachedTickets; }
     async function sbCreateTicket(title,type,content,files=[],context={}) {
         if (files.length) throw Error('Ảnh và tệp chưa được hỗ trợ. Vui lòng gửi nội dung văn bản.');
-        const key=JSON.stringify([title,type,content,context.bookingId,context.orderId,context.customerDemand]);
+        const key=JSON.stringify([adoptOwner(),'create',context.requestId,title,type,content,context.bookingId,context.orderId,context.customerDemand]);
         if (!requestIds.has(key)) requestIds.set(key,context.requestId || crypto.randomUUID());
         const id=requestIds.get(key);
         const saved=await rpc('create_own_support_ticket',{
@@ -50,24 +101,27 @@
             p_resolution:context.customerDemand || null
         });
         if (saved!==id) throw Error('Chưa xác nhận được kết quả lưu. Vui lòng thử lại.');
+        if (requestIds.get(key) === id) requestIds.delete(key);
         // The acknowledgement is authoritative even if a subsequent list refresh fails.
         return {id,rawId:id};
     }
     async function sbSendTicketReply(ticketId,text) {
-        const key=JSON.stringify(['reply',ticketId,text]);
+        const key=JSON.stringify([adoptOwner(),'reply',ticketId,text]);
         if (!requestIds.has(key)) requestIds.set(key,crypto.randomUUID());
         const id=requestIds.get(key),saved=await rpc('reply_own_support_ticket',{p_id:id,p_ticket:ticketId,p_content:text});
         if (saved!==id) throw Error('Chưa xác nhận được phản hồi. Vui lòng thử lại.');
-        await loadTickets(); return saved;
+        if (requestIds.get(key) === id) requestIds.delete(key);
+        await loadTickets().catch(loadError); return saved;
     }
     async function sbCloseAndRateTicket(ticketId,rating,comment='') {
         const saved=await rpc('rate_own_support_ticket',{p_ticket:ticketId,p_rating:rating,p_comment:comment});
         if (saved!==ticketId) throw Error('Chưa xác nhận được đánh giá. Vui lòng thử lại.');
-        await loadTickets(); return saved;
+        await loadTickets().catch(loadError); return saved;
     }
 
     window.PawPalSupport = {
         stopRealtime,
+        requestRefresh,
         getTickets: sbGetTickets,
         loadTickets: loadTickets,
         createTicket: sbCreateTicket,

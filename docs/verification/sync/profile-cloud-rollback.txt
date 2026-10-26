@@ -1,0 +1,57 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-25T09:51:06.377Z",
+  "scope": "Profile RPC/RLS integration only; synthetic A/B/staff; no commits or Logs",
+  "checks": [
+    {
+      "name": "A can read the bounded authoritative point balance used by profile UI",
+      "status": "PASS"
+    },
+    {
+      "name": "User A profile_save returns authoritative updated snapshot",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin actor reads A change by fixture ID under RLS",
+      "status": "PASS"
+    },
+    {
+      "name": "A snapshot reads admin change from same database",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale user profile revision is rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Invalid name is rejected without partial write",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read A profile via explicit ID",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot call admin profile update for A",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot execute private profile snapshot",
+      "status": "PASS"
+    },
+    {
+      "name": "Denied actions leave fixture A unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removed all synthetic customer/auth fixtures",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "6115775e-fc0d-4b5d-b0f6-dc7e0a378acf",
+    "customerB": "135a3849-a9a7-42c7-8454-675440b3c73c"
+  },
+  "status": "PASS",
+  "queries": 51
+}

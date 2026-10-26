@@ -399,8 +399,6 @@
             // Đồng bộ conversation đang chọn
             const savedConvId = sessionStorage.getItem('pawpal_admin_chatbot_conv_id');
             const targetConv = (savedConvId && realConvList.find(c => c.id === savedConvId))
-                || (savedConvId && realConvList.find(c => c.customerId === savedConvId))
-                || realConvList[0]
                 || null;
 
             PawpalChatbot.state.currentConversation = targetConv;

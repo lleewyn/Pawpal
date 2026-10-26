@@ -399,9 +399,16 @@ function resetPetForm() {
 }
 
 async function renderPetGrids() {
+    const ownerId = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id;
+    const activeGrid = document.getElementById('activePetGrid');
+    const archiveGrid = document.getElementById('archivePetGrid');
+    const isCurrent = () => ownerId === JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id
+        && document.getElementById('activePetGrid') === activeGrid
+        && document.getElementById('archivePetGrid') === archiveGrid;
     let pets;
     try { pets = await getPets(); }
     catch (error) {
+        if (!isCurrent()) return;
         for (const id of ['activePetGrid', 'archivePetGrid']) {
             const grid = document.getElementById(id);
             if (grid) { grid.textContent = 'Không thể tải hồ sơ bé cưng. Vui lòng thử lại.'; grid.setAttribute('role', 'alert'); }
@@ -411,8 +418,7 @@ async function renderPetGrids() {
         throw error;
     }
     
-    const activeGrid = document.getElementById('activePetGrid');
-    const archiveGrid = document.getElementById('archivePetGrid');
+    if (!isCurrent()) return;
 
     const activePets = pets.filter(p => !p.isArchived);
     const archivedPets = pets.filter(p => p.isArchived);
@@ -576,7 +582,8 @@ function setupBreedAutocomplete() {
 
 function setupForm() {
     const form = document.getElementById('petForm');
-    if (!form) return;
+    if (!form || form.dataset.petSaveBound === 'true') return;
+    form.dataset.petSaveBound = 'true';
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -659,67 +666,80 @@ function setupForm() {
         }
 
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-        const allPetsForDup = await getPets();
-        const sameNamePets = allPetsForDup.filter(p =>
-            p.name.trim().toLowerCase() === petName.toLowerCase() &&
-            String(p.userId) === String(currentUser?.id) &&
-            !p.isArchived &&
-            p.id !== (petId || '')
-        );
-
-        if (sameNamePets.length > 0) {
-            if (!color.trim()) {
-                const colorField = document.getElementById('color');
-                const colorError = colorField?.nextElementSibling;
-                if (colorError && colorError.classList.contains('error-msg')) {
-                    colorError.textContent = `Bé "${petName}" đã tồn tại. Vui lòng thêm màu lông / đặc điểm để phân biệt.`;
-                    colorError.classList.remove('d-none');
-                } else {
-                    showToast(`Bé "${petName}" đã tồn tại. Vui lòng thêm màu lông để phân biệt.`, 'error');
-                }
-                colorField?.focus();
-                return;
-            }
+        if (!currentUser?.id) {
+            showToast('Vui lòng đăng nhập lại để lưu hồ sơ.', 'error');
+            return;
         }
-
-        const petData = {
-            id: petId || generatePetId(),
-            userId: currentUser ? (currentUser.id || currentUser.custId || 'USER-001') : 'USER-001',
-            custId: currentUser ? (currentUser.custId || currentUser.id || 'CUST-001') : 'CUST-001',
-            ownerName: currentUser ? (currentUser.name || currentUser.fullname || 'Khách hàng') : 'Khách hàng',
-            ownerPhone: currentUser ? (currentUser.phone || currentUser.phone_main || '') : '',
-            name: petName,
-            species,
-            otherSpecies,
-            breed,
-            gender: gender || 'male',
-            weight: isNaN(weight) ? 0 : weight,
-            weightNum: isNaN(weight) ? 0 : weight,
-            dob,
-            dobRaw: dob,
-            color,
-            vaccinated: !!vaccinated,
-            vaccineCardPhoto: vaccineCardPhoto,
-            allergies,
-            allergy: allergies,
-            notes,
-            alert: allergies ? `Cảnh báo dị ứng: ${allergies}` : '',
-            status: 'Đang nuôi',
-            avatar: avatar || getDefaultPetAvatar(species),
-            isArchived: false,
-            createdAt: petId ? (await getPets()).find(p => p.id === petId)?.createdAt || new Date().toISOString() : new Date().toISOString()
-        };
-
-        const existingPet = petId ? editingPetSnapshot : null;
         if (form.dataset.saving === 'true') return;
         form.dataset.saving = 'true';
+        const saveSnapshot = editingPetSnapshot;
+        const saveRequestId = newPetRequestId;
+        const isCurrentSave = () => form.isConnected
+            && JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id === currentUser.id
+            && editingPetSnapshot === saveSnapshot && newPetRequestId === saveRequestId;
         const saveButton = document.getElementById('saveBtn');
         if (saveButton) saveButton.disabled = true;
         try {
-            await savePets([{ ...existingPet, ...petData, _pendingId: newPetRequestId }]);
+            const allPetsForDup = await getPets();
+            if (!isCurrentSave()) return;
+            const sameNamePets = allPetsForDup.filter(p =>
+                p.name.trim().toLowerCase() === petName.toLowerCase() &&
+                String(p.userId) === String(currentUser?.id) &&
+                !p.isArchived &&
+                p.id !== (petId || '')
+            );
+
+            if (sameNamePets.length > 0) {
+                if (!color.trim()) {
+                    const colorField = document.getElementById('color');
+                    const colorError = colorField?.nextElementSibling;
+                    if (colorError && colorError.classList.contains('error-msg')) {
+                        colorError.textContent = `Bé "${petName}" đã tồn tại. Vui lòng thêm màu lông / đặc điểm để phân biệt.`;
+                        colorError.classList.remove('d-none');
+                    } else {
+                        showToast(`Bé "${petName}" đã tồn tại. Vui lòng thêm màu lông để phân biệt.`, 'error');
+                    }
+                    colorField?.focus();
+                    return;
+                }
+            }
+
+            const petData = {
+                id: petId || generatePetId(),
+                userId: currentUser.id,
+                custId: currentUser.custId || currentUser.id,
+                ownerName: currentUser ? (currentUser.name || currentUser.fullname || 'Khách hàng') : 'Khách hàng',
+                ownerPhone: currentUser ? (currentUser.phone || currentUser.phone_main || '') : '',
+                name: petName,
+                species,
+                otherSpecies,
+                breed,
+                gender: gender || 'male',
+                weight: isNaN(weight) ? 0 : weight,
+                weightNum: isNaN(weight) ? 0 : weight,
+                dob,
+                dobRaw: dob,
+                color,
+                vaccinated: !!vaccinated,
+                vaccineCardPhoto: vaccineCardPhoto,
+                allergies,
+                allergy: allergies,
+                notes,
+                safetyNote: saveSnapshot?.safetyNote || '',
+                alert: saveSnapshot?.safetyNote || '',
+                status: 'Đang nuôi',
+                avatar: avatar || getDefaultPetAvatar(species),
+                isArchived: false,
+                createdAt: petId ? allPetsForDup.find(p => p.id === petId)?.createdAt || new Date().toISOString() : new Date().toISOString()
+            };
+
+            const existingPet = petId ? saveSnapshot : null;
+            await savePets([{ ...existingPet, ...petData, _pendingId: saveRequestId }]);
+            if (!isCurrentSave()) return;
             showToast(petId ? 'Cập nhật hồ sơ bé cưng thành công!' : 'Thêm bé cưng thành công!');
             switchToPetListScreen();
         } catch (error) {
+            if (!isCurrentSave()) return;
             showToast(error.message || 'Không thể lưu hồ sơ bé cưng. Vui lòng thử lại.', 'error');
         } finally {
             form.dataset.saving = 'false';

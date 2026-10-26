@@ -115,7 +115,7 @@ async function syncUserProfileFromSupabase(user, cache = true) {
         const phone = user.phone || user.phone_main || '';
 
         let custRecord = null;
-        if (customerId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId)) {
+        if (customerId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId)) {
             const { data } = await client.from('customer')
                 .select('id, customer_code, customer_status, contact_email')
                 .eq('id', customerId)
@@ -146,9 +146,9 @@ async function syncUserProfileFromSupabase(user, cache = true) {
                 client.from('customer_membership').select('membership_tier(tier_name, discount_percent)').eq('customer_id', customerId).maybeSingle(),
                 client.from('customer_address').select('id, receiver_name, receiver_phone, street_address, province, is_default').eq('customer_id', customerId).order('is_default', { ascending: false }),
                 client.from('customer_phone').select('phone_number, is_primary').eq('customer_id', customerId),
-                client.from('paw_point_transaction').select('points').eq('customer_id', customerId)
+                client.from('customer_point_balance').select('total_paw_points').eq('customer_id', customerId).maybeSingle()
             ]);
-            if (profRes.error || memRes.error || addrRes.error) throw new Error('Không thể tải hồ sơ mới nhất.');
+            if (profRes.error || memRes.error || addrRes.error || phoneRes.error || pointRes.error) throw new Error('Không thể tải hồ sơ mới nhất.');
 
             const profile = profRes.data || {};
             const membership = memRes.data || {};
@@ -166,7 +166,7 @@ async function syncUserProfileFromSupabase(user, cache = true) {
 
             const phones = phoneRes.data || [];
             const primaryPhone = phones.find(p => p.is_primary)?.phone_number || phones[0]?.phone_number || phone || '';
-            const currentPoints = (pointRes.data || []).reduce((acc, row) => acc + (Number(row.points) || 0), 0);
+            const currentPoints = Number(pointRes.data?.total_paw_points || 0);
 
             const tierRecord = Array.isArray(membership.membership_tier)
                 ? membership.membership_tier[0] : membership.membership_tier;
@@ -200,7 +200,7 @@ async function syncUserProfileFromSupabase(user, cache = true) {
             } catch (snapErr) {
                 console.warn('[Profile] RPC customer_profile_snapshot chưa sẵn sàng, dùng dữ liệu truy vấn trực tiếp');
             }
-            if (cache) setCurrentUser(freshUser);
+            if (cache && getCurrentUser()?.id === user.id) setCurrentUser(freshUser);
             return freshUser;
         }
     } catch (err) {
@@ -301,6 +301,7 @@ async function loadMyPets(user) {
         throw e;
     }
 
+    if (getCurrentUser()?.id !== user.id || !container.isConnected) return;
     const petsCountEl = document.getElementById('statPetsCount');
     if (petsCountEl) petsCountEl.textContent = pets.length;
 
@@ -363,7 +364,7 @@ async function loadUpcomingBooking(user) {
                     items:appointment_item (name_snapshot, is_primary)
                 `)
                 .eq('customer_id', user.id)
-                .in('appointment_status', ['cho_xac_nhan', 'da_xac_nhan', 'dang_thuc_hien'])
+                .in('appointment_status', ['pending', 'confirmed', 'checked_in', 'in_progress'])
                 .gte('scheduled_start_at', nowIso)
                 .order('scheduled_start_at', { ascending: true })
                 .limit(5);
@@ -376,8 +377,9 @@ async function loadUpcomingBooking(user) {
                 const d = b.scheduled_start_at ? new Date(b.scheduled_start_at) : null;
                 return {
                     id: b.appointment_code || b.id,
-                    date: d ? d.toLocaleDateString('vi-VN') : '',
-                    time: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+                    date: d ? d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' }) : '',
+                    month: d ? `Tháng ${new Intl.DateTimeFormat('en-US', { month: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' }).format(d)}` : '',
+                    time: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' }) : '',
                     serviceName: primaryItem?.name_snapshot || 'Dịch vụ chăm sóc',
                     petName: pet?.pet_name || 'Bé cưng'
                 };
@@ -385,10 +387,12 @@ async function loadUpcomingBooking(user) {
         }
     } catch (e) {
         console.warn('[Profile] Lỗi tải booking từ Supabase:', e);
+        if (getCurrentUser()?.id !== user.id || !container.isConnected) return;
         container.innerHTML = '<p class="p-3 text-muted" role="status">Không thể tải lịch hẹn sắp tới. Vui lòng thử lại.</p>';
         return;
     }
 
+    if (getCurrentUser()?.id !== user.id || !container.isConnected) return;
     if (!upcomingBookings.length) {
         container.innerHTML = `
             <div class="p-3 text-muted d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -400,17 +404,8 @@ async function loadUpcomingBooking(user) {
     }
 
     container.innerHTML = upcomingBookings.map(upcoming => {
-    let dateDisplay = 'Hôm nay';
-    let monthDisplay = 'LỊCH HẸN';
-    if (upcoming.date) {
-        const d = new Date(upcoming.date);
-        if (!isNaN(d.getTime())) {
-            dateDisplay = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-            monthDisplay = `Tháng ${d.getMonth() + 1}`;
-        } else {
-            dateDisplay = upcoming.date;
-        }
-    }
+    const dateDisplay = upcoming.date || 'Hôm nay';
+    const monthDisplay = upcoming.month || 'LỊCH HẸN';
 
     const serviceName = String(upcoming.serviceName || 'Dịch vụ chăm sóc').replace(/\s*&\s*/g, ' và ');
     const timeVal = upcoming.time || 'Theo lịch hẹn';
@@ -474,10 +469,12 @@ async function loadRecentOrders(user) {
         }
     } catch (e) {
         console.warn('[Profile] Lỗi tải đơn hàng từ Supabase:', e);
+        if (getCurrentUser()?.id !== user.id || !container.isConnected) return;
         container.innerHTML = '<p class="text-muted p-3" role="status">Không thể tải đơn hàng gần đây. Vui lòng tải lại trang.</p>';
         return;
     }
 
+    if (getCurrentUser()?.id !== user.id || !container.isConnected) return;
     if (!orders || orders.length === 0) {
         container.innerHTML = '<p class="text-muted p-3">Chưa có đơn hàng nào gần đây.</p>';
         return;
@@ -777,10 +774,12 @@ function initProfileEditModal(user) {
         }
         if (btnSave.disabled) return;
         btnSave.disabled = true;
+        const saveGeneration = profileGeneration;
         try {
             const updatedUser = await saveCustomerProfile(getSupabaseClient(), currentUser, {
                 name: nameVal, email: emailVal, addresses: tempAddresses
             });
+            if (getCurrentUser()?.id !== currentUser.id || saveGeneration !== profileGeneration) return;
             setCurrentUser(updatedUser);
             user = updatedUser;
             tempAddresses = updatedUser.addresses.map(a => ({ ...a }));
@@ -788,6 +787,7 @@ function initProfileEditModal(user) {
             closeModal();
             showToast('success', 'Cập nhật thông tin cá nhân thành công');
         } catch (error) {
+            if (getCurrentUser()?.id !== currentUser.id || saveGeneration !== profileGeneration) return;
             showToast('error', error.message || 'Không thể lưu hồ sơ. Vui lòng thử lại.');
             if (/email/i.test(error.message || '')) {
                 setEmailError(error.message);
@@ -802,57 +802,106 @@ function initProfileEditModal(user) {
 }
 
 let isInitRunning = false;
+let profileGeneration = 0;
 let profileChannel;
 let profileClient;
-let refreshTimer;
-let upcomingRefreshTimer;
-let refreshVersion = 0;
+let stopProfileWatch = () => {};
 let profileModal;
 
 export function dispose() {
-    clearTimeout(refreshTimer);
-    clearInterval(upcomingRefreshTimer);
-    ++refreshVersion;
-    if (profileChannel && profileClient) profileClient.removeChannel(profileChannel);
-    profileChannel = null;
+    ++profileGeneration;
+    stopProfileWatch();
     if (profileModal?.parentNode === document.body) profileModal.remove();
     document.body.classList.remove('modal-open');
 }
 
 function watchProfile(user) {
-    clearInterval(upcomingRefreshTimer);
-    let loadingUpcoming = false;
-    upcomingRefreshTimer = setInterval(async () => {
-        if (document.hidden || loadingUpcoming || !document.getElementById('upcomingBookingCardContainer')) return;
-        loadingUpcoming = true;
-        try { await Promise.allSettled([loadUpcomingBooking(user), loadRecentOrders(user)]); }
-        finally { loadingUpcoming = false; }
-    }, 10000);
+    stopProfileWatch();
     profileClient = getSupabaseClient();
     if (!profileClient?.channel) return;
-    const refresh = () => {
-        clearTimeout(refreshTimer);
-        const version = ++refreshVersion;
-        refreshTimer = setTimeout(async () => {
-            try {
+    const client = profileClient;
+    let stopped = false;
+    let running = false;
+    let timer;
+    const dirty = new Set();
+    const active = () => !stopped && getCurrentUser()?.id === user.id;
+    const flush = async () => {
+        timer = null;
+        if (!active() || document.hidden || running || !dirty.size) return;
+        const resources = new Set(dirty);
+        dirty.clear();
+        running = true;
+        try {
+            if (resources.has('profile')) {
                 const fresh = await syncUserProfileFromSupabase(user, false);
-                if (version !== refreshVersion) return;
+                if (!active()) return;
+                user = fresh;
                 setCurrentUser(fresh);
-                loadProfileData(fresh);
-                await Promise.allSettled([loadUpcomingBooking(fresh), loadMyPets(fresh), loadRecentOrders(fresh)]);
-            } catch { /* Keep the current view; a save still requires a matching revision. */ }
-        }, 200);
+                await loadProfileData(fresh);
+            }
+            if (!active()) return;
+            await Promise.allSettled([
+                resources.has('bookings') ? loadUpcomingBooking(user) : null,
+                resources.has('pets') ? loadMyPets(user) : null,
+                resources.has('orders') ? loadRecentOrders(user) : null
+            ]);
+        } finally {
+            running = false;
+            if (dirty.size) schedule();
+        }
     };
-    profileChannel = profileClient.channel(`customer-profile-${user.id}`);
-    for (const table of ['customer_profile', 'customer_address', 'customer_membership', 'appointment', 'pet_profile', 'sales_order']) {
-        profileChannel.on('postgres_changes', { event: '*', schema: 'public', table, filter: `customer_id=eq.${user.id}` }, refresh);
+    const schedule = () => {
+        if (!active() || document.hidden || running || timer) return;
+        timer = setTimeout(flush, 200);
+    };
+    const refresh = resource => {
+        if (!active()) return;
+        dirty.add(resource);
+        schedule();
+    };
+    const onVisible = () => { if (!document.hidden) schedule(); };
+    const onAuth = () => { if (!active()) stop(); };
+    const onStorage = event => { if (!event.key || event.key === CURRENT_USER_KEY) onAuth(); };
+    const stop = () => {
+        if (stopped) return;
+        stopped = true;
+        clearTimeout(timer);
+        dirty.clear();
+        client.removeChannel(channel);
+        document.removeEventListener('visibilitychange', onVisible);
+        document.removeEventListener('auth_state_changed', onAuth);
+        window.removeEventListener('storage', onStorage);
+        if (profileChannel === channel) profileChannel = null;
+    };
+    const channel = client.channel(`customer-profile-${user.id}`);
+    profileChannel = channel;
+    const resources = {
+        customer_profile: 'profile', customer_address: 'profile', customer_phone: 'profile',
+        customer_membership: 'profile', paw_point_transaction: 'profile',
+        appointment: 'bookings', pet_profile: 'pets', sales_order: 'orders'
+    };
+    for (const [table, resource] of Object.entries(resources)) {
+        channel.on('postgres_changes', { event: '*', schema: 'public', table, filter: `customer_id=eq.${user.id}` }, () => refresh(resource));
     }
-    profileChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'customer', filter: `id=eq.${user.id}` }, refresh).subscribe();
+    let subscribedBefore = false;
+    channel.on('postgres_changes', { event: '*', schema: 'public', table: 'customer', filter: `id=eq.${user.id}` }, () => refresh('profile')).subscribe(status => {
+        if (status !== 'SUBSCRIBED' || !active()) return;
+        // A reconnect may have missed changes. Refresh once, with the same coalescing/visibility guards.
+        if (subscribedBefore) {
+            for (const resource of ['profile', 'bookings', 'pets', 'orders']) refresh(resource);
+        }
+        subscribedBefore = true;
+    });
+    document.addEventListener('visibilitychange', onVisible);
+    document.addEventListener('auth_state_changed', onAuth);
+    window.addEventListener('storage', onStorage);
+    stopProfileWatch = stop;
 }
 
 // Hàm khởi tạo chính của module Profile
 export async function init() {
     if (isInitRunning) return;
+    const generation = ++profileGeneration;
     isInitRunning = true;
     try {
         let user = getCurrentUser();
@@ -876,6 +925,7 @@ export async function init() {
             }
         }
 
+        if (generation !== profileGeneration || getCurrentUser()?.id !== user.id) return;
         // Tải và hiển thị dữ liệu chuẩn một lần duy nhất
         await loadProfileData(user);
         initProfileEditModal(user);
@@ -896,7 +946,7 @@ export async function init() {
                 orders?.classList.add('profile-data-ready');
             })
         ]);
-        watchProfile(user);
+        if (generation === profileGeneration && getCurrentUser()?.id === user.id) watchProfile(user);
     } finally {
         isInitRunning = false;
     }

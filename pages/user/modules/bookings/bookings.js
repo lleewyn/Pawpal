@@ -2,6 +2,7 @@
 import { API } from '/scripts/api/api.js';
 import { cancelCustomerBooking, quoteCustomerBookingMove, moveCustomerBooking } from '/scripts/shared/customer-booking.mjs';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
+import { parseVietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
 
 
 
@@ -248,7 +249,7 @@ function createBookingCard(booking) {
     const serviceName = (booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal').replace(/\s*&\s*/g, ' và ');
     const dateTimeText = buildDateTimeText(booking);
     const endAt = booking.scheduledEndAt ? new Date(booking.scheduledEndAt) : null;
-    const expectedEnd = endAt && !Number.isNaN(endAt.getTime()) ? endAt.toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+    const expectedEnd = endAt && !Number.isNaN(endAt.getTime()) ? endAt.toLocaleString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
     const visibleNote = String(booking.note || '').replace(/\[Pawpal\s+(intake|handover)(?:\s+v\d+)?\][\s\S]*?\[\/Pawpal\s+\1\]/gi, ' ').replace(/\[Pawpal\s+(?:intake|handover)(?:\s+v\d+)?\][\s\S]*$/gi, '').trim();
     const serviceItems = (booking.items || []).filter(item=>item.name).map(item=>`${escapeHtml(item.name)}${Number(item.quantity)>1?' × '+Number(item.quantity):''}`).join('<br>');
 
@@ -432,7 +433,7 @@ export function formatDate(dateString) {
     if (!dateString) return 'Chưa có ngày';
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) return dateString;
-    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return date.toLocaleDateString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function calculateNights(startDate, endDate) {
@@ -447,11 +448,14 @@ function resolveBookingStatus(booking) {
 }
 
 function getBookingScheduledAt(booking) {
+    if (booking?.scheduledStartAt) {
+        const instant = new Date(booking.scheduledStartAt);
+        if (!Number.isNaN(instant.getTime())) return instant;
+    }
     if (!booking?.date) return null;
     const isHotel = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase() === 'hotel' || String(booking?.service || booking?.serviceName || '').toLowerCase().includes('hotel');
     const time = booking.time || booking.timeStart || (isHotel ? '12:00' : '09:00');
-    const scheduled = new Date(`${booking.date}T${time}:00`);
-    return Number.isNaN(scheduled.getTime()) ? null : scheduled;
+    return parseVietnamDateTimeInput(`${booking.date}T${time}`);
 }
 
 export function formatPrice(price) {
@@ -591,13 +595,13 @@ export function openBookingMoveModal(booking,onSaved) {
     modal.addEventListener('click',e=>{const r=modal.getBoundingClientRect();if(e.target===modal&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))modal.close();});
     modal.addEventListener('close',()=>{++version;modal.remove();},{once:true});
     quoteButton.addEventListener('click',async()=>{
-        const parsed=new Date(start.value);if(!start.value || Number.isNaN(parsed.getTime())){error.textContent='Vui lòng chọn thời gian mới.';error.hidden=false;start.focus();return;}
+        const parsed=parseVietnamDateTimeInput(start.value);if(!parsed){error.textContent='Vui lòng chọn thời gian mới theo giờ Việt Nam.';error.hidden=false;start.focus();return;}
         invalidate();const current=version;quoteButton.disabled=true;
         try{
             const result=await quoteCustomerBookingMove(db,user,booking,parsed.toISOString());
             if(!modal.isConnected || current!==version)return;
             quote=result;preview.hidden=false;
-            modal.querySelector('#bookingMoveEnd').textContent='Kết thúc dự kiến: '+new Date(result.end_at).toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            modal.querySelector('#bookingMoveEnd').textContent='Kết thúc dự kiến: '+new Date(result.end_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
             modal.querySelector('#bookingMoveTotal').textContent='Tổng tiền mới: '+formatPrice(Number(result.total));save.disabled=false;
         }catch(err){if(modal.isConnected&&current===version){error.textContent=err.message;error.hidden=false;}}
         finally{quoteButton.disabled=false;}

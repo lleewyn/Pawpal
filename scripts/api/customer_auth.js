@@ -328,7 +328,7 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             }
             if (req.body?.action === 'support-reply') {
                 await limit(`support-reply:${user.id}`, 30, 60000);
-                const service = require('./customer_support').createCustomerSupportService(admin);
+                const service = require('./customer_support').createCustomerSupportService(clientFactory(token));
                 return res.json({ success: true, message: await service.reply(user.id, req.body) });
             }
             res.json({ success: true, user });

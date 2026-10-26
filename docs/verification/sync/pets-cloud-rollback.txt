@@ -1,0 +1,66 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-25T12:53:52.614Z",
+  "scope": "Pet RPC/RLS; synthetic actors; transaction always rolled back; no Logs",
+  "checks": [
+    {
+      "name": "User creates one pet; server derives owner A despite forged customer_id B",
+      "status": "PASS"
+    },
+    {
+      "name": "Retry with same create ID cannot duplicate pet",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin reads exact owner and independent fields after User update",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin customer-scoped edit rejects mismatched customer/pet relation",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads Admin edits from same pet ID",
+      "status": "PASS"
+    },
+    {
+      "name": "Invalid weight and stale version rejected without partial update",
+      "status": "PASS"
+    },
+    {
+      "name": "User archive is visible to Admin without deleting pet",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin restore is visible to User and preserves ownership",
+      "status": "PASS"
+    },
+    {
+      "name": "Name/status updates with null weight do not duplicate weight history",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read, edit or archive A pet using its ID",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot invoke private pet write RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Denied operations leave the pet unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removed all synthetic pet/customer/auth fixtures",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "1bc7e5f2-bda4-45ea-a3a3-af0f1b058287",
+    "customerB": "02b04686-21a7-49d3-984f-4956af043372",
+    "pet": "024bfe16-ed3d-4baf-9926-bd1f46d9fed5"
+  },
+  "status": "PASS",
+  "queries": 75
+}

@@ -205,9 +205,9 @@
 
         tbody.innerHTML = pageList.map(item => {
             let priorityBadge = '';
-            if (item.priority === 'khan_cap') priorityBadge = '<span class="admin-badge badge-danger">Khẩn cấp</span>';
-            else if (item.priority === 'high') priorityBadge = '<span class="admin-badge badge-warning">Cao</span>';
-            else priorityBadge = `<span class="admin-badge badge-neutral">${item.priority === 'low' ? 'Thấp' : 'Trung bình'}</span>`;
+            if (item.priority === 'khan_cap') priorityBadge = '<span class="admin-badge priority-chip priority-critical">Khẩn cấp</span>';
+            else if (item.priority === 'high') priorityBadge = '<span class="admin-badge priority-chip priority-high">Cao</span>';
+            else priorityBadge = `<span class="admin-badge priority-chip ${item.priority === 'low' ? 'priority-low' : 'priority-medium'}">${item.priority === 'low' ? 'Thấp' : 'Trung bình'}</span>`;
 
             let statusBadge = '';
             if (item.status === 'open' || item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Chưa xử lý</span>';

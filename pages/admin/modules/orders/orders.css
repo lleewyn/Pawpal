@@ -315,7 +315,7 @@
 
 /* HUY HIỆU TRẠNG THÁI (MUTED PASTEL VÀ KHÔNG VIỀN) */
 
-.orders-module .admin-badge {
+.orders-module .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2123,6 +2123,45 @@
 
 .orders-module .variant-matrix-table tr:last-child td {
     border-bottom: none;
+}
+
+.orders-module #modalAddProduct .variant-table-wrapper {
+    overflow-x: auto;
+    overscroll-behavior: contain;
+}
+
+.orders-module #modalAddProduct .variant-label-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    min-width: 0;
+}
+
+.orders-module #modalAddProduct .variant-matrix-table .admin-input {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.orders-module #modalAddProduct textarea.admin-input {
+    height: auto !important;
+    min-height: 120px;
+    padding: 10px 12px;
+    line-height: 1.6;
+    resize: vertical;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.orders-module #modalAddProduct #newProdDescription {
+    min-height: 160px;
+}
+
+.orders-module #modalAddProduct #newProdFeedingGuide,
+.orders-module #modalAddProduct #newProdStorage {
+    min-height: 90px;
 }
 
 .orders-module .variant-input {
@@ -4120,7 +4159,7 @@
     white-space: nowrap;
 }
 
-.orders-module #ordersTable .admin-badge {
+.orders-module #ordersTable .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {
     white-space: nowrap;
 }
 
@@ -4206,8 +4245,8 @@
 }
 
 /* Status labels are plain text with semantic color — no oversized AI-style pills. */
-.orders-module .admin-table .admin-badge,
-.orders-module .admin-badge {
+.orders-module .admin-table .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)),
+.orders-module .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {
     display: inline;
     height: auto;
     min-height: 0;
@@ -5102,4 +5141,535 @@ td):nth-child(n/**/+3) {
 .orders-module .user-link-text:hover {
     text-decoration: underline;
     text-underline-offset: 2px;
+}
+
+/* ==========================================================================
+   PAWPAL ADMIN — SHARED STATUS / PRIORITY / SLA CONTRACT
+   Quiet Enterprise — Data-first Admin
+   Ordinary status = text only. Priority/SLA = restrained outlined chips.
+   ========================================================================== */
+
+/* Ordinary lifecycle/account/payment/content status: text only, never pills. */
+.orders-module .admin-badge:is(
+    .badge-success,
+    .badge-active,
+    .badge-info,
+    .badge-primary,
+    .badge-warning,
+    .badge-danger,
+    .badge-neutral,
+    .badge-secondary,
+    .badge-pending,
+    .badge-confirmed,
+    .badge-completed,
+    .badge-cancelled,
+    .badge-in-progress,
+    .badge-shipping,
+    .badge-delivered,
+    .badge-paid,
+    .badge-unpaid,
+    .badge-cod-pending,
+    .badge-pass,
+    .badge-fail,
+    .badge-leave,
+    .badge-pause,
+    .badge-locked,
+    .badge-resigned,
+    .badge-retrain,
+    .badge-req-approved,
+    .badge-req-pending,
+    .badge-req-rejected,
+    .badge-reprocessing,
+    .badge-waiting-approval
+):not(.priority-chip):not(.sla-chip) {
+    display: inline;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+
+    font-size: 12.5px !important;
+    font-weight: 550 !important;
+    line-height: 1.45 !important;
+    white-space: normal;
+}
+
+/* Semantic colors sampled from the existing PawPal customer-admin palette. */
+.orders-module .admin-badge:is(
+    .badge-success,
+    .badge-active,
+    .badge-completed,
+    .badge-paid,
+    .badge-delivered,
+    .badge-pass,
+    .badge-req-approved
+):not(.priority-chip):not(.sla-chip) {
+    color: #345D46 !important;
+}
+
+.orders-module .admin-badge:is(
+    .badge-info,
+    .badge-primary,
+    .badge-confirmed,
+    .badge-in-progress,
+    .badge-shipping
+):not(.priority-chip):not(.sla-chip) {
+    color: #526A78 !important;
+}
+
+.orders-module .admin-badge:is(
+    .badge-warning,
+    .badge-pending,
+    .badge-cod-pending,
+    .badge-leave,
+    .badge-retrain,
+    .badge-req-pending,
+    .badge-waiting-approval
+):not(.priority-chip):not(.sla-chip) {
+    color: #987324 !important;
+}
+
+.orders-module .admin-badge:is(
+    .badge-danger,
+    .badge-cancelled,
+    .badge-unpaid,
+    .badge-fail,
+    .badge-locked,
+    .badge-resigned,
+    .badge-req-rejected,
+    .badge-reprocessing
+):not(.priority-chip):not(.sla-chip) {
+    color: #BA4745 !important;
+}
+
+.orders-module .admin-badge:is(
+    .badge-neutral,
+    .badge-secondary,
+    .badge-pause
+):not(.priority-chip):not(.sla-chip) {
+    color: #697A70 !important;
+}
+
+/* Priority: same quiet outlined chip shape; semantic emphasis is mostly text. */
+.orders-module .admin-badge.priority-chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+    padding: 2px 6px;
+
+    background: #FFFFFF !important;
+    border: 1px solid #DCE4DE !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+
+    color: #59675E !important;
+    font-size: 11.5px;
+    font-weight: 550;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.orders-module .admin-badge.priority-chip.priority-critical {
+    color: #A74643 !important;
+    border-color: #D9C2BF !important;
+}
+
+.orders-module .admin-badge.priority-chip.priority-high {
+    color: #80652D !important;
+    border-color: #DDD2BD !important;
+}
+
+.orders-module .admin-badge.priority-chip.priority-medium {
+    color: #626F66 !important;
+    border-color: #DCE4DE !important;
+}
+
+.orders-module .admin-badge.priority-chip.priority-low {
+    color: #697A70 !important;
+    border-color: #E2E7E3 !important;
+}
+
+/* SLA: outlined, neutral background; color signals only urgent exceptions. */
+.orders-module .admin-badge:is(
+    .badge-sla-ok,
+    .badge-sla-urgent,
+    .badge-sla-warning
+),
+.orders-module .sla-badge,
+.orders-module .admin-badge.sla-chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+    padding: 2px 6px;
+
+    background: #FFFFFF !important;
+    border: 1px solid #DCE4DE !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+
+    color: #697A70 !important;
+    font-size: 11.5px;
+    font-weight: 550;
+    line-height: 1.4;
+    white-space: normal;
+}
+
+.orders-module .admin-badge.badge-sla-ok,
+.orders-module .sla-badge.sla-done {
+    color: #345D46 !important;
+    border-color: #D1DDD4 !important;
+}
+
+.orders-module .admin-badge:is(.badge-sla-warning, .badge-sla-urgent),
+.orders-module .sla-badge.sla-urgent {
+    color: #80652D !important;
+    border-color: #DDD2BD !important;
+}
+
+.orders-module .sla-badge.sla-overdue {
+    color: #A74643 !important;
+    border-color: #D9C2BF !important;
+}
+
+.orders-module .sla-badge.sla-normal {
+    color: #697A70 !important;
+    border-color: #E2E7E3 !important;
+}
+
+/* Preserve conditional visibility for dynamic status labels. */
+.orders-module .admin-badge[hidden],
+.orders-module .sla-badge[hidden] {
+    display: none !important;
+}
+
+/* Table column alignment: matching headers and data cells */
+.orders-module #ordersTable > thead > tr > th:not([colspan]),
+.orders-module #ordersTable > tbody > tr > td:not([colspan]),
+.orders-module table:has(> tbody#detailOrderItemsBody) > thead > tr > th:not([colspan]),
+.orders-module table:has(> tbody#detailOrderItemsBody) > tbody > tr > td:not([colspan]),
+.orders-module #productsTable > thead > tr > th:not([colspan]),
+.orders-module #productsTable > tbody > tr > td:not([colspan]),
+.orders-module #vouchersTable > thead > tr > th:not([colspan]),
+.orders-module #vouchersTable > tbody > tr > td:not([colspan]),
+.orders-module table:has(> tbody#posCartItemsList) > thead > tr > th:not([colspan]),
+.orders-module table:has(> tbody#posCartItemsList) > tbody > tr > td:not([colspan]),
+.orders-module table:has(> tbody#salesBatchDispatchBody) > thead > tr > th:not([colspan]),
+.orders-module table:has(> tbody#salesBatchDispatchBody) > tbody > tr > td:not([colspan]),
+.orders-module table:has(> tbody#rmaItemsTableBody) > thead > tr > th:not([colspan]),
+.orders-module table:has(> tbody#rmaItemsTableBody) > tbody > tr > td:not([colspan]),
+.orders-module #variantMatrixTable > thead > tr > th:not([colspan]),
+.orders-module #variantMatrixTable > tbody > tr > td:not([colspan]),
+.orders-module table:has(> tbody#stockLogsTableBody) > thead > tr > th:not([colspan]),
+.orders-module table:has(> tbody#stockLogsTableBody) > tbody > tr > td:not([colspan]),
+.orders-module table:has(> tbody#grnItemsTableBody) > thead > tr > th:not([colspan]),
+.orders-module table:has(> tbody#grnItemsTableBody) > tbody > tr > td:not([colspan]),
+.orders-module table:has(> tbody#stocktakeTableBody) > thead > tr > th:not([colspan]),
+.orders-module table:has(> tbody#stocktakeTableBody) > tbody > tr > td:not([colspan]),
+.orders-module .packing-slip-sheet .slip-items-table > thead > tr > th:not([colspan]),
+.orders-module .packing-slip-sheet .slip-items-table > tbody > tr > td:not([colspan]),
+.orders-module .manifest-sheet .slip-items-table > thead > tr > th:not([colspan]),
+.orders-module .manifest-sheet .slip-items-table > tbody > tr > td:not([colspan]),
+.orders-module #posReceiptPrintArea .slip-items-table > thead > tr > th:not([colspan]),
+.orders-module #posReceiptPrintArea .slip-items-table > tbody > tr > td:not([colspan]) {
+    text-align: left !important;
+    vertical-align: middle;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+
+.orders-module #ordersTable > thead > tr > th:nth-child(5):not([colspan]),
+.orders-module #ordersTable > tbody > tr > td:nth-child(5):not([colspan]) {
+    text-align: right !important;
+}
+
+.orders-module #ordersTable > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.orders-module #ordersTable > thead > tr > th:nth-child(1):not([colspan]),
+.orders-module #ordersTable > tbody > tr > td:nth-child(1):not([colspan]),
+.orders-module #ordersTable > thead > tr > th:nth-child(10):not([colspan]),
+.orders-module #ordersTable > tbody > tr > td:nth-child(10):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module #ordersTable > tbody > tr > td:nth-child(1):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #ordersTable > tbody > tr > td:nth-child(10):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module table:has(> tbody#detailOrderItemsBody) > thead > tr > th:nth-child(3):not([colspan]),
+.orders-module table:has(> tbody#detailOrderItemsBody) > tbody > tr > td:nth-child(3):not([colspan]),
+.orders-module table:has(> tbody#detailOrderItemsBody) > thead > tr > th:nth-child(5):not([colspan]),
+.orders-module table:has(> tbody#detailOrderItemsBody) > tbody > tr > td:nth-child(5):not([colspan]) {
+    text-align: right !important;
+}
+
+.orders-module table:has(> tbody#detailOrderItemsBody) > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module table:has(> tbody#detailOrderItemsBody) > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.orders-module table:has(> tbody#detailOrderItemsBody) > thead > tr > th:nth-child(4):not([colspan]),
+.orders-module table:has(> tbody#detailOrderItemsBody) > tbody > tr > td:nth-child(4):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module table:has(> tbody#detailOrderItemsBody) > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module #productsTable > thead > tr > th:nth-child(5):not([colspan]),
+.orders-module #productsTable > tbody > tr > td:nth-child(5):not([colspan]) {
+    text-align: right !important;
+}
+
+.orders-module #productsTable > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.orders-module #productsTable > thead > tr > th:nth-child(6):not([colspan]),
+.orders-module #productsTable > tbody > tr > td:nth-child(6):not([colspan]),
+.orders-module #productsTable > thead > tr > th:nth-child(7):not([colspan]),
+.orders-module #productsTable > tbody > tr > td:nth-child(7):not([colspan]),
+.orders-module #productsTable > thead > tr > th:nth-child(8):not([colspan]),
+.orders-module #productsTable > tbody > tr > td:nth-child(8):not([colspan]),
+.orders-module #productsTable > thead > tr > th:nth-child(9):not([colspan]),
+.orders-module #productsTable > tbody > tr > td:nth-child(9):not([colspan]),
+.orders-module #productsTable > thead > tr > th:nth-child(12):not([colspan]),
+.orders-module #productsTable > tbody > tr > td:nth-child(12):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module #productsTable > tbody > tr > td:nth-child(6):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #productsTable > tbody > tr > td:nth-child(7):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #productsTable > tbody > tr > td:nth-child(8):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #productsTable > tbody > tr > td:nth-child(9):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #productsTable > tbody > tr > td:nth-child(12):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module #vouchersTable > thead > tr > th:nth-child(3):not([colspan]),
+.orders-module #vouchersTable > tbody > tr > td:nth-child(3):not([colspan]),
+.orders-module #vouchersTable > thead > tr > th:nth-child(4):not([colspan]),
+.orders-module #vouchersTable > tbody > tr > td:nth-child(4):not([colspan]) {
+    text-align: right !important;
+}
+
+.orders-module #vouchersTable > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #vouchersTable > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.orders-module #vouchersTable > thead > tr > th:nth-child(5):not([colspan]),
+.orders-module #vouchersTable > tbody > tr > td:nth-child(5):not([colspan]),
+.orders-module #vouchersTable > thead > tr > th:nth-child(7):not([colspan]),
+.orders-module #vouchersTable > tbody > tr > td:nth-child(7):not([colspan]),
+.orders-module #vouchersTable > thead > tr > th:nth-child(9):not([colspan]),
+.orders-module #vouchersTable > tbody > tr > td:nth-child(9):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module #vouchersTable > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #vouchersTable > tbody > tr > td:nth-child(7):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #vouchersTable > tbody > tr > td:nth-child(9):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module table:has(> tbody#posCartItemsList) > thead > tr > th:nth-child(2):not([colspan]),
+.orders-module table:has(> tbody#posCartItemsList) > tbody > tr > td:nth-child(2):not([colspan]),
+.orders-module table:has(> tbody#posCartItemsList) > thead > tr > th:nth-child(4):not([colspan]),
+.orders-module table:has(> tbody#posCartItemsList) > tbody > tr > td:nth-child(4):not([colspan]) {
+    text-align: right !important;
+}
+
+.orders-module table:has(> tbody#posCartItemsList) > tbody > tr > td:nth-child(2):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module table:has(> tbody#posCartItemsList) > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.orders-module table:has(> tbody#posCartItemsList) > thead > tr > th:nth-child(3):not([colspan]),
+.orders-module table:has(> tbody#posCartItemsList) > tbody > tr > td:nth-child(3):not([colspan]),
+.orders-module table:has(> tbody#posCartItemsList) > thead > tr > th:nth-child(5):not([colspan]),
+.orders-module table:has(> tbody#posCartItemsList) > tbody > tr > td:nth-child(5):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module table:has(> tbody#posCartItemsList) > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module table:has(> tbody#posCartItemsList) > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module table:has(> tbody#rmaItemsTableBody) > thead > tr > th:nth-child(5):not([colspan]),
+.orders-module table:has(> tbody#rmaItemsTableBody) > tbody > tr > td:nth-child(5):not([colspan]) {
+    text-align: right !important;
+}
+
+.orders-module table:has(> tbody#rmaItemsTableBody) > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.orders-module table:has(> tbody#rmaItemsTableBody) > thead > tr > th:nth-child(1):not([colspan]),
+.orders-module table:has(> tbody#rmaItemsTableBody) > tbody > tr > td:nth-child(1):not([colspan]),
+.orders-module table:has(> tbody#rmaItemsTableBody) > thead > tr > th:nth-child(3):not([colspan]),
+.orders-module table:has(> tbody#rmaItemsTableBody) > tbody > tr > td:nth-child(3):not([colspan]),
+.orders-module table:has(> tbody#rmaItemsTableBody) > thead > tr > th:nth-child(4):not([colspan]),
+.orders-module table:has(> tbody#rmaItemsTableBody) > tbody > tr > td:nth-child(4):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module table:has(> tbody#rmaItemsTableBody) > tbody > tr > td:nth-child(1):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module table:has(> tbody#rmaItemsTableBody) > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module table:has(> tbody#rmaItemsTableBody) > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module #variantMatrixTable > thead > tr > th:nth-child(4):not([colspan]),
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(4):not([colspan]),
+.orders-module #variantMatrixTable > thead > tr > th:nth-child(5):not([colspan]),
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(5):not([colspan]),
+.orders-module #variantMatrixTable > thead > tr > th:nth-child(6):not([colspan]),
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(6):not([colspan]) {
+    text-align: right !important;
+}
+
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(6):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.orders-module #variantMatrixTable > thead > tr > th:nth-child(7):not([colspan]),
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(7):not([colspan]),
+.orders-module #variantMatrixTable > thead > tr > th:nth-child(8):not([colspan]),
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(8):not([colspan]),
+.orders-module #variantMatrixTable > thead > tr > th:nth-child(9):not([colspan]),
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(9):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(7):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(8):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #variantMatrixTable > tbody > tr > td:nth-child(9):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module table:has(> tbody#stockLogsTableBody) > thead > tr > th:nth-child(4):not([colspan]),
+.orders-module table:has(> tbody#stockLogsTableBody) > tbody > tr > td:nth-child(4):not([colspan]),
+.orders-module table:has(> tbody#stockLogsTableBody) > thead > tr > th:nth-child(5):not([colspan]),
+.orders-module table:has(> tbody#stockLogsTableBody) > tbody > tr > td:nth-child(5):not([colspan]),
+.orders-module table:has(> tbody#stockLogsTableBody) > thead > tr > th:nth-child(6):not([colspan]),
+.orders-module table:has(> tbody#stockLogsTableBody) > tbody > tr > td:nth-child(6):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module table:has(> tbody#stockLogsTableBody) > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module table:has(> tbody#stockLogsTableBody) > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module table:has(> tbody#stockLogsTableBody) > tbody > tr > td:nth-child(6):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module table:has(> tbody#grnItemsTableBody) > thead > tr > th:nth-child(4):not([colspan]),
+.orders-module table:has(> tbody#grnItemsTableBody) > tbody > tr > td:nth-child(4):not([colspan]),
+.orders-module table:has(> tbody#grnItemsTableBody) > thead > tr > th:nth-child(5):not([colspan]),
+.orders-module table:has(> tbody#grnItemsTableBody) > tbody > tr > td:nth-child(5):not([colspan]) {
+    text-align: right !important;
+}
+
+.orders-module table:has(> tbody#grnItemsTableBody) > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module table:has(> tbody#grnItemsTableBody) > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.orders-module table:has(> tbody#grnItemsTableBody) > thead > tr > th:nth-child(3):not([colspan]),
+.orders-module table:has(> tbody#grnItemsTableBody) > tbody > tr > td:nth-child(3):not([colspan]),
+.orders-module table:has(> tbody#grnItemsTableBody) > thead > tr > th:nth-child(6):not([colspan]),
+.orders-module table:has(> tbody#grnItemsTableBody) > tbody > tr > td:nth-child(6):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module table:has(> tbody#grnItemsTableBody) > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module table:has(> tbody#grnItemsTableBody) > tbody > tr > td:nth-child(6):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module table:has(> tbody#stocktakeTableBody) > thead > tr > th:nth-child(3):not([colspan]),
+.orders-module table:has(> tbody#stocktakeTableBody) > tbody > tr > td:nth-child(3):not([colspan]),
+.orders-module table:has(> tbody#stocktakeTableBody) > thead > tr > th:nth-child(4):not([colspan]),
+.orders-module table:has(> tbody#stocktakeTableBody) > tbody > tr > td:nth-child(4):not([colspan]),
+.orders-module table:has(> tbody#stocktakeTableBody) > thead > tr > th:nth-child(5):not([colspan]),
+.orders-module table:has(> tbody#stocktakeTableBody) > tbody > tr > td:nth-child(5):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module table:has(> tbody#stocktakeTableBody) > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module table:has(> tbody#stocktakeTableBody) > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module table:has(> tbody#stocktakeTableBody) > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module .packing-slip-sheet .slip-items-table > thead > tr > th:nth-child(3):not([colspan]),
+.orders-module .packing-slip-sheet .slip-items-table > tbody > tr > td:nth-child(3):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module .packing-slip-sheet .slip-items-table > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module .manifest-sheet .slip-items-table > thead > tr > th:nth-child(6):not([colspan]),
+.orders-module .manifest-sheet .slip-items-table > tbody > tr > td:nth-child(6):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module .manifest-sheet .slip-items-table > tbody > tr > td:nth-child(6):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.orders-module #posReceiptPrintArea .slip-items-table > thead > tr > th:nth-child(4):not([colspan]),
+.orders-module #posReceiptPrintArea .slip-items-table > tbody > tr > td:nth-child(4):not([colspan]),
+.orders-module #posReceiptPrintArea .slip-items-table > thead > tr > th:nth-child(5):not([colspan]),
+.orders-module #posReceiptPrintArea .slip-items-table > tbody > tr > td:nth-child(5):not([colspan]) {
+    text-align: right !important;
+}
+
+.orders-module #posReceiptPrintArea .slip-items-table > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.orders-module #posReceiptPrintArea .slip-items-table > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.orders-module #posReceiptPrintArea .slip-items-table > thead > tr > th:nth-child(3):not([colspan]),
+.orders-module #posReceiptPrintArea .slip-items-table > tbody > tr > td:nth-child(3):not([colspan]) {
+    text-align: center !important;
+}
+
+.orders-module #posReceiptPrintArea .slip-items-table > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .orders-module #modalAddProduct .form-row-3col,
+    .orders-module #modalAddProduct .form-row-2col {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .orders-module #modalAddProduct .form-row-3col > .form-group-item {
+        grid-column: auto !important;
+        min-width: 0;
+    }
 }

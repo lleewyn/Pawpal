@@ -1,5 +1,6 @@
 import { API } from '/scripts/api/api.js';
 import { paymentResult } from '/scripts/shared/payment-result.mjs';
+import { clearCheckoutRequest } from '/scripts/shared/checkout-request.mjs';
 const el=id=>document.getElementById(id);
 async function loadResult(){
  const params=new URLSearchParams(location.search),id=params.get('orderId')||params.get('vnp_TxnRef');
@@ -14,8 +15,10 @@ async function loadResult(){
   const orders=await API.getUserOrders(identity.data.id);
   const order=orders.find(o=>o.id===id || o._supabaseId===id);
   if(!order)throw Error('Chưa tìm thấy đơn hàng trong tài khoản của bạn. Vui lòng thử kiểm tra lại.');
+  try { clearCheckoutRequest(sessionStorage,identity.data.id,id); } catch { /* Storage errors must not hide a verified order. */ }
   const result=paymentResult(order);
   el('resultTitle').textContent=result.title;el('resultMessage').textContent=result.message;
+  if(params.get('cartReview')==='1')el('resultMessage').textContent+=' Giỏ hàng chưa được xác nhận đồng bộ sau khi tạo đơn. Vui lòng kiểm tra giỏ hàng; đơn này đã có trên hệ thống.';
   el('resultMark').textContent=result.mark;el('resultMark').dataset.state=result.state;
   el('resultOrderCode').textContent=order.id;
   el('resultAmount').textContent=Number(order.pricing.grandTotal).toLocaleString('vi-VN')+'đ';

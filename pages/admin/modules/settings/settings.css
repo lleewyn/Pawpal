@@ -1211,8 +1211,8 @@
     color: var(--settings-primary);
 }
 
-.settings-module-wrapper .admin-badge {
-    display: inline !important;
+.settings-module-wrapper .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {
+    display: inline;
     min-height: 0 !important;
     height: auto !important;
     padding: 0 !important;
@@ -1226,24 +1226,24 @@
     white-space: normal;
 }
 
-.settings-module-wrapper .admin-badge.badge-active,
-.settings-module-wrapper .admin-badge.badge-success {
+.settings-module-wrapper .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)).badge-active,
+.settings-module-wrapper .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)).badge-success {
     color: #275e49 !important;
 }
 
-.settings-module-wrapper .admin-badge.badge-danger {
+.settings-module-wrapper .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)).badge-danger {
     color: #b54745 !important;
 }
 
-.settings-module-wrapper .admin-badge.badge-warning {
+.settings-module-wrapper .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)).badge-warning {
     color: #8a5a12 !important;
 }
 
-.settings-module-wrapper .admin-badge.badge-info {
+.settings-module-wrapper .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)).badge-info {
     color: #315e78 !important;
 }
 
-.settings-module-wrapper .admin-badge.badge-neutral {
+.settings-module-wrapper .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)).badge-neutral {
     color: #6f8176 !important;
 }
 
@@ -1612,9 +1612,9 @@
     border-bottom: 0;
 }
 
-.settings-module-wrapper .admin-table .admin-badge,
-.settings-module-wrapper .admin-table .admin-badge[style] {
-    display: inline !important;
+.settings-module-wrapper .admin-table .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)),
+.settings-module-wrapper .admin-table .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning))[style] {
+    display: inline;
     min-height: 0 !important;
     height: auto !important;
     padding: 0 !important;
@@ -2092,3 +2092,268 @@
     }
 }
 
+/* ==========================================================================
+   PAWPAL ADMIN — SHARED STATUS / PRIORITY / SLA CONTRACT
+   Quiet Enterprise — Data-first Admin
+   Ordinary status = text only. Priority/SLA = restrained outlined chips.
+   ========================================================================== */
+
+/* Ordinary lifecycle/account/payment/content status: text only, never pills. */
+.settings-module-wrapper .admin-badge:is(
+    .badge-success,
+    .badge-active,
+    .badge-info,
+    .badge-primary,
+    .badge-warning,
+    .badge-danger,
+    .badge-neutral,
+    .badge-secondary,
+    .badge-pending,
+    .badge-confirmed,
+    .badge-completed,
+    .badge-cancelled,
+    .badge-in-progress,
+    .badge-shipping,
+    .badge-delivered,
+    .badge-paid,
+    .badge-unpaid,
+    .badge-cod-pending,
+    .badge-pass,
+    .badge-fail,
+    .badge-leave,
+    .badge-pause,
+    .badge-locked,
+    .badge-resigned,
+    .badge-retrain,
+    .badge-req-approved,
+    .badge-req-pending,
+    .badge-req-rejected,
+    .badge-reprocessing,
+    .badge-waiting-approval
+):not(.priority-chip):not(.sla-chip) {
+    display: inline;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+
+    font-size: 12.5px !important;
+    font-weight: 550 !important;
+    line-height: 1.45 !important;
+    white-space: normal;
+}
+
+/* Semantic colors sampled from the existing PawPal customer-admin palette. */
+.settings-module-wrapper .admin-badge:is(
+    .badge-success,
+    .badge-active,
+    .badge-completed,
+    .badge-paid,
+    .badge-delivered,
+    .badge-pass,
+    .badge-req-approved
+):not(.priority-chip):not(.sla-chip) {
+    color: #345D46 !important;
+}
+
+.settings-module-wrapper .admin-badge:is(
+    .badge-info,
+    .badge-primary,
+    .badge-confirmed,
+    .badge-in-progress,
+    .badge-shipping
+):not(.priority-chip):not(.sla-chip) {
+    color: #526A78 !important;
+}
+
+.settings-module-wrapper .admin-badge:is(
+    .badge-warning,
+    .badge-pending,
+    .badge-cod-pending,
+    .badge-leave,
+    .badge-retrain,
+    .badge-req-pending,
+    .badge-waiting-approval
+):not(.priority-chip):not(.sla-chip) {
+    color: #987324 !important;
+}
+
+.settings-module-wrapper .admin-badge:is(
+    .badge-danger,
+    .badge-cancelled,
+    .badge-unpaid,
+    .badge-fail,
+    .badge-locked,
+    .badge-resigned,
+    .badge-req-rejected,
+    .badge-reprocessing
+):not(.priority-chip):not(.sla-chip) {
+    color: #BA4745 !important;
+}
+
+.settings-module-wrapper .admin-badge:is(
+    .badge-neutral,
+    .badge-secondary,
+    .badge-pause
+):not(.priority-chip):not(.sla-chip) {
+    color: #697A70 !important;
+}
+
+/* Priority: same quiet outlined chip shape; semantic emphasis is mostly text. */
+.settings-module-wrapper .admin-badge.priority-chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+    padding: 2px 6px;
+
+    background: #FFFFFF !important;
+    border: 1px solid #DCE4DE !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+
+    color: #59675E !important;
+    font-size: 11.5px;
+    font-weight: 550;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.settings-module-wrapper .admin-badge.priority-chip.priority-critical {
+    color: #A74643 !important;
+    border-color: #D9C2BF !important;
+}
+
+.settings-module-wrapper .admin-badge.priority-chip.priority-high {
+    color: #80652D !important;
+    border-color: #DDD2BD !important;
+}
+
+.settings-module-wrapper .admin-badge.priority-chip.priority-medium {
+    color: #626F66 !important;
+    border-color: #DCE4DE !important;
+}
+
+.settings-module-wrapper .admin-badge.priority-chip.priority-low {
+    color: #697A70 !important;
+    border-color: #E2E7E3 !important;
+}
+
+/* SLA: outlined, neutral background; color signals only urgent exceptions. */
+.settings-module-wrapper .admin-badge:is(
+    .badge-sla-ok,
+    .badge-sla-urgent,
+    .badge-sla-warning
+),
+.settings-module-wrapper .sla-badge,
+.settings-module-wrapper .admin-badge.sla-chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+    padding: 2px 6px;
+
+    background: #FFFFFF !important;
+    border: 1px solid #DCE4DE !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+
+    color: #697A70 !important;
+    font-size: 11.5px;
+    font-weight: 550;
+    line-height: 1.4;
+    white-space: normal;
+}
+
+.settings-module-wrapper .admin-badge.badge-sla-ok,
+.settings-module-wrapper .sla-badge.sla-done {
+    color: #345D46 !important;
+    border-color: #D1DDD4 !important;
+}
+
+.settings-module-wrapper .admin-badge:is(.badge-sla-warning, .badge-sla-urgent),
+.settings-module-wrapper .sla-badge.sla-urgent {
+    color: #80652D !important;
+    border-color: #DDD2BD !important;
+}
+
+.settings-module-wrapper .sla-badge.sla-overdue {
+    color: #A74643 !important;
+    border-color: #D9C2BF !important;
+}
+
+.settings-module-wrapper .sla-badge.sla-normal {
+    color: #697A70 !important;
+    border-color: #E2E7E3 !important;
+}
+
+/* Preserve conditional visibility for dynamic status labels. */
+.settings-module-wrapper .admin-badge[hidden],
+.settings-module-wrapper .sla-badge[hidden] {
+    display: none !important;
+}
+
+/* Table column alignment: matching headers and data cells */
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > thead > tr > th:not([colspan]),
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > tbody > tr > td:not([colspan]),
+.settings-module-wrapper table:has(> tbody#articlesTableBody) > thead > tr > th:not([colspan]),
+.settings-module-wrapper table:has(> tbody#articlesTableBody) > tbody > tr > td:not([colspan]),
+.settings-module-wrapper table:has(> tbody#auditLogTableBody) > thead > tr > th:not([colspan]),
+.settings-module-wrapper table:has(> tbody#auditLogTableBody) > tbody > tr > td:not([colspan]) {
+    text-align: left !important;
+    vertical-align: middle;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > thead > tr > th:nth-child(5):not([colspan]),
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > tbody > tr > td:nth-child(5):not([colspan]),
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > thead > tr > th:nth-child(6):not([colspan]),
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > tbody > tr > td:nth-child(6):not([colspan]) {
+    text-align: right !important;
+}
+
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > tbody > tr > td:nth-child(6):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > thead > tr > th:nth-child(7):not([colspan]),
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > tbody > tr > td:nth-child(7):not([colspan]),
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > thead > tr > th:nth-child(10):not([colspan]),
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > tbody > tr > td:nth-child(10):not([colspan]) {
+    text-align: center !important;
+}
+
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > tbody > tr > td:nth-child(7):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.settings-module-wrapper table:has(> tbody#vouchersTableBody) > tbody > tr > td:nth-child(10):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.settings-module-wrapper table:has(> tbody#articlesTableBody) > thead > tr > th:nth-child(1):not([colspan]),
+.settings-module-wrapper table:has(> tbody#articlesTableBody) > tbody > tr > td:nth-child(1):not([colspan]),
+.settings-module-wrapper table:has(> tbody#articlesTableBody) > thead > tr > th:nth-child(5):not([colspan]),
+.settings-module-wrapper table:has(> tbody#articlesTableBody) > tbody > tr > td:nth-child(5):not([colspan]),
+.settings-module-wrapper table:has(> tbody#articlesTableBody) > thead > tr > th:nth-child(9):not([colspan]),
+.settings-module-wrapper table:has(> tbody#articlesTableBody) > tbody > tr > td:nth-child(9):not([colspan]) {
+    text-align: center !important;
+}
+
+.settings-module-wrapper table:has(> tbody#articlesTableBody) > tbody > tr > td:nth-child(1):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.settings-module-wrapper table:has(> tbody#articlesTableBody) > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.settings-module-wrapper table:has(> tbody#articlesTableBody) > tbody > tr > td:nth-child(9):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}

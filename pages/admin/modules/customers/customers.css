@@ -1500,7 +1500,7 @@
     background: rgb(248, 250, 248);
 }
 
-.customers-module #customerDataTable .admin-badge {
+.customers-module #customerDataTable .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {
     display: inline;
     height: auto;
     min-height: 0px;
@@ -1925,8 +1925,8 @@
 }
 
 .customers-module #customerDataTable th:last-child {
-    width: 90px !important;
-    min-width: 90px !important;
+    width: 8% !important;
+    min-width: 80px !important;
 }
 
 .customers-module #customerDataTable .customer-code-text {
@@ -2135,7 +2135,7 @@
     max-width: 105px;
 }
 
-.customers-module #customerDataTable .admin-badge {
+.customers-module #customerDataTable .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {
     font: 500 11.5px / 1.35 Inter, "Segoe UI", Arial, sans-serif;
     letter-spacing: normal;
     color: rgb(52, 93, 70);
@@ -2152,7 +2152,7 @@
 
 .customers-module #customerDataTable .alert-indicator {
     display: block;
-    max-width: 155px;
+    max-width: 100%;
     min-width: 0px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2381,7 +2381,7 @@
     color: rgb(38, 57, 47);
 }
 
-.customers-module #subtab-tab-profile .admin-badge {
+.customers-module #subtab-tab-profile .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {
     height: auto;
     padding: 0px;
     font: 500 12px / 1.5 Inter, sans-serif;
@@ -2827,7 +2827,7 @@
     width: 170px;
 }
 
-.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table .admin-badge {
+.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {
     display: inline;
     white-space: normal;
     overflow-wrap: anywhere;
@@ -3452,35 +3452,60 @@
 }
 
 .customers-module #customerDataTable th:nth-child(1) {
-    width: 11%;
+    width: 10%;
 }
 
 .customers-module #customerDataTable th:nth-child(2) {
-    width: 19%;
+    width: 18%;
 }
 
 .customers-module #customerDataTable th:nth-child(3) {
-    width: 12%;
+    width: 11%;
 }
 
 .customers-module #customerDataTable th:nth-child(4) {
-    width: 16%;
+    width: 14%;
 }
 
 .customers-module #customerDataTable th:nth-child(5) {
-    width: 13%;
-}
-
-.customers-module #customerDataTable th:nth-child(6) {
     width: 12%;
 }
 
+.customers-module #customerDataTable th:nth-child(6) {
+    width: 15%;
+}
+
 .customers-module #customerDataTable th:nth-child(7) {
-    width: 9%;
+    width: 12%;
 }
 
 .customers-module #customerDataTable th:nth-child(8) {
     width: 8%;
+}
+
+/* Keep each column heading on the same axis as its row content. */
+.customers-module #customerDataTable th,
+.customers-module #customerDataTable td {
+    vertical-align: middle;
+}
+
+.customers-module #customerDataTable th:nth-child(6),
+.customers-module #customerDataTable td:nth-child(6),
+.customers-module #customerDataTable th:nth-child(7),
+.customers-module #customerDataTable td:nth-child(7) {
+    text-align: left;
+}
+
+.customers-module #customerDataTable td:nth-child(7) {
+    white-space: nowrap;
+}
+
+.customers-module #customerDataTable th:nth-child(8),
+.customers-module #customerDataTable td:nth-child(8) {
+    padding-right: 11px;
+    padding-left: 11px;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .customers-module #subtab-tab-list .table-responsive-wrapper:focus-visible {
@@ -3530,7 +3555,7 @@
     color: #275e49;
 }
 
-.customers-module #subtab-tab-profile .admin-badge {
+.customers-module #subtab-tab-profile .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {
     background: transparent !important;
     border: none !important;
     border-radius: 0 !important;
@@ -3718,7 +3743,7 @@
     border-color: #ba4745;
 }
 
-.customer-modal-v7 .admin-badge {
+.customer-modal-v7 .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {
     background: transparent !important;
     border: 0 !important;
     padding: 0;
@@ -4241,4 +4266,312 @@
     .customers-module #subtab-tab-profile .profile-drawer-container {
         padding: 14px;
     }
+}
+
+/* ==========================================================================
+   PAWPAL ADMIN — SHARED STATUS / PRIORITY / SLA CONTRACT
+   Quiet Enterprise — Data-first Admin
+   Ordinary status = text only. Priority/SLA = restrained outlined chips.
+   ========================================================================== */
+
+/* Ordinary lifecycle/account/payment/content status: text only, never pills. */
+.customers-module .admin-badge:is(
+    .badge-success,
+    .badge-active,
+    .badge-info,
+    .badge-primary,
+    .badge-warning,
+    .badge-danger,
+    .badge-neutral,
+    .badge-secondary,
+    .badge-pending,
+    .badge-confirmed,
+    .badge-completed,
+    .badge-cancelled,
+    .badge-in-progress,
+    .badge-shipping,
+    .badge-delivered,
+    .badge-paid,
+    .badge-unpaid,
+    .badge-cod-pending,
+    .badge-pass,
+    .badge-fail,
+    .badge-leave,
+    .badge-pause,
+    .badge-locked,
+    .badge-resigned,
+    .badge-retrain,
+    .badge-req-approved,
+    .badge-req-pending,
+    .badge-req-rejected,
+    .badge-reprocessing,
+    .badge-waiting-approval
+):not(.priority-chip):not(.sla-chip) {
+    display: inline;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+
+    font-size: 12.5px !important;
+    font-weight: 550 !important;
+    line-height: 1.45 !important;
+    white-space: normal;
+}
+
+/* Semantic colors sampled from the existing PawPal customer-admin palette. */
+.customers-module .admin-badge:is(
+    .badge-success,
+    .badge-active,
+    .badge-completed,
+    .badge-paid,
+    .badge-delivered,
+    .badge-pass,
+    .badge-req-approved
+):not(.priority-chip):not(.sla-chip) {
+    color: #345D46 !important;
+}
+
+.customers-module .admin-badge:is(
+    .badge-info,
+    .badge-primary,
+    .badge-confirmed,
+    .badge-in-progress,
+    .badge-shipping
+):not(.priority-chip):not(.sla-chip) {
+    color: #526A78 !important;
+}
+
+.customers-module .admin-badge:is(
+    .badge-warning,
+    .badge-pending,
+    .badge-cod-pending,
+    .badge-leave,
+    .badge-retrain,
+    .badge-req-pending,
+    .badge-waiting-approval
+):not(.priority-chip):not(.sla-chip) {
+    color: #987324 !important;
+}
+
+.customers-module .admin-badge:is(
+    .badge-danger,
+    .badge-cancelled,
+    .badge-unpaid,
+    .badge-fail,
+    .badge-locked,
+    .badge-resigned,
+    .badge-req-rejected,
+    .badge-reprocessing
+):not(.priority-chip):not(.sla-chip) {
+    color: #BA4745 !important;
+}
+
+.customers-module .admin-badge:is(
+    .badge-neutral,
+    .badge-secondary,
+    .badge-pause
+):not(.priority-chip):not(.sla-chip) {
+    color: #697A70 !important;
+}
+
+/* Priority: same quiet outlined chip shape; semantic emphasis is mostly text. */
+.customers-module .admin-badge.priority-chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+    padding: 2px 6px;
+
+    background: #FFFFFF !important;
+    border: 1px solid #DCE4DE !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+
+    color: #59675E !important;
+    font-size: 11.5px;
+    font-weight: 550;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.customers-module .admin-badge.priority-chip.priority-critical {
+    color: #A74643 !important;
+    border-color: #D9C2BF !important;
+}
+
+.customers-module .admin-badge.priority-chip.priority-high {
+    color: #80652D !important;
+    border-color: #DDD2BD !important;
+}
+
+.customers-module .admin-badge.priority-chip.priority-medium {
+    color: #626F66 !important;
+    border-color: #DCE4DE !important;
+}
+
+.customers-module .admin-badge.priority-chip.priority-low {
+    color: #697A70 !important;
+    border-color: #E2E7E3 !important;
+}
+
+/* SLA: outlined, neutral background; color signals only urgent exceptions. */
+.customers-module .admin-badge:is(
+    .badge-sla-ok,
+    .badge-sla-urgent,
+    .badge-sla-warning
+),
+.customers-module .sla-badge,
+.customers-module .admin-badge.sla-chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+    padding: 2px 6px;
+
+    background: #FFFFFF !important;
+    border: 1px solid #DCE4DE !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+
+    color: #697A70 !important;
+    font-size: 11.5px;
+    font-weight: 550;
+    line-height: 1.4;
+    white-space: normal;
+}
+
+.customers-module .admin-badge.badge-sla-ok,
+.customers-module .sla-badge.sla-done {
+    color: #345D46 !important;
+    border-color: #D1DDD4 !important;
+}
+
+.customers-module .admin-badge:is(.badge-sla-warning, .badge-sla-urgent),
+.customers-module .sla-badge.sla-urgent {
+    color: #80652D !important;
+    border-color: #DDD2BD !important;
+}
+
+.customers-module .sla-badge.sla-overdue {
+    color: #A74643 !important;
+    border-color: #D9C2BF !important;
+}
+
+.customers-module .sla-badge.sla-normal {
+    color: #697A70 !important;
+    border-color: #E2E7E3 !important;
+}
+
+/* Preserve conditional visibility for dynamic status labels. */
+.customers-module .admin-badge[hidden],
+.customers-module .sla-badge[hidden] {
+    display: none !important;
+}
+
+/* Table column alignment: matching headers and data cells */
+.customers-module #customerDataTable > thead > tr > th:not([colspan]),
+.customers-module #customerDataTable > tbody > tr > td:not([colspan]),
+.customers-module table:has(> tbody#drawerOrdersTbody) > thead > tr > th:not([colspan]),
+.customers-module table:has(> tbody#drawerOrdersTbody) > tbody > tr > td:not([colspan]),
+.customers-module table:has(> tbody#drawerBookingsTbody) > thead > tr > th:not([colspan]),
+.customers-module table:has(> tbody#drawerBookingsTbody) > tbody > tr > td:not([colspan]),
+.customers-module table:has(> tbody#drawerComplaintsTbody) > thead > tr > th:not([colspan]),
+.customers-module table:has(> tbody#drawerComplaintsTbody) > tbody > tr > td:not([colspan]),
+.customers-module table:has(> tbody#pawpointHistoryTbody) > thead > tr > th:not([colspan]),
+.customers-module table:has(> tbody#pawpointHistoryTbody) > tbody > tr > td:not([colspan]),
+.customers-module table:has(> tbody#membershipTierPolicyTbody) > thead > tr > th:not([colspan]),
+.customers-module table:has(> tbody#membershipTierPolicyTbody) > tbody > tr > td:not([colspan]) {
+    text-align: left !important;
+    vertical-align: middle;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+
+.customers-module #customerDataTable > thead > tr > th:nth-child(8):not([colspan]),
+.customers-module #customerDataTable > tbody > tr > td:nth-child(8):not([colspan]) {
+    text-align: center !important;
+}
+
+.customers-module #customerDataTable > tbody > tr > td:nth-child(8):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.customers-module table:has(> tbody#drawerOrdersTbody) > thead > tr > th:nth-child(3):not([colspan]),
+.customers-module table:has(> tbody#drawerOrdersTbody) > tbody > tr > td:nth-child(3):not([colspan]) {
+    text-align: right !important;
+}
+
+.customers-module table:has(> tbody#drawerOrdersTbody) > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.customers-module table:has(> tbody#drawerOrdersTbody) > thead > tr > th:nth-child(6):not([colspan]),
+.customers-module table:has(> tbody#drawerOrdersTbody) > tbody > tr > td:nth-child(6):not([colspan]) {
+    text-align: center !important;
+}
+
+.customers-module table:has(> tbody#drawerOrdersTbody) > tbody > tr > td:nth-child(6):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.customers-module table:has(> tbody#drawerBookingsTbody) > thead > tr > th:nth-child(6):not([colspan]),
+.customers-module table:has(> tbody#drawerBookingsTbody) > tbody > tr > td:nth-child(6):not([colspan]) {
+    text-align: center !important;
+}
+
+.customers-module table:has(> tbody#drawerBookingsTbody) > tbody > tr > td:nth-child(6):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.customers-module table:has(> tbody#drawerComplaintsTbody) > thead > tr > th:nth-child(6):not([colspan]),
+.customers-module table:has(> tbody#drawerComplaintsTbody) > tbody > tr > td:nth-child(6):not([colspan]) {
+    text-align: center !important;
+}
+
+.customers-module table:has(> tbody#drawerComplaintsTbody) > tbody > tr > td:nth-child(6):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
+}
+
+.customers-module table:has(> tbody#pawpointHistoryTbody) > thead > tr > th:nth-child(3):not([colspan]),
+.customers-module table:has(> tbody#pawpointHistoryTbody) > tbody > tr > td:nth-child(3):not([colspan]),
+.customers-module table:has(> tbody#pawpointHistoryTbody) > thead > tr > th:nth-child(4):not([colspan]),
+.customers-module table:has(> tbody#pawpointHistoryTbody) > tbody > tr > td:nth-child(4):not([colspan]) {
+    text-align: right !important;
+}
+
+.customers-module table:has(> tbody#pawpointHistoryTbody) > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
+.customers-module table:has(> tbody#pawpointHistoryTbody) > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.customers-module table:has(> tbody#membershipTierPolicyTbody) > thead > tr > th:nth-child(2):not([colspan]),
+.customers-module table:has(> tbody#membershipTierPolicyTbody) > tbody > tr > td:nth-child(2):not([colspan]) {
+    text-align: right !important;
+}
+
+.customers-module table:has(> tbody#membershipTierPolicyTbody) > tbody > tr > td:nth-child(2):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: right;
+}
+
+.customers-module table:has(> tbody#membershipTierPolicyTbody) > thead > tr > th:nth-child(3):not([colspan]),
+.customers-module table:has(> tbody#membershipTierPolicyTbody) > tbody > tr > td:nth-child(3):not([colspan]) {
+    text-align: center !important;
+}
+
+.customers-module table:has(> tbody#membershipTierPolicyTbody) > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
+    text-align: center;
 }

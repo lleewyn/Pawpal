@@ -370,8 +370,15 @@ function recalculatePrice() {
 
     for (const id of ['detailBasePrice','stickyPriceVal']) {
         const el = document.getElementById(id);
-        if (el) el.textContent = serviceData.hasPrice ? Number(finalPrice).toLocaleString('vi-VN') + ' VNĐ' : 'Báo giá khi đặt lịch';
+        if (el) el.textContent = serviceData.hasPrice ? Number(finalPrice).toLocaleString('vi-VN') + ' VNĐ' + (serviceData.priceDisplay ? ' / '+serviceData.priceDisplay : '') : 'Báo giá khi đặt lịch';
     }
+    const stickyUnit = document.querySelector('.sticky-price-unit');
+    if (stickyUnit) stickyUnit.textContent = '';
+
+    const selectedIndex = Object.keys(serviceData.prices || {}).indexOf(selectedWeight);
+    const variant = serviceData.priceRows?.[selectedIndex];
+    const duration = document.getElementById('detailDuration');
+    if (duration) duration.textContent = variant?.duration_minutes ? `${variant.duration_minutes} phút` : serviceData.duration;
 
     const stickySub = document.getElementById('stickyServiceSub');
     if (stickySub) {
@@ -968,7 +975,7 @@ async function setupRelatedServices() {
         else if (service.category === 'taxi') displayCategory = 'Taxi đưa đón';
 
         const formattedPrice = (service.price || 0).toLocaleString('vi-VN');
-        const priceUnit = (service.priceDisplay || '').includes('đêm') ? ' / đêm' : '';
+        const priceUnit = service.priceDisplay ? ` / ${service.priceDisplay}` : '';
 
         const sanitizedDesc = escapeServiceHTML(service.description);
         const sanitizedName = escapeServiceHTML(service.name);

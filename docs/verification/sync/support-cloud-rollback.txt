@@ -1,0 +1,68 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T01:47:30.024Z",
+  "scope": "One synthetic ticket and order references; RPC/RLS only; rollback; no Logs",
+  "checks": [
+    {
+      "name": "A cannot link a support ticket to B order",
+      "status": "PASS"
+    },
+    {
+      "name": "Create/retry yields one ticket and initial message; Admin sees exact owner/order",
+      "status": "PASS"
+    },
+    {
+      "name": "User reply retry creates one message visible to Admin",
+      "status": "PASS"
+    },
+    {
+      "name": "User receives one public Admin reply, never the internal note",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale Admin snapshot cannot overwrite ticket",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin request-info state reaches User; User reply returns ticket to processing",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read, reply or rate A ticket by ID",
+      "status": "PASS"
+    },
+    {
+      "name": "User sees resolved status and public resolution note",
+      "status": "PASS"
+    },
+    {
+      "name": "Resolved ticket rejects a new User reply",
+      "status": "PASS"
+    },
+    {
+      "name": "Rating retry is idempotent; changed replay conflicts",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin closure is visible to User without losing public history",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot read private support list",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes ticket/messages and all synthetic references/actors",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "467adca0-65aa-45e0-b603-debcadcd163d",
+    "customerB": "e94e2743-1c7e-4d26-ae23-bde299286327",
+    "ticket": "f63f5674-246e-4c4d-a7f1-1f029e12e9d4",
+    "orderA": "4f58c042-ea8a-4674-8793-cb7b30b3bbb8",
+    "orderB": "957f3fef-ad6d-47ec-8ca5-e2c372bfbe32"
+  },
+  "status": "PASS",
+  "queries": 111
+}
