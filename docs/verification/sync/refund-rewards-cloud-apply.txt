@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-26T08:48:54.589Z",
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "migration": "107_refund_reward_points.sql",
+  "sha256": "8b61b13202fad40bba91c589f05d1e494d67c939990cdde37ff56937f384bdf5",
+  "status": "APPLIED",
+  "functions": [
+    "get_admin_service_cashier",
+    "post_admin_service_money",
+    "get_admin_sales_cashier",
+    "post_admin_sales_money"
+  ],
+  "scope": "Function DDL only; existing payment/refund/reward rows unchanged; no real money or Logs"
+}

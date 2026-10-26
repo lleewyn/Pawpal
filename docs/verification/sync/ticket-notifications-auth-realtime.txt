@@ -1,0 +1,349 @@
+{
+  "timestamp": "2026-10-26T12:26:18.964Z",
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "scope": "Actual synthetic customer/Admin Auth, PostgREST committed ticket RPCs and Realtime; no production UI, review publication, money, upload, Storage or Logs. Immutable test audit rows retained.",
+  "checks": [
+    {
+      "name": "Two synthetic customers and existing private Admin authenticate through real Supabase Auth",
+      "status": "PASS"
+    },
+    {
+      "name": "Two overlapping PostgREST create requests with same UUID commit one ticket and one opening message",
+      "status": "PASS"
+    },
+    {
+      "name": "Committed ticket is visible to A, not B, through customer projection RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Owner and other-customer Realtime subscriptions both join with their actual JWTs",
+      "status": "PASS"
+    },
+    {
+      "name": "Committed internal note stays out of customer ticket projection and notification inbox",
+      "status": "PASS"
+    },
+    {
+      "name": "Reply retry commits one notice; owner receives actual Realtime message/notification, B receives neither",
+      "status": "PASS"
+    },
+    {
+      "name": "Real JWT owner read acknowledgement commits once; B is rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Fresh authenticated client re-reads committed ticket and persisted read state",
+      "status": "PASS"
+    },
+    {
+      "name": "Resolve retry persists status and sends exactly one additional notice with actual Realtime delivery",
+      "status": "PASS"
+    },
+    {
+      "name": "Event keys and recipient IDs remain unique and public across committed flow",
+      "status": "PASS"
+    },
+    {
+      "name": "Scoped cleanup removes synthetic Auth/customer/ticket/notifications, preserving immutable audit trail",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customers": [
+      "9da360a7-afca-42ab-ab74-bf9a6e76374a",
+      "20fa04c8-11c9-48f2-b354-c56d9e0aee95"
+    ],
+    "auth": [
+      "89d6d993-9d77-4a09-b7e9-74842d93c8f4",
+      "97fd96fc-67a8-4732-a375-13aa4e19c98c"
+    ],
+    "ticket": "98dc4be9-94d5-48aa-8ee3-5604b52a2c23"
+  },
+  "retainedImmutableAuditRows": 3,
+  "cleanup": {
+    "status": "PASS",
+    "errors": [],
+    "retainedAuditPolicy": "Append-only COMPLAINT_ACTION records retained as designed; no audit deletion or trigger disabling"
+  },
+  "status": "PASS",
+  "http": {
+    "requests": 54,
+    "trace": [
+      {
+        "path": "/rest/v1/customer_phone",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/complete_customer_auth",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/token",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/customer_phone",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/complete_customer_auth",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/token",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/token",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/create_own_support_ticket",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/create_own_support_ticket",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/support_ticket",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/support_ticket_message",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_support_tickets",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_support_tickets",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/support_ticket",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/act_admin_complaint",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_notifications_snapshot",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_support_tickets",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/support_ticket",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/act_admin_complaint",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/act_admin_complaint",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_notifications_snapshot",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_notifications_snapshot",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/mark_own_notifications_read",
+        "method": "POST",
+        "status": 403
+      },
+      {
+        "path": "/rest/v1/rpc/mark_own_notifications_read",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/mark_own_notifications_read",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_notifications_snapshot",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_support_tickets",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/support_ticket",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/act_admin_complaint",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/act_admin_complaint",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_notifications_snapshot",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_support_tickets",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/notification",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/notification",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/support_ticket_message",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/support_ticket",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_membership",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_address",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_phone",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_profile",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/auth/v1/admin/users/89d6d993-9d77-4a09-b7e9-74842d93c8f4",
+        "method": "DELETE",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users/97fd96fc-67a8-4732-a375-13aa4e19c98c",
+        "method": "DELETE",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/notification",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/support_ticket",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users/89d6d993-9d77-4a09-b7e9-74842d93c8f4",
+        "method": "GET",
+        "status": 404
+      },
+      {
+        "path": "/auth/v1/admin/users/97fd96fc-67a8-4732-a375-13aa4e19c98c",
+        "method": "GET",
+        "status": 404
+      },
+      {
+        "path": "/rest/v1/audit_log",
+        "method": "GET",
+        "status": 200
+      }
+    ]
+  },
+  "realtime": {
+    "ownerMessages": 3,
+    "ownerNotifications": 2,
+    "otherEvents": 0
+  }
+}

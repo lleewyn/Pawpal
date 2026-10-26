@@ -3,6 +3,9 @@
 
 
     let cachedTickets = [];
+    const paged=()=>window.PAWPAL_SUPPORT_PAGING_ENABLED!==false;
+    let pageInfo={page:1,total:0,counts:null,filter:'all'},pinnedTicket=null,ticketDetailVersion=0;
+    const mapTicket=t=>({id:t.id,rawId:t.id,ticketCode:t.ticket_code,title:t.subject,description:t.description,type:t.category,status:t.status,priority:['high','urgent'].includes(t.priority)?'Cao':'Trung bình',rating:t.rating,ratingComment:t.rating_comment,createdAt:t.created_at,resolution:t.resolution_note?{note:t.resolution_note}:null,context:{bookingId:t.appointment_id,orderId:t.order_id,serviceName:t.service_name,petName:t.pet_name},messages:t.messages||[],messageTotal:t.message_total??(t.messages||[]).length,messagePage:t.message_page||1});
     let ticketsChannel = null;
     let activeOwner = null, epoch = 0, ticketLoad = null, refreshTimer = null;
     let dirty = false, waitingForLoad = false;
@@ -15,7 +18,7 @@
     function adoptOwner() {
         const owner = currentOwner();
         if (owner !== activeOwner) {
-            stopRealtime(); cachedTickets = []; requestIds.clear(); ticketLoad = null; activeOwner = owner;
+            stopRealtime(); cachedTickets = [];pinnedTicket=null;++ticketDetailVersion;pageInfo={page:1,total:0,counts:null,filter:'all'}; requestIds.clear(); ticketLoad = null; activeOwner = owner;
         }
         return owner;
     }
@@ -72,16 +75,12 @@
     }
     async function fetchTickets(owner, version) {
         try {
-            const rows = await rpc('own_support_tickets');
+            const result = await rpc('own_support_tickets',paged()?{p_page:pageInfo.page,p_filter:pageInfo.filter,p_ticket:null,p_message_page:1}:undefined);
+            const rows=Array.isArray(result)?result:result.rows;
             if (owner !== currentOwner() || version !== epoch) throw Error('Phiên hỗ trợ đã thay đổi.');
-            cachedTickets = (rows || []).map(t => ({
-                id:t.id,rawId:t.id,ticketCode:t.ticket_code,title:t.subject,description:t.description,
-                type:t.category,status:t.status,priority:['high','urgent'].includes(t.priority)?'Cao':'Trung bình',
-                rating:t.rating,ratingComment:t.rating_comment,createdAt:t.created_at,
-                resolution:t.resolution_note ? {note:t.resolution_note} : null,
-                context:{bookingId:t.appointment_id,orderId:t.order_id,serviceName:t.service_name,petName:t.pet_name},
-                messages:t.messages || []
-            }));
+            cachedTickets = (rows || []).map(mapTicket);
+            pageInfo={...pageInfo,page:result.page||1,total:result.total??rows.length,counts:result.counts||null};
+            if(paged() && pinnedTicket)await fetchTicket(pinnedTicket.id,pinnedTicket.messagePage,false);
             if (!ticketsChannel && supportView()) {
                 ticketsChannel=client().channel('customer-support-'+crypto.randomUUID()).on('postgres_changes',{event:'*',schema:'public',table:'support_ticket_message'},requestRefresh).subscribe();
             }
@@ -89,7 +88,17 @@
             return cachedTickets;
         } catch(error) { throw error; }
     }
-    function sbGetTickets() { adoptOwner(); return cachedTickets; }
+    function sbGetTickets() { adoptOwner(); return pinnedTicket?[pinnedTicket,...cachedTickets.filter(t=>t.id!==pinnedTicket.id)]:cachedTickets; }
+    async function fetchTicket(id,messagePage=1,notify=false){
+        if(!paged())return sbGetTickets().find(t=>t.id===id);
+        const detailVersion=++ticketDetailVersion;
+        const result=await rpc('own_support_tickets',{p_page:1,p_filter:'all',p_ticket:id,p_message_page:messagePage});
+        if(detailVersion!==ticketDetailVersion)return null;
+        pinnedTicket=result.rows?.[0]?mapTicket(result.rows[0]):null;
+        if(notify)document.dispatchEvent(new CustomEvent('tickets_updated'));
+        return pinnedTicket;
+    }
+    async function setPage(page,filter=pageInfo.filter){if(ticketLoad)return;pageInfo={...pageInfo,page,filter};return loadTickets();}
     async function sbCreateTicket(title,type,content,files=[],context={}) {
         if (files.length) throw Error('Ảnh và tệp chưa được hỗ trợ. Vui lòng gửi nội dung văn bản.');
         const key=JSON.stringify([adoptOwner(),'create',context.requestId,title,type,content,context.bookingId,context.orderId,context.customerDemand]);
@@ -130,6 +139,10 @@
     }
 
     window.PawPalSupport = {
+        isPaged:paged,getPageInfo:()=>pageInfo,getPageTickets:()=>cachedTickets,setPage,
+        releaseTicket:()=>{pinnedTicket=null;++ticketDetailVersion;},
+        ensureTicket:async id=>sbGetTickets().find(t=>t.id===id)||await fetchTicket(id),
+        messagePage:(id,page)=>fetchTicket(id,page,true),
         stopRealtime,
         requestRefresh,
         getTickets: sbGetTickets,

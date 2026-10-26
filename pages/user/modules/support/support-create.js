@@ -8,7 +8,7 @@ export async function initSupportCreate() {
     form.addEventListener('submit',e=>e.preventDefault());
     const user=window.getCurrentUser?.() || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const db=window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    const native=await db?.auth?.getUser();if(native?.error || !native?.data?.user){error.textContent='Vui lòng đăng nhập để gửi yêu cầu.';button.disabled=true;return;}
+    const native=await db?.auth?.getUser();if(native?.error || !native?.data?.user){error.textContent='Vui lòng đăng nhập để gửi yêu cầu.';button.disabled=true;button.textContent='Gửi yêu cầu';return;}
     const key='pawpal_support_request:'+native.data.user.id;
     let requestId=sessionStorage.getItem(key);if(!/^[0-9a-f-]{36}$/i.test(requestId || '')){requestId=crypto.randomUUID();sessionStorage.setItem(key,requestId);}
     const results=await Promise.allSettled([API.getUserBookings(user),API.getUserOrders(user)]);
@@ -46,5 +46,6 @@ export async function initSupportCreate() {
             sessionStorage.removeItem(key);location.hash='support';
         }catch(e){error.textContent=e.message;button.disabled=false;button.textContent='Gửi yêu cầu';}
     };
+    button.disabled=false;button.textContent='Gửi yêu cầu';
 }
 export const init=initSupportCreate;

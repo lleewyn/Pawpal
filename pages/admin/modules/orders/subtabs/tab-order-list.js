@@ -1264,6 +1264,11 @@
         sales_money_exceeds_balance:'Số tiền vượt số còn được thu hoặc hoàn.',
         sales_money_reference_required:'Nhập mã giao dịch ngân hàng đã đối soát.',
         sales_money_reference_duplicate:'Mã giao dịch ngân hàng đã được ghi nhận.',
+        refund_reward_points_insufficient:'Khách không đủ điểm để thu hồi. Cần đối soát trước khi hoàn tiền.',
+        refund_loyalty_history_conflict:'Lịch sử hoàn tiền và điểm chưa khớp. Cần đối soát.',
+        refund_loyalty_confirmation_required:'Kiểm tra và xác nhận số điểm cần thu hồi trước khi hoàn.',
+        refund_loyalty_exceeds_balance:'Số tiền vượt số còn được hoàn.',
+        sales_replacement_refund_review_required:'Đơn đang có hàng đổi hoặc gửi bù. Cần đối soát trước khi hoàn thêm tiền.',
         sales_refund_ledger_review_required:'Khoản thu đã liên quan đến điểm hoặc xét hạng, cần đối soát sổ điểm trước khi hoàn.',
         sales_money_booking_closed:'Đơn đã hủy hoặc trả hàng không thể thu thêm.',
         sales_refund_source_invalid:'Khoản thu gốc không hợp lệ hoặc không thuộc đơn này.',
@@ -1301,6 +1306,20 @@
     window.PawpalOrdersModule.confirmPayment=id=>m.openCashier(m.state.orders.find(o=>o.id===id));
     window.PawpalOrdersModule.reconcileCod=window.PawpalOrdersModule.confirmPayment;
     let context=null,booking=null,session=0,busy=false;
+    let refundPreview;
+    function previewRefund(){
+        let row=el('salesCashierLoyaltyPreview');
+        if(!row){row=document.createElement('p');row.id='salesCashierLoyaltyPreview';row.style.cssText='color:#4F7A65;margin:8px 0;';row.setAttribute('aria-live','polite');el('salesCashierConfirmationText').parentElement.before(row);}
+        const refund=el('salesCashierAction').value==='refund';
+        row.hidden=!refund;
+        const payment=context?.payments.find(p=>p.id===el('salesCashierPayment').value);
+        const plan=refund&&payment?refundPreview?.(payment,el('salesCashierAmount').value):null;
+        row.textContent=refund?(plan?.error||(plan?'Thu hồi '+plan.points+' điểm thưởng. Chi tiêu xét hạng giảm '+m.formatCurrency(plan.eligible)+'. Điểm còn lại '+plan.balance+'.':'Chọn khoản thu gốc để đối soát điểm.')):'';
+        row.style.color=plan?.error?'#DC2626':'#4F7A65';
+        el('btnSaveSalesMoney').disabled=busy||!context||(refund&&(!plan||!!plan.error));
+        return plan;
+    }
+
     const refundable=p=>Number(p.amount)-(p.refunds||[]).filter(r=>r.refund_status==='succeeded').reduce((sum,r)=>sum+Number(r.refunded_amount),0);
     function syncFields(){
         const refund=el('salesCashierAction').value==='refund';
@@ -1308,14 +1327,16 @@
         const method=context?.methods.find(v=>v.id===el('salesCashierMethod').value);
         el('salesCashierReferenceField').style.display=method?.requires_reference?'block':'none';
         el('salesCashierReference').required=!!method?.requires_reference;
-        el('salesCashierConfirmationText').textContent=refund?'Đã hoàn trả cho khách đúng số tiền ghi ở trên':'Đã nhận từ khách đúng số tiền ghi ở trên';
+        el('salesCashierConfirmationText').textContent=refund?'Đã hoàn trả đúng số tiền cho khách và đồng ý thu hồi điểm theo đối soát ở trên':'Đã nhận từ khách đúng số tiền ghi ở trên';
         el('salesCashierConfirmed').checked=false;
         const payment=context?.payments.find(p=>p.id===el('salesCashierPayment').value);
         const maximum=refund?(payment?refundable(payment):0):Number(context?.remaining||0);
         el('salesCashierAmount').value=maximum>0?String(maximum):'';el('salesCashierAmount').max=String(maximum);
         m.enhanceEntitySelects();
+        previewRefund();
     }
     async function load(current){
+        ({refundLoyaltyPreview:refundPreview}=await import('/scripts/shared/refund-loyalty.mjs'));
         const {data,error}=await window.getSupabaseClient().rpc('get_admin_sales_cashier',{p_order_id:booking.rawId});
         if(error)throw error;if(current!==session)return;
         context=data;
@@ -1338,10 +1359,11 @@
         el('btnSaveSalesMoney').disabled=true;
         el('modalSalesCashier').style.removeProperty('display');el('modalSalesCashier').classList.add('active');
         try{await load(current);}catch(error){if(current===session)el('salesCashierError').textContent=m.errorMessage(error);}
-        finally{if(current===session)el('btnSaveSalesMoney').disabled=!context;}
+        finally{if(current===session)previewRefund();}
     };
     el('formSalesCashier').addEventListener('submit',event=>event.preventDefault());
     for(const id of ['salesCashierAction','salesCashierMethod','salesCashierPayment'])el(id).addEventListener('change',()=>{el('salesCashierError').textContent='';syncFields();});
+    el('salesCashierAmount').addEventListener('input',()=>{el('salesCashierConfirmed').checked=false;previewRefund();});
     el('btnSaveSalesMoney').onclick=async()=>{
         if(busy||!context)return;el('salesCashierError').textContent='';
         const amount=Number(el('salesCashierAmount').value),reason=el('salesCashierReason').value.trim(),method=context.methods.find(v=>v.id===el('salesCashierMethod').value),action=el('salesCashierAction').value;
@@ -1349,6 +1371,7 @@
         const reference=el('salesCashierReference').value.trim();if(method.requires_reference&&!reference){el('salesCashierError').textContent='Nhập mã giao dịch ngân hàng đã đối soát.';el('salesCashierReference').focus();return;}
         const details={amount,reason,method_id:method.id,reference:method.requires_reference?reference:'',confirmed:true};
         if(action==='refund'){details.payment_id=el('salesCashierPayment').value;if(!details.payment_id){el('salesCashierError').textContent='Chọn khoản thu gốc cần hoàn.';return;}}
+        if(action==='refund'){const plan=previewRefund();if(!plan||plan.error){el('salesCashierError').textContent=plan?.error||'Chọn khoản thu để đối soát.';return;}details.loyalty_confirmed=true;}
         busy=true;el('btnSaveSalesMoney').disabled=true;const current=session;
         try{
             await m.saveSalesMoney(booking,context,action,details);
@@ -1356,7 +1379,7 @@
             booking=m.state.orders.find(b=>b.rawId===booking.rawId)||booking;
             await load(current);el('salesCashierReason').value='';el('salesCashierReference').value='';
         }catch(error){el('salesCashierError').textContent=m.errorMessage(error);}
-        finally{busy=false;el('btnSaveSalesMoney').disabled=!context;}
+        finally{busy=false;previewRefund();}
     };
 })();
 

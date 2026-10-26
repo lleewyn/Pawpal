@@ -751,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         'Bán hàng':   {
             html: 'modules/orders/orders.html',
-            scripts: ['modules/orders/orders.js', 'modules/orders/subtabs/tab-order-list.js', 'modules/orders/subtabs/tab-order-detail.js', 'modules/orders/subtabs/tab-order-products.js', 'modules/orders/subtabs/tab-order-promos.js'],
+            scripts: ['modules/orders/orders.js', 'modules/orders/subtabs/tab-order-list.js', 'modules/orders/subtabs/tab-order-detail.js', 'modules/orders/subtabs/tab-sales-replacements.js', 'modules/orders/subtabs/tab-order-products.js', 'modules/orders/subtabs/tab-order-promos.js'],
             postLoad: async () => {
                 if (window.PawpalOrders?.renderOrdersTable) window.PawpalOrders.renderOrdersTable();
             }

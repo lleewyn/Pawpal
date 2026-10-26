@@ -33,7 +33,7 @@ function render(){
     text('receiver-name',o.shipping?.name||'—');text('receiver-phone',o.shipping?.phone||'—');text('receiver-address',o.shipping?.address||'—');
     text('payment-method',o.paymentMethodName||'Chưa xác định');
     const paymentLabels={paid:'Đã thanh toán',partial:'Đã thanh toán một phần',cancelled:'Đơn đã hủy',pending_payment:'Chưa thanh toán'};
-    text('payment-status',paymentLabels[o.paymentStatus]||'Chưa thanh toán');
+    text('payment-status',Number(o.pricing.grandTotal)===0?'Không thu thêm tiền':paymentLabels[o.paymentStatus]||'Chưa thanh toán');
     const products=document.getElementById('products-list');
     if(products)products.innerHTML=(o.products||[]).map(p=>`<div class="product-item"><div class="product-item-info"><h4 class="product-item-name">${escapeHtml(p.name)}</h4><p class="product-item-variant">${escapeHtml(p.sku||'')}</p><p class="product-item-meta">Số lượng ${Number(p.quantity)}</p></div><div class="product-item-price">${money(p.total)}</div></div>`).join('')||'<p>Đơn hàng chưa có dòng sản phẩm.</p>';
     text('subtotal',money(o.pricing.subtotal));text('shipping-fee',money(o.pricing.shippingFee));text('discount',money(o.pricing.discount));text('total',money(o.pricing.grandTotal));
@@ -51,7 +51,8 @@ function render(){
         if(['shipped','shipping'].includes(o.orderStatus))add('detail-receive-order','Đã nhận hàng',()=>openOrderAction('receive'));
         add('detail-reorder','Mua lại',reorder);
         if(['completed','delivered','returned'].includes(o.orderStatus))add('detail-request-return','Yêu cầu đổi trả',()=>window.openRMADrawer(o.id));
-        if(o.paymentStatus!=='paid'){
+        document.querySelector('.order-payment-note')?.remove();
+        if(o.paymentStatus!=='paid'&&Number(o.pricing.grandTotal)>0){
             const note=document.createElement('p');note.className='order-payment-note';note.textContent='Thanh toán được cập nhật sau khi cửa hàng xác nhận đã nhận tiền.';
             document.querySelector('.order-payment-note')?.remove();
             document.getElementById('payment-status')?.parentElement.append(note);

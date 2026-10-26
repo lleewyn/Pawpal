@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-10-26T09:36:54.420Z",
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "migration": "108_sales_replacements.sql",
+  "sha256": "3056ea0bd6b4635824d5571bfa801d6fcca788e05cd2363627935ee863910551",
+  "status": "APPLIED",
+  "checks": {
+    "rls": true,
+    "can_read": true,
+    "can_insert": false,
+    "rpc": true,
+    "refund_guard": true,
+    "sync_trigger": true
+  },
+  "scope": "Schema/functions only; no existing customer/order/payment/inventory rows modified; no actual delivery, money or Logs"
+}

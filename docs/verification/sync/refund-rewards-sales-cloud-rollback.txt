@@ -1,0 +1,84 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T08:36:28.529Z",
+  "scope": "Reward refund sales RPC integration, synthetic rollback only; no real money, UI E2E, Logs or load test",
+  "checks": [
+    {
+      "name": "Migration can be reapplied safely",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin collection retry records one synthetic succeeded payment",
+      "status": "PASS"
+    },
+    {
+      "name": "Cashier contains original rewards and live balance",
+      "status": "PASS"
+    },
+    {
+      "name": "Reward reversal requires explicit confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot invoke Admin refund",
+      "status": "PASS"
+    },
+    {
+      "name": "Definer cashier getter does not expose Admin point metadata to customer",
+      "status": "PASS"
+    },
+    {
+      "name": "Private helper is not callable by API roles",
+      "status": "PASS"
+    },
+    {
+      "name": "Insufficient points block refund atomically with no money, points or version changes",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent point spend invalidates cashier version",
+      "status": "PASS"
+    },
+    {
+      "name": "Over-refund rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Unreconciled legacy refund blocked without changing history",
+      "status": "PASS"
+    },
+    {
+      "name": "Small refund rounded to zero creates no invalid zero-point ledger entry",
+      "status": "PASS"
+    },
+    {
+      "name": "Three partial refunds use cumulative floor; final refund recovers all 7 points and eligible spend",
+      "status": "PASS"
+    },
+    {
+      "name": "Same request retries once; changed replay rejected for each partial refund",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer reads zero remaining rewards and eligible spending",
+      "status": "PASS"
+    },
+    {
+      "name": "Other customer does not inherit refund data",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removed all fixtures and migration DDL",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "44fd9538-6bbd-4206-89fe-50e4a2ae26b7",
+    "customerB": "9c05a527-0546-429a-995f-9e620c162408",
+    "product": "28c09686-0907-42ed-a56e-d724e5338a1f",
+    "variant": "f86d4e1e-698f-4e90-aafb-d4fb1f578f09",
+    "order": "aa301bba-02a6-49c1-85ec-0877bfe74c5a"
+  },
+  "status": "PASS",
+  "queries": 160
+}

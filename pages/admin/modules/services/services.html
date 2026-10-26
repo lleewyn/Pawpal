@@ -923,6 +923,16 @@
 <option value="VOUCHER_FREE_BATH">Tặng 01 lượt tắm vệ sinh miễn phí</option>
 </select>
 </div>
+<div class="form-group-item" id="reviewModerationFields" hidden>
+<label class="form-label-clean" for="reviewPublicationStatus">Trạng thái công bố</label>
+<select class="admin-select" id="reviewPublicationStatus">
+<option value="pending">Chờ duyệt</option><option value="published">Công bố</option><option value="hidden">Ẩn</option><option value="rejected">Không duyệt</option>
+</select>
+<label class="form-label-clean" for="reviewModerationReason">Lý do <span style="color:#DC2626">*</span></label>
+<textarea class="admin-input" id="reviewModerationReason" rows="3" maxlength="2000"></textarea>
+<p id="reviewModerationError" role="alert" style="color:#DC2626"></p>
+<button class="admin-btn admin-btn-secondary" id="btnModerateServiceReview" type="button">Lưu trạng thái</button>
+</div>
 <div class="modal-footer-clean svc-inline-b5a0c66e" style="display: flex;">
 <div>
 <button class="admin-btn admin-btn-danger-outline" id="btnEscalateToComplaint" style="display: none;" type="button">Chuyển thành khiếu nại</button>
@@ -1722,7 +1732,7 @@
 </div>
 <div class="form-group-item"><label class="form-label-clean" for="cashierReason">Lý do hoặc ghi chú <span class="svc-inline-55f4b7c7">*</span></label><textarea class="admin-input svc-inline-0a79f374" id="cashierReason" maxlength="2000" required="" rows="2"></textarea></div>
 <label class="intake-check-item"><input id="cashierConfirmed" required="" type="checkbox"/><span id="cashierConfirmationText">Đã nhận đủ số tiền ghi ở trên</span> <span class="svc-inline-55f4b7c7">*</span></label>
-<p class="svc-inline-bcef30ca">Chỉ ghi số tiền đã thực nhận hoặc thực hoàn. Giao dịch này không tự cộng điểm, áp voucher hoặc xét hạng.</p>
+<p class="svc-inline-bcef30ca">Chỉ ghi tiền đã thực nhận hoặc thực hoàn. Khi hoàn tiền, điểm thưởng và chi tiêu xét hạng được giảm theo đối soát.</p>
 <p class="svc-inline-7dab5feb" id="cashierError" role="alert"></p>
 <div class="modal-footer-clean"><button class="admin-btn admin-btn-secondary" data-close-modal="modalServiceCashier" type="button">Hủy</button><button class="admin-btn admin-btn-primary" id="btnSaveServiceMoney" type="button">Lưu giao dịch</button></div>
 </form>

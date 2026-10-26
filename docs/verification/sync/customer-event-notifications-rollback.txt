@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-10-26T12:20:06.419Z",
+  "status": "PASS",
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "checks": [
+    {
+      "name": "Customer opening own ticket does not notify themselves",
+      "status": "PASS"
+    },
+    {
+      "name": "Public staff reply and retry produce one correctly linked owner notification",
+      "status": "PASS"
+    },
+    {
+      "name": "Internal staff note never enters customer bell notifications",
+      "status": "PASS"
+    },
+    {
+      "name": "Other customer cannot see or mark owner notification",
+      "status": "PASS"
+    },
+    {
+      "name": "Read acknowledgement is owner-scoped and repeated acknowledgement changes zero rows",
+      "status": "PASS"
+    },
+    {
+      "name": "Resolution status creates one additional notification without exposing internal action notes",
+      "status": "PASS"
+    },
+    {
+      "name": "Submitting pending service review does not create a publication notification",
+      "status": "PASS"
+    },
+    {
+      "name": "Publication notification links correct booking, appears once and omits private moderation reason",
+      "status": "PASS"
+    },
+    {
+      "name": "Review moderation notification is not delivered to another customer",
+      "status": "PASS"
+    },
+    {
+      "name": "Changing published review to hidden creates exactly one new status notification",
+      "status": "PASS"
+    },
+    {
+      "name": "No-op review status update does not create another notification",
+      "status": "PASS"
+    },
+    {
+      "name": "Unique source event prevents duplicate notification insertion",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot read private notification inbox",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes all notification/review/ticket fixtures and DDL",
+      "status": "PASS"
+    }
+  ],
+  "queries": 111,
+  "scope": "One support ticket and completed service/review fixture; SQL role claims and trigger integration only; always rollback; no public review committed, real messages, upload, Logs or load test"
+}

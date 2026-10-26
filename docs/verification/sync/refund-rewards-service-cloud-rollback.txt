@@ -1,0 +1,72 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T08:37:58.104Z",
+  "scope": "Reward refund service RPC integration, synthetic rollback only; no real money, UI E2E, Logs or load test",
+  "checks": [
+    {
+      "name": "Cashier contains original rewards and live balance",
+      "status": "PASS"
+    },
+    {
+      "name": "Reward reversal requires explicit confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot invoke Admin refund",
+      "status": "PASS"
+    },
+    {
+      "name": "Definer cashier getter does not expose Admin point metadata to customer",
+      "status": "PASS"
+    },
+    {
+      "name": "Private helper is not callable by API roles",
+      "status": "PASS"
+    },
+    {
+      "name": "Insufficient points block refund atomically with no money, points or version changes",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent point spend invalidates cashier version",
+      "status": "PASS"
+    },
+    {
+      "name": "Over-refund rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Unreconciled legacy refund blocked without changing history",
+      "status": "PASS"
+    },
+    {
+      "name": "Three partial refunds use cumulative floor; final refund recovers all 7 points and eligible spend",
+      "status": "PASS"
+    },
+    {
+      "name": "Same request retries once; changed replay rejected for each partial refund",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer reads zero remaining rewards and eligible spending",
+      "status": "PASS"
+    },
+    {
+      "name": "Other customer does not inherit refund data",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removed all fixtures and migration DDL",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "a10df852-ed72-4ce1-8cbc-1d8499458499",
+    "customerB": "21f0771b-7d65-4eaa-ab9b-b5da36e91381",
+    "pet": "5767dfbc-ff02-4293-84ba-9d4c6b2a0b37",
+    "service": "2507c5b2-0047-487b-b4a4-595073a39c55",
+    "booking": "286c67f0-22ed-420c-af79-df22eabdbf01"
+  },
+  "status": "PASS",
+  "queries": 147
+}

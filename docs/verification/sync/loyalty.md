@@ -1,5 +1,15 @@
 # Điểm và voucher — tiến độ 26/10/2026
 
+## Phân trang server — đã áp dụng Cloud
+
+Cập nhật sau xác nhận cụ thể “áp dụng lên cloud”: migration104 đã commit trên Cloud; metadata xác minh overload `(integer,integer,integer)` và zero-argument RPC cũ cùng tồn tại. Không sửa/xóa ledger, customer_voucher hoặc voucher. UI local bật mặc định (`PAWPAL_LOYALTY_PAGING_ENABLED=false` mới tắt để rollback). Chrome phân trang, 7 test Node và loyalty service PASS sau bật. Frontend mới chưa push/deploy; không tuyên bố website đang deploy đã dùng phân trang mới hoặc E2E/Auth/Realtime đã đạt.
+
+Migration104 thêm overload `own_loyalty_snapshot(integer,integer,integer)` cho ba trang độc lập: history tối đa10, wallet/catalog tối đa6; count và balance tính toàn owner, page clamp khi dữ liệu giảm, validate tham số. Giữ nguyên RPC cũ và thuật toán đổi điểm. `sync_loyalty_page_cloud_rollback.cjs --cloud`: **14 kiểm tra PASS/113 SQL statements**, DDL/fixture đều rollback. Nhánh 12 dòng ledger xác minh trang10/2 không trùng, tổng balance111 từ toàn ledger, chặn page0; các kiểm tra đổi điểm/quyền/phiên bản trước vẫn PASS. [Kết quả](loyalty-page-cloud-rollback.txt).
+
+`user_loyalty_page_ui.cjs`: Chrome offline PASS với HTML/module thật: history10/2, wallet/catalog6/1, page args độc lập và balance giữ999 ở cả hai trang. Không gọi Cloud. UI đã bật mặc định sau apply; đặt `PAWPAL_LOYALTY_PAGING_ENABLED=false` mới dùng RPC cũ/client pagination để rollback. Sửa cả aria-label tiếng Việt lỗi mã hóa của nút phân trang.
+
+Lịch sử duyệt: auto-review từ chối apply104 lần đầu vì chỉ nhận xác nhận cho103; sau khi người dùng đồng ý cụ thể, lệnh đã được duyệt và áp dụng. Trạng thái hiện tại theo đoạn cập nhật ở đầu mục này. Không dùng test rollback/mock để thay nghiệm thu website đã deploy.
+
 Đợt này gồm sửa mã local, test offline và RPC/RLS Cloud với fixture luôn hoàn tác; không Logs/stress-test, chưa push/deploy hoặc nghiệm thu E2E.
 
 ## Thay đổi

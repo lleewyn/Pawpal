@@ -1,0 +1,148 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T09:08:06.424Z",
+  "scope": "Exchange and resend RPC/RLS, synthetic rollback only; no actual delivery/money, Logs or load test",
+  "checks": [
+    {
+      "name": "Exchange blocked before inspected receipt",
+      "status": "PASS"
+    },
+    {
+      "name": "Exchange restocks inspected original items separately",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: revision, confirmation and exact RMA quantity enforced",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: customer and Guest cannot create replacements",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: prior cash refund requires reconciliation",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: retry returns one order; changed replay or second ID cannot duplicate",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: free linked order copies owner/address and reserves without issuing stock",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: active replacement prevents independent money refund",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: replacement RMA cannot restock a second time",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: cancellation releases holds; already-received RMA stays counted to prevent duplicate returns",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: owner receipt also completes linked RMA through existing order RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: ship retries issue exactly once; completion syncs RMA without another issue",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: replacement cannot be repriced into another charge",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: API roles cannot modify replacement mapping directly",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: owner sees tracking/completion; other customer cannot read link or order",
+      "status": "PASS"
+    },
+    {
+      "name": "exchange: no new payment, rewards or point redemption",
+      "status": "PASS"
+    },
+    {
+      "name": "Insufficient replacement stock leaves no partial order or link",
+      "status": "PASS"
+    },
+    {
+      "name": "Resend must use original SKU",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: revision, confirmation and exact RMA quantity enforced",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: customer and Guest cannot create replacements",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: prior cash refund requires reconciliation",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: retry returns one order; changed replay or second ID cannot duplicate",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: free linked order copies owner/address and reserves without issuing stock",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: active replacement prevents independent money refund",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: replacement RMA cannot restock a second time",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: cancellation releases holds; already-received RMA stays counted to prevent duplicate returns",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: owner receipt also completes linked RMA through existing order RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: ship retries issue exactly once; completion syncs RMA without another issue",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: replacement cannot be repriced into another charge",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: API roles cannot modify replacement mapping directly",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: owner sees tracking/completion; other customer cannot read link or order",
+      "status": "PASS"
+    },
+    {
+      "name": "resend: no new payment, rewards or point redemption",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes all fixtures and migration DDL",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "f2b7794a-5c47-4d8a-9228-dfb73b239473",
+    "customerB": "ba58366b-82b7-44ad-8530-2ee28d423cfe",
+    "product": "b2f1d2f2-b877-49e9-be39-410731dcdf42",
+    "variant": "673be1a6-952d-48a2-a997-6542a7bfd8b8",
+    "order": "c4a648cd-e557-49dd-98dd-71ad84caffbe"
+  },
+  "status": "PASS",
+  "queries": 328
+}

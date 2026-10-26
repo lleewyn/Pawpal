@@ -17,7 +17,7 @@ async function loadReturnRequestFromSupabase(orderId) {
             resolvedOrderId = lookup.data.id;
         }
         const { data, error } = await db.from('return_request')
-            .select('*, return_request_detail(*, sales_order_detail(product_name_snapshot,sku_snapshot,unit_price))')
+            .select('*, '+(window.PAWPAL_SALES_REPLACEMENTS_ENABLED===true?'replacement:sales_replacement(order_id,kind,order:order_id(id,order_code,order_status,tracking_code,shipping_status)),':'')+' return_request_detail(*, sales_order_detail(product_name_snapshot,sku_snapshot,unit_price))')
             .eq('sales_order_id', resolvedOrderId)
             .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
@@ -66,11 +66,12 @@ function normalizeReturnRequestRow(row) {
         orderId: row.sales_order_id || '',
         rmaId: row.id || '',
         createdAt: row.created_at || new Date().toISOString(),
-        status: ({pending:'reviewing',received:'received',approved:'approved',rejected:'rejected',cancelled:'cancelled'})[row.request_status] || String(row.request_status || 'placed').toLowerCase(),
+        status: ({pending:'reviewing',received:'received',approved:'approved',rejected:'rejected',cancelled:'cancelled',completed:'completed'})[row.request_status] || String(row.request_status || 'placed').toLowerCase(),
         reason: row.reason || 'change_mind',
         type: ['hoan_tien', 'refund'].includes(String(row.return_type).toLowerCase()) ? 'refund' : 'exchange',
         description: row.description || '',
         resolution: row.resolution_type || '',
+        replacement: Array.isArray(row.replacement) ? row.replacement[0] : row.replacement || null,
         refundAccount: row.refund_account || '',
         products,
         pointsDeducted: row.points_deducted || false,
@@ -161,7 +162,7 @@ async function initReturnDetail() {
 
     const shippingBox = document.getElementById('rma-shipping-box');
     if (shippingBox) {
-        if (rmaData.status === 'approved' || rmaData.status === 'shipping_return') {
+        if ((rmaData.status === 'approved' || rmaData.status === 'shipping_return') && rmaData.replacement?.kind !== 'resend') {
             shippingBox.classList.remove('d-none');
             const codeBold = document.getElementById('rma-code-bold');
             if (codeBold) codeBold.textContent = rmaData.rmaId;
@@ -178,9 +179,20 @@ async function initReturnDetail() {
     ];
     if(['rejected','cancelled'].includes(rmaData.status))timelineSteps.splice(1,timelineSteps.length-1,
         {key:rmaData.status,title:getStatusLabel(rmaData.status),desc:getReturnResolutionMessage(rmaData)});
+    if(rmaData.replacement?.order){
+        const replacement=rmaData.replacement.order;
+        const states={pending:'Đang chuẩn bị',confirmed:'Đã xác nhận',packing:'Đang đóng gói',shipped:'Đang giao',shipping:'Đang giao',delivered:'Đã giao',completed:'Đã giao',cancelled:'Đã hủy'};
+        timelineSteps.push({key:rmaData.status,title:rmaData.replacement.kind==='resend'?'Đơn gửi bù':'Đơn đổi hàng',
+            desc:replacement.order_code+' · '+(states[replacement.order_status]||'Đang cập nhật')+(replacement.tracking_code?' · Vận đơn '+replacement.tracking_code:'')+' · Không thu thêm tiền.'});
+        if(rmaData.replacement.kind==='resend'){
+            const receipt=timelineSteps.findIndex(step=>step.key==='received');if(receipt>=0)timelineSteps.splice(receipt,1);
+            const approval=timelineSteps.find(step=>step.key==='approved');if(approval)approval.desc='Cửa hàng đã duyệt gửi bù theo yêu cầu.';
+        }
+    }
 
     const statusOrder = timelineSteps.map(s => s.key);
     let activeIdx = statusOrder.indexOf(rmaData.status);
+    if(rmaData.replacement?.order)activeIdx=timelineSteps.length-1;
     if (activeIdx === -1) activeIdx = 0; // fallback
 
     const timelineContainer = document.getElementById('rma-timeline');
@@ -199,6 +211,10 @@ async function initReturnDetail() {
             </div>
         `;
     }).join('');
+    if(rmaData.replacement?.order?.id){
+        const link=document.createElement('a');link.textContent='Xem đơn thay thế';
+        link.href='#order-detail?id='+encodeURIComponent(rmaData.replacement.order.id);timelineContainer.append(link);
+    }
 }
 
 function getReturnResolutionMessage(data) {

@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-10-26T12:04:00.068Z",
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "status": "PASS",
+  "baseline": "REPRODUCED: active direct_request rule did not set SLA before migration",
+  "checks": [
+    {
+      "name": "Inactive and unrelated rules do not create a fallback SLA; no configuration stays NULL",
+      "status": "PASS"
+    },
+    {
+      "name": "Returning to bot clears stale SLA",
+      "status": "PASS"
+    },
+    {
+      "name": "Waiting deadline follows strictest active direct_request SLA; no arbitrary staff assignment",
+      "status": "PASS"
+    },
+    {
+      "name": "Handoff retry neither extends deadline nor changes revision",
+      "status": "PASS"
+    },
+    {
+      "name": "Editing rule does not rewrite an already-waiting deadline",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer followup does not reset first-response deadline",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot call service-only mode RPC or private trigger function",
+      "status": "PASS"
+    },
+    {
+      "name": "Agent take preserves historical waiting deadline for audit",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin release to bot also clears deadline through the same trigger",
+      "status": "PASS"
+    },
+    {
+      "name": "New handoff uses updated rule, not previous frozen deadline",
+      "status": "PASS"
+    },
+    {
+      "name": "Zero-second SLA means immediate response, not missing configuration",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot bypass service gateway to change SLA",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes conversation, rules and actors; migration DDL not committed",
+      "status": "PASS"
+    }
+  ],
+  "queries": 84,
+  "scope": "Direct customer handoff SLA only; synthetic rules/conversation, role claims over SQL, always rollback; no existing rules changed, real messages, Logs, automatic matching or staff assignment"
+}

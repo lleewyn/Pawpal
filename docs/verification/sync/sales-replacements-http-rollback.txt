@@ -1,0 +1,141 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T11:35:38.125Z",
+  "scope": "Actual Admin replacement modal and customer return module -> loopback test HTTP bridge -> deployed Cloud RPC/RLS; one serialized PG transaction, always rollback. Bootstrap API stub and synthetic actor tokens; not Supabase Auth, PostgREST embedding, COMMIT, production shipping UI, Realtime or concurrent DB writers. No Logs/load tests or actual delivery/money.",
+  "checks": [
+    {
+      "name": "Customer module reads inspected return through HTTP and Cloud RLS",
+      "status": "PASS"
+    },
+    {
+      "name": "Other customer sees empty owner-scoped result over HTTP",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual Admin modal sends one HTTP RPC and refreshes persisted-in-transaction linked order",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer reload reads replacement order from Cloud with no fabricated RPC response",
+      "status": "PASS"
+    },
+    {
+      "name": "Simultaneous HTTP reads keep A/B identity isolated on serialized transaction transport",
+      "status": "PASS"
+    },
+    {
+      "name": "Other customer cannot invoke Admin replacement RPC via HTTP",
+      "status": "PASS"
+    },
+    {
+      "name": "Existing fulfillment RPC shipping is visible after customer reload with exact tracking",
+      "status": "PASS"
+    },
+    {
+      "name": "Existing completion RPC updates customer RMA to completed over HTTP read",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual Admin return renderer reads matching replacement completion/tracking",
+      "status": "PASS"
+    },
+    {
+      "name": "Replacement issued exactly two units after inspected stock return",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removed original and replacement orders plus all supporting fixtures",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "00d34137-1cc5-4c77-b3e6-989fcbf7c6f2",
+    "customerB": "a87b2ad9-793a-4e51-b10a-7f4ea4a3a9d1",
+    "product": "abcc15e1-c8de-492e-b88d-d3f8b6e15b03",
+    "variant": "9b747f5e-851f-46f7-86e7-2d97000ac924",
+    "order": "265482af-9ef7-4eed-a5ec-8cdf9536ea99"
+  },
+  "http": {
+    "requests": 15,
+    "responseBytes": 23148,
+    "trace": [
+      {
+        "path": "/__test/read",
+        "status": 200,
+        "bytes": 955
+      },
+      {
+        "path": "/__test/read",
+        "status": 200,
+        "bytes": 13
+      },
+      {
+        "path": "/__test/read",
+        "status": 200,
+        "bytes": 1942
+      },
+      {
+        "path": "/__test/rpc",
+        "status": 200,
+        "bytes": 47
+      },
+      {
+        "path": "/__test/read",
+        "status": 200,
+        "bytes": 2946
+      },
+      {
+        "path": "/__test/read",
+        "status": 200,
+        "bytes": 1959
+      },
+      {
+        "path": "/__test/read",
+        "status": 200,
+        "bytes": 1959
+      },
+      {
+        "path": "/__test/read",
+        "status": 200,
+        "bytes": 13
+      },
+      {
+        "path": "/__test/rpc",
+        "status": 400,
+        "bytes": 66
+      },
+      {
+        "path": "/__test/advance",
+        "status": 200,
+        "bytes": 1961
+      },
+      {
+        "path": "/__test/advance",
+        "status": 200,
+        "bytes": 2039
+      },
+      {
+        "path": "/__test/read",
+        "status": 200,
+        "bytes": 2039
+      },
+      {
+        "path": "/__test/advance",
+        "status": 200,
+        "bytes": 2074
+      },
+      {
+        "path": "/__test/read",
+        "status": 200,
+        "bytes": 2074
+      },
+      {
+        "path": "/__test/read",
+        "status": 200,
+        "bytes": 3061
+      }
+    ]
+  },
+  "status": "PASS",
+  "queries": 147
+}

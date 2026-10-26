@@ -1,0 +1,65 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T06:51:54.392Z",
+  "scope": "One voucher, one adjustment, one redemption; synthetic actors only; rollback; no Logs",
+  "status": "PASS",
+  "queries": 113,
+  "checks": [
+    {
+      "name": "Admin adjustment and retry create one 100-point ledger entry",
+      "status": "PASS"
+    },
+    {
+      "name": "User snapshot reads Admin adjustment and active fixture voucher",
+      "status": "PASS"
+    },
+    {
+      "name": "History payload is 10 plus 2 rows, balance uses all 12 ledger entries and pages do not overlap",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot call Admin adjustment or directly mint ledger points",
+      "status": "PASS"
+    },
+    {
+      "name": "Redemption and retry create one wallet item and one 40-point debit",
+      "status": "PASS"
+    },
+    {
+      "name": "Same request with different payload is rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin sees exact User redemption ledger and wallet reference",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed voucher rejects stale version; current cost enforces sufficient balance",
+      "status": "PASS"
+    },
+    {
+      "name": "Disabled voucher disappears from catalog and cannot be redeemed",
+      "status": "PASS"
+    },
+    {
+      "name": "Expired voucher cannot be redeemed with a current version",
+      "status": "PASS"
+    },
+    {
+      "name": "B snapshot isolates A wallet/history and cannot replay A request",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot read private loyalty snapshot or redeem",
+      "status": "PASS"
+    },
+    {
+      "name": "Denied operations leave balance and ledger unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes all fixture actors, voucher, wallet and ledger",
+      "status": "PASS"
+    }
+  ]
+}

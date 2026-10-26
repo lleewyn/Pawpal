@@ -1,0 +1,61 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T07:21:08.616Z",
+  "scope": "One conversation, two synthetic agents/customers; RPC/roles only; rollback; no real messaging or Logs",
+  "status": "PASS",
+  "queries": 89,
+  "checks": [
+    {
+      "name": "Service gateway open retry uses one conversation for the same identity",
+      "status": "PASS"
+    },
+    {
+      "name": "Existing conversation cannot be reopened as another customer",
+      "status": "PASS"
+    },
+    {
+      "name": "Handoff request retry keeps one waiting state and one system message",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot bypass server gateway or take conversation as staff",
+      "status": "PASS"
+    },
+    {
+      "name": "Agent take retry assigns one owner",
+      "status": "PASS"
+    },
+    {
+      "name": "Unassigned staff cannot send into another assigned conversation",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer gateway message retry stores once during human handling without bot reply",
+      "status": "PASS"
+    },
+    {
+      "name": "Staff reply retry stores one public staff message",
+      "status": "PASS"
+    },
+    {
+      "name": "Transfer retry assigns new staff while private note never becomes public message",
+      "status": "PASS"
+    },
+    {
+      "name": "Previous agent loses send permission after transfer",
+      "status": "PASS"
+    },
+    {
+      "name": "Resolved conversation cannot silently reopen through mode request",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot invoke service-only chat creation RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes conversation, messages and all synthetic actors",
+      "status": "PASS"
+    }
+  ]
+}

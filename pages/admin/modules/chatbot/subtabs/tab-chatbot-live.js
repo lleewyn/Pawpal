@@ -17,6 +17,13 @@
     let subscribedConversationId = null;
     let customerTypingHideTimer = null;
     let isSendingLiveMsg = false;
+    const pendingConversationOperations = new Set();
+    function ownsConversation(conversation) {
+        try {
+            const actor = JSON.parse(localStorage.getItem('pawpal_admin_user') || sessionStorage.getItem('pawpal_admin_user') || '{}');
+            return Boolean(actor.id && conversation?.assignedStaffId === actor.id && conversation.status === 'agent_handling');
+        } catch { return false; }
+    }
     let inboxPage = Number(sessionStorage.getItem('pawpal_chat_inbox_page')) || 1;
     let isStaffTypingActive = false;
     let staffTypingStopTimer = null;
@@ -521,10 +528,12 @@
         const conversationClosed = ['resolved', 'closed', 'completed', 'blocked'].includes(currentConversation.status);
         const messageInput = document.getElementById('chatMessageInput');
         const sendButton = document.getElementById('btnSendLiveMessage');
-        if (messageInput) messageInput.disabled = conversationClosed;
-        if (sendButton) sendButton.disabled = conversationClosed;
+        const operationPending = pendingConversationOperations.has(currentConversation.id);
+        const canSend = !conversationClosed && !operationPending && ownsConversation(currentConversation);
+        if (messageInput) messageInput.disabled = !canSend;
+        if (sendButton) sendButton.disabled = !canSend;
         if (takeoverBtn) {
-            takeoverBtn.disabled = conversationClosed;
+            takeoverBtn.disabled = conversationClosed || operationPending || Boolean(currentConversation.assignedStaffId && !ownsConversation(currentConversation));
             takeoverBtn.textContent = conversationClosed ? 'Đã kết thúc' : currentConversation.isHandover ? 'Trả lại AI' : 'Tiếp nhận';
             takeoverBtn.className = 'admin-btn btn-takeover-compact ' + (currentConversation.isHandover ? 'admin-btn-secondary' : 'admin-btn-primary');
         }
@@ -976,9 +985,11 @@
     const operationRequests = new Map();
     async function operateConversation(action,content,button) {
         const conversation=PawpalChatbot.state?.currentConversation;
-        if(!conversation || !supabase || button?.disabled)return false;
+        if(!conversation || !supabase || button?.disabled || pendingConversationOperations.has(conversation.id))return false;
         const key=JSON.stringify([conversation.id,action,content,conversation.updatedAtRaw]);
         if(!operationRequests.has(key))operationRequests.set(key,crypto.randomUUID());
+        pendingConversationOperations.add(conversation.id);
+        renderCurrentChat();
         if(button)button.disabled=true;
         try {
             const {error}=await supabase.rpc('act_admin_chat',{
@@ -993,12 +1004,12 @@
         }catch(error){
             const messages={chat_changed:'Hội thoại đã thay đổi. Làm mới trước khi thao tác.',chat_assigned_to_other:'Hội thoại đang do nhân viên khác phụ trách.',chat_take_required:'Bạn cần tiếp nhận hội thoại trước.',chat_not_open:'Hội thoại đã kết thúc.',chat_forbidden:'Bạn không có quyền thao tác.'};
             PawpalChatbot.showToast?.(messages[error.message] || 'Không lưu được thao tác. Bản nháp được giữ lại.','error');return false;
-        }finally{if(button)button.disabled=false;}
+        }finally{pendingConversationOperations.delete(conversation.id);if(button)button.disabled=false;renderCurrentChat();}
     }
     async function sendLiveMsg() {
         if(isSendingLiveMsg)return;
         const conversation=PawpalChatbot.state?.currentConversation,input=document.getElementById('chatMessageInput'),button=document.getElementById('btnSendLiveMessage');
-        const text=input?.value.trim();if(!conversation || !text || input.disabled || button?.disabled)return;
+        const text=input?.value.trim();if(!conversation || !text || input.disabled || button?.disabled || !ownsConversation(conversation) || pendingConversationOperations.has(conversation.id))return;
         isSendingLiveMsg=true;
         try{if(await operateConversation('send',text,button)){
             if(PawpalChatbot.state.currentConversation?.id===conversation.id && input.value.trim()===text)input.value='';

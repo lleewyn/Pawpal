@@ -1,0 +1,346 @@
+{
+  "timestamp": "2026-10-26T12:30:09.577Z",
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "scope": "Actual synthetic customer/Admin Auth, committed nonpublic service review moderation and notification Realtime. Only pending/hidden/rejected are used; no test review published, production UI, money, files, Storage or Logs. Immutable test moderation audit rows retained.",
+  "checks": [
+    {
+      "name": "Two synthetic customers and existing private Admin authenticate through real Supabase Auth",
+      "status": "PASS"
+    },
+    {
+      "name": "Real customer submission and retry commit one pending review, without a self-notification",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read A review; customer cannot moderate their own review",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent Admin hide retry commits once; only owner receives linked Realtime notice without private reason",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale committed moderation snapshot is rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Fresh authenticated client reads committed rejection and two distinct owner notices",
+      "status": "PASS"
+    },
+    {
+      "name": "Anonymous public reviews never expose the pending/hidden/rejected test review; no real service review was published",
+      "status": "PASS"
+    },
+    {
+      "name": "Scoped cleanup removes synthetic Auth/customer/ticket/notifications, preserving immutable audit trail",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customers": [
+      "34d2586f-9c29-4095-ae46-7739fd7d1856",
+      "3826187a-90d1-471a-81e0-51087cb7c183"
+    ],
+    "auth": [
+      "e63add87-0954-404d-b5f3-a4f47fa32220",
+      "a726affb-9574-4071-9db1-28be52010519"
+    ],
+    "ticket": "69228fed-d8cb-464d-86f2-ad89d706164e",
+    "pet": "c7f7808d-443b-4450-adf9-2e5134d8840b",
+    "booking": "15dfa3a0-18ff-4e56-8060-eab81b1a7fbf",
+    "item": "0b7ca936-5d9e-441f-a541-859470b0c550",
+    "review": "98c01045-0f55-4370-b082-104aa8b12d73"
+  },
+  "retainedImmutableAuditRows": 2,
+  "cleanup": {
+    "status": "PASS",
+    "errors": [],
+    "retainedAuditPolicy": "Append-only test action audit records retained as designed; no audit deletion or trigger disabling"
+  },
+  "status": "PASS",
+  "http": {
+    "requests": 55,
+    "trace": [
+      {
+        "path": "/rest/v1/customer_phone",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/complete_customer_auth",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/token",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/customer_phone",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/complete_customer_auth",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/token",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/token",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/pet_breed",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/service",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/pet_profile",
+        "method": "POST",
+        "status": 201
+      },
+      {
+        "path": "/rest/v1/appointment",
+        "method": "POST",
+        "status": 201
+      },
+      {
+        "path": "/rest/v1/appointment_item",
+        "method": "POST",
+        "status": 201
+      },
+      {
+        "path": "/rest/v1/rpc/submit_own_service_reviews",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/submit_own_service_reviews",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_service_reviews",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_notifications_snapshot",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_service_reviews",
+        "method": "POST",
+        "status": 403
+      },
+      {
+        "path": "/rest/v1/rpc/moderate_admin_service_review",
+        "method": "POST",
+        "status": 403
+      },
+      {
+        "path": "/rest/v1/review",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/moderate_admin_service_review",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/moderate_admin_service_review",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_notifications_snapshot",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_service_reviews",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_notifications_snapshot",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/moderate_admin_service_review",
+        "method": "POST",
+        "status": 409
+      },
+      {
+        "path": "/rest/v1/review",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/moderate_admin_service_review",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_service_reviews",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/own_notifications_snapshot",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/public_service_reviews",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/notification",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/review",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/appointment_item",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/appointment",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/pet_profile",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/support_ticket_message",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/support_ticket",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_membership",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_address",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_phone",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_profile",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/auth/v1/admin/users/e63add87-0954-404d-b5f3-a4f47fa32220",
+        "method": "DELETE",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users/a726affb-9574-4071-9db1-28be52010519",
+        "method": "DELETE",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/notification",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/support_ticket",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users/e63add87-0954-404d-b5f3-a4f47fa32220",
+        "method": "GET",
+        "status": 404
+      },
+      {
+        "path": "/auth/v1/admin/users/a726affb-9574-4071-9db1-28be52010519",
+        "method": "GET",
+        "status": 404
+      },
+      {
+        "path": "/rest/v1/audit_log",
+        "method": "GET",
+        "status": 200
+      }
+    ]
+  },
+  "realtime": {
+    "ownerMessages": 0,
+    "ownerNotifications": 2,
+    "otherEvents": 0
+  }
+}

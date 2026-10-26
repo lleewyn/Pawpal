@@ -12,3 +12,10 @@ test('Admin explanation is escaped for timeline HTML',()=>{
 test('Absent explanation or cancellation keeps generic text instead of technical resolution codes',()=>{
  const generic=context.message({status:'rejected'});assert.ok(generic.length>0);assert.equal(context.message({status:'cancelled',resolution:'internal-code'}),generic);
 });
+test('Replacement relation preserves order/tracking for object and array embeddings',()=>{
+ const replacement={order_id:'replacement',kind:'resend',order:{id:'replacement',order_code:'RP-E2E',order_status:'shipped',tracking_code:'TRACK'}};
+ for(const value of [replacement,[replacement]]){
+  const data=context.normalize({id:'return',request_status:'completed',replacement:value});assert.equal(data.status,'completed');assert.equal(data.replacement.order_id,'replacement');assert.equal(data.replacement.order.tracking_code,'TRACK');
+ }
+ assert.equal(context.normalize({id:'return',replacement:[]}).replacement,undefined);
+});

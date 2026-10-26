@@ -20,6 +20,6 @@
 
 `node --test scripts/test/vercel_routes.test.cjs`: 4 test PASS, đối chiếu đầy đủ route local/Vercel, đích file, alias API, URL cũ và không trùng source/vòng lặp trang chủ.
 
-Chưa push/redeploy; production vẫn cần phát hành cấu hình này rồi kiểm tra HTTP lại. Chưa thay cấu hình dự án/domain hay ghi dữ liệu Supabase. Không dùng Logs hoặc kiểm thử tải.
+Đã push riêng commit `73f82a8d` lên `origin/main` theo yêu cầu người dùng. GitHub báo trạng thái Vercel success; production đã kiểm tra lại 11 URL: trang chính và asset đều 200, GET `/api/customer/auth/me` trả 405 JSON đúng phương thức, không còn 404. [Bằng chứng HTTP](vercel-routing-live-2026-10-26.txt). Không thay cấu hình dự án/domain hay ghi dữ liệu Supabase. Không dùng Logs hoặc kiểm thử tải. Các thay đổi đồng bộ chưa commit vẫn giữ local.
 
 Tài liệu cấu hình tham chiếu: [Vercel vercel.json](https://vercel.com/docs/project-configuration/vercel-json).

@@ -171,7 +171,10 @@ async function loadBookingDetail(bookingId, preserveReview = false) {
     renderBookingDetail(currentBooking);
     await loadBookingExecution(db, currentBooking,valid);
     if(!valid())return;
-    if (!preserveReview) await renderServiceReviewSection(currentBooking,valid);
+    // A background refresh may preserve an edited form. Its submit guard must
+    // follow the mounted actor/booking, not the superseded read sequence.
+    const reviewValid=()=>version===detailVersion && owner===detailOwner() && document.querySelector('.booking-detail-module-container')?.isConnected && [currentBooking?.id,currentBooking?._supabaseId].some(id=>String(id)===String(bookingId));
+    if (!preserveReview) await renderServiceReviewSection(currentBooking,reviewValid);
     if(!valid())return;
     checkBookingModifiability(currentBooking);
     const cancelButton=document.getElementById('btnCancelBooking');

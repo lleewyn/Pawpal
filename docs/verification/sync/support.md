@@ -1,5 +1,17 @@
 # Kiểm tra đồng bộ hỗ trợ khách hàng — 26/10/2026
 
+## Phân trang ticket và messages — đã áp dụng Cloud
+
+Đóng modal gọi releaseTicket để ngừng tải bổ sung chi tiết khi danh sách nhận sự kiện mới; version riêng chặn response chi tiết cũ ghi đè ticket chọn sau. Hai bài Chrome support paging/sync PASS sau sửa.
+
+Migration105 thêm overload `own_support_tickets(integer,text,uuid,integer)`: danh sách tối đa10 ticket theo filter, tổng/counts tính toàn owner; mỗi ticket tối đa20 public messages theo trang, sort ổn định. Tham số ticket cho deep link vẫn áp owner. Projection giữ nguyên quy tắc ẩn internal notes và chỉ lộ resolution công khai khi trạng thái cho phép. RPC cũ được giữ nguyên, không sửa/xóa business rows.
+
+`sync_support_page_cloud_rollback.cjs --cloud`: **14 kiểm tra PASS/126 SQL statements**, DDL và fixture rollback. Bổ sung23 public messages cho một ticket: trang20/3 không trùng và message_total23; reject page0. Kế thừa kiểm tra A/B/Guest, internal note, reply/idempotency, resolve/rate/close. [Kết quả](support-page-cloud-rollback.txt). Lượt apply persistent đầu bị auto-review chặn; sau xác nhận cụ thể105 đã áp dụng và metadata xác minh overload mới/cũ tồn tại. Không bypass review.
+
+`user_support_page_ui.cjs`: Chrome offline PASS cho23 ticket mock: 10/10/3 dòng và count23; messages20/3; deep link tới ticket ngoài trang đọc riêng mà không chèn thừa dòng vào danh sách. Helper chỉ tải thêm ticket đang mở khi cần; message page được giữ khi refresh. Có guard owner/detail version sau async để response cũ không mở nhầm modal. Pagination/filter dùng RPC mới; `PAWPAL_SUPPORT_PAGING_ENABLED=false` là rollback switch, mặc định bật sau apply.
+
+`user_support_sync_ui.cjs` vẫn PASS. Batch mở rộng gồm11 bài Chrome và75 test Node cùng Copilot/service; toàn bộ transport mock, không gọi Cloud. Chưa nghiệm thu Auth/HTTP/Realtime/commit hai portal, upload hoặc tổng egress. Frontend mới chưa push/deploy. Các ghi chú lịch sử “unbounded” dưới đây mô tả RPC zero-argument cũ; RPC mới đã bounded, client cũ vẫn có thể gọi RPC cũ.
+
 Bổ sung retry local: ID phản hồi được giữ trong sessionStorage theo owner/ticket/SHA-256 nội dung, không lưu nội dung hoặc token; kiểm tra ghi journal trước RPC, ack đúng mới xóa. `user_support_sync_ui.cjs` PASS với lỗi ghi → stop/nạp lại helper (mất Map trong bộ nhớ) → retry cùng ID; ý định gửi cùng nội dung sau ack dùng ID mới. Đây là tái nạp helper trong browser, chưa phải reload toàn portal hoặc mất response sau commit thật. SHA-256 chỉ dùng định danh nội dung, không coi là mã hóa bảo mật. Các giới hạn ID chỉ nằm trong bộ nhớ ghi trước đây đã được sửa ở phạm vi helper; E2E reload vẫn cần kiểm tra.
 
 Phạm vi: mã local và RPC/RLS Supabase Cloud; chưa push/deploy hoặc nghiệm thu đầy đủ hai portal qua HTTP/Auth, commit, Realtime và reload.

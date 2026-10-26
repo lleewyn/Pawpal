@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-10-26T12:07:54.225Z",
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "migration": "109_chat_handoff_sla.sql",
+  "status": "APPLIED",
+  "sha256": "6449971538addebad6badcceb7efb2ec8f5fb36d0e5254900915e087fd3c2ba4",
+  "checks": {
+    "trigger_installed": true,
+    "direct_request_rule": true,
+    "private_helper": true,
+    "gateway_retained": true,
+    "customer_gateway_blocked": true
+  },
+  "scope": "Trigger/function DDL only; no existing conversations or rules changed; no rules seeded, automatic matching or staff assignment"
+}

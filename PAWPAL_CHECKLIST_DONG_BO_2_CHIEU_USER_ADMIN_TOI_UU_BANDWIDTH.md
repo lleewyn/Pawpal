@@ -1,6 +1,6 @@
 # PAWPAL --- CHECKLIST KIỂM THỬ ĐỒNG BỘ 2 CHIỀU USER ↔ ADMIN
 
-**Phiên bản:** 1.29 · **Cập nhật:** 26/10/2026 · **Trạng thái tổng:** ĐANG KIỂM TRA MỘT PHẦN · **Timezone:**
+**Phiên bản:** 1.47 · **Cập nhật:** 26/10/2026 · **Trạng thái tổng:** ĐANG KIỂM TRA MỘT PHẦN · **Timezone:**
 Asia/Ho_Chi_Minh (UTC+7)
 
 **Mục tiêu:** phát hiện lỗi khi User thao tác nhưng Admin không nhận cập
@@ -15,24 +15,108 @@ Supabase.
 > thật. Tên bảng, enum, FK, RLS và cơ chế realtime phải xác minh với
 > schema/code đang triển khai.
 
-**Dấu hoàn thành:** `[x]` ở các đầu việc con xác nhận đúng phần SQL/RLS hoặc offline đã có bằng chứng. Ô cha `[ ]` giữ trống khi chưa kiểm tra đủ chuỗi hai portal; không đồng nghĩa các phần bên trong chưa làm. Các mục chưa chạy không đánh dấu.
+**Dấu hoàn thành:** `[x]` ở đầu việc con xác nhận đúng phạm vi SQL/RLS, offline hoặc UI/Auth/commit thật đã ghi bằng chứng. Ô cha `[ ]` giữ trống khi chưa kiểm tra đủ các nhánh; không đồng nghĩa các phần bên trong chưa làm. Các mục chưa chạy không đánh dấu.
 
 ### Các đợt đã thực hiện
 
+### SLA tiếp nhận 5 phút đã cấu hình — 26/10/2026
+
+- [x] Theo xác nhận người dùng, bật một rule `direct_request`, SLA 300 giây trên Supabase Cloud; không đặt vai trò tự phân công, ghi audit cấu hình.
+- [x] Xác minh yêu cầu mới nhận deadline 5 phút; retry không kéo dài hạn. Một hội thoại tổng hợp trong transaction đã rollback sạch; cả 8 hội thoại cũ giữ nguyên revision/deadline. [Bằng chứng](docs/verification/sync/chat-sla-5min-cloud.txt).
+- [x] Playwright MCP mở Admin → Chatbot → Quy định → chuyển giao: thấy “Khách yêu cầu gặp chuyên viên”, “300 giây”, “Hiệu lực”. Không thêm polling/channel/query vào ứng dụng.
+- [ ] Countdown/tiếp nhận trên luồng UI mới có commit thực tế và engine tự phân công/từ khóa/cảm xúc chưa nghiệm thu đầy đủ; không coi bài rollback là UI E2E. Frontend local chưa phát hành.
+
+### Các mục hiện chưa đóng
+
+- [ ] Phát hành các thay đổi giao diện đồng bộ/loyalty/ticket/review/hoàn điểm/đổi gửi bù còn ở local; lần push `73f82a8d` chỉ khôi phục route Vercel.
+- [ ] Hoàn tất các nhánh UI E2E còn lại: người nhận trả lời/resolve sau transfer, public page published trên dịch vụ active trong môi trường tách biệt và các phân hệ khác. UI moderation published/hidden trên dịch vụ inactive riêng, transfer/receipt/quyền compose/reload đã kiểm ở đợt 1.46.
+- [ ] Hai kết nối ghi đồng thời và mất response sau commit thật; request HTTP đọc A/B đồng thời trên một kết nối SQL tuần tự chưa đóng mục DB writers.
+- [ ] SLA-01 đã sửa backend bằng migration 109, rule tiếp nhận 5 phút đã bật Cloud theo người dùng (đợt 1.47); còn phát hành UI và nghiệm thu countdown toàn chuỗi/engine tự phân công.
+- HOÃN — Upload ticket/quyền Storage làm sau theo yêu cầu người dùng vì chưa nối nơi lưu ảnh; không tạo bucket/policy/file input, không dùng mục này để chặn đợt chat/ticket/đánh giá/thông báo hiện tại. Gateway thanh toán thật N/A theo yêu cầu.
+
+### UI chuyển ca và công bố sau commit — 26/10/2026
+
+- [x] Công bố/ẩn trên dịch vụ thử inactive riêng: khách → Admin duyệt → khách cập nhật và reload đúng, DB xác nhận published/hidden. Không đưa đánh giá thử vào dịch vụ đang phục vụ. [Báo cáo](docs/verification/sync/advanced-portal-live-ui.md).
+- [x] Anonymous API loại dịch vụ/review inactive, bốn lần moderation sinh bốn notice/source_event đúng chủ; không nới filter hoặc backfill dữ liệu.
+- [x] UI transfer sang người nhận thử trong BrowserContext đăng nhập riêng; người nhận tự nhận cập nhật, mở ô trả lời; người cũ bị khóa ô trả lời; reload giữ đúng phân công. Khách thấy thông điệp chuyển, không thấy ghi chú nội bộ.
+- [x] Sửa khóa thao tác chat theo hội thoại đến hết RPC/refresh và chỉ cho đúng người phụ trách soạn/gửi. Giữ/thả một request take thật, click lặp vẫn một request, gửi ngay sau khi ô mở lưu đúng một tin; không thêm polling/query/channel.
+- [x] Ba hồi quy UI chat offline và năm test SLA PASS. Dọn khách/Auth, người nhận/quyền tạm, lịch/bé cưng, chat/review/notice và dịch vụ inactive; giữ bảy audit bất biến. [Cleanup](docs/verification/sync/advanced-portal-live-cleanup.txt).
+- [ ] Người nhận gửi/resolve sau transfer; public page active published trong môi trường tách biệt. Rule SLA 5 phút đã bật theo xác nhận ở đợt 1.47; còn countdown UI toàn chuỗi.
+
+### Hai giao diện qua Playwright MCP — 26/10/2026
+
+- [x] Đăng nhập form thật Admin/khách A ở hai origin riêng, kết nối Supabase Cloud; khách A → B qua đăng xuất/đăng nhập thật. [Báo cáo chi tiết](docs/verification/sync/two-portal-live-ui.md).
+- [x] Ticket: tạo từ form khách → Admin tự nhận, ghi chú nội bộ không lộ, phản hồi hai chiều, giải quyết bằng giải thích, reload hai cổng giữ trạng thái/nội dung đúng.
+- [x] Review riêng tư: khách gửi chờ duyệt → Admin ẩn → khách tự cập nhật, reload giữ “Đã ẩn”; chuông đúng chủ lịch, không lộ lý do riêng.
+- [x] Chat: khách yêu cầu chuyên viên → Admin tiếp nhận/trả lời → khách phản hồi → Admin hoàn tất; hai cổng nhận cập nhật và reload giữ lịch sử, một tin staff. Ghi nhận một 409 khi gửi quá sát lúc nhận ca, bản nháp giữ và retry thành công; chưa đánh PASS gửi liên tục.
+- [x] Khách B không mở được ticket/lịch A qua deep link, không lộ review/chat A; badge 0. Ba notice có source_event khác nhau, không notice cho B.
+- [x] Sửa hai lỗi UI và kiểm lại trực tiếp: modal thông báo đóng khi mở nội dung liên quan; nút gửi ticket chỉ bật sau initializer sẵn sàng. Hồi quy header/scheduler 18 PASS, không thêm query/channel/polling.
+- [x] Dọn fixture hai khách/Auth, ticket/chat/review/lịch/bé cưng/thông báo; giữ bảy audit bất biến. [Bằng chứng cleanup](docs/verification/sync/two-portal-live-cleanup.txt).
+- [x] Bổ sung UI moderation published/hidden sau commit và chuyển nhân viên/receipt/reload ở đợt 1.46, theo đúng giới hạn fixture riêng.
+- [ ] Engine/SLA theo rule thật và các nhánh E2E còn ghi ở đầu tài liệu; frontend local chưa phát hành. Không đóng toàn bộ hệ thống chỉ từ đợt này.
+
+### Chuyển chat qua Auth/gateway/commit/Realtime thật — 26/10/2026
+
+- [x] 8 kiểm tra/47 request HTTP PASS: khách đăng nhập thật gọi API Vercel open/yêu cầu nhân viên, retry một hội thoại/message; Admin nhận ca và chuyển cho nhân viên đủ quyền bằng hai request chồng thời gian; người nhận nhận Realtime và đọc phân công mới.
+- [x] Nhân viên chưa được phân công không trả lời được, nhân viên cũ mất quyền trả lời sau chuyển; gateway khách không lộ ghi chú nội bộ/raw fields, đọc cùng revision trả notModified. [Bằng chứng](docs/verification/sync/chat-and-reviews.md).
+- [x] Dọn toàn bộ hội thoại/messages, khách/Auth và nhân viên/quyền tạm; giữ hai audit bất biến của QA Admin. Không cấp Admin cho nhân viên thử, gọi AI, Logs hay stress test.
+- [x] UI transfer/receipt/quyền compose/reload đã xác minh trong context người nhận riêng ở đợt 1.46.
+- [ ] Người nhận trả lời/resolve sau transfer qua Auth thật; hiện hai nhánh này chỉ có SQL rollback. Không đánh dấu toàn chuỗi hoàn tất.
+
+### Thông báo ticket và kiểm duyệt dịch vụ — 26/10/2026
+
+- [x] Phát hiện NOTIFY-01/P1: phản hồi/trạng thái ticket và kiểm duyệt review chưa tự tạo notification chuông; message hệ thống trong ticket không phải notification.
+- [x] Chuẩn bị migration 110: public staff reply/trạng thái ticket và review status tạo notice đúng owner, không gửi ghi chú nội bộ/lý do kiểm duyệt riêng tư; khóa source_event chống trùng, không backfill notice cũ.
+- [x] 14 kiểm tra Cloud/111 SQL rollback PASS: retry/no-op không trùng, owner A/B, read acknowledgement, public/private và review pending/công bố/ẩn. [Bằng chứng](docs/verification/sync/customer-event-notifications.md).
+- [x] Áp dụng migration 110 lên Cloud; xác minh ba trigger/chỉ mục chống trùng/helper private, không backfill hoặc sửa thông báo cũ. [Bằng chứng](docs/verification/sync/customer-event-notifications-apply.txt).
+- [x] Ticket Auth/commit/Realtime thật: 11 kiểm tra/54 request HTTP PASS; A nhận public reply và trạng thái, B không đọc/nhận được, nội bộ không lộ, retry không trùng, đánh dấu đọc giữ qua client mới. Dọn fixture, giữ ba audit bất biến. [Kết quả](docs/verification/sync/ticket-notifications-auth-realtime.txt).
+- [x] Review riêng tư Auth/commit/Realtime thật: 8 kiểm tra/55 request HTTP PASS; pending → hidden → rejected, retry/revision/owner và thông báo đúng chủ lịch; không công bố review thử nghiệm. Dọn fixture, giữ hai audit bất biến. [Kết quả](docs/verification/sync/review-notifications-auth-realtime.txt).
+- [x] Bổ sung UI thật/reload cho ticket và review chờ duyệt→ẩn, thông báo/deep link đúng chủ; xem đợt Playwright MCP 1.45.
+- [x] Công bố/ẩn sau commit bằng UI trên dịch vụ inactive riêng; khách nhận và reload đúng. Public API loại nội dung inactive theo thiết kế, xem đợt 1.46.
+- [ ] Public page hiển thị published trên dịch vụ active trong môi trường tách biệt và các nhánh toàn chuỗi khác. Upload/Storage hoãn theo yêu cầu.
+
+### SLA theo rule — 26/10/2026
+
+- [x] Tái hiện SLA-01/P1: rule đang bật nhưng `set_public_chat_mode` không đặt deadline. Đọc Cloud thấy rule thực tế đang rỗng; không tự chèn cấu hình thật.
+- [x] Chuẩn bị migration 109 cho yêu cầu nhân viên trực tiếp: rule active `direct_request`, lấy SLA ngắn nhất, 0 giây là tức thì, không có rule thì NULL. Retry/followup không kéo dài hạn, sửa rule không đổi lượt cũ; quay về bot xóa hạn cũ.
+- [x] 13 kiểm tra Cloud/84 SQL rollback và 5 test hiển thị SLA PASS; xác minh sạch fixture/DDL, không sửa rule/hội thoại thật. Sửa local bảng rule hiển thị đúng `0 giây`. [Bằng chứng](docs/verification/sync/chat-sla.md).
+- [x] Hồi quy offline 14 bài Chrome/87 test Node cùng Copilot/loyalty service PASS; không Logs/stress test, không thêm query trình duyệt/channel/polling.
+- [x] Áp dụng migration 109 lên Supabase Cloud ngày 26/10/2026; xác minh trigger, rule direct_request và quyền private helper/gateway. Không sửa hội thoại/rule hiện có hoặc chèn deadline mặc định. [Bằng chứng áp dụng](docs/verification/sync/chat-sla-cloud-apply.txt).
+- [x] Cấu hình rule tiếp nhận thật 5 phút theo người dùng, xác minh backend và màn hình rule Admin ở đợt 1.47.
+- [ ] Phát hành UI và nghiệm thu countdown/từ khóa/cảm xúc/phân công tự động đầy đủ hai portal.
+
+### Sửa 404 trên Vercel — 26/10/2026
+
+- [x] Xác minh production: `/` 200, `/services`/`admin`/`user` 404; file HTML trực tiếp và API function vẫn 200. Thiếu `vercel.json` sau commit `0ef89a39`.
+- [x] Khôi phục cấu hình route local, 4 kiểm tra PASS; 61 file đích đều có trong HEAD, có thể phát hành riêng bản sửa này. [Chi tiết](docs/maintenance/2026-10-26-vercel-routing-404.md).
+- [x] Đã push riêng commit `73f82a8d` lên `origin/main` theo yêu cầu; Vercel báo success. Production `/`, `/services`, `/shop`, `/admin`, `/admin/login`, `/user`, `/booking`, `/service-detail` và asset kiểm tra đều 200; GET API Auth trả 405 đúng phương thức, không còn 404. [Bằng chứng HTTP](docs/maintenance/vercel-routing-live-2026-10-26.txt). Đây là kiểm tra route, không thay nghiệm thu nghiệp vụ hai portal. Các thay đổi đồng bộ khác vẫn ở local.
+
 ### Phạm vi chốt theo yêu cầu người dùng
+
+- [x] Chat handoff/transfer/reply/resolve:13 kiểm tra Cloud/89 SQL statements PASS, một hội thoại tổng hợp đã rollback sạch;4 test handler API mock PASS cho token/owner/projection30 tin. [Bằng chứng](docs/verification/sync/chat-and-reviews.md).
+- [x] Đánh giá dịch vụ:10 kiểm tra Cloud/97 SQL statements PASS cho pending/retry/owner, phản hồi Admin và lọc public published/hidden. Fixture rollback sạch; không đăng review thật.
+- [x] Đã triển khai Admin xử lý công bố/chờ duyệt/ẩn/không duyệt cùng lý do bắt buộc trong modal review; revision/retry/owner được kiểm tra. Migration106 đã áp dụng Cloud sau xác nhận riêng, UI local bật mặc định; không sửa/xóa review cũ. 14 kiểm tra Cloud rollback/129 SQL statements và Chrome modal PASS. [Bằng chứng](docs/verification/sync/chat-and-reviews.md).
+- [x] Hồi quy gộp mở rộng12 bài Chrome,79 test Node cùng Copilot/service PASS; không Logs/stress-test. Frontend mới chưa push/deploy.
+- [ ] Full UI E2E hai portal và cấu hình SLA thật vẫn chưa đóng. Đã bổ sung Auth/gateway/commit/Realtime cho chuyển chat, ticket và review riêng tư ở đầu tài liệu; các bài này chưa thay đủ thao tác UI/reload/công bố.
+
+- [x] Ticket/messages phân trang: migration105 đã áp dụng Cloud sau xác nhận riêng; giữ RPC cũ, không sửa/xóa ticket. 14 kiểm tra/126 SQL statements transaction rollback PASS; Chrome 10/10/3 ticket, 20/3 message, count toàn owner và deep link ngoài trang PASS. Frontend bật mặc định local; chưa push/deploy. [Bằng chứng](docs/verification/sync/support.md).
+- [x] Hồi quy gộp mở rộng 11 bài Chrome, 75 test Node và hai nhóm service; không gọi fixture Cloud từ batch. Migration104 và105 đều được đối chiếu metadata tồn tại trên Cloud.
+
+- [x] Chuẩn bị migration104 phân trang loyalty: 14 kiểm tra/113 SQL statements transaction rollback PASS, Chrome history 10/2 và wallet/catalog 6/1 PASS; điểm vẫn tính toàn ledger. Không đổi dữ liệu thật.
+- [x] Sau xác nhận cụ thể, đã áp dụng migration104 Cloud và xác minh metadata RPC mới/cũ cùng tồn tại; không sửa/xóa ledger hoặc voucher. Bật phân trang mặc định trong mã local, Chrome + 7 test Node + service PASS. Frontend mới chưa push/deploy, chưa nghiệm thu Auth/Realtime E2E. [Bằng chứng](docs/verification/sync/loyalty.md).
 
 - [x] Chuẩn bị migration 103 RPC phân trang thông báo additive: 9 kiểm tra/61 SQL statements trong transaction rollback PASS; Chrome 23 dòng/3 trang và lọc unread PASS, 18 test header/scheduler PASS.
 - [x] Sau xác nhận người dùng, đã áp dụng migration 103 trên Cloud và đọc metadata xác minh cả RPC phân trang/RPC cũ tồn tại. Bật mặc định phân trang trong header local; Chrome + 18 test Node PASS. Không sửa/xóa notification hoặc dùng Logs. Website đã deploy chưa nhận code frontend mới vì chưa push/deploy; chưa nghiệm thu Auth/Realtime E2E. [Bằng chứng](docs/verification/sync/notifications.md).
 
 - [x] Hồi quy gộp `node scripts/test/sync_offline_batch.cjs`: 9 bài Chrome offline, 75 test Node, Copilot business và loyalty service PASS; báo cáo [offline-batch.txt](docs/verification/sync/offline-batch.txt). Không gọi fixture Cloud, Logs hoặc deploy. Inbox 10 dòng/trang, cache và invalidation theo conversation PASS; sửa SLA deadline không hợp lệ tránh NaN, 3 test SLA PASS.
-- [ ] Các hạng mục vẫn cần triển khai/nghiệm thu: payload snapshot có phân trang server; workflow đối soát/thu hồi điểm; đổi/gửi bù; E2E Auth/commit/Realtime hai portal; moderation/handoff và quyền Storage nếu triển khai upload. Ticket hiện không có luồng upload trong form: ghi là chưa triển khai, không tự đánh PASS hoặc N/A. Không dùng batch offline để đóng các ô này.
+- [ ] Các hạng mục vẫn cần nghiệm thu: hoàn điểm và đổi/gửi bù hai portal; đầy đủ thao tác UI/Auth/commit/Realtime/reload; moderation/handoff. Ticket/review đã có kiểm thử SDK Auth/commit/Realtime ghi riêng ở đầu tài liệu. Upload/Storage HOÃN theo yêu cầu, không đánh PASS và không chặn đợt hiện tại. Phân trang server thông báo/loyalty/ticket đã có RPC mới, frontend mới vẫn ở local; chưa khẳng định tổng egress production tối ưu hoàn toàn. Không dùng batch offline để đóng E2E.
 
 - [x] Retry phản hồi ticket sau nạp lại helper: journal session theo owner/ticket/SHA-256 nội dung giữ đúng ID, ack đúng mới xóa; không lưu content/token. Chrome offline PASS lỗi → nạp lại helper → retry cùng ID và lần gửi mới có ID mới. Chưa kiểm tra reload toàn portal/commit thật.
 
 - [x] Retry đánh giá dịch vụ qua reload: giữ UUID theo owner/booking/line trong sessionStorage trước gửi; xác nhận đúng IDs mới xóa. Chrome offline PASS sau lỗi → reload → nhập lại → retry cùng ID. Không lưu content/token, không gọi Cloud. Chưa nghiệm thu mất response sau commit thật.
 
 - N/A — Gateway thanh toán/hoàn tiền thật không áp dụng. Không dùng các ghi chú “chưa test gateway” bên dưới làm điều kiện chặn nghiệm thu; vẫn kiểm tra thu/hoàn tiền thủ công và quyền, số dư, retry tương ứng.
-- Các phần còn lại được gom thành một đợt xử lý tiếp; chỉ đánh `[x]` khi có bằng chứng. Full E2E/Auth/commit, giới hạn payload, ledger hoàn điểm, đổi/gửi bù, ticket/upload/handoff/SLA, retry reload và moderation vẫn cần hoàn thành hoặc ghi rõ giới hạn thực tế.
+- Các phần còn lại được gom thành một đợt xử lý tiếp; chỉ đánh `[x]` khi có bằng chứng. Full UI E2E, giới hạn payload, ledger hoàn điểm, đổi/gửi bù, handoff/SLA, retry reload và moderation cần hoàn thành hoặc ghi rõ giới hạn thực tế. Upload/Storage hoãn.
 
 - [x] Gửi đánh giá dịch vụ Chrome offline PASS: lỗi ghi giữ draft, retry cùng ID, double-click không gửi trùng, ack thành công hiển thị review và đổi tài khoản khi đang gửi không dựng lại giao diện cũ. Thêm khóa disabled trong handler; không gọi Cloud. Chưa kiểm tra reload giữ ID, moderation/publication hoặc HTTP/Auth thật.
 
@@ -357,10 +441,34 @@ biết cách đối chiếu record.
 
 - [x] 13 kiểm tra Cloud/112 SQL statements PASS; một đơn/return/payment/refund tổng hợp luôn rollback, xác minh sạch fixture.
 - [x] Kiểm tra quyền A/B/Guest và chặn User tự nhận hàng/nhập kho/gọi hoàn tiền Admin; không Logs/stress-test hoặc chuyển tiền thật.
-- [ ] Còn hoàn tiền có điểm thưởng/chi tiêu xét hạng, từ chối/đổi/gửi bù, gateway, đồng thời và E2E hai portal. Các ô toàn chuỗi giữ trống; chưa push/deploy thay đổi mới.
+- [ ] Còn kiểm thử đồng thời và E2E hai portal. Đổi/gửi bù đã có mã, kiểm thử và migration 108 trên Cloud; hoàn điểm đã có migration 107 trên Cloud; gateway thật N/A theo yêu cầu. Các ô toàn chuỗi giữ trống; chưa push/deploy frontend mới.
 - [x] Bổ sung 8 kiểm tra Cloud/82 SQL statements: hoàn nhanh bị chặn khi nguồn có điểm/eligible spend; snapshot tính chi tiêu ròng đúng trên refund fixture; trigger chặn hoàn eligible vượt mức. Fixture rollback sạch, không Logs/tiền thật. [Bằng chứng](docs/verification/sync/refund-ledger.md).
-- [ ] Chưa nghiệm thu workflow đối soát/thu hồi điểm và tính lại hạng; kiểm tra chốt chặn không thay thế hoàn tiền đầy đủ cho nguồn có ledger.
+- [ ] Chưa nghiệm thu đầy đủ workflow hoàn điểm qua hai portal và hai phiên đồng thời. Không tự đổi hạng thành viên đã gán; số chi tiêu xét hạng được giảm theo tỷ lệ trong mã mới.
 - [x] Bổ sung 9 kiểm tra Cloud/94 SQL statements PASS: chặn số lượng trả sai/vượt tổng, từ chối có lý do, nhận hàng không bán lại không tăng tồn bán được và không xử lý lại request đã giải quyết. Một fixture/sau cùng rollback sạch.
+
+### Hoàn tiền có điểm thưởng — 26/10/2026
+
+- [x] Chốt quy tắc: thu hồi theo tỷ lệ tiền hoàn cộng dồn, làm tròn xuống; chặn toàn bộ khoản hoàn khi khách không đủ điểm.
+- [x] Mã migration 107 cho cả thu ngân đơn hàng và dịch vụ: tiền hoàn, bút toán âm điểm và chi tiêu xét hạng cùng transaction; không sửa/xóa lịch sử; khóa customer/payment, quyền, phiên bản và retry được kiểm tra.
+- [x] Cloud rollback: đơn hàng 17 kiểm tra/160 SQL, dịch vụ 14 kiểm tra/147 SQL PASS; thiếu điểm không ghi refund dở dang, hoàn nhiều lần không lệch làm tròn, retry không trùng và quyền đọc metadata được giữ. [Bằng chứng](docs/verification/sync/refund-rewards.md).
+- [x] Hai modal Chrome offline PASS: xem trước điểm/chi tiêu giảm/số dư, bỏ xác nhận khi đổi tiền, chống bấm trùng và chặn thiếu điểm. Xem trước không gọi thêm RPC khi gõ.
+- [x] Hồi quy offline: 13 bài Chrome/84 test Node cùng Copilot/loyalty service PASS; không Logs, polling mới, stress test hoặc chuyển tiền thật.
+- [x] Áp dụng migration 107 lên Supabase Cloud theo xác nhận cụ thể của người dùng ngày 26/10/2026; xác minh cả hai getter và hai RPC ghi tiền có logic mới. Không sửa/xóa dữ liệu hiện có. [Bằng chứng áp dụng](docs/verification/sync/refund-rewards-cloud-apply.txt).
+- [ ] Auth/HTTP/commit/Realtime/reload hai portal và hai phiên hoàn đồng thời chưa nghiệm thu; frontend chưa push/deploy. Gateway thật N/A.
+
+### Đổi hàng và gửi bù — 26/10/2026
+
+- [x] Mã migration 108: liên kết RMA với đơn thay thế 0đ; đổi hàng sau nhận/kiểm định, gửi bù đúng SKU; kiểm tra số lượng, tồn khả dụng, quyền/revision và chống tạo trùng.
+- [x] Tái sử dụng giữ kho/giao hàng: chỉ xuất khi giao, retry không xuất trùng; hoàn tất đồng bộ RMA. Hủy giải phóng giữ kho và giữ lịch sử RMA đã nhận để tránh nhập trả lặp. Không phát sinh thanh toán/điểm/voucher.
+- [x] Chặn vừa hoàn tiền vừa gửi hàng thay thế qua hai màn hình; cấm sửa giá/phí/liên kết đơn thay thế để thu thêm tiền hoặc đổi chủ.
+- [x] 33 kiểm tra Cloud/328 SQL PASS: cả hai nhánh đổi/gửi bù, Admin và khách xác nhận hoàn tất, quyền A/B/Guest, thiếu tồn không ghi dở dang, giữ/xuất kho và retry; fixture và migration luôn rollback. [Bằng chứng](docs/verification/sync/sales-replacements.md).
+- [x] Chrome Admin/khách offline PASS: tạo đơn, tìm SKU có giới hạn/debounce, giữ bản nháp/retry, xem trạng thái/vận đơn/liên kết; tái sử dụng channel hiện có, không polling hoặc tải toàn bộ catalog.
+- [x] Hồi quy offline 14 bài Chrome/85 test Node cùng Copilot/loyalty service PASS; không Logs, stress test hoặc giao hàng/tiền thật.
+- [x] Áp dụng migration 108 lên Cloud ngày 26/10/2026 theo xác nhận cụ thể của người dùng; xác minh RLS, quyền đọc/không INSERT trực tiếp, RPC tạo đơn, chốt chặn hoàn tiền và trigger đồng bộ. Cờ tính năng đã bật mặc định trong mã local. [Bằng chứng áp dụng](docs/verification/sync/sales-replacements-cloud-apply.txt).
+- [x] Bổ sung 11 kiểm tra modal Admin/trang khách → HTTP thử nghiệm → RPC/RLS Cloud PASS: tạo đơn, đọc sau reload, vận đơn/giao/hoàn tất và B bị chặn. Một transaction luôn rollback, 147 SQL/15 request nghiệp vụ; response JSON 23.148 byte trong test, không phải egress production. [Bằng chứng HTTP](docs/verification/sync/sales-replacements-http.md).
+- [x] Đọc A/B qua hai HTTP request đồng thời không lẫn danh tính trên transport SQL đã tuần tự hóa; không coi đây là kiểm thử hai DB writer.
+- [x] Đăng nhập Admin bằng Supabase Auth thật và đọc quan hệ mới qua PostgREST PASS: 6 request Auth/REST, GET tối đa một dòng, hàm thu ngân đọc thành công; không ghi nghiệp vụ hoặc xuất credentials. Không mở toàn bộ portal/Dashboard để kéo dữ liệu không liên quan.
+- [ ] Frontend chưa push/deploy; chưa nghiệm thu Auth khách và giao diện đầy đủ hai portal qua HTTP/commit/Realtime/reload hoặc hai kết nối ghi đồng thời. Các kết quả HTTP rollback/Auth chỉ đọc không thay thế các ô toàn chuỗi.
 
 ## 7. GĐ-05 --- Khiếu nại, hỗ trợ và chat
 
@@ -380,7 +488,7 @@ biết cách đối chiếu record.
     - [x] SQL/RLS chặn B đọc/phản hồi/đánh giá A, chặn Guest; offline chặn response/cache A vào B. Còn URL/HTTP thật.
 -   [ ] **SYNC-05-06 \| P1** User và Admin gửi gần nhau; message không
     mất hoặc nhân đôi, thứ tự hợp lý.
--   [ ] **SYNC-05-07 \| P1** Nếu có upload, thử một file nhỏ hợp lệ và
+-   [ ] **SYNC-05-07 \| P1 — HOÃN theo yêu cầu người dùng, chờ nối nơi lưu ảnh.** Khi triển khai upload, thử một file nhỏ hợp lệ và
     một file không hợp lệ; kiểm tra quyền Storage.
 -   [ ] **SYNC-05-08 \| P1** Nếu có handoff chatbot → nhân viên, hai
     phía thấy đúng trạng thái chuyển giao; không tạo conversation trùng.
@@ -397,7 +505,8 @@ biết cách đối chiếu record.
 - [x] Sửa local API dùng JWT người gọi + RPC, tách lỗi refresh khỏi xác nhận ghi, escape tiêu đề và giờ Việt Nam. Không đổi schema/RPC/policy, chưa push/deploy.
 - [x] Ghi bằng chứng và giới hạn tại [support.md](docs/verification/sync/support.md); không dùng Logs hoặc stress-test.
 - [ ] Phân trang lịch sử ticket: RPC hiện còn trả toàn bộ lịch sử của owner; chưa bảo đảm ID retry phản hồi qua reload.
-- [ ] E2E hai portal/Auth/HTTP/commit/reload, gửi đồng thời thật, upload, handoff chatbot và SLA/ưu tiên: RETEST/NOT RUN.
+- [x] Ticket có Auth/HTTP/commit và hai request tạo/phản hồi chồng thời gian, Realtime owner A/B, read acknowledgement qua client mới: 11 PASS; xem bằng chứng đầu tài liệu.
+- [ ] E2E thao tác hai portal/reload trình duyệt, handoff chatbot và SLA/ưu tiên: còn nghiệm thu riêng. Upload/Storage HOÃN theo yêu cầu.
 
 Tiếp theo: notification, sau đó điểm/voucher và đổi trả/hoàn tiền; tiếp tục fixture ít, truy vấn theo ID và cập nhật checklist theo bằng chứng.
 

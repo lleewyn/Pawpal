@@ -1,0 +1,105 @@
+// One synthetic order/SKU, transaction-only fixtures. No actual money or delivery.
+const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
+const {connect}=require('../database/v1/service_import_connection.cjs');
+if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded return branch checks; otherwise no network.');process.exit(0);}
+(async()=>{const db=await connect();let queries=0;
+ const report={environment:'Supabase Cloud cpzuvaplseielhgcnqrn',timestamp:new Date().toISOString(),scope:'One synthetic COD order/SKU; RPC/RLS only; always ROLLBACK; no Logs',checks:[]};
+ const q=async(sql,args)=>{queries++;return db.query(sql,args);};
+ const actor=async(id,role='authenticated')=>{await q('RESET ROLE');await q("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role',$2,true)",[id,role]);await q(role==='anon'?'SET LOCAL ROLE anon':'SET LOCAL ROLE authenticated');};
+ const denied=async(fn,codes)=>{await q('SAVEPOINT expected_denial');let error;try{await fn();}catch(e){error=e;}await q('ROLLBACK TO SAVEPOINT expected_denial');await q('RELEASE SAVEPOINT expected_denial');assert.ok(error,'Expected denial');assert.ok(codes.includes(error.code),'Unexpected SQLSTATE '+error.code);};
+ const pass=name=>report.checks.push({name,status:'PASS'});
+ const order=async id=>(await q('SELECT id,customer_id,order_status,shipping_status,tracking_code,updated_at::text FROM public.sales_order WHERE id=$1',[id])).rows[0];
+ try{
+  await q("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
+  const migration=fs.readFileSync('scripts/database/v1/108_sales_replacements.sql','utf8').replace(/^BEGIN;/,'').replace('COMMIT;','');
+  assert.ok(!/\b(?:BEGIN|COMMIT)\s*;/i.test(migration));await q(migration);
+  const a=randomUUID(),b=randomUUID(),sa=randomUUID(),staff=randomUUID(),ca=randomUUID(),cb=randomUUID(),product=randomUUID(),variant=randomUUID(),id=randomUUID(),method=randomUUID(),delivery=randomUUID(),provider=randomUUID();
+  report.fixtureIds={customerA:ca,customerB:cb,product,variant,order:id};
+  const category=(await q('SELECT id FROM public.product_category ORDER BY id LIMIT 1')).rows[0]?.id;assert.ok(category);
+  await q('INSERT INTO auth.users(id) VALUES($1),($2),($3)',[a,b,sa]);
+  await q('INSERT INTO public.customer(id,auth_user_id,customer_code) VALUES($1,$2,$3),($4,$5,$6)',[ca,a,'E2E-ORD-A-'+ca,cb,b,'E2E-ORD-B-'+cb]);
+  await q("INSERT INTO public.customer_profile(customer_id,full_name) VALUES($1,'E2E Order A'),($2,'E2E Order B') ON CONFLICT(customer_id) DO UPDATE SET full_name=excluded.full_name",[ca,cb]);
+  await q("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES($1,$2,'E2E Order Admin','QA','active',false)",[staff,sa]);
+  await q("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[staff]);
+  await q("INSERT INTO public.product(id,category_id,product_name,unit,slug) VALUES($1,$2,'E2E Order Product','Cai',$3)",[product,category,'e2e-order-'+product]);
+  await q('INSERT INTO public.product_variant(id,product_id,sku_variant,cost_price,sale_price) VALUES($1,$2,$3,30000,50000)',[variant,product,'E2E-'+variant]);
+  await q("INSERT INTO public.inventory_transaction(product_variant_id,transaction_type,quantity,note,idempotency_key) VALUES($1,'opening',3,'E2E rollback only',$2)",[variant,'e2e-opening:'+variant]);
+  await q("INSERT INTO public.payment_method_config(id,name,short_name,fee,available) VALUES($1,'E2E COD','cod',0,true)",[method]);
+  await q("INSERT INTO public.delivery_option_config(id,name,fee,available) VALUES($1,'E2E Delivery',5000,true)",[delivery]);
+  await q("INSERT INTO public.shipping_provider(id,provider_name,provider_code,status) VALUES($1,'E2E Provider',$2,'active')",[provider,'E2E-'+provider]);
+  await q("UPDATE public.payment_method_config SET name='Tiền mặt' WHERE id=$1",[method]);
+  const details={delivery:true,delivery_option_id:delivery,receiver_name:'E2E Receiver',receiver_phone:'0000000000',province:'E2E Province',street_address:'E2E Street',discount_mode:'none'};
+  const lines=[{variant_id:variant,quantity:2}],rid=randomUUID(),collect=randomUUID(),refund=randomUUID();
+  await actor(a);const quote=(await q('SELECT public.quote_own_sales_order($1::jsonb,$2::jsonb) value',[JSON.stringify(details),JSON.stringify(lines)])).rows[0].value;
+  await q('SELECT public.create_own_sales_order($1,$2,$3::jsonb,$4::jsonb,$5)',[id,quote.version,JSON.stringify(details),JSON.stringify(lines),method]);
+  await actor(sa);let row=await order(id);await q("SELECT public.update_admin_sales_order($1,$2,$3,'confirm','{}'::jsonb)",[randomUUID(),id,row.updated_at]);row=await order(id);
+  await q("SELECT public.update_admin_sales_order($1,$2,$3,'ship',$4::jsonb)",[randomUUID(),id,row.updated_at,JSON.stringify({provider_id:provider,tracking_code:'E2E-RETURN'})]);row=await order(id);
+  await q("SELECT public.update_admin_sales_order($1,$2,$3,'complete','{}'::jsonb)",[randomUUID(),id,row.updated_at]);
+  const line=(await q('SELECT id FROM public.sales_order_detail WHERE order_id=$1',[id])).rows[0].id;row=await order(id);
+  const alternative=randomUUID(),altProduct=randomUUID();await q('RESET ROLE');
+  await q("INSERT INTO public.product(id,category_id,product_name,unit,slug) VALUES($1,$2,'E2E Replacement Product','Cai',$3)",[altProduct,category,'e2e-replacement-'+altProduct]);
+  await q('INSERT INTO public.product_variant(id,product_id,sku_variant,cost_price,sale_price) VALUES($1,$2,$3,30000,60000)',[alternative,altProduct,'E2E-ALT-'+alternative]);
+  await q("INSERT INTO public.inventory_transaction(product_variant_id,transaction_type,quantity,note,idempotency_key) VALUES($1,'opening',3,'E2E rollback only',$2)",[alternative,'e2e-opening:'+alternative]);
+  await actor(sa);let context=(await q('SELECT public.get_admin_sales_cashier($1) value',[id])).rows[0].value;
+  await q("SELECT public.post_admin_sales_money($1,$2,$3,'collect',$4::jsonb)",[collect,id,context.version,JSON.stringify({method_id:method,amount:105000,reason:'E2E receipt',confirmed:true})]);
+  const inventory=async variantId=>Number((await q('SELECT coalesce(sum(quantity),0) n FROM public.inventory_transaction WHERE product_variant_id=$1',[variantId])).rows[0].n);
+  const returned=async()=>(await q('SELECT *,updated_at::text revision FROM public.return_request WHERE id=$1',[rid])).rows[0];
+  const send=async(key,revision,details)=>q('SELECT public.create_admin_sales_replacement($1,$2,$3,$4::jsonb)',[key,rid,revision,JSON.stringify(details)]);
+  for(const kind of ['exchange','resend']){
+   await q('SAVEPOINT replacement_branch');await actor(a);row=await order(id);
+   await q('SELECT public.request_own_sales_return($1,$2,$3,$4::jsonb)',[rid,id,row.updated_at,JSON.stringify({type:kind,reason:'E2E replacement',lines:[{line_id:line,quantity:2}]})]);
+   const detail=(await q('SELECT id FROM public.return_request_detail WHERE return_request_id=$1',[rid])).rows[0].id;
+   const replacement=randomUUID();let r=await returned();
+   const details={kind,reason:'E2E no additional charge',confirmed:true,lines:[{return_detail_id:detail,quantity:2,variant_id:kind==='exchange'?alternative:variant}]};
+   await actor(sa);
+   if(kind==='exchange'){
+    await denied(()=>send(replacement,r.revision,details),['22023']);pass('Exchange blocked before inspected receipt');
+    await q("SELECT public.save_admin_sales_return($1,$2,$3,$4,'receive',$5::jsonb)",[randomUUID(),rid,id,r.revision,JSON.stringify({received:true,inspected:true,saleable:true,reason:'E2E received'})]);
+    r=await returned();assert.equal(await inventory(variant),3);pass('Exchange restocks inspected original items separately');
+   }else{
+    await denied(()=>send(replacement,r.revision,details),['23514']);
+    assert.equal((await q('SELECT count(*)::int n FROM public.sales_order WHERE id=$1',[replacement])).rows[0].n,0);pass('Insufficient replacement stock leaves no partial order or link');
+    await q('RESET ROLE');await q("INSERT INTO public.inventory_transaction(product_variant_id,transaction_type,quantity,note,idempotency_key) VALUES($1,'opening',2,'E2E extra stock',$2)",[variant,'e2e-extra:'+replacement]);await actor(sa);
+    await denied(()=>send(replacement,r.revision,{...details,lines:[{...details.lines[0],variant_id:alternative}]}),['22023']);pass('Resend must use original SKU');
+   }
+   await denied(()=>send(replacement,'2000-01-01T00:00:00Z',details),['PT409']);
+   await denied(()=>send(replacement,r.revision,{...details,confirmed:false}),['22023']);
+   await denied(()=>send(replacement,r.revision,{...details,lines:[{...details.lines[0],quantity:3}]}),['22023']);pass(kind+': revision, confirmation and exact RMA quantity enforced');
+   await actor(b);await denied(()=>send(replacement,r.revision,details),['42501']);await actor('','anon');await denied(()=>send(replacement,r.revision,details),['42501']);await actor(sa);pass(kind+': customer and Guest cannot create replacements');
+   await q('SAVEPOINT refunded_branch');context=(await q('SELECT public.get_admin_sales_cashier($1) value',[id])).rows[0].value;
+   await q("SELECT public.post_admin_sales_money($1,$2,$3,'refund',$4::jsonb)",[randomUUID(),id,context.version,JSON.stringify({method_id:method,payment_id:collect,amount:100,reason:'E2E prior refund',confirmed:true,loyalty_confirmed:true})]);
+   await denied(()=>send(replacement,r.revision,details),['23514']);await q('ROLLBACK TO SAVEPOINT refunded_branch');await q('RELEASE SAVEPOINT refunded_branch');pass(kind+': prior cash refund requires reconciliation');
+   const stockBefore=await inventory(details.lines[0].variant_id);
+   for(let retry=0;retry<2;retry++)assert.equal((await send(replacement,r.revision,details)).rows[0].create_admin_sales_replacement,replacement);
+   await denied(()=>send(replacement,r.revision,{...details,reason:'Changed payload'}),['PT409']);
+   r=await returned();await denied(()=>send(randomUUID(),r.revision,details),['PT409']);pass(kind+': retry returns one order; changed replay or second ID cannot duplicate');
+   const replacementRow=(await q('SELECT customer_id,shipping_fee_snapshot,receiver_name_snapshot FROM public.sales_order WHERE id=$1',[replacement])).rows[0];assert.equal(replacementRow.customer_id,ca);assert.equal(Number(replacementRow.shipping_fee_snapshot),0);assert.equal(replacementRow.receiver_name_snapshot,'E2E Receiver');
+   assert.equal(Number((await q('SELECT total_amount FROM public.sales_order_totals WHERE order_id=$1',[replacement])).rows[0].total_amount),0);
+   assert.equal(await inventory(details.lines[0].variant_id),stockBefore);assert.equal((await q("SELECT coalesce(sum(quantity),0)::int n FROM public.stock_reservation WHERE order_id=$1 AND status='active'",[replacement])).rows[0].n,2);pass(kind+': free linked order copies owner/address and reserves without issuing stock');
+   context=(await q('SELECT public.get_admin_sales_cashier($1) value',[id])).rows[0].value;
+   await denied(()=>q("SELECT public.post_admin_sales_money($1,$2,$3,'refund',$4::jsonb)",[randomUUID(),id,context.version,JSON.stringify({method_id:method,payment_id:collect,amount:100,reason:'E2E prevent double compensation',confirmed:true,loyalty_confirmed:true})]),['23514']);pass(kind+': active replacement prevents independent money refund');
+   await denied(()=>q("SELECT public.save_admin_sales_return($1,$2,$3,$4,'receive',$5::jsonb)",[randomUUID(),rid,id,r.revision,JSON.stringify({received:true,inspected:true,saleable:true,reason:'E2E double receipt'})]),['22023']);pass(kind+': replacement RMA cannot restock a second time');
+   await q('SAVEPOINT cancel_branch');let replacementState=await order(replacement);
+   await q("SELECT public.update_admin_sales_order($1,$2,$3,'cancel',$4::jsonb)",[randomUUID(),replacement,replacementState.updated_at,JSON.stringify({reason:'E2E cancel replacement'})]);
+   assert.equal((await returned()).request_status,kind==='exchange'?'received':'cancelled');assert.equal((await q("SELECT count(*)::int n FROM public.stock_reservation WHERE order_id=$1 AND status='active'",[replacement])).rows[0].n,0);assert.equal(await inventory(details.lines[0].variant_id),stockBefore);
+   await q('ROLLBACK TO SAVEPOINT cancel_branch');await q('RELEASE SAVEPOINT cancel_branch');pass(kind+': cancellation releases holds; already-received RMA stays counted to prevent duplicate returns');
+   replacementState=await order(replacement);await q("SELECT public.update_admin_sales_order($1,$2,$3,'confirm','{}'::jsonb)",[randomUUID(),replacement,replacementState.updated_at]);replacementState=await order(replacement);
+   const ship=randomUUID(),shipping={provider_id:provider,tracking_code:'E2E-REPLACEMENT-'+kind};
+   for(let retry=0;retry<2;retry++)await q("SELECT public.update_admin_sales_order($1,$2,$3,'ship',$4::jsonb)",[ship,replacement,replacementState.updated_at,JSON.stringify(shipping)]);
+   assert.equal(await inventory(details.lines[0].variant_id),stockBefore-2);replacementState=await order(replacement);
+   await q('SAVEPOINT customer_receipt');await actor(a);
+   await q('SELECT public.receive_own_sales_order($1,$2,$3)',[randomUUID(),replacement,replacementState.updated_at]);assert.equal((await returned()).request_status,'completed');
+   await q('ROLLBACK TO SAVEPOINT customer_receipt');await q('RELEASE SAVEPOINT customer_receipt');await actor(sa);pass(kind+': owner receipt also completes linked RMA through existing order RPC');
+   const complete=randomUUID();for(let retry=0;retry<2;retry++)await q("SELECT public.update_admin_sales_order($1,$2,$3,'complete','{}'::jsonb)",[complete,replacement,replacementState.updated_at]);
+   assert.equal(await inventory(details.lines[0].variant_id),stockBefore-2);assert.equal((await returned()).request_status,'completed');pass(kind+': ship retries issue exactly once; completion syncs RMA without another issue');
+   await denied(()=>q('UPDATE public.sales_order_detail SET unit_price=1 WHERE order_id=$1',[replacement]),['23514']);await denied(()=>q('UPDATE public.sales_order SET shipping_fee_snapshot=1 WHERE id=$1',[replacement]),['23514']);pass(kind+': replacement cannot be repriced into another charge');
+   await actor(a);const ownLink=(await q('SELECT order_id,kind FROM public.sales_replacement WHERE return_request_id=$1',[rid])).rows[0];assert.equal(ownLink.order_id,replacement);assert.equal(ownLink.kind,kind);assert.equal((await order(replacement)).tracking_code,shipping.tracking_code);assert.equal((await returned()).request_status,'completed');
+   await denied(()=>q('UPDATE public.sales_replacement SET kind=$2 WHERE order_id=$1',[replacement,'resend']),['42501']);pass(kind+': API roles cannot modify replacement mapping directly');
+   await actor(b);assert.equal((await q('SELECT order_id FROM public.sales_replacement WHERE return_request_id=$1',[rid])).rows.length,0);assert.equal(await order(replacement),undefined);pass(kind+': owner sees tracking/completion; other customer cannot read link or order');
+   await q('RESET ROLE');assert.equal((await q('SELECT count(*)::int n FROM public.payment WHERE order_id=$1',[replacement])).rows[0].n,0);assert.equal((await q('SELECT count(*)::int n FROM public.paw_point_transaction WHERE customer_id=$1',[ca])).rows[0].n,0);pass(kind+': no new payment, rewards or point redemption');
+   await q('ROLLBACK TO SAVEPOINT replacement_branch');await q('RELEASE SAVEPOINT replacement_branch');
+  }
+  await q('RESET ROLE');await q('ROLLBACK');assert.equal((await q('SELECT EXISTS(SELECT 1 FROM public.sales_order WHERE id=$1) OR EXISTS(SELECT 1 FROM public.customer WHERE id=ANY($2::uuid[])) OR EXISTS(SELECT 1 FROM auth.users WHERE id=ANY($3::uuid[])) remains',[id,[ca,cb],[a,b,sa]])).rows[0].remains,false);pass('Rollback removes all fixtures and migration DDL');
+  report.status='PASS';report.queries=queries;report.scope='Exchange and resend RPC/RLS, synthetic rollback only; no actual delivery/money, Logs or load test';fs.writeFileSync('docs/verification/sync/sales-replacements-cloud-rollback.txt',JSON.stringify(report,null,2)+'\n');console.log('PASS',report.checks.length,'replacement checks;',queries,'SQL; rollback verified');
+ }catch(e){await db.query('ROLLBACK').catch(()=>{});console.error('Replacement failed after',report.checks.length,'checks:',e.code||'',e.message);process.exitCode=1;}finally{await db.end();}
+})().catch(e=>{console.error(e.code||'connection_failed');process.exitCode=1;});

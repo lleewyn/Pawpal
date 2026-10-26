@@ -45,7 +45,7 @@
   const scoped=query=>(ids||id)?query.in('order_id',selectedIds):query;
   const [totals,returns,redemptions]=await Promise.all([
    rows(()=>scoped(db().from('sales_order_totals').select('order_id,total_amount').order('order_id'))),
-   rows(()=>{let query=db().from('return_request').select('id,sales_order_id,resolution_type,reason,return_type,description,request_status,created_at,updated_at,lines:return_request_detail(id,quantity,sales_order_detail_id,line:sales_order_detail_id(product_name_snapshot,sku_snapshot,unit_price,discount_amount,quantity,product_variant_id))').order('created_at',{ascending:false}).order('id');return (ids||id)?query.in('sales_order_id',selectedIds):query;}),
+   rows(()=>{let query=db().from('return_request').select('id,sales_order_id,resolution_type,reason,return_type,description,request_status,created_at,updated_at,'+(window.PAWPAL_SALES_REPLACEMENTS_ENABLED===true?'replacement:sales_replacement(order_id,kind,order:order_id(id,order_code,order_status,tracking_code,shipping_status)),':'')+'lines:return_request_detail(id,quantity,sales_order_detail_id,line:sales_order_detail_id(product_name_snapshot,sku_snapshot,unit_price,discount_amount,quantity,product_variant_id))').order('created_at',{ascending:false}).order('id');return (ids||id)?query.in('sales_order_id',selectedIds):query;}),
    rows(()=>scoped(db().from('voucher_redemption').select('order_id,discount_amount_snapshot,status').not('order_id','is',null).order('id')))
   ]);
   const totalMap=new Map(totals.map(t=>[t.order_id,Number(t.total_amount)]));

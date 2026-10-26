@@ -1,0 +1,44 @@
+[
+  {
+    "phase": "hidden",
+    "timestamp": "2026-10-26T15:11:40.071Z",
+    "publicReviewCount": 0,
+    "inactiveServiceAbsentFromPublicDirectory": true,
+    "notifications": 2,
+    "uniqueEvents": true,
+    "correctOwner": true,
+    "status": "PASS"
+  },
+  {
+    "phase": "transfer",
+    "timestamp": "2026-10-26T15:15:35.526Z",
+    "assignedToRecipient": true,
+    "status": "PASS",
+    "staffMessages": 1,
+    "privateNoteNotPublic": true,
+    "activeDirectRules": 0,
+    "deadline": null
+  },
+  {
+    "phase": "published",
+    "timestamp": "2026-10-26T15:16:23.767Z",
+    "committedReviewStatus": "published",
+    "publicReviewCount": 0,
+    "inactiveServiceAbsentFromPublicDirectory": true,
+    "notifications": 3,
+    "uniqueEvents": true,
+    "correctOwner": true,
+    "status": "PASS"
+  },
+  {
+    "phase": "hidden",
+    "timestamp": "2026-10-26T15:16:28.958Z",
+    "committedReviewStatus": "hidden",
+    "publicReviewCount": 0,
+    "inactiveServiceAbsentFromPublicDirectory": true,
+    "notifications": 4,
+    "uniqueEvents": true,
+    "correctOwner": true,
+    "status": "PASS"
+  }
+]

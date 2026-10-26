@@ -1,5 +1,7 @@
 
 (function () {
+    // Migration 108 deployed and verified on Supabase Cloud, 26/10/2026.
+    window.PAWPAL_SALES_REPLACEMENTS_ENABLED ??= true;
     const FALLBACK_URL = 'https://cpzuvaplseielhgcnqrn.supabase.co';
     const FALLBACK_ANON_KEY = 'sb_publishable_dLV-5AkVgshhkaymnwTelg_fTFzyuwR';
 

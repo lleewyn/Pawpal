@@ -1,0 +1,72 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T08:12:54.064Z",
+  "scope": "One synthetic completed booking/review/reply; RPC/RLS and publication read projection only; rollback; no Logs",
+  "checks": [
+    {
+      "name": "Pending service cannot receive a review",
+      "status": "PASS"
+    },
+    {
+      "name": "Review retry creates one pending review; invalid rating and changed replay rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest sees no pending review and cannot read owner review projection",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read or submit review for A service",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin reads exact review and stores shop response through reviewed RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "User sees shop response but cannot invoke Admin reply",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale Admin reply snapshot cannot overwrite existing response",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot moderate own review",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin publishes through versioned RPC; retry records one moderation audit",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed replay and stale review revision rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Public RPC sees Admin-published review with correct reply",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin hide removes review from public projection",
+      "status": "PASS"
+    },
+    {
+      "name": "Owner still sees own moderated review status",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes review/reply and all synthetic service/booking/actor fixtures",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "ee931079-6ec0-4e4b-b4a4-57c5d4180587",
+    "customerB": "b2b8979a-6ff9-4bfe-8459-e2f13d432b8c",
+    "pet": "75748e61-c755-4d64-986a-81cce9c880b2",
+    "service": "b91e9409-92e8-4f29-9653-c07780b8920c",
+    "booking": "a7d94c41-a229-4354-a810-0f262c8d1d02"
+  },
+  "status": "PASS",
+  "queries": 129
+}

@@ -1,5 +1,23 @@
 # Kiểm tra đồng bộ — đợt hồ sơ 25/10/2026
 
+SLA nghiệp vụ 26/10: theo người dùng đã bật hạn **5 phút** cho yêu cầu chuyên viên trên Cloud. [Bằng chứng](chat-sla-5min-cloud.txt): yêu cầu mới/retry đúng hạn trong rollback test, tám hội thoại cũ nguyên trạng; bảng rule Admin qua MCP hiển thị 300 giây/Hiệu lực. Chưa coi đây là countdown UI toàn chuỗi hoặc tự phân công. Các ghi chú “rule rỗng” ở đợt trước đã được thay bằng cập nhật này.
+
+UI bổ sung 26/10: [chuyển ca qua context người nhận riêng, moderation published/hidden sau commit](advanced-portal-live-ui.md) PASS trong phạm vi fixture. Sửa khóa thao tác chat trong lúc nhận ca và quyền compose đúng người phụ trách, kiểm lại bằng request thật; ba hồi quy UI chat và năm test SLA PASS. Dọn cả tài khoản/quyền nhận tạm và dịch vụ inactive riêng, giữ bảy audit; chưa thay public active page/recipient reply-resolve/SLA nghiệp vụ.
+
+Hai giao diện thật qua Playwright MCP 26/10: [kết quả, hai lỗi UI đã sửa và giới hạn](two-portal-live-ui.md). Admin và khách đăng nhập riêng, kiểm ticket hai chiều/giải quyết/reload, chat tiếp nhận/trả lời/hoàn tất/reload, review chờ duyệt→ẩn và thông báo, cô lập A/B. Hồi quy 18 test header PASS. Dọn toàn bộ fixture, giữ bảy audit bất biến. Frontend local chưa phát hành; chưa nghiệm thu UI publication/transfer/SLA hoặc toàn hệ thống.
+
+Thông báo ticket/đánh giá 26/10: [migration 110 và kiểm thử luồng thật](customer-event-notifications.md). Đã áp dụng Cloud; 14 kiểm tra SQL rollback, 11 kiểm tra ticket Auth/commit/Realtime và 8 kiểm tra review riêng tư Auth/commit/Realtime PASS. Dọn fixture, giữ năm audit bất biến; không công bố review thử nghiệm. Upload/Storage hoãn theo yêu cầu người dùng. Các kết quả mới này thay ghi chú chưa kiểm tra Auth/Realtime trong các đợt cũ bên dưới, trong đúng phạm vi ticket/review; chưa nghiệm thu toàn bộ hai giao diện.
+
+Chuyển chat 26/10: [8 kiểm tra Auth/gateway Vercel/commit/Realtime thật](chat-and-reviews.md) PASS, 47 request. Chuyển retry một lần, người nhận nhận Realtime, người cũ mất quyền trả lời, khách không thấy ghi chú nội bộ. Dọn fixture/quyền/tài khoản tạm, giữ hai audit bất biến. Người nhận chưa gửi/resolve qua Auth thật; chưa full UI E2E.
+
+SLA theo rule 26/10: [SLA-01 và bản sửa](chat-sla.md), tái hiện rule bật nhưng không đặt deadline. Migration 109 qua 13 kiểm tra Cloud/84 SQL rollback và đã áp dụng Cloud, xác minh trigger/quyền; 5 test hiển thị và batch 14 bài Chrome/87 test Node PASS. Chưa cấu hình rule thật hoặc nghiệm thu engine tự động/phân công; UI local chưa push/deploy.
+
+Đợt HTTP/Auth đổi hàng 26/10: [11 kiểm tra giao diện→HTTP→Cloud SQL rollback và Admin Auth/PostgREST thật chỉ đọc](sales-replacements-http.md) PASS. Lượt rollback dùng 15 request nghiệp vụ; lượt Auth chỉ đọc dùng 6 request Auth/REST, GET tối đa một dòng. Chưa nghiệm thu commit/Realtime hai portal hoặc hai DB writer đồng thời.
+
+Đổi hàng/gửi bù 26/10: [hành vi và bằng chứng](sales-replacements.md). 33 kiểm tra Cloud/328 SQL rollback PASS; Admin và khách Chrome offline PASS; batch 14 bài Chrome/85 test Node PASS. Migration 108 đã áp dụng Cloud theo xác nhận người dùng, xác minh RLS/RPC/trigger; cờ giao diện đã bật mặc định trong mã local. Frontend chưa push/deploy và chưa nghiệm thu E2E hai portal.
+
+Hoàn tiền có điểm thưởng 26/10: [quy tắc, mã và bằng chứng](refund-rewards.md). Đơn hàng 17 kiểm tra/160 SQL, dịch vụ 14 kiểm tra/147 SQL trong transaction rollback; hai modal Chrome PASS. Batch offline 13 bài Chrome/84 test Node PASS. Migration 107 đã áp dụng Cloud theo xác nhận người dùng, kiểm tra đủ bốn hàm thu ngân; frontend chưa push/deploy, chưa nghiệm thu E2E hai portal.
+
 Đã tiếp tục đợt thú cưng: xem [kết quả và thay đổi thú cưng](pets.md). Các kết quả dưới đây vẫn chỉ nói về đợt hồ sơ, không cộng gộp thành PASS E2E toàn hệ thống.
 
 Đợt 26/10: [kết quả lịch hẹn và sửa múi giờ](bookings.md), gồm kiểm tra RPC/RLS Cloud và browser offline. Không cộng gộp thành PASS E2E hai portal.
@@ -9,6 +27,10 @@
 Đợt hỗ trợ 26/10: [RPC/RLS ticket, API và đồng bộ offline](support.md), gồm 13 assertion Cloud đã rollback, 35 test Node và Chrome offline. Chưa nghiệm thu E2E hai portal.
 
 ## Phạm vi và môi trường
+
+Đợt chat/đánh giá: [13 kiểm tra handoff + 10 kiểm tra review Cloud](chat-and-reviews.md), fixture rollback sạch;4 test owner API offline PASS. Chưa nghiệm thu moderation UI hoặc Auth/Realtime thật.
+
+Cập nhật phân trang: migration104 loyalty và105 support đã áp dụng Cloud sau xác nhận cụ thể, RPC cũ được giữ nguyên. UI local bật mặc định; Chrome loyalty/support paging PASS và batch mở rộng11 bài Chrome/75 test Node PASS. Frontend mới chưa push/deploy; chưa nghiệm thu toàn chuỗi hai portal.
 
 Đợt hồi quy gộp 26/10: [kết quả và khoảng trống còn lại](batch-review.md), 9 bài Chrome/75 test Node cùng Copilot/loyalty service PASS; chỉ offline, không thay nghiệm thu E2E.
 

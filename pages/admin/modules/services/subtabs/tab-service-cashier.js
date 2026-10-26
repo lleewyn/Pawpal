@@ -2,6 +2,20 @@
     'use strict';
     const m=window.PawpalServices,el=id=>document.getElementById(id),esc=m.escapeHtml;
     let context=null,booking=null,session=0,busy=false;
+    let refundPreview;
+    function previewRefund(){
+        let row=el('cashierLoyaltyPreview');
+        if(!row){row=document.createElement('p');row.id='cashierLoyaltyPreview';row.style.cssText='color:#4F7A65;margin:8px 0;';row.setAttribute('aria-live','polite');el('cashierConfirmationText').parentElement.before(row);}
+        const refund=el('cashierAction').value==='refund';
+        row.hidden=!refund;
+        const payment=context?.payments.find(p=>p.id===el('cashierPayment').value);
+        const plan=refund&&payment?refundPreview?.(payment,el('cashierAmount').value):null;
+        row.textContent=refund?(plan?.error||(plan?'Thu hồi '+plan.points+' điểm thưởng. Chi tiêu xét hạng giảm '+m.formatCurrency(plan.eligible)+'. Điểm còn lại '+plan.balance+'.':'Chọn khoản thu gốc để đối soát điểm.')):'';
+        row.style.color=plan?.error?'#DC2626':'#4F7A65';
+        el('btnSaveServiceMoney').disabled=busy||!context||(refund&&(!plan||!!plan.error));
+        return plan;
+    }
+
     const refundable=p=>Number(p.amount)-(p.refunds||[]).filter(r=>r.refund_status==='succeeded').reduce((sum,r)=>sum+Number(r.refunded_amount),0);
     function syncFields(){
         const refund=el('cashierAction').value==='refund';
@@ -9,14 +23,16 @@
         const method=context?.methods.find(v=>v.id===el('cashierMethod').value);
         el('cashierReferenceField').style.display=method?.requires_reference?'block':'none';
         el('cashierReference').required=!!method?.requires_reference;
-        el('cashierConfirmationText').textContent=refund?'Đã hoàn trả cho khách đúng số tiền ghi ở trên':'Đã nhận từ khách đúng số tiền ghi ở trên';
+        el('cashierConfirmationText').textContent=refund?'Đã hoàn trả đúng số tiền cho khách và đồng ý thu hồi điểm theo đối soát ở trên':'Đã nhận từ khách đúng số tiền ghi ở trên';
         el('cashierConfirmed').checked=false;
         const payment=context?.payments.find(p=>p.id===el('cashierPayment').value);
         const maximum=refund?(payment?refundable(payment):0):Number(context?.remaining||0);
         el('cashierAmount').value=maximum>0?String(maximum):'';el('cashierAmount').max=String(maximum);
         m.enhanceEntitySelects();
+        previewRefund();
     }
     async function load(current){
+        ({refundLoyaltyPreview:refundPreview}=await import('/scripts/shared/refund-loyalty.mjs'));
         const {data,error}=await window.getSupabaseClient().rpc('get_admin_service_cashier',{p_appointment_id:booking.dbId});
         if(error)throw error;if(current!==session)return;
         context=data;
@@ -38,10 +54,11 @@
         el('btnSaveServiceMoney').disabled=true;
         el('modalServiceCashier').style.removeProperty('display');el('modalServiceCashier').classList.add('active');
         try{await load(current);}catch(error){if(current===session)el('cashierError').textContent=m.errorMessage(error);}
-        finally{if(current===session)el('btnSaveServiceMoney').disabled=!context;}
+        finally{if(current===session)previewRefund();}
     };
     el('formServiceCashier').addEventListener('submit',event=>event.preventDefault());
     for(const id of ['cashierAction','cashierMethod','cashierPayment'])el(id).addEventListener('change',()=>{el('cashierError').textContent='';syncFields();});
+    el('cashierAmount').addEventListener('input',()=>{el('cashierConfirmed').checked=false;previewRefund();});
     el('btnSaveServiceMoney').onclick=async()=>{
         if(busy||!context)return;el('cashierError').textContent='';
         const amount=Number(el('cashierAmount').value),reason=el('cashierReason').value.trim(),method=context.methods.find(v=>v.id===el('cashierMethod').value),action=el('cashierAction').value;
@@ -49,6 +66,7 @@
         const reference=el('cashierReference').value.trim();if(method.requires_reference&&!reference){el('cashierError').textContent='Nhập mã giao dịch ngân hàng đã đối soát.';el('cashierReference').focus();return;}
         const details={amount,reason,method_id:method.id,reference:method.requires_reference?reference:'',confirmed:true};
         if(action==='refund'){details.payment_id=el('cashierPayment').value;if(!details.payment_id){el('cashierError').textContent='Chọn khoản thu gốc cần hoàn.';return;}}
+        if(action==='refund'){const plan=previewRefund();if(!plan||plan.error){el('cashierError').textContent=plan?.error||'Chọn khoản thu để đối soát.';return;}details.loyalty_confirmed=true;}
         busy=true;el('btnSaveServiceMoney').disabled=true;const current=session;
         try{
             await m.saveServiceMoney(booking,context,action,details);
@@ -56,6 +74,6 @@
             booking=m.state.bookingsData.find(b=>b.dbId===booking.dbId)||booking;
             await load(current);el('cashierReason').value='';el('cashierReference').value='';
         }catch(error){el('cashierError').textContent=m.errorMessage(error);}
-        finally{busy=false;el('btnSaveServiceMoney').disabled=!context;}
+        finally{busy=false;previewRefund();}
     };
 })();

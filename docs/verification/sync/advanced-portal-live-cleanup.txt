@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-10-26T15:17:42.121Z",
+  "environment": "Local UI at localhost:4000 (Admin) and 127.0.0.1:4000 (customer), live Supabase Cloud",
+  "scope": "MCP UI fixture cleanup and committed-state counts; not an automated assertion of every UI action",
+  "beforeCleanup": {
+    "customers": 2,
+    "tickets": 0,
+    "chats": 1,
+    "reviews": [
+      {
+        "status": "hidden"
+      }
+    ],
+    "notifications": 4,
+    "uniqueNotificationEvents": 4,
+    "otherCustomerNotifications": 0
+  },
+  "retainedImmutableAudits": 7,
+  "auditActions": [
+    "MODERATE_SERVICE_REVIEW",
+    "MODERATE_SERVICE_REVIEW",
+    "MODERATE_SERVICE_REVIEW",
+    "CHAT_ADMIN_OPERATION",
+    "CHAT_ADMIN_OPERATION",
+    "CHAT_ADMIN_TRANSFER",
+    "MODERATE_SERVICE_REVIEW"
+  ],
+  "cleanup": "PASS",
+  "recipientRemoved": true,
+  "inactiveServiceRemoved": true
+}

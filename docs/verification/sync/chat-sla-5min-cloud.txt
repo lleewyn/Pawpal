@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-10-26T15:42:21.685Z",
+  "status": "PASS",
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "configuration": {
+    "id": "b739d239-155d-43af-b8e5-8ab77cbfd678",
+    "trigger_type": "direct_request",
+    "sla_seconds": 300,
+    "is_active": true,
+    "auto_assign_role": null
+  },
+  "created": true,
+  "checks": {
+    "existingConversationsUnchanged": true,
+    "newHandoffDeadlineFiveMinutes": true,
+    "retryKeepsDeadline": true,
+    "noAutomaticAssignment": true,
+    "rollbackFixtureRemoved": true
+  },
+  "existingConversationCount": 8,
+  "scope": "One approved persistent SLA rule and configuration audit; one rollback-only synthetic handoff, no existing chat writes, no Logs or load test"
+}

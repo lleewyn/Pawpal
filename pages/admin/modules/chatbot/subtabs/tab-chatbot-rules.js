@@ -10,6 +10,10 @@
         ? window.getSupabaseClient() 
         : (window.SupabaseClient || (typeof createClient === 'function' ? createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null));
 
+    function formatHandoverSlaSeconds(value) {
+        return typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value + ' giây' : '—';
+    }
+
     let rulesFaqData = [];
     let rulesProfanityData = [];
     let rulesCannedData = [];
@@ -715,7 +719,7 @@
                     <td><span class="admin-badge badge-neutral">${escapeHtml(item.trigger_type || 'Tự động')}</span></td>
                     <td><div style="max-width: 380px; font-size: 12px; color: var(--text-muted); line-height: 1.4;">${escapeHtml(item.threshold_value || '')}</div></td>
                     <td><span style="font-weight: 600; color: var(--text-main);">${escapeHtml(item.auto_assign_role || 'Nhân viên CSKH')}</span></td>
-                    <td style="text-align: center;"><span style="font-weight: 700; color: #DC2626;">${item.sla_seconds ? item.sla_seconds + ' giây' : '—'}</span></td>
+                    <td style="text-align: center;"><span style="font-weight: 700; color: #DC2626;">${formatHandoverSlaSeconds(item.sla_seconds)}</span></td>
                     <td style="text-align: center;">
                         <span class="admin-badge ${item.is_active ? 'badge-active' : 'badge-neutral'}">${item.is_active ? 'Hiệu lực' : 'Tắt'}</span>
                     </td>

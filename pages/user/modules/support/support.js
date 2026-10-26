@@ -29,6 +29,7 @@ export function initSupportTickets() {
     dispose();
     ensureSupportReady(async () => {
         let activeTicketId = null;
+        let detailRequestVersion=0;
         let viewOwnerId = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id;
         let currentSelectedRating = 5;
         let currentFilter = 'all';
@@ -110,6 +111,7 @@ export function initSupportTickets() {
                 tab.classList.add('active');
                 tab.setAttribute('aria-selected', 'true');
                 currentFilter = tab.getAttribute('data-status') || 'all';
+                if(window.PawPalSupport.isPaged?.()){window.PawPalSupport.setPage(1,currentFilter).catch(onSupportLoadError);return;}
                 renderSkeletonRows();
                 setTimeout(() => {
                     renderTable();
@@ -118,6 +120,8 @@ export function initSupportTickets() {
         });
 
         function updateCounts(tickets) {
+            const counts=window.PawPalSupport.getPageInfo?.().counts;
+            if(window.PawPalSupport.isPaged?.() && counts){for(const [node,key]of [[countAll,'all'],[countPending,'pending'],[countProcessing,'processing'],[countCompleted,'completed']])if(node)node.textContent=`(${counts[key]||0})`;return;}
             const allCount = tickets.length;
             const pendingCount = tickets.filter(t => !t.status || t.status === 'pending').length;
             const processingCount = tickets.filter(t => ['processing','waiting_customer','waiting_manager_approval','reprocessing'].includes(t.status)).length;
@@ -191,6 +195,8 @@ export function initSupportTickets() {
         }
 
         function closeTicketModal() {
+            ++detailRequestVersion;
+            window.PawPalSupport.releaseTicket?.();
             const reply = document.getElementById('replyTextarea');
             const comment = document.getElementById('ratingComment');
             if (reply) reply.value = '';
@@ -204,8 +210,14 @@ export function initSupportTickets() {
 
         function renderTable() {
             if (!ticketsTableBody) return;
-            const allTickets = window.PawPalSupport.getTickets();
+            const allTickets = window.PawPalSupport.getPageTickets?.() || window.PawPalSupport.getTickets();
             updateCounts(allTickets);
+            if(window.PawPalSupport.isPaged?.()){
+                let nav=document.getElementById('supportPages');if(!nav){nav=document.createElement('nav');nav.id='supportPages';nav.style.cssText='display:flex;justify-content:center;gap:12px;margin-top:8px';ticketsTableArea.after(nav);}
+                const info=window.PawPalSupport.getPageInfo(),pages=Math.max(1,Math.ceil(info.total/10));
+                nav.innerHTML=pages<=1?'':`<button type="button" data-prev ${info.page<=1?'disabled':''}>&lt;</button><span>${info.page} / ${pages}</span><button type="button" data-next ${info.page>=pages?'disabled':''}>&gt;</button>`;
+                for(const [selector,delta]of [['[data-prev]',-1],['[data-next]',1]])nav.querySelector(selector)?.addEventListener('click',()=>window.PawPalSupport.setPage(info.page+delta).catch(onSupportLoadError));
+            }
 
             let tickets = allTickets;
             if (currentFilter === 'pending') {
@@ -305,6 +317,12 @@ export function initSupportTickets() {
         function renderTimelineMessages(ticket) {
             if (!ticketTimelineMessages) return;
             ticketTimelineMessages.innerHTML = '';
+            if(window.PawPalSupport.isPaged?.() && ticket.messageTotal>20){
+                const nav=document.createElement('div'),pages=Math.ceil(ticket.messageTotal/20);nav.style.cssText='display:flex;justify-content:center;gap:12px';
+                nav.innerHTML=`<button type="button" data-older ${ticket.messagePage>=pages?'disabled':''}>Cũ hơn</button><span>${ticket.messagePage} / ${pages}</span><button type="button" data-newer ${ticket.messagePage<=1?'disabled':''}>Mới hơn</button>`;
+                for(const [selector,delta]of [['[data-older]',1],['[data-newer]',-1]])nav.querySelector(selector).onclick=()=>window.PawPalSupport.messagePage(ticket.id,ticket.messagePage+delta).catch(onSupportLoadError);
+                ticketTimelineMessages.append(nav);
+            }
 
             const messages = ticket?.messages || [];
             if (messages.length === 0) {
@@ -339,13 +357,15 @@ export function initSupportTickets() {
             ticketTimelineMessages.scrollTop = ticketTimelineMessages.scrollHeight;
         }
 
-        function showTicketDetail(ticketId) {
+        async function showTicketDetail(ticketId) {
+            const detailVersion=++detailRequestVersion,owner=JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id;
             if (!detailTicketTitle || !ticketTimelineMessages || !replyEditorArea || !ratingFeedbackArea || !detailModalOverlay) {
                 return;
             }
 
-            const tickets = window.PawPalSupport.getTickets();
-            const ticket = tickets.find(t => t.id === ticketId);
+            let ticket;
+            try{ticket=await window.PawPalSupport.ensureTicket(ticketId);}catch{onSupportLoadError();return;}
+            if(!detailTicketTitle.isConnected || detailVersion!==detailRequestVersion || owner!==JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id)return;
             if (!ticket) return;
 
             if (activeTicketId !== ticketId) {

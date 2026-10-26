@@ -229,10 +229,11 @@
                         <span class="admin-badge ${isReplied ? 'badge-success' : 'badge-warning'}">
                             ${isReplied ? 'Đã phản hồi' : 'Chờ phản hồi'}
                         </span>
+                        <div style="color:var(--text-muted);font-size:11.5px;margin-top:2px">${esc(({pending:'Chờ duyệt',published:'Đã công bố',approved:'Đã công bố',da_duyet:'Đã công bố',hidden:'Đã ẩn',rejected:'Không duyệt'})[r.publicationStatus]||'Chờ duyệt')}</div>
                     </td>
                     <td style="text-align: center;">
                         <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-reply-review" data-review-id="${esc(r.id)}" style="padding: 4px 10px; font-size: 12px;">
-                            ${isReplied ? 'Sửa' : 'Phản hồi'}
+                            Xử lý
                         </button>
                     </td>
                 </tr>
@@ -354,6 +355,33 @@
         }
 
         modal.setAttribute('data-review-id', reviewId);
+        const moderation=document.getElementById('reviewModerationFields');
+        if(moderation){
+            moderation.hidden=window.PAWPAL_SERVICE_REVIEW_MODERATION_ENABLED===false;
+            const status=document.getElementById('reviewPublicationStatus'),reason=document.getElementById('reviewModerationReason'),error=document.getElementById('reviewModerationError'),save=document.getElementById('btnModerateServiceReview');
+            status.value=({approved:'published',da_duyet:'published'})[review.publicationStatus]||review.publicationStatus||'pending';
+            reason.value='';error.textContent='';let request=null;
+            save.onclick=async()=>{
+                if(save.disabled || modal.getAttribute('data-review-id')!==reviewId)return;
+                const content=reason.value.trim();if(content.length<2){error.textContent='Vui lòng nhập lý do ít nhất 2 ký tự.';return;}
+                const current=(PawpalServices.state?.reviewsData||[]).find(r=>r.id===reviewId);
+                if(!current?.reviewUpdatedAt){error.textContent='Vui lòng tải lại đánh giá trước khi lưu trạng thái.';return;}
+                const key=JSON.stringify([current.dbId,status.value,content]);if(request?.key!==key)request={key,id:crypto.randomUUID()};
+                save.disabled=true;error.textContent='';
+                try{
+                    const client=window.getSupabaseClient?.()||window.SupabaseClient;
+                    const result=await client.rpc('moderate_admin_service_review',{p_request:request.id,p_review:current.dbId,p_expected:current.reviewUpdatedAt,p_status:status.value,p_reason:content});
+                    if(result.error)throw result.error;
+                    if(result.data!==current.dbId)throw Error('Chưa xác nhận được kết quả lưu trạng thái.');
+                    request=null;
+                    if(modal.getAttribute('data-review-id')!==reviewId)return;
+                    error.textContent='';
+                    try{await PawpalServices.loadReviewsData({force:true});renderReviewsTable();updateReviewKPIs();PawpalServices.showToast?.('Đã lưu trạng thái công bố.');}
+                    catch{PawpalServices.showToast?.('Đã lưu trạng thái. Vui lòng tải lại danh sách để đối chiếu.');}
+                }catch(failure){if(modal.getAttribute('data-review-id')===reviewId)error.textContent=failure.code==='PT409'?'Đánh giá đã thay đổi. Vui lòng mở lại để đối chiếu.':'Không thể lưu trạng thái. Kiểm tra quyền và thử lại.';}
+                finally{save.disabled=false;}
+            };
+        }
         modal.classList.add('active');
     }
 

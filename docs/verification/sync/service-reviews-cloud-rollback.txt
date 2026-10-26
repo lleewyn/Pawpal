@@ -1,0 +1,56 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-26T07:33:15.951Z",
+  "scope": "One synthetic completed booking/review/reply; RPC/RLS and publication read projection only; rollback; no Logs",
+  "checks": [
+    {
+      "name": "Pending service cannot receive a review",
+      "status": "PASS"
+    },
+    {
+      "name": "Review retry creates one pending review; invalid rating and changed replay rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest sees no pending review and cannot read owner review projection",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read or submit review for A service",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin reads exact review and stores shop response through reviewed RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "User sees shop response but cannot invoke Admin reply",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale Admin reply snapshot cannot overwrite existing response",
+      "status": "PASS"
+    },
+    {
+      "name": "Published fixture appears publicly with correct review and shop response",
+      "status": "PASS"
+    },
+    {
+      "name": "Hidden fixture disappears from public service reviews",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes review/reply and all synthetic service/booking/actor fixtures",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "2bbaa760-9344-442c-87ef-64d3111ed9f5",
+    "customerB": "afa50deb-e0fb-448a-9146-a6ad5f900bc7",
+    "pet": "ebb139de-021f-4fab-bf73-e7a22d61f1c8",
+    "service": "3a1d9ff5-8feb-4cb5-b547-576a4a7d2d13",
+    "booking": "64ea896a-200f-4abd-86c0-ea8e190dc350"
+  },
+  "status": "PASS",
+  "queries": 97
+}

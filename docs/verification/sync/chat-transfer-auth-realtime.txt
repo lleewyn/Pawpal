@@ -1,0 +1,294 @@
+{
+  "timestamp": "2026-10-26T12:39:00.363Z",
+  "scope": "Actual Auth, public Vercel chat gateway, committed Admin transfer RPC and recipient Realtime. No AI inference, real customer edits, uploads, Storage, Logs or stress tests.",
+  "checks": [
+    {
+      "name": "Synthetic customer and chat-only recipient authenticate; existing QA Admin handles audited writes",
+      "status": "PASS"
+    },
+    {
+      "name": "Deployed customer gateway open/handoff retry commits one conversation and one system message without AI calls",
+      "status": "PASS"
+    },
+    {
+      "name": "Eligible chat-only recipient appears in handler list; Admin take retry commits one assignment",
+      "status": "PASS"
+    },
+    {
+      "name": "Unassigned recipient cannot reply before transfer",
+      "status": "PASS"
+    },
+    {
+      "name": "Overlapping transfer retries commit once and reach recipient through actual JWT Realtime",
+      "status": "PASS"
+    },
+    {
+      "name": "Previous agent loses reply permission; new recipient reads committed assignment",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer gateway shows transfer but hides private notes/raw fields; unchanged read returns metadata only",
+      "status": "PASS"
+    },
+    {
+      "name": "Scoped cleanup removes conversation, temporary recipient/permissions and synthetic Auth/customer; immutable audits retained",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "conversation": "6c823087-013e-4e80-b2e9-4066a207f61b",
+    "staff": "fa1fb9bb-5883-4eef-afbe-f50366759fda",
+    "customer": "2e2e9e6b-0e33-4134-9f15-40c240ef7573",
+    "auth": [
+      "1b3d7065-51b7-4cab-bf40-463185222b0c",
+      "8e47ce60-085c-4024-818a-db8602bf1247"
+    ]
+  },
+  "retainedImmutableAuditRows": 2,
+  "cleanup": {
+    "status": "PASS",
+    "errors": [],
+    "policy": "Delete scoped synthetic entities only; retain append-only Admin audits, never disable triggers."
+  },
+  "status": "PASS",
+  "http": {
+    "requests": 47,
+    "trace": [
+      {
+        "path": "/rest/v1/customer_phone",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/token",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/complete_customer_auth",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/token",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/staff",
+        "method": "POST",
+        "status": 201
+      },
+      {
+        "path": "/rest/v1/staff_permission",
+        "method": "POST",
+        "status": 201
+      },
+      {
+        "path": "/auth/v1/token",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/api/admin-chat",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/api/admin-chat",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/api/admin-chat",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/api/admin-chat",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/chat_conversation",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/chat_message",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/get_admin_chat_handlers",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/act_admin_chat",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/act_admin_chat",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/chat_conversation",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/act_admin_chat",
+        "method": "POST",
+        "status": 403
+      },
+      {
+        "path": "/rest/v1/rpc/transfer_admin_chat",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/transfer_admin_chat",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/chat_conversation",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/chat_message",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/rpc/act_admin_chat",
+        "method": "POST",
+        "status": 403
+      },
+      {
+        "path": "/rest/v1/chat_conversation",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/api/admin-chat",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/api/admin-chat",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/chat_message",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/chat_conversation",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/staff_permission",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/staff",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/notification",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_membership",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_address",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_phone",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer_profile",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "DELETE",
+        "status": 204
+      },
+      {
+        "path": "/auth/v1/admin/users/1b3d7065-51b7-4cab-bf40-463185222b0c",
+        "method": "DELETE",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users/8e47ce60-085c-4024-818a-db8602bf1247",
+        "method": "DELETE",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/chat_conversation",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/staff",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/rest/v1/customer",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "path": "/auth/v1/admin/users/1b3d7065-51b7-4cab-bf40-463185222b0c",
+        "method": "GET",
+        "status": 404
+      },
+      {
+        "path": "/auth/v1/admin/users/8e47ce60-085c-4024-818a-db8602bf1247",
+        "method": "GET",
+        "status": 404
+      },
+      {
+        "path": "/rest/v1/audit_log",
+        "method": "GET",
+        "status": 200
+      }
+    ]
+  }
+}

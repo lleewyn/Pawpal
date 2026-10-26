@@ -2,6 +2,8 @@
 
 ## Bổ sung vòng đời chi tiết lịch — 26/10/2026
 
+Sửa bổ sung guard form review: refresh nền giữ draft không vô hiệu hóa submit chỉ vì read sequence đã tăng; guard form theo mount/owner/booking, guard response đọc vẫn theo read sequence. Bài Chrome booking detail hiện có vẫn PASS; chưa có case Realtime thật để thay nghiệm thu.
+
 Bổ sung retry qua reload: giữ riêng UUID request trong sessionStorage theo owner/booking/line trước khi gửi, kiểm tra ghi thành công; đúng acknowledgement mới xóa ID. Không lưu rating/content/token. Harness Chrome thực hiện lỗi RPC rồi navigation/reload module và nhập lại cùng nội dung: request mới dùng đúng ID cũ, PASS. Nếu nội dung đổi sau một lần có thể commit, RPC server vẫn đối chiếu và từ chối khác payload; chưa có UX phục hồi tự động nội dung hoặc E2E mất response sau commit. Gateway thật được người dùng loại khỏi phạm vi, không phải tiêu chí chặn nghiệm thu.
 
 Bổ sung gửi review offline: `user_booking_detail_actor_ui.cjs` PASS form thật cho một dòng completed; lỗi RPC giữ nhận xét và cho retry cùng UUID, hai click lúc đang gửi chỉ một request bổ sung, ack trả đúng IDs chuyển form sang review chờ duyệt. Đổi account trong lúc submit không dựng lại section sau response. Production thêm kiểm tra button.disabled trong handler; không đổi server/RLS. Mock dùng hai lượt submit (một lỗi, một thành công); không gọi Cloud, không chứng minh idempotency server hoặc moderation thật. ID mới giữ trong closure, chưa bảo đảm retry qua reload. Không nghiệm thu lưu review qua HTTP/Auth/commit hoặc công bố review.

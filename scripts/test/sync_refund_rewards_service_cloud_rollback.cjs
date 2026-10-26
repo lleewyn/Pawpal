@@ -1,0 +1,92 @@
+// Single booking fixture; synthetic service/actors; always rollback. Not HTTP/UI E2E.
+const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
+const {connect}=require('../database/v1/service_import_connection.cjs');
+if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded service review RPC checks; otherwise no network.');process.exit(0);}
+(async()=>{const db=await connect();let queries=0;
+ const report={environment:'Supabase Cloud cpzuvaplseielhgcnqrn',timestamp:new Date().toISOString(),scope:'Single Spa booking; RPC/RLS only; synthetic actors; rollback; no Logs',checks:[]};
+ const q=async(sql,args)=>{queries++;return db.query(sql,args);};
+ const actor=async(id,role='authenticated')=>{await q('RESET ROLE');await q("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role',$2,true)",[id,role]);await q(role==='anon'?'SET LOCAL ROLE anon':'SET LOCAL ROLE authenticated');};
+ const denied=async(fn,codes)=>{await q('SAVEPOINT expected_denial');let error;try{await fn();}catch(e){error=e;}await q('ROLLBACK TO SAVEPOINT expected_denial');await q('RELEASE SAVEPOINT expected_denial');assert.ok(error,'Expected denial');assert.ok(codes.includes(error.code),'Unexpected SQLSTATE '+error.code);};
+ const pass=name=>report.checks.push({name,status:'PASS'});
+ const read=async id=>(await q('SELECT id,customer_id,pet_id,appointment_status,scheduled_start_at::text,updated_at::text,change_count FROM public.appointment WHERE id=$1',[id])).rows[0];
+ try{
+  await q("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
+  const migration=fs.readFileSync('scripts/database/v1/107_refund_reward_points.sql','utf8').replace(/^BEGIN;/,'').replace('COMMIT;','');
+  assert.ok(!/\b(?:BEGIN|COMMIT)\s*;/i.test(migration),'Migration must remain inside rollback');
+  await q(migration);
+  const a=randomUUID(),b=randomUUID(),sa=randomUUID(),staff=randomUUID(),ca=randomUUID(),cb=randomUUID(),pet=randomUUID(),svc=randomUUID(),booking=randomUUID();
+  report.fixtureIds={customerA:ca,customerB:cb,pet,service:svc,booking};
+  const breed=(await q('SELECT b.id,b.species_id FROM public.pet_breed b JOIN public.pet_species s ON s.id=b.species_id WHERE b.is_active AND s.is_active ORDER BY b.id LIMIT 1')).rows[0];
+  const cat=(await q("SELECT id FROM public.service_category WHERE category_code='grooming_spa'")).rows[0]?.id;
+  const level=(await q('SELECT id FROM public.staff_level WHERE is_active ORDER BY rank_order DESC LIMIT 1')).rows[0]?.id;
+  assert.ok(breed&&cat&&level,'Active breed/category/level required');
+  const time=(await q("WITH d AS(SELECT (now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date+30 AS booking_day), c AS(SELECT booking_day,setting_value::jsonb->'operatingHours'->CASE WHEN extract(isodow FROM booking_day) IN(6,7) THEN 'weekend' ELSE 'weekday' END hours FROM d CROSS JOIN public.pawpal_setting WHERE setting_key='system_config') SELECT ((booking_day+(hours->>'open')::time+interval '1 hour') AT TIME ZONE 'Asia/Ho_Chi_Minh')::text starts FROM c")).rows[0];
+  assert.ok(time?.starts,'Configured operating hours required');
+  await q('INSERT INTO auth.users(id) VALUES($1),($2),($3)',[a,b,sa]);
+  await q('INSERT INTO public.customer(id,auth_user_id,customer_code) VALUES($1,$2,$3),($4,$5,$6)',[ca,a,'E2E-BKG-A-'+ca,cb,b,'E2E-BKG-B-'+cb]);
+  await q("INSERT INTO public.customer_profile(customer_id,full_name) VALUES($1,'E2E Booking A'),($2,'E2E Booking B') ON CONFLICT(customer_id) DO UPDATE SET full_name=excluded.full_name",[ca,cb]);
+  await q("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,staff_level_id,employment_status,must_change_password) VALUES($1,$2,'E2E Booking Admin','QA',$3,'active',false)",[staff,sa,level]);
+  await q("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[staff]);
+  await q("INSERT INTO public.staff_schedule(staff_id,start_at,end_at) VALUES($1,$2::timestamptz-interval '1 hour',$2::timestamptz+interval '3 days')",[staff,time.starts]);
+  await q("INSERT INTO public.pet_profile(id,customer_id,pet_code,pet_name,breed_id,gender) VALUES($1,$2,$3,'E2E Booking Pet',$4,'nam')",[pet,ca,'E2E-'+pet,breed.id]);
+  await q('INSERT INTO public.pet_weight_history(pet_id,weight) VALUES($1,5)',[pet]);
+  await q("INSERT INTO public.service(id,service_code,service_name,estimated_duration,category_id,status,staff_level_required_id) VALUES($1,$2,'E2E Booking Service',30,$3,'active',$4)",[svc,'E2E-'+svc,cat,level]);
+  await q('INSERT INTO public.service_supported_species(service_id,species_id) VALUES($1,$2)',[svc,breed.species_id]);
+  await q("INSERT INTO public.service_price_matrix(service_id,weight_from,weight_to,unit_price,effective_from,status) VALUES($1,0,NULL,50000,now()-interval '1 day','active')",[svc]);
+  const details={pet_id:pet,service_id:svc,scheduled_start_at:time.starts,addon_ids:[],preferred_staff_id:staff,note:'E2E rollback only'};
+  await actor(a);const quote=(await q('SELECT public.quote_own_service_booking($1::jsonb) value',[JSON.stringify(details)])).rows[0].value;
+  await q('SELECT public.create_own_service_booking($1,$2,$3::jsonb)',[booking,quote.version,JSON.stringify(details)]);
+  await q('RESET ROLE');
+  // Fixture completion only; not an acceptance test of service execution.
+  await q("UPDATE public.appointment SET appointment_status='completed' WHERE id=$1",[booking]);
+  await q("UPDATE public.appointment_item SET status='completed' WHERE appointment_id=$1",[booking]);
+  const method=randomUUID(),id=booking,collect=randomUUID();
+  await q("INSERT INTO public.payment_method_config(id,name,short_name,fee,available) VALUES($1,'Ti\u1ec1n m\u1eb7t','cash',0,true)",[method]);
+  await actor(sa);
+  const cashier=async()=>(await q('SELECT public.get_admin_service_cashier($1) value',[id])).rows[0].value;
+  let state=await cashier();
+  await q("SELECT public.post_admin_service_money($1,$2,$3,'collect',$4::jsonb)",[collect,id,state.version,JSON.stringify({method_id:method,amount:50000,reason:'E2E receipt',confirmed:true})]);
+
+  const total=50000,eligible=50000-5000;
+  await q('RESET ROLE');await q('UPDATE public.payment SET eligible_spend_amount=$2 WHERE id=$1',[collect,eligible]);
+  await q("INSERT INTO public.paw_point_transaction(customer_id,payment_id,points,idempotency_key,sequence_no,description) VALUES($1,$2,7,$3,1,'E2E reward')",[ca,collect,'e2e-reward:'+collect]);
+  const post=async(request,version,details)=>q("SELECT public.post_admin_service_money($1,$2,$3,'refund',$4::jsonb)",[request,id,version,JSON.stringify(details)]);
+  const payload=amount=>({method_id:method,payment_id:collect,amount,reason:'E2E proportional refund',confirmed:true,loyalty_confirmed:true});
+  await actor(sa);state=await cashier();assert.equal(Number(state.payments[0].loyalty.reward_points),7);pass('Cashier contains original rewards and live balance');
+  await denied(()=>post(randomUUID(),state.version,{...payload(total),loyalty_confirmed:false}),['22023']);pass('Reward reversal requires explicit confirmation');
+  await actor(b);await denied(()=>post(randomUUID(),state.version,payload(total)),['42501']);pass('Customer cannot invoke Admin refund');
+  await denied(()=>cashier(),['42501']);pass('Definer cashier getter does not expose Admin point metadata to customer');
+  await actor(sa);await denied(()=>q('SELECT pawpal_private.plan_refund_loyalty($1,1)',[collect]),['42501']);pass('Private helper is not callable by API roles');
+  await q('SAVEPOINT spent_branch');await q('RESET ROLE');
+  await q("INSERT INTO public.paw_point_transaction(customer_id,points,idempotency_key,sequence_no,description) VALUES($1,-6,$2,2,'E2E spent')",[ca,'e2e-spent:'+collect]);
+  await actor(sa);const spent=await cashier();
+  await denied(()=>post(randomUUID(),spent.version,payload(total)),['23514']);
+  assert.equal((await cashier()).version,spent.version);assert.equal((await q('SELECT count(*)::int n FROM public.refund_transaction WHERE payment_id=$1',[collect])).rows[0].n,0);pass('Insufficient points block refund atomically with no money, points or version changes');
+  await denied(()=>post(randomUUID(),state.version,payload(1)),['PT409']);pass('Concurrent point spend invalidates cashier version');
+  await q('ROLLBACK TO SAVEPOINT spent_branch');await q('RELEASE SAVEPOINT spent_branch');
+  await actor(sa);state=await cashier();await denied(()=>post(randomUUID(),state.version,payload(total+1)),['22023']);pass('Over-refund rejected');
+  await q('SAVEPOINT legacy_branch');await q('RESET ROLE');const legacy=randomUUID();
+  await q("INSERT INTO public.refund_transaction(id,refund_code,payment_id,refund_type,requested_amount,approved_amount,refunded_amount,refund_method,refund_status,completed_at,eligible_refund_amount) VALUES($1,$2,$3,'partial',10000,10000,10000,'original','succeeded',now(),0)",[legacy,'E2E-'+legacy,collect]);
+  await actor(sa);const legacyState=await cashier();await denied(()=>post(randomUUID(),legacyState.version,payload(1)),['23514']);pass('Unreconciled legacy refund blocked without changing history');
+  await q('ROLLBACK TO SAVEPOINT legacy_branch');await q('RELEASE SAVEPOINT legacy_branch');
+  let money=0,pointSum=0,eligibleSum=0;const third=Math.floor(total/3);
+  for(const amount of [third,third,total-third*2]){
+   await actor(sa);state=await cashier();const request=randomUUID(),details=payload(amount);
+   await post(request,state.version,details);await post(request,state.version,details);
+   await denied(()=>post(request,state.version,{...details,reason:'Changed replay'}),['PT409']);
+   money+=amount;const nextPoints=Math.floor(7*money/total),nextEligible=Math.floor(eligible*money/total);
+   const ledger=(await q('SELECT points FROM public.paw_point_transaction WHERE refund_transaction_id=$1',[request])).rows;
+   assert.equal(ledger.length,nextPoints-pointSum>0?1:0);if(ledger.length)assert.equal(ledger[0].points,-(nextPoints-pointSum));
+   const refundRow=(await q('SELECT eligible_refund_amount FROM public.refund_transaction WHERE id=$1',[request])).rows[0];assert.equal(Number(refundRow.eligible_refund_amount),nextEligible-eligibleSum);
+   pointSum=nextPoints;eligibleSum=nextEligible;
+  }
+  pass('Three partial refunds use cumulative floor; final refund recovers all 7 points and eligible spend');
+  pass('Same request retries once; changed replay rejected for each partial refund');
+  await actor(a);const own=(await q('SELECT public.own_loyalty_snapshot() value')).rows[0].value;assert.equal(Number(own.points),0);assert.equal(Number(own.eligible_spend),0);pass('Customer reads zero remaining rewards and eligible spending');
+  await actor(b);const other=(await q('SELECT public.own_loyalty_snapshot() value')).rows[0].value;assert.equal(Number(other.points),0);assert.equal(Number(other.eligible_spend),0);pass('Other customer does not inherit refund data');
+  await q('RESET ROLE');await q('ROLLBACK');
+  const remains=(await q('SELECT EXISTS(SELECT 1 FROM public.payment WHERE id=$1) OR EXISTS(SELECT 1 FROM public.customer WHERE id=ANY($2::uuid[])) OR EXISTS(SELECT 1 FROM auth.users WHERE id=ANY($3::uuid[])) remains',[collect,[ca,cb],[a,b,sa]])).rows[0].remains;assert.equal(remains,false);pass('Rollback removed all fixtures and migration DDL');
+  report.status='PASS';report.queries=queries;report.scope='Reward refund service RPC integration, synthetic rollback only; no real money, UI E2E, Logs or load test';
+  fs.writeFileSync('docs/verification/sync/refund-rewards-service-cloud-rollback.txt',JSON.stringify(report,null,2)+'\n');console.log('PASS',report.checks.length,'service reward refund checks;',queries,'SQL; rollback verified');
+ }catch(e){await db.query('ROLLBACK').catch(()=>{});console.error('Reward refund failed after',report.checks.length,'checks:',e.code||'',e.message);process.exitCode=1;}finally{await db.end();}
+})().catch(e=>{console.error(e.code||'connection_failed');process.exitCode=1;});

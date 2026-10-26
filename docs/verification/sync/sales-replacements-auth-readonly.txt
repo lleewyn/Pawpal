@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-10-26T11:40:59.491Z",
+  "environment": "Local actual Admin login + Supabase Cloud cpzuvaplseielhgcnqrn Auth/PostgREST",
+  "status": "PASS",
+  "scope": "Existing private Admin test account; actual login UI/Auth and deployed read RPC/schema only, max one row per GET; no business mutations or fixtures; not customer Auth, full Admin portal, COMMIT/Realtime or concurrent writers",
+  "summary": {
+    "actualAuth": true,
+    "featureEnabled": true,
+    "postgrestEmbedding": true,
+    "mappingRead": true,
+    "boundedOrderRows": 1,
+    "boundedReturnRows": 1,
+    "boundedMappingRows": 0,
+    "cashierRead": true
+  },
+  "requests": [
+    {
+      "path": "/auth/v1/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/rest/v1/rpc/get_staff_login_context",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/rest/v1/sales_order",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/rest/v1/return_request",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/rest/v1/sales_replacement",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/rest/v1/rpc/get_admin_sales_cashier",
+      "method": "POST",
+      "status": 200
+    }
+  ],
+  "businessWrites": 0
+}

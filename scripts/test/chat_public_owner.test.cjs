@@ -1,0 +1,17 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {createHandler}=require('../../api/admin-chat.js');
+const chat='10000000-0000-4000-8000-000000000001';
+function fixture({owner='A',tokenError=false}={}){
+ const queries=[],calls=[];
+ const service={auth:{getUser:async()=>tokenError?{error:Error('invalid')}:{data:{user:{id:'auth-'+owner}}}},rpc:async(name,args)=>{calls.push({name,args});return {data:null};},from(table){
+  const row={table,filters:[]};queries.push(row);
+  const data=()=>table==='customer'?{id:owner}:table==='chat_conversation'?{id:chat,customer_id:'A',status:'waiting_agent',updated_at:'2026-10-26T03:00:00Z'}:table==='chat_message'?[{id:'msg',sender_type:'staff',content:'Public reply',metadata:{secret:'not-public'},created_at:'2026-10-26T03:00:00Z'}]:null;
+  const q={select(fields){row.select=fields;return this;},eq(k,v){row.filters.push([k,v]);return this;},is(){return this;},gt(){return this;},order(){return this;},limit(value){row.limit=value;return this;},or(){return this;},maybeSingle:async()=>({data:data()}),then(resolve){return Promise.resolve({data:data()}).then(resolve);}};return q;
+ }};
+ const handler=createHandler({serviceClient:service});
+ return {queries,calls,async invoke(action,extra={}){const res={headers:{},statusCode:200,setHeader(k,v){this.headers[k]=v;},status(code){this.statusCode=code;return this;},json(body){this.body=body;return this;}};await handler({method:'POST',headers:{authorization:'Bearer offline'},socket:{remoteAddress:'offline-'+Math.random()},body:{action,conversationId:chat,...extra}},res);return res;}};
+}
+test('invalid customer token fails before querying conversation or changing mode',async()=>{const f=fixture({tokenError:true}),r=await f.invoke('public_mode',{mode:'waiting_agent'});assert.equal(r.statusCode,401);assert.equal(f.queries.length,0);assert.equal(f.calls.length,0);});
+test('B cannot read or change A conversation through public API',async()=>{for(const action of ['public_read','public_mode']){const f=fixture({owner:'B'}),r=await f.invoke(action,{mode:'waiting_agent'});assert.equal(r.statusCode,403);assert.equal(f.calls.length,0);assert.equal(f.queries.some(q=>q.table==='chat_message'),false);}});
+test('verified owner mode action uses exact owned conversation',async()=>{const f=fixture(),r=await f.invoke('public_mode',{mode:'waiting_agent'});assert.equal(r.statusCode,200);assert.deepEqual(f.calls,[{name:'set_public_chat_mode',args:{p_conversation:chat,p_mode:'waiting_agent'}}]);assert.deepEqual(f.queries.find(q=>q.table==='customer').filters,[['auth_user_id','auth-A'],['customer_status','active']]);});
+test('public transcript bounds rows and excludes raw content/private metadata projection',async()=>{const f=fixture(),r=await f.invoke('public_read');assert.equal(r.statusCode,200);const query=f.queries.find(q=>q.table==='chat_message');assert.equal(query.limit,30);assert.ok(!query.select.includes('raw_content'));assert.equal(r.body.messages[0].content,'Public reply');assert.deepEqual(r.body.messages[0].metadata,{});});

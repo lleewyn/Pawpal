@@ -277,7 +277,7 @@
  modal.innerHTML='<div class="admin-modal-card" style="width:600px;max-width:94vw;padding:26px 30px"><div class="modal-header-clean"><div class="modal-title-clean">Xử lý hàng trả</div><button type="button" data-close-modal="modalSalesReturnReceipt" class="modal-btn-close-text">Đóng</button></div><form id="formSalesReturnReceipt" onsubmit="return false;" class="modal-body-clean"><p id="salesReturnReceiptMeta" style="margin:0;color:#4F7A65;overflow-wrap:anywhere"></p><label class="form-label-clean" for="salesReturnReceiptAction">Thao tác</label><select id="salesReturnReceiptAction" class="admin-select"><option value="receive">Xác nhận nhận hàng</option><option value="reject">Từ chối yêu cầu</option></select><div id="salesReturnReceiptInspection"><label class="form-label-clean" for="salesReturnSaleable">Kết quả kiểm định <span style="color:#DC2626">*</span></label><select id="salesReturnSaleable" class="admin-select"><option value="">Chọn kết quả</option><option value="true">Đủ điều kiện bán, nhập lại kho</option><option value="false">Không đủ điều kiện bán</option></select><label style="display:flex;gap:8px;margin-top:16px"><input type="checkbox" id="salesReturnReceived">Tôi đã nhận đủ số lượng và kiểm định hàng của yêu cầu này</label></div><label class="form-label-clean" for="salesReturnReceiptReason">Lý do hoặc ghi chú <span style="color:#DC2626">*</span></label><textarea id="salesReturnReceiptReason" class="admin-input" rows="2" maxlength="2000" style="height:auto"></textarea><p id="salesReturnReceiptError" role="alert" style="color:#DC2626;background:transparent;border:none;margin:0"></p><div class="modal-footer-clean"><button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalSalesReturnReceipt">Hủy</button><button type="button" class="admin-btn admin-btn-primary" id="btnSaveSalesReturnReceipt">Lưu xử lý</button></div></form></div>';
  document.getElementById('modalReturnRefund').parentElement.append(modal);
  let selected=null,request=null,busy=false;
- const status={pending:'Chờ xử lý',approved:'Đã duyệt, chờ nhận hàng',received:'Đã nhận và kiểm định',rejected:'Đã từ chối',cancelled:'Đã hủy'};
+ const status={pending:'Chờ xử lý',approved:'Đã duyệt',received:'Đã nhận và kiểm định',completed:'Đã hoàn tất',rejected:'Đã từ chối',cancelled:'Đã hủy'};
  m.renderSalesReturns=order=>{
   const root=el('detailOrderRmaBannerContainer');root.replaceChildren();
   for(const r of order.returnRequests||[]){
@@ -287,7 +287,8 @@
    const outcome=document.createElement('p');outcome.style.cssText='color:#4F7A65;margin:4px 0';outcome.textContent=({received_saleable:'Đã nhập lại kho sau kiểm định',received_unsaleable:'Đã nhận hàng, không nhập vào tồn có thể bán'})[r.resolution_type]||r.resolution_type||'';
    const lines=document.createElement('div');lines.style.cssText='color:#4F7A65;font-size:12px';lines.textContent=r.lines.map(d=>(d.line?.product_name_snapshot||d.line?.sku_snapshot||'Dòng bán')+' × '+d.quantity).join('; ');
    section.append(title,reason,lines,outcome);
-   if(['pending','approved'].includes(r.request_status)){
+   m.appendSalesReplacementControls?.(section,order,r);
+   if(['pending','approved'].includes(r.request_status)&&!(Array.isArray(r.replacement)?r.replacement.length:r.replacement)){
     const button=document.createElement('button');button.type='button';button.className='admin-btn admin-btn-secondary';button.textContent='Xử lý hàng trả';button.onclick=()=>m.openSalesReturnReceipt(order.rawId,r.id);section.append(button);
    }
    root.append(section);

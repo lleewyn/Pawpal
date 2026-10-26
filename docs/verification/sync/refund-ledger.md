@@ -1,5 +1,7 @@
 # Hoàn tiền, điểm thưởng và chi tiêu xét hạng — 26/10/2026
 
+**Bằng chứng lịch sử trước migration 107.** Mã mới thay chốt chặn toàn bộ bằng thu hồi điểm theo tỷ lệ; xem [triển khai và kiểm thử mới](refund-rewards.md). Lệnh `sync_refund_ledger_cloud_rollback.cjs` nay chuyển sang bộ kiểm thử hoàn điểm mới, không còn khẳng định chốt chặn cũ.
+
 **8 kiểm tra RPC/RLS/integrity Cloud PASS**, 82 SQL statements; một lượt fixture luôn rollback, không tiền thật, không Logs/stress-test. [Kết quả](refund-ledger-cloud-rollback.txt).
 
 ## Đã xác minh
