@@ -5,6 +5,8 @@ Asia/Ho_Chi_Minh (UTC+7)
 
 **Bổ sung guest 27/10:** [OTP giả lập và chống trùng](docs/verification/sync/guest-demo-otp.md).
 
+- [x] Chuẩn bị bản hợp nhất production không xung đột trên checkout riêng; 112 test và hai Chrome PASS, 34 file runtime syntax PASS. [Chi tiết phát hành](docs/verification/sync/guest-production-release-ready.md); bước push main/kiểm tra production vẫn mở theo quy định AGENTS.
+
 - [x] Đã push `d1aede07` lên nhánh guest; Vercel báo Preview thành công. HTTP Preview chuyển tới SSO; chưa nghiệm thu Preview/production từ lượt kiểm tra này.
 
 - [x] Chrome thật → local API → Cloud: mỗi cặp request tạo bé/lịch/đơn trả cùng ID, DB không trùng; Admin hủy đơn QA chưa thu tiền.

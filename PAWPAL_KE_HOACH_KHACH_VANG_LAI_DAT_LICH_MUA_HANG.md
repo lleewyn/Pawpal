@@ -465,6 +465,8 @@ ràng; không đánh dấu nghiệm thu khi chưa kiểm chứng.
 
 ## Bổ sung V1.29 — OTP giả lập và yêu cầu đồng thời (27/10/2026)
 
+- [x] Chuẩn bị phát hành trên checkout riêng, fast-forward với main không xung đột; 112 test Node, hai Chrome và syntax 34 file PASS. [Bản phát hành và cách khôi phục](docs/verification/sync/guest-production-release-ready.md). Chờ yêu cầu rõ ràng để push `origin/main`; chưa đánh dấu production đạt.
+
 - [x] Push code OTP/giỏ và bằng chứng trong `d1aede07` lên `origin/feat/guest-admin-identity`; Vercel Preview deploy thành công. Preview yêu cầu đăng nhập Vercel (302 SSO), production chưa được cập nhật; không đánh dấu nghiệm thu production.
 
 - [x] Tự phát hiện phiên guest đúng phone từ cookie máy chủ khi đăng ký; trang OTP chuyển cờ liên kết từ response, không suy đoán owner trong browser.
