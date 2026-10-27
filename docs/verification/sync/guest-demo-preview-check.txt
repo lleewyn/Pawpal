@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-10-27T08:26:49.460Z",
+  "commit": "d1aede0749d0c166b86d80d7837b484d184688ce",
+  "environment": "Preview",
+  "deploymentUrl": "https://pawpalgr3-humq9vxvs-llwyns-projects.vercel.app",
+  "githubDeploymentStatus": "success",
+  "checks": [
+    {
+      "path": "/",
+      "status": 302,
+      "redirect": "https://vercel.com/sso-api"
+    },
+    {
+      "path": "/pages/public/login/login.js",
+      "status": 302,
+      "redirect": "https://vercel.com/sso-api"
+    },
+    {
+      "path": "/pages/shop/cart/guest-cart-page.mjs",
+      "status": 302,
+      "redirect": "https://vercel.com/sso-api"
+    }
+  ],
+  "scope": "Read-only HTTP checks for Vercel Preview, not production or E2E acceptance."
+}

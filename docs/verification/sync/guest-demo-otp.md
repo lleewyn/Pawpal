@@ -26,6 +26,8 @@ Không kiểm thử tải, không polling liên tục. Đây là một cặp req
 
 [Kiểm tra HTTP production](guest-demo-release-check.txt): trang chủ 200, `login.js` đang chạy khác bản sửa, module giỏ guest trả 404. Vì vậy không đánh dấu đã triển khai hoặc nghiệm thu bản mới trên Vercel. Workspace liên kết project `pawpal_gr3` nhưng không có Vercel token/phiên CLI để chủ động deploy trong lượt này. Nhánh Git đang dùng là `feat/guest-admin-identity`; push nhánh không đồng nghĩa cập nhật production.
 
+Commit `d1aede07` đã push lên `origin/feat/guest-admin-identity`. GitHub/Vercel xác nhận deployment môi trường **Preview** thành công; [bằng chứng HTTP](guest-demo-preview-check.txt). Ba đường dẫn Preview trả 302 tới Vercel SSO, nên phiên không có đăng nhập Vercel này chưa kiểm thử được giao diện Preview. Không đổi cấu hình bảo vệ và không kết luận website lỗi từ redirect đăng nhập. Production vẫn thuộc commit `51548731` theo GitHub deployments; chưa promote nhánh guest lên production.
+
 ## Khôi phục
 
 Không có DDL cần đảo ngược. Nếu hồi quy, khôi phục commit mã trước bản vá cho `customer_auth.js`, `guest_account_link.js`, `guest_commerce.js` và `pages/public/login/login.js`; không đổi dữ liệu đã liên kết. Phiên guest đã thu hồi vẫn giữ thu hồi, không phục hồi cookie cũ. Khách đã liên kết dùng đăng nhập hoặc Quên mật khẩu của hệ thống.

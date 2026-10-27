@@ -5,6 +5,8 @@ Asia/Ho_Chi_Minh (UTC+7)
 
 **Bổ sung guest 27/10:** [OTP giả lập và chống trùng](docs/verification/sync/guest-demo-otp.md).
 
+- [x] Đã push `d1aede07` lên nhánh guest; Vercel báo Preview thành công. HTTP Preview chuyển tới SSO; chưa nghiệm thu Preview/production từ lượt kiểm tra này.
+
 - [x] Chrome thật → local API → Cloud: mỗi cặp request tạo bé/lịch/đơn trả cùng ID, DB không trùng; Admin hủy đơn QA chưa thu tiền.
 - [x] Đăng ký OTP giả lập → Supabase Auth → portal/reload giữ Customer/Pet/Appointment/Order ID; một completion thành công, cookie cũ/OTP dùng lại bị chặn.
 - [x] Dọn fixture/Auth chính xác, giữ audit; 86 test Node PASS, không migration/load test/polling mới.

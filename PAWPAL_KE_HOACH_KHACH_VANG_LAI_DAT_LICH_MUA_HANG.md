@@ -465,6 +465,8 @@ ràng; không đánh dấu nghiệm thu khi chưa kiểm chứng.
 
 ## Bổ sung V1.29 — OTP giả lập và yêu cầu đồng thời (27/10/2026)
 
+- [x] Push code OTP/giỏ và bằng chứng trong `d1aede07` lên `origin/feat/guest-admin-identity`; Vercel Preview deploy thành công. Preview yêu cầu đăng nhập Vercel (302 SSO), production chưa được cập nhật; không đánh dấu nghiệm thu production.
+
 - [x] Tự phát hiện phiên guest đúng phone từ cookie máy chủ khi đăng ký; trang OTP chuyển cờ liên kết từ response, không suy đoán owner trong browser.
 - [x] Chrome thật với Cloud: tạo bé/lịch/đơn, Admin hủy đơn chưa thanh toán, đăng ký OTP giả lập, vào portal/reload và đọc lại bé cũ; ID của mọi quan hệ giữ nguyên.
 - [x] Cặp request đồng thời cho tạo bé/lịch/đơn/hoàn tất OTP; replay cookie/OTP bị từ chối. Đã dọn fixture/Auth chính xác, giữ audit, không sửa sổ điểm hay sổ kho.
