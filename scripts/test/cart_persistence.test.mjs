@@ -61,6 +61,8 @@ function fixture(initial = [{ id: 'row-1', cart_id: 'cart-1', product_id: 'SP01'
         window: { getSupabaseClient: () => db },
         localStorage: { getItem: key => cache.get(key) || null, setItem: (key, value) => cache.set(key, value) },
         normalizeCartItems,
+        // This VM extracts member API methods without their module imports.
+        isGuestShopper: () => !JSON.parse(cache.get('pawpal_current_user') || 'null')?.id,
         publishCart: items => { const normalized = normalizeCartItems(items); cache.set('pawpal_cart', JSON.stringify(normalized)); return normalized; },
     };
     vm.runInNewContext(queue + '\nglobalThis.api = {' + methods + '};', context);

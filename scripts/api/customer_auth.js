@@ -229,9 +229,13 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             const purpose = req.body.purpose;
             if (!['register', 'reset', 'activate'].includes(purpose)) throw new Error('Yêu cầu xác thực không hợp lệ.');
             if (req.body.linkGuest != null && typeof req.body.linkGuest !== 'boolean') throw new Error('Yêu cầu liên kết không hợp lệ.');
+            let guestProof = null;
             if (req.body.linkGuest === true) {
-                if (simulate || !guestLink || purpose === 'reset') throw new Error('Liên kết hồ sơ cần xác minh số điện thoại thật, không dùng OTP giả lập.');
-                await guestLink.validate(guestLink.prepare(req), phone);
+                if (!guestLink || purpose === 'reset') throw new Error('Yêu cầu liên kết hồ sơ không hợp lệ.');
+                guestProof = guestLink.prepare(req);
+                await guestLink.validate(guestProof, phone);
+            } else if (req.body.linkGuest == null && purpose !== 'reset' && guestLink?.discover) {
+                guestProof = await guestLink.discover(req, phone);
             }
             await limit('sms-ip:' + req.ip, 10, 600000);
             await limit('sms:' + phone, 1, 60000);
@@ -241,7 +245,8 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             await assertSimulationTarget(phone, c);
             const id = crypto.randomUUID();
             const code = mode === 'demo' ? '555666' : simulate ? randomCode() : null;
-            await store.issue({ id, phone, purpose, mode: storeMode, hash: code ? hashOtp(id, code) : null });
+            // A simulated code is usable only with the same server-verified guest cookie.
+            await store.issue({ id, phone, purpose, mode: storeMode, hash: code ? hashOtp(id, code + (guestProof ? ':' + guestProof.hash : '')) : null });
             try {
                 if (mode === 'console') await deliver(phone, code);
                 if (!simulate) {
@@ -253,7 +258,7 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                 await store.activate(id, false);
                 throw error;
             }
-            res.json({ success: true, challengeId: id, expiresIn: 300, resendAfter: 60, ...(['preview', 'demo'].includes(mode) ? { testCode: code, testMode: true } : {}) });
+            res.json({ success: true, challengeId: id, expiresIn: 300, resendAfter: 60, ...(guestProof ? { linkGuest: true } : {}), ...(['preview', 'demo'].includes(mode) ? { testCode: code, testMode: true } : {}) });
         }),
         completeOtp: wrap(async (req, res) => {
             await limit('verify-ip:' + req.ip, 30, 600000);
@@ -262,13 +267,14 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             if (!/^[0-9a-f-]{36}$/i.test(String(challengeId || '')) || !/^\d{6}$/.test(String(code || ''))) throw new Error('Vui lòng nhập mã xác thực gồm 6 chữ số.');
             if (req.body.linkGuest != null && typeof req.body.linkGuest !== 'boolean') throw new Error('Yêu cầu liên kết không hợp lệ.');
             const wantsGuestLink = req.body.linkGuest === true;
-            if (wantsGuestLink && (simulate || !guestLink)) throw new Error('Liên kết hồ sơ cần xác minh số điện thoại thật, không dùng OTP giả lập.');
+            if (wantsGuestLink && !guestLink) throw new Error('Chưa thể liên kết hồ sơ. Vui lòng thử lại.');
             const guestProof = wantsGuestLink ? guestLink.prepare(req) : null;
             const claimId = crypto.randomUUID();
-            const challenge = await store.claim(challengeId, storeMode, hashOtp(challengeId, code), claimId);
+            const challenge = await store.claim(challengeId, storeMode, hashOtp(challengeId, code + (guestProof ? ':' + guestProof.hash : '')), claimId);
             let consumed = false;
             try {
                 if (wantsGuestLink && challenge.purpose === 'reset') throw new Error('Không liên kết hồ sơ trong yêu cầu khôi phục mật khẩu.');
+                if (wantsGuestLink) await guestLink.validate(guestProof, challenge.phone);
                 const c = await customer(challenge.phone);
                 if (challenge.purpose !== 'reset' && c && !c.is_temporary) throw new Error('Tài khoản đã được kích hoạt.');
                 if (challenge.purpose === 'register' && (typeof name !== 'string' || !name.trim() || name.length > 150)) throw new Error('Vui lòng nhập họ tên hợp lệ.');
@@ -282,6 +288,10 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                         if (found.error) throw new Error('Không thể xác định tài khoản thử nghiệm.');
                         authId = found.data;
                     }
+                    if (wantsGuestLink && authId) {
+                        const existing = await admin.auth.admin.getUserById(authId);
+                        if (existing.error || existing.data?.user?.app_metadata?.pawpal_test !== true) throw new Error('OTP giả lập không được liên kết tài khoản thật đã tồn tại.');
+                    }
                     if (!authId) {
                         const created = await admin.auth.admin.createUser({ phone: phoneAuth(challenge.phone), phone_confirm: true, password: crypto.randomBytes(32).toString('base64url'), app_metadata: { user_type: 'CUSTOMER', pawpal_test: true } });
                         if (created.error) throw new Error('Không thể tạo tài khoản thử nghiệm.');
@@ -289,10 +299,14 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                     }
                     const staff = await admin.from('staff').select('id').eq('auth_user_id', authId).limit(1);
                     if (staff.error || staff.data?.length) throw new Error('Danh tính không thuộc tài khoản khách hàng.');
-                    const linked = await admin.rpc('complete_customer_auth', { p_auth_id: authId, p_phone: challenge.phone, p_name: challenge.purpose === 'register' ? name.trim() : null });
-                    if (linked.error) throw new Error('Không thể lưu hồ sơ xác thực. Vui lòng thử lại.');
+                    if (wantsGuestLink) {
+                        await guestLink.complete(guestProof, { authId, phone: challenge.phone, name: challenge.purpose === 'register' ? name.trim() : null });
+                    } else {
+                        const linked = await admin.rpc('complete_customer_auth', { p_auth_id: authId, p_phone: challenge.phone, p_name: challenge.purpose === 'register' ? name.trim() : null });
+                        if (linked.error) throw new Error('Không thể lưu hồ sơ xác thực. Vui lòng thử lại.');
+                    }
                     const updated = await admin.auth.admin.updateUserById(authId, { password });
-                    if (updated.error) throw new Error('Không thể cập nhật mật khẩu. Vui lòng thử lại.');
+                    if (updated.error) throw new Error(wantsGuestLink ? 'Hồ sơ đã liên kết. Vui lòng dùng Quên mật khẩu để hoàn tất thiết lập mật khẩu.' : 'Không thể cập nhật mật khẩu. Vui lòng thử lại.');
                     const credentials = await passwordCredentials(authId, challenge.phone, password);
                     const login = await clientFactory().auth.signInWithPassword(credentials);
                     if (login.error || login.data.user?.id !== authId) throw new Error('Không thể tạo phiên đăng nhập. Vui lòng đăng nhập lại.');

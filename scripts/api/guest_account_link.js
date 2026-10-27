@@ -2,6 +2,13 @@ const {createGuestCommerce}=require('./guest_commerce');
 function createGuestAccountLink({admin,...configuration}){
     const cookies=createGuestCommerce({admin,...configuration});
     return {
+        async discover(req,phone){
+            if(!cookies.hasAccountCookie(req))return null;
+            const proof=cookies.prepareAccountLink(req);
+            const result=await admin.rpc('guest_commerce_context',{p_hash:proof.hash,p_page:1});
+            if(result.error)throw Error('Không thể kiểm tra phiên khách vãng lai. Vui lòng thử lại.');
+            return result.data?.initialized===true&&result.data?.contact?.phone===phone?proof:null;
+        },
         prepare(req){
             try{return cookies.prepareAccountLink(req);}
             catch(error){if(error.message==='invalid_session')throw Error('Phiên khách vãng lai đã hết hiệu lực. Vui lòng bắt đầu lại.');throw error;}

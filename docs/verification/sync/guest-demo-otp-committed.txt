@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-10-27T08:22:33.884Z",
+  "checks": [
+    "Two concurrent pets requests return the same petId",
+    "Two concurrent booking-create requests return the same bookingId",
+    "Two concurrent order-create requests return the same orderId",
+    "Committed DB has exactly one owner, pet, booking and order after paired writes",
+    "Admin cancels unpaid QA order through UI and releases its stock hold",
+    "Actual OTP UI sends bound link flag; two completion requests yield one success and one rejection",
+    "Simulated OTP creates real Auth login, survives portal reload, preserves original owner/pet/booking/order IDs",
+    "Old copied guest cookie and consumed OTP are denied after linking",
+    "Exact synthetic fixtures/Auth removed; audit retained; no points or inventory ledger edited"
+  ],
+  "scope": "Actual Chrome guest booking/checkout/registration, server-persisted simulated OTP, real Cloud Auth/RPC and paired concurrent HTTP writes. One synthetic owner/pet/booking/order; unpaid order cancelled via Admin. Exact fixture cleanup, audit retained. Not Vercel deployment or real SMS acceptance."
+}

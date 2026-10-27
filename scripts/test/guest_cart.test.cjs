@@ -1,6 +1,18 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const load=()=>import('../shared/guest-cart.mjs');
 const a='12345678-1234-4123-8123-123456789012',b='22345678-1234-4123-8123-123456789012';
+test('Switch preserves quantity, merges an existing target and reads latest locked quantities',async()=>{
+ const {createGuestCart}=await load(),f=fixture(),one=createGuestCart(f),two=createGuestCart(f);
+ await one.add(a,2);await one.switchVariant(a,b,10);assert.deepEqual(one.read(),[{variant_id:b,quantity:2}]);
+ await one.add(a,3);await Promise.all([two.add(b,1),one.switchVariant(a,b,6)]);assert.deepEqual(one.read(),[{variant_id:b,quantity:6}]);
+});
+test('Rejected variant switches preserve storage and unrelated lines',async()=>{
+ const {createGuestCart,GUEST_CART_KEY}=await load(),f=fixture(),store=createGuestCart(f);
+ await store.replace([{variant_id:a,quantity:2},{variant_id:b,quantity:3}]);const raw=f.values.get(GUEST_CART_KEY);
+ for(const args of [[a,b,4],[a,b,0],[a,b,1.5],['bad',b,10],[a,'bad',10]]){await assert.rejects(store.switchVariant(...args));assert.equal(f.values.get(GUEST_CART_KEY),raw);}
+ await store.switchVariant(a,a,10);assert.equal(f.values.get(GUEST_CART_KEY),raw);
+ await store.set(a,0);const remaining=f.values.get(GUEST_CART_KEY);await assert.rejects(store.switchVariant(a,b,10));assert.equal(f.values.get(GUEST_CART_KEY),remaining);
+});
 function fixture(){const values=new Map(),storage={getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value)};let tail=Promise.resolve();const locks={request(_key,fn){const result=tail.then(fn);tail=result.catch(()=>{});return result;}};return {values,storage,locks};}
 test('Guest persistence keeps only variant and quantity, coalesces variants and never writes member cart',async()=>{
  const {createGuestCart,GUEST_CART_KEY}=await load(),f=fixture(),store=createGuestCart(f);

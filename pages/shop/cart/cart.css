@@ -327,6 +327,12 @@
     display: block;
 }
 
+.variant-dropdown-menu.guest-variant-menu{min-width:0;width:min(340px,calc(100vw - 32px));max-height:280px;overflow:auto;overscroll-behavior:contain;padding:6px}
+.guest-variant-option{display:flex;flex-direction:column;gap:3px;width:100%;padding:9px 10px;border:0;border-radius:9px;background:transparent;text-align:left;color:#203a2c;font:inherit;cursor:pointer}
+.guest-variant-option:hover,.guest-variant-option.selected{background:#eef5f1}
+.guest-variant-option small{color:#4f7a65;font-size:11px}
+.guest-variant-option:disabled{opacity:.5;cursor:not-allowed}
+
 .variant-dropdown-header {
     display: flex;
     align-items: center;

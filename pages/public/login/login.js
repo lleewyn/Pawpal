@@ -97,7 +97,7 @@
         if (!validPhone(phone)) throw new Error('Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.');
         const result = await auth().request('otp/request', { phone, purpose });
         clearChallenge();
-        challenge = { id: result.challengeId, phone, purpose, code: '' };
+        challenge = { id: result.challengeId, phone, purpose, code: '', linkGuest: result.linkGuest === true };
         const register = purpose === 'register';
         show(register ? 'otpSection' : 'forgotOtpSection');
         renderTestCode(result, register);
@@ -109,7 +109,7 @@
     async function finish(passwordValue, name) {
         if (!challenge) throw new Error('Vui lòng yêu cầu mã xác thực mới.');
         if (!validPassword(passwordValue)) throw new Error('Mật khẩu cần ít nhất 8 ký tự, một chữ số và một ký tự đặc biệt.');
-        const result = await auth().request('otp/complete', { challengeId: challenge.id, code: challenge.code, password: passwordValue, name });
+        const result = await auth().request('otp/complete', { challengeId: challenge.id, code: challenge.code, password: passwordValue, name, ...(challenge.linkGuest ? { linkGuest: true } : {}) });
         await auth().accept(result);
         clearChallenge();
         for (const id of ['registerPassword', 'registerConfirmPassword', 'forgotNewPassword', 'forgotConfirmNewPassword']) if (byId(id)) byId(id).value = '';

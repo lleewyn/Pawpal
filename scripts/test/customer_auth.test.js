@@ -224,9 +224,31 @@ test('Failed real OTP cannot invoke guest link or update credentials',async()=>{
  const f=fixture({simulated:false,unlinkedGuest:true,guestLink});const request=await f.call('requestOtp',{phone:'0912345678',purpose:'register',linkGuest:true});
  assert.equal((await f.call('completeOtp',{challengeId:request.body.challengeId,code:'000000',password:'NewPass123!',name:'Test',linkGuest:true})).code,400);assert.equal(links,0);assert.equal(f.writes.length,0);
 });
-test('Demo OTP cannot link a guest, while ordinary demo behavior remains unchanged',async()=>{
- const f=fixture({mode:'demo',unlinkedGuest:true,guestLink:{prepare:()=>{throw Error('must not prepare simulated link');}}});
- const response=await f.call('requestOtp',{phone:'0912345678',purpose:'register',linkGuest:true});assert.equal(response.code,400);assert.match(response.body.message,/không dùng OTP giả lập/);assert.equal(f.writes.length,0);
+test('Demo OTP links the cookie-bound guest, preserves identity and never calls ordinary profile creation',async()=>{
+ let links=0,cleared=false;const proof={hash:'a'.repeat(64)};
+ const f=fixture({mode:'demo',unlinkedGuest:true,guestLink:{discover:async()=>proof,prepare:()=>proof,validate:async()=>{},complete:async(p,data)=>{assert.equal(p,proof);assert.equal(data.authId,'auth-1');links++;},clear:()=>{cleared=true;}}});
+ const r=await f.call('requestOtp',{phone:'0912345678',purpose:'register'});assert.equal(r.code,200);assert.equal(r.body.linkGuest,true);
+ const body={challengeId:r.body.challengeId,code:r.body.testCode,password:'NewPass123!',name:'Demo guest',linkGuest:true,authId:'forged',customerId:'forged'};
+ const responses=await Promise.all([f.call('completeOtp',body),f.call('completeOtp',body)]);assert.deepEqual(responses.map(r=>r.code).sort(),[200,400]);assert.equal(links,1);assert.equal(cleared,true);assert.ok(!f.writes.includes('link'));assert.equal(f.writes.filter(w=>w.password).length,1);
+});
+test('Demo challenge rejects removed link flag, different cookie, wrong OTP and replay without linking',async()=>{
+ let proof={hash:'a'.repeat(64)},links=0;
+ const f=fixture({mode:'demo',unlinkedGuest:true,guestLink:{prepare:()=>proof,validate:async()=>{},complete:async()=>{links++;},clear:()=>{}}});
+ const r=await f.call('requestOtp',{phone:'0912345678',purpose:'register',linkGuest:true});
+ const body={challengeId:r.body.challengeId,code:r.body.testCode,password:'NewPass123!',name:'Guest',linkGuest:true};
+ assert.equal((await f.call('completeOtp',{...body,linkGuest:false})).code,400);
+ proof={hash:'b'.repeat(64)};assert.equal((await f.call('completeOtp',body)).code,400);
+ proof={hash:'a'.repeat(64)};assert.equal((await f.call('completeOtp',{...body,code:'000000'})).code,400);
+ assert.equal(links,0);assert.equal(f.writes.length,0);assert.equal((await f.call('completeOtp',body)).code,200);assert.equal((await f.call('completeOtp',body)).code,400);assert.equal(links,1);
+});
+test('Demo guest cannot replace credentials of an existing non-test Auth account',async()=>{
+ let links=0;const f=fixture({mode:'demo',realAccount:true,unlinkedGuest:true,guestLink:{prepare:()=>({hash:'a'.repeat(64)}),validate:async()=>{},complete:async()=>{links++;},clear:()=>{}}});
+ const r=await f.call('requestOtp',{phone:'0912345678',purpose:'register',linkGuest:true});assert.equal((await f.call('completeOtp',{challengeId:r.body.challengeId,code:r.body.testCode,password:'NewPass123!',name:'Guest',linkGuest:true})).code,400);assert.equal(links,0);assert.equal(f.writes.length,0);
+});
+test('Expired OTP and revoked cookie are denied before demo link or password writes',async()=>{
+ for(const expired of [true,false]){let valid=true,links=0;const f=fixture({mode:'demo',unlinkedGuest:true,guestLink:{prepare:()=>({hash:'a'.repeat(64)}),validate:async()=>{if(!valid)throw Error('Revoked');},complete:async()=>{links++;},clear:()=>{}}});
+ const r=await f.call('requestOtp',{phone:'0912345678',purpose:'register',linkGuest:true});if(expired)f.advance(300001);else valid=false;
+ assert.equal((await f.call('completeOtp',{challengeId:r.body.challengeId,code:r.body.testCode,password:'NewPass123!',name:'Guest',linkGuest:true})).code,400);assert.equal(links,0);assert.equal(f.writes.length,0);}
 });
 test('Guest link conflict occurs before password writes and retains cookie',async()=>{
  let cleared=false;const guestLink={prepare:()=>({hash:'a'.repeat(64)}),validate:async()=>{},complete:async()=>{throw Error('Guest link conflict');},clear:()=>{cleared=true;}};

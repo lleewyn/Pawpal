@@ -31,6 +31,17 @@ export function createGuestCart({storage,locks,mayUse=()=>true,publish=()=>{},ge
         });
     }
     return {read,add:(id,quantity)=>mutate(lines=>[...lines,{variant_id:id,quantity}]),
+        switchVariant:(from,to,stock)=>{
+            if(typeof from!=='string'||typeof to!=='string'||!uuid.test(from)||!uuid.test(to)||!Number.isSafeInteger(stock)||stock<0)return Promise.reject(Error('Phân loại hoặc tồn kho không hợp lệ.'));
+            from=from.toLowerCase();to=to.toLowerCase();
+            return mutate(lines=>{
+                const source=lines.find(line=>line.variant_id===from);if(!source)throw Error('Giỏ hàng đã thay đổi. Vui lòng chọn lại phân loại.');
+                if(from===to)return lines;
+                const quantity=source.quantity+(lines.find(line=>line.variant_id===to)?.quantity||0);
+                if(quantity>stock||quantity>1000000)throw Error('Phân loại đã chọn không đủ tồn kho cho tổng số lượng trong giỏ.');
+                return lines.filter(line=>line.variant_id!==from&&line.variant_id!==to).concat({variant_id:to,quantity});
+            });
+        },
         set:(id,quantity)=>mutate(lines=>quantity===0?lines.filter(l=>l.variant_id!==id):lines.map(l=>l.variant_id===id?{...l,quantity}:l)),
         clear:()=>mutate(()=>[]),replace:lines=>mutate(()=>lines),
         consume:purchased=>mutate(lines=>{const bought=normalizeGuestLines(purchased);return lines.map(line=>({...line,quantity:Math.max(0,line.quantity-(bought.find(p=>p.variant_id===line.variant_id)?.quantity||0))})).filter(line=>line.quantity>0);})};

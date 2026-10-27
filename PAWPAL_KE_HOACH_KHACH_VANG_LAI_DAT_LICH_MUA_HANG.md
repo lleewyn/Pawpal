@@ -1,6 +1,6 @@
 # PAWPAL --- KẾ HOẠCH TRIỂN KHAI NHẬN DIỆN KHÁCH VÃNG LAI VÀ ĐẶT LỊCH/MUA HÀNG
 
-**Phiên bản:** V1.27\
+**Phiên bản:** V1.29\
 **Ngày lập:** 26/10/2026\
 **Phạm vi:** Guest Identity, Pet Profile, Service Booking, Shop
 Cart/Checkout\
@@ -78,7 +78,7 @@ Tiến độ 26/10/2026:
 - [x] Playwright MCP trên frontend local + Cloud RPC mới: 35 hồ sơ/1 thành viên/34 vãng lai; lọc member/guest đúng, trang cuối guest 4 dòng, nhãn giữ sau reload. Chi tiết đơn/lịch hiển thị “Thành viên”, không lỗi console/quyền đọc.
 - [x] Fixture committed chuyển linkage qua service RPC: cùng Customer ID/Pet ID/Appointment ID, retry không trùng; Admin UI tự đổi vãng lai→thành viên qua Realtime và reload. Fixture đã dọn, không xóa ledger/audit. [Bằng chứng](docs/verification/sync/guest-activation-and-lookup.md).
 - [x] Đăng nhập phone/mật khẩu thật sau liên kết: khách A thấy lại đúng bé/lịch, giữ Customer ID/Pet ID/Appointment ID. V1.25 kiểm trên fixture committed, đã dọn; không thay cho signup/OTP.
-- [ ] Đăng ký/kích hoạt bằng OTP giả lập và xem lại bé/lịch trọn luồng: chưa nghiệm thu. Auth ở lượt V1.25 được xác nhận sẵn bằng fixture, không thay cho kiểm thử challenge OTP giả lập; frontend local chưa phát hành. SMS thật không áp dụng.
+- [x] Đăng ký bằng OTP giả lập trọn luồng V1.29: UI thật → challenge lưu máy chủ → Supabase Auth thật → portal/reload; cùng Customer/Pet/Appointment/Order ID. Cookie cũ và OTP dùng lại bị chặn. Không thay cho nghiệm thu nhánh kích hoạt tài khoản tạm tại quầy hoặc Vercel. SMS thật không áp dụng.
 - [x] Phát hiện GUEST-LOOKUP-01: backend lịch sử tra cứu đọc theo phone bằng service client chưa xác minh owner. Chuẩn bị bản vá local yêu cầu Auth owner, bỏ frontend fallback; 35 test Auth/access và hai HTTP deny thật PASS.
 - [x] Cơ chế mã tra cứu riêng được backend xác minh cho từng đơn/lịch guest: HMAC ràng buộc loại/UUID/hạn 90 ngày, không phone/browser OTP. Migration 122 Cloud; UI/HTTP/SQL rollback và tamper/type/expiry/browser-role deny PASS. API/UI chưa phát hành, không coi là nghiệm thu Auth/hai portal.
 - [x] Hoàn tất khảo sát đặt lịch/giỏ hàng/checkout/thành viên, đối chiếu schema/RPC/RLS và deployment; gate khảo sát GĐ-00 đạt. [Báo cáo và vấn đề chuyển tiếp](docs/verification/sync/guest-stage0-audit.md). Chưa nghiệm thu luồng guest không OTP.
@@ -254,11 +254,11 @@ Cập nhật kiểm thử 27/10: [nhiều bé và khóa hai writer](docs/verific
 -   [x] Tìm hồ sơ khách theo quy tắc nghiệp vụ đã thống nhất: chỉ dùng binding server của phiên, không tìm/chọn hồ sơ cũ bằng phone.
 -   [x] Nếu hồ sơ được xác định hợp lệ, liên kết phiên với hồ sơ đó: chỉ liên kết hồ sơ mới do phiên tạo trong transaction; nhận lại/liên kết Auth cũ chưa triển khai.
 -   [x] Nếu chưa có hồ sơ, chỉ tạo khi nghiệp vụ cần lưu thông tin.
--   [ ] Xử lý yêu cầu đồng thời để hạn chế tạo hai hồ sơ trùng.
+-   [x] V1.29: một cặp HTTP đồng thời cho từng thao tác tạo bé đầu tiên, tạo lịch và tạo đơn với cùng request ID/cookie; Cloud chỉ có một owner/bé/lịch/đơn tương ứng. Không suy rộng sang nhiều thiết bị độc lập cùng phone.
 -   [x] Nếu có nhiều kết quả không thể phân biệt, không tự động gộp/chọn
     hồ sơ.
 -   [x] Backend liên kết hồ sơ guest mới với Auth sau xác minh hợp lệ mà giữ ID/lịch sử; xung đột không tự hợp nhất. 116 kiểm tra phone-confirmed/Auth và signed guest proof; HTTP verifier được mock trong test. Probe 111 không được dùng thay bằng chứng 116; SMS thật ngoài phạm vi từ V1.26.
--   [ ] Rà/nối và kiểm thử nhánh liên kết guest với OTP giả lập máy chủ, giữ Customer/Pet/Appointment/Order ID theo binding cookie, không cấp quyền từ phone hoặc cờ browser. Không bỏ kiểm tra owner của RPC hiện có để làm test qua.
+-   [x] Nối và kiểm thử OTP giả lập máy chủ V1.29, giữ Customer/Pet/Appointment/Order ID theo cookie; hash challenge gắn hash phiên, thiếu cờ hoặc đổi cookie không dùng được. Giữ RPC 116 và quyền owner, không sửa schema; tài khoản Auth không có dấu test bị từ chối liên kết giả lập.
 
 ### 6.2. Hồ sơ thú cưng
 
@@ -402,7 +402,7 @@ V1.25 đã kiểm một giao dịch spa committed; các dấu hoàn tất hẹp 
 -   [x] Khách có nhiều bé cưng và chọn đúng Pet ID: hai bé cùng owner được chọn qua UI và tạo hai lịch committed riêng, SQL đối chiếu đúng pet/owner.
 -   [x] Thêm bé thứ hai giữ bé/lịch đầu, không gộp hoặc ghi đè; kiểm thử V1.27 với hai Pet ID và hai Appointment ID riêng.
 -   [x] Hai bé trùng tên/giống phân biệt đúng: card có mã riêng khi trùng, chọn đúng ID; hai INSERT thật đến Admin không reload sau sửa Realtime.
--   [ ] Hai yêu cầu đồng thời không tạo khách/giao dịch trùng.
+-   [x] V1.29: từng cặp yêu cầu cùng request ID tạo bé/lịch/đơn trả cùng ID, DB committed không trùng; hai request hoàn tất OTP chỉ một thành công. Không stress/load test.
 -   [ ] Số điện thoại có định dạng khác nhau được chuẩn hóa nhất quán.
 -   [ ] Số điện thoại trùng nhiều hồ sơ không tự động chọn/gộp sai.
 -   [x] Phiên fixture hết hạn bị HTTP 401; sau end/revoke replay cookie ký thật ban đầu cũng 401. Chỉ ép expiry trên session QA, không đổi giờ server hoặc phiên khách thật.
@@ -462,6 +462,23 @@ ràng; không đánh dấu nghiệm thu khi chưa kiểm chứng.
 
   GĐ-06                   Triển khai              Sau nghiệm thu
   -----------------------------------------------------------------------
+
+## Bổ sung V1.29 — OTP giả lập và yêu cầu đồng thời (27/10/2026)
+
+- [x] Tự phát hiện phiên guest đúng phone từ cookie máy chủ khi đăng ký; trang OTP chuyển cờ liên kết từ response, không suy đoán owner trong browser.
+- [x] Chrome thật với Cloud: tạo bé/lịch/đơn, Admin hủy đơn chưa thanh toán, đăng ký OTP giả lập, vào portal/reload và đọc lại bé cũ; ID của mọi quan hệ giữ nguyên.
+- [x] Cặp request đồng thời cho tạo bé/lịch/đơn/hoàn tất OTP; replay cookie/OTP bị từ chối. Đã dọn fixture/Auth chính xác, giữ audit, không sửa sổ điểm hay sổ kho.
+
+Bằng chứng: [OTP giả lập và chống trùng](docs/verification/sync/guest-demo-otp.md). Đây là nghiệm thu local nối Cloud, không thay cho phát hành Vercel hoặc mọi nhánh kích hoạt/reset.
+
+## Bổ sung V1.28 — đổi phân loại tại giỏ hàng (27/10/2026)
+
+- [x] Giỏ khách vãng lai có nút chọn lại phân loại của cùng sản phẩm; cập nhật ảnh, giá và tổng tiền, giữ số lượng.
+- [x] Gộp phân loại đã có trong giỏ bằng thao tác có khóa; chặn khi tổng số lượng vượt tồn kho trong catalog. Máy chủ kiểm tra lại tồn kho khi checkout.
+- [x] Giữ trạng thái chọn thanh toán; hỗ trợ Escape, bấm ngoài, focus và menu trong chiều ngang điện thoại 390px.
+- [x] Kiểm thử: 45 test Node, Chrome module giỏ thật với catalog fixture, hồi quy Chrome checkout PASS. Không ghi Cloud, không thêm polling/request khi đổi phân loại.
+
+Bằng chứng và giới hạn: [Đổi phân loại giỏ guest](docs/verification/sync/guest-cart-variant.md). Chưa push/deploy thay đổi này; các mục nghiệm thu tổng thể phía dưới giữ nguyên.
 
 ## 11. Tiêu chí hoàn thành toàn bộ
 

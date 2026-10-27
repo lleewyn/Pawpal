@@ -178,6 +178,7 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
    return res.status(status).json({success:false,message,...(field&&action.startsWith('booking-')?{fields:{[field[0]]:field[1]}}:{})});
   }
  };
+ handle.hasAccountCookie=req=>Boolean(cookie(req));
  handle.prepareAccountLink=req=>{
   if(!allowed.has(req.headers.origin)||req.headers['sec-fetch-site']==='cross-site')throw Error('Nguồn yêu cầu liên kết không hợp lệ.');
   const session=cookie(req);if(!session)throw Error('Cần phiên khách vãng lai hợp lệ để liên kết.');
