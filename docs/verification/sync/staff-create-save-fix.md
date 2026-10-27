@@ -1,6 +1,6 @@
 # Sửa thông báo và kiểm tra đầu vào khi thêm nhân viên
 
-Ngày: 27/10/2026. Bản sửa ở local, chưa push/deploy.
+Ngày: 27/10/2026. Đã push/deploy production sau yêu cầu của người dùng.
 
 ## Nguyên nhân đã tái hiện
 
@@ -25,4 +25,4 @@ Một lần tạo nhân viên QA hợp lệ qua giao diện trả HTTP 200, lưu
 
 `node --test scripts/test/staff_auth_cloud.test.cjs`, kiểm tra cú pháp file JS và `git diff --check` PASS. Không migration, không Supabase Logs, không polling hoặc load test.
 
-Bản JS/HTML sửa chưa triển khai production; kết quả Cloud xác nhận thao tác lưu được với đầu vào hợp lệ, không phải bằng chứng website chính đã có bản sửa giao diện.
+Bản `a6635fed` đã push lên `origin/main`, Vercel deployment success. Hai asset staff production khớp source. Chrome đăng nhập Admin thực tế, mở Thêm nhân viên và xác nhận lỗi thiếu email hiện rõ/focus đúng ô, dấu bắt buộc mật khẩu hiển thị; không gửi request provisioning hoặc tạo dữ liệu thử trong lượt kiểm tra sau phát hành. [Bằng chứng production](staff-create-production.txt). Lượt tạo nhân viên Cloud hợp lệ đã kiểm ở trên; không tạo lại nhân viên chỉ để kiểm tra deployment.

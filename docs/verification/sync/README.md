@@ -157,7 +157,7 @@ Playwright và kết nối PG dùng các dependency private hiện có trên má
 Luồng đầy đủ UI → HTTP API → DB commit → màn hình phía kia → reload/login lại; Auth thật cho A/B/Admin; Realtime delivery thật; các phân hệ thú cưng, đặt lịch, checkout, ticket, notification, voucher và quyền toàn hệ thống. Các case tương ứng giữ NOT RUN hoặc RETEST, không PASS từ test SQL/offline.
 # Cập nhật giỏ guest 27/10/2026
 
-Nhân sự: [Sửa Thêm nhân viên](staff-create-save-fix.md). API từ chối thiếu email/mật khẩu nhưng UI che lỗi; bản local bổ sung validation/focus/ARIA và giữ thông báo API. Chrome với API/Cloud thật đã tạo một nhân viên QA bị khóa đăng nhập, dọn fixture và giữ audit. Chưa push/deploy bản sửa này; checklist đồng bộ 1.50.
+Nhân sự: [Sửa Thêm nhân viên](staff-create-save-fix.md). API từ chối thiếu email/mật khẩu nhưng UI che lỗi; đã bổ sung validation/focus/ARIA và giữ thông báo API. Chrome với API/Cloud thật đã tạo một nhân viên QA bị khóa đăng nhập, dọn fixture và giữ audit. `a6635fed` đã push main, Vercel success; asset và validation trên production PASS, không tạo lại fixture. Checklist đồng bộ 1.50.
 
 **Production đã cập nhật:** `a6fec053` push main sau xác nhận, Vercel success; [smoke bằng Playwright MCP](guest-production-smoke.md) PASS các trang/form guest/đăng ký và đổi phân loại giỏ/reload. Checklist guest V1.30, đồng bộ 1.49; không nhận toàn bộ E2E production là hoàn thành.
 

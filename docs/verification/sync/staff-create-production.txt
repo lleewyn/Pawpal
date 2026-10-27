@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-10-27T08:50:40.760Z",
+  "status": "PASS",
+  "commit": "a6635fed",
+  "checks": [
+    "pages/admin/modules/staff/staff.html matches local",
+    "pages/admin/modules/staff/subtabs/tab-staff-list.js matches local",
+    "Missing login email shows specific error and focuses field without provisioning request",
+    "Temporary password required marker visible"
+  ],
+  "provisioningRequests": 0,
+  "scope": "Production assets match source; actual Chrome Admin form validation, no fixture/staff/Auth creation or edits."
+}

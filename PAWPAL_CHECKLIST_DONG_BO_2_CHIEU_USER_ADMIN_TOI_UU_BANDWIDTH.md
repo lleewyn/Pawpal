@@ -7,7 +7,7 @@ Asia/Ho_Chi_Minh (UTC+7)
 
 - [x] Tái hiện production: thiếu email đăng nhập/mật khẩu tạm trả 400 nhưng UI che lỗi cụ thể. Sửa kiểm tra đầu vào, focus/ARIA và giữ thông báo API ở local.
 - [x] Chrome với hai asset form local → API/Cloud thật: tạo nhân viên QA hợp lệ HTTP 200, đóng modal; đăng nhập vẫn bị khóa khi chưa cho phép, không cấp vai trò. Đã dọn staff/Auth fixture, giữ audit.
-- [ ] Push/deploy bản sửa form nhân sự và kiểm tra lại trên website chính; chưa được yêu cầu push ở lượt sửa này.
+- [x] Người dùng yêu cầu push: `a6635fed` đã lên main, Vercel deploy success. Hai asset staff khớp source; Chrome trên production xác nhận lỗi thiếu email hiện rõ/focus đúng, dấu bắt buộc mật khẩu hiển thị và không gửi yêu cầu tạo nhân viên. [Bằng chứng](docs/verification/sync/staff-create-production.txt).
 
 **Bổ sung guest 27/10:** [OTP giả lập và chống trùng](docs/verification/sync/guest-demo-otp.md).
 
