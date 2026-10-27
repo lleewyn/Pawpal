@@ -1,9 +1,11 @@
 # PAWPAL --- CHECKLIST KIỂM THỬ ĐỒNG BỘ 2 CHIỀU USER ↔ ADMIN
 
-**Phiên bản:** 1.48 · **Cập nhật:** 27/10/2026 · **Trạng thái tổng:** ĐANG KIỂM TRA MỘT PHẦN · **Timezone:**
+**Phiên bản:** 1.49 · **Cập nhật:** 27/10/2026 · **Trạng thái tổng:** ĐANG KIỂM TRA MỘT PHẦN · **Timezone:**
 Asia/Ho_Chi_Minh (UTC+7)
 
 **Bổ sung guest 27/10:** [OTP giả lập và chống trùng](docs/verification/sync/guest-demo-otp.md).
+
+- [x] Phát hành production `a6fec053` lên main sau xác nhận; Vercel success và [Playwright MCP kiểm tra website chính](docs/verification/sync/guest-production-smoke.md). Giỏ đổi phân loại/reload đúng, form guest/đăng ký mở được, API guest chặn cookie thiếu. Không suy rộng thành toàn bộ E2E production.
 
 - [x] Chuẩn bị bản hợp nhất production không xung đột trên checkout riêng; 112 test và hai Chrome PASS, 34 file runtime syntax PASS. [Chi tiết phát hành](docs/verification/sync/guest-production-release-ready.md); bước push main/kiểm tra production vẫn mở theo quy định AGENTS.
 
@@ -12,7 +14,7 @@ Asia/Ho_Chi_Minh (UTC+7)
 - [x] Chrome thật → local API → Cloud: mỗi cặp request tạo bé/lịch/đơn trả cùng ID, DB không trùng; Admin hủy đơn QA chưa thu tiền.
 - [x] Đăng ký OTP giả lập → Supabase Auth → portal/reload giữ Customer/Pet/Appointment/Order ID; một completion thành công, cookie cũ/OTP dùng lại bị chặn.
 - [x] Dọn fixture/Auth chính xác, giữ audit; 86 test Node PASS, không migration/load test/polling mới.
-- [ ] Phát hành và nghiệm thu bản vá guest/giỏ trên Vercel: production còn bản cũ theo kiểm tra HTTP, chưa có kết nối Vercel deploy trực tiếp trong phiên này. Không dùng kết quả local thay nghiệm thu production.
+- [x] Phát hành bản vá guest/giỏ lên Vercel qua Git main và nghiệm thu smoke đúng phạm vi ghi trong báo cáo production. E2E rộng hơn giữ các gate riêng, không tự đóng từ smoke.
 
 **Mục tiêu:** phát hiện lỗi khi User thao tác nhưng Admin không nhận cập
 nhật, hoặc Admin thao tác nhưng User không thấy cập nhật; đồng thời

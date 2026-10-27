@@ -1,6 +1,6 @@
 # PAWPAL --- KẾ HOẠCH TRIỂN KHAI NHẬN DIỆN KHÁCH VÃNG LAI VÀ ĐẶT LỊCH/MUA HÀNG
 
-**Phiên bản:** V1.29\
+**Phiên bản:** V1.30\
 **Ngày lập:** 26/10/2026\
 **Phạm vi:** Guest Identity, Pet Profile, Service Booking, Shop
 Cart/Checkout\
@@ -464,6 +464,12 @@ ràng; không đánh dấu nghiệm thu khi chưa kiểm chứng.
   -----------------------------------------------------------------------
 
 ## Bổ sung V1.29 — OTP giả lập và yêu cầu đồng thời (27/10/2026)
+
+**Cập nhật phát hành V1.30:** [Production đã triển khai và smoke bằng Playwright MCP](docs/verification/sync/guest-production-smoke.md).
+
+- [x] Người dùng xác nhận push `a6fec053` lên `origin/main`; Vercel Production success đúng SHA.
+- [x] Website chính: các module login/giỏ khớp source, API guest không cookie trả 401; giỏ đổi 400g → 1kg, đúng giá/số lượng và reload giữ phân loại. Trang dịch vụ, form guest và đăng ký mở được.
+- [ ] E2E toàn bộ nghiệp vụ trên production: lượt này chỉ smoke, không phát sinh đơn/lịch/Auth mới. Không dùng bằng chứng local → Cloud trước đó thay mọi gate production.
 
 - [x] Chuẩn bị phát hành trên checkout riêng, fast-forward với main không xung đột; 112 test Node, hai Chrome và syntax 34 file PASS. [Bản phát hành và cách khôi phục](docs/verification/sync/guest-production-release-ready.md). Chờ yêu cầu rõ ràng để push `origin/main`; chưa đánh dấu production đạt.
 

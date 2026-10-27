@@ -157,6 +157,8 @@ Playwright và kết nối PG dùng các dependency private hiện có trên má
 Luồng đầy đủ UI → HTTP API → DB commit → màn hình phía kia → reload/login lại; Auth thật cho A/B/Admin; Realtime delivery thật; các phân hệ thú cưng, đặt lịch, checkout, ticket, notification, voucher và quyền toàn hệ thống. Các case tương ứng giữ NOT RUN hoặc RETEST, không PASS từ test SQL/offline.
 # Cập nhật giỏ guest 27/10/2026
 
+**Production đã cập nhật:** `a6fec053` push main sau xác nhận, Vercel success; [smoke bằng Playwright MCP](guest-production-smoke.md) PASS các trang/form guest/đăng ký và đổi phân loại giỏ/reload. Checklist guest V1.30, đồng bộ 1.49; không nhận toàn bộ E2E production là hoàn thành.
+
 Phát hành code: `d1aede07` đã push nhánh `feat/guest-admin-identity`, Vercel Preview thành công; [Preview yêu cầu Vercel SSO](guest-demo-preview-check.txt). Production chưa promote, không đánh dấu nghiệm thu website chính.
 
 V1.29: [OTP giả lập guest và chống trùng](guest-demo-otp.md). Chrome thật → local API → Cloud/Auth: paired request tạo bé/lịch/đơn trả cùng ID, OTP chỉ một completion thành công; portal/reload giữ owner/bé/lịch/đơn. Đã dọn fixture, giữ audit; 86 test Node PASS. Vercel hiện chưa có bản này, không đánh dấu production đạt.

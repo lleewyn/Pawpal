@@ -17,9 +17,9 @@ Checkout riêng: `D:/Aboutme/Pawpal-infra/guest-production-release`, nhánh `rel
 - [x] Rewrite `/api/customer/guest/:path*` đúng handler; `.vercelignore` loại `.env`, private files, test, database scripts và docs khỏi upload deployment.
 - [x] `git diff --check origin/main...HEAD` PASS.
 - [x] GitHub/Vercel báo Preview của `972bf577` thành công. Preview yêu cầu Vercel SSO; không tính là nghiệm thu UI production.
-- [ ] Push bản phát hành lên `origin/main` sau yêu cầu rõ ràng của người dùng.
-- [ ] Đợi Vercel deployment Production thành công, kiểm tra đúng SHA và module/API đã cập nhật.
-- [ ] Chạy kiểm tra giao diện production, phiên guest và giỏ, ghi kết quả thực tế vào checklist.
+- [x] Người dùng xác nhận “ok push”; đã push bản `a6fec053` lên `origin/main`.
+- [x] Vercel deployment Production của `a6fec053` thành công; ba module login/guest cart khớp source đã phát hành, API guest không còn 404.
+- [x] Playwright MCP kiểm tra các trang, form guest/đăng ký và đổi phân loại giỏ/reload trên website chính. [Phạm vi và bằng chứng production](guest-production-smoke.md); không thay cho toàn bộ E2E production.
 
 Lệnh test Node đã chạy từ checkout riêng, dùng dependency hiện có qua `NODE_PATH`:
 
@@ -35,4 +35,4 @@ Không chạy lại giao dịch Cloud chỉ để kiểm tra checkout Git; bằn
 
 Mốc production trước phát hành: `515487316452d2df1394984e74d45926c4f0cca9`. Ưu tiên khôi phục deployment Production trước đó qua Vercel; hoặc tạo commit đảo các thay đổi phát hành trên main, không force-push hay xóa lịch sử. Không đảo migration Cloud hoặc phục hồi cookie đã thu hồi; dữ liệu liên kết giữ nguyên. Khách đã có Auth dùng đăng nhập/Quên mật khẩu hiện có.
 
-Việc push đang chờ vì [AGENTS.md](../../../AGENTS.md), mục 10 quy định: “Chỉ chạy git push khi người dùng yêu cầu rõ ràng.” Mục 12 cũng yêu cầu không coi yêu cầu sửa tiếp là yêu cầu push. Bản hợp nhất và các kiểm tra đã hoàn tất trước bước xác nhận này.
+Push được thực hiện sau yêu cầu rõ ràng “ok push”, theo [AGENTS.md](../../../AGENTS.md), mục 10 và 12. Bản hợp nhất và các kiểm tra đã hoàn tất trước bước xác nhận.
