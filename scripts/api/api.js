@@ -2,6 +2,7 @@ import { normalizeOrderStatus } from '/scripts/shared/order-status.mjs';
 import { vietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
 import { resolveAuthenticatedCustomerId } from '/scripts/shared/customer-identity.mjs';
 import { normalizeCartItems, publishCart } from '/scripts/shared/cart-state.mjs';
+import { guestCart, isGuestShopper } from '/scripts/shared/guest-cart.mjs';
 
 const wishlistIntents = new Map();
 let cartWriteQueue = Promise.resolve();
@@ -558,6 +559,19 @@ export const API = {
     },
 
     async addToCart(userId, productId, quantity = 1, details = {}) {
+        if (isGuestShopper()) {
+            const current=JSON.parse(localStorage.getItem('pawpal_current_user')||'null');
+            if(userId && userId!==current?.id)throw Error('Tài khoản đã thay đổi. Vui lòng tải lại trang.');
+            const products=await window.DataLoader.loadProducts();
+            const product=products.find(p=>p.id===productId);
+            const variantId=details.variantId||details.product_variant_id||(product?.variants?.length===1?product.variants[0].id:null);
+            const variant=product?.variants?.find(v=>v.id===variantId);
+            if(!variant||!product.inStock)throw Error('Vui lòng chọn phân loại đang được bán.');
+            const old=guestCart().read().find(l=>l.variant_id===variantId)?.quantity||0;
+            if(!Number.isSafeInteger(Number(quantity))||Number(quantity)<1||old+Number(quantity)>variant.stock)throw Error('Sản phẩm không đủ tồn kho khả dụng.');
+            await guestCart().add(variantId,Number(quantity));
+            return {success:true};
+        }
         if (!userId) return { success: false, error: 'User not logged in' };
         if (!Number.isSafeInteger(Number(quantity)) || Number(quantity) < 1) throw new Error('Invalid quantity');
         return queueCartWrite(async () => {

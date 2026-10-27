@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-10-27T02:39:52.287Z",
+  "status": "PASS",
+  "sha256": "b95f8c07ed623a22b4a3ce2b7b3bf276af217440f5f6b146c7f384ea8ca6915f",
+  "originalSha256": "d62a628f1e929e1b029abf9c667476f42f7eddf6a21cb4ea923b914e891d73bf",
+  "queries": 65,
+  "checks": [
+    "Rename with displayed self-reported phone never creates canonical phone or revokes unchanged session",
+    "Legacy UI omitting phone preserves guest contact",
+    "Changed guest contact remains self-reported even if another member owns the canonical number; old guest session revoked",
+    "Canonical member ownership is never moved or merged",
+    "Member and pre-commerce guest primary-phone flows keep existing behavior",
+    "Invalid self-contact, stale revision and canonical duplicate remain rejected",
+    "Customer and anonymous cannot edit Admin profiles",
+    "Reverse restores old function without deleting rows",
+    "All fixture Auth/staff/customer/phone/session/audit and DDL rolled back"
+  ],
+  "scope": "Actual Cloud SQL update under authenticated synthetic Admin claims; no real login/UI or committed fixture. All data, audit and DDL rolled back, reverse tested; no Logs."
+}

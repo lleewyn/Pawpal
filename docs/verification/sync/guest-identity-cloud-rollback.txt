@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-10-26T16:26:37.673Z",
+  "status": "PASS",
+  "sha256": "6d5a430a0aa9e41a97f0027439b3c19e3b1df7c5f78674eb6ec93cb09d69b8a4",
+  "queries": 37,
+  "checks": [
+    {
+      "name": "Admin receives derived identity without Auth UUID",
+      "status": "PASS"
+    },
+    {
+      "name": "Loyalty guest stays guest and account member without loyalty stays member",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest category includes locked guest",
+      "status": "PASS"
+    },
+    {
+      "name": "Member filter uses account linkage",
+      "status": "PASS"
+    },
+    {
+      "name": "Active status includes active guests and members",
+      "status": "PASS"
+    },
+    {
+      "name": "Identity and locked status combine independently",
+      "status": "PASS"
+    },
+    {
+      "name": "Paging and global identity counts stay consistent",
+      "status": "PASS"
+    },
+    {
+      "name": "Linking account reclassifies same Customer ID without merge",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot call Admin directory RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Anonymous caller denied",
+      "status": "PASS"
+    },
+    {
+      "name": "DDL and synthetic customers fully rolled back",
+      "status": "PASS"
+    }
+  ],
+  "scope": "Installed RPC inside rollback transaction, synthetic role claims; not UI/Auth/commit E2E, no real records changed or Logs queried"
+}

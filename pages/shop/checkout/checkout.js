@@ -1,6 +1,7 @@
 
 import { voucherBelongsToUser } from '/scripts/shared/cart-state.mjs';
 import { readCheckoutRequest, writeCheckoutRequest } from '/scripts/shared/checkout-request.mjs';
+import { isGuestShopper } from '/scripts/shared/guest-cart.mjs';
 
 const checkoutState = {
     cart: [],
@@ -149,6 +150,7 @@ function finishCheckoutLoading() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        if (isGuestShopper()) { const {initGuestCheckout}=await import('./guest-checkout.mjs'); await initGuestCheckout(); return; }
         checkoutState.user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (!checkoutState.user?.id || checkoutState.user.is_temporary) { window.location.href='/login'; return; }
         PENDING_POINTS_KEY='pawpal_checkout_points_used:'+checkoutState.user.id;

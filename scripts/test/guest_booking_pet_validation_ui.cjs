@@ -1,0 +1,34 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+ const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.route('http://localhost:3001/**',route=>{
+  const name=new URL(route.request().url()).pathname;
+  if(name==='/')return route.fulfill({contentType:'text/html',body:'<!doctype html><meta charset="utf-8"><main id="root"></main>'});
+  if(!['/pages/services/booking/booking-guest-pets.mjs','/scripts/shared/guest-commerce-client.mjs','/scripts/shared/guest-account-state.mjs','/scripts/shared/guest-contact-editor.mjs'].includes(name))return route.abort();
+  return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(process.cwd(),name),'utf8')});
+ });
+ await page.goto('http://localhost:3001/');
+ await page.evaluate(async()=>{
+  const {renderGuestPets}=await import('/pages/services/booking/booking-guest-pets.mjs'),{guestCommerce}=await import('/scripts/shared/guest-commerce-client.mjs');
+  window.calls=[];window.failSave=true;window.selected=null;
+  guestCommerce.request=async(action,body)=>{calls.push({action,body});if(action==='pets'){if(failSave)throw Error('Kết nối thử bị gián đoạn.');window.saved=body;return {petId:body.requestId};}if(action==='profile-read')return {contact:{...saved.contact,revision:'a'.repeat(32)},pet:{id:saved.requestId,...saved.pet,revision:'b'.repeat(32)}};if(action==='profile-update'){if(body.pet)saved.pet=body.pet;if(body.contact)saved.contact=body.contact;return {requestId:body.requestId,rotated:!!body.contact};}return {page:1,hasMore:false,contact:saved.contact,pets:[{id:saved.requestId,name:saved.pet.name,breedId:saved.pet.breedId,gender:saved.pet.gender}]};};
+  renderGuestPets({root:document.getElementById('root'),context:{pets:[],page:1},breeds:[{id:'breed-test',breed_name:'Poodle',species_id:'dog',pet_species:{species_name:'Chó',is_active:true}}],onChoose:pet=>{window.selected=pet;},onNext:()=>{},onContext:()=>{}});
+ });
+ await page.click('#guestAddPet');await page.click('#guestPetSave');
+ for(const id of ['guestOwnerName','guestOwnerPhone','guestPetName','guestPetBreed','guestPetWeight']){assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'true');assert.ok(await page.locator('#'+id+'Error').textContent());assert.equal(await page.getAttribute('#'+id,'aria-describedby'),id+'Error');}
+ assert.equal(await page.evaluate(()=>document.activeElement.id),'guestOwnerName');assert.equal(await page.evaluate(()=>calls.length),0);
+ await page.fill('#guestOwnerName','   ');await page.fill('#guestPetName','   ');await page.fill('#guestOwnerPhone','123');await page.fill('#guestPetWeight','201');await page.fill('#guestPetBreed','Poodle');await page.click('#guestPetSave');
+ for(const id of ['guestOwnerName','guestOwnerPhone','guestPetName','guestPetBreed','guestPetWeight'])assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'true');assert.equal(await page.evaluate(()=>calls.length),0);
+ await page.fill('#guestOwnerName','Test owner');await page.fill('#guestPetName','Test pet');await page.fill('#guestOwnerPhone','+84 (912) 345-678');await page.fill('#guestPetWeight','1.001');await page.click('#guestPetBreed');await page.click('[data-breed="breed-test"]');await page.click('#guestPetSave');assert.equal(await page.getAttribute('#guestPetWeight','aria-invalid'),'true');assert.equal(await page.evaluate(()=>calls.length),0);
+ await page.fill('#guestPetWeight','1.25');await page.evaluate(()=>{for(const id of ['guestPetAllergy','guestPetSafety'])document.getElementById(id).value='x'.repeat(1001);});await page.click('#guestPetSave');for(const id of ['guestPetAllergy','guestPetSafety'])assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'true');assert.equal(await page.evaluate(()=>calls.length),0);
+ await page.fill('#guestPetAllergy','Test allergy');await page.fill('#guestPetSafety','Test safety');await page.fill('#guestPetBreed','Poodle edited');await page.click('#guestPetSave');assert.equal(await page.getAttribute('#guestPetBreed','aria-invalid'),'true');assert.equal(await page.evaluate(()=>calls.length),0);await page.fill('#guestPetBreed','Poodle');await page.click('[data-breed="breed-test"]');
+ await page.click('#guestPetSave');await page.waitForFunction(()=>document.getElementById('guestPetSaveError').textContent);
+ assert.equal(await page.inputValue('#guestPetName'),'Test pet');assert.equal(await page.inputValue('#guestPetAllergy'),'Test allergy');assert.equal(await page.isDisabled('#guestPetSave'),false);assert.equal(await page.isDisabled('#step1Next'),true);
+ const request=await page.evaluate(()=>calls[0].body.requestId);assert.equal(await page.evaluate(()=>sessionStorage.getItem('pawpal_guest_pet_request_v1')),request);
+ await page.evaluate(()=>{window.failSave=false;});await page.click('#guestPetSave');await page.waitForFunction(()=>window.selected);
+ assert.equal(await page.evaluate(()=>selected.id),request);assert.equal(await page.evaluate(()=>calls[1].body.requestId),request);assert.equal(await page.locator('#guestPetEditor').textContent(),'');assert.equal(await page.isDisabled('#step1Next'),false);assert.equal(await page.evaluate(()=>sessionStorage.getItem('pawpal_guest_pet_request_v1')),null);
+ await page.click('#guestEditPet');await page.waitForSelector('#guestPetName');assert.equal(await page.inputValue('#guestPetName'),'Test pet');assert.equal(await page.inputValue('#guestPetWeight'),'1.25');await page.fill('#guestPetName','Edited pet');await page.fill('#guestPetWeight','2');await page.click('#guestPetSave');await page.waitForFunction(()=>selected.name==='Edited pet');assert.equal(await page.evaluate(()=>selected.id),request);assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='pets').length),2);assert.equal(await page.evaluate(()=>calls.find(c=>c.action==='profile-update').body.pet.id),request);
+ await page.click('#guestEditContact');await page.waitForSelector('#guestEditName');await page.fill('#guestEditName','New owner');await page.fill('#guestEditPhone','123');await page.click('#guestEditSave');assert.equal(await page.getAttribute('#guestEditPhone','aria-invalid'),'true');await page.fill('#guestEditPhone','0987654321');await page.click('#guestEditSave');await page.waitForFunction(()=>document.getElementById('guestBookingContact').textContent.includes('New owner'));assert.match(await page.locator('#guestBookingContact').textContent(),/0987654321/);
+ assert.deepEqual(errors,[]);console.log('PASS actual guest pet form validation/retry plus edit selected pet preserving ID and edit contact validation/refresh. Fixture transport only; no Cloud.');
+}finally{await browser.close();}})().catch(error=>{console.error(error);process.exitCode=1;});

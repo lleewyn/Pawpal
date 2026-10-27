@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-26T18:21:33.869Z",
+  "status": "PASS",
+  "requests": 3,
+  "unboundQuoteMatchesPublicCatalogLine": true,
+  "ownerIdNotExposed": true,
+  "anonymousDenied": true,
+  "unboundReceiptDenied": true,
+  "scope": "One public in-stock variant selected with bounded read; real Supabase REST quote/service and anon denial/receipt denial; no customer/phone/history reads, no order or business writes; no deployed backend/UI acceptance"
+}

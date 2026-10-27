@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-10-27T06:44:23.020Z",
+  "checks": [
+    "Two same-name/same-breed pets are distinct in UI and Pet ID under one owner",
+    "Each same-name pet creates its own committed spa booking; both real INSERT frames refresh already-open Admin",
+    "Different browser with identical self-reported phone receives separate owner and cannot read first owner pet/receipt",
+    "Server rejects valid signed cookie whose own fixture DB session has expired",
+    "Ending the session revokes access even when replaying the original signed cookie"
+  ],
+  "parts": {
+    "owners": 2,
+    "pets": 3,
+    "bookings": 2,
+    "appointmentInsertFrames": 2
+  },
+  "scope": "Actual browser UI/HTTP and committed Cloud fixtures, two same-name pets booked separately and real Realtime INSERT into Admin after subscription fix. Other browser same phone denied. Expiry set only on own synthetic DB session; original signed cookie replay after revoke denied. No payment/SMS/mock business transport; scoped cleanup required."
+}

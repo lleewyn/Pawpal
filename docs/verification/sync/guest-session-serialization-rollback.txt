@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-10-27T01:02:55.488Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "Independent writer B waits on the actual guest token advisory lock held by writer A",
+      "status": "PASS"
+    },
+    {
+      "name": "After first writer rollback, waiting writer finishes with one bound profile and retry creates no extra pet",
+      "status": "PASS"
+    },
+    {
+      "name": "Both transactions rolled back; no session, customer or pet fixture committed",
+      "status": "PASS"
+    }
+  ],
+  "scope": "Two real Cloud SQL connections with service_role and installed save-pet RPC; bounded advisory lock observation only. No Supabase Logs, commit, public catalog fixture, HTTP/UI, same-profile-after-commit or overselling acceptance."
+}

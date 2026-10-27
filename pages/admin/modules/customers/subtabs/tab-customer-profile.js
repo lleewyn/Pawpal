@@ -360,7 +360,7 @@
         // Tab 1: Cá nhân
         if (document.getElementById('profileValCustId')) document.getElementById('profileValCustId').textContent = data.id;
         if (document.getElementById('profileValFullName')) document.getElementById('profileValFullName').textContent = data.name;
-        if (document.getElementById('profileValPhone')) document.getElementById('profileValPhone').textContent = data.phone;
+        if (document.getElementById('profileValPhone')) document.getElementById('profileValPhone').textContent = data.phone+(data.phoneUnverified?' · Chưa xác minh':'');
         const displayOptional = (value, fallback = 'Chưa cập nhật') => {
             const normalized = value === null || value === undefined || String(value).trim().toLowerCase() === 'null' || String(value).trim().toLowerCase() === 'undefined' ? '' : String(value).trim();
             return normalized || fallback;
@@ -375,7 +375,7 @@
         const authStatusEl = document.getElementById('profileValAuthStatus');
         if (authStatusEl) {
             const authBadgeClass = data.status === 'LOCKED' ? 'badge-danger' : (data.status === 'TEMP' ? 'badge-warning' : 'badge-success');
-            authStatusEl.innerHTML = `<span class="admin-badge ${authBadgeClass}">${data.status === 'LOCKED' ? 'Hồ sơ đã khóa' : 'Hồ sơ đang hoạt động'}</span>`;
+            authStatusEl.innerHTML = `<span class="admin-badge ${authBadgeClass}">${data.status === 'LOCKED' ? 'Hồ sơ đã khóa' : 'Hồ sơ đang hoạt động'}</span><span style="margin-left:8px">${PawpalCustomers.escapeHtml(data.customerTypeLabel || 'Chưa xác định loại khách')}</span>`;
         }
 
         // Sổ địa chỉ
@@ -460,6 +460,9 @@
         }
         tier.value=data.membershipTierId || '';
         const phone=document.getElementById('editCustPhone'); phone.required=Boolean(values.editCustPhone);
+        let contactNote=document.getElementById('editCustPhoneSource');
+        if(!contactNote){contactNote=document.createElement('p');contactNote.id='editCustPhoneSource';contactNote.className='text-muted';contactNote.style.cssText='font-size:11.5px;margin:4px 0 0';phone.after(contactNote);}
+        contactNote.textContent=data.phoneUnverified?'Khách tự cung cấp, chưa xác minh.':'';contactNote.hidden=!data.phoneUnverified;
         phone.closest('.form-group').querySelector('label').innerHTML='Số điện thoại'+(phone.required?' <span style="color:#DC2626">*</span>':'');
         currentEditingAddresses=(data.addresses || []).map(a=>({...a}));
         initialEditingAddressesSnapshot=JSON.stringify(currentEditingAddresses);

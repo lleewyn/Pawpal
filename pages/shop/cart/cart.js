@@ -1,7 +1,9 @@
 import { ensureCartAccess, showCartNotice } from '/scripts/shared/cart-access.mjs';
 import { voucherBelongsToUser } from '/scripts/shared/cart-state.mjs';
+import { isGuestShopper } from '/scripts/shared/guest-cart.mjs';
 
 async function initCartPage() {
+    if (isGuestShopper()) { const {initGuestCartPage}=await import('./guest-cart-page.mjs'); return initGuestCartPage(); }
     if (!ensureCartAccess()) return;
     const cartRoot = document.getElementById('cart-items-list');
     if (!cartRoot || cartRoot.dataset.cartLoading === 'true' || cartRoot.dataset.cartReady === 'true') return;

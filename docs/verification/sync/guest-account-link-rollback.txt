@@ -1,0 +1,100 @@
+{
+  "timestamp": "2026-10-26T18:46:30.170Z",
+  "status": "PASS",
+  "migrationSha256": "2b0c70725ab40265ec2aff506234baf6b7f6cef1c6e1217b2f2c59760acb08dc",
+  "authHandlerSha256": "66afa2a89bf45895cad8536579e749ef12ff1398d736bcc869501b639c965047",
+  "guestHandlerSha256": "70f14435bad365a49df2a7b3da21d1f0b69aa66e85aec62f328e05f529daf4c2",
+  "legacyLinkSha256": "0e7b8db71477dce672805090ee593a15a96c91a7b24cab1793d4632cace50aec",
+  "queries": 144,
+  "checks": [
+    {
+      "name": "anon cannot execute link RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "authenticated cannot execute link RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Unconfirmed Auth phone cannot link",
+      "status": "PASS"
+    },
+    {
+      "name": "Different verified Auth phone cannot claim guest",
+      "status": "PASS"
+    },
+    {
+      "name": "Unknown token hash cannot link",
+      "status": "PASS"
+    },
+    {
+      "name": "Locked guest cannot link",
+      "status": "PASS"
+    },
+    {
+      "name": "Revoked unlinked session cannot link",
+      "status": "PASS"
+    },
+    {
+      "name": "Expired session cannot link",
+      "status": "PASS"
+    },
+    {
+      "name": "Banned Auth identity cannot link",
+      "status": "PASS"
+    },
+    {
+      "name": "Staff Auth identity cannot link through guest portal",
+      "status": "PASS"
+    },
+    {
+      "name": "Normalized staff phone prevents cross-portal link",
+      "status": "PASS"
+    },
+    {
+      "name": "Other profile with canonical phone causes conflict, not auto merge",
+      "status": "PASS"
+    },
+    {
+      "name": "Auth already linked to another customer causes conflict",
+      "status": "PASS"
+    },
+    {
+      "name": "All denied cases leave original guest unlinked",
+      "status": "PASS"
+    },
+    {
+      "name": "HTTP OTP completion uses signed guest proof and verified identity; ignores client owner/Auth IDs",
+      "status": "PASS"
+    },
+    {
+      "name": "Retry keeps same Customer ID and one canonical phone after session revocation",
+      "status": "PASS"
+    },
+    {
+      "name": "Link revokes all commerce sessions and copied guest cookie loses access",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet, appointment and order IDs retain original owner, no move or merge",
+      "status": "PASS"
+    },
+    {
+      "name": "Linked customer role reads same profile and pet through existing member RPCs",
+      "status": "PASS"
+    },
+    {
+      "name": "Link/canonical phone and original FK constraints pass when forced immediate",
+      "status": "PASS"
+    },
+    {
+      "name": "Legacy account-link RPC remains unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "Auth/profile/transaction fixtures and DDL fully rolled back",
+      "status": "PASS"
+    }
+  ],
+  "scope": "Actual loopback HTTP/cookies and Cloud SQL linking/role RPCs in rollback; OTP delivery/verifier/password update mocked, Auth records seeded confirmed only inside rollback; no real SMS/Auth login, commit/Realtime/UI or concurrency acceptance; appointment/order fixture headers test ID retention, not transaction creation lifecycle"
+}

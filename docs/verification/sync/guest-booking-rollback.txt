@@ -1,0 +1,134 @@
+{
+  "timestamp": "2026-10-26T18:00:31.639Z",
+  "status": "PASS",
+  "migrationSha256": "678dd259ca5128989e2ff4813417ffa5aed1c8996cd55dbbea62bf8d3e87f5fd",
+  "handlerSha256": "5dfa5816e2b29a06ef920380bf41ea1b20bddc29fc1c5d9be790154ba24926e3",
+  "queries": 285,
+  "checks": [
+    {
+      "name": "anon cannot execute service-only booking RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "authenticated cannot execute service-only booking RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "grooming_spa quote uses authoritative price, required addons and sanitized response",
+      "status": "PASS"
+    },
+    {
+      "name": "grooming_spa create saves pending booking/items with correct pet and no false payment",
+      "status": "PASS"
+    },
+    {
+      "name": "grooming_spa exact retry returns same booking without duplicate items",
+      "status": "PASS"
+    },
+    {
+      "name": "grooming_spa receipt returns server state scoped to creating session",
+      "status": "PASS"
+    },
+    {
+      "name": "grooming_spa foreign session cannot read receipt or replay booking",
+      "status": "PASS"
+    },
+    {
+      "name": "grooming_spa changed payload under same request ID conflicts",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_hotel quote uses authoritative price, required addons and sanitized response",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_hotel create saves pending booking/items with correct pet and no false payment",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_hotel exact retry returns same booking without duplicate items",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_hotel receipt returns server state scoped to creating session",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_hotel foreign session cannot read receipt or replay booking",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_hotel changed payload under same request ID conflicts",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_taxi quote uses authoritative price, required addons and sanitized response",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_taxi create saves pending booking/items with correct pet and no false payment",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_taxi exact retry returns same booking without duplicate items",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_taxi receipt returns server state scoped to creating session",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_taxi foreign session cannot read receipt or replay booking",
+      "status": "PASS"
+    },
+    {
+      "name": "pet_taxi changed payload under same request ID conflicts",
+      "status": "PASS"
+    },
+    {
+      "name": "Hotel reservation and round-trip taxi rows match quoted logistics",
+      "status": "PASS"
+    },
+    {
+      "name": "Quote rejects foreign pet even with same self-declared phone",
+      "status": "PASS"
+    },
+    {
+      "name": "Client cannot provide arbitrary customer owner",
+      "status": "PASS"
+    },
+    {
+      "name": "Missing required addon rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Operating-hour availability is rechecked by quote",
+      "status": "PASS"
+    },
+    {
+      "name": "Variant duration 90 plus addon 15 cannot fit into 80 minutes before closing, despite 60-minute service default",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed server price rejects stale quote without partial booking",
+      "status": "PASS"
+    },
+    {
+      "name": "Reserved room cannot be quoted again by another session",
+      "status": "PASS"
+    },
+    {
+      "name": "Revoked session cannot access previously created booking",
+      "status": "PASS"
+    },
+    {
+      "name": "Original member quote/availability definitions remain unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "All fixture bookings/logistics/audit and DDL rolled back",
+      "status": "PASS"
+    }
+  ],
+  "scope": "Actual loopback HTTP -> real Cloud SQL service_role RPC/rate limit in rollback transaction; synthetic services/rooms/prices/guest profiles only; no real customer/config mutations, no commit/Realtime/UI, no full-slot/two-writer concurrency or member Auth quote parity acceptance"
+}

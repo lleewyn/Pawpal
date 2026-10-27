@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-10-27T04:37:55.624Z",
+  "status": "APPLIED",
+  "migration": 123,
+  "sha256": "a507b287abfabee125e9a93bcf596b77096484de4ddfd1f49feccc91f0ef5978",
+  "scope": "Replace profile update retry branch only: accept exact recorded retry with original or replacement session; never rotate twice or resurrect revoked sessions. No existing data updates; original definitions backed up outside webroot."
+}

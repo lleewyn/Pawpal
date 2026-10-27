@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-10-26T16:12:47.135Z",
+  "scope": "Existing Cloud read-only schema/aggregate checks, no customer records or credentials exported; not staging migration validation",
+  "counts": {
+    "total": 35,
+    "guests": 34,
+    "members": 1,
+    "loyaltyidentitymismatch": 21
+  },
+  "metadata": {
+    "auth_column_select": true,
+    "customer_rls_enabled": true,
+    "page_returns_identity": false
+  },
+  "customerSelectPolicyExpressions": [
+    "pawpal_private.owns_customer(id)",
+    "pawpal_private.has_permission('customer.read'::text)"
+  ]
+}

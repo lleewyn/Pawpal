@@ -45,145 +45,14 @@ let rgLastSearchState = {
 };
 
 function initReturnGuestPage() {
-    const form      = document.getElementById('rg-form');
-    const errorBox  = document.getElementById('rg-error');
-    const resultsEl = document.getElementById('rg-results');
-    const phoneInput = document.getElementById('rg-phone');
-
-    if (!form || !phoneInput) return;
-    if (form.dataset.rgBound === 'true') return;
-    form.dataset.rgBound = 'true';
-
-    const memberCard = document.getElementById('rg-member-card');
-    const memberPhone = document.getElementById('rg-member-phone');
-    const memberLoginLink = document.getElementById('rg-member-login-link');
-
-    if (errorBox) errorBox.classList.add('d-none');
-    if (memberCard) memberCard.classList.add('d-none');
-    if (resultsEl) resultsEl.classList.add('d-none');
-
-    phoneInput.addEventListener('input', (e) => {
-        const currentNorm = normalizePhone(e.target.value);
-        if (errorBox) errorBox.classList.add('d-none');
-        if (memberCard) memberCard.classList.add('d-none');
-        if (rgVerifiedPhone && currentNorm !== rgVerifiedPhone) {
-            rgVerifiedPhone = null;
-            if (resultsEl) resultsEl.classList.add('d-none');
-        }
-    });
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try {
-            const rawPhone = phoneInput ? phoneInput.value : '';
-            const phone = rawPhone.trim();
-
-            // Chặn SĐT sai định dạng ngay tại form, không gửi request tra cứu
-            const phoneError = validateLookupPhone(phone);
-            if (phoneError) {
-                if (memberCard) memberCard.classList.add('d-none');
-                if (resultsEl) resultsEl.classList.add('d-none');
-                if (errorBox) {
-                    errorBox.textContent = phoneError;
-                    errorBox.classList.remove('d-none');
-                }
-                phoneInput.focus();
-                return;
-            }
-            if (phone !== rawPhone) phoneInput.value = phone;
-
-            const normPhone = normalizePhone(phone);
-
-            if (errorBox) errorBox.classList.add('d-none');
-            if (memberCard) memberCard.classList.add('d-none');
-
-            const btn = form.querySelector('button[type=submit]');
-            if (btn) {
-                btn.disabled    = true;
-                btn.textContent = 'Đang kiểm tra...';
-            }
-
-            // Kiểm tra xem số điện thoại có thuộc về tài khoản Thành viên chính thức không
-            const member = await isRegisteredMember(normPhone);
-            if (member) {
-                if (btn) {
-                    btn.disabled    = false;
-                    btn.textContent = 'Tìm kiếm';
-                }
-                if (resultsEl) resultsEl.classList.add('d-none');
-                if (memberCard) {
-                    if (memberPhone) memberPhone.textContent = phone;
-                    if (memberLoginLink) memberLoginLink.href = `/login?phone=${encodeURIComponent(normPhone)}`;
-                    memberCard.classList.remove('d-none');
-                }
-                return;
-            }
-
-            if (btn) {
-                btn.textContent = 'Đang tìm...';
-            }
-
-            const supabaseResults = await loadSupabaseGuestResults(phone);
-            let bookings = supabaseResults.bookings || [];
-            let orders = supabaseResults.orders || [];
-
-            if (btn) {
-                btn.disabled    = false;
-                btn.textContent = 'Tìm kiếm';
-            }
-
-            if (bookings.length === 0 && orders.length === 0) {
-                if (resultsEl) resultsEl.classList.add('d-none');
-                if (errorBox) {
-                    errorBox.classList.remove('d-none');
-                    errorBox.innerHTML = 'Không tìm thấy thông tin đơn hàng/lịch hẹn cho số điện thoại này.';
-                }
-                return;
-            }
-
-            // Check if this phone number was already OTP-verified in this session
-            if (rgVerifiedPhone === normPhone) {
-                if (errorBox) errorBox.classList.add('d-none');
-                if (resultsEl) resultsEl.classList.remove('d-none');
-                rgLastSearchState = { phone, bookings, orders };
-                renderResults(bookings, orders);
-                return;
-            }
-
-            // First time searching this phone: Prompt OTP verification before showing results
-            if (errorBox) errorBox.classList.add('d-none');
-            showOTPModal(phone, () => {
-                rgVerifiedPhone = normPhone;
-                if (resultsEl) resultsEl.classList.remove('d-none');
-                rgLastSearchState = { phone, bookings, orders };
-                renderResults(bookings, orders);
-                showToast('Xác thực số điện thoại thành công!', 'success');
-            });
-        } catch (fatalErr) {
-            console.error('[ReturnGuest] Error in submit handler:', fatalErr);
-            if (errorBox) {
-                errorBox.classList.remove('d-none');
-                errorBox.textContent = 'Có lỗi xảy ra trong quá trình tra cứu. Vui lòng thử lại sau.';
-            }
-            const btn = form.querySelector('button[type=submit]');
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = 'Tìm kiếm';
-            }
-        }
-    });
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const initialPhone = urlParams.get('phone');
-    if (initialPhone && phoneInput && !phoneInput.value) {
-        phoneInput.value = initialPhone;
-        setTimeout(() => {
-            if (form && !form.querySelector('button[type=submit]')?.disabled) {
-                form.dispatchEvent(new Event('submit', { cancelable: true }));
-            }
-        }, 120);
-    }
+    const form=document.getElementById('rg-form');
+    if(!form||form.dataset.rgRecovery==='true')return;
+    form.dataset.rgRecovery='true';form.hidden=true;
+    Promise.all([import('/scripts/shared/guest-recovery.mjs'),import('/pages/public/return-guest/guest-booking-lookup.mjs')]).then(([recovery,booking])=>{
+        recovery.mountGuestRecoveryLookup(form);booking.mountGuestBookingLookup(form);booking.mountGuestOrderLookup(form);
+    }).catch(()=>{const error=document.createElement('p');error.setAttribute('role','alert');error.textContent='Ch?a t?i ???c tra c?u. Vui l?ng t?i l?i trang.';form.before(error);});
 }
+
 window.initReturnGuestPage = initReturnGuestPage;
 
 if (document.readyState === 'loading') {
@@ -244,92 +113,20 @@ function validateLookupPhone(phone) {
 
 async function loadSupabaseGuestResults(phone) {
     if (!phone) return { bookings: [], orders: [] };
-    const normPhone = normalizePhone(phone);
-
-    try {
-        const res = await fetch('/api/customer/auth/guest-records', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: normPhone })
-        });
-        if (res.ok) {
-            const data = await res.json();
-            if (data.success) {
-                return {
-                    bookings: Array.isArray(data.bookings) ? data.bookings.map(mapSupabaseBookingRow) : [],
-                    orders: Array.isArray(data.orders) ? data.orders.map(mapSupabaseOrderRow) : [],
-                };
-            }
-        }
-    } catch (apiErr) {
-        console.warn('[ReturnGuest] Backend guest-records lookup failed, falling back:', apiErr);
-    }
-
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (!db) return { bookings: [], orders: [] };
-    try {
-        let orderRows = [];
-        let bookingRows = [];
-
-        // Tìm customer_id liên quan đến số điện thoại
-        const { data: phones } = await db.from('customer_phone').select('customer_id').eq('phone_number', normPhone).limit(5);
-        const custIds = (phones || []).map(p => p.customer_id).filter(Boolean);
-
-        // 1. Tra cứu đơn hàng (bằng receiver_phone_snapshot hoặc customer_id)
-        let orderQuery = db.from('sales_order').select(`
-            id,
-            order_code,
-            order_status,
-            shipping_status,
-            shipping_fee_snapshot,
-            receiver_name_snapshot,
-            receiver_phone_snapshot,
-            street_address_snapshot,
-            province_snapshot,
-            created_at,
-            updated_at,
-            note,
-            sales_order_detail ( id, quantity, unit_price, discount_amount, product_name_snapshot, sku_snapshot ),
-            payment ( id, payment_method, payment_status, amount )
-        `);
-
-        if (custIds.length > 0) {
-            orderQuery = orderQuery.or(`receiver_phone_snapshot.eq.${normPhone},customer_id.in.(${custIds.join(',')})`);
-        } else {
-            orderQuery = orderQuery.eq('receiver_phone_snapshot', normPhone);
-        }
-
-        const { data: oData, error: oError } = await orderQuery.order('created_at', { ascending: false });
-        if (!oError && Array.isArray(oData)) {
-            orderRows = oData;
-        }
-
-        // 2. Tra cứu lịch hẹn (theo customer_id)
-        if (custIds.length > 0) {
-            const { data: bData, error: bError } = await db.from('appointment').select(`
-                id,
-                appointment_code,
-                scheduled_start_at,
-                scheduled_end_at,
-                appointment_status,
-                note,
-                pet_profile:pet_id ( id, pet_name ),
-                appointment_item ( id, name_snapshot, unit_price, quantity, is_primary )
-            `).in('customer_id', custIds).order('scheduled_start_at', { ascending: false });
-
-            if (!bError && Array.isArray(bData)) {
-                bookingRows = bData;
-            }
-        }
-
-        return {
-            bookings: Array.isArray(bookingRows) ? bookingRows.map(mapSupabaseBookingRow) : [],
-            orders: Array.isArray(orderRows) ? orderRows.map(mapSupabaseOrderRow) : [],
-        };
-    } catch (err) {
-        console.warn('[ReturnGuest] Supabase guest lookup exception:', err);
-        return { bookings: [], orders: [] };
-    }
+    const session = await db?.auth?.getSession();
+    const token = session?.data?.session?.access_token;
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch('/api/customer/auth/guest-records', {
+        method: 'POST', headers, body: JSON.stringify({ phone: normalizePhone(phone) })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || 'Vui lòng xác thực quyền tra cứu.');
+    return {
+        bookings: Array.isArray(data.bookings) ? data.bookings.map(mapSupabaseBookingRow) : [],
+        orders: Array.isArray(data.orders) ? data.orders.map(mapSupabaseOrderRow) : []
+    };
 }
 
 function mapSupabaseOrderRow(row) {

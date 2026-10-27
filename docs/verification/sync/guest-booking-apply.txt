@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-10-26T18:02:08.743Z",
+  "status": "PASS",
+  "migrationSha256": "678dd259ca5128989e2ff4813417ffa5aed1c8996cd55dbbea62bf8d3e87f5fd",
+  "reverseSha256": "6f8c8c27e62d9d4db10d70569b345244d15ad549f951c9db73b28e96d05a078c",
+  "protectedMemberFunctionsUnchanged": true,
+  "functions": [
+    {
+      "schema": "pawpal_private",
+      "proname": "guest_booking_availability",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": false
+    },
+    {
+      "schema": "pawpal_private",
+      "proname": "guest_booking_quote_core",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": false
+    },
+    {
+      "schema": "pawpal_private",
+      "proname": "require_guest_booking_session",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": false
+    },
+    {
+      "schema": "public",
+      "proname": "guest_booking_create",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": true
+    },
+    {
+      "schema": "public",
+      "proname": "guest_booking_quote",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": true
+    },
+    {
+      "schema": "public",
+      "proname": "guest_booking_receipt",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": true
+    }
+  ],
+  "scope": "New private helpers and service-only guest booking RPCs; no business records created during apply, no public browser grants; API code local, no UI/production backend acceptance"
+}

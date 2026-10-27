@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-10-27T04:32:05.370Z",
+  "sha256": "e2c15a870ddc6faca726dc75980837b928db9b6dd8f5dc07d70b103bb754279f",
+  "queries": 31,
+  "checks": [
+    "Live settings and availability produce bounded half-hour slots with safe staff fields",
+    "Foreign pet and missing session rejected",
+    "Both browser roles denied direct RPC",
+    "Reverse and all profile/weight/session fixtures rolled back"
+  ],
+  "scope": "Scoped Cloud SQL read + synthetic pet in rollback, no real customer changes or Logs, no UI/commit acceptance."
+}

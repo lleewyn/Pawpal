@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-10-26T17:24:09.267Z",
+  "status": "PASS",
+  "constraints": [
+    {
+      "conname": "customer_unverified_contact_phone_format",
+      "convalidated": true
+    },
+    {
+      "conname": "guest_session_commerce_customer_fk",
+      "convalidated": true
+    },
+    {
+      "conname": "guest_session_commerce_scope_check",
+      "convalidated": true
+    },
+    {
+      "conname": "guest_session_purpose_check",
+      "convalidated": true
+    }
+  ],
+  "functions": [
+    {
+      "proname": "guard_guest_commerce_session",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false
+    },
+    {
+      "proname": "revoke_customer_commerce_sessions",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false
+    }
+  ],
+  "triggers": [
+    {
+      "tgname": "revoke_customer_commerce_sessions",
+      "tgenabled": "O"
+    },
+    {
+      "tgname": "guard_guest_commerce_session",
+      "tgenabled": "O"
+    }
+  ],
+  "primaryUniqueIndexesPreserved": 2,
+  "anonymousPolicies": 0,
+  "scope": "Installed schema metadata only; no business writes or Logs; not HTTP/transaction E2E"
+}

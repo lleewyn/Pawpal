@@ -1,0 +1,23 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+const {connect}=require('./service_import_connection.cjs');
+(async()=>{const db=await connect();try{
+ const signatures=['pawpal_private.quote_own_sales_core(uuid,jsonb,jsonb)','pawpal_private.create_own_sales_core(uuid,uuid,text,jsonb,jsonb)'],definitions=[];
+ await db.query('BEGIN READ ONLY');for(const signature of signatures)definitions.push((await db.query('SELECT pg_get_functiondef($1::regprocedure) value',[signature])).rows[0].value.replaceAll('\r\n','\n'));await db.query('ROLLBACK');
+ const replaceOnce=(s,a,b)=>{assert.equal(s.split(a).length,2,'Unexpected source marker '+a.slice(0,70));return s.replace(a,b);};
+ const guard=s=>{const start=s.indexOf('IF NOT pawpal_private.owns_customer(p_customer_id)'),end=s.indexOf('END IF;',start);assert.ok(start>0&&end>start);return s.slice(0,start)+"IF p_customer_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.customer WHERE id=p_customer_id AND auth_user_id IS NULL AND customer_status='active' AND unverified_contact_phone IS NOT NULL) THEN RAISE EXCEPTION 'guest_session_invalid' USING ERRCODE='42501'; END IF;"+s.slice(end+7);};
+ let quote=guard(definitions[0]),create=guard(definitions[1]);
+ quote=replaceOnce(quote,'pawpal_private.quote_own_sales_core(','pawpal_private.quote_guest_sales_core(');
+ if(!quote.includes('SECURITY DEFINER'))quote=replaceOnce(quote,'LANGUAGE plpgsql\n SET','LANGUAGE plpgsql\n SECURITY DEFINER\n SET');
+ quote=replaceOnce(quote,'IF p_customer_id IS NULL OR jsonb_typeof(p_details)', 'IF jsonb_typeof(p_details)');
+ quote=replaceOnce(quote,"('none','tier','voucher','points')","('none','voucher')");
+ quote=replaceOnce(quote,"OR NOT EXISTS(SELECT 1 FROM public.customer WHERE id=p_customer_id AND customer_status='active')", "OR (p_customer_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.customer WHERE id=p_customer_id AND customer_status='active'))");
+ quote=replaceOnce(quote,'SELECT coalesce(sum(points),0) INTO points_balance FROM public.paw_point_transaction WHERE customer_id=p_customer_id;','points_balance:=0;');
+ quote=replaceOnce(quote,"'customer_id',p_customer_id,'details'","'customer_id',NULL::uuid,'details'");
+ create=replaceOnce(create,'pawpal_private.create_own_sales_core(','pawpal_private.create_guest_sales_core(');
+ create=replaceOnce(create,'pawpal_private.quote_own_sales_core(','pawpal_private.quote_guest_sales_core(');
+ assert.ok(!quote.includes('owns_customer(')&&!create.includes('owns_customer('));
+ const generated=quote.trim()+';\n\n'+create.trim()+';\nREVOKE ALL ON FUNCTION pawpal_private.quote_guest_sales_core(uuid,jsonb,jsonb),pawpal_private.create_guest_sales_core(uuid,uuid,text,jsonb,jsonb) FROM PUBLIC,anon,authenticated,service_role;';
+ const file='scripts/database/v1/115_guest_sales.sql';fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace(/-- BEGIN GENERATED SALES HELPERS[\s\S]*?-- END GENERATED SALES HELPERS/,()=> '-- BEGIN GENERATED SALES HELPERS\n'+generated+'\n-- END GENERATED SALES HELPERS'));
+ fs.writeFileSync('docs/verification/sync/guest-sales-source-baseline.txt',JSON.stringify({timestamp:new Date().toISOString(),sources:signatures.map((signature,i)=>({signature,sha256:crypto.createHash('sha256').update(definitions[i]).digest('hex')})),scope:'Read-only source definitions cloned for guest with nullable quote owner, normalized owner-free version, no member points/tier; existing member functions unchanged. Future price/stock changes need both paths reviewed.'},null,2)+'\n');
+ console.log('PASS generated guest price/stock helpers from unchanged member source.');
+}finally{await db.end();}})().catch(e=>{console.error(e.code||e.name,e.message);process.exitCode=1;});

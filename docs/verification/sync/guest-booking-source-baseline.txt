@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-26T17:59:13.623Z",
+  "sources": [
+    {
+      "signature": "pawpal_private.customer_new_booking_quote(jsonb)",
+      "sha256": "d7c75e01f8154006a182d64249f1df016b91f0407792b72287788518d608878b"
+    },
+    {
+      "signature": "public.own_booking_availability(jsonb)",
+      "sha256": "f3368e87f651e0fd9303a7c6744247f98a354c0b364badc052a3943442c17eeb"
+    }
+  ],
+  "scope": "Read-only member rule definitions copied into new private guest helpers; original member definitions unchanged. Future pricing/availability logic changes must update and retest guest helpers."
+}

@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-10-26T18:49:21.543Z",
+  "status": "PASS",
+  "migrationSha256": "2b0c70725ab40265ec2aff506234baf6b7f6cef1c6e1217b2f2c59760acb08dc",
+  "reverseSha256": "732d1cba0389b550b01efe9c0f72816101b4712a83236e74faa75ae536055703",
+  "scope": "Forward/reverse function DDL verified in rollback, no identity data writes; reverse removes RPC only and never unlinks existing accounts"
+}

@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-10-27T02:48:47.948Z",
+  "status": "PASS",
+  "sha256": "a3c6d01420e808e5e4b194b73a799abb17ba723974500dde93e10aa0645a5313",
+  "originalSha256": "4eb9b18da145013f192f6d7adef9ef974336226c199f53456d29c94714e865ad",
+  "queries": 72,
+  "checks": [
+    "POS finds both isolated active guests by self-contact, labels source/type, excludes locked and never exposes Auth IDs",
+    "Canonical member phone remains preferred",
+    "Orders searchable by owner self-contact and distinct recipient name/phone",
+    "Booking page finds guest self-contact with original appointment ID",
+    "Reads do not create canonical phones or merge guest profiles",
+    "Customer denied access to all three Admin reads",
+    "Anonymous denied access to all three Admin reads",
+    "Reverse restores all three baselines with ACL/invoker unchanged",
+    "Fixture Auth/staff/customer/pet/order/appointment and all DDL fully rolled back"
+  ],
+  "scope": "Cloud SQL with synthetic Admin/customer JWT claims, reverse and rollback. No genuine Auth login, committed fixtures, production UI or Logs."
+}

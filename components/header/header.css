@@ -623,6 +623,36 @@
     transition: var(--transition-smooth);
 }
 
+.main-header .guest-cart-button {
+    position: relative;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 36px;
+    padding: 6px;
+    color: #214939;
+    text-decoration: none;
+}
+.main-header .guest-cart-badge {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: #efb227;
+    color: #214939;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    pointer-events: none;
+}
+.main-header .guest-cart-button:focus-visible {
+    outline: 2px solid #236b48;
+    outline-offset: 3px;
+    border-radius: 9px;
+}
 .cart-btn:hover {
     color: var(--color-accent);
     

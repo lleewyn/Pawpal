@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-10-26T18:03:32.156Z",
+  "status": "PASS",
+  "requests": 2,
+  "serviceRejectsUnboundSession": true,
+  "anonymousDenied": true,
+  "scope": "Real Supabase REST with random unbound hash and random booking UUID; no business writes or real history/phone lookup; not deployed backend/UI or real Auth acceptance"
+}

@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-10-26T17:23:20.709Z",
+  "status": "PASS",
+  "sha256": "f198b0a3633c056a4ca0d3b812f1cc855d3edca1300eb3f2cea12a81d8cbc3b4",
+  "rollbackSha256": "e71506252d3078b36dbe1369c91cb0a842a47223ceafcb9f22b408cf9d69a0d4",
+  "beforeSchemaSha256": "7be6236a85fa5c5a47161d896d8226b6d263bbcdfccac1cfa4087dce4af07fd4",
+  "afterSchemaSha256": "9829bd81110a26cc87818123fbfc73b83251a06e42bf047cf07c903765437634",
+  "backupFolder": "D:/Aboutme/Pawpal-infra/supabase-local/backups/guest-commerce-112",
+  "existingDataFingerprintUnchanged": true,
+  "rowCounts": {
+    "customer": 35,
+    "guest_session": 0
+  },
+  "scope": "Additive schema only; existing RLS/ACL/business RPC unchanged; preexisting business fields fingerprinted before/after inside locked apply transaction; no profile backfill or transaction guest acceptance; rollback refuses commerce data loss"
+}

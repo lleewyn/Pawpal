@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-10-27T06:49:19.846Z",
+  "scope": "Read-only HTTP check of current Vercel deployment before any push/deploy. HTML only, no page JS run or business writes; not acceptance of local guest changes.",
+  "results": [
+    {
+      "path": "/",
+      "status": 200,
+      "contentType": "text/html",
+      "title": "PawPal — Chăm sóc bằng cả trái tim"
+    },
+    {
+      "path": "/shop",
+      "status": 200,
+      "contentType": "text/html",
+      "title": "PawPal - Cửa hàng thú cưng"
+    },
+    {
+      "path": "/booking",
+      "status": 200,
+      "contentType": "text/html",
+      "title": "PawPal - Đặt lịch chăm sóc"
+    },
+    {
+      "path": "/return-guest",
+      "status": 200,
+      "contentType": "text/html",
+      "title": "Tra cứu đơn hàng | lịch dịch vụ - PawPal"
+    },
+    {
+      "path": "/api/customer/guest/context",
+      "status": 404,
+      "contentType": "text/plain",
+      "title": null
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-10-27T04:34:43.460Z",
+  "sha256": "45fb81c0b2ca0570e344291ba306728d8f0ec47a9e22330b72ac08a072b4b88b",
+  "queries": 43,
+  "checks": [
+    "Exact guest receipt remains readable by trusted service after session revocation",
+    "Non-guest and wrong transaction type rejected",
+    "Browser roles cannot bypass signed HTTP proof using direct RPC",
+    "Reverse and all profile/pet/order/booking/audit/session fixtures rolled back"
+  ],
+  "scope": "Cloud SQL with exact scoped rollback fixtures, service/browser permission tests. HTTP signature verified separately. No committed customer changes or Logs."
+}

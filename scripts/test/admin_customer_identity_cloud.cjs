@@ -1,0 +1,34 @@
+const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{connect}=require('../database/v1/service_import_connection.cjs');
+const apply=process.argv.includes('--apply-cloud');if(!apply&&!process.argv.includes('--verify-cloud')){console.log('No connection. Use --verify-cloud for rollback tests or --apply-cloud after a matching PASS.');process.exit(0);}
+const file='scripts/database/v1/111_admin_customer_identity.sql',source=fs.readFileSync(file,'utf8').replace(/\ufeff/g,''),hash=crypto.createHash('sha256').update(source).digest('hex'),reportPath='docs/verification/sync/guest-identity-cloud-rollback.txt',signature='public.admin_customer_page(text,text,text,text,integer,integer,text)';
+(async()=>{const db=await connect(),checks=[];let queries=0;const q=async(s,a)=>{queries++;return db.query(s,a);},pass=name=>checks.push({name,status:'PASS'});try{
+ await q("SET statement_timeout='8s';SET lock_timeout='3s'");
+ const original=(await q('SELECT pg_get_functiondef($1::regprocedure) definition',[signature])).rows[0].definition;
+ if(apply){
+  const evidence=JSON.parse(fs.readFileSync(reportPath,'utf8'));assert.equal(evidence.status,'PASS');assert.equal(evidence.sha256,hash);
+  fs.writeFileSync('D:/Aboutme/Pawpal-infra/supabase-local/admin-customer-page-before-111.private.sql',original+';\n');
+  await q(source);const definition=(await q('SELECT pg_get_functiondef($1::regprocedure) definition',[signature])).rows[0].definition;assert.ok(definition.includes('customer_type'));assert.ok(definition.includes('auth_user_id IS NOT NULL AS member'));
+  const perms=(await q("SELECT has_function_privilege('authenticated',$1,'EXECUTE') authorized,NOT has_function_privilege('anon',$1,'EXECUTE') guest_denied",[signature])).rows[0];assert.ok(perms.authorized&&perms.guest_denied);
+  fs.writeFileSync('docs/verification/sync/guest-identity-cloud-apply.txt',JSON.stringify({timestamp:new Date().toISOString(),status:'APPLIED',migration:111,sha256:hash,checks:perms,scope:'Replace existing read RPC, unchanged signature/access checks. No customer/pet/transaction rows updated. Original function saved outside repo for rollback.'},null,2)+'\n');console.log('APPLIED 111: read RPC identity/filter/stats; grants retained; original function backed up outside repo.');return;
+ }
+ const migration=source.replace(/^BEGIN;\s*$/m,'').replace(/^COMMIT;\s*$/m,'');assert.ok(!/^\s*(BEGIN|COMMIT);/m.test(migration));
+ await q('BEGIN');await q(migration);
+ const [staffAuth,memberAuth,guest,locked,member,staff,linkAuth]=Array.from({length:7},()=>crypto.randomUUID()),prefix='E2E-ID-'+crypto.randomUUID();
+ await q('INSERT INTO auth.users(id) VALUES($1),($2),($3)',[staffAuth,memberAuth,linkAuth]);await q("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES($1,$2,'E2E identity QA','QA','active',false)",[staff,staffAuth]);await q("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[staff]);
+ await q("INSERT INTO public.customer(id,customer_code,customer_status,auth_user_id) VALUES($1,$4||'-G','active',NULL),($2,$4||'-L','locked',NULL),($3,$4||'-M','active',$5)",[guest,locked,member,prefix,memberAuth]);
+ await q('INSERT INTO public.customer_membership(customer_id,membership_tier_id) SELECT $1,id FROM public.membership_tier ORDER BY id LIMIT 1',[guest]);
+ const page=async(category='ALL',status='ALL',number=1,size=10)=>(await q('SELECT public.admin_customer_page($1,\'ALL\',$2,$3,$4,$5,\'\') data',[prefix,status,category,number,size])).rows[0].data;
+ await q("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role','authenticated',true)",[staffAuth]);await q('SET LOCAL ROLE authenticated');
+ let r=await page();assert.equal(r.total,3);assert.ok(r.custData.every(c=>!('auth_user_id' in c)));pass('Admin receives derived identity without Auth UUID');
+ assert.equal(r.custData.find(c=>c.id===guest).customer_type,'guest');assert.equal(r.custData.find(c=>c.id===member).customer_type,'member');pass('Loyalty guest stays guest and account member without loyalty stays member');
+ r=await page('TEMP');assert.equal(r.total,2);assert.ok(r.pageIds.includes(locked));pass('Guest category includes locked guest');
+ r=await page('MEMBER');assert.equal(r.total,1);assert.deepEqual(r.pageIds,[member]);pass('Member filter uses account linkage');
+ r=await page('ALL','ACTIVE');assert.equal(r.total,2);assert.ok(r.pageIds.includes(guest)&&r.pageIds.includes(member));pass('Active status includes active guests and members');
+ r=await page('TEMP','LOCKED');assert.equal(r.total,1);assert.deepEqual(r.pageIds,[locked]);pass('Identity and locked status combine independently');
+ const a=await page('ALL','ALL',1,2),b=await page('ALL','ALL',2,2);assert.equal(a.pageIds.length,2);assert.equal(b.pageIds.length,1);assert.equal(new Set([...a.pageIds,...b.pageIds]).size,3);assert.equal(r.stats.member+r.stats.guest,r.stats.total);pass('Paging and global identity counts stay consistent');
+ await q('RESET ROLE');await q('UPDATE public.customer SET auth_user_id=$1 WHERE id=$2',[linkAuth,guest]);await q('SET LOCAL ROLE authenticated');r=await page('MEMBER');assert.equal(r.total,2);assert.ok(r.pageIds.includes(guest));pass('Linking account reclassifies same Customer ID without merge');
+ await q('RESET ROLE');await q("SELECT set_config('request.jwt.claim.sub',$1,true)",[memberAuth]);await q('SET LOCAL ROLE authenticated');await q('SAVEPOINT denied');let denied;try{await page();}catch(e){denied=e.code;}await q('ROLLBACK TO SAVEPOINT denied');assert.equal(denied,'42501');pass('Customer cannot call Admin directory RPC');
+ await q('RESET ROLE');await q('SET LOCAL ROLE anon');await q('SAVEPOINT denied');denied=null;try{await page();}catch(e){denied=e.code;}await q('ROLLBACK TO SAVEPOINT denied');assert.equal(denied,'42501');pass('Anonymous caller denied');
+ await q('RESET ROLE');await q('ROLLBACK');assert.equal((await q('SELECT pg_get_functiondef($1::regprocedure) definition',[signature])).rows[0].definition,original);assert.equal((await q('SELECT count(*)::integer n FROM public.customer WHERE id=ANY($1::uuid[])',[[guest,locked,member]])).rows[0].n,0);pass('DDL and synthetic customers fully rolled back');
+ fs.writeFileSync(reportPath,JSON.stringify({timestamp:new Date().toISOString(),status:'PASS',sha256:hash,queries,checks,scope:'Installed RPC inside rollback transaction, synthetic role claims; not UI/Auth/commit E2E, no real records changed or Logs queried'},null,2)+'\n');console.log('PASS',checks.length,'checks;',queries,'SQL; fixtures and DDL rolled back.');
+}catch(e){await db.query('RESET ROLE').catch(()=>{});await db.query('ROLLBACK').catch(()=>{});console.error(e.code||e.name,e.message);process.exitCode=1;}finally{await db.end();}})().catch(e=>{console.error(e.code||e.name);process.exitCode=1;});

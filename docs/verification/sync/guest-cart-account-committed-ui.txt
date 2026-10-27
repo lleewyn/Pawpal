@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-10-27T06:39:49.675Z",
+  "checks": [
+    "Guest cart contains three units before account linking",
+    "Real login A starts with empty member cart, then persists two units through UI",
+    "Logout A/login B on same browser does not inherit A or guest cart; B persists one unit",
+    "Returning to A and reloading restores exactly A two units"
+  ],
+  "quantities": {
+    "guestLocal": 3,
+    "memberA": 2,
+    "memberB": 1
+  },
+  "scope": "Real phone/password Auth forms and live cart RPCs, same browser A->B->A, no fake app Auth state. Auth QA phone/email preconfirmed by fixture, not OTP acceptance. No stock reservations from cart changes; separate scoped cleanup required."
+}

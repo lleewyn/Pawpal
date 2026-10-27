@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-10-27T02:49:17.601Z",
+  "status": "APPLIED",
+  "migration": 119,
+  "sha256": "a3c6d01420e808e5e4b194b73a799abb17ba723974500dde93e10aa0645a5313",
+  "aclUnchanged": true,
+  "securityInvoker": true,
+  "scope": "Three Admin read/search functions only; no existing data changed. Added customer.read guard to order/booking search. Backups outside webroot."
+}

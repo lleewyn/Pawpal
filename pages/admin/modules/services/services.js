@@ -473,7 +473,7 @@
     }
 
     const one = value => Array.isArray(value) ? value[0] : value;
-    const primaryPhone = customer => (customer?.customer_phone || []).find(p => p.is_primary)?.phone_number || '';
+    const primaryPhone = customer => window.PawpalCustomerIdentity.contact(customer).phone;
     const categoryCode = service => one(service?.category)?.category_code || '';
     async function readRows(query) {
         const {data,error} = await withServicesQueryTimeout(query);
@@ -485,7 +485,7 @@
         const rows=[];
         for(let offset=0;;offset+=500){const page=await readRows(makeQuery().range(offset,offset+499));rows.push(...page);if(page.length<500)return rows;}
     }
-    const customerFields='id,customer_status,customer_profile(full_name),customer_phone(phone_number,is_primary)';
+    const customerFields='id,auth_user_id,customer_status,unverified_contact_phone,customer_profile(full_name),customer_phone(phone_number,is_primary)';
     const petFields='id,customer_id,pet_code,pet_name,breed_id,date_of_birth,allergy,routine,safety_note,avatar_url,status,breed:breed_id(breed_name,species:species_id(species_name))';
     async function fetchBookingDirectoryRaw({force=false}={}){
         const fetcher=async()=>{
@@ -840,6 +840,8 @@
                     serviceCategory: item.service?.service_category,
                     userId: item.customer_id || null,
                     customerName,
+                    customerType: window.PawpalCustomerIdentity.classify(item.customer),
+                    phoneUnverified: window.PawpalCustomerIdentity.contact(item.customer).unverified,
                     phone,
                     hotelStay: one(item.hotel)||null,
                     roomCode: one(item.hotel)?.room?.room_number||'',
@@ -1213,7 +1215,6 @@
                 .on('postgres_changes', {event:'*',schema:'public',table:'customer_profile'},()=>{directoryChanged();triggerServiceSync('services:reviews*');})
                 .on('postgres_changes', {event:'*',schema:'public',table:'pet_profile'},directoryChanged)
                 .on('postgres_changes', {event:'*',schema:'public',table:'hotel_room'},directoryChanged)
-                .on('postgres_changes', {event:'*',schema:'public',table:'room_type'},directoryChanged)
                 .on('postgres_changes', {event:'*',schema:'public',table:'staff'},()=>{window.PawpalDataStore?.invalidate('services:staff');triggerServiceSync('services:bookings*');})
                 .on('postgres_changes', {event:'*',schema:'public',table:'staff_schedule'},()=>PawpalServices.refreshStaffSchedule?.())
                 .on('postgres_changes', {event:'*',schema:'public',table:'support_ticket'},()=>triggerServiceSync('services:reviews*'))

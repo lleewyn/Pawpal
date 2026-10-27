@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-10-26T18:20:35.348Z",
+  "status": "PASS",
+  "migrationSha256": "e4b372caf7646a843d4e93440091c03298479f7211bda5afed33353d780e934d",
+  "reverseSha256": "969908c8fd14f933f2171b46a366f6e93b7a1a064dd5ff3a41f87bccfcf61d0e",
+  "protectedMemberFunctionsUnchanged": true,
+  "functions": [
+    {
+      "schema": "pawpal_private",
+      "proname": "create_guest_sales_core",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": false
+    },
+    {
+      "schema": "pawpal_private",
+      "proname": "quote_guest_sales_core",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": false
+    },
+    {
+      "schema": "pawpal_private",
+      "proname": "validate_guest_sales_input",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": false
+    },
+    {
+      "schema": "public",
+      "proname": "guest_sales_create",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": true
+    },
+    {
+      "schema": "public",
+      "proname": "guest_sales_quote",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": true
+    },
+    {
+      "schema": "public",
+      "proname": "guest_sales_receipt",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": true
+    }
+  ],
+  "scope": "New private guest pricing/stock helpers and service-only public quote/create/receipt; no business writes during apply, no member/RLS/table changes; backend code local, not deployed UI acceptance"
+}

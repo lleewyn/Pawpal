@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-10-27T06:36:57.961Z",
+  "checks": [
+    "Guest real product/cart/checkout creates one committed pending order without Auth/OTP",
+    "New guest order arrives in already-open Admin without reload",
+    "Admin confirms the exact synthetic order using UI",
+    "Guest receipt reads confirmed/packing status committed by Admin",
+    "Admin cancels QA order through UI and releases hold without stock issue",
+    "Guest manual refresh sees cancellation from Admin"
+  ],
+  "parts": {
+    "lines": 1,
+    "active_holds": 0,
+    "collected": 0,
+    "stock_issues": 0
+  },
+  "scope": "Actual Chrome UI and Auth Admin against local server/live Cloud; committed synthetic customer/order, one existing real variant held then cancelled, no collection/shipment/inventory issue. Separate cleanup required; not cart/account-switch acceptance yet."
+}

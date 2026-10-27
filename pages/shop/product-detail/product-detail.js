@@ -387,10 +387,6 @@ async function handleAddToCart() {
     }
 
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!currentUser || !currentUser.id || currentUser.is_temporary) {
-        showToast('Vui lòng đăng nhập để sử dụng giỏ hàng, hoặc bấm "Mua ngay"', 'warning');
-        return;
-    }
 
     const itemToAdd = {
         ...product,
@@ -461,10 +457,6 @@ async function handleCardAddToCart(product) {
         return;
     }
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!currentUser || !currentUser.id || currentUser.is_temporary) {
-        showToast('Vui lòng đăng nhập để sử dụng giỏ hàng, hoặc bấm "Mua ngay"', 'warning');
-        return;
-    }
     const groups = getProductAttributeGroups(product);
     const defaultVariant = groups.length > 0 ? groups.map(g => g.options[0].label).join(' • ') : 'Tiêu chuẩn';
 

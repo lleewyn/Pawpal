@@ -316,6 +316,10 @@
       "destination": "/api/staff-auth"
     },
     {
+      "source": "/api/customer/guest/:path*",
+      "destination": "/api/guest-commerce?action=:path*"
+    },
+    {
       "source": "/api/customer/auth/:path*",
       "destination": "/api/customer-auth?action=:path*"
     },

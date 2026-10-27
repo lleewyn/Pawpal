@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-10-27T05:15:36.496Z",
+  "scope": "Committed fixture cleanup and scoped state counts, not automatic proof of every manual browser step.",
+  "beforeCleanup": {
+    "customers": 2,
+    "bookings": [
+      {
+        "status": "confirmed",
+        "ownerMatches": true,
+        "petMatches": true
+      }
+    ],
+    "payments": 0,
+    "points": 0,
+    "orders": 0
+  },
+  "uiFlags": {
+    "adminConfirmed": true,
+    "linked": true,
+    "memberLogin": true,
+    "isolationB": true
+  },
+  "retainedAuditActions": [
+    "UPDATE_APPOINTMENT",
+    "GUEST_BOOKING_CREATE"
+  ],
+  "retainedAudits": 2,
+  "remainingFixtureRows": 0,
+  "authUsersRemoved": 2
+}

@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-10-27T04:30:03.251Z",
+  "status": "APPLIED",
+  "migration": 120,
+  "sha256": "9479777a7c214fbd5620c634d592884a91b842ed400703bcda6c6cd81a184ca4",
+  "scope": "Add service-only profile edit/read and private retry ledger, receipt ownership continuity after rotation. No existing data updates on apply; original receipt functions backed up outside webroot."
+}

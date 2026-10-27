@@ -164,12 +164,18 @@
         const trackingEl = document.getElementById('detailTrackingNumber');
 
         if (recNameEl) {
-            recNameEl.textContent = order.customerName;
-            recNameEl.onclick = () => {
+            recNameEl.textContent = order.receiverName || order.customerName;
+            recNameEl.onclick = order.receiverName&&order.receiverName!==order.customerName?null:() => {
                 PawpalOrdersModule.openCustomerProfile(order.userId, order.customerName);
             };
+            recNameEl.style.cursor=order.receiverName&&order.receiverName!==order.customerName?'text':'';
         }
-        if (recPhoneEl) recPhoneEl.textContent = order.phone;
+        if (recPhoneEl) recPhoneEl.textContent = order.receiverPhone || order.phone || '—';
+        const ownerNameEl=document.getElementById('detailOrderCustomerName'),ownerPhoneEl=document.getElementById('detailOrderCustomerPhone');
+        if(ownerNameEl)ownerNameEl.textContent=order.customerName||'—';
+        if(ownerPhoneEl)ownerPhoneEl.textContent=(order.phone||'—')+(order.phoneUnverified?' · Chưa xác minh':'');
+        const customerTypeEl = document.getElementById('detailOrderCustomerType');
+        if (customerTypeEl) customerTypeEl.textContent = window.PawpalCustomerIdentity.label(order.customerType);
         if (recAddrEl) recAddrEl.textContent = order.address;
         if (payMethodEl) {
             let txt = 'Thanh toán tiền mặt khi nhận hàng (COD)';

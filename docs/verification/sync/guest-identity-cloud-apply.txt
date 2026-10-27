@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-10-26T16:26:51.612Z",
+  "status": "APPLIED",
+  "migration": 111,
+  "sha256": "6d5a430a0aa9e41a97f0027439b3c19e3b1df7c5f78674eb6ec93cb09d69b8a4",
+  "checks": {
+    "authorized": true,
+    "guest_denied": true
+  },
+  "scope": "Replace existing read RPC, unchanged signature/access checks. No customer/pet/transaction rows updated. Original function saved outside repo for rollback."
+}

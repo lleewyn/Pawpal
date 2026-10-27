@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-10-27T04:37:13.758Z",
+  "status": "PASS",
+  "sha256": "a507b287abfabee125e9a93bcf596b77096484de4ddfd1f49feccc91f0ef5978",
+  "originalSha256": "738b942872f95fab7da7ea7f2e99734c3d5b108b93aec7bf452a7986f45e2c35",
+  "queries": 87,
+  "checks": [
+    "Session-bound detail reads exact owned pet and revision; foreign pet denied",
+    "Pet update preserves ID, updates weight, exact retry idempotent; stale revision and changed retry rejected",
+    "Invalid weight and foreign update rejected",
+    "Changing self-contact revokes old session, issues replacement on same owner; exact old-cookie retry works without un-revocation",
+    "No duplicate weight record, canonical phone creation or customer merge",
+    "Rotated session retains own order/booking receipt access; another owner cannot read it",
+    "Recorded retry never resurrects a subsequently revoked replacement session",
+    "Browser roles cannot execute edit/read RPCs",
+    "Reverse restores receipts; all profile/weight/session/order/booking/audit fixtures and DDL rolled back"
+  ],
+  "scope": "Real SQL Cloud transaction under service role, direct deny checks and tested reverse; no real customer mutation or committed fixture/Logs."
+}

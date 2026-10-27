@@ -249,7 +249,9 @@
         const petAllergyEl = document.getElementById('detailPetAllergy');
 
         if (custNameEl) custNameEl.textContent = booking.customerName;
-        if (custPhoneEl) custPhoneEl.textContent = booking.phone;
+        const customerTypeEl = document.getElementById('detailServiceCustomerType');
+        if (customerTypeEl) customerTypeEl.textContent = window.PawpalCustomerIdentity.label(booking.customerType);
+        if (custPhoneEl) custPhoneEl.textContent = (booking.phone||'—')+(booking.phoneUnverified?' · Chưa xác minh':'');
         if (petNameEl) petNameEl.textContent = booking.petName;
         if (petBreedEl) petBreedEl.textContent = booking.petBreed || 'Chưa ghi nhận';
         if (petWeightEl) petWeightEl.textContent = booking.petWeight || 'Chưa cân';

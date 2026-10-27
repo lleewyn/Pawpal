@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-26T18:15:37.964Z",
+  "sources": [
+    {
+      "signature": "pawpal_private.quote_own_sales_core(uuid,jsonb,jsonb)",
+      "sha256": "372687eb53b570014609eb243fe44f02037118e3f70e4c1afe93f62de2f5abf6"
+    },
+    {
+      "signature": "pawpal_private.create_own_sales_core(uuid,uuid,text,jsonb,jsonb)",
+      "sha256": "0007a6ee28cdd247690fefec71f45b2b23e12959ea5a3444041c9caccd4ec816"
+    }
+  ],
+  "scope": "Read-only source definitions cloned for guest with nullable quote owner, normalized owner-free version, no member points/tier; existing member functions unchanged. Future price/stock changes need both paths reviewed."
+}

@@ -1,0 +1,7 @@
+{
+  "status": "APPLIED",
+  "timestamp": "2026-10-27T04:36:48.052Z",
+  "migration": 122,
+  "sha256": "45fb81c0b2ca0570e344291ba306728d8f0ec47a9e22330b72ac08a072b4b88b",
+  "scope": "Two service-only exact receipt read RPCs, no existing data changes; HTTP requires signed private recovery code."
+}

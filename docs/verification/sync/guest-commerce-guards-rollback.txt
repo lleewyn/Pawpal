@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-10-26T17:25:34.705Z",
+  "status": "PASS",
+  "checks": [
+    "Self-declared contact change revokes bound commerce token",
+    "General chat/support session stays unchanged",
+    "Revoked token cannot be reactivated",
+    "Booking INSERT rejects pet belonging to another customer",
+    "Booking UPDATE rejects owner mismatch",
+    "Correct customer/pet booking relation preserved"
+  ],
+  "scope": "Synthetic rows only, one short SQL DO block, transaction rollback; no committed fixtures, no real user mutation or HTTP/UI acceptance"
+}

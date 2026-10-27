@@ -1,0 +1,106 @@
+{
+  "timestamp": "2026-10-26T18:19:28.295Z",
+  "status": "PASS",
+  "migrationSha256": "e4b372caf7646a843d4e93440091c03298479f7211bda5afed33353d780e934d",
+  "handlerSha256": "bd8931abf17c9588dc08b9b7180e1fcbd0aec514575d5b2710d25645cc8b1ec3",
+  "queries": 257,
+  "checks": [
+    {
+      "name": "anon cannot execute guest sales RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "authenticated cannot execute guest sales RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Unbound guest quote uses real variant/shipping/public voucher prices without creating profile or pet",
+      "status": "PASS"
+    },
+    {
+      "name": "Initial submit atomically creates guest/customer/order without requiring or creating pet",
+      "status": "PASS"
+    },
+    {
+      "name": "Receiver snapshot is separate from self-declared profile contact",
+      "status": "PASS"
+    },
+    {
+      "name": "Order holds stock, records public voucher once and creates pending manual payment only",
+      "status": "PASS"
+    },
+    {
+      "name": "Exact retry keeps one order/line/hold/payment/voucher after stock changed",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed lines, payment or quote under same request conflict",
+      "status": "PASS"
+    },
+    {
+      "name": "Receipt shows server pending payment, scoped lines and total",
+      "status": "PASS"
+    },
+    {
+      "name": "Unbound other session cannot read existing receipt",
+      "status": "PASS"
+    },
+    {
+      "name": "Same phone in separate session creates isolated business profile, no auto merge",
+      "status": "PASS"
+    },
+    {
+      "name": "Bound foreign session cannot read or replay another order",
+      "status": "PASS"
+    },
+    {
+      "name": "First-write foreign order ID rolls back attempted customer/session",
+      "status": "PASS"
+    },
+    {
+      "name": "Unsupported gateway rejects and rolls back first profile creation",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot spend points/tier benefits or member-owned vouchers",
+      "status": "PASS"
+    },
+    {
+      "name": "Insufficient available stock rejected before order creation",
+      "status": "PASS"
+    },
+    {
+      "name": "Duplicate variant lines rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Price change rejects stale quote without partial order/hold/payment",
+      "status": "PASS"
+    },
+    {
+      "name": "Zero-total order reserves stock without fabricating paid collection",
+      "status": "PASS"
+    },
+    {
+      "name": "Partial manual collection is not falsely displayed as fully paid",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet saved after checkout reuses scoped customer instead of duplicate profile",
+      "status": "PASS"
+    },
+    {
+      "name": "Revoked commerce session loses order access",
+      "status": "PASS"
+    },
+    {
+      "name": "Member price/stock source definitions unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "All fixture orders, ledger/payment/audit, contacts, stock and DDL rolled back",
+      "status": "PASS"
+    }
+  ],
+  "scope": "Actual loopback HTTP -> Cloud SQL service-role RPC/rate limits in rollback; isolated product/stock/voucher/payment/delivery fixtures, no real customer/config edits, no gateway/SMS/Logs; no commit/Realtime/UI, refund lifecycle or two-writer concurrency acceptance"
+}

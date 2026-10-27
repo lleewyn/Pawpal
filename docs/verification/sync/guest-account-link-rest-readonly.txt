@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-10-26T18:51:50.034Z",
+  "status": "PASS",
+  "requests": 2,
+  "unverifiedIdentityDenied": true,
+  "anonymousDenied": true,
+  "scope": "Real Supabase REST with random unknown Auth UUID/hash, no identity/profile/transaction writes or history read, no SMS/Auth login acceptance"
+}

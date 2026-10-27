@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-10-27T04:40:23.209Z",
+  "status": "PASS",
+  "queries": 60,
+  "rpcCalls": {
+    "guest_commerce_context": 4,
+    "guest_commerce_save_pet": 1,
+    "guest_profile_read": 2,
+    "guest_profile_update": 2,
+    "guest_booking_day_slots": 1,
+    "guest_booking_quote": 1,
+    "guest_booking_create": 1,
+    "guest_booking_receipt": 1,
+    "guest_booking_recover": 1
+  },
+  "fixturePets": 1,
+  "fixtureBookings": 1,
+  "fixtureOwners": 1,
+  "selectedPetMatches": true,
+  "logistics": {
+    "hotel": 0,
+    "taxi": 0,
+    "payments": 0
+  },
+  "remainingFixtureRows": 0,
+  "scope": "Actual Chrome modules -> loopback HTTP handler -> installed Cloud SQL, including anon catalog read and profile-bound edits, signed cookie rotation, day slots, spa create/receipt and recovery after cookies cleared. Initial fixture measurement timestamp is one second earlier under fixed transaction now(). Rate limiter bypassed; all fixtures rolled back. No committed business fixture, real Auth login, Admin portal or Realtime acceptance."
+}

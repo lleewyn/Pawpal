@@ -590,7 +590,7 @@
                 for(const customer of rows){
                     const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';
                     const name=document.createElement('strong');name.textContent=customer.name||'Chưa có tên khách';
-                    const info=document.createElement('div');info.className='sub-meta-text';info.textContent=[customer.phone,customer.rank].filter(Boolean).join(' · ');
+                    const info=document.createElement('div');info.className='sub-meta-text';info.textContent=[customer.phone,customer.phoneUnverified?'Chưa xác minh':'',customer.customerType==='guest'?'Khách vãng lai':'',customer.rank].filter(Boolean).join(' · ');
                     button.append(name,info);button.onmousedown=e=>e.preventDefault();button.onclick=()=>selectPosCustomer(customer);root.append(button);
                 }
                 if(!rows.length&&!query.trim()){root.style.display='none';return;}
@@ -611,7 +611,7 @@
         setPosFieldError('createOrderPhone','createOrderPhoneError');setPosFieldError('createOrderName','createOrderNameError');
         activePosCustomer=customer;document.getElementById('createOrderName').value=customer.rawName||'';document.getElementById('createOrderName').readOnly=true;document.getElementById('createOrderPhone').value=customer.phone;
         document.getElementById('createOrderCustomerDropdown').style.display='none';
-        for(const [id,text] of [['posCustCardName',customer.name],['posCustCardPhone',customer.phone],['posCustCardRank',customer.rank],['posCustCardPoints',customer.points+' \u0111i\u1ec3m']])document.getElementById(id).textContent=text;
+        for(const [id,text] of [['posCustCardName',customer.name],['posCustCardPhone',customer.phone+(customer.phoneUnverified?' · Chưa xác minh':'')],['posCustCardRank',customer.rank],['posCustCardPoints',customer.points+' \u0111i\u1ec3m']])document.getElementById(id).textContent=text;
         document.getElementById('posCustomerSelectedCard').style.display='flex';document.getElementById('createOrderMemberBanner').style.display='none';
         const address=customer.defaultAddress;
         document.getElementById('createOrderCustomAddress').value=address?.street_address||'';document.getElementById('createOrderProvince').value=address?.province||'';

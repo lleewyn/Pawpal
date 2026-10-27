@@ -138,8 +138,23 @@
             ? window.getCurrentUser()
             : (function() { try { return JSON.parse(localStorage.getItem('pawpal_current_user')) || null; } catch { return null; }})();
 
-        // Lựa chọn A: Chỉ hiển thị giỏ hàng khi người dùng ĐÃ ĐĂNG NHẬP chính thức
+        // Guest cart is separate from all member cart caches.
         if (!currentUser || currentUser.is_temporary) {
+            try {
+                const {guestCart}=await import('/scripts/shared/guest-cart.mjs');
+                const count=guestCart().read().reduce((sum,line)=>sum+line.quantity,0);
+                if(revision!==cartBadgeRevision)return;
+                let link=document.getElementById('headerGuestCart');
+                if(!link){
+                    link=document.createElement('a');link.id='headerGuestCart';link.href='/cart';link.className='cart-btn guest-cart-button';link.title='Giỏ hàng';
+                    link.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg><span class="guest-cart-badge" aria-hidden="true" hidden></span>';
+                    const actions=document.querySelector('.main-header .header-actions');
+                    const lookup=actions?.querySelector('.lookup-btn');
+                    if(lookup)lookup.after(link);else actions?.prepend(link);
+                }
+                link.setAttribute('aria-label',count?'Giỏ hàng, '+count+' sản phẩm':'Giỏ hàng');
+                const badge=link.querySelector('.guest-cart-badge');badge.textContent=count>99?'99+':String(count);badge.hidden=count===0;
+            } catch { /* Keep damaged/blocked browser storage intact. */ }
             const cartBadges = document.querySelectorAll('.cart-badge');
             cartBadges.forEach(badge => {
                 badge.textContent = '0';
@@ -153,6 +168,7 @@
             }
             return;
         }
+        document.getElementById('headerGuestCart')?.remove();
 
         let totalItems = 0;
         let hasLocalCart = false;
@@ -928,10 +944,11 @@
         if (e.key === 'pawpal_settings_notices') {
             renderDynamicTopBarNotice();
         }
-        if (e.key === 'pawpal_cart') {
+        if (e.key === 'pawpal_cart' || e.key === 'pawpal_guest_cart_v1') {
             if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
         }
     });
+    document.addEventListener('guest_cart_updated',()=>window.updateCartBadge?.());
     window.addEventListener('focus', () => {
         window.updateNotificationBadge();
         if (typeof window.updateCartBadge === 'function') window.updateCartBadge();

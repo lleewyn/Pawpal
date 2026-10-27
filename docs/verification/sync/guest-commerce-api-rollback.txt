@@ -1,0 +1,106 @@
+{
+  "timestamp": "2026-10-26T17:43:18.042Z",
+  "status": "PASS",
+  "migrationSha256": "d7f744daf28182e4cfbc4127653196422d283ac4baaab4114eb6d65b5c0708fb",
+  "handlerSha256": "66796d68038d1bf5854d69537491a9d4563c007bac12cfe5c891cd45f87b3be6",
+  "queries": 125,
+  "checks": [
+    {
+      "name": "Anonymous role cannot execute service-only guest RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer role cannot execute service-only guest RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Bootstrap issues secure HttpOnly cookie, exposes no token, creates no customer",
+      "status": "PASS"
+    },
+    {
+      "name": "Unbound signed session reads empty context without phone lookup",
+      "status": "PASS"
+    },
+    {
+      "name": "HTTP pet save atomically creates scoped customer, session, pet and weight",
+      "status": "PASS"
+    },
+    {
+      "name": "Exact HTTP retry keeps Pet ID and one initial weight row",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed payload under same request ID conflicts instead of duplicate pet",
+      "status": "PASS"
+    },
+    {
+      "name": "Phone change cannot move the existing session to another customer",
+      "status": "PASS"
+    },
+    {
+      "name": "Separate session with identical normalized phone gets isolated profile, no merge",
+      "status": "PASS"
+    },
+    {
+      "name": "Context returns only own minimal pet data, no other phone-matching profile",
+      "status": "PASS"
+    },
+    {
+      "name": "Known foreign Pet ID denied without clearing valid session cookie",
+      "status": "PASS"
+    },
+    {
+      "name": "New pet in same session reuses customer, preserves distinct Pet IDs",
+      "status": "PASS"
+    },
+    {
+      "name": "Context does not accept phone or arbitrary owner lookup input",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet pagination rejects invalid bounds",
+      "status": "PASS"
+    },
+    {
+      "name": "Missing cookie cannot access guest context",
+      "status": "PASS"
+    },
+    {
+      "name": "Tampered signed cookie rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Duplicate cookie ambiguity rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Cross-origin requests rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Bearer request cannot silently downgrade to guest",
+      "status": "PASS"
+    },
+    {
+      "name": "Expired cookie rejected before private data lookup",
+      "status": "PASS"
+    },
+    {
+      "name": "End revokes server binding; copied old cookie cannot regain access",
+      "status": "PASS"
+    },
+    {
+      "name": "Phone normalization accepts supported country forms and rejects text",
+      "status": "PASS"
+    },
+    {
+      "name": "SQL reverse removes only API definitions and preserves saved pet records",
+      "status": "PASS"
+    },
+    {
+      "name": "All RPC definitions, sessions, contacts, pets and weights rolled back",
+      "status": "PASS"
+    }
+  ],
+  "scope": "Actual loopback HTTP handler and real Cloud SQL RPC/rate limiter under service_role inside rollback; signed cookie tests, SQL anon/customer roles; no real Auth/REST service request, no concurrency/transaction booking/checkout/UI acceptance, no Logs/SMS"
+}

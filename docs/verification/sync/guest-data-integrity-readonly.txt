@@ -1,0 +1,18 @@
+{
+  "capturedAt": "2026-10-26T17:00:05.221Z",
+  "scope": "Cloud READ ONLY aggregates; no record/phone exported, no repair, no migration; not transaction E2E",
+  "phone": {
+    "phone_rows": 33,
+    "invalid_phone_rows": 0,
+    "phones_on_multiple_customers": 0,
+    "primary_phones_on_multiple_customers": 0,
+    "duplicate_normalized_rows_per_customer": 0,
+    "customers_with_invalid_primary_count": 0
+  },
+  "relationships": {
+    "pets_without_customer": 0,
+    "appointment_owner_mismatches": 0,
+    "orphan_appointment_items": 0,
+    "orphan_order_details": 0
+  }
+}

@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { createCustomerAuth, validPassword, runtimeMode } = require('../api/customer_auth');
 const { createTestStore } = require('./auth_store_fixture');
 
-function fixture({ simulated = true, locked = false, staff = false, temporary = false, realAccount = false, mode = simulated ? 'console' : 'supabase', allowedPhones = ['0912345678'] } = {}) {
+function fixture({ simulated = true, locked = false, staff = false, temporary = false, realAccount = false, mode = simulated ? 'console' : 'supabase', allowedPhones = ['0912345678'], guestLink, unlinkedGuest = false } = {}) {
     let time = 1000, codes = [], writes = [], credentialsUsed = [], profileCalls = [], failUpdate = false, failRead = false, ready = true, failLink = false;
     const phoneData = { customer_id: 'customer-1', phone_number: '0912345678', is_primary: true };
     const customer = { id: 'customer-1', auth_user_id: 'auth-1', customer_status: locked ? 'locked' : 'active', contact_email: 'test@example.com' };
@@ -13,7 +13,7 @@ function fixture({ simulated = true, locked = false, staff = false, temporary = 
                 select() { return this; }, eq() { return this; }, limit() { return this; },
                 async maybeSingle() {
                     if (failRead) return { data: null, error: new Error('DB rejected') };
-                    if (table === 'customer_phone') return { data: phoneData, error: null };
+                    if (table === 'customer_phone') return { data: unlinkedGuest ? null : phoneData, error: null };
                     if (table === 'customer') return { data: customer, error: null };
                     if (table === 'customer_profile') return { data: { full_name: 'Khách kiểm thử' }, error: null };
                     return { data: customer, error: null };
@@ -40,7 +40,7 @@ function fixture({ simulated = true, locked = false, staff = false, temporary = 
         }
     };
     const store = createTestStore(() => time);
-    const createApi = () => createCustomerAuth({ admin, store, mode, allowedTestPhones: allowedPhones, randomCode: () => '123456', deliver: (phone, code) => codes.push(code), clientFactory: token => ({
+    const createApi = () => createCustomerAuth({ admin, store, mode, allowedTestPhones: allowedPhones, guestLink, randomCode: () => '123456', deliver: (phone, code) => codes.push(code), clientFactory: token => ({
         async rpc(name, args) { profileCalls.push({name,args,token}); return failUpdate ? {error: new Error('Atomic profile rejected')} : {data: name==='reply_own_support_ticket'?args.p_id:{id: 'customer-1', revision: 'db-revision', addresses: []}}; },
         auth: {
         async signInWithPassword(credentials) { credentialsUsed.push(credentials); const { password } = credentials; if (mode === 'demo' && (!credentials.email || credentials.phone)) return { data: {}, error: new Error('Phone provider disabled') }; if (!['OldPass123!', 'NewPass123!'].includes(password)) return { data: {}, error: new Error('Wrong password') }; return { data: { user: { id: 'auth-1' }, session: { access_token: 'safe-token', refresh_token: 'refresh' } } }; },
@@ -209,4 +209,36 @@ test('demo deployment defaults to simulator and can explicitly switch to real SM
     assert.equal(runtimeMode({ PAWPAL_SMS_MODE: 'supabase', VERCEL_ENV: 'production' }).mode, 'supabase');
     assert.equal(runtimeMode({ VERCEL_ENV: 'production' }).randomCode, undefined);
     assert.equal(runtimeMode({ PAWPAL_SMS_MODE: 'preview', VERCEL_ENV: 'preview', PAWPAL_AUTH_TEST_PHONES: '0912345678' }).randomCode(), '555666');
+});
+
+test('Explicit guest link follows real verifier and uses verified identity/challenge phone, never client owner',async()=>{
+ const links=[],proof={hash:'a'.repeat(64)};let cleared=false,f;
+ const guestLink={prepare:()=>proof,validate:async()=>{},complete:async(p,data)=>{assert.equal(f.writes.length,0);links.push({p,data});return 'customer-1';},clear:()=>{cleared=true;}};
+ f=fixture({simulated:false,unlinkedGuest:true,guestLink});
+ const request=await f.call('requestOtp',{phone:'+84 912 345 678',purpose:'register',linkGuest:true});assert.equal(request.code,200);
+ const result=await f.call('completeOtp',{challengeId:request.body.challengeId,code:'123456',password:'NewPass123!',name:'Verified guest',linkGuest:true,authId:'forged',customerId:'forged',phone:'0999999999'});
+ assert.equal(result.code,200);assert.equal(links.length,1);assert.deepEqual(links[0],{p:proof,data:{authId:'auth-1',phone:'0912345678',name:'Verified guest'}});assert.ok(!f.writes.includes('link'));assert.equal(cleared,true);assert.equal(result.body.user.id,'customer-1');
+});
+test('Failed real OTP cannot invoke guest link or update credentials',async()=>{
+ let links=0;const guestLink={prepare:()=>({hash:'a'.repeat(64)}),validate:async()=>{},complete:async()=>{links++;},clear:()=>{throw Error('unexpected clear');}};
+ const f=fixture({simulated:false,unlinkedGuest:true,guestLink});const request=await f.call('requestOtp',{phone:'0912345678',purpose:'register',linkGuest:true});
+ assert.equal((await f.call('completeOtp',{challengeId:request.body.challengeId,code:'000000',password:'NewPass123!',name:'Test',linkGuest:true})).code,400);assert.equal(links,0);assert.equal(f.writes.length,0);
+});
+test('Demo OTP cannot link a guest, while ordinary demo behavior remains unchanged',async()=>{
+ const f=fixture({mode:'demo',unlinkedGuest:true,guestLink:{prepare:()=>{throw Error('must not prepare simulated link');}}});
+ const response=await f.call('requestOtp',{phone:'0912345678',purpose:'register',linkGuest:true});assert.equal(response.code,400);assert.match(response.body.message,/không dùng OTP giả lập/);assert.equal(f.writes.length,0);
+});
+test('Guest link conflict occurs before password writes and retains cookie',async()=>{
+ let cleared=false;const guestLink={prepare:()=>({hash:'a'.repeat(64)}),validate:async()=>{},complete:async()=>{throw Error('Guest link conflict');},clear:()=>{cleared=true;}};
+ const f=fixture({simulated:false,unlinkedGuest:true,guestLink});const r=await f.call('requestOtp',{phone:'0912345678',purpose:'register',linkGuest:true});
+ const response=await f.call('completeOtp',{challengeId:r.body.challengeId,code:'123456',password:'NewPass123!',name:'Test',linkGuest:true});assert.equal(response.code,400);assert.equal(f.writes.length,0);assert.equal(cleared,false);
+});
+test('Missing guest proof cannot send OTP or invoke link',async()=>{
+ const f=fixture({simulated:false,unlinkedGuest:true,guestLink:{prepare:()=>{throw Error('Missing cookie');}}});
+ assert.equal((await f.call('requestOtp',{phone:'0912345678',purpose:'register',linkGuest:true})).code,400);assert.equal(f.writes.length,0);
+});
+test('Password setup failure after linking directs recovery without pretending the profile rolled back',async()=>{
+ let linked=false,cleared=false;const f=fixture({simulated:false,unlinkedGuest:true,guestLink:{prepare:()=>({hash:'a'.repeat(64)}),validate:async()=>{},complete:async()=>{linked=true;},clear:()=>{cleared=true;}}});
+ const r=await f.call('requestOtp',{phone:'0912345678',purpose:'register',linkGuest:true});f.rejectUpdate();
+ const response=await f.call('completeOtp',{challengeId:r.body.challengeId,code:'123456',password:'NewPass123!',name:'Test',linkGuest:true});assert.equal(response.code,400);assert.match(response.body.message,/Quên mật khẩu/);assert.equal(linked,true);assert.equal(cleared,false);
 });

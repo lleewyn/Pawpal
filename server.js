@@ -15,6 +15,8 @@ app.get('/api/admin-config', require('./api/admin-config.js'));
 app.post('/api/admin/auth/complete-password-change', require('./api/staff-auth.js'));
 
 const customerAuth = require('./scripts/api/customer_auth.js');
+const guestCommerce = require('./scripts/api/guest_commerce.js');
+app.all('/api/customer/guest/:action', (req, res) => guestCommerce.handle(req, res, req.params.action));
 app.post('/api/customer/auth/guest', (req, res) => customerAuth.guest(req, res));
 app.post('/api/customer/auth/lookup', (req, res) => customerAuth.lookup(req, res));
 app.post('/api/customer/auth/guest-records', (req, res) => customerAuth.guestRecords(req, res));

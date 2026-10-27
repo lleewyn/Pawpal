@@ -1,0 +1,145 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-10-27T06:49:25.921Z",
+  "queries": 1,
+  "sourceSha256": "2206303fe0d2e5ac3e62510d0cf97d3dfdd26d82f7a7d25647d1c5bc19d63fa0",
+  "subscriptionCount": 27,
+  "tables": [
+    {
+      "table_name": "appointment",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "service",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "service_price_matrix",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "hotel_room_type",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "taxi_price_rule",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "service_image",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "review",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "appointment_item",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "appointment_record",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "payment",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "refund_transaction",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "taxi_trip",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "hotel_booking",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "care_log",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "review_response",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "service_care_action",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "service_supported_species",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "pet_weight_history",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "customer_phone",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "customer",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "customer_profile",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "pet_profile",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "hotel_room",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "staff",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "staff_schedule",
+      "exists": true,
+      "published": true
+    },
+    {
+      "table_name": "support_ticket",
+      "exists": true,
+      "published": true
+    }
+  ],
+  "scope": "One read-only metadata query, no business data/Logs/schema changes; compare actual module subscription names to live publication."
+}

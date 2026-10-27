@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-10-26T18:20:23.486Z",
+  "status": "PASS",
+  "migrationSha256": "e4b372caf7646a843d4e93440091c03298479f7211bda5afed33353d780e934d",
+  "reverseSha256": "969908c8fd14f933f2171b46a366f6e93b7a1a064dd5ff3a41f87bccfcf61d0e",
+  "scope": "Forward and reverse DDL executed in rollback, all six new functions removed; member definitions unchanged, no business data written"
+}

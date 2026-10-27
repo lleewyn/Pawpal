@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-10-27T02:02:32.976Z",
+  "status": "PASS",
+  "queries": 47,
+  "rpcCalls": {
+    "guest_commerce_context": 2,
+    "guest_sales_quote": 1,
+    "guest_sales_create": 2,
+    "guest_sales_receipt": 2
+  },
+  "parts": {
+    "orders": 1,
+    "lines": 1,
+    "holds": 1,
+    "payments": 1,
+    "collected": 0,
+    "redemptions": 1
+  },
+  "fixtureProducts": 2,
+  "remainingFixtureRows": 0,
+  "scope": "Playwright -> loopback HTTP -> installed Cloud service_role checkout RPCs in rollback. Catalog read from actual customer_shop_catalog under anon inside the same transaction, filtered to two synthetic products and forwarded to browser. Synthetic inventory/voucher never committed, no real catalog/stock edits or locks on public sellable product rows. Rate limiter bypassed; not commit/Realtime/Admin/gateway/SMS acceptance."
+}

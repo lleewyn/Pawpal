@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-26T18:23:00.842Z",
+  "status": "PASS",
+  "checks": [
+    "RPC rejects forged unit price directly",
+    "Guest order/hold/payment passes all deferred constraints forced immediate",
+    "Pending, partial and fully collected receipt states match actual amounts"
+  ],
+  "scope": "Installed SQL RPC, synthetic product/stock/contact/order/payment fixtures; deferred constraints explicitly fired then all data rolled back; no real gateway/Auth/commit/Realtime/UI or refund lifecycle acceptance"
+}

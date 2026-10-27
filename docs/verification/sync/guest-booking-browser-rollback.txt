@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-10-27T01:46:21.337Z",
+  "status": "PASS",
+  "queries": 37,
+  "rpcCalls": {
+    "guest_commerce_context": 3,
+    "guest_commerce_save_pet": 1,
+    "guest_booking_quote": 1,
+    "guest_booking_receipt": 3,
+    "guest_booking_create": 1
+  },
+  "fixturePets": 1,
+  "fixtureBookings": 1,
+  "remainingFixtureRows": 0,
+  "scope": "Playwright browser requests forwarded to temporary loopback HTTP handler with installed Cloud SQL service_role RPCs. Public catalog via normal frontend REST; all guest profile/pet/booking/audit writes rollback. Rate limiter bypassed in bridge, no real commit/Realtime/Admin portal/gateway/SMS/Storage acceptance."
+}

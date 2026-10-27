@@ -1,0 +1,3596 @@
+{
+  "capturedAt": "2026-10-26T16:53:06.052Z",
+  "scope": "READ ONLY catalog metadata; no business rows; transaction rolled back",
+  "backup": {
+    "path": "D:\\Aboutme\\Pawpal-infra\\supabase-local\\backups\\guest-stage0-2026-10-26\\schema-catalog.private.json",
+    "bytes": 1654427,
+    "sha256": "be0474e3accca035c9e7fa188088728d16a36704972d0208ce290046901c9f14",
+    "limitation": "PostgreSQL catalog snapshot, not a pg_dump restore archive; no table data or auth credentials"
+  },
+  "tables": [
+    {
+      "name": "customer",
+      "exists": true
+    },
+    {
+      "name": "customer_phone",
+      "exists": true
+    },
+    {
+      "name": "customer_profile",
+      "exists": true
+    },
+    {
+      "name": "guest_session",
+      "exists": true
+    },
+    {
+      "name": "pet_profile",
+      "exists": true
+    },
+    {
+      "name": "appointment",
+      "exists": true
+    },
+    {
+      "name": "appointment_item",
+      "exists": true
+    },
+    {
+      "name": "cart",
+      "exists": true
+    },
+    {
+      "name": "cart_item",
+      "exists": true
+    },
+    {
+      "name": "sales_order",
+      "exists": true
+    },
+    {
+      "name": "sales_order_detail",
+      "exists": true
+    },
+    {
+      "name": "payment",
+      "exists": true
+    }
+  ],
+  "relations": [
+    {
+      "schema": "public",
+      "name": "appointment",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}",
+      "owner": "postgres"
+    },
+    {
+      "schema": "public",
+      "name": "appointment_item",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}",
+      "owner": "postgres"
+    },
+    {
+      "schema": "public",
+      "name": "cart",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}",
+      "owner": "postgres"
+    },
+    {
+      "schema": "public",
+      "name": "cart_item",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}",
+      "owner": "postgres"
+    },
+    {
+      "schema": "public",
+      "name": "customer",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}",
+      "owner": "postgres"
+    },
+    {
+      "schema": "public",
+      "name": "customer_phone",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}",
+      "owner": "postgres"
+    },
+    {
+      "schema": "public",
+      "name": "customer_profile",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}",
+      "owner": "postgres"
+    },
+    {
+      "schema": "public",
+      "name": "guest_session",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}",
+      "owner": "postgres"
+    },
+    {
+      "schema": "public",
+      "name": "payment",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "owner": "postgres"
+    },
+    {
+      "schema": "public",
+      "name": "pet_profile",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}",
+      "owner": "postgres"
+    },
+    {
+      "schema": "public",
+      "name": "sales_order",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}",
+      "owner": "postgres"
+    },
+    {
+      "schema": "public",
+      "name": "sales_order_detail",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}",
+      "owner": "postgres"
+    }
+  ],
+  "columns": [
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "extensions.gen_random_uuid()"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_code",
+      "attnum": 2,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "customer_id",
+      "attnum": 3,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "pet_id",
+      "attnum": 4,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "staff_id",
+      "attnum": 5,
+      "type": "uuid",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "check_in_time",
+      "attnum": 6,
+      "type": "timestamp with time zone",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "check_out_time",
+      "attnum": 7,
+      "type": "timestamp with time zone",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "note",
+      "attnum": 8,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "change_count",
+      "attnum": 9,
+      "type": "integer",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "0"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_status",
+      "attnum": 10,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "'pending'::text"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "created_at",
+      "attnum": 11,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "updated_at",
+      "attnum": 12,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "scheduled_start_at",
+      "attnum": 13,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "scheduled_end_at",
+      "attnum": 14,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "extensions.gen_random_uuid()"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_id",
+      "attnum": 2,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "service_id",
+      "attnum": 3,
+      "type": "uuid",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "service_addon_id",
+      "attnum": 4,
+      "type": "uuid",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "is_primary",
+      "attnum": 5,
+      "type": "boolean",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "false"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "name_snapshot",
+      "attnum": 6,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "quantity",
+      "attnum": 7,
+      "type": "integer",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "unit_price",
+      "attnum": 8,
+      "type": "numeric(18,4)",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "discount_amount",
+      "attnum": 9,
+      "type": "numeric(18,4)",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "0"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "duration_minutes",
+      "attnum": 10,
+      "type": "integer",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "weight_snapshot",
+      "attnum": 11,
+      "type": "numeric(18,4)",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "staff_id",
+      "attnum": 12,
+      "type": "uuid",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "status",
+      "attnum": 13,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "'pending'::text"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "created_at",
+      "attnum": 14,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "updated_at",
+      "attnum": 15,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "extensions.gen_random_uuid()"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "customer_id",
+      "attnum": 2,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "cart_status",
+      "attnum": 3,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "'active'::text"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "created_at",
+      "attnum": 4,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "updated_at",
+      "attnum": 5,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "extensions.gen_random_uuid()"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "cart_id",
+      "attnum": 2,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "product_variant_id",
+      "attnum": 3,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "quantity",
+      "attnum": 4,
+      "type": "integer",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "unit_price",
+      "attnum": 5,
+      "type": "numeric(18,4)",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "created_at",
+      "attnum": 6,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "updated_at",
+      "attnum": 7,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "extensions.gen_random_uuid()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "auth_user_id",
+      "attnum": 2,
+      "type": "uuid",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "customer_code",
+      "attnum": 3,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "customer_status",
+      "attnum": 4,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "'active'::text"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "registered_at",
+      "attnum": 5,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "note",
+      "attnum": 6,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "created_at",
+      "attnum": 7,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "updated_at",
+      "attnum": 8,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "contact_email",
+      "attnum": 9,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "extensions.gen_random_uuid()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "customer_id",
+      "attnum": 2,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "phone_number",
+      "attnum": 3,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "is_primary",
+      "attnum": 4,
+      "type": "boolean",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "false"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "verified_at",
+      "attnum": 5,
+      "type": "timestamp with time zone",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "created_at",
+      "attnum": 6,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "updated_at",
+      "attnum": 7,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "customer_id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "full_name",
+      "attnum": 2,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "date_of_birth",
+      "attnum": 3,
+      "type": "date",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "gender",
+      "attnum": 4,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "created_at",
+      "attnum": 5,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "updated_at",
+      "attnum": 6,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "extensions.gen_random_uuid()"
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "token_hash",
+      "attnum": 2,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "expires_at",
+      "attnum": 3,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "revoked_at",
+      "attnum": 4,
+      "type": "timestamp with time zone",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "created_at",
+      "attnum": 5,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "extensions.gen_random_uuid()"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_code",
+      "attnum": 2,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "customer_id",
+      "attnum": 3,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_method_config_id",
+      "attnum": 4,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_type",
+      "attnum": 5,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "amount",
+      "attnum": 6,
+      "type": "numeric(18,4)",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "transaction_status",
+      "attnum": 7,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "'pending'::text"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "succeeded_at",
+      "attnum": 8,
+      "type": "timestamp with time zone",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "created_at",
+      "attnum": 9,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "updated_at",
+      "attnum": 10,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "gateway_transaction_id",
+      "attnum": 11,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "idempotency_key",
+      "attnum": 12,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "order_id",
+      "attnum": 13,
+      "type": "uuid",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "appointment_id",
+      "attnum": 14,
+      "type": "uuid",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "eligible_spend_amount",
+      "attnum": 15,
+      "type": "numeric(18,4)",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "0"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "extensions.gen_random_uuid()"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "customer_id",
+      "attnum": 2,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_code",
+      "attnum": 3,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_name",
+      "attnum": 4,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "avatar_url",
+      "attnum": 5,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "gender",
+      "attnum": 6,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "date_of_birth",
+      "attnum": 7,
+      "type": "date",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "color",
+      "attnum": 8,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "routine",
+      "attnum": 9,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "allergy",
+      "attnum": 10,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "status",
+      "attnum": 11,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "'active'::text"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "created_at",
+      "attnum": 12,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "updated_at",
+      "attnum": 13,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "breed_id",
+      "attnum": 14,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "safety_note",
+      "attnum": 15,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "extensions.gen_random_uuid()"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "order_code",
+      "attnum": 2,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "customer_id",
+      "attnum": 3,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "order_status",
+      "attnum": 4,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "'draft'::text"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "note",
+      "attnum": 5,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "created_at",
+      "attnum": 6,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "updated_at",
+      "attnum": 7,
+      "type": "timestamp with time zone",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "now()"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "shipping_fee_snapshot",
+      "attnum": 8,
+      "type": "numeric(18,4)",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "0"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "receiver_name_snapshot",
+      "attnum": 9,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "receiver_phone_snapshot",
+      "attnum": 10,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "province_snapshot",
+      "attnum": 11,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "street_address_snapshot",
+      "attnum": 12,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "postal_code_snapshot",
+      "attnum": 13,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "delivery_option_id",
+      "attnum": 14,
+      "type": "uuid",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "shipping_provider_id",
+      "attnum": 15,
+      "type": "uuid",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "tracking_code",
+      "attnum": 16,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "shipped_at",
+      "attnum": 17,
+      "type": "timestamp with time zone",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "delivered_at",
+      "attnum": 18,
+      "type": "timestamp with time zone",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "shipping_status",
+      "attnum": 19,
+      "type": "text",
+      "attnotnull": false,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "id",
+      "attnum": 1,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "extensions.gen_random_uuid()"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "order_id",
+      "attnum": 2,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "product_variant_id",
+      "attnum": 3,
+      "type": "uuid",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "quantity",
+      "attnum": 4,
+      "type": "integer",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "unit_price",
+      "attnum": 5,
+      "type": "numeric(18,4)",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "discount_amount",
+      "attnum": 6,
+      "type": "numeric(18,4)",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": "0"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "product_name_snapshot",
+      "attnum": 7,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "sku_snapshot",
+      "attnum": 8,
+      "type": "text",
+      "attnotnull": true,
+      "attidentity": "",
+      "attgenerated": "",
+      "attacl": null,
+      "default_expression": null
+    }
+  ],
+  "constraints": [
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_appointment_code_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(appointment_code)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_appointment_code_key",
+      "contype": "u",
+      "definition": "UNIQUE (appointment_code)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_appointment_status_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(appointment_status)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_change_count_check",
+      "contype": "c",
+      "definition": "CHECK (change_count >= 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_check",
+      "contype": "c",
+      "definition": "CHECK (scheduled_end_at > scheduled_start_at)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_check1",
+      "contype": "c",
+      "definition": "CHECK (check_out_time IS NULL OR check_out_time >= check_in_time)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_customer_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customer(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_pet_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (pet_id) REFERENCES pet_profile(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_staff_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (staff_id) REFERENCES staff(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1_money_check",
+      "contype": "t",
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_appointment_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (appointment_id) REFERENCES appointment(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_check",
+      "contype": "c",
+      "definition": "CHECK (num_nonnulls(service_id, service_addon_id) = 1)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_check1",
+      "contype": "c",
+      "definition": "CHECK (discount_amount <= (quantity::numeric * unit_price))"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_check2",
+      "contype": "c",
+      "definition": "CHECK (NOT is_primary OR service_id IS NOT NULL)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_discount_amount_check",
+      "contype": "c",
+      "definition": "CHECK (discount_amount >= 0::numeric)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_duration_minutes_check",
+      "contype": "c",
+      "definition": "CHECK (duration_minutes >= 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_name_snapshot_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(name_snapshot)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_quantity_check",
+      "contype": "c",
+      "definition": "CHECK (quantity > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_service_addon_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (service_addon_id) REFERENCES service_addon(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_service_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (service_id) REFERENCES service(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_staff_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (staff_id) REFERENCES staff(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_status_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(status)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_unit_price_check",
+      "contype": "c",
+      "definition": "CHECK (unit_price >= 0::numeric)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_weight_snapshot_check",
+      "contype": "c",
+      "definition": "CHECK (weight_snapshot >= 0::numeric)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "v1_money_check",
+      "contype": "t",
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "cart_cart_status_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(cart_status)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "cart_customer_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customer(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "cart_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "cart_item_cart_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (cart_id) REFERENCES cart(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "cart_item_cart_id_product_variant_id_key",
+      "contype": "u",
+      "definition": "UNIQUE (cart_id, product_variant_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "cart_item_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "cart_item_product_variant_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (product_variant_id) REFERENCES product_variant(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "cart_item_quantity_check",
+      "contype": "c",
+      "definition": "CHECK (quantity > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "cart_item_unit_price_check",
+      "contype": "c",
+      "definition": "CHECK (unit_price >= 0::numeric)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "customer_auth_user_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (auth_user_id) REFERENCES auth.users(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "customer_auth_user_id_key",
+      "contype": "u",
+      "definition": "UNIQUE (auth_user_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "customer_customer_code_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(customer_code)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "customer_customer_code_key",
+      "contype": "u",
+      "definition": "UNIQUE (customer_code)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "customer_customer_status_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(customer_status)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "customer_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "customer_phone_customer_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customer(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "customer_phone_customer_id_phone_number_key",
+      "contype": "u",
+      "definition": "UNIQUE (customer_id, phone_number)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "customer_phone_phone_number_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(phone_number)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "customer_phone_phone_number_check1",
+      "contype": "c",
+      "definition": "CHECK (phone_number ~ '^\\+?[0-9]{8,15}$'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "customer_phone_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "v1_contact_default",
+      "contype": "t",
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "customer_profile_customer_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customer(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "customer_profile_date_of_birth_check",
+      "contype": "c",
+      "definition": "CHECK (date_of_birth <= CURRENT_DATE)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "customer_profile_full_name_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(full_name)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "customer_profile_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (customer_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "guest_session_check",
+      "contype": "c",
+      "definition": "CHECK (expires_at > created_at)"
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "guest_session_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "guest_session_token_hash_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(token_hash)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "guest_session_token_hash_check1",
+      "contype": "c",
+      "definition": "CHECK (token_hash ~ '^[a-f0-9]{64}$'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "guest_session_token_hash_key",
+      "contype": "u",
+      "definition": "UNIQUE (token_hash)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_amount_check",
+      "contype": "c",
+      "definition": "CHECK (amount >= 0::numeric)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_amount_check1",
+      "contype": "c",
+      "definition": "CHECK (amount > 0::numeric)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_appointment_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (appointment_id) REFERENCES appointment(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_check",
+      "contype": "c",
+      "definition": "CHECK (num_nonnulls(order_id, appointment_id) = 1)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_check1",
+      "contype": "c",
+      "definition": "CHECK (eligible_spend_amount <= amount)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_check2",
+      "contype": "c",
+      "definition": "CHECK ((transaction_status = 'succeeded'::text) = (succeeded_at IS NOT NULL))"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_check3",
+      "contype": "c",
+      "definition": "CHECK (transaction_status = 'succeeded'::text OR eligible_spend_amount = 0::numeric)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_customer_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customer(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_eligible_spend_amount_check",
+      "contype": "c",
+      "definition": "CHECK (eligible_spend_amount >= 0::numeric)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_idempotency_key_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(idempotency_key)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_idempotency_key_key",
+      "contype": "u",
+      "definition": "UNIQUE (idempotency_key)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_order_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (order_id) REFERENCES sales_order(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_payment_code_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(payment_code)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_payment_code_key",
+      "contype": "u",
+      "definition": "UNIQUE (payment_code)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_payment_method_config_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (payment_method_config_id) REFERENCES payment_method_config(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_payment_type_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(payment_type)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_transaction_status_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(transaction_status)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_transaction_status_check1",
+      "contype": "c",
+      "definition": "CHECK (transaction_status = ANY (ARRAY['pending'::text, 'succeeded'::text, 'failed'::text, 'cancelled'::text]))"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "v1_money_check",
+      "contype": "t",
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_profile_breed_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (breed_id) REFERENCES pet_breed(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_profile_customer_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customer(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_profile_date_of_birth_check",
+      "contype": "c",
+      "definition": "CHECK (date_of_birth <= CURRENT_DATE)"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_profile_pet_code_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(pet_code)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_profile_pet_code_key",
+      "contype": "u",
+      "definition": "UNIQUE (pet_code)"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_profile_pet_name_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(pet_name)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_profile_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_profile_status_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(status)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "sales_order_customer_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customer(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "sales_order_delivery_option_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (delivery_option_id) REFERENCES delivery_option_config(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "sales_order_order_code_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(order_code)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "sales_order_order_code_key",
+      "contype": "u",
+      "definition": "UNIQUE (order_code)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "sales_order_order_status_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(order_status)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "sales_order_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "sales_order_shipping_fee_snapshot_check",
+      "contype": "c",
+      "definition": "CHECK (shipping_fee_snapshot >= 0::numeric)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "sales_order_shipping_provider_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (shipping_provider_id) REFERENCES shipping_provider(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "v1_money_check",
+      "contype": "t",
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "sales_order_detail_check",
+      "contype": "c",
+      "definition": "CHECK (discount_amount <= (quantity::numeric * unit_price))"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "sales_order_detail_discount_amount_check",
+      "contype": "c",
+      "definition": "CHECK (discount_amount >= 0::numeric)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "sales_order_detail_order_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (order_id) REFERENCES sales_order(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "sales_order_detail_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "sales_order_detail_product_name_snapshot_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(product_name_snapshot)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "sales_order_detail_product_variant_id_fkey",
+      "contype": "f",
+      "definition": "FOREIGN KEY (product_variant_id) REFERENCES product_variant(id) DEFERRABLE"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "sales_order_detail_quantity_check",
+      "contype": "c",
+      "definition": "CHECK (quantity > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "sales_order_detail_sku_snapshot_check",
+      "contype": "c",
+      "definition": "CHECK (length(btrim(sku_snapshot)) > 0)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "sales_order_detail_unit_price_check",
+      "contype": "c",
+      "definition": "CHECK (unit_price >= 0::numeric)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "v1_money_check",
+      "contype": "t",
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    }
+  ],
+  "indexes": [
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_appointment_code_key",
+      "definition": "CREATE UNIQUE INDEX appointment_appointment_code_key ON public.appointment USING btree (appointment_code)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "appointment_pkey",
+      "definition": "CREATE UNIQUE INDEX appointment_pkey ON public.appointment USING btree (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1fk_adc9c3114f37fa9622",
+      "definition": "CREATE INDEX v1fk_adc9c3114f37fa9622 ON public.appointment USING btree (staff_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1fk_b715937196a06007e5",
+      "definition": "CREATE INDEX v1fk_b715937196a06007e5 ON public.appointment USING btree (customer_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1fk_e0c33cff566dadf471",
+      "definition": "CREATE INDEX v1fk_e0c33cff566dadf471 ON public.appointment USING btree (pet_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_appointment_id_idx",
+      "definition": "CREATE UNIQUE INDEX appointment_item_appointment_id_idx ON public.appointment_item USING btree (appointment_id) WHERE is_primary"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "appointment_item_pkey",
+      "definition": "CREATE UNIQUE INDEX appointment_item_pkey ON public.appointment_item USING btree (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "v1fk_b13b31a4a40dfe904a",
+      "definition": "CREATE INDEX v1fk_b13b31a4a40dfe904a ON public.appointment_item USING btree (service_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "v1fk_ba6faca544ee9bcc94",
+      "definition": "CREATE INDEX v1fk_ba6faca544ee9bcc94 ON public.appointment_item USING btree (appointment_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "v1fk_c278c1198a36eb3714",
+      "definition": "CREATE INDEX v1fk_c278c1198a36eb3714 ON public.appointment_item USING btree (staff_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "v1fk_c3133fdd7568d79c60",
+      "definition": "CREATE INDEX v1fk_c3133fdd7568d79c60 ON public.appointment_item USING btree (service_addon_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "cart_pkey",
+      "definition": "CREATE UNIQUE INDEX cart_pkey ON public.cart USING btree (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "v1fk_92f992202ce797fad9",
+      "definition": "CREATE INDEX v1fk_92f992202ce797fad9 ON public.cart USING btree (customer_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "cart_item_cart_id_product_variant_id_key",
+      "definition": "CREATE UNIQUE INDEX cart_item_cart_id_product_variant_id_key ON public.cart_item USING btree (cart_id, product_variant_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "cart_item_pkey",
+      "definition": "CREATE UNIQUE INDEX cart_item_pkey ON public.cart_item USING btree (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "v1fk_7877a33fb94b22dc23",
+      "definition": "CREATE INDEX v1fk_7877a33fb94b22dc23 ON public.cart_item USING btree (product_variant_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "v1fk_90b1bf9bd9fb1077cb",
+      "definition": "CREATE INDEX v1fk_90b1bf9bd9fb1077cb ON public.cart_item USING btree (cart_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "customer_auth_user_id_key",
+      "definition": "CREATE UNIQUE INDEX customer_auth_user_id_key ON public.customer USING btree (auth_user_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "customer_customer_code_key",
+      "definition": "CREATE UNIQUE INDEX customer_customer_code_key ON public.customer USING btree (customer_code)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "customer_pkey",
+      "definition": "CREATE UNIQUE INDEX customer_pkey ON public.customer USING btree (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "v1fk_35a91f2ed61eb91e09",
+      "definition": "CREATE INDEX v1fk_35a91f2ed61eb91e09 ON public.customer USING btree (auth_user_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "customer_phone_customer_id_idx",
+      "definition": "CREATE UNIQUE INDEX customer_phone_customer_id_idx ON public.customer_phone USING btree (customer_id) WHERE is_primary"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "customer_phone_customer_id_phone_number_key",
+      "definition": "CREATE UNIQUE INDEX customer_phone_customer_id_phone_number_key ON public.customer_phone USING btree (customer_id, phone_number)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "customer_phone_phone_number_idx",
+      "definition": "CREATE UNIQUE INDEX customer_phone_phone_number_idx ON public.customer_phone USING btree (phone_number) WHERE is_primary"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "customer_phone_pkey",
+      "definition": "CREATE UNIQUE INDEX customer_phone_pkey ON public.customer_phone USING btree (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "v1fk_6891e6c20f9d89aa19",
+      "definition": "CREATE INDEX v1fk_6891e6c20f9d89aa19 ON public.customer_phone USING btree (customer_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "customer_profile_pkey",
+      "definition": "CREATE UNIQUE INDEX customer_profile_pkey ON public.customer_profile USING btree (customer_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "v1fk_475e2047db570cb186",
+      "definition": "CREATE INDEX v1fk_475e2047db570cb186 ON public.customer_profile USING btree (customer_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "guest_session_pkey",
+      "definition": "CREATE UNIQUE INDEX guest_session_pkey ON public.guest_session USING btree (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "guest_session_token_hash_key",
+      "definition": "CREATE UNIQUE INDEX guest_session_token_hash_key ON public.guest_session USING btree (token_hash)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_idempotency_key_key",
+      "definition": "CREATE UNIQUE INDEX payment_idempotency_key_key ON public.payment USING btree (idempotency_key)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_payment_code_key",
+      "definition": "CREATE UNIQUE INDEX payment_payment_code_key ON public.payment USING btree (payment_code)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "payment_pkey",
+      "definition": "CREATE UNIQUE INDEX payment_pkey ON public.payment USING btree (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "v1fk_0831f9316c3bc262c6",
+      "definition": "CREATE INDEX v1fk_0831f9316c3bc262c6 ON public.payment USING btree (payment_method_config_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "v1fk_2494d3ddf9ba98b38a",
+      "definition": "CREATE INDEX v1fk_2494d3ddf9ba98b38a ON public.payment USING btree (customer_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "v1fk_cffd5f257141f1c185",
+      "definition": "CREATE INDEX v1fk_cffd5f257141f1c185 ON public.payment USING btree (appointment_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "v1fk_e3f445a136d7d059a9",
+      "definition": "CREATE INDEX v1fk_e3f445a136d7d059a9 ON public.payment USING btree (order_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_profile_pet_code_key",
+      "definition": "CREATE UNIQUE INDEX pet_profile_pet_code_key ON public.pet_profile USING btree (pet_code)"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "pet_profile_pkey",
+      "definition": "CREATE UNIQUE INDEX pet_profile_pkey ON public.pet_profile USING btree (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "v1fk_a15c7ef67018e5cdb2",
+      "definition": "CREATE INDEX v1fk_a15c7ef67018e5cdb2 ON public.pet_profile USING btree (breed_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "v1fk_a70f7522e469f44638",
+      "definition": "CREATE INDEX v1fk_a70f7522e469f44638 ON public.pet_profile USING btree (customer_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "sales_order_order_code_key",
+      "definition": "CREATE UNIQUE INDEX sales_order_order_code_key ON public.sales_order USING btree (order_code)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "sales_order_pkey",
+      "definition": "CREATE UNIQUE INDEX sales_order_pkey ON public.sales_order USING btree (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "v1fk_97e6f5e8ae76df6e14",
+      "definition": "CREATE INDEX v1fk_97e6f5e8ae76df6e14 ON public.sales_order USING btree (delivery_option_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "v1fk_d338ae97d3866ee692",
+      "definition": "CREATE INDEX v1fk_d338ae97d3866ee692 ON public.sales_order USING btree (shipping_provider_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "v1fk_e7f5af1fdbf76553ac",
+      "definition": "CREATE INDEX v1fk_e7f5af1fdbf76553ac ON public.sales_order USING btree (customer_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "sales_order_detail_pkey",
+      "definition": "CREATE UNIQUE INDEX sales_order_detail_pkey ON public.sales_order_detail USING btree (id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "v1fk_8fde45639cdde521c2",
+      "definition": "CREATE INDEX v1fk_8fde45639cdde521c2 ON public.sales_order_detail USING btree (order_id)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "v1fk_c9cf6e848e1cccdd5f",
+      "definition": "CREATE INDEX v1fk_c9cf6e848e1cccdd5f ON public.sales_order_detail USING btree (product_variant_id)"
+    }
+  ],
+  "policies": [
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "own_customer_appointment",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(customer_id)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('appointment.write'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('appointment.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('appointment.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('appointment.write'::text)",
+      "with_check": "pawpal_private.has_permission('appointment.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "own_customer_appointment_item",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM appointment a\n  WHERE ((a.id = appointment_item.appointment_id) AND pawpal_private.owns_customer(a.customer_id))))",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('appointment_item.write'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('appointment_item.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('appointment_item.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('appointment_item.write'::text)",
+      "with_check": "pawpal_private.has_permission('appointment_item.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "own_customer",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(customer_id)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('cart.write'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('cart.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('cart.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('cart.write'::text)",
+      "with_check": "pawpal_private.has_permission('cart.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('cart_item.write'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('cart_item.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('cart_item.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('cart_item.write'::text)",
+      "with_check": "pawpal_private.has_permission('cart_item.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "own_customer",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(id)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('customer.write'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('customer.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('customer.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('customer.write'::text)",
+      "with_check": "pawpal_private.has_permission('customer.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "own_customer",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(customer_id)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('customer_phone.write'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('customer_phone.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('customer_phone.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('customer_phone.write'::text)",
+      "with_check": "pawpal_private.has_permission('customer_phone.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "own_customer",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(customer_id)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('customer_profile.write'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('customer_profile.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('customer_profile.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('customer_profile.write'::text)",
+      "with_check": "pawpal_private.has_permission('customer_profile.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('guest_session.write'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('guest_session.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('guest_session.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "guest_session",
+      "name": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('guest_session.write'::text)",
+      "with_check": "pawpal_private.has_permission('guest_session.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "own_customer",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(customer_id)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "own_customer_order_payment",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(customer_id)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('payment.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "own_customer",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(customer_id)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('pet_profile.write'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('pet_profile.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('pet_profile.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('pet_profile.write'::text)",
+      "with_check": "pawpal_private.has_permission('pet_profile.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "own_customer",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(customer_id)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "own_customer_order",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(customer_id)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('sales_order.write'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('sales_order.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('sales_order.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('sales_order.write'::text)",
+      "with_check": "pawpal_private.has_permission('sales_order.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "own_customer_order_detail",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM sales_order o\n  WHERE ((o.id = sales_order_detail.order_id) AND pawpal_private.owns_customer(o.customer_id))))",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('sales_order_detail.write'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('sales_order_detail.write'::text)"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('sales_order_detail.read'::text)",
+      "with_check": null
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('sales_order_detail.write'::text)",
+      "with_check": "pawpal_private.has_permission('sales_order_detail.write'::text)"
+    }
+  ],
+  "triggers": [
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1_appointment_owner",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_appointment_owner BEFORE INSERT OR UPDATE ON appointment FOR EACH ROW EXECUTE FUNCTION pawpal_private.validate_appointment_owner()"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1_money_check",
+      "tgenabled": "O",
+      "definition": "CREATE CONSTRAINT TRIGGER v1_money_check AFTER INSERT OR DELETE OR UPDATE ON appointment DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION pawpal_private.deferred_money_check()"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1_service_staff_availability",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_service_staff_availability BEFORE INSERT OR UPDATE OF staff_id, scheduled_start_at, scheduled_end_at, appointment_status ON appointment FOR EACH ROW EXECUTE FUNCTION pawpal_private.guard_service_staff_availability()"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1_sync_service_logistics",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_sync_service_logistics AFTER UPDATE OF appointment_status, staff_id ON appointment FOR EACH ROW EXECUTE FUNCTION pawpal_private.sync_service_logistics()"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment",
+      "name": "v1_updated",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_updated BEFORE UPDATE ON appointment FOR EACH ROW EXECUTE FUNCTION pawpal_private.touch_updated_at()"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "v1_money_check",
+      "tgenabled": "O",
+      "definition": "CREATE CONSTRAINT TRIGGER v1_money_check AFTER INSERT OR DELETE OR UPDATE ON appointment_item DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION pawpal_private.deferred_money_check()"
+    },
+    {
+      "schema": "public",
+      "table_name": "appointment_item",
+      "name": "v1_updated",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_updated BEFORE UPDATE ON appointment_item FOR EACH ROW EXECUTE FUNCTION pawpal_private.touch_updated_at()"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart",
+      "name": "v1_updated",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_updated BEFORE UPDATE ON cart FOR EACH ROW EXECUTE FUNCTION pawpal_private.touch_updated_at()"
+    },
+    {
+      "schema": "public",
+      "table_name": "cart_item",
+      "name": "v1_updated",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_updated BEFORE UPDATE ON cart_item FOR EACH ROW EXECUTE FUNCTION pawpal_private.touch_updated_at()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "v1_portal_identity",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_portal_identity BEFORE INSERT OR UPDATE OF auth_user_id ON customer FOR EACH ROW EXECUTE FUNCTION pawpal_private.check_portal_identity()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer",
+      "name": "v1_updated",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_updated BEFORE UPDATE ON customer FOR EACH ROW EXECUTE FUNCTION pawpal_private.touch_updated_at()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "v1_contact_default",
+      "tgenabled": "O",
+      "definition": "CREATE CONSTRAINT TRIGGER v1_contact_default AFTER INSERT OR DELETE OR UPDATE ON customer_phone DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION pawpal_private.check_contact_default()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "v1_lock_contact",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_lock_contact BEFORE INSERT OR DELETE OR UPDATE ON customer_phone FOR EACH ROW EXECUTE FUNCTION pawpal_private.lock_contact_parent()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_phone",
+      "name": "v1_updated",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_updated BEFORE UPDATE ON customer_phone FOR EACH ROW EXECUTE FUNCTION pawpal_private.touch_updated_at()"
+    },
+    {
+      "schema": "public",
+      "table_name": "customer_profile",
+      "name": "v1_updated",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_updated BEFORE UPDATE ON customer_profile FOR EACH ROW EXECUTE FUNCTION pawpal_private.touch_updated_at()"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "v1_audit_event",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_audit_event AFTER INSERT OR UPDATE ON payment FOR EACH ROW EXECUTE FUNCTION pawpal_private.audit_money()"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "v1_money_check",
+      "tgenabled": "O",
+      "definition": "CREATE CONSTRAINT TRIGGER v1_money_check AFTER INSERT OR DELETE OR UPDATE ON payment DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION pawpal_private.deferred_money_check()"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "v1_posted_delete",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_posted_delete BEFORE DELETE ON payment FOR EACH ROW EXECUTE FUNCTION pawpal_private.protect_payment_delete()"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "v1_updated",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_updated BEFORE UPDATE ON payment FOR EACH ROW EXECUTE FUNCTION pawpal_private.touch_updated_at()"
+    },
+    {
+      "schema": "public",
+      "table_name": "payment",
+      "name": "v1_validate_payment",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_validate_payment BEFORE INSERT OR UPDATE ON payment FOR EACH ROW EXECUTE FUNCTION pawpal_private.validate_payment()"
+    },
+    {
+      "schema": "public",
+      "table_name": "pet_profile",
+      "name": "v1_updated",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_updated BEFORE UPDATE ON pet_profile FOR EACH ROW EXECUTE FUNCTION pawpal_private.touch_updated_at()"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "sync_sales_replacement",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER sync_sales_replacement AFTER UPDATE ON sales_order FOR EACH ROW EXECUTE FUNCTION pawpal_private.sync_sales_replacement()"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "v1_money_check",
+      "tgenabled": "O",
+      "definition": "CREATE CONSTRAINT TRIGGER v1_money_check AFTER INSERT OR DELETE OR UPDATE ON sales_order DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION pawpal_private.deferred_money_check()"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order",
+      "name": "v1_updated",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER v1_updated BEFORE UPDATE ON sales_order FOR EACH ROW EXECUTE FUNCTION pawpal_private.touch_updated_at()"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "protect_sales_replacement_lines",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER protect_sales_replacement_lines BEFORE INSERT OR DELETE OR UPDATE ON sales_order_detail FOR EACH ROW EXECUTE FUNCTION pawpal_private.protect_sales_replacement_lines()"
+    },
+    {
+      "schema": "public",
+      "table_name": "sales_order_detail",
+      "name": "v1_money_check",
+      "tgenabled": "O",
+      "definition": "CREATE CONSTRAINT TRIGGER v1_money_check AFTER INSERT OR DELETE OR UPDATE ON sales_order_detail DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION pawpal_private.deferred_money_check()"
+    }
+  ],
+  "functions": [
+    {
+      "schema": "pawpal_private",
+      "name": "owns_customer",
+      "args": "target uuid",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "proacl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "definition": "CREATE OR REPLACE FUNCTION pawpal_private.owns_customer(target uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\n SELECT EXISTS(SELECT 1 FROM public.customer c JOIN auth.users u ON u.id=c.auth_user_id\n WHERE c.id=target AND c.auth_user_id=auth.uid() AND c.customer_status='active'\n AND (u.banned_until IS NULL OR u.banned_until<=now()));\n$function$\n",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "schema": "public",
+      "name": "complete_customer_auth",
+      "args": "p_auth_id uuid, p_phone text, p_name text",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "proacl": "{postgres=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "definition": "CREATE OR REPLACE FUNCTION public.complete_customer_auth(p_auth_id uuid, p_phone text, p_name text DEFAULT NULL::text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n    v_customer_id uuid;\n    v_tier_id uuid;\n    v_clean_phone text := btrim(p_phone);\n    v_clean_name text := nullif(btrim(regexp_replace(coalesce(p_name, ''), '\\s+', ' ', 'g')), '');\n    v_current_status text;\n    v_existing_auth_id uuid;\nBEGIN\n    -- Khóa theo số điện thoại chống tranh chấp ghi đồng thời\n    PERFORM pg_advisory_xact_lock(hashtextextended(v_clean_phone, 0));\n\n    -- Kiểm tra Auth ID có tồn tại trong auth.users\n    IF NOT EXISTS (SELECT 1 FROM auth.users WHERE id = p_auth_id) THEN\n        RAISE EXCEPTION 'Tài khoản đăng nhập không tồn tại.';\n    END IF;\n\n    -- Chặn tài khoản nhân sự\n    IF EXISTS (SELECT 1 FROM public.staff WHERE auth_user_id = p_auth_id OR phone_number = v_clean_phone) THEN\n        RAISE EXCEPTION 'Không được kích hoạt tài khoản nhân sự tại cổng khách hàng.';\n    END IF;\n\n    -- Tra cứu xem số điện thoại này đã tồn tại trong customer_phone chưa\n    SELECT cp.customer_id, c.customer_status, c.auth_user_id \n    INTO v_customer_id, v_current_status, v_existing_auth_id\n    FROM public.customer_phone cp\n    JOIN public.customer c ON c.id = cp.customer_id\n    WHERE cp.phone_number = v_clean_phone\n    LIMIT 1\n    FOR UPDATE OF c;\n\n    IF FOUND THEN\n        -- Khách hàng đã có hồ sơ tại quầy hoặc trước đó\n        IF v_current_status = 'locked' OR v_current_status = 'LOCKED' OR v_current_status = 'da_khoa' THEN\n            RAISE EXCEPTION 'Tài khoản này đã bị khóa. Vui lòng liên hệ CSKH.';\n        END IF;\n\n        IF v_existing_auth_id IS NOT NULL AND v_existing_auth_id <> p_auth_id THEN\n            RAISE EXCEPTION 'Số điện thoại này đã được liên kết với một tài khoản khác.';\n        END IF;\n\n        -- Cập nhật liên kết auth_user_id vào customer\n        UPDATE public.customer \n        SET auth_user_id = p_auth_id,\n            customer_status = 'active',\n            updated_at = now()\n        WHERE id = v_customer_id;\n\n        -- Xác nhận số điện thoại\n        UPDATE public.customer_phone \n        SET verified_at = coalesce(verified_at, now()),\n            updated_at = now()\n        WHERE customer_id = v_customer_id AND phone_number = v_clean_phone;\n\n        -- Cập nhật họ tên nếu có\n        IF v_clean_name IS NOT NULL THEN\n            UPDATE public.customer_profile \n            SET full_name = v_clean_name, updated_at = now() \n            WHERE customer_id = v_customer_id;\n\n            IF NOT FOUND THEN\n                INSERT INTO public.customer_profile (customer_id, full_name)\n                VALUES (v_customer_id, v_clean_name);\n            END IF;\n        END IF;\n    ELSE\n        -- Khách hàng mới hoàn toàn, đăng ký qua cổng online\n        IF v_clean_name IS NULL THEN\n            RAISE EXCEPTION 'Vui lòng cung cấp họ và tên để hoàn tất đăng ký.';\n        END IF;\n\n        v_customer_id := gen_random_uuid();\n\n        INSERT INTO public.customer (id, customer_code, customer_status, auth_user_id, note)\n        VALUES (\n            v_customer_id,\n            'CUS-' || upper(replace(v_customer_id::text, '-', '')),\n            'active',\n            p_auth_id,\n            'Đăng ký trực tuyến qua Cổng Khách hàng.'\n        );\n\n        INSERT INTO public.customer_profile (customer_id, full_name)\n        VALUES (v_customer_id, v_clean_name);\n\n        INSERT INTO public.customer_phone (customer_id, phone_number, is_primary, verified_at)\n        VALUES (v_customer_id, v_clean_phone, true, now());\n\n        -- Gán hạng thành viên Đồng ban đầu\n        SELECT id INTO v_tier_id \n        FROM public.membership_tier \n        WHERE is_active AND minimum_expenditure = 0 \n        ORDER BY id LIMIT 1;\n\n        IF v_tier_id IS NOT NULL THEN\n            INSERT INTO public.customer_membership (customer_id, membership_tier_id)\n            VALUES (v_customer_id, v_tier_id);\n        END IF;\n\n        -- Tặng 50 điểm chào mừng vào sổ cái paw_point_transaction\n        NULL; -- Chưa tự cộng điểm khi đăng ký.\n    END IF;\n\n    RETURN v_customer_id;\nEND $function$\n",
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    {
+      "schema": "public",
+      "name": "create_own_sales_order",
+      "args": "p_id uuid, p_expected_quote text, p_details jsonb, p_lines jsonb, p_payment_method uuid",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "proacl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "definition": "CREATE OR REPLACE FUNCTION public.create_own_sales_order(p_id uuid, p_expected_quote text, p_details jsonb, p_lines jsonb, p_payment_method uuid)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE owner_id uuid; method public.payment_method_config; prior public.payment; due numeric;\nBEGIN\n SELECT id INTO owner_id FROM public.customer WHERE auth_user_id=auth.uid() AND pawpal_private.owns_customer(id) FOR UPDATE;\n IF owner_id IS NULL THEN RAISE EXCEPTION 'Vui lòng đăng nhập lại' USING ERRCODE='42501'; END IF;\n SELECT * INTO method FROM public.payment_method_config WHERE id=p_payment_method AND available AND fee=0 FOR SHARE;\n IF NOT FOUND OR lower(method.short_name) NOT IN ('cod','cash','bank transfer','vietqr') THEN\n  RAISE EXCEPTION 'Phương thức này chưa hỗ trợ xác nhận thủ công' USING ERRCODE='22023'; END IF;\n PERFORM pawpal_private.create_own_sales_core(p_id,owner_id,p_expected_quote,p_details,p_lines);\n SELECT * INTO prior FROM public.payment WHERE idempotency_key='customer-order:'||p_id;\n IF FOUND THEN\n  IF prior.payment_method_config_id<>method.id THEN RAISE EXCEPTION 'Yêu cầu đặt hàng đã thay đổi' USING ERRCODE='PT409'; END IF;\n  RETURN p_id;\n END IF;\n SELECT total_amount INTO due FROM public.sales_order_totals WHERE order_id=p_id;\n IF due>0 THEN\n  INSERT INTO public.payment(payment_code,customer_id,payment_method_config_id,payment_type,amount,transaction_status,idempotency_key,order_id)\n  VALUES('PAY-'||replace(p_id::text,'-',''),owner_id,method.id,'collection',due,'pending','customer-order:'||p_id,p_id);\n END IF;\n RETURN p_id;\nEND $function$\n",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "schema": "public",
+      "name": "create_own_service_booking",
+      "args": "p_id uuid, p_expected_quote text, p_details jsonb",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "proacl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "definition": "CREATE OR REPLACE FUNCTION public.create_own_service_booking(p_id uuid, p_expected_quote text, p_details jsonb)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE owner_id uuid; a public.appointment; previous public.audit_log; quote jsonb; addon jsonb; base_total numeric;\nBEGIN\n SELECT id INTO owner_id FROM public.customer WHERE auth_user_id=auth.uid() AND pawpal_private.owns_customer(id) FOR UPDATE;\n IF owner_id IS NULL OR EXISTS(SELECT 1 FROM public.staff WHERE auth_user_id=auth.uid()) THEN RAISE EXCEPTION 'customer_session_required' USING ERRCODE='42501'; END IF;\n IF p_id IS NULL OR p_expected_quote IS NULL OR p_details IS NULL OR length(p_details::text)>16000 THEN RAISE EXCEPTION 'invalid_booking_details' USING ERRCODE='22023'; END IF;\n PERFORM pg_advisory_xact_lock(hashtextextended(p_id::text,68));\n SELECT * INTO a FROM public.appointment WHERE id=p_id FOR UPDATE;\n IF FOUND THEN\n  IF a.customer_id<>owner_id THEN RAISE EXCEPTION 'booking_owner_required' USING ERRCODE='42501'; END IF;\n  SELECT * INTO previous FROM public.audit_log WHERE entity_id=p_id AND action='CUSTOMER_BOOKING_CREATE' LIMIT 1;\n  IF previous.id IS NULL OR previous.description::jsonb->'details' IS DISTINCT FROM p_details OR previous.description::jsonb->>'quote_version' IS DISTINCT FROM p_expected_quote THEN RAISE EXCEPTION 'booking_request_conflict' USING ERRCODE='PT409'; END IF;\n  RETURN p_id;\n END IF;\n quote:=pawpal_private.customer_new_booking_quote(p_details);\n IF quote->>'version'<>p_expected_quote THEN RAISE EXCEPTION 'booking_quote_changed_reload_required' USING ERRCODE='PT409'; END IF;\n IF quote->>'category'='grooming_spa' THEN PERFORM pawpal_private.create_customer_service_core(p_id,quote->'core');\n ELSE PERFORM pawpal_private.create_customer_logistics_core(p_id,quote->'core'); END IF;\n SELECT quantity*unit_price INTO base_total FROM public.appointment_item WHERE appointment_id=p_id AND is_primary;\n IF base_total IS DISTINCT FROM (quote->>'quantity')::integer*(quote->>'unit_price')::numeric THEN RAISE EXCEPTION 'booking_quote_changed_reload_required' USING ERRCODE='PT409'; END IF;\n FOR addon IN SELECT value FROM jsonb_array_elements(quote->'addons') LOOP\n  INSERT INTO public.appointment_item(appointment_id,service_addon_id,name_snapshot,quantity,unit_price,duration_minutes,status)\n   VALUES(p_id,(addon->>'id')::uuid,addon->>'name',1,(addon->>'price')::numeric,(addon->>'duration')::integer,'pending');\n END LOOP;\n UPDATE public.appointment SET scheduled_end_at=(quote->>'end_at')::timestamptz WHERE id=p_id;\n INSERT INTO public.audit_log(action,entity_name,entity_id,description) VALUES('CUSTOMER_BOOKING_CREATE','appointment',p_id,\n  jsonb_build_object('details',p_details,'quote_version',p_expected_quote,'quote',quote)::text);\n RETURN p_id;\nEND $function$\n",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "schema": "public",
+      "name": "customer_profile_snapshot",
+      "args": "",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "proacl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "definition": "CREATE OR REPLACE FUNCTION public.customer_profile_snapshot()\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE c public.customer; result jsonb; addresses jsonb; phone text;\nBEGIN\n SELECT * INTO c FROM public.customer WHERE auth_user_id=auth.uid() AND customer_status='active';\n IF NOT FOUND OR EXISTS(SELECT 1 FROM public.staff WHERE auth_user_id=auth.uid()) THEN\n  RAISE EXCEPTION 'Phiên khách hàng không hợp lệ' USING ERRCODE='42501'; END IF;\n SELECT phone_number INTO phone FROM public.customer_phone WHERE customer_id=c.id ORDER BY is_primary DESC,id LIMIT 1;\n -- V1 lưu địa chỉ dạng văn bản; giữ tương thích với form hiện có.\n SELECT coalesce(jsonb_agg(to_jsonb(a)||jsonb_build_object(\n  'street_address',CASE WHEN strpos(a.street_address,',')>0 THEN regexp_replace(a.street_address,',[^,]*$','') ELSE a.street_address END,\n  'district',CASE WHEN strpos(a.street_address,',')>0 THEN btrim(substring(a.street_address FROM '[^,]*$')) ELSE '' END,\n  'ward','') ORDER BY a.id),'[]'::jsonb) INTO addresses FROM public.customer_address a WHERE customer_id=c.id;\n SELECT jsonb_build_object('id',c.id,'phone',coalesce(phone,''),'email',coalesce(c.contact_email,''),\n  'name',coalesce((SELECT full_name FROM public.customer_profile WHERE customer_id=c.id),''),'addresses',addresses,\n  'customer_updated_at',c.updated_at) INTO result;\n RETURN result||jsonb_build_object('revision',md5(result::text));\nEND $function$\n",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "schema": "public",
+      "name": "ensure_guest_customer",
+      "args": "p_phone text, p_name text",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "proacl": "{postgres=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "definition": "CREATE OR REPLACE FUNCTION public.ensure_guest_customer(p_phone text, p_name text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n    v_customer_id uuid;\n    v_clean_phone text := btrim(p_phone);\n    v_clean_name text := nullif(btrim(regexp_replace(coalesce(p_name, ''), '\\s+', ' ', 'g')), '');\n    v_tier_id uuid;\nBEGIN\n    IF v_clean_phone !~ '^0[0-9]{9}$' THEN\n        RAISE EXCEPTION 'Số điện thoại không hợp lệ.';\n    END IF;\n    IF v_clean_name IS NULL THEN\n        RAISE EXCEPTION 'Họ và tên không hợp lệ.';\n    END IF;\n\n    -- Khóa chống tranh chấp\n    PERFORM pg_advisory_xact_lock(hashtextextended(v_clean_phone, 2));\n\n    -- Kiểm tra nếu đã có khách với số này\n    SELECT customer_id INTO v_customer_id\n    FROM public.customer_phone\n    WHERE phone_number = v_clean_phone\n    LIMIT 1;\n\n    IF FOUND THEN\n        RETURN v_customer_id;\n    END IF;\n\n    -- Tạo hồ sơ khách vãng lai (auth_user_id IS NULL)\n    v_customer_id := gen_random_uuid();\n    INSERT INTO public.customer (id, customer_code, customer_status, note)\n    VALUES (\n        v_customer_id,\n        'GUEST-' || upper(replace(v_customer_id::text, '-', '')),\n        'active',\n        'Khách vãng lai đặt dịch vụ/mua hàng.'\n    );\n\n    INSERT INTO public.customer_profile (customer_id, full_name)\n    VALUES (v_customer_id, v_clean_name);\n\n    INSERT INTO public.customer_phone (customer_id, phone_number, is_primary)\n    VALUES (v_customer_id, v_clean_phone, true);\n\n    SELECT id INTO v_tier_id \n    FROM public.membership_tier \n    WHERE is_active AND minimum_expenditure = 0 \n    ORDER BY id LIMIT 1;\n\n    IF v_tier_id IS NOT NULL THEN\n        INSERT INTO public.customer_membership (customer_id, membership_tier_id)\n        VALUES (v_customer_id, v_tier_id);\n    END IF;\n\n    RETURN v_customer_id;\nEND $function$\n",
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    {
+      "schema": "public",
+      "name": "own_booking_pets",
+      "args": "",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "proacl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "definition": "CREATE OR REPLACE FUNCTION public.own_booking_pets()\n RETURNS jsonb\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\n SELECT coalesce(jsonb_agg(jsonb_build_object('id',p.id,'name',p.pet_name,'species_id',b.species_id,'species',s.species_name,'breed',b.breed_name,\n  'weight',w.weight,'allergy',p.allergy,'safety_note',p.safety_note) ORDER BY p.pet_name),'[]'::jsonb)\n FROM public.pet_profile p JOIN public.pet_breed b ON b.id=p.breed_id JOIN public.pet_species s ON s.id=b.species_id\n LEFT JOIN public.pet_current_weight w ON w.pet_id=p.id\n WHERE p.status='active' AND pawpal_private.owns_customer(p.customer_id) AND NOT EXISTS(SELECT 1 FROM public.staff WHERE auth_user_id=auth.uid());\n$function$\n",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "schema": "public",
+      "name": "own_customer_cart",
+      "args": "p_lines jsonb",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "proacl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "definition": "CREATE OR REPLACE FUNCTION public.own_customer_cart(p_lines jsonb DEFAULT NULL::jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE owner_id uuid; cart_id_value uuid; item jsonb; variant uuid; qty numeric; price numeric; available bigint; seen uuid[]:='{}'; result jsonb;\nBEGIN\n SELECT id INTO owner_id FROM public.customer WHERE auth_user_id=auth.uid() AND pawpal_private.owns_customer(id) FOR UPDATE;\n IF owner_id IS NULL OR EXISTS(SELECT 1 FROM public.staff WHERE auth_user_id=auth.uid()) THEN\n  RAISE EXCEPTION 'Vui lòng đăng nhập bằng tài khoản khách hàng' USING ERRCODE='42501'; END IF;\n SELECT id INTO cart_id_value FROM public.cart WHERE customer_id=owner_id ORDER BY created_at,id LIMIT 1 FOR UPDATE;\n IF p_lines IS NOT NULL THEN\n  IF jsonb_typeof(p_lines)<>'array' OR jsonb_array_length(p_lines)>100 OR length(p_lines::text)>30000 THEN\n   RAISE EXCEPTION 'Giỏ hàng không hợp lệ' USING ERRCODE='22023'; END IF;\n  IF cart_id_value IS NULL THEN INSERT INTO public.cart(customer_id) VALUES(owner_id) RETURNING id INTO cart_id_value; END IF;\n  FOR item IN SELECT value FROM jsonb_array_elements(p_lines) ORDER BY value->>'variant_id' LOOP\n   variant:=(item->>'variant_id')::uuid; qty:=(item->>'quantity')::numeric;\n   IF variant IS NULL OR variant=ANY(seen) OR qty IS NULL OR qty::text IN ('NaN','Infinity','-Infinity') OR qty NOT BETWEEN 1 AND 999 OR qty<>round(qty) THEN\n    RAISE EXCEPTION 'Số lượng sản phẩm không hợp lệ' USING ERRCODE='22023'; END IF;\n   seen:=array_append(seen,variant);\n   SELECT pv.sale_price INTO price FROM public.product_variant pv JOIN public.product p ON p.id=pv.product_id\n    WHERE pv.id=variant AND lower(pv.status)='active' AND lower(p.status)='active' FOR SHARE OF pv;\n   IF NOT FOUND THEN RAISE EXCEPTION 'Sản phẩm không còn được bán' USING ERRCODE='22023'; END IF;\n   SELECT coalesce((SELECT sum(quantity) FROM public.inventory_transaction WHERE product_variant_id=variant),0)\n    -coalesce((SELECT sum(quantity) FROM public.stock_reservation WHERE product_variant_id=variant AND status='active' AND expires_at>now()),0) INTO available;\n   IF qty>available THEN RAISE EXCEPTION 'Sản phẩm không đủ tồn kho khả dụng' USING ERRCODE='22023'; END IF;\n   INSERT INTO public.cart_item(cart_id,product_variant_id,quantity,unit_price) VALUES(cart_id_value,variant,qty,price)\n   ON CONFLICT(cart_id,product_variant_id) DO UPDATE SET quantity=EXCLUDED.quantity,unit_price=EXCLUDED.unit_price,updated_at=now();\n  END LOOP;\n  DELETE FROM public.cart_item WHERE cart_id=cart_id_value AND NOT(product_variant_id=ANY(seen));\n  UPDATE public.cart SET updated_at=now() WHERE id=cart_id_value;\n END IF;\n SELECT coalesce(jsonb_agg(jsonb_build_object('id',ci.id,'product_variant_id',ci.product_variant_id,'quantity',ci.quantity,\n  'unit_price',pv.sale_price,'product_variant',jsonb_build_object('id',pv.id,'product_id',pv.product_id,'sku_variant',pv.sku_variant,'sale_price',pv.sale_price,\n  'product',jsonb_build_object('id',p.id,'product_name',p.product_name,'brand_name',p.brand_name))) ORDER BY ci.created_at,ci.id),'[]'::jsonb)\n INTO result FROM public.cart_item ci JOIN public.product_variant pv ON pv.id=ci.product_variant_id JOIN public.product p ON p.id=pv.product_id WHERE ci.cart_id=cart_id_value;\n RETURN result;\nEND $function$\n",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "schema": "public",
+      "name": "quote_own_sales_order",
+      "args": "p_details jsonb, p_lines jsonb",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "proacl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "definition": "CREATE OR REPLACE FUNCTION public.quote_own_sales_order(p_details jsonb, p_lines jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE owner_id uuid;\nBEGIN\n SELECT id INTO owner_id FROM public.customer WHERE auth_user_id=auth.uid() AND pawpal_private.owns_customer(id);\n RETURN pawpal_private.quote_own_sales_core(owner_id,p_details,p_lines);\nEND $function$\n",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "schema": "public",
+      "name": "quote_own_service_booking",
+      "args": "p_details jsonb",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "proacl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "definition": "CREATE OR REPLACE FUNCTION public.quote_own_service_booking(p_details jsonb)\n RETURNS jsonb\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$ SELECT pawpal_private.customer_new_booking_quote(p_details) $function$\n",
+      "anon_execute": false,
+      "authenticated_execute": true
+    }
+  ]
+}

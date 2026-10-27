@@ -402,9 +402,9 @@
                     const mem = memMap[c.id] || {};
                     const points = balanceMap.get(c.id) || 0;
 
-                    const hasMembership = !!memMap[c.id];
-                    const isWalkInName = /vãng lai|vang lai/i.test(prof.full_name || c.full_name || '');
-                    const isTemp = !hasMembership;
+                    const customerType = window.PawpalCustomerIdentity.classify(c);
+                    const hasMembership = customerType === 'member';
+                    const isTemp = customerType === 'guest';
 
                     let tier = 'NONE';
                     const tierName = mem.membership_tier?.tier_name || 'Chưa có hạng';
@@ -433,8 +433,8 @@
                     const isSuspended = accMeta.raw === 'tam_khoa' || rawAccountStatus === 'suspended';
                     const isLocked = accMeta.isLocked;
 
-                    // Xác định số điện thoại ưu tiên: c.phone_main -> số người nhận trong sổ địa chỉ -> '—'
-                    const phoneVal = phoneMap.get(c.id) || '—';
+                    const customerContact = window.PawpalCustomerIdentity.contact(c,phoneMap.get(c.id));
+                    const phoneVal = customerContact.phone || '—';
 
                     // GĐ-03 & F-006: Chuẩn hóa mapping giới tính qua PawpalEnum, không gán NULL thành Khác
                     const genderVal = (window.PawpalEnum?.gender)
@@ -451,6 +451,7 @@
                         accountStatusRaw: c.customer_status,
                         name: prof.full_name || c.full_name || ('Khách hàng ' + (phoneVal !== '—' ? phoneVal : custKey)),
                         phone: phoneVal,
+                        phoneUnverified: customerContact.unverified,
                         email: c.contact_email || 'Chưa cập nhật',
                         gender: genderVal,
                         dob: prof.date_of_birth ? PawpalCustomers.formatDate(prof.date_of_birth) : 'Chưa cập nhật',
@@ -460,6 +461,8 @@
                         tierBadgeClass: tierBadge,
                         points: points,
                         isMember: hasMembership,
+                        customerType,
+                        customerTypeLabel: window.PawpalCustomerIdentity.label(customerType),
                         status: isSuspended ? 'SUSPENDED' : (isLocked ? 'LOCKED' : (isTemp ? 'TEMP' : 'ACTIVE')),
                         authStatus: isSuspended ? 'Tạm khóa' : (isLocked ? 'Đã khóa' : (isTemp ? 'Khách vãng lai' : 'Đang hoạt động')),
                         accountStatusLabel: accMeta.label,

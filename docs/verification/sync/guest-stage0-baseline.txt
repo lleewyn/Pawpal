@@ -1,0 +1,90 @@
+{
+  "capturedAt": "2026-10-26T16:54:38.309Z",
+  "branch": "feat/guest-admin-identity",
+  "head": "515487316452d2df1394984e74d45926c4f0cca9",
+  "originMain": "515487316452d2df1394984e74d45926c4f0cca9",
+  "production": {
+    "sha": "515487316452d2df1394984e74d45926c4f0cca9",
+    "created": "2026-10-26T15:47:35Z",
+    "status": "success",
+    "url": "https://pawpalgr3-5r5bht1dg-llwyns-projects.vercel.app",
+    "source": "https://api.github.com/repos/lleewyn/Pawpal/deployments/7336473465/statuses"
+  },
+  "localFiles": [
+    {
+      "file": "pages/public/login/login.js",
+      "sha256": "a1f667f27eeced42bacd96a01f8d417e007261913d81a0b77f08714ece1e50fb"
+    },
+    {
+      "file": "pages/public/return-guest/return-guest.js",
+      "sha256": "0adcf8cc949fbc689f25e00ef317bdba331377a9460fd2a62a54a1fa4114447b"
+    },
+    {
+      "file": "pages/services/booking/booking.js",
+      "sha256": "a88e1a7f0eb8db46a41ca2e1a1e15f2a8ba0187b793e0a83bbd6cd8eb9d3ecb4"
+    },
+    {
+      "file": "pages/shop/cart/cart.js",
+      "sha256": "d65a04aaa8eecddf9323c00c41753e4d30c597651e5130f7e06e790de067d29f"
+    },
+    {
+      "file": "pages/shop/checkout/checkout.js",
+      "sha256": "fc209488eabe0507a1d5ac289405b5eccce37f09afe3ddb4dbc98b12fa292a3d"
+    },
+    {
+      "file": "scripts/api/api.js",
+      "sha256": "124c28a435ace01b236fc83d4f99870ab5313de70213008b0649dcb5e4df5fb4"
+    },
+    {
+      "file": "scripts/api/customer_auth.js",
+      "sha256": "102cf4e570e249aa0186b8c4009ab61c0a35b3ddac2a0242ad25b324049c5e99"
+    },
+    {
+      "file": "scripts/shared/cart-access.mjs",
+      "sha256": "4ea634ff7641b95a20cd1cd2f9d895d7c8e9d7268e8c9d9c6552702fae95311a"
+    },
+    {
+      "file": "scripts/shared/customer-identity.mjs",
+      "sha256": "1dd9b8a6587d5679cdbea93afb39849043237348fe00d1c5f2c0c791a905906f"
+    },
+    {
+      "file": "pages/user/modules/profile/profile.js",
+      "sha256": "de68ce418ce992572cf0e4b5dfe3d05a00741143515118fa973c1d8ca43bd8d2"
+    },
+    {
+      "file": "pages/user/modules/pets/pets.js",
+      "sha256": "d324a293aac8ea7a2a29d80e12fc060dbed95efec9c4ec7a3a9db363038072ba"
+    },
+    {
+      "file": "pages/user/modules/bookings/bookings.js",
+      "sha256": "1b51a95ca11b7fba745c34af03720947b782d7f37a33c73ae7c9036b92cd6478"
+    },
+    {
+      "file": "pages/user/modules/orders/orders.js",
+      "sha256": "0a1c0dc66fdb69f15550625a4bfd81329e5fcf5b764ee84867a3e7c294df6cb1"
+    }
+  ],
+  "aliasChecks": [
+    {
+      "file": "pages/services/booking/booking.js",
+      "status": 200,
+      "bytes": 33973,
+      "sha256": "a88e1a7f0eb8db46a41ca2e1a1e15f2a8ba0187b793e0a83bbd6cd8eb9d3ecb4",
+      "matchesProductionCommit": true
+    },
+    {
+      "file": "pages/shop/checkout/checkout.js",
+      "status": 200,
+      "bytes": 73952,
+      "sha256": "65ebd50e93e3ed5dfa67e15c2ba1050e1ccbfc6fb2be4e6ece0041f7d89d0767",
+      "matchesProductionCommit": true
+    },
+    {
+      "file": "scripts/api/api.js",
+      "status": 200,
+      "bytes": 85117,
+      "sha256": "d659840aa8e58bd0fa68e1d7cd22f1ffd6667e7214122a1e547dfa33784813f7",
+      "matchesProductionCommit": true
+    }
+  ]
+}

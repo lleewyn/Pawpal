@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-26T17:47:29.824Z",
+  "status": "PASS",
+  "checks": [
+    "Same-name pets retain two distinct Pet IDs under one owner",
+    "First write using foreign Pet ID rejects and rolls back newly attempted customer/session",
+    "Self-declared guest contact never claims primary phone"
+  ],
+  "scope": "Installed RPC SQL with synthetic fixtures, transaction rollback; no HTTP/Auth/UI or concurrency acceptance"
+}

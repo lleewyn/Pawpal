@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-10-26T17:44:54.071Z",
+  "status": "PASS",
+  "serviceContextUnboundEmpty": true,
+  "anonymousDenied": true,
+  "anonymousCode": "42501",
+  "requests": 2,
+  "scope": "Real Supabase REST service/anon context calls with random unknown hash; no business writes or customer lookup, no Auth user login/HTTP backend deployment acceptance"
+}

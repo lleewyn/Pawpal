@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-10-26T17:44:30.296Z",
+  "status": "PASS",
+  "migrationSha256": "d7f744daf28182e4cfbc4127653196422d283ac4baaab4114eb6d65b5c0708fb",
+  "rollbackSha256": "1bf5ade8965329323e55246589d8133431dbb273f3c0dbbb65e6fa302e47bbc1",
+  "backupFolder": "D:/Aboutme/Pawpal-infra/supabase-local/backups/guest-commerce-113",
+  "functions": [
+    {
+      "proname": "guest_commerce_context",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": true
+    },
+    {
+      "proname": "guest_commerce_end",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": true
+    },
+    {
+      "proname": "guest_commerce_save_pet",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public"
+      ],
+      "anon_execute": false,
+      "customer_execute": false,
+      "service_execute": true
+    }
+  ],
+  "scope": "Three new service-only fixed-path RPC definitions; no calls creating business records, schema/table data/RLS unchanged; backend code not deployed"
+}

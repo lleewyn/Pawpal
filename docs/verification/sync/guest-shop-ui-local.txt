@@ -1,0 +1,111 @@
+{
+  "timestamp": "2026-10-27T01:31:35.325Z",
+  "status": "PASS",
+  "nodeTests": {
+    "passed": 68,
+    "failed": 0
+  },
+  "browser": {
+    "tool": "Playwright MCP",
+    "localOrigin": "http://localhost:4001",
+    "publicLiveReads": [
+      "catalog",
+      "customer_shop_options",
+      "guest session/context",
+      "order quote",
+      "unbound order receipt"
+    ],
+    "actualUI": [
+      "Guest cart empty state without redirect",
+      "Actual product detail add button",
+      "Two variants of same product remain separate",
+      "Quantity edit and reload persist minimal guest cart",
+      "Guest cart does not write member cache",
+      "Checkout opens without login and requires contact",
+      "390px cart and checkout have no horizontal overflow"
+    ],
+    "twoRealTabs": {
+      "webLocks": true,
+      "sessionRequests": 2,
+      "newCookiesIssued": 1,
+      "secondRequestHasCookie": true,
+      "additions": [
+        2,
+        3
+      ],
+      "storedQuantity": 5
+    },
+    "uncertainCreate": {
+      "interceptedStatus": 503,
+      "explicitAttempts": 2,
+      "sameRequestId": true,
+      "cookiePreserved": true,
+      "actualReceiptStatuses": [
+        404,
+        404
+      ],
+      "falseSuccess": false,
+      "automaticRetry": false
+    },
+    "mockedSuccessReceipt": {
+      "pendingPayment": true,
+      "selectiveCleanup": true,
+      "concurrentAdditionPreserved": true,
+      "reloadDoesNotRepeatCreateOrCleanup": true
+    },
+    "pageErrors": [],
+    "businessCreateRequestsReachedCloud": 0
+  },
+  "limits": [
+    "No committed order/profile/hold fixture or Realtime acceptance",
+    "Receipt/create success fixtures intercepted; not real server success proof",
+    "No full member UI regression, guest booking UI, coupon/shipping/buy-now acceptance",
+    "No gateway/SMS/upload, migration or push/deploy"
+  ],
+  "sources": [
+    {
+      "file": "scripts/shared/guest-cart.mjs",
+      "sha256": "1239dafd82c272b9c981c5a4902a7a7e8190d5f8b1f6a106366b1ce973975d24"
+    },
+    {
+      "file": "scripts/shared/guest-commerce-client.mjs",
+      "sha256": "a5a0a4bcc6cc00ab3c70e177945db8b0aa4fbc5691fc5d7c68d7674c4fb9171c"
+    },
+    {
+      "file": "scripts/api/api.js",
+      "sha256": "7883518e313ce826d626c459067f0ad7810346ef4ea55630d617155660d71648"
+    },
+    {
+      "file": "scripts/api/guest_commerce.js",
+      "sha256": "ed4f09a8110430c5780e061c68f3706984074bb2c01ac3ca44d100ca86162643"
+    },
+    {
+      "file": "pages/shop/cart/guest-cart-page.mjs",
+      "sha256": "598ae46b96ed1c8f7fd469697c2908860775762d6a7f0fad38c2e33ef8dfff93"
+    },
+    {
+      "file": "pages/shop/cart/cart.js",
+      "sha256": "ca5c674b544e664a061d92cbf1c806a4cc309155eca6b833d69d4d071243123c"
+    },
+    {
+      "file": "pages/shop/checkout/guest-checkout.mjs",
+      "sha256": "d8c5a5f01602c63623ca40c3246c68af3a278fdcda8930e94c3e96b2621cef06"
+    },
+    {
+      "file": "pages/shop/checkout/checkout.js",
+      "sha256": "8d4cd5663d6f88db3181b6044276fa19988a82263b05d5a72c53c91e6163c80a"
+    },
+    {
+      "file": "pages/shop/shop.js",
+      "sha256": "3ced71711d806ca674e6999eed9c919105334267b4e8d245254dfdf200c83f0a"
+    },
+    {
+      "file": "pages/shop/product-detail/product-detail.js",
+      "sha256": "4d1f03d8274fe94eeb8ff51e9d0f78d598d9dc255f5e58cd77e6a75ac26f58a5"
+    },
+    {
+      "file": "components/header/header.js",
+      "sha256": "8699db4bfb8201a5f82486eedfef87cf048dda774fe8758abdf2cc2726c30557"
+    }
+  ]
+}

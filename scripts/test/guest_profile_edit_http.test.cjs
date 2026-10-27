@@ -1,0 +1,9 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {createGuestCommerce}=require('../api/guest_commerce');
+test('Profile rotation repeats deterministically after lost response and does not extend cookie expiry',async()=>{
+ const calls=[];const handler=createGuestCommerce({admin:{rpc:async(name,args)=>{calls.push({name,args});return {data:{requestId:args.p_request,rotated:true}};}},secret:'profile-http-test-secret-at-least-32-bytes',origins:['https://test.pawpal'],now:()=>1800000000000,limit:async()=>{}});
+ const send=async(action,body={},cookie)=>{const res={headers:{},statusCode:200,setHeader(k,v){this.headers[k]=v;},status(n){this.statusCode=n;return this;},json(data){this.data=data;return this;}};await handler({method:'POST',headers:{origin:'https://test.pawpal','content-type':'application/json',cookie},body},res,action);return res;};
+ const cookie=(await send('session')).headers['Set-Cookie'].split(';')[0],body={requestId:'11111111-1111-4111-8111-111111111111',revision:'a'.repeat(32),contact:{name:'Owner',phone:'+84 912 345 678'}};
+ const a=await send('profile-update',body,cookie),b=await send('profile-update',body,cookie);assert.equal(a.statusCode,200);assert.equal(a.headers['Set-Cookie'],b.headers['Set-Cookie']);assert.notEqual(a.headers['Set-Cookie'].split(';')[0],cookie);assert.match(a.headers['Set-Cookie'],/Max-Age=604800/);assert.equal(calls[0].args.p_contact.phone,'0912345678');assert.equal(calls[0].args.p_new_hash,calls[1].args.p_new_hash);assert.notEqual(calls[0].args.p_hash,calls[0].args.p_new_hash);
+ const count=calls.length;assert.equal((await send('profile-update',{...body,revision:'bad'},cookie)).statusCode,400);assert.equal((await send('profile-update',{...body,contact:{...body.contact,phone:'123'}},cookie)).statusCode,400);assert.equal((await send('profile-read',{petId:'bad'},cookie)).statusCode,400);assert.equal(calls.length,count);
+});

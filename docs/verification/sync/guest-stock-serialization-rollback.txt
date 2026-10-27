@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-10-27T01:10:12.264Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "Different sessions checking out the same real variant serialize on a database row lock",
+      "status": "PASS"
+    },
+    {
+      "name": "Waiting checkout completes after the first writer rolls back",
+      "status": "PASS"
+    },
+    {
+      "name": "An old quote cannot create an order or hold once available stock is exhausted in the transaction",
+      "status": "PASS"
+    },
+    {
+      "name": "Exact retry still returns its original order after stock exhaustion, with no duplicate line/hold/payment",
+      "status": "PASS"
+    },
+    {
+      "name": "All test orders, holds, payments and guest profiles rolled back; catalog/stock ledger were never edited",
+      "status": "PASS"
+    }
+  ],
+  "scope": "Installed Cloud SQL checkout RPCs and two independent service_role connections; existing public variant price/ledger unchanged. Bounded row-lock contention followed by rollback, transaction-local exhaustion and exact retry. No commit, after-commit overselling, HTTP/UI, gateway, stress testing or Supabase Logs acceptance."
+}

@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-10-27T06:49:22.857Z",
+  "queries": 1,
+  "checks": [
+    {
+      "function": "guest_booking_day_slots",
+      "sourceSha256": "07ecd13f07b7b5f382ff66983f2282366c51d4c7adc71d514a26e2aac7e4dd58",
+      "serviceOnly": true
+    },
+    {
+      "function": "guest_booking_recover",
+      "sourceSha256": "855d4ba989a8b61a01abf999fe4f111029064555c16e8ba99326371f3382eb57",
+      "serviceOnly": true
+    },
+    {
+      "function": "guest_profile_read",
+      "sourceSha256": "0233622cbd4b92a52db7b60269ef34f1e921842295e86b079aaea30788477cc5",
+      "serviceOnly": true
+    },
+    {
+      "function": "guest_profile_update",
+      "sourceSha256": "962b1cfa4fb1a0f6d870b6ea64441764fa4f48b4a46862f2386930040e9eeef8",
+      "serviceOnly": true
+    },
+    {
+      "function": "guest_sales_recover",
+      "sourceSha256": "922f9ef89bdcac36edf7f3c722352770c9ea6bf72406d42341b67d5461610731",
+      "serviceOnly": true
+    }
+  ],
+  "scope": "Read-only metadata for five named functions; installed bodies match migration files, service-only EXECUTE. No business rows read/written or Logs."
+}

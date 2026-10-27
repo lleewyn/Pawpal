@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-10-26T16:45:50.676Z",
+  "scope": "Local handler HTTP with Cloud readiness, Auth and rate-limit store; two denied calls, no customer/transaction query, no SMS, no Logs",
+  "checks": [
+    {
+      "name": "Phone-only caller denied",
+      "status": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "Invalid JWT denied",
+      "status": "PASS",
+      "httpStatus": 401
+    }
+  ],
+  "status": "PASS"
+}

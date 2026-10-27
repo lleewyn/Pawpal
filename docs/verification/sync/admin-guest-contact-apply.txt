@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-10-27T02:31:46.868Z",
+  "status": "APPLIED",
+  "migration": 117,
+  "sha256": "c63c48b83f4684163f39dd68201435373904eb186f07cefeb1d5f5d2adabbbe3",
+  "aclUnchanged": true,
+  "scope": "Replace existing Admin read/search RPC only; no customer/phone/transaction rows updated. Original function and tested reverse backed up outside webroot."
+}

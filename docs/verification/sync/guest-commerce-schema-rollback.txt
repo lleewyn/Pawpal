@@ -1,0 +1,123 @@
+{
+  "timestamp": "2026-10-26T17:22:07.093Z",
+  "status": "PASS",
+  "sha256": "f198b0a3633c056a4ca0d3b812f1cc855d3edca1300eb3f2cea12a81d8cbc3b4",
+  "rollbackSha256": "e71506252d3078b36dbe1369c91cb0a842a47223ceafcb9f22b408cf9d69a0d4",
+  "beforeSchemaSha256": "7be6236a85fa5c5a47161d896d8226b6d263bbcdfccac1cfa4087dce4af07fd4",
+  "queries": 80,
+  "checks": [
+    {
+      "name": "Existing RLS, grants and member/Admin RPC definitions unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "Existing primary phone unique indexes unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "Existing sessions default to general without customer binding",
+      "status": "PASS"
+    },
+    {
+      "name": "Duplicate self-declared contact allowed on isolated profiles without claiming primary phone",
+      "status": "PASS"
+    },
+    {
+      "name": "Malformed self-declared contact rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Legacy general session supports unchanged lifetime and nullable customer",
+      "status": "PASS"
+    },
+    {
+      "name": "Commerce session binds active guest with self-declared contact",
+      "status": "PASS"
+    },
+    {
+      "name": "Commerce lifetime above seven days rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Unknown purpose rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Commerce without customer rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "General cannot acquire customer binding",
+      "status": "PASS"
+    },
+    {
+      "name": "Chat/general token cannot become commerce token",
+      "status": "PASS"
+    },
+    {
+      "name": "Commerce cannot switch owner even when phone matches",
+      "status": "PASS"
+    },
+    {
+      "name": "Commerce token hash cannot be replaced",
+      "status": "PASS"
+    },
+    {
+      "name": "Commerce cannot extend expiration",
+      "status": "PASS"
+    },
+    {
+      "name": "Commerce cannot change created time",
+      "status": "PASS"
+    },
+    {
+      "name": "Profile without self-declared contact cannot be bound",
+      "status": "PASS"
+    },
+    {
+      "name": "Locking bound customer revokes commerce session",
+      "status": "PASS"
+    },
+    {
+      "name": "Revoked commerce token cannot be reactivated",
+      "status": "PASS"
+    },
+    {
+      "name": "Locked customer cannot receive new commerce session",
+      "status": "PASS"
+    },
+    {
+      "name": "Linking Auth revokes guest session while preserving customer ID",
+      "status": "PASS"
+    },
+    {
+      "name": "Member cannot receive new commerce session",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot read raw guest session hashes/bindings through RLS",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot call private trigger function",
+      "status": "PASS"
+    },
+    {
+      "name": "Anon cannot read guest session table",
+      "status": "PASS"
+    },
+    {
+      "name": "Reverse migration refuses to discard new contact/session data",
+      "status": "PASS"
+    },
+    {
+      "name": "Forward and guarded reverse restore original logical schema, grants and RPCs with no new data",
+      "status": "PASS"
+    },
+    {
+      "name": "Outer rollback leaves no DDL or synthetic fixtures",
+      "status": "PASS"
+    }
+  ],
+  "scope": "Cloud DDL and synthetic role/fixture tests inside rollback; forward/reverse verified; no committed business mutations, no SMS/Logs; not real Auth/HTTP/guest checkout E2E"
+}

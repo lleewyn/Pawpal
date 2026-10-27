@@ -79,13 +79,14 @@
         const stats=PawpalCustomers.state.customerPage?.stats;
         const totalCount = stats?.total??allCusts.length;
         const memberCount = stats?.member??allCusts.filter(c => c.isMember).length;
-        const guestCount = stats?.guest??allCusts.filter(c => c.status === 'TEMP').length;
+        const guestCount = stats?.guest??allCusts.filter(c => c.customerType === 'guest').length;
         const lockedCount = stats?.locked??allCusts.filter(c => c.status === 'LOCKED').length;
         const complaintCount = stats?.complaint??allCusts.filter(c => c.complaints?.some(tc => !tc.isClosed)).length;
 
         if (totalEl) totalEl.textContent = totalCount.toLocaleString('vi-VN');
-        if (memberEl) memberEl.textContent = memberCount.toLocaleString('vi-VN');
-        if (guestEl) guestEl.textContent = guestCount.toLocaleString('vi-VN');
+        const identityKnown = allCusts.every(c => c.customerType && c.customerType !== 'unknown');
+        if (memberEl) memberEl.textContent = identityKnown ? memberCount.toLocaleString('vi-VN') : '—';
+        if (guestEl) guestEl.textContent = identityKnown ? guestCount.toLocaleString('vi-VN') : '—';
         if (lockedEl) lockedEl.textContent = lockedCount.toLocaleString('vi-VN');
         if (complaintEl) complaintEl.textContent = complaintCount.toLocaleString('vi-VN');
     }
@@ -165,7 +166,7 @@
         const tbody = document.getElementById('customerTableTbody');
         if (!tbody) return;
         if(PawpalCustomers.serverCustomerPaging){
-            const request={query:(document.getElementById('custSearchInput')?.value||'').trim(),tier:document.getElementById('custFilterTier')?.value||'ALL',status:document.getElementById('custFilterStatus')?.value||'ALL',category:currentCustomerFilter,page:currentCustomerPage,size:CUSTOMER_PAGE_SIZE};
+            const request={query:(document.getElementById('custSearchInput')?.value||'').trim(),tier:document.getElementById('custFilterTier')?.value||'ALL',status:['MEMBER','TEMP'].includes(document.getElementById('custFilterStatus')?.value)?'ALL':document.getElementById('custFilterStatus')?.value||'ALL',category:currentCustomerFilter,page:currentCustomerPage,size:CUSTOMER_PAGE_SIZE};
             const key=JSON.stringify(request);PawpalCustomers.state.customerListRequest=request;
             if(PawpalCustomers.state.customerPage?.key!==key&&PawpalCustomers.state.customerFailedKey!==key){
                 if(PawpalCustomers.state.customerPendingKey!==key){PawpalCustomers.state.customerPendingKey=key;PawpalCustomers.loadCustomersModuleData().then(()=>{if(PawpalCustomers.state.customerPendingKey===key)PawpalCustomers.state.customerPendingKey=null;renderCustomersTable();});}
@@ -269,9 +270,7 @@
                 statusBadgeHtml = '<span class="admin-badge badge-neutral">Vãng lai</span>';
             }
 
-            const subCellHtml = c.status === 'TEMP'
-                ? 'Khách vãng lai tại quầy'
-                : (c.email && c.email !== 'Chưa cập nhật' ? esc(c.email) : 'Chưa cập nhật email');
+            const subCellHtml = esc(c.customerTypeLabel || 'Chưa xác định loại khách');
 
             const tierPointsHtml = `<span class="admin-badge ${esc(c.tierBadgeClass || 'badge-neutral')}">${esc(c.tierName || 'Chưa có hạng')}</span><span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} điểm</span>`;
 
@@ -284,7 +283,7 @@
                         </div>
                         <div class="user-sub-cell">${subCellHtml}</div>
                     </td>
-                    <td><strong>${esc(c.phone)}</strong></td>
+                    <td><strong>${esc(c.phone)}</strong>${c.phoneUnverified?'<div class="text-muted" style="font-size:11.5px">Chưa xác minh</div>':''}</td>
                     <td>
                         ${formatCustomerPetsCell(c.pets)}
                     </td>
@@ -515,7 +514,7 @@
             if (currentCustomerFilter === 'MEMBER') {
                 matchCategory = c.isMember;
             } else if (currentCustomerFilter === 'TEMP') {
-                matchCategory = (c.status === 'TEMP');
+                matchCategory = (c.customerType === 'guest');
             } else if (currentCustomerFilter === 'LOCKED') {
                 matchCategory = (c.status === 'LOCKED' || c.status === 'SUSPENDED');
             } else if (currentCustomerFilter === 'COMPLAINT') {
@@ -523,6 +522,8 @@
             }
 
             const matchStatus = (selectedStatus === 'ALL') ||
+                (selectedStatus === 'MEMBER' && c.customerType === 'member') ||
+                (selectedStatus === 'TEMP' && c.customerType === 'guest') ||
                 (selectedStatus === 'LOCKED' && (c.status === 'LOCKED' || c.status === 'SUSPENDED')) ||
                 (c.status === selectedStatus);
 
@@ -941,7 +942,8 @@
             filterStatusSelect.addEventListener('change', (e) => {
                 const val = e.target.value;
                 if (val === 'ALL') currentCustomerFilter = 'ALL';
-                else if (val === 'ACTIVE') currentCustomerFilter = 'MEMBER';
+                else if (val === 'MEMBER') currentCustomerFilter = 'MEMBER';
+                else if (val === 'ACTIVE') currentCustomerFilter = 'ALL';
                 else if (val === 'TEMP') currentCustomerFilter = 'TEMP';
                 else if (val === 'LOCKED') currentCustomerFilter = 'LOCKED';
                 currentCustomerPage = 1;
@@ -1000,7 +1002,7 @@
                 if (filterStatusSelect) {
                     if (filter === 'LOCKED') filterStatusSelect.value = 'LOCKED';
                     else if (filter === 'TEMP') filterStatusSelect.value = 'TEMP';
-                    else if (filter === 'MEMBER') filterStatusSelect.value = 'ACTIVE';
+                    else if (filter === 'MEMBER') filterStatusSelect.value = 'MEMBER';
                     else filterStatusSelect.value = 'ALL';
                 }
                 currentCustomerPage = 1;

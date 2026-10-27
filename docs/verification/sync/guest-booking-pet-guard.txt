@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-10-26T18:03:35.766Z",
+  "status": "PASS",
+  "checks": [
+    "Inactive owned pet rejected before quote",
+    "Explicit owner field rejected by RPC itself"
+  ],
+  "scope": "Installed SQL RPC synthetic pet/contact/session fixture in rollback; no committed data or actual catalog/config changes"
+}

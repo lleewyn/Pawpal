@@ -1,16 +1,16 @@
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('node:crypto');
 const { createSupabaseAuthStore, hashOtp } = require('./customer_auth_store');
+const { normalizeVietnamPhone } = require('../shared/phone-normalization.cjs');
 
 const phoneLocal = value => {
-    const phone = String(value || '').trim();
-    if (!/^0\d{9}$/.test(phone)) throw new Error('Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.');
-    return phone;
+    try { return normalizeVietnamPhone(value); }
+    catch { throw new Error('Số điện thoại Việt Nam không hợp lệ. Vui lòng kiểm tra lại.'); }
 };
 const phoneAuth = phone => `+84${phone.slice(1)}`;
 const validPassword = password => typeof password === 'string' && password.length <= 128 && /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/s.test(password);
 
-function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthStore(admin), mode = 'demo', allowedTestPhones = [], deliver = () => {}, randomCode = () => '555666' } = {}) {
+function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthStore(admin), mode = 'demo', allowedTestPhones = [], deliver = () => {}, randomCode = () => '555666', guestLink } = {}) {
     const simulate = mode !== 'supabase';
     const storeMode = mode === 'demo' ? 'preview' : mode;
     async function passwordCredentials(authId, phone, password) {
@@ -145,10 +145,17 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
         guestRecords: wrap(async (req, res) => {
             await limit(`guest-records:${req.ip}`, 60, 60000);
             const phone = phoneLocal(req.body.phone);
+            // A phone number and a browser-only OTP flag do not prove ownership.
+            // Guest lookup needs a server-issued verified proof before it can be enabled.
+            const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+            if (!token) return res.status(401).json({ success: false, message: 'Vui lòng xác thực tài khoản để xem lịch sử riêng tư.' });
+            const verified = await admin.auth.getUser(token);
+            if (verified.error || !verified.data?.user) return res.status(401).json({ success: false, message: 'Phiên xác thực không hợp lệ.' });
+            const owner = await admin.from('customer').select('id,customer_status').eq('auth_user_id', verified.data.user.id).maybeSingle();
+            if (owner.error) throw owner.error;
+            if (!owner.data || !['active','ACTIVE','dang_hoat_dong'].includes(owner.data.customer_status)) return res.status(403).json({ success: false, message: 'Không có quyền xem lịch sử này.' });
             const c = await customer(phone);
-            if (!c) {
-                return res.json({ success: true, bookings: [], orders: [] });
-            }
+            if (!c || c.id !== owner.data.id) return res.status(403).json({ success: false, message: 'Không có quyền xem lịch sử này.' });
 
             const { data: bookingRows, error: bookingError } = await admin
                 .from('appointment')
@@ -221,6 +228,11 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             const phone = phoneLocal(req.body.phone);
             const purpose = req.body.purpose;
             if (!['register', 'reset', 'activate'].includes(purpose)) throw new Error('Yêu cầu xác thực không hợp lệ.');
+            if (req.body.linkGuest != null && typeof req.body.linkGuest !== 'boolean') throw new Error('Yêu cầu liên kết không hợp lệ.');
+            if (req.body.linkGuest === true) {
+                if (simulate || !guestLink || purpose === 'reset') throw new Error('Liên kết hồ sơ cần xác minh số điện thoại thật, không dùng OTP giả lập.');
+                await guestLink.validate(guestLink.prepare(req), phone);
+            }
             await limit('sms-ip:' + req.ip, 10, 600000);
             await limit('sms:' + phone, 1, 60000);
             const c = await customer(phone);
@@ -248,10 +260,15 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             const { challengeId, code, password, name } = req.body;
             if (!validPassword(password)) throw new Error('Mật khẩu cần ít nhất 8 ký tự, một chữ số và một ký tự đặc biệt.');
             if (!/^[0-9a-f-]{36}$/i.test(String(challengeId || '')) || !/^\d{6}$/.test(String(code || ''))) throw new Error('Vui lòng nhập mã xác thực gồm 6 chữ số.');
+            if (req.body.linkGuest != null && typeof req.body.linkGuest !== 'boolean') throw new Error('Yêu cầu liên kết không hợp lệ.');
+            const wantsGuestLink = req.body.linkGuest === true;
+            if (wantsGuestLink && (simulate || !guestLink)) throw new Error('Liên kết hồ sơ cần xác minh số điện thoại thật, không dùng OTP giả lập.');
+            const guestProof = wantsGuestLink ? guestLink.prepare(req) : null;
             const claimId = crypto.randomUUID();
             const challenge = await store.claim(challengeId, storeMode, hashOtp(challengeId, code), claimId);
             let consumed = false;
             try {
+                if (wantsGuestLink && challenge.purpose === 'reset') throw new Error('Không liên kết hồ sơ trong yêu cầu khôi phục mật khẩu.');
                 const c = await customer(challenge.phone);
                 if (challenge.purpose !== 'reset' && c && !c.is_temporary) throw new Error('Tài khoản đã được kích hoạt.');
                 if (challenge.purpose === 'register' && (typeof name !== 'string' || !name.trim() || name.length > 150)) throw new Error('Vui lòng nhập họ tên hợp lệ.');
@@ -292,13 +309,19 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                     if (c?.auth_user_id && c.auth_user_id !== authId) throw new Error('Danh tính xác thực không khớp hồ sơ.');
                     const staff = await admin.from('staff').select('id').eq('auth_user_id', authId).limit(1);
                     if (staff.error || staff.data?.length) throw new Error('Danh tính không thuộc tài khoản khách hàng.');
-                    const linked = await admin.rpc('complete_customer_auth', { p_auth_id: authId, p_phone: challenge.phone, p_name: challenge.purpose === 'register' ? name.trim() : null });
-                    if (linked.error) throw new Error('Không thể lưu hồ sơ xác thực. Vui lòng thử lại.');
+                    if (wantsGuestLink) {
+                        await guestLink.complete(guestProof, { authId, phone: challenge.phone, name: challenge.purpose === 'register' ? name.trim() : null });
+                    } else {
+                        const linked = await admin.rpc('complete_customer_auth', { p_auth_id: authId, p_phone: challenge.phone, p_name: challenge.purpose === 'register' ? name.trim() : null });
+                        if (linked.error) throw new Error('Không thể lưu hồ sơ xác thực. Vui lòng thử lại.');
+                    }
                     const updated = await client.auth.updateUser({ password });
-                    if (updated.error) throw new Error('Không thể cập nhật mật khẩu. Vui lòng thử lại.');
+                    if (updated.error) throw new Error(wantsGuestLink ? 'Hồ sơ đã liên kết. Vui lòng dùng Quên mật khẩu để hoàn tất thiết lập mật khẩu.' : 'Không thể cập nhật mật khẩu. Vui lòng thử lại.');
                     session = verified.data.session;
                 }
-                res.json({ success: true, user: await identity(authId), session });
+                const user = await identity(authId);
+                if (wantsGuestLink) guestLink.clear(res);
+                res.json({ success: true, user, session });
             } finally {
                 if (!consumed) await store.finish(challengeId, claimId, true);
             }
@@ -368,7 +391,10 @@ function configured() {
     const { SUPABASE_URL: url, SUPABASE_ANON_KEY: anon, SUPABASE_SERVICE_ROLE_KEY: service } = process.env;
     if (!url || !anon || !service) throw new Error('Chưa cấu hình Supabase Auth trên máy chủ.');
     const options = { auth: { persistSession: false, autoRefreshToken: false } };
-    instance = createCustomerAuth({ admin: createClient(url, service, options), clientFactory: token => createClient(url, anon, {
+    const admin = createClient(url, service, options);
+    const { createGuestAccountLink } = require('./guest_account_link');
+    const { cookieConfiguration } = require('./guest_commerce');
+    instance = createCustomerAuth({ admin, guestLink: createGuestAccountLink({ admin, ...cookieConfiguration() }), clientFactory: token => createClient(url, anon, {
         ...options, ...(token ? { global: { headers: { Authorization: `Bearer ${token}` } } } : {})
     }), ...runtimeMode() });
     return instance;

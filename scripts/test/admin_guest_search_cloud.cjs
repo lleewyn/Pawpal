@@ -1,0 +1,44 @@
+const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+const {connect}=require('../database/v1/service_import_connection.cjs');
+const apply=process.argv.includes('--apply-cloud');if(!apply&&!process.argv.includes('--verify-cloud')){console.log('Use --verify-cloud or --apply-cloud after matching rollback PASS.');process.exit(0);}
+const forward=fs.readFileSync('scripts/database/v1/119_admin_guest_search.sql','utf8'),reverse=fs.readFileSync('scripts/database/v1/119_admin_guest_search_rollback.sql','utf8');
+const bodies=s=>[...s.matchAll(/AS \$\$([\s\S]*?)\$\$;/g)].map(m=>m[1].replaceAll('\r\n','\n').trim()),sha=s=>crypto.createHash('sha256').update(s).digest('hex');
+const signatures=['public.search_admin_sales_customers(text)','public.get_admin_sales_order_page(jsonb,integer)','public.get_admin_service_booking_page(jsonb,integer,boolean)'];
+const report='docs/verification/sync/admin-guest-search-rollback.txt';
+(async()=>{const db=await connect(),checks=[];let queries=0;const q=(sql,args)=>{queries++;return db.query(sql,args);},pass=name=>checks.push(name),original=[];
+ try{
+  await q("SET statement_timeout='8s';SET lock_timeout='2s'");
+  for(let i=0;i<3;i++){original[i]=(await q('SELECT pg_get_functiondef($1::regprocedure) definition,prosrc,proacl::text acl,prosecdef FROM pg_proc WHERE oid=$1::regprocedure',[signatures[i]])).rows[0];assert.equal(original[i].prosrc.replaceAll('\r\n','\n').trim(),bodies(reverse)[i],'Unexpected live baseline '+signatures[i]);assert.equal(original[i].prosecdef,false);}
+  const baselineHash=sha(original.map(x=>x.definition).join('\n'));
+  const verifyDefinitions=async(source)=>{for(let i=0;i<3;i++){const row=(await q('SELECT prosrc,proacl::text acl,prosecdef FROM pg_proc WHERE oid=$1::regprocedure',[signatures[i]])).rows[0];assert.equal(row.prosrc.replaceAll('\r\n','\n').trim(),bodies(source)[i]);assert.equal(row.acl,original[i].acl);assert.equal(row.prosecdef,false);}};
+  if(apply){
+   const proof=JSON.parse(fs.readFileSync(report));assert.equal(proof.status,'PASS');assert.equal(proof.sha256,sha(forward));assert.equal(proof.originalSha256,baselineHash);
+   const folder='D:/Aboutme/Pawpal-infra/supabase-local/backups/admin-guest-search-119';fs.mkdirSync(folder,{recursive:true});fs.writeFileSync(folder+'/before.sql',original.map(x=>x.definition+';').join('\n'));fs.writeFileSync(folder+'/forward.sql',forward);fs.writeFileSync(folder+'/reverse.sql',reverse);
+   await q(forward);await verifyDefinitions(forward);fs.writeFileSync('docs/verification/sync/admin-guest-search-apply.txt',JSON.stringify({timestamp:new Date().toISOString(),status:'APPLIED',migration:119,sha256:sha(forward),aclUnchanged:true,securityInvoker:true,scope:'Three Admin read/search functions only; no existing data changed. Added customer.read guard to order/booking search. Backups outside webroot.'},null,2)+'\n');console.log('APPLIED 119: three read functions; ACL/invoker unchanged.');return;
+  }
+  const strip=s=>s.replace(/^BEGIN;\s*$/m,'').replace(/^COMMIT;\s*$/m,'');await q('BEGIN');await q(strip(forward));await verifyDefinitions(forward);
+  const auth=crypto.randomUUID(),memberAuth=crypto.randomUUID(),staff=crypto.randomUUID(),ids=Array.from({length:4},()=>crypto.randomUUID()),order=crypto.randomUUID(),appointment=crypto.randomUUID(),pet=crypto.randomUUID();
+  const phones=[];while(phones.length<3){const value='09'+crypto.randomInt(10000000,99999999);if(!phones.includes(value)&&!(await q('SELECT 1 FROM public.customer_phone WHERE phone_number=$1',[value])).rowCount)phones.push(value);}
+  await q('INSERT INTO auth.users(id) VALUES($1),($2)',[auth,memberAuth]);await q("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES($1,$2,'Guest search rollback QA','QA','active',false)",[staff,auth]);await q("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[staff]);
+  for(let i=0;i<4;i++){await q('INSERT INTO public.customer(id,customer_code,unverified_contact_phone,auth_user_id) VALUES($1,$2,$3,$4)',[ids[i],'SEARCH-'+ids[i],phones[0],i===2?memberAuth:null]);await q('INSERT INTO public.customer_profile(customer_id,full_name) VALUES($1,$2)',[ids[i],'Owner '+ids[i]]);}
+  await q('INSERT INTO public.customer_phone(customer_id,phone_number,is_primary) VALUES($1,$2,true)',[ids[2],phones[1]]);await q("UPDATE public.customer SET customer_status='locked' WHERE id=$1",[ids[3]]);
+  await q('INSERT INTO public.pet_profile(id,pet_code,customer_id,pet_name,breed_id) SELECT $1,$3,$2,\'Search fixture pet\',id FROM public.pet_breed WHERE is_active ORDER BY id LIMIT 1',[pet,ids[0],'SEARCH-'+pet]);
+  await q("INSERT INTO public.sales_order(id,order_code,customer_id,receiver_name_snapshot,receiver_phone_snapshot) VALUES($1,$2,$3,$4,$5)",[order,'SEARCH-'+order,ids[0],'Receiver '+order,phones[2]]);
+  await q("INSERT INTO public.appointment(id,appointment_code,customer_id,pet_id,scheduled_start_at,scheduled_end_at) VALUES($1,$2,$3,$4,now()+interval '14 days',now()+interval '337 hours')",[appointment,'SEARCH-'+appointment,ids[0],pet]);
+  await q("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role','authenticated',true)",[auth]);await q('SET LOCAL ROLE authenticated');
+  const pos=async(phone)=>(await q('SELECT public.search_admin_sales_customers($1) value',[phone])).rows[0].value;
+  const orderPage=async(query)=>(await q('SELECT public.get_admin_sales_order_page($1,1) value',[{query}])).rows[0].value;
+  const bookingPage=async(query)=>(await q('SELECT public.get_admin_service_booking_page($1,1,false) value',[{query}])).rows[0].value;
+  const rows=await pos(phones[0]);assert.ok(ids.slice(0,2).every(id=>rows.some(r=>r.id===id)));assert.ok(!rows.some(r=>r.id===ids[2]||r.id===ids[3]));assert.ok(rows.length<=10);assert.ok(rows.filter(r=>ids.includes(r.id)).every(r=>r.phoneUnverified===true&&r.customerType==='guest'&&!('auth_user_id' in r)));pass('POS finds both isolated active guests by self-contact, labels source/type, excludes locked and never exposes Auth IDs');
+  const members=await pos(phones[1]);assert.equal(members.find(r=>r.id===ids[2]).phoneUnverified,false);assert.equal(members.find(r=>r.id===ids[2]).customerType,'member');pass('Canonical member phone remains preferred');
+  assert.ok((await orderPage(phones[0])).ids.includes(order));assert.ok((await orderPage(phones[2])).ids.includes(order));assert.ok((await orderPage('Receiver '+order)).ids.includes(order));pass('Orders searchable by owner self-contact and distinct recipient name/phone');
+  assert.ok((await bookingPage(phones[0])).ids.includes(appointment));pass('Booking page finds guest self-contact with original appointment ID');
+  assert.equal((await q('SELECT count(*)::int n FROM public.customer_phone WHERE customer_id=ANY($1::uuid[])',[[ids[0],ids[1]]])).rows[0].n,0);pass('Reads do not create canonical phones or merge guest profiles');
+  const reject=async(fn)=>{await q('SAVEPOINT denied');let code;try{await fn();}catch(e){code=e.code;}await q('ROLLBACK TO SAVEPOINT denied');assert.equal(code,'42501');};
+  await q('RESET ROLE');await q("SELECT set_config('request.jwt.claim.sub',$1,true)",[memberAuth]);await q('SET LOCAL ROLE authenticated');for(const fn of [pos,orderPage,bookingPage])await reject(()=>fn(phones[0]));pass('Customer denied access to all three Admin reads');
+  await q('RESET ROLE');await q('SET LOCAL ROLE anon');for(const fn of [pos,orderPage,bookingPage])await reject(()=>fn(phones[0]));pass('Anonymous denied access to all three Admin reads');
+  await q('RESET ROLE');await q(strip(reverse));await verifyDefinitions(reverse);pass('Reverse restores all three baselines with ACL/invoker unchanged');
+  await q('SET CONSTRAINTS ALL IMMEDIATE');await q('ROLLBACK');for(let i=0;i<3;i++)assert.equal((await q('SELECT pg_get_functiondef($1::regprocedure) definition FROM pg_proc WHERE oid=$1::regprocedure',[signatures[i]])).rows[0].definition,original[i].definition);assert.equal((await q('SELECT count(*)::int n FROM public.customer WHERE id=ANY($1::uuid[])',[ids])).rows[0].n,0);assert.equal((await q('SELECT count(*)::int n FROM auth.users WHERE id=ANY($1::uuid[])',[[auth,memberAuth]])).rows[0].n,0);pass('Fixture Auth/staff/customer/pet/order/appointment and all DDL fully rolled back');
+  fs.writeFileSync(report,JSON.stringify({timestamp:new Date().toISOString(),status:'PASS',sha256:sha(forward),originalSha256:baselineHash,queries,checks,scope:'Cloud SQL with synthetic Admin/customer JWT claims, reverse and rollback. No genuine Auth login, committed fixtures, production UI or Logs.'},null,2)+'\n');console.log('PASS',checks.length,'checks;',queries,'SQL; all DDL/fixtures rolled back.');
+ }catch(e){await db.query('RESET ROLE').catch(()=>{});await db.query('ROLLBACK').catch(()=>{});console.error(e.code||e.name,e.message);process.exitCode=1;}finally{await db.end();}
+})();

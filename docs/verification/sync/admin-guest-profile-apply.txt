@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-10-27T02:40:55.196Z",
+  "status": "APPLIED",
+  "migration": 118,
+  "sha256": "b95f8c07ed623a22b4a3ce2b7b3bf276af217440f5f6b146c7f384ea8ca6915f",
+  "aclUnchanged": true,
+  "securityInvoker": true,
+  "scope": "Replace Admin update function only; no existing customer/phone/session rows changed on apply. Tested reverse and original definition backed up outside webroot."
+}

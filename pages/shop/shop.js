@@ -269,13 +269,9 @@ async function confirmBuyNowFromModal() {
 
     if (buyNowModalState.mode === 'add-to-cart') {
         const user = getCurrentShopUser();
-        if (!user || !user.id) {
-            showToast('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng', 'warning');
-            return;
-        }
 
         try {
-            const result = await window.API.addToCart(user.id, product.id, quantity, {
+            const result = await window.API.addToCart(user?.id, product.id, quantity, {
                 variantId: buyNowModalState.variantId || product.variantId,
                 name: product.name, brand: product.brand, price: variantPrice,
                 selectedVariant: variantName, image: product.image, stock: product.stock,
@@ -1167,14 +1163,10 @@ async function addToCart(productId) {
     if (!product || !product.inStock) return;
     
     const user = getCurrentShopUser();
-    if (!user || !user.id) {
-        showToast('Vui lòng đăng nhập để sử dụng giỏ hàng', 'warning');
-        return;
-    }
     
     if (window.API && window.API.addToCart) {
         try {
-        const res = await window.API.addToCart(user.id, productId, 1);
+        const res = await window.API.addToCart(user?.id, productId, 1,{variantId:product.variantId});
         if (res && res.success) {
             showToast(`Đã thêm ${product.name} vào giỏ hàng`, 'success');
             if (typeof window.updateCartBadge === 'function') {
