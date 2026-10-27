@@ -1,7 +1,13 @@
 # PAWPAL --- CHECKLIST KIỂM THỬ ĐỒNG BỘ 2 CHIỀU USER ↔ ADMIN
 
-**Phiên bản:** 1.49 · **Cập nhật:** 27/10/2026 · **Trạng thái tổng:** ĐANG KIỂM TRA MỘT PHẦN · **Timezone:**
+**Phiên bản:** 1.50 · **Cập nhật:** 27/10/2026 · **Trạng thái tổng:** ĐANG KIỂM TRA MỘT PHẦN · **Timezone:**
 Asia/Ho_Chi_Minh (UTC+7)
+
+**Sửa Thêm nhân viên 27/10:** [Nguyên nhân và kiểm thử](docs/verification/sync/staff-create-save-fix.md).
+
+- [x] Tái hiện production: thiếu email đăng nhập/mật khẩu tạm trả 400 nhưng UI che lỗi cụ thể. Sửa kiểm tra đầu vào, focus/ARIA và giữ thông báo API ở local.
+- [x] Chrome với hai asset form local → API/Cloud thật: tạo nhân viên QA hợp lệ HTTP 200, đóng modal; đăng nhập vẫn bị khóa khi chưa cho phép, không cấp vai trò. Đã dọn staff/Auth fixture, giữ audit.
+- [ ] Push/deploy bản sửa form nhân sự và kiểm tra lại trên website chính; chưa được yêu cầu push ở lượt sửa này.
 
 **Bổ sung guest 27/10:** [OTP giả lập và chống trùng](docs/verification/sync/guest-demo-otp.md).
 

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-10-27T08:46:41.416Z",
+  "status": "PASS",
+  "checks": [
+    "Missing name/job/email/password/access: clear message, focus, ARIA and no provisioning request",
+    "Safe API rejection is displayed with request ID and form values retained (one fixture response only)",
+    "Actual UI create saves staff in Cloud, keeps login disabled, grants no roles and closes modal",
+    "Exact synthetic staff/Auth cleaned; audit retained"
+  ],
+  "scope": "Chrome against production Admin/API/live Cloud; only local staff form HTML/JS overridden. Validation and one mocked 409 response; one actual disabled QA identity created and cleaned. No production deploy or existing employee modifications."
+}
