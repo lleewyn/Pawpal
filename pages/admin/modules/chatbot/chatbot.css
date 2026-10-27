@@ -4300,6 +4300,13 @@
     border-radius: 3px;
     font-size: 11.5px;
 }
+#subtab-tab-chatbot-rules #inputPolicySearch {
+    flex: 0 1 320px;
+    width: 320px;
+    max-width: 100%;
+    min-width: 0;
+    border-radius: var(--admin-radius, 9px);
+}
 #subtab-tab-chatbot-rules .rules-filter-select {
     flex: 0 1 185px;
     width: auto;

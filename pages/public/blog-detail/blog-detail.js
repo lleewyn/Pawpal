@@ -1,477 +1,368 @@
 /**
- * blog-detail.js - Logic chi tiết bài viết Cẩm nang PawPal
+ * PawPal Journal — trang đọc bài viết.
+ * Không dựng phản hồi/bình luận giả, không tự gán học vị hoặc chứng chỉ.
  */
+(function () {
+    'use strict';
 
-async function initBlogDetail() {
-    function formatDateVN(dateStr) {
-        if (!dateStr) return '24/07/2026';
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return dateStr;
-        const day = d.getDate().toString().padStart(2, '0');
-        const month = (d.getMonth() + 1).toString().padStart(2, '0');
-        const year = d.getFullYear();
-        return `${day}/${month}/${year}`;
+    const BLOG_PATH = '/blog';
+
+    function byId(id) {
+        return document.getElementById(id);
     }
 
-    function showCustomToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `toast-custom toast-${type}`;
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: ${type === 'error' ? '#DC2626' : '#236B48'};
-            color: #FFFFFF;
-            padding: 12px 20px;
-            border-radius: 9px;
-            font-size: 13.5px;
-            font-weight: 600;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-            z-index: 999999;
-            transition: all 0.3s ease;
-            transform: translateY(20px);
-            opacity: 0;
-        `;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-
-        requestAnimationFrame(() => {
-            toast.style.transform = 'translateY(0)';
-            toast.style.opacity = '1';
-        });
-
-        setTimeout(() => {
-            toast.style.transform = 'translateY(20px)';
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-        }, 2800);
+    function esc(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[character]));
     }
 
-    // 1. Reading Progress Bar
-    function setupReadingProgress() {
-        const progressBar = document.getElementById('readingProgressBar');
-        if (!progressBar) return;
-
-        window.addEventListener('scroll', () => {
-            const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
-            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
-            progressBar.style.width = `${Math.min(100, Math.max(0, scrolled))}%`;
-        });
+    function safeUrl(raw) {
+        const str = String(raw || '').trim();
+        if (!str) return '';
+        try {
+            const parsed = new URL(str, window.location.origin);
+            if (!['https:', 'http:'].includes(parsed.protocol)) return '';
+            return parsed.href;
+        } catch {
+            return '';
+        }
     }
 
-    // 2. Load Blog Data
-    async function loadBlogData() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const slug = urlParams.get('slug');
+    function dateVN(dateValue) {
+        if (!dateValue) return '';
+        const date = new Date(dateValue);
+        if (!Number.isFinite(date.valueOf())) return '';
+        return new Intl.DateTimeFormat('vi-VN', {
+            timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric'
+        }).format(date);
+    }
 
+    function articleUrl(blog) {
+        return '/pages/public/blog-detail/blog-detail.html?slug=' + encodeURIComponent(blog.slug || '');
+    }
+
+    function createElement(tag, className, textValue) {
+        const el = document.createElement(tag);
+        if (className) el.className = className;
+        if (textValue != null) el.textContent = String(textValue);
+        return el;
+    }
+
+    /** Sanitize rich article HTML while retaining editorial markup and images. */
+    function sanitizeArticleContent(rawHtml) {
+        const parsed = new DOMParser().parseFromString(String(rawHtml ?? ''), 'text/html');
+        const allowed = new Set([
+            'P', 'H2', 'H3', 'H4', 'UL', 'OL', 'LI', 'EM', 'STRONG', 'B', 'I',
+            'BLOCKQUOTE', 'BR', 'HR', 'A', 'IMG', 'FIGURE', 'FIGCAPTION',
+            'DIV', 'SPAN', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD', 'SUP', 'SUB'
+        ]);
+        const dropEntirely = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'FORM', 'INPUT', 'BUTTON', 'SVG', 'MATH']);
+
+        function cleanse(node) {
+            for (const child of Array.from(node.childNodes)) {
+                if (child.nodeType === Node.COMMENT_NODE) {
+                    child.remove();
+                    continue;
+                }
+                if (child.nodeType !== Node.ELEMENT_NODE) continue;
+                const tag = child.tagName.toUpperCase();
+                if (dropEntirely.has(tag)) {
+                    child.remove();
+                    continue;
+                }
+                if (!allowed.has(tag)) {
+                    child.replaceWith(...Array.from(child.childNodes));
+                    cleanse(node);
+                    continue;
+                }
+                const originalHref = child.getAttribute('href');
+                const originalSrc = child.getAttribute('src');
+                const originalAlt = child.getAttribute('alt');
+                const originalClass = child.getAttribute('class');
+                for (const attribute of Array.from(child.attributes)) child.removeAttribute(attribute.name);
+                if (tag === 'A') {
+                    const href = safeUrl(originalHref);
+                    if (href) {
+                        child.setAttribute('href', href);
+                        if (new URL(href).origin !== window.location.origin) {
+                            child.setAttribute('target', '_blank');
+                            child.setAttribute('rel', 'noopener noreferrer');
+                        }
+                    }
+                }
+                if (tag === 'IMG') {
+                    const src = safeUrl(originalSrc);
+                    if (!src) {
+                        child.remove();
+                        continue;
+                    }
+                    child.setAttribute('src', src);
+                    child.setAttribute('alt', originalAlt || 'Hình minh họa bài viết');
+                    child.setAttribute('loading', 'lazy');
+                    child.setAttribute('decoding', 'async');
+                }
+                if (tag === 'P' && originalClass?.split(/\s+/).includes('lead')) child.classList.add('lead');
+                if (tag === 'DIV' && originalClass?.split(/\s+/).includes('expert-tip-box')) child.classList.add('expert-tip-box');
+                cleanse(child);
+            }
+        }
+
+        cleanse(parsed.body);
+        return parsed.body.innerHTML;
+    }
+
+    async function getArticle(slug, id) {
         let blogs = [];
         if (window.DataLoader && typeof window.DataLoader.loadBlogs === 'function') {
             try {
                 blogs = await window.DataLoader.loadBlogs();
-            } catch (err) {
-                console.warn('Error loading blogs from DataLoader:', err);
+            } catch (error) {
+                console.warn('Không thể tải danh sách bài viết, sẽ thử tra cứu bài hiện tại:', error);
             }
         }
-
         blogs = Array.isArray(blogs) ? blogs : [];
+        const found = slug ? blogs.find((item) => item.slug === slug) : blogs.find((item) => String(item.id) === id);
+        if (found) return { blog: found, others: blogs };
 
-        // Find target blog
-        let blog = null;
-        const idParam = urlParams.get('id');
-
-        if (slug) {
-            const decSlug = decodeURIComponent(slug);
-            blog = blogs.find(b => b.slug === slug || b.slug === decSlug);
-        } else if (idParam) {
-            blog = blogs.find(b => String(b.id) === String(idParam));
+        // Truy vấn đúng bài viết đã yêu cầu khi danh sách được cache chưa chứa bài.
+        const client = (typeof window.getSupabaseClient === 'function' && window.getSupabaseClient()) || window.SupabaseClient;
+        if (client && (slug || id)) {
+            let request = client.from('blog_post').select('*, blog_category(category_name)')
+                .in('status', ['published', 'PUBLISHED', 'dang_hien_thi']);
+            request = slug ? request.eq('slug', slug) : request.eq('id', id);
+            const { data, error } = await request.maybeSingle();
+            if (error) throw error;
+            if (data) {
+                const root = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '/';
+                const image = data.thumbnail_url || '';
+                return {
+                    blog: {
+                        id: data.id,
+                        title: data.title,
+                        slug: data.slug,
+                        summary: data.summary,
+                        content: data.content,
+                        thumbnail: image && !image.startsWith('http') ? root + image.replace(/^\/+/, '') : image,
+                        author: data.author || 'PawPal',
+                        date: data.publish_at || data.created_at,
+                        viewCount: data.view_count,
+                        categoryName: data.blog_category?.category_name || 'Cẩm nang',
+                        categorySlug: data.blog_category?.category_slug || ''
+                    },
+                    others: blogs
+                };
+            }
         }
+        return { blog: null, others: blogs };
+    }
 
-        // Direct Supabase Live lookup if not found in cache
-        if (!blog && (slug || idParam)) {
+    function showToast(message, error = false) {
+        const container = byId('toastContainer') || document.body;
+        const toast = createElement('div', `journal-toast ${error ? 'is-error' : ''}`, message);
+        toast.setAttribute('role', error ? 'alert' : 'status');
+        container.append(toast);
+        window.setTimeout(() => toast.remove(), 3300);
+    }
+
+    function setupShare() {
+        byId('btnCopyLink')?.addEventListener('click', async () => {
             try {
-                const db = window.SupabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : null);
-                if (db) {
-                    let q = db.from('blog_post').select('*, blog_category(category_name)');
-                    if (slug) q = q.eq('slug', decodeURIComponent(slug));
-                    else if (idParam) q = q.eq('id', idParam);
-                    const { data: dbItem, error: dbErr } = await q.maybeSingle();
-                    if (dbItem && !dbErr) {
-                        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
-                        blog = {
-                            id: dbItem.id,
-                            title: dbItem.title,
-                            slug: dbItem.slug,
-                            summary: dbItem.summary,
-                            content: dbItem.content,
-                            thumbnail: dbItem.thumbnail_url ? (dbItem.thumbnail_url.startsWith('http') ? dbItem.thumbnail_url : rootPath + dbItem.thumbnail_url.replace(/^[\/\\]+/, '')) : rootPath + 'assets/images/publics/dog1.png',
-                            authorId: dbItem.author_id,
-                            date: dbItem.publish_at || dbItem.created_at,
-                            viewCount: dbItem.view_count || 0,
-                            categoryName: dbItem.blog_category?.category_name || 'Cẩm nang chăm sóc',
-                            categorySlug: dbItem.blog_category?.category_name ? dbItem.blog_category.category_name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'tips'
-                        };
-                    }
-                }
-            } catch (e) {
-                console.warn('Error fetching single blog from DB:', e);
+                await navigator.clipboard.writeText(window.location.href);
+                showToast('Đã sao chép liên kết bài viết.');
+            } catch {
+                showToast('Không thể sao chép liên kết trên trình duyệt này.', true);
             }
-        }
-
-        if (!blog && !slug && !idParam && blogs.length > 0) {
-            blog = blogs[0];
-        }
-
-        if (!blog) {
-            document.getElementById('blog-title').textContent = 'Bài viết không tồn tại';
-            document.getElementById('blog-content').innerHTML = '<p class="text-center py-5">Không tìm thấy bài viết này. Hãy quay lại danh sách Cẩm nang.</p>';
-            document.getElementById('breadcrumbCurrentTitle').textContent = 'Không tìm thấy bài viết';
-            document.querySelector('.blog-hero-meta')?.setAttribute('hidden', '');
-            document.getElementById('blogHeroCatWrap')?.setAttribute('hidden', '');
-            document.getElementById('blog-hero-cover')?.replaceChildren();
-            return;
-        }
-
-        // Render Page Title & Breadcrumbs
-        blog.title = String(blog.title || '').normalize('NFC');
-        document.title = `${blog.title} - PawPal Blog`;
-        
-        const breadcrumbTitle = document.getElementById('breadcrumbCurrentTitle');
-        if (breadcrumbTitle) {
-            breadcrumbTitle.textContent = blog.title;
-        }
-
-        // Category Badge
-        const catBadge = document.getElementById('blogCategoryBadge');
-        if (catBadge) {
-            catBadge.textContent = blog.categoryName || 'Cẩm nang';
-        }
-
-        // Title
-        const titleEl = document.getElementById('blog-title');
-        if (titleEl) {
-            titleEl.textContent = blog.title;
-        }
-
-        // Meta Info
-        const authorNameEl = document.getElementById('blogAuthorName');
-        if (authorNameEl) {
-            authorNameEl.textContent = blog.author || 'Đội ngũ Bác sĩ Thú y PawPal';
-        }
-
-        const metaStatsEl = document.getElementById('blogMetaStats');
-        if (metaStatsEl) {
-            const readingTime = blog.readingTime || (Math.max(2, Math.ceil((blog.content || '').length / 1000)) + ' phút đọc');
-            const views = (Math.max(0, Number(blog.viewCount ?? blog.view_count) || 0)).toLocaleString('vi-VN');
-            metaStatsEl.textContent = `${formatDateVN(blog.date)} • ${readingTime} • ${views} lượt xem`;
-        }
-
-        // Cover Image
-        const coverContainer = document.getElementById('blog-hero-cover');
-        if (coverContainer) {
-            coverContainer.innerHTML = `
-                <img src="${blog.thumbnail || '/assets/images/publics/dog1.png'}" alt="${blog.title}" class="blog-hero-cover-img" loading="eager">
-            `;
-        }
-
-        // Content
-        const contentEl = document.getElementById('blog-content');
-        if (contentEl) {
-            contentEl.innerHTML = blog.content || '<p>Nội dung bài viết đang được cập nhật...</p>';
-        }
-
-        // Tags List
-        const tagsList = document.getElementById('tagsList');
-        if (tagsList) {
-            const tagNames = [
-                blog.categoryName || 'Cẩm nang',
-                'Chăm sóc Boss',
-                'Bác sĩ thú y khuyên dùng',
-                'Kinh nghiệm thực tế'
-            ];
-            tagsList.innerHTML = tagNames.map(tag => `
-                <a href="/pages/public/blog/blog.html?search=${encodeURIComponent(tag)}" class="btn-tag-chip">#${tag.replace(/\s+/g, '')}</a>
-            `).join('');
-        }
-
-        // Setup TOC
-        setupTOC(contentEl);
-
-        // Render Trending Sidebar Articles
-        renderSidebarTrending(blogs, blog.id);
-
-        // Render Related Articles
-        renderRelatedArticles(blogs, blog);
-
-        // Setup Share Buttons
-        setupShareBtns(blog);
+        });
+        byId('btnShareFB')?.addEventListener('click', () => {
+            const link = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
+            window.open(link, '_blank', 'noopener,noreferrer,width=700,height=580');
+        });
+        byId('sidebarSearchForm')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const value = byId('sidebarSearchInput')?.value.trim();
+            if (value) window.location.assign(`${BLOG_PATH}?search=${encodeURIComponent(value)}`);
+        });
     }
 
-    // 3. Table of Contents (TOC) with ScrollSpy
-    function setupTOC(contentEl) {
-        if (!contentEl) return;
-        const headings = contentEl.querySelectorAll('h2, h3');
-        const tocNav = document.getElementById('toc-nav');
-        const tocCard = document.getElementById('tocSidebarCard');
-        if (!tocNav) return;
-
-        if (headings.length === 0) {
-            if (tocCard) tocCard.style.display = 'none';
-            return;
+    function setupReadProgress() {
+        const bar = byId('readingProgressBar');
+        if (!bar) return;
+        let pending = false;
+        function updateProgress() {
+            pending = false;
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            bar.value = maxScroll > 0 ? Math.min(100, Math.max(0, window.scrollY / maxScroll * 100)) : 0;
         }
-
-        if (tocCard) tocCard.style.display = 'block';
-        tocNav.innerHTML = '';
-
-        headings.forEach((heading, index) => {
-            if (!heading.id) {
-                heading.id = 'toc-section-' + (index + 1);
-            }
-            const a = document.createElement('a');
-            a.className = `toc-nav-link ${index === 0 ? 'active' : ''}`;
-            a.href = '#' + heading.id;
-            a.textContent = heading.textContent;
-            
-            a.addEventListener('click', (e) => {
-                e.preventDefault();
-                const target = document.getElementById(heading.id);
-                if (target) {
-                    const topPos = target.getBoundingClientRect().top + window.scrollY - 100;
-                    window.scrollTo({ top: topPos, behavior: 'smooth' });
-                }
-            });
-
-            tocNav.appendChild(a);
-        });
-
-        // ScrollSpy observer
-        const tocLinks = tocNav.querySelectorAll('.toc-nav-link');
         window.addEventListener('scroll', () => {
-            const scrollPos = window.scrollY + 140;
-            let currentId = '';
-
-            headings.forEach(h => {
-                if (h.offsetTop <= scrollPos) {
-                    currentId = h.id;
-                }
-            });
-
-            if (currentId) {
-                tocLinks.forEach(link => {
-                    link.classList.toggle('active', link.getAttribute('href') === `#${currentId}`);
-                });
-            }
-        });
+            if (pending) return;
+            pending = true;
+            requestAnimationFrame(updateProgress);
+        }, { passive: true });
+        window.addEventListener('resize', updateProgress);
+        updateProgress();
     }
 
-    // 4. Trending / Most Read Articles in Sidebar
-    function renderSidebarTrending(blogs, currentBlogId) {
-        const trendingContainer = document.getElementById('sidebarTrendingList');
-        if (!trendingContainer || !blogs.length) return;
+    function setupTOC(articleElement) {
+        const nav = byId('toc-nav');
+        const card = byId('tocSidebarCard');
+        if (!nav || !articleElement) return;
+        nav.replaceChildren();
+        const headings = Array.from(articleElement.querySelectorAll('h2, h3'));
+        card.hidden = headings.length === 0;
+        headings.forEach((heading, index) => {
+            heading.id = heading.id || `section-${index + 1}`;
+            const anchor = createElement('a', `toc-nav-link ${heading.tagName === 'H3' ? 'is-child' : ''}`, heading.textContent);
+            anchor.href = `#${heading.id}`;
+            anchor.addEventListener('click', (event) => {
+                event.preventDefault();
+                heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                history.replaceState(null, '', `#${encodeURIComponent(heading.id)}`);
+            });
+            nav.append(anchor);
+        });
+        if (typeof IntersectionObserver === 'undefined' || !headings.length) return;
+        const links = Array.from(nav.querySelectorAll('a'));
+        const observer = new IntersectionObserver((entries) => {
+            const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+            if (!visible.length) return;
+            links.forEach((anchor) => anchor.classList.toggle('active', anchor.getAttribute('href') === '#' + visible[0].target.id));
+        }, { rootMargin: '-115px 0px -58% 0px', threshold: 0 });
+        headings.forEach((heading) => observer.observe(heading));
+    }
 
-        const otherBlogs = blogs.filter(b => b.id !== currentBlogId);
-        const topTrending = [...otherBlogs].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)).slice(0, 4);
+    function renderArticle(blog) {
+        byId('blog-title').textContent = blog.title || 'Bài viết PawPal';
+        byId('breadcrumbCurrentTitle').textContent = blog.title || 'Bài viết';
+        byId('blogCategoryBadge').textContent = blog.categoryName || 'Cẩm nang';
+        byId('blogAuthorName').textContent = blog.author || 'PawPal';
+        document.title = `${blog.title || 'Cẩm nang'} | PawPal Journal`;
+        const words = String(blog.content || '').replace(/<[^>]*>/g, '').trim().length;
+        const duration = blog.readingTime || (words ? `${Math.max(1, Math.ceil(words / 1000))} phút đọc ước tính` : 'Bài viết');
+        const views = Number(blog.viewCount ?? blog.view_count);
+        const parts = [dateVN(blog.date), duration];
+        if (Number.isFinite(views)) parts.push(`${Math.max(0, views).toLocaleString('vi-VN')} lượt xem`);
+        byId('blogMetaStats').textContent = parts.filter(Boolean).join(' · ');
 
-        trendingContainer.innerHTML = topTrending.map((b, i) => {
-            const num = (i + 1).toString().padStart(2, '0');
-            const url = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(b.slug)}`;
-            const views = (Math.max(0, Number(b.viewCount ?? b.view_count) || 0)).toLocaleString('vi-VN');
-            return `
-                <a href="${url}" class="trending-item-row">
-                    <span class="trending-num-badge">${num}</span>
-                    <img src="${b.thumbnail || '/assets/images/publics/cat11.jpg'}" alt="${b.title}" class="trending-row-thumb" loading="lazy">
-                    <div class="trending-row-info">
-                        <h5 class="trending-row-title">${b.title}</h5>
-                        <div class="trending-row-meta">${views} lượt đọc</div>
-                    </div>
-                </a>
-            `;
+        const cover = byId('blog-hero-cover');
+        cover.replaceChildren();
+        const coverSrc = safeUrl(blog.thumbnail || blog.thumbnail_url);
+        if (coverSrc) {
+            const image = createElement('img', 'blog-hero-cover-img');
+            image.src = coverSrc;
+            image.alt = blog.title || 'Hình ảnh bài viết';
+            image.loading = 'eager';
+            image.decoding = 'async';
+            image.addEventListener('error', () => {
+                cover.classList.add('missing-cover');
+                image.remove();
+            }, { once: true });
+            cover.append(image);
+        } else {
+            cover.hidden = true;
+        }
+
+        const article = byId('blog-content');
+        const content = String(blog.content || '').trim();
+        article.innerHTML = content ? sanitizeArticleContent(content) : '<p>Nội dung bài viết đang được cập nhật.</p>';
+        setupTOC(article);
+
+        const tags = byId('tagsList');
+        tags.replaceChildren();
+        const category = String(blog.categoryName || '').trim();
+        if (category) {
+            const tag = createElement('a', 'btn-tag-chip', category);
+            tag.href = BLOG_PATH + '?search=' + encodeURIComponent(category);
+            tags.append(tag);
+        } else {
+            byId('blog-tags').hidden = true;
+        }
+    }
+
+    function renderTrending(articles, currentId) {
+        const box = byId('sidebarTrendingList');
+        if (!box) return;
+        const pool = articles.filter((item) => item.id !== currentId && Number.isFinite(Number(item.viewCount ?? item.view_count)));
+        pool.sort((a, b) => Number(b.viewCount ?? b.view_count) - Number(a.viewCount ?? a.view_count));
+        if (!pool.length) {
+            box.innerHTML = '<p class="sidebar-note">Bạn có thể tìm thêm các bài viết trong Cẩm nang PawPal.</p>';
+            return;
+        }
+        box.innerHTML = pool.slice(0, 4).map((item, index) => `
+            <a class="trending-item-row" href="${esc(articleUrl(item))}">
+                <span class="trending-num-badge">${String(index + 1).padStart(2, '0')}</span>
+                <span class="trending-row-info"><span class="trending-row-title">${esc(item.title)}</span>
+                <span class="trending-row-meta">${Number(item.viewCount ?? item.view_count).toLocaleString('vi-VN')} lượt xem</span></span>
+            </a>`).join('');
+    }
+
+    function renderRelated(articles, currentBlog) {
+        const box = byId('related-posts-container');
+        if (!box) return;
+        const candidates = articles.filter((item) => item.id !== currentBlog.id);
+        const ordered = [
+            ...candidates.filter((a) => a.categorySlug && a.categorySlug === currentBlog.categorySlug),
+            ...candidates.filter((a) => !a.categorySlug || a.categorySlug !== currentBlog.categorySlug)
+        ].slice(0, 3);
+        if (!ordered.length) {
+            box.innerHTML = '<p class="related-empty">Chưa có bài viết liên quan. Hãy khám phá thêm trong Cẩm nang PawPal.</p>';
+            return;
+        }
+        box.innerHTML = ordered.map((item) => {
+            const imgSrc = safeUrl(item.thumbnail || item.thumbnail_url);
+            const picture = imgSrc ? `<img src="${esc(imgSrc)}" alt="${esc(item.title)}" loading="lazy" decoding="async">` : '<span class="related-img-fallback">PawPal Journal</span>';
+            return `<div class="col-md-4"><a class="related-article-card" href="${esc(articleUrl(item))}">
+                <div class="related-card-media">${picture}</div>
+                <div class="related-card-body">
+                    <p class="related-card-meta">${esc(item.categoryName || 'Cẩm nang')} · ${esc(dateVN(item.date))}</p>
+                    <h3 class="related-card-title">${esc(item.title)}</h3>
+                    <p class="related-card-excerpt">${esc(item.summary || '')}</p>
+                </div>
+            </a></div>`;
         }).join('');
     }
 
-    // 5. Related Articles Grid
-    function renderRelatedArticles(blogs, currentBlog) {
-        const relatedContainer = document.getElementById('related-posts-container');
-        if (!relatedContainer || !blogs.length) return;
-
-        let related = blogs.filter(b => b.id !== currentBlog.id && b.categorySlug === currentBlog.categorySlug);
-        if (related.length < 3) {
-            const remaining = blogs.filter(b => b.id !== currentBlog.id && b.categorySlug !== currentBlog.categorySlug);
-            related = [...related, ...remaining];
-        }
-        related = related.slice(0, 3);
-
-        relatedContainer.innerHTML = related.map(b => {
-            const url = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(b.slug)}`;
-            const readingTime = b.readingTime || '4 phút đọc';
-            return `
-                <div class="col-md-4">
-                    <a href="${url}" class="related-article-card">
-                        <div class="related-card-media">
-                            <img src="${b.thumbnail || '/assets/images/publics/cat2.png'}" alt="${b.title}" loading="lazy">
-                            <span class="related-cat-chip">${b.categoryName || 'Cẩm nang'}</span>
-                        </div>
-                        <div class="related-card-body">
-                            <div class="related-card-meta">${formatDateVN(b.date)} • ${readingTime}</div>
-                            <h4 class="related-card-title">${b.title}</h4>
-                            <p class="related-card-excerpt">${b.summary || ''}</p>
-                        </div>
-                    </a>
-                </div>
-            `;
-        }).join('');
-    }
-
-    // 6. Share Buttons
-    function setupShareBtns(blog) {
-        const copyBtn = document.getElementById('btnCopyLink');
-        if (copyBtn) {
-            copyBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(window.location.href).then(() => {
-                    showCustomToast('Đã sao chép đường dẫn bài viết vào bộ nhớ tạm!');
-                }).catch(() => {
-                    showCustomToast('Không thể sao chép liên kết.', 'error');
-                });
-            });
-        }
-
-        const fbBtn = document.getElementById('btnShareFB');
-        if (fbBtn) {
-            fbBtn.addEventListener('click', () => {
-                const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
-                window.open(shareUrl, '_blank', 'width=640,height=480');
-            });
-        }
-    }
-
-    // 7. Sidebar Quick Search Form
-    function setupSidebarSearch() {
-        const searchForm = document.getElementById('sidebarSearchForm');
-        const searchInput = document.getElementById('sidebarSearchInput');
-        if (!searchForm || !searchInput) return;
-
-        searchForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const q = searchInput.value.trim();
-            if (q) {
-                window.location.href = `/pages/public/blog/blog.html?search=${encodeURIComponent(q)}`;
+    async function initBlogDetail() {
+        const query = new URLSearchParams(window.location.search);
+        const slug = query.get('slug');
+        const id = query.get('id');
+        setupShare();
+        setupReadProgress();
+        byId('commentSubmitForm')?.addEventListener('submit', (event) => event.preventDefault());
+        try {
+            if (!slug && !id) {
+                throw new Error('Không có mã bài viết');
             }
-        });
-    }
-
-    // 8. Comments Feed & Submission
-    function setupComments() {
-        const feedList = document.getElementById('commentsFeedList');
-        const form = document.getElementById('commentSubmitForm');
-        const countSpan = document.getElementById('commentsCount');
-        if (!feedList) return;
-
-        const initialComments = [
-            {
-                name: 'Minh Châu',
-                initial: 'M',
-                time: '24/07/2026 - 10:30',
-                text: 'Bài viết rất thiết thực và đúng lúc! Bé Corgi nhà mình lông dày đợt này mưa gió hay bị hôi kẽ chân, mình sẽ áp dụng sấy ấm và xịt dưỡng ngay.',
-                isAdmin: false
-            },
-            {
-                name: 'BS. Lê Minh Hoàng',
-                initial: 'P',
-                time: '24/07/2026 - 11:15',
-                text: 'Cảm ơn bạn Minh Châu đã quan tâm! Bạn nhớ chú ý lau khô và kiểm tra kẽ đệm chân bé sau mỗi lần đi dạo về để phòng ngừa viêm kẽ móng nhé ạ.',
-                isAdmin: true
-            },
-            {
-                name: 'Thanh Tùng',
-                initial: 'T',
-                time: '25/07/2026 - 08:20',
-                text: 'Cho mình hỏi có nên dùng máy sấy tóc của người sấy cho chó không ạ?',
-                isAdmin: false
+            const { blog, others } = await getArticle(slug, id);
+            if (!blog) {
+                byId('blog-title').textContent = 'Không tìm thấy bài viết';
+                byId('breadcrumbCurrentTitle').textContent = 'Không tìm thấy bài viết';
+                byId('blog-content').innerHTML = '<p>Bài viết này không có sẵn. <a href="/blog">Quay về Cẩm nang</a>.</p>';
+                byId('blogHeroCatWrap').hidden = true;
+                byId('blog-hero-cover').hidden = true;
+                byId('blogCommentsSection').hidden = true;
+            } else {
+                renderArticle(blog);
+                renderTrending(others, blog.id);
+                renderRelated(others, blog);
             }
-        ];
-
-        let comments = [...initialComments];
-
-        function renderCommentItems() {
-            if (countSpan) countSpan.textContent = comments.length;
-            feedList.innerHTML = comments.map(c => `
-                <div class="comment-item-card ${c.isAdmin ? 'is-reply' : ''}">
-                    <div class="comment-card-header">
-                        <div class="comment-user-wrap">
-                            <div class="comment-user-avatar" style="${c.isAdmin ? 'background:#236B48;color:#fff;' : ''}">${c.initial}</div>
-                            <div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="comment-user-name">${c.name}</span>
-                                    ${c.isAdmin ? '<span class="comment-admin-badge">PawPal Care</span>' : ''}
-                                </div>
-                                <span class="comment-time">${c.time}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="comment-text">${c.text}</p>
-                </div>
-            `).join('');
-        }
-
-        renderCommentItems();
-
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const nameInput = document.getElementById('commentAuthorInput');
-                const contentInput = document.getElementById('commentContentInput');
-                if (!nameInput || !contentInput) return;
-
-                const authorName = nameInput.value.trim();
-                const content = contentInput.value.trim();
-
-                if (!authorName || !content) {
-                    showCustomToast('Vui lòng điền đầy đủ tên và nội dung bình luận.', 'error');
-                    return;
-                }
-
-                const now = new Date();
-                const timeStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} - ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-                comments.unshift({
-                    name: authorName,
-                    initial: authorName.charAt(0).toUpperCase(),
-                    time: timeStr,
-                    text: content,
-                    isAdmin: false
-                });
-
-                renderCommentItems();
-                form.reset();
-                showCustomToast('Bình luận của bạn đã được đăng thành công!');
-            });
-        }
-    }
-
-    // Initialize all sub-modules
-    setupReadingProgress();
-    setupSidebarSearch();
-    setupComments();
-    try {
-        await loadBlogData();
-    } catch (error) {
-        console.error('Không thể tải bài viết:', error);
-        document.getElementById('blog-title').textContent = 'Không thể tải bài viết';
-        document.getElementById('blog-content').innerHTML = '<p role="status">Vui lòng tải lại trang hoặc quay lại danh sách Cẩm nang.</p>';
-        document.querySelector('.blog-hero-meta')?.setAttribute('hidden', '');
-        document.getElementById('blog-hero-cover')?.replaceChildren();
-    } finally {
-        const main = document.querySelector('.blog-detail-main');
-        requestAnimationFrame(() => requestAnimationFrame(() => {
+        } catch (error) {
+            console.error('Lỗi tải bài viết:', error);
+            byId('blog-title').textContent = 'Chưa thể tải bài viết';
+            byId('breadcrumbCurrentTitle').textContent = 'Không thể tải nội dung';
+            byId('blog-content').innerHTML = '<p>Dữ liệu Cẩm nang chưa khả dụng. Bạn có thể <a href="/blog">quay lại danh sách bài viết</a> và thử lại sau.</p>';
+            byId('blog-hero-cover').hidden = true;
+            byId('blogCommentsSection').hidden = true;
+        } finally {
+            const main = document.querySelector('.blog-detail-main');
             main?.classList.remove('blog-loading');
             main?.setAttribute('aria-busy', 'false');
-            setTimeout(() => document.querySelectorAll('.blog-loading-placeholder').forEach(el => el.remove()), 260);
-        }));
+        }
     }
-}
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initBlogDetail);
-} else {
-    initBlogDetail();
-}
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initBlogDetail, { once: true });
+    } else {
+        initBlogDetail();
+    }
+})();

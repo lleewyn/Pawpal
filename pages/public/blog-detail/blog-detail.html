@@ -29,7 +29,7 @@
 
     <!-- Thanh tiến trình đọc bài viết -->
     <div class="reading-progress-track" aria-hidden="true">
-        <div class="reading-progress-bar" id="readingProgressBar"></div>
+        <progress class="reading-progress-bar" id="readingProgressBar" max="100" value="0" aria-label="Tiến độ đọc"></progress>
     </div>
 
     <header class="main-header" id="mainHeader">
@@ -242,193 +242,112 @@
         </nav>
     </header>
 
-    <main class="blog-detail-main blog-loading" aria-busy="true">
-        <!-- Hero Header Wrapper with Warm Soft Green Tint -->
-        <header class="blog-detail-header-wrapper">
-            <div class="container-xl">
-                <!-- Breadcrumbs -->
-                <nav aria-label="breadcrumb" class="blog-breadcrumb">
-                    <ol class="breadcrumb" id="blog-breadcrumb">
-                        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-                        <li class="breadcrumb-item"><a href="/blog">Cẩm nang</a></li>
-                        <li class="breadcrumb-item active" aria-current="page" id="breadcrumbCurrentTitle">Đang tải...</li>
-                    </ol>
-                </nav>
-
-                <div class="blog-hero-content"><div class="blog-loading-placeholder blog-hero-placeholder" role="status" aria-label="Đang tải bài viết"><div class="pawpal-skeleton" style="width:25%;height:24px"></div><div class="pawpal-skeleton" style="width:90%;height:48px"></div><div class="pawpal-skeleton" style="width:60%;height:48px"></div><div class="pawpal-skeleton" style="width:45%;height:40px"></div><div class="pawpal-skeleton blog-cover-placeholder"></div></div>
-                    <!-- Category Chip -->
-                    <div class="blog-hero-cat-wrap mb-2" id="blogHeroCatWrap">
-                        <span class="blog-hero-category-chip" id="blogCategoryBadge">Cẩm nang</span>
-                    </div>
-
-                    <!-- Article Title -->
-                    <h1 class="blog-hero-title" id="blog-title">Đang tải bài viết...</h1>
-
-                    <!-- Article Meta & Text-Only Social Share Toolbar -->
-                    <div class="blog-hero-meta">
-                        <div class="meta-author" id="blog-author-meta">
-                            <div class="author-avatar-wrap">
-                                <img src="/assets/images/publics/cat7.jpg" alt="PawPal Editor" class="author-avatar">
-                                <span class="author-verified-dot" title="Tác giả được xác thực"></span>
-                            </div>
-                            <div class="author-info">
-                                <span class="author-name">Bởi <strong id="blogAuthorName">Đội ngũ Bác sĩ Thú y PawPal</strong></span>
-                                <span class="post-date" id="blogMetaStats">24/07/2026 • 5 phút đọc</span>
-                            </div>
-                        </div>
-
-                        <div class="meta-actions">
-                            <button type="button" class="btn-share-pill" id="btnCopyLink" title="Sao chép liên kết bài viết">
-                                <span>Sao chép link</span>
-                            </button>
-                            <button type="button" class="btn-share-pill btn-share-fb" id="btnShareFB" title="Chia sẻ lên Facebook">
-                                <span>Chia sẻ Facebook</span>
-                            </button>
+    <main class="blog-detail-main blog-loading" aria-busy="true" id="mainContent">
+    <header class="blog-detail-header-wrapper">
+        <div class="container-xl">
+            <nav aria-label="Đường dẫn" class="blog-breadcrumb">
+                <ol class="breadcrumb" id="blog-breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="/blog">Cẩm nang</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" id="breadcrumbCurrentTitle">Đang tải...</li>
+                </ol>
+            </nav>
+            <div class="blog-hero-content">
+                <div class="blog-hero-cat-wrap" id="blogHeroCatWrap"><span class="blog-hero-category-chip" id="blogCategoryBadge">Cẩm nang</span></div>
+                <h1 class="blog-hero-title" id="blog-title">Đang tải bài viết...</h1>
+                <div class="blog-hero-meta">
+                    <div class="meta-author" id="blog-author-meta">
+                        <div class="author-info">
+                            <span class="author-name">Biên soạn bởi <strong id="blogAuthorName">PawPal</strong></span>
+                            <span class="post-date" id="blogMetaStats"></span>
                         </div>
                     </div>
-
-                    <!-- Hero Cover Image -->
-                    <div class="blog-hero-cover-container mt-4" id="blog-hero-cover">
-                        <div class="cover-loading-skeleton"></div>
+                    <div class="meta-actions">
+                        <button class="btn-share-pill" id="btnCopyLink" type="button">Sao chép liên kết</button>
+                        <button class="btn-share-pill btn-share-fb" id="btnShareFB" type="button">Chia sẻ Facebook</button>
                     </div>
                 </div>
-            </div>
-        </header>
-
-        <!-- Main Content Area & Sticky Sidebar -->
-        <div class="container-xl mt-4">
-            <div class="row g-4 g-lg-5">
-                
-                <!-- Left Column: Article Body -->
-                <div class="col-lg-8">
-                    <div class="blog-body-loading-wrapper"><div class="blog-loading-placeholder" role="status" aria-label="Đang tải nội dung bài viết"><div class="pawpal-skeleton" style="width:95%;height:18px"></div><div class="pawpal-skeleton" style="width:100%;height:18px"></div><div class="pawpal-skeleton" style="width:85%;height:18px"></div><div class="pawpal-skeleton" style="width:98%;height:18px"></div><div class="pawpal-skeleton" style="width:90%;height:18px"></div><div class="pawpal-skeleton" style="width:100%;height:18px"></div><div class="pawpal-skeleton" style="width:75%;height:18px"></div><div class="pawpal-skeleton" style="width:95%;height:18px"></div></div><article class="blog-article-content" id="blog-content">
-                        <!-- Loaded dynamically by JS -->
-                    </article></div>
-
-                    <!-- Article Tags & Expert Author Box -->
-                    <div class="blog-footer-meta mt-4 pt-3">
-                        <div class="blog-tags-wrapper mb-4" id="blog-tags">
-                            <span class="tags-label">Chủ đề liên quan:</span>
-                            <div class="tags-list" id="tagsList"></div>
-                        </div>
-                        
-                        <div class="author-expert-box">
-                            <div class="author-expert-avatar-col">
-                                <img src="/assets/images/publics/cat7.jpg" alt="PawPal Veterinary Team" class="author-expert-avatar">
-                            </div>
-                            <div class="author-expert-info">
-                                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                                    <h4 class="author-expert-name">Hội đồng Chuyên môn PawPal</h4>
-                                    <span class="author-expert-badge">Ban Cố Vấn Y Khoa</span>
-                                </div>
-                                <p class="author-expert-bio">Được biên soạn và kiểm duyệt bởi đội ngũ Bác sĩ Thú y và Chuyên viên Grooming giàu kinh nghiệm tại PawPal, cam kết mang đến những kiến thức khoa học, an toàn và thiết thực nhất cho thú cưng của bạn.</p>
-                                <div class="author-expert-action">
-                                    <a href="/pages/public/about/about.html" class="author-consult-link">Tìm hiểu thêm về PawPal ›</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Comments & Community Interaction -->
-                    <section class="blog-comments-section mt-4" id="blogCommentsSection">
-                        <div class="comments-header-row mb-4">
-                            <h3 class="comments-title">Bình luận và Thảo luận (<span id="commentsCount">3</span>)</h3>
-                        </div>
-                        
-                        <!-- Comment Form -->
-                        <div class="comment-form-card mb-4">
-                            <h4 class="comment-form-heading">Để lại ý kiến hoặc câu hỏi của bạn</h4>
-                            <form id="commentSubmitForm">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label-custom">Họ và tên <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control-custom" id="commentAuthorInput" placeholder="Ví dụ: Minh Châu" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label-custom">Email <span class="text-danger">*</span></label>
-                                        <input type="email" class="form-control-custom" id="commentEmailInput" placeholder="name@domain.com" required>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label-custom">Nội dung bình luận <span class="text-danger">*</span></label>
-                                        <textarea class="form-control-custom" id="commentContentInput" rows="3" placeholder="Chia sẻ kinh nghiệm hoặc đặt câu hỏi cho chuyên gia PawPal..." required></textarea>
-                                    </div>
-                                    <div class="col-12 text-end">
-                                        <button type="submit" class="btn-submit-comment">Gửi bình luận</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Comment Feed List -->
-                        <div class="comments-feed-list" id="commentsFeedList">
-                            <!-- Populated dynamically / with initial comments -->
-                        </div>
-                    </section>
-                </div>
-
-                <!-- Right Column: Sidebar Widgets -->
-                <div class="col-lg-4">
-                    <aside class="blog-detail-sidebar">
-                        
-                        <!-- 1. Quick Search Widget (100% Text-Only Button) -->
-                        <div class="sidebar-card">
-                            <h4 class="sidebar-card-title">Tìm kiếm cẩm nang</h4>
-                            <form class="sidebar-search-form" id="sidebarSearchForm">
-                                <div class="sidebar-search-box">
-                                    <input type="search" id="sidebarSearchInput" placeholder="Tìm kiến thức, mẹo nuôi Boss..." autocomplete="off">
-                                    <button type="submit" class="btn-sidebar-search">Tìm</button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- 2. Table of Contents (TOC - 100% Text-Only) -->
-                        <div class="sidebar-card toc-card sticky-top" id="tocSidebarCard">
-                            <h4 class="sidebar-card-title toc-title-text">Mục lục bài viết</h4>
-                            <nav id="toc-nav" class="toc-nav-list">
-                                <!-- Populated dynamically by JS -->
-                            </nav>
-                        </div>
-
-                        <!-- 3. Trending / Most Read Articles (100% Text-Only Badge) -->
-                        <div class="sidebar-card">
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <h4 class="sidebar-card-title mb-0">Bài viết đọc nhiều</h4>
-                                <span class="trending-badge-fire">Nổi bật</span>
-                            </div>
-                            <div class="sidebar-trending-list" id="sidebarTrendingList">
-                                <!-- Loaded dynamically by JS -->
-                            </div>
-                        </div>
-
-                        <!-- 4. Service Booking Promo Card -->
-                        <div class="sidebar-promo-card">
-                            <img src="/assets/images/publics/cat6.jpg" alt="Dịch vụ Spa PawPal" class="promo-card-bg">
-                            <div class="promo-card-overlay">
-                                <span class="promo-badge-tag">Ưu Đãi Đặc Biệt</span>
-                                <h4 class="promo-card-title">Combo Spa và Tắm Dưỡng Toàn Diện</h4>
-                                <p class="promo-card-desc">Chăm sóc chuẩn y khoa, sấy êm ái ngừa hoảng sợ cho các bé cưng.</p>
-                                <a href="/services" class="btn-promo-action">Đặt lịch trải nghiệm ngay ›</a>
-                            </div>
-                        </div>
-
-                    </aside>
+                <div class="blog-hero-cover-container" id="blog-hero-cover" aria-label="Ảnh bài viết">
+                    <div class="cover-loading-skeleton" role="status" aria-label="Đang tải ảnh bài viết"></div>
                 </div>
             </div>
         </div>
-
-        <!-- Related Articles Grid Section -->
-        <section class="related-articles-section mt-5 pt-5">
-            <div class="container-xl">
-                <div class="related-section-header mb-4">
-                    <h2 class="related-section-title">Bài viết liên quan gợi ý cho bạn</h2>
-                    <a href="/blog" class="related-view-all-link">Xem tất cả bài viết ›</a>
+    </header>
+    <div class="container-xl blog-reading-container">
+        <div class="blog-reading-grid">
+            <div class="blog-reading-main">
+                <article class="blog-article-content" id="blog-content" aria-label="Nội dung bài viết"></article>
+                <div class="blog-footer-meta">
+                    <div class="blog-tags-wrapper" id="blog-tags">
+                        <span class="tags-label">Khám phá thêm</span>
+                        <div class="tags-list" id="tagsList"></div>
+                    </div>
+                    <div class="blog-end-note"><strong>PawPal Journal.</strong> Cảm ơn bạn đã dành thời gian tìm hiểu cách chăm sóc bé cưng.</div>
                 </div>
-                <div class="row g-4" id="related-posts-container">
-                    <!-- Populated dynamically by JS -->
-                </div>
+                <section class="blog-comments-section" id="blogCommentsSection" aria-labelledby="commentsHeading">
+                    <div class="comments-header-row">
+                        <h2 class="comments-title" id="commentsHeading">Gửi câu hỏi & góp ý</h2>
+                        <p class="comments-intro">Bạn có điều muốn trao đổi về bài viết? Hãy để lại nội dung bên dưới.</p>
+                    </div>
+                    <div class="comment-form-card">
+                        <form id="commentSubmitForm">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label-custom" for="commentAuthorInput">Họ và tên</label>
+                                    <input class="form-control-custom" id="commentAuthorInput" type="text" autocomplete="name" required placeholder="Tên của bạn">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-custom" for="commentEmailInput">Email</label>
+                                    <input class="form-control-custom" id="commentEmailInput" type="email" autocomplete="email" required placeholder="email@example.com">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label-custom" for="commentContentInput">Nội dung</label>
+                                    <textarea class="form-control-custom" id="commentContentInput" rows="4" required placeholder="Điều bạn muốn chia sẻ..."></textarea>
+                                </div>
+                                <div class="col-12 comment-submit-row">
+                                    <p class="comments-disclaimer">Chức năng gửi bình luận chưa được kích hoạt trên website.</p>
+                                    <button class="btn-submit-comment" type="submit" disabled title="Chưa hỗ trợ gửi bình luận">Gửi ý kiến</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="comments-feed-list" id="commentsFeedList" hidden></div>
+                    <span id="commentsCount" class="visually-hidden">0</span>
+                </section>
             </div>
-        </section>
-    </main>
+            <aside class="blog-detail-sidebar" aria-label="Điều hướng bài viết">
+                <section class="sidebar-card toc-card" id="tocSidebarCard" aria-labelledby="tocHeading">
+                    <p class="sidebar-eyebrow">TRONG BÀI NÀY</p>
+                    <h2 class="sidebar-card-title" id="tocHeading">Nội dung chính</h2>
+                    <nav id="toc-nav" class="toc-nav-list" aria-label="Mục lục bài viết"></nav>
+                </section>
+                <section class="sidebar-card" aria-labelledby="searchHeading">
+                    <h2 class="sidebar-card-title" id="searchHeading">Khám phá Cẩm nang</h2>
+                    <form class="sidebar-search-form" id="sidebarSearchForm" role="search">
+                        <div class="sidebar-search-box">
+                            <label class="visually-hidden" for="sidebarSearchInput">Tìm bài viết khác</label>
+                            <input type="search" id="sidebarSearchInput" placeholder="Tìm một chủ đề khác..." autocomplete="off">
+                            <button type="submit" class="btn-sidebar-search">Tìm</button>
+                        </div>
+                    </form>
+                </section>
+                <section class="sidebar-card trending-sidebar" aria-labelledby="readMoreHeading">
+                    <h2 class="sidebar-card-title" id="readMoreHeading">Đọc thêm</h2>
+                    <div class="sidebar-trending-list" id="sidebarTrendingList"></div>
+                </section>
+            </aside>
+        </div>
+    </div>
+    <section class="related-articles-section" aria-labelledby="relatedHeading">
+        <div class="container-xl">
+            <div class="related-section-header">
+                <h2 class="related-section-title" id="relatedHeading">Có thể bạn cũng thích</h2>
+                <a href="/blog" class="related-view-all-link">Xem mọi bài viết <span aria-hidden="true">↗</span></a>
+            </div>
+            <div class="row g-4" id="related-posts-container"></div>
+        </div>
+    </section>
+</main>
     
     <div id="site-footer"></div>
     <div class="toast-container-custom" id="toastContainer"></div>

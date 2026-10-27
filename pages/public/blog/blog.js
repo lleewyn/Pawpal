@@ -1,481 +1,389 @@
 /**
- * PAWPAL BLOG & EDITORIAL MAGAZINE JAVASCRIPT
- * Live Filtering, Bento Spotlight, Sidebar Widgets & Search
+ * PawPal Journal — trang danh sách Cẩm nang.
+ * Chỉ trình bày dữ liệu từ DataLoader; không tạo bài viết hoặc lượt xem giả.
  */
+(function () {
+    'use strict';
 
-let allBlogs = [];
-let filteredBlogs = [];
-let currentCategory = 'all';
-let currentPetTarget = 'all';
-let currentKeyword = '';
-let currentSort = 'latest';
-let currentPage = 1;
-const itemsPerPage = 6;
+    const PAGE_SIZE = 6;
+    const DETAIL_PATH = '/pages/public/blog-detail/blog-detail.html';
+    const state = {
+        articles: [],
+        matches: [],
+        featuredIds: new Set(),
+        category: 'all',
+        pet: 'all',
+        keyword: '',
+        sort: 'latest',
+        page: 1,
+        loaded: false
+    };
 
-function normalizeText(value) {
-    return (value || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .trim();
-}
+    function byId(id) {
+        return document.getElementById(id);
+    }
 
-function formatDateVN(dateStr) {
-    if (!dateStr) return 'Gần đây';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    const day = d.getDate().toString().padStart(2, '0');
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-}
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char]));
+    }
 
-async function loadAndPrepareBlogs() {
-    let rawBlogs = [];
-    if (window.DataLoader && typeof window.DataLoader.loadBlogs === 'function') {
+    function safeImageUrl(value) {
+        const url = String(value ?? '').trim();
+        if (!url) return '';
         try {
-            rawBlogs = await window.DataLoader.loadBlogs(true);
-        } catch (e) {
-            console.error('Không thể tải bài viết từ CSDL:', e);
-            const title = document.getElementById('articlesCountTitle');
-            if (title) title.textContent = 'Không thể tải bài viết';
-            const grid = document.getElementById('articlesCardGrid');
-            if (grid) grid.innerHTML = '<p>Không thể tải bài viết. Vui lòng tải lại trang để thử lại.</p>';
+            const parsed = new URL(url, window.location.origin);
+            if (!['http:', 'https:'].includes(parsed.protocol)) return '';
+            return parsed.href;
+        } catch {
+            return '';
+        }
+    }
+
+    function normalize(value) {
+        return String(value ?? '').toLowerCase().normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').trim();
+    }
+
+    function formatDateVN(value) {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.valueOf())) return '';
+        return new Intl.DateTimeFormat('vi-VN', {
+            timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric'
+        }).format(date);
+    }
+
+    function detailUrl(article) {
+        return DETAIL_PATH + '?slug=' + encodeURIComponent(String(article.slug || ''));
+    }
+
+    function imageMarkup(article, className, eager = false) {
+        const src = safeImageUrl(article.thumbnail);
+        if (!src) return '<span class="article-image-missing">PawPal Journal</span>';
+        return `<img class="${className}" src="${escapeHtml(src)}" alt="${escapeHtml(article.title)}" loading="${eager ? 'eager' : 'lazy'}" decoding="async">`;
+    }
+
+    function readingLabel(article) {
+        return escapeHtml(article.readingTime || 'Bài viết');
+    }
+
+    function toArticle(blog) {
+        const title = String(blog.title || 'Bài viết chưa có tiêu đề');
+        const target = String(blog.petTarget || '').toLowerCase();
+        let pet = target;
+        if (!['all', 'cho', 'meo', 'be-con'].includes(pet)) {
+            const normalized = normalize(title);
+            if (normalized.includes('cho con') || normalized.includes('meo con')) pet = 'be-con';
+            else if (normalized.includes('meo')) pet = 'meo';
+            else if (normalized.includes('cho') || normalized.includes('cun')) pet = 'cho';
+            else pet = 'all';
+        }
+        const labels = { all: 'Chó & mèo', cho: 'Chó cưng', meo: 'Mèo cưng', 'be-con': 'Bé con' };
+        const rawViews = Number(blog.viewCount ?? blog.view_count);
+        const content = String(blog.content || '');
+        return {
+            ...blog,
+            title,
+            id: blog.id,
+            petTarget: pet,
+            petTargetLabel: blog.petTargetLabel || labels[pet],
+            author: blog.author || 'PawPal',
+            readingTime: blog.readingTime || (content ? `${Math.max(1, Math.ceil(content.replace(/<[^>]*>/g, '').length / 1000))} phút đọc ước tính` : ''),
+            viewCount: Number.isFinite(rawViews) ? Math.max(0, rawViews) : null,
+            thumbnail: blog.thumbnail || blog.thumbnail_url || '',
+            categoryName: blog.categoryName || 'Cẩm nang',
+            date: blog.date || blog.publish_at || blog.created_at || null
+        };
+    }
+
+    function sorting(articles, order = 'latest') {
+        return [...articles].sort((a, b) => {
+            if (order === 'popular') return (b.viewCount ?? -1) - (a.viewCount ?? -1);
+            return (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0);
+        });
+    }
+
+    function featuredCard(article, main) {
+        const url = escapeHtml(detailUrl(article));
+        if (main) {
+            return `<a class="bento-hero-card" href="${url}">
+                <div class="bento-hero-media">${imageMarkup(article, 'feature-image', true)}</div>
+                <div class="bento-hero-body">
+                    <span class="bento-category-tag">${escapeHtml(article.categoryName)}</span>
+                    <h3 class="bento-hero-title">${escapeHtml(article.title)}</h3>
+                    <p class="bento-hero-excerpt">${escapeHtml(article.summary || '')}</p>
+                    <div class="bento-hero-footer"><span>${escapeHtml(formatDateVN(article.date))}</span><span class="read-more-text">Đọc câu chuyện <span aria-hidden="true">↗</span></span></div>
+                </div>
+            </a>`;
+        }
+        return `<a class="bento-mini-card" href="${url}">
+            <div class="bento-mini-media">${imageMarkup(article, 'feature-image')}</div>
+            <div class="bento-mini-body">
+                <span class="bento-category-tag">${escapeHtml(article.categoryName)}</span>
+                <h3 class="bento-mini-title">${escapeHtml(article.title)}</h3>
+                <p class="bento-mini-excerpt">${escapeHtml(article.summary || '')}</p>
+                <span class="bento-mini-meta">${escapeHtml(formatDateVN(article.date))} ${article.readingTime ? '· ' + readingLabel(article) : ''}</span>
+            </div>
+        </a>`;
+    }
+
+    function renderSpotlight() {
+        const container = byId('blogHeroBentoGrid');
+        if (!container) return;
+        const ordered = sorting(state.articles);
+        const featuredFirst = ordered.filter((a) => Boolean(a.is_featured ?? a.featured));
+        const spotlight = [...featuredFirst, ...ordered.filter((a) => !featuredFirst.includes(a))].slice(0, 3);
+        state.featuredIds = new Set(spotlight.map((a) => a.id));
+        if (!spotlight.length) {
+            container.innerHTML = '<p class="bento-loading-placeholder">Hiện chưa có bài viết được xuất bản.</p>';
             return;
         }
+        container.innerHTML = featuredCard(spotlight[0], true)
+            + (spotlight.length > 1 ? `<div class="bento-stacked-cards">${spotlight.slice(1).map((a) => featuredCard(a, false)).join('')}</div>` : '');
     }
 
-    rawBlogs = Array.isArray(rawBlogs) ? rawBlogs : [];
-
-    // Enhance blogs with metadata
-    allBlogs = rawBlogs.map((b, idx) => {
-        const titleLower = (b.title || '').toLowerCase();
-        let petTarget = b.petTarget || 'all';
-        let petLabel = b.petTargetLabel || 'Chó và Mèo';
-
-        if (titleLower.includes('mèo con')) {
-            petTarget = 'be-con';
-            petLabel = 'Mèo con';
-        } else if (titleLower.includes('chó con')) {
-            petTarget = 'be-con';
-            petLabel = 'Chó con';
-        } else if (titleLower.includes('mèo')) {
-            petTarget = 'meo';
-            petLabel = 'Mèo cưng';
-        } else if (titleLower.includes('chó') || titleLower.includes('cún')) {
-            petTarget = 'cho';
-            petLabel = 'Chó cưng';
+    function renderSidebar() {
+        const box = byId('sidebarTrendingList');
+        if (!box) return;
+        const viewed = state.articles.filter((a) => a.viewCount !== null);
+        if (!viewed.length) {
+            box.innerHTML = '<p class="sidebar-empty">Chưa có thống kê lượt đọc.</p>';
+            return;
         }
+        box.innerHTML = sorting(viewed, 'popular').slice(0, 5).map((article, index) => `
+            <a class="trending-row-item" href="${escapeHtml(detailUrl(article))}">
+                <span class="trending-rank-num">${String(index + 1).padStart(2, '0')}</span>
+                <span class="trending-row-info"><strong class="trending-row-title">${escapeHtml(article.title)}</strong>
+                <span class="trending-row-meta">${article.viewCount.toLocaleString('vi-VN')} lượt đọc</span></span>
+            </a>`).join('');
+    }
 
-        const readTime = b.readingTime || (b.content ? Math.max(1, Math.ceil(b.content.length / 900)) + ' phút đọc ước tính' : 'Bài viết');
-        const viewCount = Math.max(0, Number(b.viewCount ?? b.view_count) || 0);
+    function updateActiveButtons() {
+        document.querySelectorAll('#blogCategoryTabs [data-cat]').forEach((button) => {
+            const active = button.dataset.cat === state.category;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-pressed', String(active));
+        });
+        document.querySelectorAll('#blogPetChips [data-pet]').forEach((button) => {
+            const active = button.dataset.pet === state.pet;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-pressed', String(active));
+        });
+        if (byId('blogSortSelect')) byId('blogSortSelect').value = state.sort;
+        if (byId('blogSearchInput')) byId('blogSearchInput').value = state.keyword;
+    }
 
-        return {
-            ...b,
-            petTarget,
-            petTargetLabel: petLabel,
-            readingTime: readTime,
-            viewCount: viewCount,
-            author: b.author || 'PawPal'
+    function matchCategory(article) {
+        if (state.category === 'all') return true;
+        const slug = normalize(article.categorySlug).replace(/\s+/g, '-');
+        const title = normalize(article.categoryName);
+        const terms = {
+            tips: ['tips', 'cham soc', 'meo vat', 'kien thuc'],
+            'dinh-duong': ['dinh duong', 'khau phan'],
+            'suc-khoe': ['suc khoe', 'y te', 'benh'],
+            'huan-luyen': ['huan luyen', 'tap tinh'],
+            promo: ['khuyen mai', 'su kien', 'promo'],
+            news: ['tin tuc', 'pawpal news']
         };
-    });
-
-    renderHeroBentoSpotlight();
-    renderSidebarWidgets();
-    applyCombinedFilters();
-}
-
-/**
- * 1. RENDER HERO BENTO SPOTLIGHT (1 Main + 2 Side Articles)
- */
-function renderHeroBentoSpotlight() {
-    const container = document.getElementById('blogHeroBentoGrid');
-    if (!container || allBlogs.length === 0) return;
-
-    const spotlight = allBlogs.find(b => b.title.includes('tắm cho chó') || b.categorySlug === 'tips') || allBlogs[0];
-    const sideArticles = allBlogs.filter(b => b.id !== spotlight.id).slice(0, 2);
-
-    const spotlightUrl = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(spotlight.slug)}`;
-
-    let html = `
-        <a href="${spotlightUrl}" class="bento-hero-card">
-            <div class="bento-hero-media">
-                <img src="${spotlight.thumbnail}" alt="${spotlight.title}" loading="lazy">
-                <span class="bento-badge-spotlight">Bài Tiêu Điểm</span>
-            </div>
-            <div class="bento-hero-body">
-                <div class="bento-meta-row">
-                    <span class="bento-category-tag">${spotlight.categoryName || 'Cẩm nang'}</span>
-                    <span>•</span>
-                    <span>${formatDateVN(spotlight.date)}</span>
-                    <span>•</span>
-                    <span>${spotlight.readingTime}</span>
-                </div>
-                <h2 class="bento-hero-title">${spotlight.title}</h2>
-                <p class="bento-hero-excerpt">${spotlight.summary || ''}</p>
-                <div class="bento-hero-footer">
-                    <div class="author-chip">
-                        <span class="author-dot"></span>
-                        <span>${spotlight.author}</span>
-                    </div>
-                    <span class="read-more-text">Đọc bài viết →</span>
-                </div>
-            </div>
-        </a>
-
-        <div class="bento-stacked-cards">
-            ${sideArticles.map(article => {
-                const articleUrl = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(article.slug)}`;
-                return `
-                    <a href="${articleUrl}" class="bento-mini-card">
-                        <div class="bento-mini-media">
-                            <img src="${article.thumbnail}" alt="${article.title}" loading="lazy">
-                        </div>
-                        <div class="bento-mini-body">
-                            <div class="bento-meta-row">
-                                <span class="bento-category-tag">${article.categoryName || 'Cẩm nang'}</span>
-                                <span>•</span>
-                                <span>${article.readingTime}</span>
-                            </div>
-                            <h3 class="bento-mini-title">${article.title}</h3>
-                            <p class="bento-mini-excerpt">${article.summary || ''}</p>
-                        </div>
-                    </a>
-                `;
-            }).join('')}
-        </div>
-    `;
-
-    container.innerHTML = html;
-}
-
-/**
- * 2. RENDER SIDEBAR WIDGETS
- */
-function renderSidebarWidgets() {
-    // Trending top 5
-    const trendingContainer = document.getElementById('sidebarTrendingList');
-    if (trendingContainer && allBlogs.length > 0) {
-        const top5 = [...allBlogs].sort((a, b) => b.viewCount - a.viewCount).slice(0, 5);
-        trendingContainer.innerHTML = top5.map((b, i) => {
-            const url = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(b.slug)}`;
-            const num = (i + 1).toString().padStart(2, '0');
-            return `
-                <a href="${url}" class="trending-row-item">
-                    <span class="trending-rank-num">${num}</span>
-                    <div class="trending-row-info">
-                        <h4 class="trending-row-title">${b.title}</h4>
-                        <div class="trending-row-meta">
-                            <span>${b.readingTime}</span> • <span>${b.viewCount.toLocaleString()} lượt đọc</span>
-                        </div>
-                    </div>
-                </a>
-            `;
-        }).join('');
+        if (slug === state.category || slug === state.category.replace(/-/g, '')) return true;
+        return (terms[state.category] || []).some((term) => title.includes(term) || slug.includes(term.replace(/ /g, '-')));
     }
-}
 
-/**
- * 3. COMBINED FILTERS & SEARCH
- */
-function applyCombinedFilters() {
-    try {
-        sessionStorage.setItem('pawpal_blog_filters', JSON.stringify({ currentCategory, currentPetTarget, currentKeyword, currentSort }));
-    } catch {}
-    const normKeyword = normalizeText(currentKeyword);
-
-    filteredBlogs = allBlogs.filter(b => {
-        // Category match
-        let matchCat = true;
-        if (currentCategory !== 'all') {
-            const bCat = (b.categorySlug || '').toLowerCase();
-            const bName = normalizeText(b.categoryName || '');
-            if (currentCategory === 'tips') matchCat = bCat === 'tips' || bName.includes('cham soc') || bName.includes('meo');
-            else if (currentCategory === 'dinh-duong') matchCat = bCat === 'dinh-duong' || bName.includes('dinh duong');
-            else if (currentCategory === 'suc-khoe') matchCat = bCat === 'suc-khoe' || bName.includes('suc khoe') || bName.includes('y te');
-            else if (currentCategory === 'huan-luyen') matchCat = bCat === 'huan-luyen' || bName.includes('huan luyen') || bName.includes('tap tinh');
-            else if (currentCategory === 'promo') matchCat = bCat === 'promo' || bName.includes('khuyen mai') || bName.includes('su kien');
-            else if (currentCategory === 'news') matchCat = bCat === 'news' || bName.includes('tin tuc');
+    function refreshFilters() {
+        let matches = state.articles.filter((article) => {
+            if (!matchCategory(article)) return false;
+            if (state.pet !== 'all' && article.petTarget !== 'all' && article.petTarget !== state.pet) return false;
+            const searchHaystack = normalize([article.title, article.summary, article.categoryName, article.petTargetLabel].join(' '));
+            return !state.keyword || searchHaystack.includes(normalize(state.keyword));
+        });
+        const isDefault = state.category === 'all' && state.pet === 'all' && !state.keyword.trim() && state.sort === 'latest';
+        if (isDefault && matches.length > 5) {
+            matches = matches.filter((a) => !state.featuredIds.has(a.id));
         }
+        state.matches = sorting(matches, state.sort);
+        state.page = 1;
+        renderFeed();
+        updateActiveButtons();
+        try {
+            sessionStorage.setItem('pawpal_blog_filters', JSON.stringify({
+                currentCategory: state.category, currentPetTarget: state.pet,
+                currentKeyword: state.keyword, currentSort: state.sort
+            }));
+        } catch { /* Private browsing can disable storage. */ }
+    }
 
-        // Pet target match
-        let matchPet = true;
-        if (currentPetTarget !== 'all') {
-            if (currentPetTarget === 'be-con') matchPet = b.petTarget === 'be-con';
-            else if (currentPetTarget === 'cho') matchPet = b.petTarget === 'cho' || b.petTarget === 'all';
-            else if (currentPetTarget === 'meo') matchPet = b.petTarget === 'meo' || b.petTarget === 'all';
+    function feedCard(article) {
+        const url = escapeHtml(detailUrl(article));
+        return `<article class="magazine-article-card">
+            <a href="${url}" class="article-card-media" tabindex="-1" aria-hidden="true">
+                ${imageMarkup(article, 'article-card-image')}</a>
+            <div class="article-card-body">
+                <p class="article-meta-line"><span>${escapeHtml(article.categoryName)}</span><span aria-hidden="true">·</span><time>${escapeHtml(formatDateVN(article.date))}</time></p>
+                <h3 class="article-title"><a href="${url}">${escapeHtml(article.title)}</a></h3>
+                <p class="article-excerpt">${escapeHtml(article.summary || '')}</p>
+                <div class="article-card-footer"><span>${readingLabel(article)}</span><span class="article-pet-target">${escapeHtml(article.petTargetLabel)}</span></div>
+            </div>
+        </article>`;
+    }
+
+    function renderFeed() {
+        const grid = byId('articlesCardGrid');
+        const empty = byId('blogEmptyBox');
+        const count = byId('articlesCountTitle');
+        if (!grid) return;
+        if (count) count.textContent = `${state.matches.length} bài viết`;
+        if (empty) empty.hidden = state.matches.length > 0;
+        grid.replaceChildren();
+        if (state.matches.length) {
+            const start = (state.page - 1) * PAGE_SIZE;
+            grid.innerHTML = state.matches.slice(start, start + PAGE_SIZE).map(feedCard).join('');
         }
+        renderPagination();
+    }
 
-        // Search keyword match
-        let matchSearch = true;
-        if (normKeyword) {
-            const fullText = normalizeText(`${b.title} ${b.summary} ${b.categoryName} ${b.petTargetLabel}`);
-            matchSearch = fullText.includes(normKeyword);
+    function renderPagination() {
+        const wrapper = byId('blogPaginationWrapper');
+        const list = byId('blogPagination');
+        if (!wrapper || !list) return;
+        const total = Math.ceil(state.matches.length / PAGE_SIZE);
+        wrapper.hidden = total <= 1;
+        if (total <= 1) {
+            list.replaceChildren();
+            return;
         }
+        const pages = [
+            { text: 'Trước', page: state.page - 1, disabled: state.page === 1 },
+            ...Array.from({ length: total }, (_, index) => ({ text: String(index + 1), page: index + 1, current: index + 1 === state.page })),
+            { text: 'Tiếp', page: state.page + 1, disabled: state.page === total }
+        ];
+        list.innerHTML = pages.map(({ text, page, disabled, current }) => `
+            <li class="page-item"><button type="button" class="page-link${current ? ' active' : ''}"
+            data-page="${page}" ${disabled ? 'disabled' : ''} ${current ? 'aria-current="page"' : ''}>${text}</button></li>`).join('');
+    }
 
-        return matchCat && matchPet && matchSearch;
-    });
+    async function loadArticles() {
+        if (!window.DataLoader || typeof window.DataLoader.loadBlogs !== 'function') {
+            throw new Error('Không tìm thấy nguồn tải Cẩm nang');
+        }
+        const data = await window.DataLoader.loadBlogs(true);
+        state.articles = (Array.isArray(data) ? data : []).map(toArticle).filter((a) => a.slug);
+        state.loaded = true;
+        renderSpotlight();
+        renderSidebar();
+        refreshFilters();
+    }
 
-    // Apply sorting
-    if (currentSort === 'popular') {
-        filteredBlogs.sort((a, b) => b.viewCount - a.viewCount);
+    function attachEvents() {
+        byId('blogSearchForm')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            state.keyword = byId('blogSearchInput').value.trim();
+            refreshFilters();
+            byId('blogFilterSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        byId('blogSearchInput')?.addEventListener('input', (event) => {
+            state.keyword = event.target.value;
+            refreshFilters();
+        });
+        byId('blogCategoryTabs')?.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-cat]');
+            if (!button) return;
+            state.category = button.dataset.cat;
+            refreshFilters();
+        });
+        byId('blogPetChips')?.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-pet]');
+            if (!button) return;
+            state.pet = button.dataset.pet;
+            refreshFilters();
+        });
+        document.querySelectorAll('.btn-keyword-chip').forEach((button) => {
+            button.addEventListener('click', () => {
+                state.keyword = button.dataset.keyword || '';
+                refreshFilters();
+                byId('blogFilterSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+        byId('popularTagsCloud')?.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-tag]');
+            if (!button) return;
+            state.keyword = button.dataset.tag.replace(/-/g, ' ');
+            refreshFilters();
+            byId('blogFilterSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        byId('blogSortSelect')?.addEventListener('change', (event) => {
+            state.sort = event.target.value;
+            refreshFilters();
+        });
+        byId('btnResetFilters')?.addEventListener('click', () => {
+            state.category = 'all';
+            state.pet = 'all';
+            state.keyword = '';
+            state.sort = 'latest';
+            refreshFilters();
+        });
+        byId('blogPagination')?.addEventListener('click', (event) => {
+            const button = event.target.closest('button[data-page]');
+            if (!button || button.disabled) return;
+            const page = Number(button.dataset.page);
+            if (page !== state.page && page >= 1 && page <= Math.ceil(state.matches.length / PAGE_SIZE)) {
+                state.page = page;
+                renderFeed();
+                byId('blogFilterSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+        byId('mainContent')?.addEventListener('error', (event) => {
+            if (event.target.tagName === 'IMG') {
+                event.target.hidden = true;
+                event.target.parentElement.classList.add('missing-image');
+            }
+        }, true);
+    }
+
+    window.initBlog = async function initBlog() {
+        const root = byId('blogCategoryTabs');
+        if (!root || root.dataset.blogReady === 'true') return;
+        root.dataset.blogReady = 'true';
+        try {
+            const saved = JSON.parse(sessionStorage.getItem('pawpal_blog_filters') || 'null');
+            if (saved) {
+                state.category = saved.currentCategory || 'all';
+                state.pet = saved.currentPetTarget || 'all';
+                state.keyword = saved.currentKeyword || '';
+                state.sort = saved.currentSort || 'latest';
+            }
+        } catch { /* Optional state only. */ }
+        const query = new URLSearchParams(window.location.search);
+        if (query.has('search')) state.keyword = query.get('search') || '';
+        const category = query.get('category');
+        if (category === 'dog') {
+            state.pet = 'cho';
+            state.category = 'all';
+        } else if (category === 'cat') {
+            state.pet = 'meo';
+            state.category = 'all';
+        }
+        else if (['tips', 'dinh-duong', 'suc-khoe', 'huan-luyen', 'promo', 'news'].includes(category)) state.category = category;
+        updateActiveButtons();
+        attachEvents();
+        try {
+            await loadArticles();
+        } catch (error) {
+            console.error('Lỗi tải cẩm nang:', error);
+            byId('blogHeroBentoGrid').innerHTML = '<p class="bento-loading-placeholder">Chưa thể tải bài viết. Vui lòng thử lại sau.</p>';
+            byId('articlesCountTitle').textContent = 'Không thể tải danh sách bài viết';
+            byId('articlesCardGrid').innerHTML = '<p class="feed-error">Không thể kết nối dữ liệu Cẩm nang. Vui lòng tải lại trang.</p>';
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.initBlog, { once: true });
     } else {
-        filteredBlogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        window.initBlog();
     }
-
-    currentPage = 1;
-    renderArticlesFeed();
-}
-
-/**
- * 4. RENDER ARTICLES FEED & PAGINATION
- */
-function renderArticlesFeed() {
-    const grid = document.getElementById('articlesCardGrid');
-    const emptyBox = document.getElementById('blogEmptyBox');
-    const countTitle = document.getElementById('articlesCountTitle');
-    const pagWrapper = document.getElementById('blogPaginationWrapper');
-
-    if (!grid) return;
-
-    if (countTitle) {
-        countTitle.textContent = `Danh sách bài viết (${filteredBlogs.length} bài)`;
-    }
-
-    if (filteredBlogs.length === 0) {
-        grid.innerHTML = '';
-        if (emptyBox) emptyBox.style.display = 'block';
-        if (pagWrapper) pagWrapper.style.display = 'none';
-        return;
-    }
-
-    if (emptyBox) emptyBox.style.display = 'none';
-
-    // Pagination slice
-    const totalPages = Math.ceil(filteredBlogs.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentItems = filteredBlogs.slice(startIndex, startIndex + itemsPerPage);
-
-    grid.style.opacity = '0.35';
-    grid.style.transition = 'opacity 140ms ease';
-    grid.innerHTML = currentItems.map(blog => {
-        const url = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(blog.slug)}`;
-        return `
-            <article class="magazine-article-card">
-                <a href="${url}" class="article-card-media">
-                    <img src="${blog.thumbnail}" alt="${blog.title}" loading="lazy">
-                    <span class="article-cat-badge">${blog.categoryName || 'Cẩm nang'}</span>
-                </a>
-                <div class="article-card-body">
-                    <div class="article-meta-line">
-                        <span>${formatDateVN(blog.date)}</span>
-                        <span>•</span>
-                        <span>${blog.readingTime}</span>
-                    </div>
-                    <h3 class="article-title"><a href="${url}">${blog.title}</a></h3>
-                    <p class="article-excerpt">${blog.summary || ''}</p>
-                    <div class="article-card-footer">
-                        <span>${blog.author}</span>
-                        <span class="article-pet-target">${blog.petTargetLabel}</span>
-                    </div>
-                </div>
-            </article>
-        `;
-    }).join('');
-
-    requestAnimationFrame(() => {
-        grid.style.opacity = '1';
-    });
-
-    renderPagination(totalPages);
-}
-
-function renderPagination(totalPages) {
-    const pagWrapper = document.getElementById('blogPaginationWrapper');
-    const pagUl = document.getElementById('blogPagination');
-    if (!pagWrapper || !pagUl) return;
-
-    if (totalPages <= 1) {
-        pagWrapper.style.display = 'none';
-        return;
-    }
-
-    pagWrapper.style.display = 'block';
-    let html = `
-        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-            <a class="page-link" href="#" data-page="${currentPage - 1}">‹</a>
-        </li>
-    `;
-
-    for (let i = 1; i <= totalPages; i++) {
-        html += `
-            <li class="page-item ${currentPage === i ? 'active' : ''}">
-                <a class="page-link" href="#" data-page="${i}">${i}</a>
-            </li>
-        `;
-    }
-
-    html += `
-        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-            <a class="page-link" href="#" data-page="${currentPage + 1}">›</a>
-        </li>
-    `;
-
-    pagUl.innerHTML = html;
-    pagUl.querySelectorAll('.page-link').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const p = parseInt(link.getAttribute('data-page'));
-            if (p > 0 && p <= totalPages && p !== currentPage) {
-                currentPage = p;
-                renderArticlesFeed();
-                document.getElementById('blogFilterSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
-    });
-}
-
-/**
- * 5. ATTACH INTERACTIVE LISTENERS
- */
-function initEventListeners() {
-    // Category Tabs
-    const catTabs = document.querySelectorAll('#blogCategoryTabs .cat-tab-btn');
-    catTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            catTabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentCategory = tab.dataset.cat || 'all';
-            if (currentCategory === 'all') {
-                currentPetTarget = 'all';
-                currentKeyword = '';
-                const search = document.getElementById('blogSearchInput');
-                if (search) search.value = '';
-                document.querySelectorAll('#blogPetChips .pet-chip-btn').forEach(chip => chip.classList.toggle('active', chip.dataset.pet === 'all'));
-            }
-            applyCombinedFilters();
-        });
-    });
-
-    // Pet Type Chips
-    const petChips = document.querySelectorAll('#blogPetChips .pet-chip-btn');
-    petChips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            petChips.forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            currentPetTarget = chip.dataset.pet || 'all';
-            applyCombinedFilters();
-        });
-    });
-
-    // Search Form & Input
-    const searchForm = document.getElementById('blogSearchForm');
-    const searchInput = document.getElementById('blogSearchInput');
-    if (searchForm && searchInput) {
-        searchForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            currentKeyword = searchInput.value;
-            applyCombinedFilters();
-            document.getElementById('blogFilterSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-
-        searchInput.addEventListener('input', () => {
-            currentKeyword = searchInput.value;
-            applyCombinedFilters();
-        });
-    }
-
-    // Keyword Chips in Hero
-    document.querySelectorAll('.btn-keyword-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-            const kw = chip.dataset.keyword;
-            if (searchInput) searchInput.value = kw;
-            currentKeyword = kw;
-            applyCombinedFilters();
-            document.getElementById('blogFilterSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-    });
-
-    // Popular Tags in Sidebar
-    document.querySelectorAll('.tag-cloud-btn').forEach(tagBtn => {
-        tagBtn.addEventListener('click', () => {
-            const tag = tagBtn.dataset.tag;
-            if (searchInput) searchInput.value = tagBtn.textContent.replace('#', '');
-            currentKeyword = String(tag || '').replace(/-/g, ' ');
-            applyCombinedFilters();
-            document.getElementById('blogFilterSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-    });
-
-    // Sort dropdown
-    const sortSelect = document.getElementById('blogSortSelect');
-    if (sortSelect) {
-        sortSelect.addEventListener('change', (e) => {
-            currentSort = e.target.value;
-            applyCombinedFilters();
-        });
-    }
-
-    // Reset Filters button
-    const btnReset = document.getElementById('btnResetFilters');
-    if (btnReset) {
-        btnReset.addEventListener('click', () => {
-            currentCategory = 'all';
-            currentPetTarget = 'all';
-            currentKeyword = '';
-            if (searchInput) searchInput.value = '';
-
-            document.querySelectorAll('#blogCategoryTabs .cat-tab-btn').forEach((t, i) => t.classList.toggle('active', i === 0));
-            document.querySelectorAll('#blogPetChips .pet-chip-btn').forEach((c, i) => c.classList.toggle('active', i === 0));
-            applyCombinedFilters();
-            if (!allBlogs.length) loadAndPrepareBlogs();
-        });
-    }
-
-    // Newsletter Form
-    const newsletterForm = document.getElementById('newsletterForm');
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = newsletterForm.querySelector('input').value;
-            newsletterForm.innerHTML = '<div style="color:#165335;background:#DCEEE2;padding:10px 12px;border-radius:6px;font-size:12.5px;font-weight:600;">Cảm ơn bạn đã đăng ký nhận bản tin Pawpal!</div>';
-        });
-    }
-
-    // URL Query Param Category Handlers
-    const urlParams = new URLSearchParams(window.location.search);
-    const categoryParam = urlParams.get('category');
-    if (categoryParam) {
-        const targetTab = document.querySelector(`#blogCategoryTabs [data-cat="${categoryParam}"]`);
-        if (targetTab) {
-            targetTab.click();
-        }
-    }
-}
-
-window.initBlog = async function() {
-    const root = document.getElementById('blogCategoryTabs');
-    if (!root || root.dataset.blogReady === 'true') return;
-    root.dataset.blogReady = 'true';
-    try {
-        const saved = JSON.parse(sessionStorage.getItem('pawpal_blog_filters') || 'null');
-        if (saved) {
-            currentCategory = saved.currentCategory || 'all';
-            currentPetTarget = saved.currentPetTarget || 'all';
-            currentKeyword = saved.currentKeyword || '';
-            currentSort = saved.currentSort || 'latest';
-            const search = document.getElementById('blogSearchInput');
-            if (search) search.value = currentKeyword;
-            document.querySelectorAll('#blogCategoryTabs .cat-tab-btn').forEach(tab => tab.classList.toggle('active', tab.dataset.cat === currentCategory));
-            document.querySelectorAll('#blogPetChips .pet-chip-btn').forEach(chip => chip.classList.toggle('active', chip.dataset.pet === currentPetTarget));
-        }
-    } catch {}
-    initEventListeners();
-    await loadAndPrepareBlogs();
-};
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', window.initBlog);
-} else {
-    window.initBlog();
-}
+})();
