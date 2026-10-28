@@ -249,7 +249,7 @@
             .replace(/[\u0300-\u036f]/g, '')
             .replace(/[đĐ]/g, m => m === 'đ' ? 'd' : 'D')
             .toLowerCase()
-            .trim();
+            .trim().replace(/\s+/g, ' ');
     }
 
     function matchSearch(sourceText, searchTerm) {
@@ -486,7 +486,7 @@
         for(let offset=0;;offset+=500){const page=await readRows(makeQuery().range(offset,offset+499));rows.push(...page);if(page.length<500)return rows;}
     }
     const customerFields='id,auth_user_id,customer_status,unverified_contact_phone,customer_profile(full_name),customer_phone(phone_number,is_primary)';
-    const petFields='id,customer_id,pet_code,pet_name,breed_id,date_of_birth,allergy,routine,safety_note,avatar_url,status,breed:breed_id(breed_name,species:species_id(species_name))';
+    const petFields='id,customer_id,pet_code,pet_name,breed_id,date_of_birth,allergy,routine,safety_note,avatar_url,status,updated_at,breed:breed_id(breed_name,species:species_id(species_name))';
     async function fetchBookingDirectoryRaw({force=false}={}){
         const fetcher=async()=>{
             const db=window.getSupabaseClient();
@@ -890,7 +890,7 @@
     }
     let bookingReadVersion=0;
     PawpalServices.state.serverBookingPagination=true;
-    const defaultBookingFilters={query:'',category:'ALL',status:'ALL',staff:'ALL',upcoming:false,allergy:false,sla:false};
+    const defaultBookingFilters={query:'',category:'ALL',status:'ALL',staff:'ALL',today:false,upcoming:false,allergy:false,sla:false};
     async function ensureBooking(id,{force=false}={}){
         if(!id)return null;
         const state=PawpalServices.state,found=state.bookingsData.find(b=>b.id===id||b.dbId===id);

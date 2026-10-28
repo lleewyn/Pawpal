@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-10-28T01:48:28.544Z",
+  "status": "APPLIED",
+  "sha256": "ff60e5339360e606278c16d413b8bcded2d4f636167cd8a3da40c08160e0be96",
+  "checks": {
+    "invoker": true,
+    "stable": true,
+    "staff_available": true,
+    "anonymous_blocked": true,
+    "day_filter": true
+  },
+  "scope": "Read-only booking page/export date filter only; no business rows modified"
+}

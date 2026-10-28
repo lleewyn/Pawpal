@@ -10,7 +10,7 @@
 <span class="kpi-val" id="statTotalBookings"><span class="skeleton-kpi"></span></span>
 </div>
 <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="pending" title="Lọc lịch chờ xác nhận">
-<span class="kpi-label">Chờ xác nhận</span>
+<span class="kpi-label">Chờ xác nhận hôm nay</span>
 <span class="kpi-val text-warning" id="statPendingBookings"><span class="skeleton-kpi"></span></span>
 </div>
 <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="upcoming" title="Lọc 3 lịch hẹn sắp tới trong 60 phút">
@@ -18,15 +18,15 @@
 <span class="kpi-val text-urgent-amber" id="statUpcomingBookings"><span class="skeleton-kpi"></span></span>
 </div>
 <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="in_progress" title="Lọc lịch đang thực hiện">
-<span class="kpi-label">Đang thực hiện</span>
+<span class="kpi-label">Đang thực hiện hôm nay</span>
 <span class="kpi-val svc-inline-39fba82d" id="statInProgressBookings"><span class="skeleton-kpi"></span></span>
 </div>
 <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="completed" title="Lọc lịch hoàn thành">
-<span class="kpi-label">Hoàn thành</span>
+<span class="kpi-label">Hoàn thành hôm nay</span>
 <span class="kpi-val text-success" id="statCompletedBookings"><span class="skeleton-kpi"></span></span>
 </div>
 <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="cancelled" title="Lọc lịch yêu cầu đổi và hủy">
-<span class="kpi-label">Yêu cầu đổi và hủy</span>
+<span class="kpi-label">Đã hủy hôm nay</span>
 <span class="kpi-val text-danger" id="statCancelledBookings"><span class="skeleton-kpi"></span></span>
 </div>
 </div>
@@ -58,6 +58,10 @@
 </div>
 </div>
 <div class="filter-row-bottom">
+<div class="filter-dropdown-group">
+<label class="filter-label" for="serviceFilterDay">Ngày hẹn</label>
+<select class="admin-select" id="serviceFilterDay"><option value="ALL">Tất cả ngày</option><option value="TODAY">Hôm nay</option></select>
+</div>
 <div class="filter-dropdown-group">
 <label class="filter-label">Loại dịch vụ</label>
 <select class="admin-select" id="serviceFilterCategory">
@@ -574,6 +578,11 @@
 <div class="field-error-text svc-inline-1ee86b9d" id="errorNewBookingPetName" style="display: none;"></div>
 </div>
 </div>
+<div class="form-group-item">
+<label class="form-label-clean" for="newBookingPetWeight">Cân nặng dùng tính giá (kg) <span class="svc-inline-55f4b7c7">*</span></label>
+<input class="admin-input" id="newBookingPetWeight" type="number" min="0.001" max="1000" step="any" placeholder="Chọn bé để nạp cân nặng"/>
+<span style="font-size:12px;color:var(--text-muted)">Cân nặng thay đổi sẽ được ghi vào hồ sơ bé khi lưu lịch.</span>
+</div>
 <div class="form-row-2col">
 <div class="form-group-item">
 <label class="form-label-clean">Nhóm dịch vụ <span class="svc-inline-55f4b7c7">*</span></label>
@@ -641,24 +650,24 @@
 <div class="svc-inline-44ce5506" id="createBookingTaxiFields" style="display: none;">
 <div class="svc-inline-d8fe5cef">Thông tin lộ trình Pet Taxi đưa đón:</div>
 <div class="form-group-item">
-<label class="form-label-clean">Địa chỉ đón</label>
+<label class="form-label-clean">Địa chỉ đón <span class="svc-inline-55f4b7c7">*</span></label>
 <input class="admin-input" id="newBookingTaxiPickup" placeholder="Nhập địa chỉ đón bé (Số nhà, đường, phường, quận)..." type="text"/>
 <div class="field-error-text svc-inline-1ee86b9d" id="errorNewBookingTaxiPickup" style="display: none;"></div>
 </div>
 <div class="form-group-item">
-<label class="form-label-clean">Địa chỉ trả</label>
+<label class="form-label-clean">Địa chỉ trả <span class="svc-inline-55f4b7c7">*</span></label>
 <input class="admin-input" id="newBookingTaxiDropoff" placeholder="Nhập địa chỉ trả bé" type="text"/>
 </div>
 <div class="form-row-2col">
 <div class="form-group-item">
-<label class="form-label-clean">Hình thức đưa đón</label>
+<label class="form-label-clean">Hình thức đưa đón <span class="svc-inline-55f4b7c7">*</span></label>
 <select class="admin-select" id="newBookingTaxiTripType">
 <option value="one_way">Một chiều</option>
 <option value="round_trip">Khứ hồi</option>
 </select>
 </div>
 <div class="form-group-item">
-<label class="form-label-clean">Cự ly mỗi lượt (km)</label>
+<label class="form-label-clean">Cự ly mỗi lượt (km) <span class="svc-inline-55f4b7c7">*</span></label>
 <input class="admin-input" id="newBookingTaxiDistance" min="0.1" step="0.1" type="number"/>
 </div>
 </div>
@@ -1213,11 +1222,11 @@
 </div>
 <!-- KHỐI 2: CHECKLIST NGOẠI QUAN 4 VÙNG AN TOÀN (ZERO-CLAIM INSPECTION) -->
 <div class="form-group-item">
-<label class="form-label-clean">Kiểm tra ngoại quan an toàn</label>
+<label class="form-label-clean">Kiểm tra ngoại quan an toàn <span class="svc-inline-55f4b7c7">*</span></label>
 <div class="intake-checklist-grid">
 <!-- Vùng 1: Da và Lông -->
 <div class="intake-check-section">
-<div class="intake-section-subhead">1. Da và Lông</div>
+<div class="intake-section-subhead">1. Da và lông <span class="svc-inline-55f4b7c7">*</span></div>
 <div class="intake-check-options">
 <label class="intake-check-item">
 <input checked="" id="checkSkinNormal" type="checkbox"/> Da lông sạch sẽ
@@ -1235,7 +1244,7 @@
 </div>
 <!-- Vùng 2: Mắt, Mũi và Tai -->
 <div class="intake-check-section">
-<div class="intake-section-subhead">2. Mắt, Mũi và Tai</div>
+<div class="intake-section-subhead">2. Mắt, mũi và tai <span class="svc-inline-55f4b7c7">*</span></div>
 <div class="intake-check-options">
 <label class="intake-check-item">
 <input checked="" id="checkEyesEarsNormal" type="checkbox"/> Mắt tai bình thường
@@ -1253,7 +1262,7 @@
 </div>
 <!-- Vùng 3: Vết trầy xước hoặc Sẹo có sẵn -->
 <div class="intake-check-section">
-<div class="intake-section-subhead">3. Vết trầy xước hoặc sẹo có sẵn</div>
+<div class="intake-section-subhead">3. Vết trầy xước hoặc sẹo có sẵn <span class="svc-inline-55f4b7c7">*</span></div>
 <div class="intake-check-options">
 <label class="intake-check-item">
 <input checked="" id="checkWoundNone" type="checkbox"/> Không có vết thương cũ
@@ -1266,10 +1275,10 @@
 </div>
 <!-- Vùng 4: Tâm lý và Tính khí -->
 <div class="intake-check-section">
-<div class="intake-section-subhead">4. Tâm lý và Tính khí</div>
+<div class="intake-section-subhead">4. Tâm lý và tính khí <span class="svc-inline-55f4b7c7">*</span></div>
 <div class="intake-check-options">
 <label class="intake-check-item">
-<input checked="" name="intakeTemperamentRadio" type="radio" value="Ngoan hiền"/> Ngoan hiền và thân thiện
+<input checked="" id="intakeTemperamentCalm" name="intakeTemperamentRadio" type="radio" value="Ngoan hiền"/> Ngoan hiền và thân thiện
                                 </label>
 <label class="intake-check-item">
 <input name="intakeTemperamentRadio" type="radio" value="Nhút nhát"/> Nhút nhát hoặc sợ nước

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-10-28T02:13:59.442Z",
+  "status": "PASS",
+  "checks": [
+    "Accent/whitespace-insensitive customer search returns exact records",
+    "Processing filter survives page 2 with no duplicates or omissions",
+    "Priority then newest then ID order is stable across reload",
+    "High priority KPI and quick filter include urgent open tickets and exclude closed tickets"
+  ],
+  "scope": "Synthetic actor/customer/tickets and RPC DDL all rolled back; no SLA deadlines invented, no Logs"
+}

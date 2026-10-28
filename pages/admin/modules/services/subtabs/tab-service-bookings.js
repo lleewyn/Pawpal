@@ -10,12 +10,33 @@
     let currentFilterCategory = 'ALL';
     let currentFilterStatus = 'ALL';
     let currentFilterStaff = 'ALL';
+    let isTodayFilterActive = false;
     let isUpcomingFilterActive = false;
     let isAllergyFilterActive = false;
     let isSlaFilterActive = false;
     let currentBookingPage = 1;
     let exportBookings=[];
     const BOOKINGS_PER_PAGE = 10;
+
+    function clearModalErrors(modal){
+        modal?.querySelectorAll('[data-service-error]').forEach(node=>node.remove());
+        modal?.querySelectorAll('[aria-invalid="true"]').forEach(field=>{field.removeAttribute('aria-invalid');field.removeAttribute('aria-describedby');});
+    }
+    function fieldError(id,message){
+        if(id==='newBookingServiceSelect')id='newBookingServiceInput';
+        const field=document.getElementById(id);if(!field)return;
+        let node=document.getElementById(id+'Error');
+        if(!node){node=document.createElement('p');node.id=id+'Error';node.dataset.serviceError='true';node.setAttribute('role','alert');node.style.cssText='color:#DC2626;font-size:12px;margin:6px 0 0;background:transparent;border:none';const group=field.closest('.intake-check-section'),card=selectedCardForField(field);if(group)group.append(node);else (card|| (field._entityInput?field.parentElement:field.closest('.customer-autocomplete-wrapper')||field)).after(node);}
+        node.textContent=message;field.setAttribute('aria-invalid','true');field.setAttribute('aria-describedby',node.id);
+        if(field._entityInput){field._entityInput.setAttribute('aria-invalid','true');field._entityInput.setAttribute('aria-describedby',node.id);}
+    }
+    function selectedCardForField(field){const id={newBookingCustomer:'bookingSelectedCustomerCard',newBookingPetName:'bookingSelectedPetCard',newBookingServiceInput:'bookingSelectedServiceCard'}[field?.id],card=id&&document.getElementById(id);return card&&card.style.display!=='none'?card:null;}
+    function focusModalError(modal){const field=modal?.querySelector('[aria-invalid="true"]'),first=selectedCardForField(field)?.querySelector('button')||field?._entityInput||field;first?.focus();first?.scrollIntoView({block:'nearest'});}
+    function modalError(modal,message){let node=modal.querySelector('[data-service-summary-error]');if(!node){node=document.createElement('p');node.dataset.serviceError='true';node.dataset.serviceSummaryError='true';node.setAttribute('role','alert');node.style.cssText='color:#DC2626;background:transparent;border:none';const form=modal.querySelector('form');(form?.querySelector('.modal-footer-clean')||form||modal).before(node);}node.textContent=message;node.scrollIntoView({block:'nearest'});}
+    function syncBookingKpis(){
+        document.querySelectorAll('#subtab-tab-service-bookings .kpi-card-clickable').forEach(card=>{card.classList.toggle('active',card.dataset.kpiFilter===(isUpcomingFilterActive?'upcoming':isTodayFilterActive?currentFilterStatus:null));});
+        const day=document.getElementById('serviceFilterDay');if(day)day.value=isTodayFilterActive?'TODAY':'ALL';
+    }
 
     let activeDropdownBookingId = null;
     let intakeProofImagesTemp = [];
@@ -203,7 +224,7 @@
         if (!tbody) return;
         if(PawpalServices.state.serverBookingPagination&&!skipFetch){
             tbody.inert=true;tbody.setAttribute('aria-busy','true');
-            const filters={query:currentSearchTerm,category:currentFilterCategory,status:currentFilterStatus,staff:currentFilterStaff,upcoming:isUpcomingFilterActive,allergy:isAllergyFilterActive,sla:isSlaFilterActive};
+            const filters={query:currentSearchTerm,category:currentFilterCategory,status:currentFilterStatus,staff:currentFilterStaff,today:isTodayFilterActive,upcoming:isUpcomingFilterActive,allergy:isAllergyFilterActive,sla:isSlaFilterActive};
             const success=await PawpalServices.loadServicesData({filters,page:currentBookingPage,render:false,prefetch:false});
             if(success===null)return;
             tbody.inert=false;tbody.removeAttribute('aria-busy');
@@ -249,6 +270,7 @@
                 }
             }
 
+            if (isTodayFilterActive && item.date !== new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())) return false;
             if (currentFilterCategory !== 'ALL' && item.category !== currentFilterCategory) return false;
             if (currentFilterStatus !== 'ALL' && item.status !== currentFilterStatus) return false;
 
@@ -282,7 +304,7 @@
 
         const btnServiceClearFilters = document.getElementById('btnServiceClearFilters');
         const isAnyFilterActive = Boolean(
-            currentSearchTerm ||
+            currentSearchTerm || isTodayFilterActive ||
             currentFilterCategory !== 'ALL' ||
             currentFilterStatus !== 'ALL' ||
             currentFilterStaff !== 'ALL' ||
@@ -302,7 +324,6 @@
                         <div class="empty-state-wrapper">
                             <div class="empty-state-text" style="font-size: 13.5px; color: var(--text-muted); text-align: center; padding: 30px;">
                                 Không tìm thấy lịch hẹn phù hợp với bộ lọc hiện tại. 
-                                <button type="button" id="btnResetServiceFilters" style="background: none; border: none; color: #236B48; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0 4px; font-size: 13.5px;">Xóa bộ lọc</button>
                             </div>
                         </div>
                     </td>
@@ -473,7 +494,9 @@
         currentFilterCategory = 'ALL';
         currentFilterStatus = 'ALL';
         currentFilterStaff = 'ALL';
+        isTodayFilterActive = false;
         isUpcomingFilterActive = false;
+        syncBookingKpis();
         isAllergyFilterActive = false;
         isSlaFilterActive = false;
         currentBookingPage = 1;
@@ -500,8 +523,7 @@
         if (btnSla) btnSla.classList.remove('active');
 
         document.querySelectorAll('.kpi-card-clickable').forEach(c => c.classList.remove('active'));
-        const kpiAll = document.querySelector('.kpi-card-clickable[data-kpi-filter="ALL"]');
-        if (kpiAll) kpiAll.classList.add('active');
+        syncBookingKpis();
 
         const btnServiceClearFilters = document.getElementById('btnServiceClearFilters');
         if (btnServiceClearFilters) btnServiceClearFilters.style.display = 'none';
@@ -576,7 +598,7 @@
             searchInput.addEventListener('input', () => {
                 clearTimeout(serviceSearchTimer);
                 serviceSearchTimer = setTimeout(() => {
-                    currentSearchTerm = searchInput.value.trim();
+                    currentSearchTerm = searchInput.value.trim().replace(/\s+/g,' ').trim();
                     currentBookingPage = 1;
                     renderBookingsTable();
                 }, 300);
@@ -606,11 +628,13 @@
         if (selectStatus) {
             selectStatus.addEventListener('change', () => {
                 currentFilterStatus = selectStatus.value;
+                isUpcomingFilterActive=false;document.getElementById('btnToggleUpcomingOnly')?.classList.remove('active');syncBookingKpis();
                 currentBookingPage = 1;
                 renderBookingsTable();
             });
         }
 
+        document.getElementById('serviceFilterDay')?.addEventListener('change',event=>{isTodayFilterActive=event.target.value==='TODAY';isUpcomingFilterActive=false;document.getElementById('btnToggleUpcomingOnly')?.classList.remove('active');syncBookingKpis();currentBookingPage=1;renderBookingsTable();});
         const selectStaff = document.getElementById('serviceFilterStaff');
         if (selectStaff) {
             selectStaff.addEventListener('change', () => {
@@ -623,7 +647,7 @@
         const btnUpcoming = document.getElementById('btnToggleUpcomingOnly');
         if (btnUpcoming) {
             btnUpcoming.addEventListener('click', () => {
-                isUpcomingFilterActive = !isUpcomingFilterActive;
+                isUpcomingFilterActive = !isUpcomingFilterActive;if(isUpcomingFilterActive){isTodayFilterActive=false;currentFilterStatus='ALL';if(selectStatus)selectStatus.value='ALL';}syncBookingKpis();
                 btnUpcoming.classList.toggle('active', isUpcomingFilterActive);
                 currentBookingPage = 1;
                 renderBookingsTable();
@@ -659,6 +683,7 @@
         document.querySelectorAll('.kpi-card-clickable').forEach(card => {
             card.addEventListener('click', () => {
                 const kpiVal = card.getAttribute('data-kpi-filter');
+                isTodayFilterActive=kpiVal!=='upcoming';
                 document.querySelectorAll('.kpi-card-clickable').forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
 
@@ -674,6 +699,7 @@
                 }
 
                 if (selectStatus) selectStatus.value = currentFilterStatus;
+                syncBookingKpis();
                 if (btnUpcoming) btnUpcoming.classList.toggle('active', isUpcomingFilterActive);
                 currentBookingPage = 1;
                 renderBookingsTable();
@@ -685,7 +711,8 @@
         if (btnFilterUpcomingQuick) {
             btnFilterUpcomingQuick.addEventListener('click', () => {
                 currentFilterStatus = 'ALL';
-                isUpcomingFilterActive = true;
+                isTodayFilterActive=false;
+                isUpcomingFilterActive = true;syncBookingKpis();
                 if (selectStatus) selectStatus.value = 'ALL';
                 if (btnUpcoming) btnUpcoming.classList.add('active');
                 document.querySelectorAll('.kpi-card-clickable').forEach(c => {
@@ -721,7 +748,7 @@
                 const headers = ['Mã lịch hẹn', 'Thời gian', 'Ngày', 'Khách hàng', 'Số điện thoại', 'Thú cưng', 'Dịch vụ', 'Kỹ thuật viên', 'Tổng tiền', 'Thanh toán', 'Trạng thái'];
                 if(PawpalServices.state.loadError||!PawpalServices.state.isLoaded){PawpalServices.showToast('Chưa tải xong dữ liệu để xuất.','warning');return;}
                 const button=event.currentTarget;button.disabled=true;
-                let rows;try{rows=PawpalServices.state.serverBookingPagination?await PawpalServices.exportFilteredBookings({query:currentSearchTerm,category:currentFilterCategory,status:currentFilterStatus,staff:currentFilterStaff,upcoming:isUpcomingFilterActive,allergy:isAllergyFilterActive,sla:isSlaFilterActive}):exportBookings.map(b=>[b.id,b.time,b.date,b.customerName,b.phone,b.petName,b.serviceName,b.staff||'Chưa phân công',b.total??0,b.paymentStatus||'Chưa thu',PawpalServices.getStatusBadge(b.status).replace(/<[^>]*>/g,'')]);}catch(error){PawpalServices.showToast('Không thể tải dữ liệu xuất file.','warning');return;}finally{button.disabled=false;}
+                let rows;try{rows=PawpalServices.state.serverBookingPagination?await PawpalServices.exportFilteredBookings({query:currentSearchTerm,category:currentFilterCategory,status:currentFilterStatus,staff:currentFilterStaff,today:isTodayFilterActive,upcoming:isUpcomingFilterActive,allergy:isAllergyFilterActive,sla:isSlaFilterActive}):exportBookings.map(b=>[b.id,b.time,b.date,b.customerName,b.phone,b.petName,b.serviceName,b.staff||'Chưa phân công',b.total??0,b.paymentStatus||'Chưa thu',PawpalServices.getStatusBadge(b.status).replace(/<[^>]*>/g,'')]);}catch(error){PawpalServices.showToast('Không thể tải dữ liệu xuất file.','warning');return;}finally{button.disabled=false;}
                 const cell=value=>{let text=String(value??'');if(/^[=+\-@\t\r]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"';};
                 const csvContent='\uFEFF'+[headers,...rows].map(row=>row.map(cell).join(',')).join('\r\n');
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -817,6 +844,8 @@
     function openIntakeModal(bookingId, mode = 'intake') {
         const modal = document.getElementById('modalEditIntakeInfo') || document.getElementById('modalIntakeSafety');
         if (!modal) return;
+
+        clearModalErrors(modal);
 
         const bookingsData = PawpalServices.state?.bookingsData || [];
         const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
@@ -1283,6 +1312,11 @@
             if (formCreateBooking) formCreateBooking.reset();
             selectedCustomerObj = null;
             selectedBookingPet = null;
+            modalCreateBooking._weightRequests=new Map();
+            clearModalErrors(modalCreateBooking);
+            delete modalCreateBooking.dataset.requestSignature;delete modalCreateBooking.dataset.requestId;
+            for(const id of ['newBookingCustomer','newBookingPetName','newBookingServiceInput'])document.getElementById(id).style.display='';
+            delete document.getElementById('newBookingServiceSelect').dataset.serviceId;
             const hotelF = document.getElementById('createBookingHotelFields');
             const taxiF = document.getElementById('createBookingTaxiFields');
             const spaF = document.getElementById('createBookingSpaFields');
@@ -1307,6 +1341,8 @@
 
         if (btnOpenCreateBooking && modalCreateBooking) {
             btnOpenCreateBooking.addEventListener('click', () => {
+                closeCreateModal();
+                clearModalErrors(modalCreateBooking);
                 // Điền ngày hiện tại làm mặc định
                 const dateInput = document.getElementById('newBookingDate');
                 if (dateInput) {
@@ -1340,6 +1376,8 @@
         if (btnSubmitCreateBooking) {
             btnSubmitCreateBooking.addEventListener('click', async (e) => {
                 if (e) e.preventDefault();
+                if(btnSubmitCreateBooking.disabled)return;
+                clearModalErrors(modalCreateBooking);
 
                 const customer = (document.getElementById('newBookingCustomer')?.value || '').trim();
                 const phone = (document.getElementById('newBookingPhone')?.value || '').trim();
@@ -1352,50 +1390,71 @@
                 const staff = document.getElementById('newBookingStaff')?.value || 'Chưa phân công';
                 const petAlert = (document.getElementById('newBookingPetAlert')?.value || '').trim();
                 const note = (document.getElementById('newBookingNotes')?.value || '').trim();
+                const weight=Number(document.getElementById('newBookingPetWeight').value);
 
-                if (!customer) {
-                    PawpalServices.showToast('Vui lòng nhập tên khách hàng!', 'warning');
-                    document.getElementById('newBookingCustomer')?.focus();
-                    return;
+                if(!customer)fieldError('newBookingCustomer','Chọn khách hàng từ danh sách gợi ý.');
+                if(!phone)fieldError('newBookingPhone','Nhập số điện thoại khách hàng.');
+                else if(!/^(0\d{9}|\+84\d{9})$/.test(phone))fieldError('newBookingPhone','Số điện thoại cần 10 chữ số bắt đầu bằng 0 hoặc dạng +84 hợp lệ.');
+                if(!petName)fieldError('newBookingPetName','Chọn bé cưng từ danh sách gợi ý.');
+                if(!serviceName)fieldError('newBookingServiceSelect','Chọn gói dịch vụ cụ thể.');
+                if(!Number.isFinite(weight)||weight<=0||weight>1000)fieldError('newBookingPetWeight','Nhập cân nặng thực tế lớn hơn 0 và không quá 1000 kg.');
+                if(category==='Taxi'){
+                    for(const [id,label] of [['newBookingTaxiPickup','địa chỉ đón'],['newBookingTaxiDropoff','địa chỉ trả']])if(!document.getElementById(id).value.trim())fieldError(id,'Nhập '+label+'.');
+                    const distance=Number(document.getElementById('newBookingTaxiDistance').value);if(!Number.isFinite(distance)||distance<=0)fieldError('newBookingTaxiDistance','Nhập cự ly mỗi lượt lớn hơn 0.');
                 }
-                if (!petName) {
-                    PawpalServices.showToast('Vui lòng nhập tên bé cưng!', 'warning');
-                    document.getElementById('newBookingPetName')?.focus();
-                    return;
-                }
+                if(!document.getElementById('newBookingDate').value)fieldError('newBookingDate','Chọn ngày hẹn.');
+                if(!time)fieldError('newBookingTime','Chọn giờ hẹn.');
+                if(modalCreateBooking.querySelector('[aria-invalid="true"]')){focusModalError(modalCreateBooking);return;}
 
                 if (btnSubmitCreateBooking.disabled) return;
                 btnSubmitCreateBooking.disabled = true;
                 let newId;
                 try {
+                    const invalid=(id,message)=>{fieldError(id,message);throw Object.assign(Error(message),{fieldError:true});};
                     const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                     if (!client) throw new Error('Chưa kết nối được CSDL.');
                     const petRef = selectedBookingPet;
                     const petId = petRef?.rawId || petRef?.id;
-                    if (!petId || (petRef.pet_name || petRef.name) !== petName) throw new Error('Vui lòng chọn lại bé cưng từ danh sách gợi ý.');
+                    if (!petId || (petRef.pet_name || petRef.name) !== petName) invalid('newBookingPetName','Chọn lại bé cưng từ danh sách gợi ý.');
                     const ownerId=selectedCustomerObj?.rawId || selectedCustomerObj?.id;
-                    if(!ownerId || (selectedCustomerObj.name||'')!==customer)throw Error('Vui lòng chọn lại khách hàng từ danh sách gợi ý.');
+                    if(!ownerId || (selectedCustomerObj.name||'')!==customer)invalid('newBookingCustomer','Chọn lại khách hàng từ danh sách gợi ý.');
                     const matches=(PawpalServices.state.servicesData||[]).filter(s=>s.dbId===serviceSelect?.dataset.serviceId&&s.name===serviceSelect?.value&&s.status==='Đang phục vụ');
-                    if(matches.length!==1)throw Error('Vui lòng chọn đúng một dịch vụ đang phục vụ.');
+                    if(matches.length!==1)invalid('newBookingServiceSelect','Chọn đúng một dịch vụ đang phục vụ.');
                     if(!date||!time)throw Error('Vui lòng chọn ngày và giờ hẹn.');
                     const at=new Date(date+'T'+time+':00+07:00');
-                    if(!Number.isFinite(+at)||+at<=Date.now())throw Error('Thời gian hẹn phải ở tương lai.');
+                    if(!Number.isFinite(+at)||+at<=Date.now())invalid('newBookingTime','Thời gian hẹn phải ở tương lai.');
+                    if(category==='Spa'&&Array.isArray(matches[0].priceRows)){
+                        const prices=matches[0].priceRows.filter(p=>p.status==='active'&&weight>=Number(p.weight_from)&&(p.weight_to==null||weight<Number(p.weight_to)||p.weight_to_inclusive&&weight===Number(p.weight_to))&&Date.parse(p.effective_from)<=+at&&(p.effective_to==null||Date.parse(p.effective_to)>+at));
+                        if(prices.length!==1)invalid('newBookingServiceSelect',prices.length?'Có nhiều mức giá cùng áp dụng cho cân nặng và ngày hẹn. Kiểm tra lại Bảng giá.':'Chưa có mức giá áp dụng cho cân nặng và ngày hẹn. Kiểm tra lại Bảng giá.');
+                    }
                     const staffMatches=(PawpalServices.state.liveStaffList||[]).filter(s=>s.id===staff);
-                    if(staff!=='Chưa phân công'&&staffMatches.length!==1)throw Error('Vui lòng chọn lại nhân viên phụ trách.');
+                    if(staff!=='Chưa phân công'&&staffMatches.length!==1)invalid('newBookingStaff','Chọn lại nhân viên phụ trách.');
                     const style=category==='Spa'&&isGroomingService(matches[0].name)?document.getElementById('newBookingSpaStyle').value.trim():'';
                     const details={customer_id:ownerId,pet_id:petId,service_id:matches[0].dbId,staff_id:staffMatches[0]?.id||null,scheduled_start_at:at.toISOString(),note:[note,petAlert,style?'Yêu cầu tạo kiểu: '+style:''].filter(Boolean).join('\n')};
                     if(category==='Hotel'){
                         const endDate=document.getElementById('newBookingHotelCheckOutDate').value,endTime=document.getElementById('newBookingHotelCheckOutTime').value;
-                        if(!endDate||!endTime)throw Error('Vui lòng chọn ngày và giờ trả phòng.');
+                        if(!endDate||!endTime)invalid(!endDate?'newBookingHotelCheckOutDate':'newBookingHotelCheckOutTime','Chọn ngày và giờ trả phòng.');
                         Object.assign(details,{room_id:document.getElementById('newBookingHotelRoomType').value,check_out_at:new Date(endDate+'T'+endTime+':00+07:00').toISOString(),diet_notes:document.getElementById('newBookingHotelDiet').value.trim(),care_notes:document.getElementById('newBookingHotelCareNotes').value.trim()});
                     }
                     if(category==='Taxi'){
                         const trip=document.getElementById('newBookingTaxiTripType').value,back=document.getElementById('newBookingTaxiReturnAt').value;
-                        if(trip==='round_trip'&&!back)throw Error('Vui lòng chọn thời điểm bắt đầu lượt về.');
+                        if(trip==='round_trip'&&!back)invalid('newBookingTaxiReturnAt','Chọn thời điểm bắt đầu lượt về.');
                         Object.assign(details,{pickup_address:document.getElementById('newBookingTaxiPickup').value.trim(),dropoff_address:document.getElementById('newBookingTaxiDropoff').value.trim(),distance_km:document.getElementById('newBookingTaxiDistance').value,trip_type:trip,return_at:trip==='round_trip'?new Date(back+':00+07:00').toISOString():null});
                     }
                     // Retain the request ID on a network failure so retry cannot create a second booking.
                     const signature=JSON.stringify(details);
+                    if(Number(petRef.weight)!==weight){
+                        const key=petId+':'+weight;modalCreateBooking._weightRequests||=new Map();if(!modalCreateBooking._weightRequests.has(key))modalCreateBooking._weightRequests.set(key,crypto.randomUUID());
+                        const expected=petRef.updated_at||petRef.updatedAt;
+                        if(!expected)invalid('newBookingPetWeight','Cần tải lại hồ sơ bé trước khi cập nhật cân nặng.');
+                        const measurementId=modalCreateBooking._weightRequests.get(key);
+                        const result=await client.rpc('record_admin_pet_weight',{p_pet_id:petId,p_expected_updated_at:expected,p_measurement_id:measurementId,p_weight:weight,p_note:'Cập nhật cân nặng khi đặt lịch dịch vụ.'});
+                        if(result.error){fieldError('newBookingPetWeight',PawpalServices.errorMessage(result.error));throw Object.assign(Error('weight_save_failed'),{fieldError:true});}
+                        if(result.data!==measurementId)invalid('newBookingPetWeight','Chưa xác minh được cân nặng đã lưu. Vui lòng thử lại.');
+                        const fresh=await client.from('pet_profile').select('updated_at').eq('id',petId).single();if(fresh.error)throw fresh.error;
+                        petRef.weight=weight;petRef.updated_at=fresh.data.updated_at;
+                        for(const p of PawpalServices.state.livePetDirectory||[])if(p.id===petId)Object.assign(p,{weight,updated_at:fresh.data.updated_at});
+                    }
                     if(modalCreateBooking.dataset.requestSignature!==signature){modalCreateBooking.dataset.requestSignature=signature;modalCreateBooking.dataset.requestId=crypto.randomUUID();}
                     const {data,error}=await client.rpc(category==='Spa'?'create_admin_service_booking':'create_admin_logistics_booking',{p_id:modalCreateBooking.dataset.requestId,p_details:details});
                     if(error)throw error;
@@ -1405,7 +1464,10 @@
                     await PawpalServices.loadServicesData({force:true,forceStaff:false,prefetch:false});
                     try{const created=await PawpalServices.ensureBooking(data);if(created)newId=created.id;}catch(error){/* The booking was saved; do not encourage a duplicate submission. */}
                 } catch (err) {
-                    PawpalServices.showToast('Không thể lưu lịch hẹn: ' + PawpalServices.errorMessage(err), 'danger');
+                    const fields={pet_weight_required:'newBookingPetWeight',ambiguous_service_price:'newBookingServiceSelect',ambiguous_taxi_price:'newBookingTaxiDistance',future_booking_required:'newBookingTime',staff_level_required:'newBookingStaff',staff_not_eligible:'newBookingStaff',staff_not_available:'newBookingStaff',staff_schedule_conflict:'newBookingStaff'};
+                    if(fields[err.message])fieldError(fields[err.message],PawpalServices.errorMessage(err));
+                    else if(!err.fieldError)modalError(modalCreateBooking,'Không thể lưu lịch hẹn: '+PawpalServices.errorMessage(err));
+                    focusModalError(modalCreateBooking);
                     return;
                 } finally {
                     btnSubmitCreateBooking.disabled = false;
@@ -1430,6 +1492,7 @@
         function updateTaxiReturnFields(){
             const field=document.getElementById('newBookingTaxiReturnFields');
             if(field)field.style.display=catSelect?.value==='Taxi'&&document.getElementById('newBookingTaxiTripType').value==='round_trip'?'':'none';
+            document.getElementById('newBookingTaxiReturnAt').required=field?.style.display!== 'none';
         }
         document.getElementById('newBookingTaxiTripType')?.addEventListener('change',updateTaxiReturnFields);
         function isGroomingService(serviceName) {
@@ -1457,10 +1520,11 @@
             updateTaxiReturnFields();
             if (hotelFields) hotelFields.style.display = (val === 'Hotel') ? 'block' : 'none';
             if (taxiFields) taxiFields.style.display = (val === 'Taxi') ? 'block' : 'none';
+            for(const id of ['newBookingTaxiPickup','newBookingTaxiDropoff','newBookingTaxiDistance'])document.getElementById(id).required=val==='Taxi';
             
             // Reset lựa chọn gói dịch vụ cụ thể khi đổi nhóm dịch vụ
-            if (serviceInput) serviceInput.value = '';
-            if (serviceHidden) serviceHidden.value = '';
+            if (serviceInput){serviceInput.value = '';serviceInput.style.display='';}
+            if (serviceHidden){serviceHidden.value = '';delete serviceHidden.dataset.serviceId;}
             if (serviceSelectedCard) serviceSelectedCard.style.display = 'none';
             updateGroomingFields();
             PawpalServices.enhanceEntitySelects();
@@ -1492,6 +1556,7 @@
                         tierName: c.membership_tier ? `Hạng ${c.membership_tier}` : (prof.tier ? `Hạng ${prof.tier}` : 'Thành viên'),
                         pets: pets.map(p => ({
                             id: p.id, customer_id: c.id,
+                            updated_at:p.updated_at,safety_note:p.safety_note,
                             name: p.pet_name,
                             species: p.species || 'Thú cưng',
                             breed: p.breed || 'Chưa rõ giống',
@@ -1507,12 +1572,12 @@
 
         function renderCustomerAutocomplete(query = '') {
             if (!customerDropdown) return;
-            const q = (query || '').toLowerCase().trim();
+            const q = PawpalServices.toUnaccent(query || '');
             const customers = getAllCustomersList();
             
             const matches = customers.filter(c => {
                 if (!q) return true;
-                const name = (c.name || '').toLowerCase();
+                const name = PawpalServices.toUnaccent(c.name || '');
                 const phone = (c.phone || '').replace(/[^0-9]/g, '');
                 const cleanQ = q.replace(/[^0-9]/g, '');
                 const matchPhone = cleanQ && phone.includes(cleanQ);
@@ -1561,10 +1626,12 @@
         }
 
         function selectCustomerItem(c) {
+            if(selectedBookingPet&&selectedBookingPet.customer_id!==c.id){selectedBookingPet=null;document.getElementById('newBookingPetName').value='';document.getElementById('newBookingPetName').style.display='';document.getElementById('bookingSelectedPetCard').style.display='none';document.getElementById('newBookingPetWeight').value='';}
             selectedCustomerObj = c;
             const name = c.name || '';
             const phone = c.phone || '';
             if (customerInput) customerInput.value = name;
+            if (customerInput) customerInput.style.display='none';
             if (phoneInput && phone) phoneInput.value = phone;
 
             if (customerSelectedCard) {
@@ -1576,6 +1643,7 @@
                 customerSelectedCard.querySelector('.btn-clear-selection')?.addEventListener('click', () => {
                     selectedCustomerObj = null;
                     if (customerInput) customerInput.value = '';
+                    customerInput.style.display='';phoneInput.value='';selectedBookingPet=null;petInput.value='';petInput.style.display='';petSelectedCard.style.display='none';petAlertInput.value='';document.getElementById('newBookingPetWeight').value='';customerInput.focus();
                     customerSelectedCard.style.display = 'none';
                 });
             }
@@ -1603,7 +1671,7 @@
 
         function renderPetAutocomplete(query = '') {
             if (!petDropdown) return;
-            const q = (query || '').toLowerCase().trim();
+            const q = PawpalServices.toUnaccent(query || '');
             let petList = [];
 
             if (selectedCustomerObj && selectedCustomerObj.pets && selectedCustomerObj.pets.length > 0) {
@@ -1660,6 +1728,8 @@
             selectedBookingPet = p;
             const petNameStr = p.pet_name || p.name || 'Bé cưng';
             if (petInput) petInput.value = petNameStr;
+            if (petInput) petInput.style.display='none';
+            document.getElementById('newBookingPetWeight').value=Number(p.weight)>0?p.weight:'';
             if(petAlertInput)petAlertInput.value=[p.allergy,p.safety_note].filter(Boolean).join('; ');
 
             if (petSelectedCard) {
@@ -1670,6 +1740,7 @@
                 petSelectedCard.style.display = 'flex';
                 petSelectedCard.querySelector('.btn-clear-selection')?.addEventListener('click', () => {
                     if (petInput) petInput.value = '';
+                    selectedBookingPet=null;petInput.style.display='';petAlertInput.value='';document.getElementById('newBookingPetWeight').value='';petInput.focus();
                     petSelectedCard.style.display = 'none';
                 });
             }
@@ -1718,7 +1789,7 @@
                     dbId:s.dbId,
                     code: s.code || s.id || '',
                     name: s.name,
-                    duration: s.duration || '60 phút',
+                    duration: categoryVal==='Taxi'?'Theo chuyến':s.duration || 'Chưa cập nhật',tripType:s.tripType,
                     price: s.minPrice != null ? 'Từ '+s.minPrice.toLocaleString('vi-VN')+' đ' : 'Chưa có bảng giá',
                     desc: s.desc || ''
                 }));
@@ -1731,12 +1802,12 @@
             if (!serviceDropdown) return;
             const catVal = catSelect ? catSelect.value : 'Spa';
             const allServices = getServicesForCategory(catVal);
-            const q = (query || '').toLowerCase().trim();
+            const q = PawpalServices.toUnaccent(query || '');
 
             const matches = allServices.filter(s => {
-                const name = (s.name || '').toLowerCase();
+                const name = PawpalServices.toUnaccent(s.name || '');
                 const code = (s.code || '').toLowerCase();
-                const desc = (s.desc || '').toLowerCase();
+                const desc = PawpalServices.toUnaccent(s.desc || '');
                 return !q || name.includes(q) || code.includes(q) || desc.includes(q);
             });
 
@@ -1774,6 +1845,7 @@
 
         function selectServiceItem(s) {
             if (serviceInput) serviceInput.value = s.name;
+            if (serviceInput) serviceInput.style.display='none';
             if (serviceHidden) serviceHidden.value = s.name;
             if (serviceHidden) serviceHidden.dataset.serviceId=s.dbId;
             const rooms=document.getElementById('newBookingHotelRoomType');
@@ -1791,6 +1863,7 @@
                 serviceSelectedCard.querySelector('.btn-clear-selection')?.addEventListener('click', () => {
                     if (serviceInput) serviceInput.value = '';
                     if (serviceHidden) serviceHidden.value = '';
+                    delete serviceHidden.dataset.serviceId;serviceInput.style.display='';serviceInput.focus();
                     serviceSelectedCard.style.display = 'none';
                     updateGroomingFields();
                 });
@@ -1854,6 +1927,8 @@
         if (btnConfirmIntake) {
             btnConfirmIntake.addEventListener('click', async () => {
                 const modal = document.getElementById('modalEditIntakeInfo') || document.getElementById('modalIntakeSafety');
+                if(btnConfirmIntake.disabled)return;
+                clearModalErrors(modal);
                 const bookingId = modal?.getAttribute('data-booking-id');
                 const bookingsData = PawpalServices.state?.bookingsData || [];
                 const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
@@ -1885,6 +1960,16 @@
                 document.querySelectorAll('.check-belonging-item:checked').forEach(cb => belongings.push(cb.value));
                 const belongingsNote = document.getElementById('intakeBelongingsInput')?.value || '';
 
+                if(!Number.isFinite(actualWeight)||actualWeight<=0)fieldError('intakePetWeightInput','Nhập cân nặng thực tế lớn hơn 0.');
+                if(!staff)fieldError('intakeStaffSelect','Chọn kỹ thuật viên tiếp nhận ca.');
+                if(!skinList.length)fieldError('checkSkinNormal','Chọn tình trạng da và lông.');
+                else if(document.getElementById('checkSkinNormal')?.checked&&skinList.length>1)fieldError('checkSkinNormal','Không chọn đồng thời da sạch và tình trạng bất thường.');
+                if(!eyesEarsList.length)fieldError('checkEyesEarsNormal','Chọn tình trạng mắt, mũi và tai.');
+                else if(document.getElementById('checkEyesEarsNormal')?.checked&&eyesEarsList.length>1)fieldError('checkEyesEarsNormal','Không chọn đồng thời bình thường và tình trạng bất thường.');
+                if(!woundsStr||woundNone&&document.getElementById('checkWoundExisting')?.checked)fieldError('checkWoundNone','Chọn đúng một tình trạng vết thương.');
+                if(!selectedTemp)fieldError('intakeTemperamentCalm','Chọn tình trạng tâm lý và tính khí.');
+                if(modal.querySelector('[aria-invalid="true"]')){focusModalError(modal);return;}
+
                 if(btnConfirmIntake.disabled) return;
                 btnConfirmIntake.disabled=true;
                 try {
@@ -1903,7 +1988,7 @@
                         recordedAt:booking.intakeRecord?.recordedAt||new Date().toISOString(),updatedAt:new Date().toISOString()
                     },{appointment_status:'dang_thuc_hien',staff_id:staffMatches[0].id});
                     PawpalServices.showToast('Đã lưu biên bản tiếp nhận và trạng thái ca dịch vụ.');
-                } catch(err) {PawpalServices.showToast('Không thể tiếp nhận: '+PawpalServices.errorMessage(err),'danger');return;}
+                } catch(err) {if(['staff_level_required','staff_not_eligible','staff_not_available'].includes(err.message)){fieldError('intakeStaffSelect',PawpalServices.errorMessage(err));focusModalError(modal);}else modalError(modal,'Không thể tiếp nhận: '+PawpalServices.errorMessage(err));return;}
                 finally {btnConfirmIntake.disabled=false;}
                 if (modal) modal.classList.remove('active');
             });

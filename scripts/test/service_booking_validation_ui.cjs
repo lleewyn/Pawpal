@@ -1,0 +1,26 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{
+ const p=await b.newPage({viewport:{width:1440,height:1000}});await p.route('**/*',r=>r.abort());await p.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));await p.goto('http://localhost:3001/');await p.setContent(fs.readFileSync('pages/admin/modules/services/services.html','utf8'));
+ for(const path of ['pages/admin/admin.css','pages/admin/modules/services/services.css','pages/admin/modules/services/services-v8.css'])await p.addStyleTag({content:fs.readFileSync(path,'utf8')});
+ let core=fs.readFileSync('pages/admin/modules/services/services.js','utf8');core=core.slice(0,core.lastIndexOf("    if (document.readyState === 'loading')"))+'})();';await p.addScriptTag({content:core});
+ await p.evaluate(()=>{
+  const today=new Date(Date.now()+7*3600000).toISOString().slice(0,10),tomorrow=new Date(Date.now()+86400000+7*3600000).toISOString().slice(0,10);window.today=today;
+  PawpalServices.state.serverBookingPagination=false;PawpalServices.state.isLoaded=true;PawpalServices.state.liveStaffList=[{id:'staff-a',full_name:'Staff A'}];window.toasts=[];PawpalServices.showToast=m=>toasts.push(m);window.saves=0;PawpalServices.saveBookingRecord=async()=>{saves++;throw {message:'staff_level_required'};};
+  PawpalServices.state.bookingsData=Array.from({length:14},(_,i)=>({id:'BKG-'+i,dbId:'booking-'+i,rawStatus:i===0?'confirmed':i===1?'completed':'pending',customerName:'Customer '+i,phone:'0901234567',petName:'Pet '+i,petBreed:'Breed',serviceName:'Bath',category:'Spa',staff:'Staff A',staffId:'staff-a',status:i===0?'confirmed':i===1?'completed':'pending',date:i<3?today:tomorrow,time:'09:00',total:100000,totalPrice:100000,price:100000,charges:[],allItems:[],surcharges:[],petWeight:'5 kg',careLogs:[]}));
+ });
+ await p.addScriptTag({content:fs.readFileSync('pages/admin/modules/services/subtabs/tab-service-bookings.js','utf8')});
+ await p.click('[data-kpi-filter="pending"]');assert.equal(await p.locator('#serviceFilterDay').inputValue(),'TODAY');assert.equal(await p.locator('#servicesBookingTableBody tr[data-booking-id]').count(),1);assert.equal(await p.locator('#servicesPagination [data-page="2"]').count(),0);
+ await p.selectOption('#serviceFilterStatus','completed');assert.equal(await p.locator('[data-kpi-filter="completed"]').evaluate(n=>n.classList.contains('active')),true);assert.equal(await p.locator('[data-kpi-filter="pending"]').evaluate(n=>n.classList.contains('active')),false);
+ await p.selectOption('#serviceFilterDay','ALL');assert.equal(await p.locator('.kpi-card-clickable.active').count(),0);
+ await p.click('#btnOpenCreateBookingModal');await p.evaluate(()=>{document.getElementById('formCreateBooking').reset();document.getElementById('newBookingDate').value='';document.getElementById('newBookingTime').value='';});await p.click('#btnSubmitCreateBooking');
+ for(const id of ['newBookingCustomer','newBookingPhone','newBookingPetName','newBookingServiceInput','newBookingDate','newBookingTime']){assert.equal(await p.locator('#'+id).getAttribute('aria-invalid'),'true');assert.ok(await p.locator('#'+id+'Error').isVisible());}
+ assert.equal(await p.evaluate(()=>toasts.length),0);assert.equal(await p.evaluate(()=>document.activeElement.id),'newBookingCustomer');
+ fs.mkdirSync('docs/verification/service-booking-validation',{recursive:true});await p.locator('#modalCreateBooking .admin-modal-card').screenshot({path:'docs/verification/service-booking-validation/create-errors.png'});
+ await p.setViewportSize({width:390,height:844});await p.locator('#modalCreateBooking .admin-modal-card').screenshot({path:'docs/verification/service-booking-validation/create-errors-mobile.png'});await p.setViewportSize({width:1440,height:1000});await p.click('#btnCancelCreateBooking');
+ await p.evaluate(()=>PawpalServices.subtabs.bookings.openIntakeModal('BKG-0'));await p.click('#intakeModalSubmitBtn');
+ for(const id of ['checkSkinNormal','checkEyesEarsNormal','checkWoundNone','intakeTemperamentCalm'])assert.equal(await p.locator('#'+id).getAttribute('aria-invalid'),'true');assert.equal(await p.evaluate(()=>saves),0);
+ for(const id of ['checkSkinNormal','checkEyesEarsNormal','checkWoundNone','intakeTemperamentCalm'])await p.check('#'+id);
+ await p.click('#intakeModalSubmitBtn');await p.waitForFunction(()=>saves===1);assert.equal(await p.locator('#intakeStaffSelect').getAttribute('aria-invalid'),'true');assert.equal(await p.evaluate(()=>toasts.length),0);assert.ok((await p.locator('#intakeStaffSelectError').innerText()).length>0);
+ await p.locator('#modalEditIntakeInfo .admin-modal-card').screenshot({path:'docs/verification/service-booking-validation/intake-level-error.png'});
+ console.log('PASS today KPI/one-result pager/dropdown sync, six inline create errors with no toast, intake required groups and inline level failure. Mocked transport; no business writes.');
+}finally{await b.close();}})().catch(e=>{console.error(e.stack);process.exitCode=1;});

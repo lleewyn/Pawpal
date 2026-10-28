@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-28T01:57:42.041Z",
+  "status": "PASS",
+  "checks": [
+    "Taxi uses configured 150000 price and creates exactly one trip on retry",
+    "Recorded 4.5kg is used by Spa price snapshot at configured 100000",
+    "Missing active price is rejected without inventing a price"
+  ],
+  "scope": "Synthetic actor/customer/pet/services/prices/weight/bookings all ROLLBACK; no live customer data or Logs"
+}

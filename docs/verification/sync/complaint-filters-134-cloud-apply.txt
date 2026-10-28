@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-28T02:16:53.045Z",
+  "status": "APPLIED",
+  "sha256": "432ec2efda87a1ac382986f2a6056507fe0a2be9e08abbae0bb742074143f377",
+  "checks": {
+    "invoker": true,
+    "stable": true,
+    "staff_available": true,
+    "anonymous_blocked": true,
+    "normalized_search": true,
+    "stable_page_order": true
+  },
+  "scope": "Read-only complaint normalized search, open high/urgent scope and stable page order; no ticket rows modified or SLA deadlines invented"
+}

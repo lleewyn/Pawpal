@@ -30,13 +30,14 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
                     if (window.failPage) return { error: { message: 'fixture failure' } };
                     const filters = args.p_filters || {};
                     if (window.delayPage) await new Promise(resolve => setTimeout(resolve, filters.query === 'Issue 1' ? 100 : 5));
-                    const matching = rows.filter(row => row.category === args.p_kind && (!filters.query || row.subject.toLowerCase().includes(filters.query.toLowerCase()))
+                    const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase().trim().replace(/\s+/g,' ');
+                    const matching = rows.filter(row => row.category === args.p_kind && (!filters.query || normalize(row.subject+' '+row._export.customerName).includes(normalize(filters.query)))
                         && (!filters.status || filters.status === 'ALL' || row.status === filters.status) && (!filters.priority || filters.priority === 'ALL' || row.priority === filters.priority));
                     const number = Math.min(args.p_page, Math.max(1, Math.ceil(matching.length / args.p_size)));
                     const tickets = matching.slice((number - 1) * args.p_size, number * args.p_size);
                     const context = rows.find(row => row.id === args.p_context || row.ticket_code === args.p_context);
                     return { data: { kind: args.p_kind, total: matching.length, page: number,
-                        pageIds: tickets.map(row => row.id), tickets: context && !tickets.some(row => row.id === context.id) ? [...tickets, context] : tickets,
+                        pageIds: tickets.map(row => row.id), tickets: context && !tickets.some(row => row.id === context.id) ? [...tickets, context] : window.reverseTickets?[...tickets].reverse():tickets,
                         stats: { sNew: 23, sProc: 0, sWait: 0, sHigh: 0, oNew: 12, oProc: 0, oRma: 0, oWait: 0, oRef: 0 }
                     } };
                 },
@@ -111,6 +112,18 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
             await PawpalComplaints.loadComplaintsModuleData({ force: true });
         });
         await page.waitForFunction(() => document.querySelector('#orderComplaintsTableBody tr')?.dataset.ticketId === 'TICKET-30');
+        await page.evaluate(async()=>{
+            window.delayPage=false;window.reverseTickets=true;rows.forEach((row,i)=>{if(row.category==='service'){row.status=i<12?'processing':'new';row._export.customerName='Nguyễn Lê Thị';}});
+            document.querySelectorAll('.subtab-content').forEach(el=>el.classList.toggle('active',el.id==='subtab-tab-complaint-services'));
+            await PawpalComplaints.loadComplaintsModuleData({force:true});
+        });
+        await page.click('[data-service-kpi="processing"]');await page.waitForFunction(()=>document.querySelectorAll('#serviceComplaintsTableBody tr[data-ticket-id]').length===10);
+        assert.equal(await page.locator('#serviceFilterStatus').inputValue(),'processing');assert.equal(await page.locator('#serviceQuickChips [data-filter="ALL"]').evaluate(node=>node.classList.contains('active')),false);
+        assert.equal(await page.locator('#serviceComplaintsTableBody tr[data-ticket-id]').first().getAttribute('data-ticket-id'),'TICKET-0','server pageIds order must survive reversed ticket payload');
+        await page.fill('#serviceSearchInput',' nguyen  le thi ');await page.waitForFunction(()=>calls.at(-1).args.p_filters.query==='nguyen le thi');await page.waitForFunction(()=>document.querySelectorAll('#serviceComplaintsTableBody tr[data-ticket-id]').length===10);
+        await page.click('#servicePagination [data-page="2"]');await page.waitForFunction(()=>document.querySelectorAll('#serviceComplaintsTableBody tr[data-ticket-id]').length===2);assert.equal(await page.locator('#serviceFilterStatus').inputValue(),'processing');assert.equal(await page.evaluate(()=>calls.at(-1).args.p_filters.status),'processing');assert.equal(await page.evaluate(()=>calls.at(-1).args.p_filters.query),'nguyen le thi');
+        await page.selectOption('#serviceFilterStatus','new');await page.waitForFunction(()=>document.querySelectorAll('#serviceComplaintsTableBody tr[data-ticket-id]').length===10);assert.equal(await page.locator('[data-service-kpi="new"]').evaluate(node=>node.classList.contains('active')),true);assert.equal(await page.locator('[data-service-kpi="processing"]').evaluate(node=>node.classList.contains('active')),false);
+        await page.click('#serviceQuickChips [data-filter="WAITING_MANAGER"]');assert.equal(await page.locator('#serviceFilterStatus').inputValue(),'waiting_manager_approval');assert.equal(await page.locator('#serviceQuickChips [data-filter="WAITING_MANAGER"]').evaluate(node=>node.classList.contains('active')),true);
         assert.deepEqual(errors, []);
         console.log('PASS complaints server pages, page cache, global KPIs, search, full export, off-page context and order page 2; mock RPC only.');
     } finally { await browser.close(); }

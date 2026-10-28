@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-28T01:58:57.864Z",
+  "status": "APPLIED",
+  "sha256": "f1471fa0bceb44f94bc357a4ba20d2ff5cf45659b34fad9a1037bb1ddf9f4b51",
+  "checks": {
+    "invoker": true,
+    "stable": true,
+    "staff_available": true,
+    "anonymous_blocked": true,
+    "canonical_search": true,
+    "whitespace_normalized": true
+  },
+  "scope": "Read-only booking search normalization only; existing today scope retained; no business rows modified"
+}

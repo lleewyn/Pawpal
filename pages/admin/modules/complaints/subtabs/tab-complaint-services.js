@@ -15,6 +15,21 @@
     let currentServiceQuickFilter = 'ALL';
     let currentServiceKpiFilter = 'ALL';
     let lastFilteredServices = [];
+    function syncServiceControls(){
+        const status=document.getElementById('serviceFilterStatus')?.value||'ALL',priority=document.getElementById('serviceFilterPriority')?.value||'ALL',staff=document.getElementById('serviceFilterStaff')?.value||'ALL';
+        document.querySelectorAll('[data-service-kpi]').forEach(card=>{card.classList.toggle('active',card.dataset.serviceKpi===currentServiceKpiFilter);});
+        const all=currentServiceQuickFilter==='ALL'&&currentServiceKpiFilter==='ALL'&&status==='ALL'&&priority==='ALL'&&staff==='ALL';
+        document.querySelectorAll('#serviceQuickChips [data-filter]').forEach(button=>button.classList.toggle('active',button.dataset.filter===currentServiceQuickFilter&&(currentServiceQuickFilter!=='ALL'||all)));
+    }
+    function changeServiceDropdown(){
+        currentServiceQuickFilter='ALL';
+        const status=document.getElementById('serviceFilterStatus').value,priority=document.getElementById('serviceFilterPriority').value;
+        currentServiceKpiFilter=priority==='high_open'&&status==='ALL'?'high':['new','processing','waiting_customer'].includes(status)?status:'ALL';
+        if(status==='waiting_manager_approval')currentServiceQuickFilter='WAITING_MANAGER';
+        if(status==='reprocessing')currentServiceQuickFilter='REPROCESSING';
+        if(status==='ALL'&&priority==='high_open')currentServiceQuickFilter='HIGH';
+        syncServiceControls();serviceCurrentPage=1;renderServiceComplaintsTable();
+    }
 
     function sanitizeCsvCell(val) {
         if (val === null || val === undefined) return '""';
@@ -114,7 +129,7 @@
         const prioritySelect = document.getElementById('serviceFilterPriority');
         const staffSelect = document.getElementById('serviceFilterStaff');
 
-        const searchTerm = (searchInput && searchInput.value) ? searchInput.value.trim().toLowerCase() : '';
+        const searchTerm = (searchInput && searchInput.value) ? searchInput.value.trim().replace(/\s+/g,' ') : '';
         const selectedCat = categorySelect ? categorySelect.value : 'ALL';
         const selectedStatus = statusSelect ? statusSelect.value : 'ALL';
         const selectedPriority = prioritySelect ? prioritySelect.value : 'ALL';
@@ -132,54 +147,8 @@
             renderServicePagination(0);
             return;
         }
-        const visible = (PawpalComplaints.state.serviceComplaints || []).filter(item => serverPage.pageIds.includes(item.rawId));
-        const filtered = visible.filter(item => {
-            if (searchTerm) {
-                const match = (item.id && item.id.toLowerCase().includes(searchTerm)) ||
-                              (item.customerName && item.customerName.toLowerCase().includes(searchTerm)) ||
-                              (item.phone && item.phone.toLowerCase().includes(searchTerm)) ||
-                              (item.petName && item.petName.toLowerCase().includes(searchTerm)) ||
-                              (item.bookingId && item.bookingId.toLowerCase().includes(searchTerm)) ||
-                              (item.title && item.title.toLowerCase().includes(searchTerm)) ||
-                              (item.content && item.content.toLowerCase().includes(searchTerm));
-                if (!match) return false;
-            }
-
-            if (selectedCat !== 'ALL') {
-                if (selectedCat === 'contact') {
-                    if (!['contact', 'other', 'test'].includes(item.serviceType)) return false;
-                } else if (item.serviceType !== selectedCat) {
-                    return false;
-                }
-            }
-            if (selectedStatus !== 'ALL' && item.status !== selectedStatus) return false;
-            if (selectedPriority !== 'ALL' && item.priority !== selectedPriority) return false;
-
-            if (selectedStaff !== 'ALL') {
-                if (selectedStaff === 'unassigned') {
-                    if (item.staffAssigned !== 'Chưa phân công') return false;
-                } else if (item.staffAssigned !== selectedStaff) return false;
-            }
-
-            if (currentServiceQuickFilter === 'MY' && item.assigned_staff_id !== PawpalComplaints.getCurrentStaffId()) return false;
-            if (currentServiceQuickFilter === 'UNASSIGNED' && item.staffAssigned !== 'Chưa phân công') return false;
-            if (currentServiceQuickFilter === 'WAITING_MANAGER' && item.status !== 'waiting_manager_approval') return false;
-            if (currentServiceQuickFilter === 'REPROCESSING' && item.status !== 'reprocessing') return false;
-            if (currentServiceQuickFilter === 'OVERDUE' && item.slaStatus !== 'OVERDUE') return false;
-            if (currentServiceQuickFilter === 'HIGH' && item.priority !== 'high') return false;
-
-            if (currentServiceKpiFilter !== 'ALL') {
-                if (currentServiceKpiFilter === 'high') {
-                    if (item.priority !== 'high') return false;
-                } else if (currentServiceKpiFilter === 'overdue') {
-                    if (item.slaStatus !== 'OVERDUE') return false;
-                } else if (item.status !== currentServiceKpiFilter) return false;
-            }
-
-            return true;
-        });
-
-        filtered.sort(sortComplaintsByUrgencyAndSla);
+        const byId=new Map((PawpalComplaints.state.serviceComplaints||[]).map(item=>[item.rawId,item]));
+        const filtered=serverPage.pageIds.map(id=>byId.get(id)).filter(Boolean);
         lastFilteredServices = filtered;
 
         const totalPages = Math.ceil(serverPage.total / ITEMS_PER_PAGE);
@@ -281,6 +250,7 @@
 
         currentServiceQuickFilter = 'ALL';
         currentServiceKpiFilter = 'ALL';
+        syncServiceControls();
         serviceCurrentPage = 1;
         renderServiceComplaintsTable();
     }
@@ -342,13 +312,31 @@
         if (categorySelect) categorySelect.addEventListener('change', () => { serviceCurrentPage = 1; renderServiceComplaintsTable(); });
 
         const statusSelect = document.getElementById('serviceFilterStatus');
-        if (statusSelect) statusSelect.addEventListener('change', () => { serviceCurrentPage = 1; renderServiceComplaintsTable(); });
+        if (statusSelect) statusSelect.addEventListener('change', changeServiceDropdown);
 
         const prioritySelect = document.getElementById('serviceFilterPriority');
-        if (prioritySelect) prioritySelect.addEventListener('change', () => { serviceCurrentPage = 1; renderServiceComplaintsTable(); });
+        if (prioritySelect) prioritySelect.addEventListener('change', changeServiceDropdown);
 
         const staffSelect = document.getElementById('serviceFilterStaff');
-        if (staffSelect) staffSelect.addEventListener('change', () => { serviceCurrentPage = 1; renderServiceComplaintsTable(); });
+        if (staffSelect) staffSelect.addEventListener('change', changeServiceDropdown);
+
+        document.querySelectorAll('[data-service-kpi]').forEach(card=>{
+            if(card.dataset.serviceKpi==='overdue'){card.setAttribute('aria-disabled','true');card.title='Chưa cấu hình hạn xử lý khiếu nại.';return;}
+            card.addEventListener('click',()=>{
+                const value=card.dataset.serviceKpi;currentServiceKpiFilter=value;currentServiceQuickFilter=value==='high'?'HIGH':'ALL';
+                statusSelect.value=value==='high'?'ALL':value;prioritySelect.value=value==='high'?'high_open':'ALL';staffSelect.value='ALL';
+                syncServiceControls();serviceCurrentPage=1;renderServiceComplaintsTable();
+            });
+        });
+        document.querySelectorAll('#serviceQuickChips [data-filter]').forEach(button=>{
+            if(button.dataset.filter==='OVERDUE'){button.disabled=true;button.title='Chưa cấu hình hạn xử lý khiếu nại.';return;}
+            button.addEventListener('click',()=>{
+                const value=button.dataset.filter;if(value==='ALL'){clearServiceFilters();return;}
+                currentServiceQuickFilter=value;currentServiceKpiFilter=value==='HIGH'?'high':'ALL';
+                statusSelect.value=({WAITING_MANAGER:'waiting_manager_approval',REPROCESSING:'reprocessing'})[value]||'ALL';prioritySelect.value=value==='HIGH'?'high_open':'ALL';staffSelect.value=value==='UNASSIGNED'?'Chưa phân công':'ALL';
+                syncServiceControls();serviceCurrentPage=1;renderServiceComplaintsTable();
+            });
+        });
 
         // Nút xuất file CSV
         const btnExport = document.getElementById('btnExportServiceComplaints');
