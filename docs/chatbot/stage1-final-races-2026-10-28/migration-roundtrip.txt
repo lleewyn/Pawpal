@@ -1,0 +1,9 @@
+{
+  "capturedAt": "2026-10-28T05:12:26.964Z",
+  "scope": "Marker-owned local clone only; no Cloud",
+  "status": "PASS",
+  "before": "2504a7a84299fe1b9c71be2cd4a3ed09",
+  "applied": "d5c264300b05ef451184ee429c074a7d",
+  "restored": "2504a7a84299fe1b9c71be2cd4a3ed09",
+  "warning": "Rollback restores the old cumulative-cap vulnerability; use only as reviewed rollback, not a final fix."
+}

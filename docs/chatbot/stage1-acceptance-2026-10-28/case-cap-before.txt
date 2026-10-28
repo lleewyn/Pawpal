@@ -1,0 +1,7 @@
+{
+  "capturedAt": "2026-10-28T04:56:23.742Z",
+  "scope": "Local clone only, SQL claims; no Cloud",
+  "checks": [],
+  "status": "FAIL",
+  "error": "P0: distinct request IDs bypass the approved 200-point case cap\n\ntrue !== false\n"
+}

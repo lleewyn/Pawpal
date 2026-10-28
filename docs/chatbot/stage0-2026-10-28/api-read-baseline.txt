@@ -1,0 +1,295 @@
+{
+  "capturedAt": "2026-10-28T03:36:11.996Z",
+  "scope": "Existing QA staff JWT; read-only history session page; five sequential samples each, not load or capacity test. Auth sign-in only; no model calls or business writes.",
+  "local": [
+    {
+      "status": 200,
+      "ms": 1914.11,
+      "decodedBytes": 659,
+      "responseHash": "60747f41e8258908201edbd112827c11efd82ad745130a20236fa345eabe049f",
+      "shape": [
+        "ok",
+        "page",
+        "sessions",
+        "total"
+      ],
+      "internalRequests": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 977,
+          "ms": 774.49
+        },
+        {
+          "route": "/rest/v1/rpc/get_staff_login_context",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 5584,
+          "ms": 777.49
+        },
+        {
+          "route": "/rest/v1/rpc/admin_copilot_session_page",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 677,
+          "ms": 357.46
+        }
+      ]
+    },
+    {
+      "status": 200,
+      "ms": 1277.01,
+      "decodedBytes": 659,
+      "responseHash": "60747f41e8258908201edbd112827c11efd82ad745130a20236fa345eabe049f",
+      "shape": [
+        "ok",
+        "page",
+        "sessions",
+        "total"
+      ],
+      "internalRequests": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 977,
+          "ms": 620.08
+        },
+        {
+          "route": "/rest/v1/rpc/get_staff_login_context",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 5584,
+          "ms": 303.87
+        },
+        {
+          "route": "/rest/v1/rpc/admin_copilot_session_page",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 677,
+          "ms": 350.21
+        }
+      ]
+    },
+    {
+      "status": 200,
+      "ms": 1020.3,
+      "decodedBytes": 659,
+      "responseHash": "60747f41e8258908201edbd112827c11efd82ad745130a20236fa345eabe049f",
+      "shape": [
+        "ok",
+        "page",
+        "sessions",
+        "total"
+      ],
+      "internalRequests": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 977,
+          "ms": 363.33
+        },
+        {
+          "route": "/rest/v1/rpc/get_staff_login_context",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 5584,
+          "ms": 329.8
+        },
+        {
+          "route": "/rest/v1/rpc/admin_copilot_session_page",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 677,
+          "ms": 324.94
+        }
+      ]
+    },
+    {
+      "status": 200,
+      "ms": 1201.66,
+      "decodedBytes": 659,
+      "responseHash": "60747f41e8258908201edbd112827c11efd82ad745130a20236fa345eabe049f",
+      "shape": [
+        "ok",
+        "page",
+        "sessions",
+        "total"
+      ],
+      "internalRequests": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 977,
+          "ms": 649.33
+        },
+        {
+          "route": "/rest/v1/rpc/get_staff_login_context",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 5584,
+          "ms": 246.12
+        },
+        {
+          "route": "/rest/v1/rpc/admin_copilot_session_page",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 677,
+          "ms": 303.91
+        }
+      ]
+    },
+    {
+      "status": 200,
+      "ms": 1017.27,
+      "decodedBytes": 659,
+      "responseHash": "60747f41e8258908201edbd112827c11efd82ad745130a20236fa345eabe049f",
+      "shape": [
+        "ok",
+        "page",
+        "sessions",
+        "total"
+      ],
+      "internalRequests": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 977,
+          "ms": 265.2
+        },
+        {
+          "route": "/rest/v1/rpc/get_staff_login_context",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 5584,
+          "ms": 367.65
+        },
+        {
+          "route": "/rest/v1/rpc/admin_copilot_session_page",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 677,
+          "ms": 382.02
+        }
+      ]
+    }
+  ],
+  "production": [
+    {
+      "status": 200,
+      "ms": 2830.35,
+      "decodedBytes": 659,
+      "responseHash": "60747f41e8258908201edbd112827c11efd82ad745130a20236fa345eabe049f",
+      "shape": [
+        "ok",
+        "page",
+        "sessions",
+        "total"
+      ]
+    },
+    {
+      "status": 200,
+      "ms": 2609.27,
+      "decodedBytes": 659,
+      "responseHash": "60747f41e8258908201edbd112827c11efd82ad745130a20236fa345eabe049f",
+      "shape": [
+        "ok",
+        "page",
+        "sessions",
+        "total"
+      ]
+    },
+    {
+      "status": 200,
+      "ms": 1904.48,
+      "decodedBytes": 659,
+      "responseHash": "60747f41e8258908201edbd112827c11efd82ad745130a20236fa345eabe049f",
+      "shape": [
+        "ok",
+        "page",
+        "sessions",
+        "total"
+      ]
+    },
+    {
+      "status": 200,
+      "ms": 1908.09,
+      "decodedBytes": 659,
+      "responseHash": "60747f41e8258908201edbd112827c11efd82ad745130a20236fa345eabe049f",
+      "shape": [
+        "ok",
+        "page",
+        "sessions",
+        "total"
+      ]
+    },
+    {
+      "status": 200,
+      "ms": 1500.09,
+      "decodedBytes": 659,
+      "responseHash": "60747f41e8258908201edbd112827c11efd82ad745130a20236fa345eabe049f",
+      "shape": [
+        "ok",
+        "page",
+        "sessions",
+        "total"
+      ]
+    }
+  ],
+  "localSummary": {
+    "n": 5,
+    "empiricalP50Ms": 1201.66,
+    "empiricalP95Ms": 1914.11,
+    "method": "nearest rank; n=5, p95 is max sample; smoke baseline only",
+    "all200": true,
+    "maxResponseBytes": 659
+  },
+  "productionSummary": {
+    "n": 5,
+    "empiricalP50Ms": 1908.09,
+    "empiricalP95Ms": 2830.35,
+    "method": "nearest rank; n=5, p95 is max sample; smoke baseline only",
+    "all200": true,
+    "maxResponseBytes": 659
+  },
+  "sameReadPayload": true,
+  "deployment": {
+    "sha": "1defebeacd7f2f606293ae28e1ff8078cf6090d0",
+    "proof": "GitHub deployment metadata and asset hashes from inventory; GET contract parity is not a runtime source fingerprint."
+  },
+  "status": "PASS",
+  "sourceComparison": [
+    {
+      "file": "api/admin-chat.js",
+      "deploymentSourceSha256": "1ead2c5e25c0b34cc48633d70b1ad35d75826bc045f7c9e21d4c1cae961022cb",
+      "localSourceSha256": "478ce982be2d33bf2d4412f99da27328b8d2c4d718ce632f51ae9a982c79d026",
+      "existsInDeploymentCommit": true,
+      "matchesLocal": false
+    },
+    {
+      "file": "scripts/api/admin_copilot.js",
+      "deploymentSourceSha256": "db8587dc3d72c47788bae4ddcb6a2e0045f85f38db6951aa66736da448228649",
+      "localSourceSha256": "873b27ed8c7894a7e396f905ee105a070b7c2df32418abe6eb07021dbb668ce6",
+      "existsInDeploymentCommit": true,
+      "matchesLocal": false
+    },
+    {
+      "file": "scripts/api/chat_understanding.js",
+      "localSourceSha256": "37c91f563bc906a6d3409ab20dfd40c314af48a1edbfe15a981b8e38c9eece4d",
+      "existsInDeploymentCommit": false,
+      "matchesLocal": false
+    },
+    {
+      "file": "scripts/api/staff_auth.js",
+      "deploymentSourceSha256": "23534a051bd209b2bb972f60368d0572447aa4003c07e7694b814534b4838864",
+      "localSourceSha256": "5b9443e3665ee030ccbe0201ee4a5c72cba0e3738b76f726e81ffa4899429f31",
+      "existsInDeploymentCommit": true,
+      "matchesLocal": false
+    }
+  ],
+  "finalization": "Offline only: completed Git source comparison after initial harness rejected a module absent from deployed commit; network measurements unchanged."
+}

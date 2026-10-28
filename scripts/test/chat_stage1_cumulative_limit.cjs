@@ -1,0 +1,26 @@
+// Local-only reproduction and regression for the approved per-conversation point cap.
+const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{execFile}=require('node:child_process');
+if(!process.argv.includes('--local-fixtures')){console.log('No connection. Use --local-fixtures.');process.exit(0);}
+const out='docs/chatbot/stage1-acceptance-2026-10-28',env=JSON.parse(fs.readFileSync(out+'/local-environment.txt','utf8'));
+if(env.status!=='READY'||!/^pawpal_chatbot_g0_[a-f0-9]{12}$/.test(env.database))throw Error('invalid_test_environment');
+const id=()=>crypto.randomUUID(),u=id(),s=id(),c=id(),chat=id(),policy=id();
+const report={capturedAt:new Date().toISOString(),scope:'Local clone only, SQL claims; no Cloud',checks:[]};
+async function sql(text,actor){return new Promise(resolve=>{const child=execFile('docker',['exec','-i','supabase-db','psql','-U','supabase_admin','-d',env.database,'-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-f','-'],{windowsHide:true,timeout:15000},(e,stdout,stderr)=>resolve({ok:!e,text:stdout.trim(),code:stderr.match(/ERROR:\s+([A-Z0-9]{5}):/)?.[1]}));child.stdin.end(`BEGIN;SET LOCAL statement_timeout='5s';SET LOCAL lock_timeout='3s';${actor?`SET LOCAL request.jwt.claim.sub='${actor}';SET LOCAL ROLE authenticated;`:''}${text};COMMIT;`);});}
+async function good(text,actor){const r=await sql(text,actor);assert.ok(r.ok,r.code);return r.text?JSON.parse(r.text):null;}
+(async()=>{
+ assert.equal(await good(`SELECT to_json(shobj_description(oid,'pg_database')) FROM pg_database WHERE datname=current_database()`),env.ownerMarker);
+ if(process.argv.includes('--apply-fix')){const source=fs.readFileSync('scripts/database/v1/135_chat_compensation_case_limit.sql','utf8');const r=await sql(source.replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));assert.ok(r.ok,r.code);}
+ await good(`INSERT INTO auth.users(id) VALUES('${u}');INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES('${s}','${u}','QA cap','QA','active',false);INSERT INTO public.staff_role(staff_id,role_code) VALUES('${s}','ADMIN');INSERT INTO public.customer(id,customer_code) VALUES('${c}','QA-${c}');INSERT INTO public.chat_conversation(id,customer_id,status,assigned_staff_id,channel,sentiment_level,sentiment_trend) VALUES('${chat}','${c}','agent_handling','${s}','web',2,'stable');INSERT INTO public.chatbot_compensation_policy(id,issue_type,max_points,max_discount_vnd,approval_required,description,is_active) VALUES('${policy}','QA cap',200,0,false,'QA',true);`);
+ let rev=await good(`SELECT to_json(updated_at::text) FROM public.chat_conversation WHERE id='${chat}'`);const req=id();
+ const award=(request,amount)=>`SELECT public.adjust_admin_chat_points('${request}','${chat}','${rev}'::timestamptz,'${policy}',${amount})`;
+ await good(award(req,150),u);const overflow=await sql(award(id(),60),u);assert.equal(overflow.ok,false,'P0: distinct request IDs bypass the approved 200-point case cap');assert.equal(overflow.code,'42501');
+ await good(award(req,150),u);await good(award(id(),50),u);
+ assert.equal(await good(`SELECT to_json(sum(points)) FROM public.paw_point_transaction WHERE customer_id='${c}'`),200);report.checks.push('ADMIN cap cumulative 200, overflow denied, replay allowed and balance exactly 200');
+ const u2=id(),s2=id();await good(`INSERT INTO auth.users(id) VALUES('${u2}');INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES('${s2}','${u2}','QA regular','QA','active',false);INSERT INTO public.staff_permission(staff_id,permission_code) SELECT '${s2}',v FROM unnest(ARRAY['chat_conversation.read','chat_conversation.write','chatbot_compensation_policy.read','paw_point_transaction.write','audit_log.write']) v;UPDATE public.chat_conversation SET assigned_staff_id='${s2}' WHERE id='${chat}';`);
+ rev=await good(`SELECT to_json(updated_at::text) FROM public.chat_conversation WHERE id='${chat}'`);
+ const denied=await sql(award(id(),1),u2);assert.equal(denied.code,'42501');report.checks.push('Transfer cannot reset aggregate awarded points');
+ // Separate case for regular staff; policy remains 200 but actor is limited to 50.
+ const second=id();await good(`INSERT INTO public.chat_conversation(id,customer_id,status,assigned_staff_id,channel,sentiment_level,sentiment_trend) VALUES('${second}','${c}','agent_handling','${s2}','web',2,'stable')`);
+ const v2=await good(`SELECT to_json(updated_at::text) FROM public.chat_conversation WHERE id='${second}'`),regular=(request,n)=>`SELECT public.adjust_admin_chat_points('${request}','${second}','${v2}'::timestamptz,'${policy}',${n})`;
+ await good(regular(id(),40),u2);const pair=await Promise.all([sql(regular(id(),10),u2),sql(regular(id(),10),u2)]);assert.equal(pair.filter(r=>r.ok).length,1);assert.equal(pair.filter(r=>r.code==='42501').length,1);report.checks.push('Regular staff cap 50 enforced under two concurrent distinct IDs');report.status='PASS';
+})().catch(e=>{report.status='FAIL';report.error=e.message;process.exitCode=1;}).finally(()=>{fs.writeFileSync(out+(process.argv.includes('--apply-fix')?'/case-cap-after.txt':'/case-cap-before.txt'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));});

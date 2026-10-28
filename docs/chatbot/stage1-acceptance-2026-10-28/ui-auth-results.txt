@@ -1,0 +1,72 @@
+{
+  "capturedAt": "2026-10-28T05:09:42.999Z",
+  "scope": "Task-owned localhost only; real GoTrue JWT/API/PostgREST and original admin/widget HTML/JS; no AI",
+  "checks": [
+    {
+      "name": "Guest widget sends real request through API/Auth identity gateway and DB into waiting queue with 300s server SLA, without model",
+      "status": "PASS"
+    },
+    {
+      "name": "Staff A takes and sends from original Admin UI; original guest widget reads reply",
+      "status": "PASS"
+    },
+    {
+      "name": "Transfer modal commits recipient; recipient UI replies and private transfer note stays hidden",
+      "status": "PASS"
+    },
+    {
+      "name": "Former staff real JWT loses server send permission",
+      "status": "PASS"
+    },
+    {
+      "name": "Recipient completes through modal; guest composer locks and invited feedback commits through API and DB",
+      "status": "PASS"
+    },
+    {
+      "name": "Real member JWT and unrelated guest cannot read/send/mode/feedback another member conversation",
+      "status": "PASS"
+    },
+    {
+      "name": "Member and unrelated guest cannot read/send/mode/feedback the guest-owned conversation",
+      "status": "PASS"
+    },
+    {
+      "name": "Other staff real JWT cannot read or delete private copilot history",
+      "status": "PASS"
+    },
+    {
+      "name": "Real staff JWT service-ticket retry creates one ticket for own customer appointment and rejects another customer appointment",
+      "status": "PASS"
+    },
+    {
+      "name": "Reward/ticket/transfer/resolve modals reject changed selected case before mutation RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Three unclear API turns hand off without AI; explicit resume resets count and clears SLA",
+      "status": "PASS"
+    },
+    {
+      "name": "Real local WebSocket change reaches subscribed Admin inbox without manual refresh",
+      "status": "PASS"
+    },
+    {
+      "name": "Ten rounds of three Admin tabs do not increase channel or interval count",
+      "status": "PASS"
+    }
+  ],
+  "externalBlocked": 0,
+  "aiCalls": 0,
+  "httpErrors": [
+    {
+      "route": "/assets/images/publics/zalo.webp",
+      "status": 404
+    },
+    {
+      "route": "/assets/images/publics/zalo.webp",
+      "status": 404
+    }
+  ],
+  "step": "guest reads first reply",
+  "status": "PASS"
+}

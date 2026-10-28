@@ -1,0 +1,10 @@
+{
+  "capturedAt": "2026-10-28T04:57:01.489Z",
+  "scope": "Local clone only, SQL claims; no Cloud",
+  "checks": [
+    "ADMIN cap cumulative 200, overflow denied, replay allowed and balance exactly 200",
+    "Transfer cannot reset aggregate awarded points",
+    "Regular staff cap 50 enforced under two concurrent distinct IDs"
+  ],
+  "status": "PASS"
+}

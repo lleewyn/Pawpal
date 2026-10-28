@@ -1,0 +1,17 @@
+{
+  "destination": "D:\\Aboutme\\Pawpal-infra\\supabase-local\\backups\\chatbot-stage0-20261028",
+  "verified": true,
+  "files": [
+    {
+      "name": "functions.sql",
+      "bytes": 74335,
+      "sha256": "5f24004105b3d4b161127b3f9329849996a8644367c0c9e06d09f74a2479ccfc"
+    },
+    {
+      "name": "inventory.txt",
+      "bytes": 643207,
+      "sha256": "e31a2471653a7c38bb63c0346468c3146f53af3da5ee0f30213ed56e800d95ae"
+    }
+  ],
+  "scope": "Function definitions and catalog inventory only; not full database/Auth/data backup and not an automatically executable rollback."
+}

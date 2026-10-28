@@ -1,0 +1,901 @@
+{
+  "capturedAt": "2026-10-28T03:58:38.712Z",
+  "database": "pawpal_chatbot_g0_cfdfdf483da6",
+  "scope": "Task-owned local clone only; real GoTrue JWT, PostgREST, active API handler and original widget. No Cloud/AI.",
+  "cases": [
+    {
+      "name": "guest",
+      "full": {
+        "label": "guest-full",
+        "status": 200,
+        "ms": 37.19,
+        "apiBytes": 4830,
+        "internal": [
+          {
+            "route": "/rest/v1/guest_session",
+            "method": "GET",
+            "status": 200,
+            "bytes": 47,
+            "ms": 5.83
+          },
+          {
+            "route": "/rest/v1/chat_conversation",
+            "method": "GET",
+            "status": 200,
+            "bytes": 196,
+            "ms": 7.78
+          },
+          {
+            "route": "/rest/v1/chat_message",
+            "method": "GET",
+            "status": 200,
+            "bytes": 5843,
+            "ms": 10.06
+          },
+          {
+            "route": "/rest/v1/chat_feedback",
+            "method": "GET",
+            "status": 200,
+            "bytes": 2,
+            "ms": 8.6
+          }
+        ]
+      },
+      "revision": {
+        "label": "guest-revision",
+        "status": 200,
+        "ms": 7.86,
+        "apiBytes": 101,
+        "internal": [
+          {
+            "route": "/rest/v1/guest_session",
+            "method": "GET",
+            "status": 200,
+            "bytes": 47,
+            "ms": 3.27
+          },
+          {
+            "route": "/rest/v1/chat_conversation",
+            "method": "GET",
+            "status": 200,
+            "bytes": 196,
+            "ms": 2.99
+          }
+        ]
+      },
+      "older": {
+        "label": "guest-older",
+        "status": 200,
+        "ms": 17.33,
+        "apiBytes": 880,
+        "internal": [
+          {
+            "route": "/rest/v1/guest_session",
+            "method": "GET",
+            "status": 200,
+            "bytes": 47,
+            "ms": 2.99
+          },
+          {
+            "route": "/rest/v1/chat_conversation",
+            "method": "GET",
+            "status": 200,
+            "bytes": 196,
+            "ms": 3.6
+          },
+          {
+            "route": "/rest/v1/chat_message",
+            "method": "GET",
+            "status": 200,
+            "bytes": 968,
+            "ms": 5.84
+          },
+          {
+            "route": "/rest/v1/chat_feedback",
+            "method": "GET",
+            "status": 200,
+            "bytes": 2,
+            "ms": 2.97
+          }
+        ]
+      },
+      "denied": {
+        "label": "guest-other-owner",
+        "status": 403,
+        "ms": 7.7,
+        "apiBytes": 67,
+        "internal": [
+          {
+            "route": "/rest/v1/guest_session",
+            "method": "GET",
+            "status": 200,
+            "bytes": 2,
+            "ms": 2.84
+          },
+          {
+            "route": "/rest/v1/chat_conversation",
+            "method": "GET",
+            "status": 200,
+            "bytes": 196,
+            "ms": 3.48
+          }
+        ]
+      },
+      "publicProjectionSafe": true
+    },
+    {
+      "name": "member",
+      "full": {
+        "label": "member-full",
+        "status": 200,
+        "ms": 312.28,
+        "apiBytes": 4829,
+        "internal": [
+          {
+            "route": "/auth/v1/user",
+            "method": "GET",
+            "status": 200,
+            "bytes": 1557,
+            "ms": 294.43
+          },
+          {
+            "route": "/rest/v1/customer",
+            "method": "GET",
+            "status": 200,
+            "bytes": 47,
+            "ms": 5.74
+          },
+          {
+            "route": "/rest/v1/chat_conversation",
+            "method": "GET",
+            "status": 200,
+            "bytes": 195,
+            "ms": 3.62
+          },
+          {
+            "route": "/rest/v1/chat_message",
+            "method": "GET",
+            "status": 200,
+            "bytes": 5843,
+            "ms": 3.64
+          },
+          {
+            "route": "/rest/v1/chat_feedback",
+            "method": "GET",
+            "status": 200,
+            "bytes": 2,
+            "ms": 2.83
+          }
+        ]
+      },
+      "revision": {
+        "label": "member-revision",
+        "status": 200,
+        "ms": 374.75,
+        "apiBytes": 100,
+        "internal": [
+          {
+            "route": "/auth/v1/user",
+            "method": "GET",
+            "status": 200,
+            "bytes": 1557,
+            "ms": 366.91
+          },
+          {
+            "route": "/rest/v1/customer",
+            "method": "GET",
+            "status": 200,
+            "bytes": 47,
+            "ms": 3.47
+          },
+          {
+            "route": "/rest/v1/chat_conversation",
+            "method": "GET",
+            "status": 200,
+            "bytes": 195,
+            "ms": 2.89
+          }
+        ]
+      },
+      "older": {
+        "label": "member-older",
+        "status": 200,
+        "ms": 346.32,
+        "apiBytes": 879,
+        "internal": [
+          {
+            "route": "/auth/v1/user",
+            "method": "GET",
+            "status": 200,
+            "bytes": 1557,
+            "ms": 331.83
+          },
+          {
+            "route": "/rest/v1/customer",
+            "method": "GET",
+            "status": 200,
+            "bytes": 47,
+            "ms": 3.03
+          },
+          {
+            "route": "/rest/v1/chat_conversation",
+            "method": "GET",
+            "status": 200,
+            "bytes": 195,
+            "ms": 2.78
+          },
+          {
+            "route": "/rest/v1/chat_message",
+            "method": "GET",
+            "status": 200,
+            "bytes": 968,
+            "ms": 3.55
+          },
+          {
+            "route": "/rest/v1/chat_feedback",
+            "method": "GET",
+            "status": 200,
+            "bytes": 2,
+            "ms": 3.33
+          }
+        ]
+      },
+      "denied": {
+        "label": "member-other-owner",
+        "status": 403,
+        "ms": 311.5,
+        "apiBytes": 67,
+        "internal": [
+          {
+            "route": "/auth/v1/user",
+            "method": "GET",
+            "status": 200,
+            "bytes": 1557,
+            "ms": 304.52
+          },
+          {
+            "route": "/rest/v1/customer",
+            "method": "GET",
+            "status": 200,
+            "bytes": 47,
+            "ms": 2.88
+          },
+          {
+            "route": "/rest/v1/chat_conversation",
+            "method": "GET",
+            "status": 200,
+            "bytes": 195,
+            "ms": 2.78
+          }
+        ]
+      },
+      "publicProjectionSafe": true
+    }
+  ],
+  "ui": [
+    {
+      "name": "guest",
+      "apiReads": 2,
+      "internalCalls": [
+        4,
+        2
+      ],
+      "idleWindowMs": 11000,
+      "warmRevisionReads": 1,
+      "renderedMessages": 30
+    },
+    {
+      "name": "member",
+      "apiReads": 2,
+      "internalCalls": [
+        5,
+        3
+      ],
+      "idleWindowMs": 11000,
+      "warmRevisionReads": 1,
+      "renderedMessages": 30
+    }
+  ],
+  "load": [
+    {
+      "label": "load-0-0",
+      "status": 200,
+      "ms": 406.14,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 334.51
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 6.34
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 62.83
+        }
+      ]
+    },
+    {
+      "label": "load-0-1",
+      "status": 200,
+      "ms": 345.64,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 334.82
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 3.84
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 3.63
+        }
+      ]
+    },
+    {
+      "label": "load-1-0",
+      "status": 200,
+      "ms": 375.34,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 361.84
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 4.86
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 6.85
+        }
+      ]
+    },
+    {
+      "label": "load-1-1",
+      "status": 200,
+      "ms": 378.35,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 362.45
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 9.45
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 3.83
+        }
+      ]
+    },
+    {
+      "label": "load-2-0",
+      "status": 200,
+      "ms": 379.52,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 368.45
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 5.8
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 3.41
+        }
+      ]
+    },
+    {
+      "label": "load-2-1",
+      "status": 200,
+      "ms": 378.43,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 367.26
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 5.26
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 3.83
+        }
+      ]
+    },
+    {
+      "label": "load-3-0",
+      "status": 200,
+      "ms": 362.54,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 349.79
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 4.56
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 5.4
+        }
+      ]
+    },
+    {
+      "label": "load-3-1",
+      "status": 200,
+      "ms": 363.8,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 349.99
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 6.04
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 4.34
+        }
+      ]
+    },
+    {
+      "label": "load-4-0",
+      "status": 200,
+      "ms": 342.21,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 330.43
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 5.45
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 4.16
+        }
+      ]
+    },
+    {
+      "label": "load-4-1",
+      "status": 200,
+      "ms": 341.74,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 330.1
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 3.98
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 4.27
+        }
+      ]
+    },
+    {
+      "label": "load-5-0",
+      "status": 200,
+      "ms": 333.39,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 322.38
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 4.69
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 4.1
+        }
+      ]
+    },
+    {
+      "label": "load-5-1",
+      "status": 200,
+      "ms": 333.29,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 322.8
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 4.38
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 3.89
+        }
+      ]
+    },
+    {
+      "label": "load-6-0",
+      "status": 200,
+      "ms": 342.38,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 331.22
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 4.4
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 4.83
+        }
+      ]
+    },
+    {
+      "label": "load-6-1",
+      "status": 200,
+      "ms": 341.88,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 330.12
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 4.19
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 5.38
+        }
+      ]
+    },
+    {
+      "label": "load-7-0",
+      "status": 200,
+      "ms": 435.57,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 425.74
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 4.16
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 3.94
+        }
+      ]
+    },
+    {
+      "label": "load-7-1",
+      "status": 200,
+      "ms": 435.13,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 424.61
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 4.32
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 4.16
+        }
+      ]
+    },
+    {
+      "label": "load-8-0",
+      "status": 200,
+      "ms": 407.67,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 394.72
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 4.05
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 5.4
+        }
+      ]
+    },
+    {
+      "label": "load-8-1",
+      "status": 200,
+      "ms": 407.77,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 393.48
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 5.55
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 6.26
+        }
+      ]
+    },
+    {
+      "label": "load-9-0",
+      "status": 200,
+      "ms": 377.39,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 367.78
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 3.59
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 3.46
+        }
+      ]
+    },
+    {
+      "label": "load-9-1",
+      "status": 200,
+      "ms": 376.48,
+      "apiBytes": 100,
+      "internal": [
+        {
+          "route": "/auth/v1/user",
+          "method": "GET",
+          "status": 200,
+          "bytes": 1557,
+          "ms": 365.07
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "bytes": 47,
+          "ms": 4.01
+        },
+        {
+          "route": "/rest/v1/chat_conversation",
+          "method": "GET",
+          "status": 200,
+          "bytes": 195,
+          "ms": 3.79
+        }
+      ]
+    }
+  ],
+  "blockedWrites": 0,
+  "aiCalls": 0,
+  "fixture": {
+    "members": 2,
+    "guestConversations": 1,
+    "memberConversations": 1,
+    "messagesPerConversation": 35,
+    "onlyTaskDatabase": true
+  },
+  "loadSummary": {
+    "n": 20,
+    "maxConcurrentTasks": 2,
+    "p50Ms": 375.34,
+    "p95Ms": 435.13,
+    "maxMs": 435.57,
+    "totalApiBytes": 2000,
+    "totalInternalCalls": 60,
+    "scope": "Local fixture smoke only; not a Cloud capacity/SLO claim."
+  },
+  "status": "PASS"
+}

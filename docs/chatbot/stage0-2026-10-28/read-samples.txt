@@ -1,0 +1,42 @@
+{
+  "capturedAt": "2026-10-28T03:19:09.553Z",
+  "scope": "SQL authenticated role with existing active ADMIN claims; read-only; no HTTP JWT, AI, writes or Logs",
+  "samples": [
+    {
+      "intent": "inventory.low_stock",
+      "filters": {},
+      "total": 0,
+      "rows": 0,
+      "sourceBytes": 266,
+      "roundTripMs": 431.54,
+      "oracleTotal": 0,
+      "matchesOracle": true
+    },
+    {
+      "intent": "appointment.list",
+      "filters": {
+        "start_at": "2026-10-28T00:00:00+07:00",
+        "end_at": "2026-10-28T17:00:00.000Z",
+        "category": "grooming_spa",
+        "status": "confirmed"
+      },
+      "total": 0,
+      "rows": 0,
+      "sourceBytes": 335,
+      "roundTripMs": 335.78,
+      "oracleTotal": 0,
+      "matchesOracle": true
+    },
+    {
+      "intent": "ticket.open",
+      "filters": {},
+      "total": 21,
+      "rows": 20,
+      "sourceBytes": 4250,
+      "roundTripMs": 368.7,
+      "oracleTotal": 21,
+      "matchesOracle": true
+    }
+  ],
+  "status": "PASS"
+}

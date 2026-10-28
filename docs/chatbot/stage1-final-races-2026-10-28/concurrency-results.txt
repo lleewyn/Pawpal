@@ -1,0 +1,57 @@
+{
+  "capturedAt": "2026-10-28T05:11:51.250Z",
+  "scope": "Task-local PostgreSQL, real commits and independent concurrent connections, SQL claims/roles; no Cloud, Auth HTTP or UI",
+  "checks": [
+    {
+      "name": "Customer and staff without chat rights cannot take or bypass gateway",
+      "status": "PASS"
+    },
+    {
+      "name": "Two concurrent takes commit exactly one winner; other request conflicts",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent identical send retries commit one message/audit; changed payload conflicts",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent transfer retry commits once; former agent denied, recipient can reply, notes remain private",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent completion retry closes once; closed chat cannot send or silently reopen",
+      "status": "PASS"
+    },
+    {
+      "name": "Other staff cannot read or delete owner copilot session",
+      "status": "PASS"
+    },
+    {
+      "name": "Raw content is not exposed by ordinary SELECT or raw RPC without permission",
+      "status": "PASS"
+    },
+    {
+      "name": "Authorized raw read returns original/fallback content and records one audit",
+      "status": "PASS"
+    },
+    {
+      "name": "Service-only feedback concurrent retry saves once; changed payload conflicts",
+      "status": "PASS"
+    },
+    {
+      "name": "Distinct concurrent transfer request IDs on one revision produce one winner and one conflict",
+      "status": "PASS"
+    },
+    {
+      "name": "Distinct concurrent completion IDs on one revision produce one winner and one conflict",
+      "status": "PASS"
+    },
+    {
+      "name": "Locked staff cannot read raw or copilot context despite retaining ADMIN role",
+      "status": "PASS"
+    }
+  ],
+  "maxConnections": 2,
+  "statements": 54,
+  "status": "PASS"
+}

@@ -1,0 +1,41 @@
+{
+  "capturedAt": "2026-10-28T04:53:26.359Z",
+  "scope": "Local marker-owned clone, committed SQL transactions/role claims; no Cloud, real customer, AI or HTTP/UI",
+  "checks": [
+    {
+      "name": "Policy limit/inactive/approval/zero/stale/non-owner denied without balance change",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent reward retry adds five points once with one operation audit and one ledger-trigger audit",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed reward payload/customer with same request ID conflicts and keeps balances",
+      "status": "PASS"
+    },
+    {
+      "name": "Ticket rejects another customer order, stale revision and unassigned staff",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent ticket retry saves one ticket/message/audit linked to correct customer/order/chat",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed ticket replay cannot overwrite original",
+      "status": "PASS"
+    },
+    {
+      "name": "Assigned staff with chat rights but missing ledger/ticket permissions cannot mutate either",
+      "status": "PASS"
+    },
+    {
+      "name": "Closed chat cannot award points or create a fresh ticket",
+      "status": "PASS"
+    }
+  ],
+  "maxConnections": 2,
+  "transactions": 37,
+  "status": "PASS"
+}

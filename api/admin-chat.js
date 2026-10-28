@@ -2,6 +2,7 @@ const {createClient}=require('@supabase/supabase-js');
 const {verifyStaffCaller}=require('../scripts/api/staff_auth.js');
 const copilot=require('../scripts/api/admin_copilot.js');
 const understanding=require('../scripts/api/chat_understanding.js');
+const {sanitizeModelData}=require('../scripts/api/chat_model_privacy.js');
 const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const limits=new Map();
 function allow(key,maximum){const now=Date.now(),recent=(limits.get(key)||[]).filter(t=>now-t<60000);if(recent.length>=maximum)return false;recent.push(now);limits.set(key,recent);if(limits.size>10000)for(const [k,rows]of limits)if(rows.every(t=>now-t>=60000))limits.delete(k);return true;}
@@ -17,7 +18,7 @@ function createGenerator({serviceClient,request=requestGemini,environmentKey=()=
  return async(question,context,history,{audience='staff'}={})=>{
   const service=serviceClient||createClient(process.env.PAWPAL_ADMIN_SUPABASE_URL,process.env.PAWPAL_ADMIN_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
   const state=await service.rpc('get_ai_key_pool_state');if(state.error)throw Error('ai_key_pool_unavailable');
-  const payload={question,context,history,audience},deadline=Date.now()+22000;
+  const payload=sanitizeModelData({question,context,history,audience}),deadline=Date.now()+22000;
   if(!state.data.configured){
    const key=environmentKey();if(!key)throw Error('ai_unconfigured');
    try{const text=await request(key,payload,Math.max(1,deadline-Date.now()));if(typeof text!=='string'||!text.trim()||text.length>16000)throw Error('empty');return text;}

@@ -1,0 +1,341 @@
+{
+  "capturedAt": "2026-10-28T03:33:51.584Z",
+  "scope": "Local module HTML/JS mounted in isolated Chrome; actual Cloud JWT and DB reads; GET copilot history from deployed API; guest history for a fresh unregistered token only. No business writes or AI.",
+  "steps": [
+    {
+      "name": "admin-local-cold-live",
+      "elapsedMs": 3885,
+      "requests": [
+        {
+          "route": "/rest/v1/rpc/get_admin_chat_inbox_page",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 8723,
+          "ms": 1533.9
+        },
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 380,
+          "ms": 1160.6
+        },
+        {
+          "route": "/rest/v1/customer_phone",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 428,
+          "ms": 1817.2
+        },
+        {
+          "route": "/rest/v1/customer_profile",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 454,
+          "ms": 1817.8
+        }
+      ],
+      "channels": 2,
+      "wsSent": 2461,
+      "wsReceived": 1111,
+      "requestCount": 4,
+      "decodedBytes": 9985
+    },
+    {
+      "name": "admin-local-warm-inbox",
+      "elapsedMs": 1497,
+      "requests": [
+        {
+          "route": "/rest/v1/customer",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 380,
+          "ms": 962.5
+        },
+        {
+          "route": "/rest/v1/customer_phone",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 428,
+          "ms": 964.1
+        },
+        {
+          "route": "/rest/v1/customer_profile",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 454,
+          "ms": 981
+        }
+      ],
+      "channels": 2,
+      "wsSent": 2461,
+      "wsReceived": 1111,
+      "requestCount": 3,
+      "decodedBytes": 1262
+    },
+    {
+      "name": "admin-local-cold-member-context",
+      "elapsedMs": 4248,
+      "requests": [
+        {
+          "route": "/rest/v1/support_ticket",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 444,
+          "ms": 1300.6
+        },
+        {
+          "route": "/rest/v1/customer_point_balance",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 25,
+          "ms": 1434.7
+        },
+        {
+          "route": "/rest/v1/customer_membership",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 35,
+          "ms": 2342.8
+        },
+        {
+          "route": "/rest/v1/pet_profile",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 1551,
+          "ms": 2567.5
+        },
+        {
+          "route": "/rest/v1/rpc/get_admin_chat_messages",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 2,
+          "ms": 2912.3
+        },
+        {
+          "route": "/rest/v1/sales_order",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 170,
+          "ms": 3518.3
+        },
+        {
+          "route": "/rest/v1/appointment",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 267,
+          "ms": 3726.4
+        }
+      ],
+      "channels": 3,
+      "wsSent": 3493,
+      "wsReceived": 1246,
+      "requestCount": 7,
+      "decodedBytes": 2494
+    },
+    {
+      "name": "admin-local-warm-member-context",
+      "elapsedMs": 10,
+      "requests": [],
+      "channels": 3,
+      "wsSent": 3493,
+      "wsReceived": 1246,
+      "requestCount": 0,
+      "decodedBytes": 0
+    },
+    {
+      "name": "admin-local-cold-copilot-history",
+      "elapsedMs": 7292,
+      "requests": [
+        {
+          "route": "/api/admin-chat",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 659,
+          "ms": 3952
+        },
+        {
+          "route": "/api/admin-chat",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 17535,
+          "ms": 2807.2
+        }
+      ],
+      "channels": 3,
+      "wsSent": 3493,
+      "wsReceived": 1246,
+      "requestCount": 2,
+      "decodedBytes": 18194
+    },
+    {
+      "name": "admin-local-cold-rules",
+      "elapsedMs": 2101,
+      "requests": [
+        {
+          "route": "/rest/v1/chatbot_handover_rule",
+          "method": "HEAD",
+          "status": 200,
+          "decodedBytes": 0,
+          "ms": 984.1
+        },
+        {
+          "route": "/rest/v1/chatbot_compensation_policy",
+          "method": "HEAD",
+          "status": 200,
+          "decodedBytes": 0,
+          "ms": 987.6
+        },
+        {
+          "route": "/rest/v1/chatbot_scenario_matrix",
+          "method": "HEAD",
+          "status": 200,
+          "decodedBytes": 0,
+          "ms": 987.4
+        },
+        {
+          "route": "/rest/v1/chatbot_profanity_filter",
+          "method": "HEAD",
+          "status": 200,
+          "decodedBytes": 0,
+          "ms": 988.6
+        },
+        {
+          "route": "/rest/v1/chatbot_canned_response",
+          "method": "HEAD",
+          "status": 200,
+          "decodedBytes": 0,
+          "ms": 988.6
+        },
+        {
+          "route": "/rest/v1/rpc/admin_chat_rule_page",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 11192,
+          "ms": 1586
+        }
+      ],
+      "channels": 3,
+      "wsSent": 3493,
+      "wsReceived": 1246,
+      "requestCount": 6,
+      "decodedBytes": 11192
+    },
+    {
+      "name": "admin-local-warm-tabs",
+      "elapsedMs": 124,
+      "requests": [],
+      "channels": 3,
+      "wsSent": 3493,
+      "wsReceived": 1246,
+      "requestCount": 0,
+      "decodedBytes": 0
+    },
+    {
+      "name": "admin-local-idle-12s",
+      "elapsedMs": 12010,
+      "requests": [],
+      "channels": 3,
+      "wsSent": 3529,
+      "wsReceived": 1309,
+      "requestCount": 0,
+      "decodedBytes": 0
+    },
+    {
+      "name": "guest-local-cold-widget-no-conversation",
+      "elapsedMs": 88,
+      "requests": [],
+      "channels": 0,
+      "wsSent": 0,
+      "wsReceived": 0,
+      "requestCount": 0,
+      "decodedBytes": 0
+    },
+    {
+      "name": "guest-local-empty-history",
+      "elapsedMs": 1573,
+      "requests": [
+        {
+          "route": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 30,
+          "ms": 1070.4
+        }
+      ],
+      "channels": 0,
+      "wsSent": 0,
+      "wsReceived": 0,
+      "requestCount": 1,
+      "decodedBytes": 30
+    },
+    {
+      "name": "guest-local-idle-12s-no-conversation",
+      "elapsedMs": 12031,
+      "requests": [],
+      "channels": 0,
+      "wsSent": 0,
+      "wsReceived": 0,
+      "requestCount": 0,
+      "decodedBytes": 0
+    }
+  ],
+  "blocked": [
+    {
+      "route": "/assets/images/publics/zalo.webp",
+      "method": "GET"
+    }
+  ],
+  "nodeRequests": [
+    {
+      "route": "/auth/v1/token",
+      "status": 200,
+      "ms": 2947
+    },
+    {
+      "route": "/rest/v1/rpc/get_staff_login_context",
+      "status": 200,
+      "ms": 4244
+    }
+  ],
+  "localSources": [
+    {
+      "file": "pages/admin/modules/chatbot/chatbot.html",
+      "sha256": "f7a513e788c4ccf821ba949a64552d346ad29453082b7a384cc6def8081a3a3d"
+    },
+    {
+      "file": "pages/admin/modules/chatbot/chatbot.js",
+      "sha256": "e24ad86154f97a42389475aad7e31f9f9f486cb80b75014eb382945fb995a0c6"
+    },
+    {
+      "file": "pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js",
+      "sha256": "58f00aad3169ee10cbdaf998a20ccdbbb048b4b7aa44f2eebbf4531acb311a74"
+    },
+    {
+      "file": "pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js",
+      "sha256": "751791823ffd7bd46dd1461722d772f0995e3a00838a7aad2376f2968821bc2e"
+    },
+    {
+      "file": "pages/admin/modules/chatbot/subtabs/tab-chatbot-rules.js",
+      "sha256": "c813f911f5daaa1def4998d580de33f1e7d0cde626277f5998a8654f6e9b1c3f"
+    },
+    {
+      "file": "pages/admin/admin-data-store.js",
+      "sha256": "0d725051d528bfec04a61beeb64c0b0abd371702e6dff44f19fd666a2faf05ad"
+    },
+    {
+      "file": "scripts/api/supabase-client.js",
+      "sha256": "b5a47e28880883aa2538ca76bacd605816d160840d31c8ce9dba0fca2f79d893"
+    },
+    {
+      "file": "components/fab/fab.js",
+      "sha256": "9dd712e6a07e3363afc0743880179acca56ea02ec0b00c7e657477b1f7d4850f"
+    }
+  ],
+  "adminState": {
+    "liveError": false,
+    "realtimeHealthy": true,
+    "channels": 3
+  },
+  "status": "REVIEW"
+}
