@@ -1,0 +1,48 @@
+{
+  "scope": "Marker-owned local database, Auth identities and actual JWT/PostgREST; no Cloud/AI",
+  "migrationSha256": "48290645bde6b36b33d183475401f915ecce4bfcc64b9dd2744cfe575cbdeb2c",
+  "checks": [
+    {
+      "name": "Canned library pages ten active records, preserves all 23 records, categories beyond page one and filtered page clamping",
+      "status": "PASS"
+    },
+    {
+      "name": "Counts omit unauthorized sources instead of false zero; rule-only staff supported without chat/history permission",
+      "status": "PASS"
+    },
+    {
+      "name": "Bounded rule pages preserve exact totals and reject arbitrary tables, filters, status and invalid pages",
+      "status": "PASS"
+    },
+    {
+      "name": "All three read paths share the four source slots and fail fast when full",
+      "status": "PASS"
+    },
+    {
+      "name": "PostgREST timeout cancels actual count SQL waiting on a table lock",
+      "status": "PASS"
+    },
+    {
+      "name": "Oversized library/rule payloads fail before emission; counts remain small and usable",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback drops new wrappers and retains original rule RPC",
+      "status": "PASS"
+    }
+  ],
+  "metrics": {
+    "canned": {
+      "pages": 3,
+      "records": 23,
+      "maxBodyBytes": 2848
+    },
+    "counts": {
+      "requests": 1,
+      "previousRequests": 5,
+      "bodyBytes": 158,
+      "returnedSources": 5
+    }
+  },
+  "status": "PASS"
+}

@@ -1,0 +1,174 @@
+{
+  "capturedAt": "2026-10-28T06:14:36.272Z",
+  "scope": "Local only, Auth JWT and actual handler/RPC; no Cloud/AI",
+  "checks": [
+    {
+      "name": "Authorized JWT performs one registered facts call and returns v1 contract within byte budget",
+      "status": "PASS"
+    },
+    {
+      "name": "History-only staff denied before invoking business RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Unaccented typo variant uses existing bounded appointment RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Follow-up uses shared budget for one private history read plus one facts read",
+      "status": "PASS"
+    },
+    {
+      "name": "Validated selected-page hint becomes caller-scoped lookup, not elevated access",
+      "status": "PASS"
+    },
+    {
+      "name": "Unknown page-context parameter rejected",
+      "status": "PASS"
+    }
+  ],
+  "modelCalls": 0,
+  "requests": [
+    {
+      "route": "/auth/v1/admin/users",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/staff",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/staff_role",
+      "method": "POST"
+    },
+    {
+      "route": "/auth/v1/token",
+      "method": "POST"
+    },
+    {
+      "route": "/auth/v1/admin/users",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/staff",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/staff_permission",
+      "method": "POST"
+    },
+    {
+      "route": "/auth/v1/token",
+      "method": "POST"
+    },
+    {
+      "route": "/auth/v1/user",
+      "method": "GET"
+    },
+    {
+      "route": "/rest/v1/rpc/get_staff_login_context",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/admin_copilot_history",
+      "method": "GET"
+    },
+    {
+      "route": "/rest/v1/rpc/admin_copilot_facts",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/rpc/save_admin_copilot_exchange",
+      "method": "POST"
+    },
+    {
+      "route": "/auth/v1/user",
+      "method": "GET"
+    },
+    {
+      "route": "/rest/v1/rpc/get_staff_login_context",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/admin_copilot_history",
+      "method": "GET"
+    },
+    {
+      "route": "/auth/v1/user",
+      "method": "GET"
+    },
+    {
+      "route": "/rest/v1/rpc/get_staff_login_context",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/admin_copilot_history",
+      "method": "GET"
+    },
+    {
+      "route": "/rest/v1/rpc/admin_copilot_facts",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/rpc/save_admin_copilot_exchange",
+      "method": "POST"
+    },
+    {
+      "route": "/auth/v1/user",
+      "method": "GET"
+    },
+    {
+      "route": "/rest/v1/rpc/get_staff_login_context",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/admin_copilot_history",
+      "method": "GET"
+    },
+    {
+      "route": "/rest/v1/rpc/admin_copilot_recent_context",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/rpc/admin_copilot_facts",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/rpc/save_admin_copilot_exchange",
+      "method": "POST"
+    },
+    {
+      "route": "/auth/v1/user",
+      "method": "GET"
+    },
+    {
+      "route": "/rest/v1/rpc/get_staff_login_context",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/admin_copilot_history",
+      "method": "GET"
+    },
+    {
+      "route": "/rest/v1/rpc/admin_copilot_facts",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/rpc/save_admin_copilot_exchange",
+      "method": "POST"
+    },
+    {
+      "route": "/auth/v1/user",
+      "method": "GET"
+    },
+    {
+      "route": "/rest/v1/rpc/get_staff_login_context",
+      "method": "POST"
+    },
+    {
+      "route": "/rest/v1/admin_copilot_history",
+      "method": "GET"
+    }
+  ],
+  "status": "PASS"
+}

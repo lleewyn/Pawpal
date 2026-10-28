@@ -3,7 +3,7 @@
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
 if(!process.argv.includes('--create-local')){console.log('No changes. Pass --create-local for isolated local setup.');process.exit(0);}
 const argument=process.argv.indexOf('--evidence-dir'),out=argument<0?'docs/chatbot/stage0-2026-10-28':process.argv[argument+1];
-if(!/^docs\/chatbot\/stage[01]-[a-z0-9-]+$/.test(out))throw Error('Invalid evidence directory');
+if(!/^docs\/chatbot\/stage[012]-[a-z0-9-]+$/.test(out))throw Error('Invalid evidence directory');
 const previous=process.argv.includes('--resume-local')?JSON.parse(fs.readFileSync(out+'/local-environment.txt','utf8')):null;
 if(previous?.status==='REMOVED')throw Error('Environment already cleaned; create a new task environment without --resume-local.');
 const nonce=previous?.database.replace('pawpal_chatbot_g0_','')||crypto.randomBytes(6).toString('hex'),dbName='pawpal_chatbot_g0_'+nonce,tag='pawpal-chatbot-g0-'+nonce;

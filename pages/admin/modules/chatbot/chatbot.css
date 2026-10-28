@@ -1800,6 +1800,23 @@
     padding-right: 4px;
     max-height: 380px;
 }
+
+#cannedResponsesModalOverlay .admin-modal-card {
+    padding: 26px 30px;
+    border-radius: var(--admin-radius, 9px);
+}
+#cannedResponsesModalOverlay .modal-header-clean,
+#cannedResponsesModalOverlay .modal-footer-clean {
+    border: none !important;
+    padding-left: 0;
+    padding-right: 0;
+}
+#cannedResponsesModalOverlay .modal-body-clean { padding: 0; }
+@media (max-width: 600px) {
+    #cannedResponsesModalOverlay .canned-lib-filter-row { flex-direction: column; align-items: stretch; }
+    #cannedResponsesModalOverlay .canned-search-input,
+    #cannedResponsesModalOverlay .canned-category-select { width: 100%; flex: none; }
+}
 .canned-item-card {
     background-color: #FFFFFF;
     border: 1px solid var(--border-neutral);

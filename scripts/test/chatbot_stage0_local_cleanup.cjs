@@ -2,7 +2,7 @@
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{execFileSync}=require('node:child_process');
 if(!process.argv.includes('--cleanup-local')){console.log('No changes. Pass --cleanup-local for task fixture cleanup.');process.exit(0);}
 const argument=process.argv.indexOf('--evidence-dir'),out=argument<0?'docs/chatbot/stage0-2026-10-28':process.argv[argument+1];
-if(!/^docs\/chatbot\/stage[01]-[a-z0-9-]+$/.test(out))throw Error('Invalid evidence directory');
+if(!/^docs\/chatbot\/stage[012]-[a-z0-9-]+$/.test(out))throw Error('Invalid evidence directory');
 const file=out+'/local-environment.txt',env=JSON.parse(fs.readFileSync(file,'utf8'));
 if(env.status==='REMOVED'){console.log('Already removed.');process.exit(0);}
 if(!/^pawpal_chatbot_g0_[a-f0-9]{12}$/.test(env.database)||env.ownerMarker!=='pawpal-chatbot-g0-'+env.database.slice('pawpal_chatbot_g0_'.length))throw Error('invalid_task_identity');

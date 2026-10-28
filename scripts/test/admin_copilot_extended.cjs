@@ -1,23 +1,24 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const {plan,contextualPlan,answer,formatFacts}=require('../api/admin_copilot.js');
+const readPermissions=['appointment.read','appointment_item.read','service.read','service_category.read','support_ticket.read','chatbot_knowledge_faq.read','payment.read','refund_transaction.read','service_price_matrix.read','taxi_price_rule.read','hotel_room_type.read'];
 (async()=>{
  const now=new Date('2026-10-27T12:00:00Z'),history=[{role:'user',content:'Hôm nay có bao nhiêu lịch hẹn Spa đang chờ phục vụ?'},{role:'assistant',content:'Không có lịch.'}];
  const follow=contextualPlan('thế ngày mai và mốt thì sao?',history,now);assert.equal(follow.intent,'appointment.list');assert.equal(follow.filters.category,'grooming_spa');assert.equal(follow.filters.status,'confirmed');assert.equal(follow.filters.start_at,'2026-10-28T00:00:00+07:00');assert.equal(Date.parse(follow.filters.end_at)-Date.parse(follow.filters.start_at),2*86400000);
  assert.equal(plan('gửi tôi bảng giá dịch vụ hiện có',now).intent,'catalog.service_price');assert.equal(plan('bảng giá tất cả các dịch vụ luôn',now).intent,'catalog.service_price');assert.equal(plan('Pet Taxi hai chiều tính giá thế nào?',now).filters.category,'pet_taxi');assert.equal(plan('Tóm tắt doanh thu hôm nay',now).intent,'revenue.summary');assert.equal(plan('Chăm sóc mèo lông dài cần lưu ý gì?',now).intent,'knowledge.search');
  let count=0;const caller={rpc:async(name,args)=>{assert.equal(name,'admin_copilot_facts');count++;return {data:{intent:args.p_intent,total:count+1,items:[],scope:args.p_filters,as_of:now.toISOString()}};}};
- const result=await answer({question:'thế ngày mai và mốt thì sao?',history,now,caller,staff:{permissions:[]},generateReply:()=>{throw Error('No model for counts');}});assert.equal(count,2);assert.equal(result.facts.total,5);assert.ok(result.reply.includes('28/10/2026'));assert.ok(result.reply.includes('29/10/2026'));assert.ok(!result.reply.includes('Tôi hỗ trợ:'));
+ const result=await answer({question:'thế ngày mai và mốt thì sao?',history,now,caller,staff:{permissions:readPermissions},generateReply:()=>{throw Error('No model for counts');}});assert.equal(count,2);assert.equal(result.facts.total,5);assert.ok(result.reply.includes('28/10/2026'));assert.ok(result.reply.includes('29/10/2026'));assert.ok(!result.reply.includes('Tôi hỗ trợ:'));
  const empty=formatFacts({intent:'inventory.low_stock',total:0,items:[],scope:{},as_of:now.toISOString()});assert.ok(empty.startsWith('Hiện không có mã hàng'));assert.ok(!empty.includes('phạm vi đã truy vấn thành công'));
  const duplicate='**Bản nháp AI — cần kiểm tra**\n\n**Bản nháp AI — cần kiểm tra**\n\nChào bạn, PawPal xin lỗi vì giao hàng trễ.\n\nPhạm vi: first\n\nPhạm vi: second';
- const draft=await answer({question:'Soạn lời xin lỗi giao trễ',caller:{},staff:{permissions:[]},generateReply:async()=>duplicate});assert.equal((draft.reply.match(/Bản nháp AI/g)||[]).length,1);assert.equal((draft.reply.match(/Phạm vi:/g)||[]).length,1);assert.ok(draft.reply.includes('xin lỗi vì giao hàng trễ'));
+ const draft=await answer({question:'Soạn lời xin lỗi giao trễ',caller:{},staff:{permissions:readPermissions},generateReply:async()=>duplicate});assert.equal((draft.reply.match(/Bản nháp AI/g)||[]).length,1);assert.equal((draft.reply.match(/Phạm vi:/g)||[]).length,1);assert.ok(draft.reply.includes('xin lỗi vì giao hàng trễ'));
  const prices=formatFacts({intent:'catalog.service_price',total:1,items:[{name:'Tắm vệ sinh',prices:[{kind:'service',weight_from:0,weight_to:5,price:100000}]}],scope:{},as_of:now.toISOString()});assert.ok(prices.includes('Tắm vệ sinh'));assert.ok(prices.includes('100.000'));assert.ok(!prices.includes('SKU'));
  for(const total of [null,undefined,'',false,'not-a-number',-1,1.5])assert.throws(()=>formatFacts({intent:'inventory.low_stock',total,items:[]}),/invalid_copilot_facts/);
  assert.throws(()=>formatFacts({intent:'revenue.summary',total:1,items:[],collected:100000,refunded:20000,net:100000}),/invalid_copilot_facts/);
  assert.throws(()=>formatFacts({intent:'revenue.summary',total:0,items:[]}),/invalid_copilot_facts/);
  for(const [question,intent,phrase] of [['Tóm tắt khiếu nại tồn đọng','ticket.open','không có khiếu nại'],['bảng giá dịch vụ hiện có','catalog.service_price','Chưa có dịch vụ'],['Chăm sóc rồng xanh có gì cần biết?','knowledge.search','Chưa tìm thấy thông tin']]){
-  const response=await answer({question,now,staff:{permissions:[]},caller:{rpc:async()=>({data:{intent,total:0,items:[],scope:{},as_of:now.toISOString()}})},generateReply:()=>{throw Error('No model for empty facts');}});
+  const response=await answer({question,now,staff:{permissions:readPermissions},caller:{rpc:async()=>({data:{intent,total:0,items:[],scope:{},as_of:now.toISOString()}})},generateReply:()=>{throw Error('No model for empty facts');}});
   assert.ok(response.reply.includes(phrase));assert.ok(!response.reply.includes('Phạm vi:'));
  }
- await assert.rejects(()=>answer({question:'Tóm tắt doanh thu hôm nay',now,staff:{permissions:[]},caller:{rpc:async()=>({error:{code:'42501'}})}}),e=>e.code==='42501');
+ await assert.rejects(()=>answer({question:'Tóm tắt doanh thu hôm nay',now,staff:{permissions:readPermissions},caller:{rpc:async()=>({error:{code:'42501'}})}}),e=>e.code==='42501');
  console.log('PASS multi-turn exact two-day counts, service/Taxi pricing routing, knowledge/revenue routes, natural zero-stock reply, draft metadata once, numeric facts bypass AI and permission denial retained.');
  if(!process.argv.includes('--cloud'))return;
  const {connect}=require('../database/v1/service_import_connection.cjs');const db=await connect();const checks=[];

@@ -129,8 +129,10 @@
   }
 
   async function openSession(id,{force=false,older=false}={}){
+   if(busy)return;const version=loadVersion;
    const previous=details.get(id);
    const result=await api('GET',null,{sessionId:id,offset:older?(previous?.messages.length||0):0,withTitle:!sessions.some(s=>s.id===id)?'1':'0'},force);
+   if(version!==loadVersion||busy)return;
    const summary=sessions.find(s=>s.id===id);
    details.set(id,{id,title:summary?.title||result.title||previous?.title||'Phiên mới',updated:summary?.updated,
     messages:older?[...new Map([...result.history,...(previous?.messages||[])].map(row=>[row.id,row])).values()]:result.history,hasMore:result.hasMore});
@@ -162,7 +164,19 @@
     }else{
      content.innerHTML=renderMarkdown(row.content);
     }
-    card.append(heading,content);timeline.append(card);
+    card.append(heading,content);
+    if(row.content_partial){
+     const more=document.createElement('button');more.type='button';more.className='admin-btn admin-btn-secondary';more.textContent='Đọc tiếp tin nhắn';
+     more.onclick=async()=>{more.disabled=true;try{
+      const part=await api('GET',null,{view:'message_part',messageId:row.id,offset:row.content_offset,revision:row.content_revision});
+      if(part.id!==row.id||part.revision!==row.content_revision||part.offset!==row.content_offset||typeof part.content!=='string'||!Number.isSafeInteger(part.next_offset)||part.next_offset<=part.offset||typeof part.hasMore!=='boolean')throw Error('Chưa xác nhận được phần tin nhắn tiếp theo.');
+      row.content+=part.content;row.content_offset=part.next_offset;row.content_partial=part.hasMore;render();
+     }catch(error){app.showToast?.(error.message,'error');more.disabled=false;}};
+     card.append(more);
+    }
+    const destinations={'#tab-list':'Mở khách hàng','#tab-order-list':'Mở đơn hàng','#tab-order-products':'Mở sản phẩm và kho','#tab-service-bookings':'Mở lịch hẹn','#tab-service-catalog':'Mở bảng giá','#tab-chatbot-rules':'Mở quy định'};
+    const next=row.continuation;if(row.role!=='user'&&next?.type==='open_module'&&Object.hasOwn(destinations,next.href)){const link=document.createElement('a');link.className='admin-btn admin-btn-secondary';link.href=next.href;link.textContent=destinations[next.href];card.append(link);}
+    timeline.append(card);
    }
    timeline.scrollTop=timeline.scrollHeight;list.replaceChildren();
 
@@ -235,7 +249,11 @@
 
   async function submit(){
    const question=input.value.trim();if(busy||!question)return;if(question.length>2000)return app.showToast?.('Câu hỏi tối đa 2.000 ký tự.','error');
-   active=active||crypto.randomUUID();const key=JSON.stringify([active,question]);if(request?.key!==key)request={key,id:crypto.randomUUID()};
+   loadVersion++;
+   const selected=app.state?.currentConversation,conversationId=selected?.id||null;
+   const candidate=selected?.customerId?(/^\+?[\d .-]{9,15}$/.test(selected.phone||'')?selected.phone:selected.customerName):null;
+   const readContext=typeof candidate==='string'&&candidate.trim().length>=3&&candidate.length<=120?{customerQuery:candidate.trim()}:{};
+   active=active||crypto.randomUUID();const key=JSON.stringify([active,question,conversationId,readContext]);if(request?.key!==key)request={key,id:crypto.randomUUID()};
    busy=true;send.disabled=true;
 
    let currSession=details.get(active);
@@ -253,11 +271,11 @@
    timeline.scrollTop=timeline.scrollHeight;
 
    try{
-    const result=await api('POST',{sessionId:active,requestId:request.id,question,conversationId:app.state?.currentConversation?.id||null});
+    const result=await api('POST',{sessionId:active,requestId:request.id,question,conversationId,readContext});
     thinkingCard.remove();
     const replyText=result.reply||'';
 
-    const aiMsg={role:'assistant',content:replyText,created_at:new Date().toISOString()};
+    const aiMsg={role:'assistant',content:replyText,created_at:new Date().toISOString(),continuation:result.continuation||null};
     currSession.messages.push(pendingMessage,aiMsg);
     if(input.value.trim()===question)input.value='';
 

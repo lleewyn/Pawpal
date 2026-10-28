@@ -1,0 +1,53 @@
+{
+  "scope": "Owned local database, actual Auth JWT/PostgREST/API, no Cloud/AI",
+  "migrationSha256": "03f6eba352538ddd9c970d206eb75fc09a0e7ad8a32d695d7d9757c797230e4a",
+  "checks": [
+    {
+      "name": "Adaptive private history stays below 32 KiB, retains all 35 complete messages and continues by actual offset",
+      "status": "PASS"
+    },
+    {
+      "name": "History uses caller staff ownership even with shared session UUID; read-only staff supported and wrong audience denied",
+      "status": "PASS"
+    },
+    {
+      "name": "Transcript byte-aware pages preserve cursor, all content and private raw-message boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual API with Auth verification loads history and title in one scoped source RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "History, session list and transcript share four transaction slots and reject immediately when full",
+      "status": "PASS"
+    },
+    {
+      "name": "Function timeout cancels actual SQL blocked on history table, not only the HTTP wait",
+      "status": "PASS"
+    },
+    {
+      "name": "Single oversized message and invalid paging fail explicitly instead of truncation or false empty history",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes only new wrappers and leaves original read RPCs",
+      "status": "PASS"
+    }
+  ],
+  "metrics": {
+    "copilot": {
+      "pages": 3,
+      "maxBodyBytes": 31287,
+      "messages": 35
+    },
+    "transcript": {
+      "pages": 3,
+      "messages": 35
+    },
+    "historyWithTitle": {
+      "authAndDbRequests": 3
+    }
+  },
+  "status": "PASS"
+}

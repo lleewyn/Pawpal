@@ -1,0 +1,43 @@
+{
+  "scope": "Owned local database, Auth identities and real JWT/PostgREST; no Cloud/model",
+  "migrationSha256": "62c5de8c8e3eaaa46e030edd2c36e0720b610c47e766edd403534b1b563dd531",
+  "checks": [
+    {
+      "name": "Oversized history appears as explicit preview instead of blocking the whole page",
+      "status": "PASS"
+    },
+    {
+      "name": "Both histories reconstruct the complete Unicode message from bounded parts, with correct code-point offsets and no raw data",
+      "status": "PASS"
+    },
+    {
+      "name": "Owner and read-only history permissions retained; another staff member and wrong transcript permission denied",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed content cannot be joined to old preview; negative offset and arbitrary raw kind rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Part reads obey the same four shared source slots, with no hidden fetch loop",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes part RPC and restores migration138 behavior",
+      "status": "PASS"
+    }
+  ],
+  "metrics": {
+    "copilot": {
+      "partRequests": 18,
+      "maxBodyBytes": 5165,
+      "unicodeCodePoints": 36000
+    },
+    "transcript": {
+      "partRequests": 18,
+      "maxBodyBytes": 5165,
+      "unicodeCodePoints": 36000
+    }
+  },
+  "status": "PASS"
+}

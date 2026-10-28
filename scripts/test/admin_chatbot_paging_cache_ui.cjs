@@ -7,7 +7,7 @@ const { createHandler } = require('../../api/admin-chat.js');
     // Read-only handler contract: scope by actor AND session, never service role.
     const calls = [];
     const caller = {
-        rpc: async (name,args) => { calls.push({name,args}); return {data:{sessions:[],total:0,page:1}}; },
+        rpc: async (name,args) => { calls.push({name,args}); return {data:name==='admin_copilot_history_page'?{history:Array.from({length:30},(_,i)=>({id:String(i)})),hasMore:true}:{sessions:[],total:0,page:1}}; },
         from(table) {
             const call = {table,filters:[]}; calls.push(call);
             const q = {select(){return q;},eq(k,v){call.filters.push([k,v]);return q;},order(){return q;},
@@ -21,11 +21,11 @@ const { createHandler } = require('../../api/admin-chat.js');
     const res={setHeader(){},status(value){status=value;return this;},json(value){response=value;}};
     await handler({method:'GET',query:{sessionId,offset:'30'}},res);
     assert.equal(response.history.length,30);assert.equal(response.hasMore,true);
-    assert.deepEqual(calls[0].filters,[['staff_id','actor-staff'],['session_id',sessionId]]);
-    assert.deepEqual(calls[0].range,[30,60]);
+    assert.equal(calls[0].name,'admin_copilot_history_page');
+    assert.deepEqual(calls[0].args,{p_session:sessionId,p_offset:30,p_with_title:false});
     await handler({method:'GET',query:{sessionId:'bad'}},res);assert.equal(status,400);
     await handler({method:'GET',query:{view:'sessions',page:'2',query:'Test'}},res);
-    assert.equal(calls.at(-1).name,'admin_copilot_session_page');
+    assert.equal(calls.at(-1).name,'admin_copilot_sessions_bounded');
 
     const browser=await chromium.launch({channel:'chrome',headless:true});
     try {
@@ -56,7 +56,9 @@ const { createHandler } = require('../../api/admin-chat.js');
             sessionStorage.setItem('pawpal_admin_user',JSON.stringify({id:'actor'}));
             window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:{access_token:'fixture',user:{id:'actor'}}}})},
                 rpc:async(name,args)=>{
-                    if(name!=='admin_chat_rule_page')throw Error('Unexpected RPC '+name);
+                    if(name==='admin_chat_rule_counts'){countReads.push(args.p_tables);return window.failCounts?{error:{code:'42501'}}:{data:Object.fromEntries(args.p_tables.map(t=>[t,0]))};}
+                    if(name==='admin_chat_canned_page'){ruleReads.push('chatbot_canned_response');return {data:{rows:[],categories:[],page:1,total:0}};}
+                    if(name!=='admin_chat_rule_page_bounded')throw Error('Unexpected RPC '+name);
                     ruleReads.push(args.p_table);
                     const all=Array.from({length:23},(_,i)=>({id:'rule-'+i,question:'Question '+i,answer:'Answer '+i,
                         category:i<10?'Category A':'Category B',is_active:i%2===0,keywords:['word'+i],priority:i,
@@ -92,7 +94,8 @@ const { createHandler } = require('../../api/admin-chat.js');
         assert.ok(requests.every(params=>params.view==='sessions'||params.sessionId),'never request unscoped full history');
         await page.evaluate(async()=>{document.getElementById('subtab-tab-chatbot-rules').classList.add('active');await PawpalChatbot.subtabs.rules.init();});
         await page.waitForFunction(()=>ruleReads.length===1);
-        assert.equal(await page.evaluate(()=>countReads.length),5,'hidden groups use body-free counts; visible group count comes with its page');
+        assert.equal(await page.evaluate(()=>countReads.length),1,'hidden groups share one counts RPC; visible group count comes with its page');
+        assert.equal(await page.evaluate(()=>countReads[0].length),5);
         await page.evaluate(async()=>PawpalChatbot.subtabs.rules.loadAllRulesDataFromSupabase());
         assert.equal(await page.evaluate(()=>ruleReads.length),1,'fresh rule cache must be reused');
         await page.evaluate(()=>ruleEvents.chatbot_knowledge_faq());
@@ -124,6 +127,8 @@ const { createHandler } = require('../../api/admin-chat.js');
         assert.equal(await page.locator('#badgeFaqCount').textContent(),'23','global badge must not shrink to filtered page');
         await page.locator('#inputFaqSearch').fill('__missing_rule__');
         await page.waitForFunction(()=>document.querySelector('#faqTableBody').textContent.includes('Không tìm thấy câu hỏi FAQ'));
+        await page.evaluate(async()=>{window.failCounts=true;PawpalDataStore.invalidate('chatbot:rule-counts:*');await PawpalChatbot.subtabs.rules.loadAllRulesDataFromSupabase();});
+        assert.equal(await page.locator('#badgeProfanityCount').textContent(),'—','failed/unauthorized counts must remain unknown rather than zero');
         let live=fs.readFileSync('pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js','utf8');
         live=live.slice(0,live.indexOf('    function formatSlaInfo'))+'PawpalChatbot.qaLoadCanned=loadLiveCannedResponses;})();';
         await page.addScriptTag({content:live});

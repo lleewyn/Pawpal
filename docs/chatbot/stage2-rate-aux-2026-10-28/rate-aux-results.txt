@@ -1,0 +1,48 @@
+{
+  "scope": "Owned local database, independent workers, Auth identities and actual JWT/PostgREST; no Cloud/AI",
+  "migrations": [
+    {
+      "name": "141_chat_shared_rate.sql",
+      "sha256": "100254e44bb49edad3cc28869e5f568a8f05a03c5dadcc6e459c76b2a16570be"
+    },
+    {
+      "name": "142_chat_aux_reads.sql",
+      "sha256": "797338affee4f8d02d77a20d902a33267539f762114e4971d4130af84a15efe3"
+    }
+  ],
+  "checks": [
+    {
+      "name": "Ten admissions across two workers share one identity window; eleventh request rejected from either process",
+      "status": "PASS"
+    },
+    {
+      "name": "Actor windows are isolated and expired timestamps pruned; state stays one bounded row per staff",
+      "status": "PASS"
+    },
+    {
+      "name": "Raw read retains role/permission checks and original audit; denied reads create no false audit",
+      "status": "PASS"
+    },
+    {
+      "name": "Oversized raw read is blocked before payload and rolls back its audit write",
+      "status": "PASS"
+    },
+    {
+      "name": "Handler eligibility/self exclusion preserved; policy-only staff do not need extra chat permissions",
+      "status": "PASS"
+    },
+    {
+      "name": "All auxiliary reads obey the shared four source transaction slots",
+      "status": "PASS"
+    },
+    {
+      "name": "More than fifty policies fails explicitly instead of silently dropping choices",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback restores original admission, removes rate state/new wrappers and retains original audit RPC",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

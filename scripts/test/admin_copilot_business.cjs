@@ -2,6 +2,7 @@
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const {plan,answer,formatFacts}=require('../api/admin_copilot.js');
 const {createHandler}=require('../../api/admin-chat.js');
+const readPermissions=['inventory.read','product_variant.read','product.read'];
 const now=new Date('2026-10-24T18:30:00Z'); // 01:30 on 25/10 in Vietnam.
 const cases=[
  ['Hôm nay có bao nhiêu lịch Spa đang chờ phục vụ?','appointment.list'],
@@ -34,15 +35,15 @@ assert.ok(formatFacts(facts).includes('1/100'));assert.ok(formatFacts(facts).inc
 (async()=>{
  let modelCalls=0,rpcCalls=0;
  const caller={rpc:async(name,args)=>{rpcCalls++;assert.equal(name,'admin_copilot_facts');assert.equal(args.p_intent,'inventory.low_stock');return {data:facts};}};
- const r=await answer({question:'Có bao nhiêu SKU dưới ngưỡng?',caller,staff:{permissions:[]},generateReply:()=>{modelCalls++;throw Error('Must not invoke AI for counts');}});
+ const r=await answer({question:'Có bao nhiêu SKU dưới ngưỡng?',caller,staff:{permissions:readPermissions},generateReply:()=>{modelCalls++;throw Error('Must not invoke AI for counts');}});
  assert.equal(r.facts.total,100);assert.equal(rpcCalls,1);assert.equal(modelCalls,0);
- await assert.rejects(()=>answer({question:'Có bao nhiêu SKU dưới ngưỡng?',caller:{rpc:async()=>({error:{code:'42501'}})},staff:{permissions:[]}}),e=>e.code==='42501');
- const summary=await answer({question:'Tóm tắt hội thoại đang chọn',staff:{permissions:[]}});assert.ok(summary.reply.includes('chọn một hội thoại'));
- const draft=await answer({question:'Soạn lời xin lỗi',caller:{},staff:{permissions:[]},generateReply:async()=>{modelCalls++;return 'Xin chào, chúng tôi đang kiểm tra.';}});assert.ok(draft.reply.includes('Bản nháp AI'));assert.equal(modelCalls,1);
+ await assert.rejects(()=>answer({question:'Có bao nhiêu SKU dưới ngưỡng?',caller:{rpc:async()=>({error:{code:'42501'}})},staff:{permissions:readPermissions}}),e=>e.code==='42501');
+ const summary=await answer({question:'Tóm tắt hội thoại đang chọn',staff:{permissions:readPermissions}});assert.ok(summary.reply.includes('chọn một hội thoại'));
+ const draft=await answer({question:'Soạn lời xin lỗi',caller:{},staff:{permissions:readPermissions},generateReply:async()=>{modelCalls++;return 'Xin chào, chúng tôi đang kiểm tra.';}});assert.ok(draft.reply.includes('Bản nháp AI'));assert.equal(modelCalls,1);
  const res=()=>({statusCode:200,setHeader(){},status(n){this.statusCode=n;return this;},json(d){this.body=d;return this;}});
  let saved=0,historyReads=0,queries=[];
  const service={from(table){assert.equal(table,'admin_copilot_history');const q={select(){return q},eq(){return q},maybeSingle:async()=>({data:null})};return q;},rpc:async(name,args)=>{assert.equal(name,'save_admin_copilot_exchange');saved++;return {data:args.p_answer};}};
- const handler=createHandler({verify:async()=>({authorized:true,staff:{id:randomUUID(),permissions:['admin_copilot_history.write']},user:{id:randomUUID()},caller:{...caller,from(){historyReads++;throw Error('Metric query must not load history');}}}),serviceClient:service,generateReply:async()=>{throw Error('No model');}});
+ const handler=createHandler({readAdmission:{acquire:async()=>null,release:async()=>{}},verify:async()=>({authorized:true,staff:{id:randomUUID(),permissions:['admin_copilot_history.write',...readPermissions]},user:{id:randomUUID()},caller:{...caller,from(){historyReads++;throw Error('Metric query must not load history');}}}),serviceClient:service,generateReply:async()=>{throw Error('No model');}});
  const result=res();await handler({method:'POST',body:{sessionId:randomUUID(),requestId:randomUUID(),question:'Có bao nhiêu SKU dưới ngưỡng?'},headers:{}},result);
  assert.equal(result.statusCode,200);assert.equal(result.body.facts.total,100);assert.equal(saved,1);assert.equal(historyReads,0);
  const forbidden=createHandler({verify:async()=>({authorized:false,status:403,message:'Forbidden'})});const denial=res();await forbidden({method:'POST',body:{},headers:{}},denial);assert.equal(denial.statusCode,403);

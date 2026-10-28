@@ -1,0 +1,51 @@
+{
+  "scope": "Disposable local database, real JWT/PostgREST; no Cloud/AI",
+  "migrations": [
+    {
+      "name": "136_chat_read_admission.sql",
+      "sha256": "2e1bdbfe4b2a8c27e7ecdaa0a72803d493a8989dc1862f9179956ef3b009bc95"
+    },
+    {
+      "name": "137_chat_panel_reads.sql",
+      "sha256": "dae8d15c2cad2e96c937e4aed1e005af716d13397845248734160ea80c51e637"
+    }
+  ],
+  "checks": [
+    {
+      "name": "Inbox enrich is one bounded caller-scoped RPC instead of four HTTP database requests",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer panel bundles six reads; ten pets/five tickets with explicit hasMore and actual empty order state",
+      "status": "PASS"
+    },
+    {
+      "name": "Chat-only staff and non-staff JWT cannot read protected customer information",
+      "status": "PASS"
+    },
+    {
+      "name": "Direct browser panels and Copilot share four SQL slots; fail fast while full and recover after release",
+      "status": "PASS"
+    },
+    {
+      "name": "Oversized inbox and customer panels rejected in SQL before source payload leaves database",
+      "status": "PASS"
+    }
+  ],
+  "metrics": {
+    "inboxNew": {
+      "requests": 1,
+      "bytes": 653
+    },
+    "inboxOld": {
+      "requests": 4,
+      "bytes": 725
+    },
+    "customerPanel": {
+      "requests": 1,
+      "previousRequests": 6,
+      "bytes": 1186
+    }
+  },
+  "status": "PASS"
+}

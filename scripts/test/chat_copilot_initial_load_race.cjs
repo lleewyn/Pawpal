@@ -1,0 +1,9 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');let browser;
+(async()=>{browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage();let initial;
+ await page.route('**/*',r=>{if(new URL(r.request().url()).pathname==='/api/admin-chat'){if(r.request().method()==='GET'){initial=r;return;}return r.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,reply:'Đã tra cứu đúng dữ liệu.'})});}return r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'});});
+ await page.goto('http://localhost:3001/');await page.setContent(fs.readFileSync('pages/admin/modules/chatbot/chatbot.html','utf8'));await page.evaluate(()=>{document.getElementById('subtab-tab-ai-copilot').classList.add('active');window.PawpalChatbot={subtabs:{}};window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:{access_token:'offline',user:{id:'staff'}}}})}});});await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js','utf8')});
+ for(let i=0;!initial&&i<50;i++)await page.waitForTimeout(10);assert.ok(initial);
+ await page.fill('#copilotInput','Tra cứu dữ liệu');await page.click('#btnSendCopilot');await page.waitForFunction(()=>!document.getElementById('btnSendCopilot').disabled);
+ await initial.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,sessions:[],total:0,page:1,history:[]})});await page.waitForTimeout(50);
+ assert.ok((await page.locator('#copilotMessagesArea').textContent()).includes('Đã tra cứu đúng dữ liệu.'));assert.equal(await page.locator('#copilotMessagesArea .msg-ai').count(),1);console.log('PASS late initial history response cannot overwrite a newly confirmed answer. Offline transport.');
+})().catch(e=>{console.error(e.message);process.exitCode=1;}).finally(async()=>{if(browser)await browser.close();});

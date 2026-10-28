@@ -30,23 +30,18 @@
 
     // PR-02: Gợi ý phản hồi mẫu chân thực, không hứa hẹn bồi hoàn ảo (CB-25)
     let defaultSmartSuggestions = [];
-    let cannedResponsesDatabase = [];
-    async function loadLiveCannedResponses() {
+    const cannedPageRequests=new Map();
+    async function loadLiveCannedResponses({query='',category='all',page=1}={}) {
+        const args={p_query:query,p_category:category,p_page:page},key=JSON.stringify(args);
         const fetcher = async () => {
-            const rows=[];
-            for(let offset=0;;offset+=500){
-                const {data,error}=await supabase.from('chatbot_canned_response').select('id,shortcut,title,content,category').eq('is_active',true).order('id').range(offset,offset+499);
+            if(!cannedPageRequests.has(key))cannedPageRequests.set(key,supabase.rpc('admin_chat_canned_page',args).then(({data,error})=>{
                 if(error)throw error;
-                rows.push(...data);
-                if(data.length<500)break;
-            }
-            return rows;
+                if(!data||!Array.isArray(data.rows)||data.rows.length>10||!Array.isArray(data.categories)||!Number.isSafeInteger(data.page)||data.page<1||!Number.isSafeInteger(data.total)||data.total<0)throw Error('invalid_canned_page');return data;
+            }).finally(()=>cannedPageRequests.delete(key)));
+            return cannedPageRequests.get(key);
         };
         const store=window.PawpalDataStore;
-        const rows=store ? await store.fetch('chatbot:canned-live:'+store.buildKey('active-canned'),fetcher,{ttlMs:60000,backgroundRevalidate:false}) : await fetcher();
-        cannedResponsesDatabase=rows;
-        defaultSmartSuggestions=rows.map(r=>({tag:r.title,text:r.content}));
-        return rows;
+        return store ? store.fetch('chatbot:canned-live:'+store.buildKey('active-canned',args),fetcher,{ttlMs:60000,backgroundRevalidate:false}) : fetcher();
     }
 
     function formatSlaInfo(c) {
@@ -128,8 +123,9 @@
     async function requestUnlockRawMessage(targetMsg) {
         if (!targetMsg || !targetMsg.id) return;
         try {
-            const {data:raw,error}=await supabase.rpc('read_admin_chat_raw',{p_message_id:targetMsg.id});
-            const data={raw_content:raw,error:error?.message};const res={ok:!error};data.ok=!error;
+            const {data:raw,error}=await supabase.rpc('read_admin_chat_raw_bounded',{p_message_id:targetMsg.id});
+            const errors={'42501':'Bạn chưa có quyền xem nguyên văn.','PT429':'Đang đủ lượt tra cứu. Vui lòng chờ rồi thử lại.','54000':'Nguyên văn vượt giới hạn dung lượng cho một lượt đọc.','57014':'Tra cứu quá thời gian cho phép. Hãy thử lại.'};
+            const data={raw_content:raw,error:error?(errors[error.code]||'Chưa tải được nguyên văn.'):null};const res={ok:!error};data.ok=!error;
             if (res.ok && data.ok) {
                 targetMsg.unlockedRawContent = data.raw_content;
                 targetMsg.activeMaskLevel = 'raw';
@@ -459,6 +455,19 @@
         });
     }
 
+    function appendMessagePartControl(container,msg) {
+        if(!msg.contentPartial)return;
+        const more=document.createElement('button');more.type='button';more.className='admin-btn admin-btn-secondary';more.textContent='Đọc tiếp tin nhắn';
+        more.addEventListener('click',async()=>{more.disabled=true;try{
+            const {data:part,error}=await supabase.rpc('read_admin_chat_message_part',{p_kind:'transcript',p_id:msg.id,p_offset:msg.contentOffset,p_revision:msg.contentRevision});
+            if(error)throw error;
+            if(!part||part.id!==msg.id||part.revision!==msg.contentRevision||part.offset!==msg.contentOffset||typeof part.content!=='string'||!Number.isSafeInteger(part.next_offset)||part.next_offset<=part.offset||typeof part.hasMore!=='boolean')throw Error('invalid_message_part');
+            msg.text+=part.content;msg.contentOffset=part.next_offset;msg.contentPartial=part.hasMore;
+            if(PawpalChatbot.state.currentConversation?.messages.includes(msg))renderCurrentChat();
+        }catch(error){PawpalChatbot.showToast?.(error.code==='PT409'?'Tin nhắn đã thay đổi. Tải lại hội thoại để đọc tiếp.':'Chưa tải được phần tin nhắn tiếp theo. Hãy thử lại.','error');more.disabled=false;}});
+        container.appendChild(more);
+    }
+
     function renderCurrentChat() {
         const timeline=document.getElementById('chatMessagesTimeline');
         const selected=PawpalChatbot.state?.currentConversation;
@@ -662,6 +671,7 @@
                         `;
                     }
 
+                    appendMessagePartControl(cardWrap,msg);
                     timelineEl.appendChild(cardWrap);
                     return;
                 }
@@ -670,6 +680,7 @@
                     const marker = document.createElement('div');
                     marker.className = 'chat-system-marker';
                     marker.innerHTML = `<span class="chat-system-marker-text">${escapeHtml(msg.text)}</span>`;
+                    appendMessagePartControl(marker,msg);
                     timelineEl.appendChild(marker);
                     return;
                 }
@@ -742,6 +753,7 @@
                         <div class="chat-bubble">${bubbleContent}</div>
                     `;
                 }
+                appendMessagePartControl(wrap,msg);
                 timelineEl.appendChild(wrap);
             });
 
@@ -840,7 +852,7 @@
                     try{
                         const older=await PawpalChatbot.loadConversationMessages(currentConversation.id,{beforeCreatedAt:first.createdAtRaw,beforeId:first.id});
                         const height=timelineEl.scrollHeight;
-                        currentConversation.messages=[...older,...currentConversation.messages];currentConversation.hasMoreMessages=older.length===30;
+                        currentConversation.messages=[...older.messages,...currentConversation.messages];currentConversation.hasMoreMessages=older.hasMore;
                         if(PawpalChatbot.state.currentConversation?.id===currentConversation.id){renderCurrentChat();timelineEl.scrollTop=timelineEl.scrollHeight-height;}
                     }catch(e){PawpalChatbot.showToast?.('Không tải được lịch sử. Hãy thử lại.','error');more.disabled=false;}
                 });timelineEl.prepend(more);
@@ -890,7 +902,7 @@
         if (custNameEl) custNameEl.textContent = currentConversation.customerName || 'Khách hàng';
         if (custTierEl) custTierEl.textContent = currentConversation.tier || '—';
         if (custPhoneEl) custPhoneEl.textContent = currentConversation.phone || '—';
-        if (custPointsEl) custPointsEl.textContent = `${(currentConversation.pawpoints || 0).toLocaleString('vi-VN')} điểm`;
+        if (custPointsEl) custPointsEl.textContent = currentConversation.contextError||currentConversation.pawpoints==null?'Chưa tải được điểm':`${currentConversation.pawpoints.toLocaleString('vi-VN')} điểm`;
 
         if (petsListEl) {
             petsListEl.innerHTML = '';
@@ -908,15 +920,16 @@
                     petsListEl.appendChild(card);
                 });
             } else {
-                petsListEl.innerHTML = '<span style="color: var(--text-muted); font-size: 12.5px;">Chưa đăng ký thú cưng</span>';
+                petsListEl.textContent = currentConversation.contextError?'Chưa tải được thông tin thú cưng':'Chưa đăng ký thú cưng';
             }
+            if(currentConversation.petsHasMore){const more=document.createElement('span');more.textContent='Chỉ hiển thị 10 bé cưng. Mở hồ sơ khách hàng để xem đầy đủ.';petsListEl.appendChild(more);}
         }
 
         if (recentOrderEl) {
             if (currentConversation.recentOrder) {
                 recentOrderEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link chat-order-info" data-id="${escapeHtml(currentConversation.recentOrder.id)}">${escapeHtml(currentConversation.recentOrder.code || currentConversation.recentOrder.id)}</a>`;
             } else {
-                recentOrderEl.textContent = 'Chưa có đơn hàng';
+                recentOrderEl.textContent = currentConversation.contextError?'Chưa tải được đơn hàng':'Chưa có đơn hàng';
             }
         }
 
@@ -924,7 +937,7 @@
             if (currentConversation.recentBooking) {
                 recentBookingEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-booking" data-id="${escapeHtml(currentConversation.recentBooking.id)}">${escapeHtml(currentConversation.recentBooking.code || currentConversation.recentBooking.id)}</a> (${escapeHtml(currentConversation.recentBooking.status)})`;
             } else {
-                recentBookingEl.textContent = 'Chưa có lịch hẹn';
+                recentBookingEl.textContent = currentConversation.contextError?'Chưa tải được lịch hẹn':'Chưa có lịch hẹn';
             }
         }
 
@@ -938,8 +951,9 @@
                     ticketsListEl.appendChild(el);
                 });
             } else {
-                ticketsListEl.innerHTML = '<span style="color: var(--text-muted); font-size: 12.5px;">Không có khiếu nại đang mở</span>';
+                ticketsListEl.textContent = currentConversation.contextError?'Chưa tải được khiếu nại':'Không có khiếu nại đang mở';
             }
+            if(currentConversation.ticketsHasMore){const more=document.createElement('span');more.textContent='Chỉ hiển thị 5 khiếu nại mới nhất. Mở hồ sơ khách hàng để xem đầy đủ.';ticketsListEl.appendChild(more);}
         }
 
         if (internalNoteInput) {
@@ -1223,7 +1237,7 @@
             select.replaceChildren(new Option('Đang tải chính sách…',''));btnReward.disabled=true;
             PawpalChatbot.openModal?.('rewardPointsModalOverlay');
             try {
-                const {data,error}=await supabase.from('chatbot_compensation_policy').select('id,issue_type,max_points,approval_required').eq('is_active',true).order('issue_type').limit(50);
+                const {data,error}=await supabase.rpc('get_admin_chat_point_policies');
                 if(error)throw error;
                 if(rewardTarget!==target)return;
                 select.replaceChildren(new Option('Chọn chính sách bồi hoàn',''),...(data||[]).map(p=>{
@@ -1248,7 +1262,7 @@
             btnReward.disabled=true;
             try{
                 const {error}=await supabase.rpc('adjust_admin_chat_points',{p_request:rewardTarget.request,p_conversation:rewardTarget.conversation,p_expected_updated_at:rewardTarget.version,p_policy:select.value,p_points:points});if(error)throw error;
-                const c=getCurrentConversationSafe();if(c?.id===rewardTarget.conversation)c.contextLoaded=false;
+                const c=getCurrentConversationSafe();if(c?.id===rewardTarget.conversation){c.contextLoaded=false;PawpalChatbot.invalidateCustomerCache?.(c.customerId);}
                 PawpalChatbot.closeModal?.('rewardPointsModalOverlay');await PawpalChatbot.loadInboxSummary();
                 PawpalChatbot.showToast?.('Đã lưu điều chỉnh điểm.', 'success');
             }catch(e){PawpalChatbot.showToast?.('Chưa lưu được điểm. Hãy kiểm tra quyền và thử lại.', 'error');}finally{btnReward.disabled=false;}
@@ -1315,7 +1329,7 @@
             try {
                 const {error}=await supabase.rpc('create_chat_complaint',args);if(error)throw error;
                 PawpalChatbot.closeModal?.('convertTicketModalOverlay');
-                const c=getCurrentConversationSafe();if(c?.id===convertTarget.id)c.contextLoaded=false;
+                const c=getCurrentConversationSafe();if(c?.id===convertTarget.id){c.contextLoaded=false;PawpalChatbot.invalidateCustomerCache?.(c.customerId);}
                 await PawpalChatbot.loadInboxSummary();
                 PawpalChatbot.showToast?.('Đã tạo khiếu nại.', 'success');
             }catch(error){PawpalChatbot.showToast?.('Chưa tạo được khiếu nại. Nội dung được giữ lại.', 'error');}
@@ -1344,7 +1358,7 @@
             transferTarget={id:c.id,version:c.updatedAtRaw,request:crypto.randomUUID()};selectedHandler=null;handlers=[];handlerInput.value='';
             document.getElementById('escalateCustomerName').value=c.customerName;document.getElementById('inputEscalateNotes').value='';
             handlerOptions.style.display='none';PawpalChatbot.openModal?.('escalateManagerModalOverlay');
-            const {data,error}=await supabase.rpc('get_admin_chat_handlers');if(error)PawpalChatbot.showToast?.('Không tải được nhân viên.', 'error');else handlers=data||[];
+            const {data,error}=await supabase.rpc('get_admin_chat_handlers_bounded');if(error)PawpalChatbot.showToast?.('Không tải được nhân viên.', 'error');else handlers=data||[];
         });
         transferButton?.addEventListener('click',async()=>{
             if(!transferTarget||transferButton.disabled)return;
@@ -1368,16 +1382,29 @@
         const selectCannedCategory = document.getElementById('selectCannedCategory');
         const cannedResponsesList = document.getElementById('cannedResponsesList');
 
-        function renderCannedLibrary() {
-            if (!cannedResponsesList) return;
+        let cannedLibraryPage=1,cannedLibraryVersion=0,cannedSearchTimer;
+        async function renderCannedLibrary() {
+            if (!cannedResponsesList||!document.getElementById('cannedResponsesModalOverlay')?.classList.contains('active')) return;
             const searchVal = (inputSearchCanned?.value || '').toLowerCase().trim();
             const catVal = selectCannedCategory?.value || 'all';
-
-            const filtered = cannedResponsesDatabase.map(r=>({...r,catName:r.category})).filter(item => {
-                const matchSearch = !searchVal || item.title.toLowerCase().includes(searchVal) || item.content.toLowerCase().includes(searchVal) || item.shortcut.toLowerCase().includes(searchVal);
-                const matchCat = catVal === 'all' || item.category === catVal;
-                return matchSearch && matchCat;
-            });
+            const version=++cannedLibraryVersion,pager=document.getElementById('cannedLibraryPagination');
+            cannedResponsesList.textContent='Đang tải câu mẫu…';pager?.replaceChildren();
+            let response;
+            try{response=await loadLiveCannedResponses({query:searchVal,category:catVal,page:cannedLibraryPage});}
+            catch{if(version===cannedLibraryVersion)cannedResponsesList.textContent='Không tải được câu mẫu. Hãy thử lại.';return;}
+            if(version!==cannedLibraryVersion||!document.getElementById('cannedResponsesModalOverlay')?.classList.contains('active'))return;
+            cannedLibraryPage=response.page;
+            defaultSmartSuggestions=response.rows.map(r=>({tag:r.title,text:r.content}));currentSuggestIndex=0;
+            renderSmartSuggestions();
+            selectCannedCategory?.replaceChildren(new Option('Tất cả','all'),...response.categories.map(c=>new Option(c,c)));
+            if(catVal!=='all'&&!response.categories.includes(catVal))selectCannedCategory?.appendChild(new Option(catVal,catVal));
+            if(selectCannedCategory)selectCannedCategory.value=catVal;
+            const filtered=response.rows.map(r=>({...r,catName:r.category}));
+            const lastPage=Math.max(1,Math.ceil(response.total/10));
+            for(const [label,disabled,delta]of [['<',response.page<=1,-1],[String(response.page),false,0],['>',response.page>=lastPage,1]]){
+                const b=document.createElement('button');b.type='button';b.className='rules-page-btn'+(delta===0?' active':'');b.textContent=label;b.disabled=disabled;
+                if(delta)b.addEventListener('click',()=>{cannedLibraryPage+=delta;renderCannedLibrary();});else b.setAttribute('aria-current','page');pager?.appendChild(b);
+            }
 
             if (filtered.length === 0) {
                 cannedResponsesList.innerHTML = `<div style="text-align: center; padding: 32px; color: var(--text-muted); font-size: 13px;">Không tìm thấy câu mẫu phù hợp</div>`;
@@ -1385,10 +1412,10 @@
             }
 
             cannedResponsesList.innerHTML = filtered.map(item => `
-                <div class="canned-response-card" style="padding: 14px 16px; border: 1px solid #ECF2EE; border-radius: 9px; margin-bottom: 10px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px;">
+                <div class="canned-response-card" style="padding: 14px 0; border: none; margin-bottom: 10px; background: transparent; display: flex; flex-direction: column; gap: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <code style="background: #EEF5F1; padding: 2px 7px; border-radius: 6px; color: #236B48; font-weight: 700; font-size: 12px;">${escapeHtml(item.shortcut)}</code>
+                            <code style="background: transparent; color: #236B48; font-weight: 700; font-size: 12px;">${escapeHtml(item.shortcut)}</code>
                             <span style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${escapeHtml(item.title)}</span>
                         </div>
                         <span class="admin-badge badge-neutral" style="font-size: 11px;">${escapeHtml(item.catName)}</span>
@@ -1416,14 +1443,11 @@
 
         btnOpenCannedModal?.addEventListener('click', async () => {
             PawpalChatbot.openModal?.('cannedResponsesModalOverlay');
-            try {await loadLiveCannedResponses();
-                selectCannedCategory.replaceChildren(new Option('Tất cả','all'),... [...new Set(cannedResponsesDatabase.map(r=>r.category))].map(c=>new Option(c,c)));
-                renderCannedLibrary();
-            } catch(e) { cannedResponsesDatabase=[];cannedResponsesList.textContent='Không tải được câu mẫu.'; }
+            cannedLibraryPage=1;await renderCannedLibrary();
         });
 
-        inputSearchCanned?.addEventListener('input', renderCannedLibrary);
-        selectCannedCategory?.addEventListener('change', renderCannedLibrary);
+        inputSearchCanned?.addEventListener('input',()=>{clearTimeout(cannedSearchTimer);++cannedLibraryVersion;cannedLibraryPage=1;cannedResponsesList.textContent='Đang tìm câu mẫu…';document.getElementById('cannedLibraryPagination')?.replaceChildren();cannedSearchTimer=setTimeout(renderCannedLibrary,250);});
+        selectCannedCategory?.addEventListener('change',()=>{clearTimeout(cannedSearchTimer);cannedLibraryPage=1;renderCannedLibrary();});
 
         // ====================================================================
         // ====================================================================

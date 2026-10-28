@@ -1,0 +1,34 @@
+{
+  "scope": "Marker-owned local PostgREST v14 only; no Cloud/model",
+  "checks": [
+    {
+      "name": "Independent worker processes share two request slots; same actor and third actor fail fast",
+      "status": "PASS"
+    },
+    {
+      "name": "Another actor cannot use or release a lease",
+      "status": "PASS"
+    },
+    {
+      "name": "SQL rejects oversized result before emitting source payload",
+      "status": "PASS"
+    },
+    {
+      "name": "PostgREST hoists function timeout: slow SQL cancelled and no active source remains",
+      "status": "PASS"
+    },
+    {
+      "name": "Four source transactions across processes; fifth rejected, locks recover after timeout",
+      "status": "PASS"
+    },
+    {
+      "name": "Expired lease is reclaimed; stale release cannot affect replacement",
+      "status": "PASS"
+    },
+    {
+      "name": "Release leaves two fixed empty slots; no growing queue or persistent fixture messages",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

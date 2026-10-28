@@ -23,7 +23,8 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   const client={
    auth:{getSession:async()=>({data:{session:{access_token:'offline',user:{id:'test-actor'}}}})},
    rpc:async(name,args)=>{
-    if(name==='get_admin_chat_inbox_page')return {data:{page:1,total:1,counts:{all:1,urgent:0,active:1},rows:[{id:'10000000-0000-4000-8000-000000000001',status:'agent_handling',assigned_staff_id:'actor',created_at:'2026-10-25T00:00:00Z',updated_at:'2026-10-25T00:00:00Z'}]}};
+    if(name==='get_admin_chat_inbox_view')return {data:{page:1,total:1,counts:{all:1,urgent:0,active:1},rows:[{id:'10000000-0000-4000-8000-000000000001',status:'agent_handling',assigned_staff_id:'actor',created_at:'2026-10-25T00:00:00Z',updated_at:'2026-10-25T00:00:00Z'}]}};
+    if(name==='get_admin_chat_point_policies')return {data:[{id:'policy',issue_type:'Chính sách thử',max_points:10,approval_required:false}]};
     if(['adjust_admin_chat_points','create_chat_complaint','transfer_admin_chat','resolve_admin_chat'].includes(name)){dbWrites.push({name,args});return {data:{}};}
     return {data:[]};
    },

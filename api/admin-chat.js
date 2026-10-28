@@ -3,6 +3,8 @@ const {verifyStaffCaller}=require('../scripts/api/staff_auth.js');
 const copilot=require('../scripts/api/admin_copilot.js');
 const understanding=require('../scripts/api/chat_understanding.js');
 const {sanitizeModelData}=require('../scripts/api/chat_model_privacy.js');
+const readTools=require('../scripts/api/chat_read_tools.js');
+const admission=require('../scripts/api/chat_read_admission.js');
 const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const limits=new Map();
 function allow(key,maximum){const now=Date.now(),recent=(limits.get(key)||[]).filter(t=>now-t<60000);if(recent.length>=maximum)return false;recent.push(now);limits.set(key,recent);if(limits.size>10000)for(const [k,rows]of limits)if(rows.every(t=>now-t>=60000))limits.delete(k);return true;}
@@ -47,7 +49,7 @@ function createGenerator({serviceClient,request=requestGemini,environmentKey=()=
  };
 }
 const generate=createGenerator();
-function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceClient}={}){
+function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceClient,readAdmission=admission}={}){
  return async(req,res)=>{
   res.setHeader('Cache-Control','no-store');
   const fail=(status,error)=>res.status(status).json({ok:false,error});
@@ -94,8 +96,8 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     if(prior.data){if(prior.data.conversation_id!==c.id||prior.data.raw_content!==question||prior.data.sender_account_id!==(user?.id||null)||prior.data.sender_guest_session_id!==(guest?.id||null))return fail(409,'Yêu cầu đã được dùng.');return res.json({ok:true,replayed:true});}
     if(['resolved','closed','completed','blocked'].includes(c.status))return fail(409,'Hội thoại đã kết thúc. Hãy tạo đoạn chat mới.');
     const now=Date.now(),key='public:'+c.id,window=(limits.get(key)||[]).filter(t=>now-t<60000);if(window.length>=10)return fail(429,'Vui lòng chờ trước khi gửi thêm.');window.push(now);limits.set(key,window);
-    const tables=await Promise.all(['chatbot_profanity_filter','chatbot_sentiment_trigger'].map(table=>service.from(table).select('*').eq('is_active',true).order('id').limit(500)));for(const r of tables)if(r.error)throw r.error;
-    const evaluation=require('../scripts/api/chat_moderation.js').evaluateToxicAndSentiment(question,tables[0].data,tables[1].data);
+    const rules=await service.rpc('read_public_chat_rules');if(rules.error)throw rules.error;
+    const evaluation=require('../scripts/api/chat_moderation.js').evaluateToxicAndSentiment(question,rules.data.profanity,rules.data.sentiment);
     if(evaluation.worstAction==='block')return fail(400,'Vui lòng điều chỉnh nội dung trước khi gửi.');
     let reply=null,understood=true;
     if(!['waiting_agent','agent_handling'].includes(c.status)){
@@ -104,10 +106,9 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      }else if(understanding.isUnclearInput(question)){
       reply=understanding.clarification;understood=false;
      }else{
-     const faq=await service.from('chatbot_knowledge_faq').select('question,answer').eq('is_active',true).order('id').limit(500);if(faq.error)throw faq.error;
-     const recent=await service.from('chat_message').select('sender_type,content').eq('conversation_id',c.id).order('created_at',{ascending:false}).order('id',{ascending:false}).limit(8);if(recent.error)throw recent.error;
-     const history=(recent.data||[]).slice().reverse().map(m=>({role:['customer','guest'].includes(m.sender_type)?'user':'model',content:m.content||''}));
-     let timer;try{const generated=await Promise.race([generateReply(question,{thongTinPawpal:faq.data.map(r=>({question:r.question,answer:r.answer}))},history,{audience:'customer'}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('ai_timeout')),25000);})]);({reply,understood}=understanding.parseCustomerReply(generated));}finally{clearTimeout(timer);}
+     const context=await service.rpc('read_public_chat_context',{p_conversation:c.id});if(context.error)throw context.error;
+     const history=(context.data.recent||[]).slice().reverse().map(m=>({role:['customer','guest'].includes(m.sender_type)?'user':'model',content:m.content||''}));
+     let timer;try{const generated=await Promise.race([generateReply(question,{thongTinPawpal:context.data.faq.map(r=>({question:r.question,answer:r.answer}))},history,{audience:'customer'}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('ai_timeout')),25000);})]);({reply,understood}=understanding.parseCustomerReply(generated));}finally{clearTimeout(timer);}
      }
      if(typeof reply!=='string'||!reply.trim())throw Error('empty_reply');
      reply=reply.replace(/\s*\((?:Nguồn|Source)\s*:[^)]*\bchatbot_knowledge_faq\b[^)]*\)/giu,'');
@@ -115,7 +116,7 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     }
     const result=await service.rpc('post_public_chat_message',{p_id:payload.requestId,p_conversation:c.id,p_expected_at:c.updated_at,p_auth:user?.id||null,p_guest:guest?.id||null,p_raw:question,p_content:evaluation.maskedText||question,p_toxic:evaluation.isToxic,p_level:evaluation.detectedLevel,p_reply:reply,p_handover:evaluation.shouldHandover,p_understood:understood});if(result.error)throw result.error;
     return res.json({ok:true});
-   }catch(error){return fail(error.code==='PT409'?409:503,'Chưa thể xử lý chat. Hãy thử lại hoặc yêu cầu chuyên viên.');}
+   }catch(error){return fail(error.code==='PT429'?429:error.code==='57014'?504:error.code==='54000'?422:error.code==='PT409'?409:503,'Chưa thể xử lý chat. Hãy thử lại hoặc yêu cầu chuyên viên.');}
   }
   if(req.method==='POST'&&payload.action==='feedback'){
    if(!uuid(payload.conversationId)||!Number.isInteger(payload.score)||payload.score<1||payload.score>5||typeof payload.comment!=='string'||payload.comment.length>2000)return fail(400,'Chọn mức đánh giá hợp lệ.');
@@ -138,41 +139,33 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
   const auth=await verify(req,'admin_copilot_history.read');if(!auth.authorized)return fail(auth.status,auth.message);
   const {caller,staff,user}=auth;
   let body=req.body||{};try{if(typeof body==='string')body=JSON.parse(body);}catch{return fail(400,'Dữ liệu không hợp lệ.');}
+  let lease=null,answerTask=null;
   try{
    if(req.method==='GET'){
+    if(req.query?.view==='message_part'){
+     const offset=Number(req.query?.offset||0),revision=req.query?.revision;
+     if(!uuid(req.query?.messageId)||!Number.isSafeInteger(offset)||offset<0||offset>2147483647||typeof revision!=='string'||!/^[0-9a-f]{32}$/.test(revision))return fail(400,'Mốc đọc tin nhắn chưa hợp lệ.');
+     const {data,error}=await caller.rpc('read_admin_chat_message_part',{p_kind:'copilot',p_id:req.query.messageId,p_offset:offset,p_revision:revision});
+     if(error)throw error;return res.json({ok:true,...data});
+    }
     if(req.query?.view==='sessions'){
      const page=Number(req.query?.page||1),query=String(req.query?.query||'');
      if(!Number.isSafeInteger(page)||page<1||query.length>2000)return fail(400,'Trang không hợp lệ.');
-     const {data,error}=await caller.rpc('admin_copilot_session_page',{p_query:query,p_page:page});
+     const {data,error}=await caller.rpc('admin_copilot_sessions_bounded',{p_query:query,p_page:page});
      if(error)throw error;return res.json({ok:true,...data});
     }
-    const offset=Number(req.query?.offset||0);if(!Number.isSafeInteger(offset)||offset<0)return fail(400,'Trang không hợp lệ.');
-    if(req.query?.sessionId!==undefined){
-     if(!uuid(req.query.sessionId))return fail(400,'Phiên không hợp lệ.');
-     const {data,error}=await caller.from('admin_copilot_history').select('id,session_id,role,content,metadata,created_at')
-      .eq('staff_id',staff.id).eq('session_id',req.query.sessionId).order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+30);
-     if(error)throw error;
-     let title;
-     if(req.query.withTitle==='1'){
-      const first=await caller.from('admin_copilot_history').select('content,metadata').eq('staff_id',staff.id).eq('session_id',req.query.sessionId)
-       .order('created_at').order('id').limit(1);
-      if(first.error)throw first.error;
-      title=first.data[0]?.metadata?.session_title||first.data[0]?.content?.slice(0,80);
-     }
-     return res.json({ok:true,history:data.slice(0,30).reverse(),hasMore:data.length>30,...(title?{title}:{})});
-    }
-    let query=caller.from('admin_copilot_history').select('id,session_id,role,content,metadata,created_at').eq('staff_id',staff.id).order('created_at').order('id').range(offset,offset+199);
-    const {data,error}=await query;if(error)throw error;return res.json({ok:true,history:data});
+    const offset=Number(req.query?.offset||0);if(!Number.isSafeInteger(offset)||offset<0||offset>2147483647)return fail(400,'Trang không hợp lệ.');
+    if(req.query?.sessionId!==undefined&&!uuid(req.query.sessionId))return fail(400,'Phiên không hợp lệ.');
+    const {data,error}=await caller.rpc('admin_copilot_history_page',{p_session:req.query?.sessionId||null,p_offset:offset,p_with_title:req.query?.withTitle==='1'});
+    if(error)throw error;return res.json({ok:true,...data});
    }
    if(!staff.permissions.includes('admin_copilot_history.write'))return fail(403,'Chưa có quyền dùng trợ lý.');
    if(body.action==='benchmark'){
     for(const code of ['chatbot_scenario_matrix.read','chatbot_scenario_matrix.write','chatbot_profanity_filter.read','chatbot_sentiment_trigger.read','audit_log.write'])if(!staff.permissions.includes(code))return fail(403,'Chưa có quyền kiểm tra quy tắc.');
-    const tables=['chatbot_profanity_filter','chatbot_sentiment_trigger','chatbot_scenario_matrix'];
-    const results=await Promise.all(tables.map(table=>caller.from(table).select('*').order('id').limit(501)));for(const r of results)if(r.error)throw r.error;
-    if(results.some(r=>r.data.length>500))return fail(400,'Bộ quy tắc quá lớn cho một lượt kiểm tra.');
+    const snapshot=await caller.rpc('read_admin_chat_benchmark_snapshot');if(snapshot.error)throw snapshot.error;
     const evaluate=require('../scripts/api/chat_moderation.js').evaluateToxicAndSentiment;
-    const rows=results[2].data.map(row=>{
-     const actual=evaluate(row.sample_user_input,results[0].data.filter(r=>r.is_active),results[1].data.filter(r=>r.is_active));
+    const rows=snapshot.data.scenarios.map(row=>{
+     const actual=evaluate(row.sample_user_input,snapshot.data.profanity.filter(r=>r.is_active),snapshot.data.sentiment.filter(r=>r.is_active));
      const status=row.expected_tool_call?'pending':Number(row.expected_sentiment)===actual.detectedLevel&&row.expected_handover===Boolean(actual.shouldHandover)?'passed':'failed';
      return {id:row.id,expected:row,status};
     });
@@ -191,26 +184,34 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
    if(prior){
     if(prior.staff_id!==staff.id||prior.session_id!==body.sessionId||prior.content!==question)return fail(409,'Yêu cầu đã được dùng cho nội dung khác.');
     const {data,error}=await service.from('admin_copilot_history').select('content').eq('staff_id',staff.id).eq('metadata->>request_id',body.requestId).eq('role','assistant').single();if(error)throw error;
-    return res.json({ok:true,reply:data.content,replayed:true});
+    return res.json({ok:true,reply:data.content,replayed:true,contract_version:1,answer_type:'saved.reply',plan:null,scope:{},source:null,as_of:null,continuation:null,limitations:['Phản hồi đã lưu, chưa tra cứu lại dữ liệu.']});
    }
    const now=Date.now(),window=limits.get(staff.id)||[];const recent=window.filter(t=>now-t<60000);
    if(recent.length>=10)return fail(429,'Vui lòng chờ trước khi gửi thêm câu hỏi.');
    recent.push(now);limits.set(staff.id,recent);if(limits.size>10000)for(const [key,values]of limits)if(values.every(t=>now-t>60000))limits.delete(key);
    if(body.conversationId!=null&&!uuid(body.conversationId))return fail(400,'Mã hội thoại không hợp lệ.');
-   const route=copilot.plan(question);let history=[];
+   const readContext=body.readContext||{};
+   if(typeof readContext!=='object'||Array.isArray(readContext)||Object.keys(readContext).some(k=>!['customerQuery','orderCode'].includes(k))||Object.values(readContext).some(v=>typeof v!=='string'||v.trim().length<3||v.length>120||/[\u0000-\u001f]/.test(v)))return fail(400,'Ngữ cảnh tra cứu chưa hợp lệ. Hãy chọn lại đối tượng.');
+   const route=copilot.contextualPlan(question,[],new Date(),readContext);
+   // All new questions share the identity rate window; replay above consumes no slot.
+   lease=await readAdmission.acquire(caller,body.requestId);
+   const readBudget=readTools.createReadBudget({lease});let history=[];
    if(copilot.needsContext(question)||['draft.reply','workflow.guide','conversation.summary'].includes(route.intent)){
-    const result=await caller.rpc('admin_copilot_recent_context',{p_session:body.sessionId});
-    if(result.error)throw result.error;history=result.data||[];
+    history=await readBudget.run(caller,readTools.prepare('history.context',{sessionId:body.sessionId},staff.permissions));
    }
    let timer,answer;
-   try{answer=await Promise.race([copilot.answer({question,caller,staff,conversationId:body.conversationId,generateReply,history}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('ai_timeout')),25000);})]);}finally{clearTimeout(timer);}
+   answerTask=copilot.answer({question,caller,staff,conversationId:body.conversationId,generateReply,history,readBudget,readContext});
+   try{answer=await Promise.race([answerTask,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('ai_timeout')),25000);})]);}finally{clearTimeout(timer);}
    const reply=answer.reply;
    const saved=await service.rpc('save_admin_copilot_exchange',{p_actor:user.id,p_request:body.requestId,p_session:body.sessionId,p_question:question,p_answer:reply,p_title:question.slice(0,80)});if(saved.error)throw saved.error;
    return res.json({...answer,ok:true,reply:saved.data,request_id:body.requestId});
   }catch(error){
-   const status=error.code==='42501'?403:error.code==='PT409'?409:error.code==='22023'?400:503;
-   const message=status===403?'Bạn chưa có quyền xem dữ liệu được yêu cầu.':status===409?'Yêu cầu đã thay đổi hoặc trùng với nội dung khác. Hãy kiểm tra và tải lại.':status===400?'Điều kiện tra cứu chưa hợp lệ. Hãy ghi rõ mã hoặc ngày cần xem.':error.message==='ai_timeout'?'Trợ lý phản hồi quá lâu. Câu hỏi chưa được xác nhận lưu; bạn có thể thử lại.':'Nguồn dữ liệu hoặc AI chưa sẵn sàng. Không thể kết luận số liệu; câu hỏi chưa được xác nhận lưu.';
-   return fail(status,message);
+   const status=error.code==='PT429'?429:error.code==='42501'?403:error.code==='PT409'?409:error.code==='22023'?400:error.code==='54000'?422:error.code==='57014'?504:503;
+   const message=status===403?'Bạn chưa có quyền xem dữ liệu được yêu cầu.':status===409?'Yêu cầu đã thay đổi hoặc trùng với nội dung khác. Hãy kiểm tra và tải lại.':status===400?'Điều kiện tra cứu chưa hợp lệ. Hãy ghi rõ mã hoặc ngày cần xem.':status===422?'Phạm vi tra cứu vượt giới hạn tài nguyên. Hãy thu hẹp điều kiện hoặc mở phân hệ liên quan để tiếp tục.':status===504?'Tra cứu quá thời gian cho phép. Câu hỏi chưa được xác nhận lưu; hãy thu hẹp điều kiện rồi thử lại.':error.message==='ai_timeout'?'Trợ lý phản hồi quá lâu. Câu hỏi chưa được xác nhận lưu; bạn có thể thử lại.':'Nguồn dữ liệu hoặc AI chưa sẵn sàng. Không thể kết luận số liệu; câu hỏi chưa được xác nhận lưu.';
+   if(status===429)res.setHeader('Retry-After',error.message==='chat_read_rate_limited'?'60':'1');
+   return fail(status,status===429?(error.message==='chat_read_rate_limited'?'Bạn đã đạt giới hạn câu hỏi trong một phút. Vui lòng chờ rồi gửi lại.':'Trợ lý đang xử lý các câu hỏi khác. Vui lòng chờ rồi gửi lại.'):message);
+  }finally{
+   if(lease){if(answerTask)await answerTask.catch(()=>{});await readAdmission.release(caller,lease).catch(()=>{});}
   }
  };
 }

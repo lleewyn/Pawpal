@@ -1,0 +1,62 @@
+{
+  "scope": "Task-owned local clone, actual Auth/JWT/handler/PostgREST, model mocked with zero external calls",
+  "migrationSha256": "d79c7b96eaa597e6b141fd4c97c2cf8bb86ad3bac4402fdc933d3328bdb5d963",
+  "checks": [
+    {
+      "name": "Minimal projection retains identical moderation output across normal, unclear, rule-keyword and sentiment cases",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual member and guest API ownership checks reject cross-conversation sends before internal source RPCs",
+      "status": "PASS"
+    },
+    {
+      "name": "Unclear member/guest messages load one rule bundle, skip FAQ/history/model and save a clarification",
+      "status": "PASS"
+    },
+    {
+      "name": "Clear public question uses two bounded source RPCs; original FAQ/history/model contract retained with a local model stub",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual staff Auth/API benchmark reads one scoped snapshot instead of three table requests and persists evaluation",
+      "status": "PASS"
+    },
+    {
+      "name": "Internal public bundles are service-role only; ordinary member cannot run staff benchmark",
+      "status": "PASS"
+    },
+    {
+      "name": "Public source bundles and staff benchmark use the same four global source slots",
+      "status": "PASS"
+    },
+    {
+      "name": "Server-only public source has a real SQL timeout, verified while its table remains locked",
+      "status": "PASS"
+    },
+    {
+      "name": "Oversized FAQ/rules fail before payload and API saves no false answer when source budget fails",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes server bundles without changing original ownership or send functions",
+      "status": "PASS"
+    }
+  ],
+  "metrics": {
+    "moderationProjection": {
+      "oldBodyBytes": 31980,
+      "newBodyBytes": 12542
+    },
+    "publicAnswer": {
+      "sourceRequests": 2,
+      "previousSourceRequests": 4
+    },
+    "benchmark": {
+      "sourceRequests": 1,
+      "previousSourceRequests": 3
+    }
+  },
+  "externalModelCalls": 0,
+  "status": "PASS"
+}

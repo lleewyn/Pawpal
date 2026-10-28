@@ -238,9 +238,11 @@
     let hasPendingRefresh = false;
     let inboxDebounceTimer = null;
     const customerContextCache = new Map();
+    const customerContextRequests = new Map();
+    let customerContextSequence=0;
 
     function invalidateCustomerCache(customerId) {
-        if (customerId) customerContextCache.delete(customerId);
+        if (customerId) {customerContextCache.delete(customerId);customerContextRequests.delete(customerId);}
     }
     PawpalChatbot.invalidateCustomerCache = invalidateCustomerCache;
 
@@ -268,7 +270,7 @@
             PawpalChatbot.subtabs.live?.renderConversationsList?.();
             let payload=inboxPages.get(key);
             if(!payload || Date.now()-payload.at>30000){
-                if(!inboxRequests.has(key))inboxRequests.set(key,supabase.rpc('get_admin_chat_inbox_page',args).then(result=>{if(result.error)throw result.error;return result.data;}).finally(()=>inboxRequests.delete(key)));
+                if(!inboxRequests.has(key))inboxRequests.set(key,supabase.rpc('get_admin_chat_inbox_view',args).then(result=>{if(result.error)throw result.error;return result.data;}).finally(()=>inboxRequests.delete(key)));
                 payload={at:Date.now(),data:await inboxRequests.get(key)};
                 if(inboxPages.size>=20)inboxPages.delete(inboxPages.keys().next().value);inboxPages.set(key,payload);
             }
@@ -288,28 +290,13 @@
                 return;
             }
 
-            const convIds = dbConvs.map(c => c.id);
-            const customerIds = [...new Set(dbConvs.map(c => c.customer_id).filter(Boolean))];
-
-            // 2. Chỉ truy vấn thông tin khách hàng và tin nhắn gần nhất cho các hội thoại được trả về
-            const [profsRes,custsRes,phonesRes] = await Promise.all([
-                customerIds.length ? supabase.from('customer_profile').select('customer_id,full_name').in('customer_id',customerIds) : {data:[]},
-                customerIds.length ? supabase.from('customer').select('id,contact_email').in('id',customerIds) : {data:[]},
-                customerIds.length ? supabase.from('customer_phone').select('customer_id,phone_number').eq('is_primary',true).in('customer_id',customerIds) : {data:[]}
-            ]);
-            for(const response of [profsRes,custsRes,phonesRes])if(response.error)throw response.error;
+            // Customer labels arrive in the same caller-scoped, bounded RPC.
+            const profMap = {}, custMap = {};
+            for(const row of dbConvs){if(row.customer_id){
+                profMap[row.customer_id]={full_name:row.customer_profile?.full_name};
+                custMap[row.customer_id]={email:row.customer_profile?.email,phone_main:row.customer_profile?.phone};
+            }}
             const recentMsgsRes={data:dbConvs.map(c=>c.latest_message).filter(Boolean)};
-            custsRes.data=custsRes.data.map(c=>({...c,email:c.contact_email,phone_main:phonesRes.data.find(p=>p.customer_id===c.id)?.phone_number || null}));
-
-            const profMap = {};
-            (profsRes.data || []).forEach(p => {
-                if (p.customer_id) profMap[p.customer_id] = p;
-            });
-
-            const custMap = {};
-            (custsRes.data || []).forEach(c => {
-                if (c && c.id) custMap[c.id] = c;
-            });
 
             const latestMsgMap = {};
             (recentMsgsRes.data || []).forEach(m => {
@@ -369,7 +356,11 @@
                     customerName: custName,
                     phone: phone,
                     tier: existingConv?.tier || (rc.customer_id ? 'Thành viên' : 'Vãng lai'),
-                    pawpoints: existingConv?.pawpoints || 0,
+                    pawpoints: existingConv?.pawpoints ?? null,
+                    contextError: existingConv?.contextError || false,
+                    contextAt: existingConv?.contextAt || 0,
+                    petsHasMore: existingConv?.petsHasMore || false,
+                    ticketsHasMore: existingConv?.ticketsHasMore || false,
                     unreadCount: isUrgent ? 1 : 0,
                     updatedAt: new Date(rc.updated_at || rc.created_at).toLocaleTimeString('vi-VN', {timeZone:'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' }),
                     sentimentLevel: sLevel,
@@ -426,23 +417,23 @@
 
     // TIER 2: Nạp tin nhắn đầy đủ (30 tin gần nhất) theo phiên hội thoại
     async function loadConversationMessages(convId, options = {}) {
-        if (!supabase || !convId) return [];
-        const limit = options.limit || 30;
+        if (!supabase || !convId) throw Error('chat_client_unavailable');
         try {
-            const {data:msgs,error}=await supabase.rpc('get_admin_chat_messages',{p_conversation:convId,p_before_at:options.beforeCreatedAt||null,p_before_id:options.beforeId||null});
+            const {data,error}=await supabase.rpc('get_admin_chat_messages_bounded',{p_conversation:convId,p_before_at:options.beforeCreatedAt||null,p_before_id:options.beforeId||null});
             if (error) throw error;
-
-            const sorted = (msgs || []).slice().reverse();
-            return sorted.map(m => ({
+            if(!data||!Array.isArray(data.messages)||typeof data.hasMore!=='boolean')throw Error('invalid_chat_message_page');
+            const sorted = data.messages.slice().reverse();
+            return {hasMore:data.hasMore,messages:sorted.map(m => ({
                 id: m.id,
                 createdAtRaw: m.created_at,
                 sender: ['customer','guest'].includes(m.sender_type) ? 'user' : (m.sender_type === 'staff' ? 'agent' : (m.sender_type === 'system' ? 'system' : 'bot')),
                 agentName: (m.sender_type === 'system' ? 'Hệ thống' : m.sender_type === 'staff' ? (m.staff_name || 'Nhân viên') : 'PawPal Bot'),
                 time: new Date(m.created_at).toLocaleTimeString('vi-VN', {timeZone:'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' }),
                 text: m.content || '',
+                contentPartial:Boolean(m.content_partial),contentOffset:m.content_offset,contentRevision:m.content_revision,
                 isToxic: !!m.is_toxic,
                 activeMaskLevel: m.is_toxic ? 'words' : 'raw'
-            }));
+            }))};
         } catch (err) {
             console.error('[Chatbot] Lỗi nạp tin nhắn phiên:', err);
             throw err;
@@ -462,55 +453,17 @@
             };
         }
 
-        if (customerContextCache.has(customerId)) {
-            return customerContextCache.get(customerId);
-        }
-
-        try {
-            const [petsRes, ordersRes, apptsRes, ticketsRes, pointsRes, membershipRes] = await Promise.all([
-                supabase.from('pet_profile').select('id,pet_name,allergy,routine,breed:pet_breed(breed_name,species:pet_species(species_name))').eq('customer_id', customerId),
-                supabase.from('sales_order').select('id, order_code, order_status, created_at').eq('customer_id', customerId).order('created_at', { ascending: false }).limit(1),
-                supabase.from('appointment').select('id, appointment_code, appointment_status, created_at, items:appointment_item(name_snapshot,is_primary)').eq('customer_id', customerId).order('created_at', { ascending: false }).limit(1),
-                supabase.from('support_ticket').select('id,subject,status,category,created_at').eq('customer_id',customerId).not('status','in','(completed,resolved,closed,rejected)').order('created_at',{ascending:false}).limit(5),
-                supabase.from('customer_point_balance').select('total_paw_points').eq('customer_id',customerId).maybeSingle(),
-                supabase.from('customer_membership').select('tier:membership_tier(tier_name)').eq('customer_id',customerId).maybeSingle()
-            ]);
-
-            for(const response of [petsRes,ordersRes,apptsRes,ticketsRes,pointsRes,membershipRes])if(response.error)throw response.error;
-            const pets = (petsRes.data || []).map(p => ({
-                id: p.id,
-                name: p.pet_name || 'Thú cưng',
-                breed: p.breed?.breed_name || p.breed?.species?.species_name || '—',
-                notes: p.allergy || p.routine || ''
-            }));
-
-            const recentOrder = (ordersRes.data || [])[0] ? {
-                id: ordersRes.data[0].id,
-                code: ordersRes.data[0].order_code,
-                status: ordersRes.data[0].order_status || 'Đang xử lý'
-            } : null;
-
-            const recentBooking = (apptsRes.data || [])[0] ? {
-                id: apptsRes.data[0].id,
-                code: apptsRes.data[0].appointment_code,
-                status: apptsRes.data[0].appointment_status || 'Đã xếp lịch'
-            } : null;
-
-            const openTickets = (ticketsRes.data || []).map(t=>({...t,title:t.subject}));
-
-            // CB-17: Lấy số dư authoritative từ customer_membership
-            const totalPoints = pointsRes.data?.total_paw_points ?? 0;
-
-            const ctx = {
-                pets,
-                recentOrder,
-                recentBooking,
-                openTickets,
-                pawpoints: totalPoints,
-                tier: membershipRes.data?.tier?.tier_name || 'Chưa gán hạng'
-            };
-
-            customerContextCache.set(customerId, ctx);
+        const cached=customerContextCache.get(customerId);
+        if(cached&&Date.now()-cached.at<30000)return cached.data;
+        if(customerContextRequests.has(customerId))return customerContextRequests.get(customerId).promise;
+        const sequence=++customerContextSequence;
+        const request=(async()=>{try {
+            const {data:ctx,error}=await supabase.rpc('get_admin_chat_customer_panel',{p_customer:customerId});
+            if(error)throw error;
+            if(!ctx||!Array.isArray(ctx.pets)||!Array.isArray(ctx.openTickets))throw Error('invalid_customer_panel');
+            if(customerContextRequests.get(customerId)?.sequence!==sequence)return {pets:[],openTickets:[],pawpoints:null,tier:'Chưa tải được hạng',error:true};
+            if(customerContextCache.size>=50)customerContextCache.delete(customerContextCache.keys().next().value);
+            customerContextCache.set(customerId,{at:Date.now(),data:ctx});
             return ctx;
         } catch (err) {
             console.error('[Chatbot] Lỗi nạp ngữ cảnh khách hàng:', err);
@@ -522,7 +475,8 @@
                 pawpoints: null,
                 tier: 'Chưa tải được hạng',error:true
             };
-        }
+        }finally{if(customerContextRequests.get(customerId)?.sequence===sequence)customerContextRequests.delete(customerId);}})();
+        customerContextRequests.set(customerId,{sequence,promise:request});return request;
     }
 
     // Nạp đầy đủ thông tin chi tiết phiên được chọn (Tier 2 on-demand)
@@ -531,22 +485,26 @@
 
         const tasks = [];
         if (!conv.messagesLoaded) {
-            tasks.push(loadConversationMessages(conv.id, { limit: 30 }).then(msgs => {
-                conv.messages = msgs;
-                conv.hasMoreMessages=msgs.length===30;
+            tasks.push(loadConversationMessages(conv.id, { limit: 30 }).then(page => {
+                conv.messages = page.messages;
+                conv.hasMoreMessages=page.hasMore;
                 conv.messagesLoaded = true;
             }));
         }
 
-        if (!conv.contextLoaded && conv.customerId) {
+        if ((!conv.contextLoaded || Date.now()-(conv.contextAt||0)>=30000) && conv.customerId) {
+            const contextRequest=conv.contextRequest=(conv.contextRequest||0)+1;
             tasks.push(loadCustomerContext(conv.customerId).then(ctx => {
+                if(conv.contextRequest!==contextRequest)return;
                 conv.pets = ctx.pets;
+                conv.petsHasMore=Boolean(ctx.petsHasMore);conv.ticketsHasMore=Boolean(ctx.ticketsHasMore);conv.contextError=Boolean(ctx.error);
                 conv.recentOrder = ctx.recentOrder;
                 conv.recentBooking = ctx.recentBooking;
                 conv.openTickets = ctx.openTickets;
                 conv.pawpoints = ctx.pawpoints;
                 conv.tier = ctx.tier;
                 conv.contextLoaded = !ctx.error;
+                conv.contextAt = ctx.error?0:Date.now();
             }));
         }
 
@@ -833,4 +791,3 @@
         }
     });
 })();
-

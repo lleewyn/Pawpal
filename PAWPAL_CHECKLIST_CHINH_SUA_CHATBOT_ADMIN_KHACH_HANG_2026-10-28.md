@@ -1,6 +1,6 @@
 # Checklist chỉnh sửa chatbot Admin và chatbot khách hàng
 
-Ngày lập: 28/10/2026. Trạng thái: **Giai đoạn 1 hoàn tất nghiệm thu local; chưa áp migration135 lên Cloud, chưa push/deploy. Giai đoạn 2 chưa bắt đầu.**
+Ngày lập: 28/10/2026. Trạng thái: **Giai đoạn 1 đã push nhánh feat/guest-admin-identity tại af2deee1. Giai đoạn 2 đã có checkpoint mã nguồn và bằng chứng local đến migration143; Gate 2 chưa đóng, migrations135–143 chưa áp Cloud.**
 
 **Kết quả giai đoạn 1:** [Hồ sơ nghiệm thu và giới hạn](docs/chatbot/stage1-acceptance-2026-10-28/README.md). Có 13 nhóm Auth/API/UI/WebSocket thật local, 12 nhóm SQL cạnh tranh/quyền, sửa P0 cộng dồn điểm 50/200 mỗi ca, bảo vệ dữ liệu model và composer đóng ca. Trạng thái đạt bên dưới áp dụng cho bộ nghiệm thu local, không phải chứng nhận Production hoặc chất lượng Gemini thật.
 
@@ -260,7 +260,7 @@ Liên kết mở phân hệ/bộ lọc là chức năng cần triển khai và k
 
 ## 16. Kế hoạch triển khai chi tiết theo giai đoạn
 
-Đây là thứ tự triển khai chính thức của tài liệu kế hoạch này, thay cho thứ tự đợt trước khi bổ sung ma trận phạm vi. Các mục 3–8 là nhóm yêu cầu kỹ thuật để đối chiếu, không phải lịch thực hiện riêng. **Giai đoạn 0–1 đạt trong phạm vi local đã ghi; giai đoạn 2–8 chưa bắt đầu theo kế hoạch mới**; chức năng cũ chỉ được đánh dấu đạt sau kiểm chứng tương ứng.
+Đây là thứ tự triển khai chính thức của tài liệu kế hoạch này, thay cho thứ tự đợt trước khi bổ sung ma trận phạm vi. Các mục 3–8 là nhóm yêu cầu kỹ thuật để đối chiếu, không phải lịch thực hiện riêng. **Giai đoạn 0–1 đạt trong phạm vi local đã ghi; giai đoạn 2 đang làm, giai đoạn 3–8 chưa bắt đầu theo kế hoạch mới**; chức năng cũ chỉ được đánh dấu đạt sau kiểm chứng tương ứng.
 
 ### Giai đoạn 0 — Chốt phạm vi và baseline
 
@@ -323,11 +323,27 @@ Các mục G1.1–G1.4 đã nghiệm thu theo ma trận local trong báo cáo t�
 
 **Tham chiếu:** C02–C08, A03–A05, Q02–Q03. **Phụ thuộc:** Giai đoạn 1.
 
-- [ ] G2.1 — Chuẩn hóa kế hoạch câu hỏi: đối tượng, điều kiện, khoảng ngày, phép tính, quan hệ và dữ kiện cần lấy.
-- [ ] G2.2 — Đăng ký các công cụ đọc hiện có; server kiểm tra tên công cụ, tham số, quyền và ngân sách thực thi.
-- [ ] G2.3 — Hỗ trợ cách nói khác nhau, không dấu/lỗi gõ, hỏi tiếp và ngữ cảnh trang đang mở; câu mơ hồ phải hỏi chọn.
-- [ ] G2.4 — Chuẩn hóa kết quả: dữ liệu, tổng, phạm vi, thời điểm, nguồn, hạn chế và liên kết tiếp tục; phân biệt lỗi với dữ liệu rỗng.
-- [ ] G2.5 — Giữ đường truy vấn xác định cho số liệu; chỉ bổ sung hiểu ngôn ngữ ở nơi cần, không cho mô hình tạo SQL tùy ý.
+**Tiến độ:** [Báo cáo nền tảng công cụ đọc](docs/chatbot/stage2-read-tools-2026-10-28/README.md). Đã có registry12 công cụ, permission/parameter validation, budget chung theo câu trả lời, contractv1 và hint/continuation UI. 6 nhóm JWT/API/RPC local thật, 13 test registry/API-budget, privacy và các hồi quy liên quan đạt; đã dọn test.
+
+**Cập nhật:** [Giới hạn nguồn dùng chung và timeout SQL](docs/chatbot/stage2-admission-2026-10-28/README.md) đã kiểm chứng local: 2 câu hỏi/1 mỗi staff, 4 transaction nguồn dùng chung giữa process; timeout SQL5 giây, lock1 giây; SQL chặn nội dung nguồn quá32 KiB trước trả và backend đặt trước ngân sách tổng64 KiB. 7 nhóm admission/SQL, 6 nhóm JWT/API và21 test offline đạt; đã dọn clone. Migration136 chưa áp Cloud.
+
+**Cập nhật đường đọc trực tiếp:** [Inbox và hồ sơ khách](docs/chatbot/stage2-panels-2026-10-28/README.md) đã chuyển sang2 RPC có RLS, timeout5 giây, cap32 KiB và dùng chung4 slot nguồn với Copilot. Inbox4→1 lượt DB, hồ sơ6→1; cache/coalescing/TTL và trạng thái lỗi không false-zero đã kiểm chứng. 5 nhóm local thật, UI và hồi quy đạt; rollback137/136 local đạt, đã dọn clone. Migration137 chưa áp Cloud.
+
+**Cập nhật lịch sử:** [Copilot history/session và transcript](docs/chatbot/stage2-history-2026-10-28/README.md) đã vào pool4, timeout5 giây và trần nội dung32 KiB. Trang tự giảm số tin theo bytes, giữ nội dung và hasMore/cursor; GET history/title gom một RPC. 8 nhóm JWT/API/SQL local và UI trang ngắn đạt; rollback138 đạt, đã dọn clone. Nhân viên chỉ có history.read không cần thêm staff.read. Migration138 chưa áp Cloud.
+
+**Cập nhật tin dài:** [Đọc từng phần nội dung](docs/chatbot/stage2-message-parts-2026-10-28/README.md) đã có preview có nhãn, nút Đọc tiếp, tối đa2.000 ký tự/lượt và kiểm phiên bản cho cả Copilot/transcript. Không tự tải nền; giữ quyền, pool4, timeout và trần nguồn32 KiB. 6 nhóm local, 3 test API mới và UI ghép Unicode/giữ preview khi lỗi đạt; rollback139 đạt, đã dọn clone. Migration139 chưa áp Cloud.
+
+**Cập nhật quy tắc/câu mẫu:** [Trang quy tắc, đếm và thư viện câu mẫu](docs/chatbot/stage2-rules-2026-10-28/README.md) đã vào pool4 và timeout5 giây; hai RPC trang có cap32 KiB. Đếm tối đa5 request→1 RPC; thư viện bỏ tải toàn bộ từng đợt500 dòng, chuyển10 mẫu/trang và tìm/lọc SQL. Có cache, debounce, chống response cũ và không tải khi đóng modal. 7 nhóm local, UI desktop/mobile, hồi quy và rollback140 đạt; đã dọn clone. Migration140 chưa áp Cloud.
+
+**Cập nhật rate và nguồn còn lại:** [Migrations141–143](docs/chatbot/stage2-rate-aux-2026-10-28/README.md) đã có10 câu mới/phút/staff dùng chung giữa instance trong RPC cấp lượt, không thêm dịch vụ. Raw/handlers/chính sách điểm vào pool4, giữ audit/quyền; nguồn benchmark3→1 RPC, nguồn trả lời public4→2 RPC. Projection kiểm duyệt giảm31.980→12.542 byte trong fixture mà kết quả giữ nguyên. 8 nhóm rate/aux và10 nhóm Auth/API/bundles local,26 test offline cùng UI/hồi quy đạt; rollback và dọn clone đã thực hiện. Chưa áp Cloud/push.
+
+Chưa đóng Gate2 tổng tài nguyên: rate cấp lượt nằm sau Auth; cần giới hạn ingress trên hosting hiện có để chặn tổng tải trước Auth. Người dùng xác nhận không có dịch vụ khác, không thêm Redis/Upstash. Public open/list/read/mode/feedback, kiểm ownership/lưu/audit/model config và đường RPC/table cũ vẫn có phần ngoài pool. Trang rule/raw quá lớn chưa có đủ luồng chi tiết; không cắt dữ liệu để sửa/chèn. Danh mục điều kiện phát hành còn mở được ghi trong báo cáo141–143; DB16 vẫn mở.
+
+- [x] G2.1 — Contract planv1 cho các intent hiện có: đối tượng/filter/operation/kỳ/relations/readOnly; không coi relations trống là công cụ join tương lai đã có.
+- [ ] G2.2 — Đã có source pool4 cho registry, Inbox/panel, history/transcript, rules/counts/canned, raw/handlers/policies, benchmark/public source; SQL cap/timeout và kiểm quyền đạt local. Đã có rate10 câu mới/phút/staff chia sẻ giữa instance, kiểm ngay trong cấp lượt. Còn ingress trước Auth, tổng tải các đường ngoài pool và dữ liệu chi tiết quá lớn theo bảng điều kiện phát hành trước đóng gate toàn hệ thống.
+- [x] G2.3 — Bộ câu hỏi hiện có có không dấu/typo giới hạn, tiếp nối ngày, hint khách đã chọn; thiếu mã đơn hoặc filter chưa hỗ trợ phải làm rõ. Không tự dùng đơn gần nhất.
+- [x] G2.4 — Contractv1 dữ liệu/phạm vi/nguồn/thời điểm/hạn chế; continuation UI whitelist subtab, không giả deep filter. Phân biệt 403/422/504/source-error và zero kết quả.
+- [x] G2.5 — Facts gọi RPC xác định, descriptor đã validate và freeze; không nhận SQL/tên RPC tùy ý hoặc đưa số liệu cho model tự đếm.
 
 **Đầu ra:** Nền tảng dùng chung về hợp đồng câu hỏi/kết quả, nhưng bộ công cụ và quyền riêng cho từng nhóm người dùng.
 

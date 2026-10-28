@@ -41,7 +41,7 @@
         const key=JSON.stringify([table,id,values,remove]);
         if(!ruleRequests.has(key))ruleRequests.set(key,crypto.randomUUID());
         const result=await supabase.rpc('save_admin_chat_rule',{p_table:table,p_id:id||ruleRequests.get(key),p_expected:original||null,p_values:values,p_delete:remove});
-        if(!result.error){ruleRequests.delete(key);if(table==='chatbot_canned_response')window.PawpalDataStore?.invalidate('chatbot:canned-live*');await loadAllRulesDataFromSupabase({ tables: [table], force: true });}
+        if(!result.error){ruleRequests.delete(key);window.PawpalDataStore?.invalidate('chatbot:rule-counts:*');if(table==='chatbot_canned_response')window.PawpalDataStore?.invalidate('chatbot:canned-live*');await loadAllRulesDataFromSupabase({ tables: [table], force: true });}
         return result;
     }
     const ruleDb={from:table=>({
@@ -59,16 +59,13 @@
         policy:[allRuleTables[currentPolicySubView==='comp'?3:4]],matrix:[allRuleTables[5]],guidelines:[]})[currentRulesView] || [];
     async function loadRuleCounts(forceTables,skipTables=new Set()) {
         const store=window.PawpalDataStore;
-        await Promise.all(allRuleTables.filter(table=>!skipTables.has(table)).map(async table=>{
-            const read=async()=>{
-                const result=await supabase.from(table).select('id',{count:'exact',head:true});
-                if(result.error)throw result.error;
-                return result.count || 0;
-            };
-            try { ruleCounts[table]=store ? await store.fetch('chatbot:rule-count:'+table+':'+store.buildKey(table),read,
-                {force:forceTables.has(table),ttlMs:60000,backgroundRevalidate:false}) : await read(); }
-            catch { delete ruleCounts[table]; }
-        }));
+        const tables=allRuleTables.filter(table=>!skipTables.has(table));if(!tables.length)return;
+        const read=async()=>{const {data,error}=await supabase.rpc('admin_chat_rule_counts',{p_tables:tables});if(error)throw error;return data;};
+        try {
+            const counts=store?await store.fetch('chatbot:rule-counts:'+store.buildKey('rule-counts',{tables}),read,
+                {force:tables.some(table=>forceTables.has(table)),ttlMs:60000,backgroundRevalidate:false}):await read();
+            tables.forEach(table=>{if(Number.isSafeInteger(counts?.[table])&&counts[table]>=0)ruleCounts[table]=counts[table];else delete ruleCounts[table];});
+        }catch{tables.forEach(table=>delete ruleCounts[table]);}
     }
     const ruleLoads = {};
     const ruleTableIds = ['faqTableBody','profanityTableBody','cannedTableBody','compPolicyTableBody','handoverRuleTableBody','matrixTableBody'];
@@ -111,7 +108,7 @@
         const loadingRow=document.createElement('tr');loadingRow.append(loadingCell);tbody.replaceChildren(loadingRow);
         try {
             const read=async()=>{
-                const {data,error}=await supabase.rpc('admin_chat_rule_page',{p_table:table,p_filters:request.filters,p_page:request.page});
+                const {data,error}=await supabase.rpc('admin_chat_rule_page_bounded',{p_table:table,p_filters:request.filters,p_page:request.page});
                 if(error)throw error;
                 return data;
             };
@@ -123,6 +120,7 @@
             return true;
         } catch(error) {
             if(revision!==pageRevision[table])return false;
+            delete ruleCounts[table];
             ruleLoads[tbody.id]='error';delete tbody.dataset.loadingSkeleton;
             const cell=document.createElement('td');cell.colSpan=columns;cell.textContent='Không tải được quy định. Vui lòng làm mới.';
             const row=document.createElement('tr');row.append(cell);tbody.replaceChildren(row);
@@ -156,11 +154,11 @@
         const bPol = document.getElementById('badgePolicyCount');
         const bMat = document.getElementById('badgeMatrixCount');
 
-        if (bFaq) bFaq.textContent = ruleCounts[allRuleTables[0]] ?? rulesFaqData.length;
-        if (bProf) bProf.textContent = ruleCounts[allRuleTables[1]] ?? rulesProfanityData.length;
-        if (bCanned) bCanned.textContent = ruleCounts[allRuleTables[2]] ?? rulesCannedData.length;
-        if (bPol) bPol.textContent = (ruleCounts[allRuleTables[3]] ?? rulesCompPolicyData.length) + (ruleCounts[allRuleTables[4]] ?? rulesHandoverRuleData.length);
-        if (bMat) bMat.textContent = ruleCounts[allRuleTables[5]] ?? rulesMatrixData.length;
+        if (bFaq) bFaq.textContent = ruleCounts[allRuleTables[0]] ?? '—';
+        if (bProf) bProf.textContent = ruleCounts[allRuleTables[1]] ?? '—';
+        if (bCanned) bCanned.textContent = ruleCounts[allRuleTables[2]] ?? '—';
+        if (bPol) bPol.textContent = Number.isSafeInteger(ruleCounts[allRuleTables[3]])&&Number.isSafeInteger(ruleCounts[allRuleTables[4]])?ruleCounts[allRuleTables[3]]+ruleCounts[allRuleTables[4]]:'—';
+        if (bMat) bMat.textContent = ruleCounts[allRuleTables[5]] ?? '—';
     }
 
     function populateRulesCategories() {
@@ -861,7 +859,7 @@
             setupRulesHubEventListeners();
             rulesHubInitialized = true;
             let timer;let channel=supabase?.channel('admin-chat-rules-v1');
-            for(const table of ['chatbot_knowledge_faq','chatbot_profanity_filter','chatbot_canned_response','chatbot_compensation_policy','chatbot_handover_rule','chatbot_scenario_matrix'])channel=channel?.on('postgres_changes',{event:'*',schema:'public',table},()=>{clearTimeout(timer);pendingRuleTables.add(table);window.PawpalDataStore?.invalidate('chatbot:rules:'+table+'*');window.PawpalDataStore?.invalidate('chatbot:rule-count:'+table+'*');if(table==='chatbot_canned_response')window.PawpalDataStore?.invalidate('chatbot:canned-live*');timer=setTimeout(()=>loadAllRulesDataFromSupabase(),350);});
+            for(const table of ['chatbot_knowledge_faq','chatbot_profanity_filter','chatbot_canned_response','chatbot_compensation_policy','chatbot_handover_rule','chatbot_scenario_matrix'])channel=channel?.on('postgres_changes',{event:'*',schema:'public',table},()=>{clearTimeout(timer);pendingRuleTables.add(table);window.PawpalDataStore?.invalidate('chatbot:rules:'+table+'*');window.PawpalDataStore?.invalidate('chatbot:rule-counts:*');if(table==='chatbot_canned_response')window.PawpalDataStore?.invalidate('chatbot:canned-live*');timer=setTimeout(()=>loadAllRulesDataFromSupabase(),350);});
             channel?.subscribe();window.addEventListener('beforeunload',()=>{clearTimeout(timer);if(channel)supabase.removeChannel(channel);},{once:true});
             document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadAllRulesDataFromSupabase();});
         }
