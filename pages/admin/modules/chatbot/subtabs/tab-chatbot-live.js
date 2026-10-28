@@ -418,7 +418,7 @@
                 ? `<span class="conv-member-badge">${escapeHtml(conv.tier || 'Thành viên')}</span>` 
                 : '';
 
-            const handoverTag = `<span class="admin-badge badge-neutral" style="font-size: 10.5px; height: 20px; padding: 0 6px;">${conv.isHandover ? 'Nhân viên' : 'Bot'}</span>`;
+            const handoverTag = `<span class="admin-badge badge-neutral" style="font-size: 10.5px; height: 20px; padding: 0 6px;">${conv.isHandover ? 'Nhân viên' : conv.status === 'waiting_agent' ? 'Chờ nhân viên' : 'Bot'}</span>`;
             const sla = formatSlaInfo(conv);
 
             const item = document.createElement('div');
@@ -549,7 +549,7 @@
         if (composerStatusEl) {
             composerStatusEl.innerHTML = currentConversation.isHandover
                 ? 'Chế độ: <strong>Nhân viên trực tiếp (Đang mở)</strong>'
-                : 'Chế độ: <em>Bot tự động (Bấm "Tiếp nhận" để trả lời)</em>';
+                : currentConversation.status === 'waiting_agent' ? 'Chế độ: <strong>Chờ nhân viên tiếp nhận</strong>' : 'Chế độ: <em>Bot tự động (Bấm "Tiếp nhận" để trả lời)</em>';
             if (conversationClosed) composerStatusEl.textContent = 'Hội thoại đã kết thúc';
         }
 

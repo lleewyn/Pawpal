@@ -1,0 +1,116 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-27T08:58:55.502Z",
+  "scope": "Migration 121 and one synthetic COD order/SKU; all DDL and data ROLLBACK; no Logs",
+  "checks": [
+    {
+      "name": "Server ignores forged unit price and computes SKU price, shipping and total",
+      "status": "PASS"
+    },
+    {
+      "name": "Server rejects quantity above available stock",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed quote does not leave a partial order",
+      "status": "PASS"
+    },
+    {
+      "name": "Create retry gives one order, one detail/payment and one quantity reservation; Admin sees exact owner/price",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale Admin version cannot confirm order",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads Admin confirmed state",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read/cancel A order or invoke Admin fulfillment",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin cancel releases reservation and User reads cancelled",
+      "status": "PASS"
+    },
+    {
+      "name": "User cancel retry is visible to Admin with one fulfillment audit",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_handover_required",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_tracking_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_tracking_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_tracking_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_tracking_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_note_too_long",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_cancel_reason_required",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_cancel_note_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_cancel_note_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin shipping retry issues stock once and User sees tracking/state",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid_sales_transition",
+      "status": "PASS"
+    },
+    {
+      "name": "Tracking correction and retry preserve shipped state and issue no additional stock",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_handover_required",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads completed state; COD is not falsely marked paid",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot quote private order",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes order and synthetic catalog/config/actors",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "3c75f131-6c18-411d-8c36-1519c0c3021f",
+    "customerB": "a933a710-01aa-459e-bd7e-a34ed3d9a53e",
+    "product": "28f43eff-80a7-4e56-82ee-40dff3afe8df",
+    "variant": "52e00932-4468-4c2f-bfba-3d200b385cae",
+    "order": "58547c6d-1056-4c3f-911d-a7d788c8bf1f"
+  },
+  "status": "PASS",
+  "queries": 183
+}

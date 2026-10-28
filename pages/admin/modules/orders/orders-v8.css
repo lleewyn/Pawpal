@@ -32,6 +32,10 @@
 
 /* Shared Admin standards: translucent outer surfaces, transparent table interiors. */
 .orders-module .admin-card,.orders-module .admin-modal-card {background:rgba(255,255,255,.70);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+/* Match shared Admin dialogs: the dark backdrop must not tint the form surface. */
+.orders-module #modalShipOrder .admin-modal-card,
+.orders-module #modalCancelOrder .admin-modal-card {background:#fff}
+.orders-module #modalShipOrder .modal-header-clean {margin-bottom:0}
 .orders-module .admin-table th {background:rgba(238,245,241,.75);color:#236B48}
 .orders-module .admin-pagination-container {justify-content:center;background:transparent;border:0;padding:2px 0;margin-top:-6px;gap:6px;flex-wrap:wrap}
 .orders-module .btn-pagination {background:transparent;border:0;box-shadow:none;border-radius:9px;color:#236B48}

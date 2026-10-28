@@ -560,11 +560,11 @@
                     <div class="form-row-2col">
                         <div class="form-group-item">
                             <label class="form-label-clean">Họ và tên <span style="color: #DC2626;">*</span></label>
-                            <input type="text" class="admin-input" id="staffInputName" placeholder="Ví dụ: Nguyễn Văn A" maxlength="100" autofocus>
+                            <input type="text" class="admin-input" id="staffInputName" placeholder="Ví dụ: Nguyễn Văn A" minlength="2" maxlength="200" required autofocus>
                         </div>
                         <div class="form-group-item">
-                            <label class="form-label-clean">Số điện thoại</label>
-                            <input type="text" class="admin-input" id="staffInputPhone" placeholder="10 chữ số...">
+                            <label class="form-label-clean">Số điện thoại <span style="color: #DC2626;">*</span></label>
+                            <input type="tel" inputmode="tel" class="admin-input" id="staffInputPhone" placeholder="10 chữ số bắt đầu bằng 0" required>
                         </div>
                         <div class="form-group-item">
                             <label class="form-label-clean">Email công việc</label>

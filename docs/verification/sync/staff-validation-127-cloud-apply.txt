@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-10-27T17:25:30.300Z",
+  "status": "APPLIED",
+  "sha256": "a2b7063230e097df942182e8375eaa2d6b8085f923eab05715b4f05f05c4d4bf",
+  "checks": {
+    "validation_trigger": true,
+    "authenticated_available": true,
+    "anonymous_blocked": true,
+    "whitespace_normalized": true
+  },
+  "scope": "Staff search RPC and contact validation trigger only; no existing staff or schedules modified"
+}

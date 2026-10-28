@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-28T01:24:50.524Z",
+  "status": "PASS",
+  "checks": [
+    "Server search collapses whitespace on both query and stored names, retaining accent-insensitive search",
+    "Duplicate active staff phone blocked for both local and +84 representations",
+    "Database rejects blank/whitespace-only, one-character and digit-containing names",
+    "Required phone rejects null, blank, whitespace, 9/11 digits and letters",
+    "Grouped spaces rejected; international +84 normalized to ten-digit local phone",
+    "Database rejects invalid phone, email and future birth dates",
+    "Leave approval succeeds and is idempotent; exact shift becomes leave without disabling employee"
+  ],
+  "scope": "Synthetic staff/shift/request only; all DDL and data rolled back; no Auth API calls or Logs"
+}

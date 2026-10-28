@@ -1,0 +1,27 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID:id}=require('node:crypto');const {connect}=require('../database/v1/service_import_connection.cjs');
+(async()=>{const db=await connect(),checks=[];try{
+ await db.query("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");await db.query(fs.readFileSync('scripts/database/v1/131_staff_assignment_eligibility.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+ const actor=id(),worker=id(),u=id(),v=id();await db.query('INSERT INTO auth.users(id) VALUES($1),($2)',[u,v]);
+ await db.query("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,phone_number,must_change_password) VALUES($1,$2,'QA eligibility reviewer','QA','0999123401',false),($3,$4,'QA eligibility worker','QA','0999123402',false)",[actor,u,worker,v]);await db.query("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[actor]);await db.query("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role','authenticated',true)",[u]);
+ const allowed=async()=>(await db.query('SELECT pawpal_private.staff_skill_allows_assignment($1) ok',[worker])).rows[0].ok;
+ const assess=async(result,date)=>{const key=id();await db.query('SELECT public.save_admin_staff_assessment($1,$2,$3::jsonb)',[key,worker,JSON.stringify({assessment_date:date,assessment_type:'QA skills',score:result==='PASS'?90:30,result,note:'QA rollback'})]);await db.query('UPDATE public.staff_assessment SET created_at=clock_timestamp() WHERE id=$1',[key]);};
+ const today=(await db.query("SELECT (now() AT TIME ZONE 'Asia/Bangkok')::date::text d")).rows[0].d;
+ assert.equal(await allowed(),true);await assess('FAIL',today);assert.equal(await allowed(),false);assert.equal((await db.query('SELECT service_locked FROM public.staff WHERE id=$1',[worker])).rows[0].service_locked,false);checks.push('Latest failed assessment blocks assignment without changing manual lock');
+ const listed=async()=>(await db.query('SELECT public.admin_service_staff_candidates() data')).rows[0].data.some(s=>s.id===worker);
+ assert.equal(await listed(),false);
+ // Insert a valid service fixture to exercise the actual assignment triggers.
+ const category=(await db.query("SELECT id FROM public.service_category WHERE category_code='grooming_spa' LIMIT 1")).rows[0].id,service=id(),customer=id(),pet=id(),appointment=id();
+ await db.query("INSERT INTO public.service(id,service_code,service_name,estimated_duration,category_id,status) VALUES($1,$2,'QA eligibility service',30,$3,'active')",[service,'QA-'+service,category]);
+ await db.query('INSERT INTO public.customer(id,customer_code) VALUES($1,$2)',[customer,'QA-'+customer]);
+ await db.query("INSERT INTO public.pet_profile(id,customer_id,pet_code,pet_name,breed_id) VALUES($1,$2,$3,'QA eligibility pet',(SELECT id FROM public.pet_breed ORDER BY id LIMIT 1))",[pet,customer,'QA-'+pet]);
+ async function rejects(action,message){await db.query('SAVEPOINT denied');let e;try{await action();}catch(error){e=error;}await db.query('ROLLBACK TO SAVEPOINT denied');assert.equal(e?.message,message);}
+ const assign=()=>db.query("INSERT INTO public.appointment(id,appointment_code,customer_id,pet_id,staff_id,scheduled_start_at,scheduled_end_at,appointment_status) VALUES($1,$2,$3,$4,$5,now()+interval '20 days',now()+interval '20 days 30 minutes','pending')",[appointment,'QA-'+appointment,customer,pet,worker]);
+ await rejects(assign,'staff_not_eligible');checks.push('Actual service assignment blocked for failed skills');
+ await assess('PASS',today);assert.equal(await allowed(),true);assert.equal(await listed(),true);await assign();checks.push('New pass restores automatic eligibility and service candidates');
+ await db.query('UPDATE public.staff SET service_locked=true WHERE id=$1',[worker]);await assess('PASS',today);assert.equal(await listed(),false);assert.equal((await db.query('SELECT service_locked FROM public.staff WHERE id=$1',[worker])).rows[0].service_locked,true);checks.push('Passing assessment preserves manual lock');
+ await db.query("UPDATE public.staff SET service_locked=false,employment_status='resigned' WHERE id=$1",[worker]);assert.equal(await listed(),false);
+ await rejects(()=>db.query("INSERT INTO public.staff_schedule(staff_id,start_at,end_at) VALUES($1,now()+interval '30 days',now()+interval '30 days 8 hours')",[worker]),'staff_not_available');
+ await rejects(()=>db.query("UPDATE public.appointment SET scheduled_start_at=scheduled_start_at+interval '1 day',scheduled_end_at=scheduled_end_at+interval '1 day' WHERE id=$1",[appointment]),'staff_not_available');
+ await db.query("UPDATE public.appointment SET appointment_status='cancelled' WHERE id=$1",[appointment]);checks.push('Resigned staff cannot receive shifts or rescheduled service work; cancellation/history preserved');
+ await db.query('SET CONSTRAINTS ALL IMMEDIATE');await db.query('ROLLBACK');fs.writeFileSync('docs/verification/sync/staff-assignment-eligibility-rollback.txt',JSON.stringify({timestamp:new Date().toISOString(),status:'PASS',checks,scope:'Synthetic actors, assessments, service and appointment; all DDL/data rolled back; no Auth API or Logs'},null,2)+'\n');console.log('PASS '+checks.length+' assignment eligibility checks; all changes rolled back.');
+}catch(e){await db.query('ROLLBACK').catch(()=>{});throw e;}finally{await db.end();}})().catch(e=>{console.error(e.code||e.name,e.message);process.exitCode=1;});

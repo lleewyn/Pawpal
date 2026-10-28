@@ -189,6 +189,7 @@
             const requiredErrors = [];
             if (!brand) requiredErrors.push('Tên thương hiệu là bắt buộc.');
             if (!hotline) requiredErrors.push('Hotline là bắt buộc.');
+            else if (!/^(?:0\d{9,10}|1[89]00\d{4,6}|\+84\d{9,10})$/.test(hotline.replace(/[\s().-]/g, ''))) requiredErrors.push('Hotline không đúng định dạng số điện thoại.');
             if (!address) requiredErrors.push('Địa chỉ là bắt buộc.');
             if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) requiredErrors.push('Email không hợp lệ.');
             if (requiredErrors.length) {
@@ -275,10 +276,10 @@
             const vnpayEn = document.getElementById('toggleVnpayEnabled')?.checked || false;
 
             const bankName = document.getElementById('inputPaymentBank')?.value || '';
-            const accNo = document.getElementById('inputPaymentAccNo')?.value.trim() || '';
+            const accNo = (document.getElementById('inputPaymentAccNo')?.value.trim() || '').replace(/[\s-]/g, '');
             const accHolder = document.getElementById('inputPaymentAccHolder')?.value.trim() || '';
             const syntax = document.getElementById('inputPaymentSyntax')?.value.trim() || '';
-            if (bankEn && (!bankName || !accHolder || !accNo || !/^[\d\s-]+$/.test(accNo))) {
+            if (bankEn && (!bankName || !accHolder || !/^\d+$/.test(accNo))) {
                 showToast('Số tài khoản QR phải là số và không được để trống.', 'warning');
                 return;
             }
@@ -412,11 +413,11 @@
 
             const checkIn = document.getElementById('inputHotelCheckIn')?.value || '';
             const checkOut = document.getElementById('inputHotelCheckOut')?.value || '';
-            const hotelLateFee = parseInt(document.getElementById('inputHotelLateFee')?.value || 'NaN', 10);
+            const hotelLateFee = Number(document.getElementById('inputHotelLateFee')?.value || 'NaN');
 
-            const slotCapacity = parseInt(document.getElementById('inputSlotCapacity')?.value || 'NaN', 10);
-            const freeHours = parseInt(document.getElementById('inputFreeCancelHours')?.value || 'NaN', 10);
-            const lateFee = parseInt(document.getElementById('inputLateCancelFee')?.value || 'NaN', 10);
+            const slotCapacity = Number(document.getElementById('inputSlotCapacity')?.value || 'NaN');
+            const freeHours = Number(document.getElementById('inputFreeCancelHours')?.value || 'NaN');
+            const lateFee = Number(document.getElementById('inputLateCancelFee')?.value || 'NaN');
             const allowPickStaff = document.getElementById('inputAllowPickStaff')?.value === 'yes';
 
             const toMinutes = (value) => {
@@ -428,11 +429,15 @@
                 showToast('Giờ mở cửa phải sớm hơn giờ đóng cửa.', 'warning');
                 return;
             }
-            if (!Number.isInteger(slotCapacity) || slotCapacity <= 0) {
+            if (checkIn === checkOut) {
+                showToast('Giờ nhận và trả phòng phải khác nhau.', 'warning');
+                return;
+            }
+            if (!Number.isInteger(slotCapacity) || slotCapacity <= 0 || slotCapacity > 1000000000) {
                 showToast('Công suất phải là số nguyên dương.', 'warning');
                 return;
             }
-            if ([hotelLateFee, freeHours, lateFee].some(value => !Number.isFinite(value) || value < 0)) {
+            if ([hotelLateFee, freeHours, lateFee].some(value => !Number.isFinite(value) || value < 0 || value > 1000000000)) {
                 showToast('Phí Hotel, phí hủy và số giờ miễn phí không được là số âm.', 'warning');
                 return;
             }
@@ -513,9 +518,13 @@
 
         // Safe mode UI & Toggle
         const handleSafeModeToggle = () => {
-            const currentRole = (sessionStorage.getItem('pawpal_admin_system_role') || '').toUpperCase();
-            if (PawpalSettings.state?.isSafeModeLocked && currentRole !== 'ADMIN' && currentRole !== 'MANAGER') {
-                showToast('Chỉ Quản trị viên (Admin/Manager) mới có quyền mở khóa an toàn hệ thống.', 'danger');
+            let actor = null;
+            try { actor = JSON.parse(sessionStorage.getItem('pawpal_admin_user') || localStorage.getItem('pawpal_admin_user') || 'null'); } catch (_) {}
+            const roles = new Set([...(Array.isArray(actor?.access_roles) ? actor.access_roles : []), actor?.system_role, actor?.role].filter(Boolean).map(role => String(role).toUpperCase()));
+            const permissions = new Set(Array.isArray(actor?.permissions) ? actor.permissions : []);
+            const canUnlock = (roles.has('ADMIN') || roles.has('MANAGER')) && ['pawpal_setting.read', 'pawpal_setting.write', 'audit_log.write'].every(permission => permissions.has(permission));
+            if (PawpalSettings.state?.isSafeModeLocked && !canUnlock) {
+                showToast('Chỉ quản trị viên hoặc quản lý có quyền sửa cấu hình mới được mở khóa an toàn hệ thống.', 'danger');
                 return;
             }
             PawpalSettings.state.isSafeModeLocked = !PawpalSettings.state.isSafeModeLocked;

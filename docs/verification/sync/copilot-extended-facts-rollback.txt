@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-27T17:16:06.999Z",
+  "status": "PASS",
+  "checks": [
+    "Service prices come from active weight-based matrix, exact decimals retained",
+    "Active knowledge is searchable without fixed categories or model guesses",
+    "Updated knowledge returned on next query without sync, cache or history dependency",
+    "Real low-stock fixture is returned with exact SKU, stock and minimum",
+    "Revenue query reconciles successful cash collections and completed refunds by event time",
+    "Disabled knowledge disappears immediately; no stale index or fake sync required",
+    "Unauthorized facts requests fail instead of reporting false zero"
+  ],
+  "scope": "New read-only RPC plus synthetic product/stock/service/price/FAQ/payment/refund/actor; all DDL and data ROLLBACK; no AI or Logs"
+}

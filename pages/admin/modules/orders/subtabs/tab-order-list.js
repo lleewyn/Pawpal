@@ -7,12 +7,17 @@
   invalid_sales_transition:'Trạng thái hiện tại không cho phép thao tác này.',
   sales_shipping_details_required:'Chọn đơn vị vận chuyển, nhập mã vận đơn và kiểm tra đủ địa chỉ nhận hàng.',
   sales_cancel_reason_required:'Nhập lý do hủy đơn.',
+  sales_tracking_invalid:'Mã vận đơn chỉ gồm chữ, số, dấu gạch ngang hoặc gạch dưới, tối đa 200 ký tự.',
+  sales_note_too_long:'Ghi chú bàn giao tối đa 250 ký tự.',
+  sales_cancel_note_invalid:'Nhập ghi chú khi chọn lý do khác, tối đa 1000 ký tự.',
+  sales_handover_required:'Đơn chưa đủ thông tin bàn giao vận chuyển. Cập nhật đơn vị vận chuyển và mã vận đơn trước khi xác nhận giao thành công.',
   sales_refund_required:'Hoàn đủ số tiền đã thu tại thu ngân trước khi hủy đơn.',
   sales_order_empty:'Đơn chưa có sản phẩm để xử lý.',
   sales_issued_order_requires_return:'Hàng đã xuất kho cần được xử lý qua yêu cầu trả hàng.',
   sales_checkout_forbidden:'Bạn chưa có quyền lập đơn bán hàng.',
   invalid_sales_checkout:'Chọn khách đang hoạt động và kiểm tra thông tin đơn.',
   sales_delivery_required:'Điền đủ người nhận, số điện thoại, địa chỉ, tỉnh thành và hình thức giao.',
+  sales_shipping_receiver_required:'Điền đủ người nhận, số điện thoại, tỉnh thành và địa chỉ nhận hàng bên dưới.',
   invalid_sales_line:'Số lượng mỗi biến thể phải là số nguyên dương.',
   sales_variant_not_sellable:'Biến thể đã ngừng bán hoặc giá bán cần được đối soát.',
   sales_available_stock_insufficient:'Số lượng vượt tồn còn có thể bán sau khi giữ hàng.',
@@ -1404,20 +1409,41 @@
   select.replaceChildren(new Option('Chọn đơn vị vận chuyển',''),...rows.map(p=>new Option(p.provider_name,p.id)));m.enhanceEntitySelects?.();
  }
  api.openShipModal=async id=>{
-  const current=order(id);if(!current)return;shipping=structuredClone(current);el('formShipOrder').reset();el('shipOrderTargetCode').textContent=current.id;el('shipTrackingInput').value=current.trackingNumber==='—'?'':current.trackingNumber;
+  const current=order(id);if(!current)return;
+  if(!['confirmed','packing','shipped','shipping'].includes(current.rawStatus)){m.helpers.showToast(message(Error('invalid_sales_transition')),'warning');return;}
+  shipping=structuredClone(current);el('formShipOrder').reset();el('shipOrderTargetCode').textContent=current.id;el('shipTrackingInput').value=current.trackingNumber==='—'?'':current.trackingNumber;
+  const receiver=current.shippingReceiver||{};
+  shipping.needsReceiver=!['name','phone','province','street'].every(key=>String(receiver[key]||'').trim());
+  el('shipReceiverFields').style.display=shipping.needsReceiver?'flex':'none';
+  for(const [field,key] of [['Name','name'],['Phone','phone'],['Province','province'],['Street','street']])el('shipReceiver'+field).value=receiver[key]||'';
+  const updating=['shipped','shipping'].includes(current.rawStatus);
+  el('modalShipOrder').querySelector('.modal-title-clean').textContent=updating?'Cập nhật vận đơn':'Bàn giao vận chuyển đơn hàng';
+  el('btnSubmitShipOrder').textContent=updating?'Lưu vận đơn':'Xác nhận bàn giao';
   el('shipTrackingError').textContent='';el('shipTrackingError').style.display='none';el('modalShipOrder').classList.add('active');el('btnSubmitShipOrder').disabled=true;
-  try{await providers('shipCarrierSelect');}catch(error){el('shipTrackingError').textContent='Không tải được đơn vị vận chuyển. Đóng và mở lại để thử lại.';el('shipTrackingError').style.display='block';}
+  try{await providers('shipCarrierSelect');el('shipCarrierSelect').value=current.providerId||'';m.enhanceEntitySelects?.();}catch(error){el('shipTrackingError').textContent='Không tải được đơn vị vận chuyển. Đóng và mở lại để thử lại.';el('shipTrackingError').style.display='block';}
   finally{el('btnSubmitShipOrder').disabled=false;}
  };
  el('formShipOrder').addEventListener('submit',e=>e.preventDefault());
  el('btnSubmitShipOrder').onclick=async()=>{
   if(busy||!shipping)return;busy=true;el('btnSubmitShipOrder').disabled=true;
-  try{await perform(shipping,'ship',{provider_id:el('shipCarrierSelect').value,tracking_code:el('shipTrackingInput').value.trim(),note:el('shipCarrierNote').value.trim()});el('modalShipOrder').classList.remove('active');}
+  try{
+   const details={provider_id:el('shipCarrierSelect').value,tracking_code:el('shipTrackingInput').value.trim(),note:el('shipCarrierNote').value.trim()};
+   if(!details.provider_id||!details.tracking_code)throw Error('sales_shipping_details_required');
+   if(!/^[a-z0-9][a-z0-9_-]{0,199}$/i.test(details.tracking_code))throw Error('sales_tracking_invalid');
+   if(details.note.length>250)throw Error('sales_note_too_long');
+   if(shipping.needsReceiver){
+    details.receiver=Object.fromEntries([['Name','name'],['Phone','phone'],['Province','province'],['Street','street']].map(([field,key])=>[key,el('shipReceiver'+field).value.trim()]));
+    const r=details.receiver;
+    if(!r.name||r.name.length>200||!/^0\d{9}$/.test(r.phone)||!r.province||r.province.length>200||!r.street||r.street.length>500)throw Error('sales_shipping_receiver_required');
+   }
+   await perform(shipping,['shipped','shipping'].includes(shipping.rawStatus)?'update_shipping':'ship',details);el('modalShipOrder').classList.remove('active');}
   catch(error){el('shipTrackingError').textContent=message(error);el('shipTrackingError').style.display='block';}
   finally{busy=false;el('btnSubmitShipOrder').disabled=false;}
  };
  api.openCancelModal=id=>{
-  const current=order(id);if(!current)return;cancelling=structuredClone(current);el('formCancelOrder').reset();el('cancelOrderTargetCode').textContent=id;el('salesCancelError').textContent='';
+  const current=order(id);if(!current)return;
+  if(!['draft','pending','confirmed','packing'].includes(current.rawStatus)){m.helpers.showToast(message(Error('invalid_sales_transition')),'warning');return;}
+  cancelling=structuredClone(current);el('formCancelOrder').reset();el('cancelOrderTargetCode').textContent=id;el('salesCancelError').textContent='';
   el('cancelOrderPaymentImpact').textContent=current.collected>0?'Cần hoàn '+m.helpers.formatVND(current.collected)+' tại thu ngân trước khi hủy.':'Giải phóng phần hàng đang giữ, không ghi thêm nhập hoặc xuất kho.';
   el('btnCancelOpenCashier').style.display=current.collected>0?'':'none';el('btnSubmitCancelOrder').disabled=current.collected>0;el('modalCancelOrder').classList.add('active');
  };
@@ -1425,7 +1451,11 @@
  el('btnCancelOpenCashier').onclick=()=>{el('modalCancelOrder').classList.remove('active');api.confirmPayment(cancelling.id);};
  el('btnSubmitCancelOrder').onclick=async()=>{
   if(busy||!cancelling)return;busy=true;el('btnSubmitCancelOrder').disabled=true;
-  try{await perform(cancelling,'cancel',{reason:el('cancelOrderReasonSelect').value+(el('cancelOrderReasonDetail').value.trim()?' · '+el('cancelOrderReasonDetail').value.trim():'')});el('modalCancelOrder').classList.remove('active');}
+  try{
+   const reason=el('cancelOrderReasonSelect').value,note=el('cancelOrderReasonDetail').value.trim();
+   if(!reason)throw Error('sales_cancel_reason_required');
+   if(note.length>1000||(reason==='Lý do khác'&&!note))throw Error('sales_cancel_note_invalid');
+   await perform(cancelling,'cancel',{reason:reason+(note?' · '+note:''),note});el('modalCancelOrder').classList.remove('active');}
   catch(error){el('salesCancelError').textContent=message(error);}
   finally{busy=false;el('btnSubmitCancelOrder').disabled=false;}
  };

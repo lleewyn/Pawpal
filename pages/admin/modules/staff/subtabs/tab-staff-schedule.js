@@ -94,7 +94,7 @@
         el('shiftAvailability').value=schedule?.availability_status||'available';el('shiftStatus').value=schedule?.schedule_status||'active';el('shiftReason').value=schedule?.reason||'';el('shiftAlertBanner').textContent='';el('shiftAlertBanner').style.display='none';
         el('shiftStatus').disabled=!schedule;el('shiftModalOverlay').classList.add('active');
         const input=el('shiftStaffSearch'),popover=el('shiftStaffOptions');
-        const render=()=>{popover.replaceChildren();for(const s of PawpalStaff.state.staff.filter(s=>PawpalStaff.matchSearch(s.name+' '+s.position,input.value))){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.style.cssText='display:block;width:100%;text-align:left;background:transparent;border:none';button.textContent=s.name+' · '+s.position;button.onclick=()=>{selectedShiftStaff=s.rawId;input.value=s.name;popover.style.display='none';};popover.append(button);}popover.style.display=popover.childElementCount?'block':'none';};
+        const render=()=>{popover.replaceChildren();for(const s of PawpalStaff.state.staff.filter(s=>s.status==='ACTIVE'&&PawpalStaff.matchSearch(s.name+' '+s.position,input.value))){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.style.cssText='display:block;width:100%;text-align:left;background:transparent;border:none';button.textContent=s.name+' · '+s.position;button.onclick=()=>{selectedShiftStaff=s.rawId;input.value=s.name;popover.style.display='none';};popover.append(button);}popover.style.display=popover.childElementCount?'block':'none';};
         input.onfocus=render;input.oninput=()=>{selectedShiftStaff=null;render();};input.onblur=()=>setTimeout(()=>popover.style.display='none',120);input.onkeydown=e=>{if(e.key==='Escape')popover.style.display='none';};popover.style.display='none';
     }
     async function saveCustomShift(){
@@ -289,7 +289,7 @@
             btn.addEventListener('click',async()=>{
                 if(btn.disabled)return;btn.disabled=true;
                 try {await reviewRequest(btn.dataset.id,btn.classList.contains('btn-approve-req'));PawpalStaff.showToast('Đã lưu kết quả xử lý đơn.','success');}
-                catch(err){PawpalStaff.showToast('Không thể xử lý đơn: '+err.message,'danger');btn.disabled=false;}
+                catch(err){const messages={staff_request_legacy_recreate:'Đơn cũ chưa liên kết đúng phiên bản ca. Cần tạo lại đơn từ ca làm việc hiện tại.',staff_request_forbidden:'Bạn chưa có đủ quyền duyệt đơn và cập nhật ca.',staff_request_already_reviewed:'Đơn đã được xử lý. Tải lại danh sách để kiểm tra.',staff_schedule_changed:'Ca đã thay đổi từ lúc tạo đơn. Kiểm tra ca và tạo lại đơn.',staff_has_service_booking:'Cần bàn giao lịch dịch vụ trong ca trước khi duyệt nghỉ.',staff_not_available:'Nhân viên đang ngừng việc hoặc bị khóa nhận việc. Kiểm tra hồ sơ trước khi duyệt.'};PawpalStaff.showToast(messages[err.message]||'Không thể xử lý đơn. Vui lòng tải lại và thử lại.','danger');btn.disabled=false;}
             });
         });
     }

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-10-27T17:27:25.169Z",
+  "status": "APPLIED",
+  "sha256": "708a7eb79ca2501b27809673026c47e253b493d44b43e0953cacf11620151b8c",
+  "checks": {
+    "trigger_present": true,
+    "direct_call_blocked": true,
+    "anonymous_blocked": true
+  },
+  "scope": "Validate names on insert or changed name only; no existing staff records modified"
+}

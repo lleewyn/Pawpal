@@ -25,7 +25,7 @@
         const active = staffList.filter(s => s.status === 'ACTIVE').length;
         const leave = staffList.filter(s => s.status === 'LEAVE').length;
         const pause = staffList.filter(s => s.status === 'PAUSE').length;
-        const retrain = staffList.filter(s => s.skillResult === 'RETRAIN' || s.skillResult === 'FAIL' || s.serviceLocked).length;
+        const retrain = staffList.filter(s => s.skillResult === 'RETRAIN' || s.skillResult === 'FAIL').length;
 
         const totalEl = document.getElementById('statTotalStaff');
         const activeEl = document.getElementById('statActiveStaff');
@@ -48,7 +48,7 @@
         const retrainToggle = document.getElementById('btnFilterRetrainOnly') || document.getElementById('staffFilterRetrainOnly');
         const lockToggle = document.getElementById('btnFilterLockOnly');
 
-        const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const query = searchInput ? searchInput.value.trim().replace(/\s+/g, ' ').toLowerCase() : '';
         const role = roleFilter ? roleFilter.value : 'ALL';
         const shift = shiftFilter ? shiftFilter.value : 'ALL';
         const status = statusFilter ? statusFilter.value : 'ALL';
@@ -186,7 +186,7 @@
                 skillText = `<span class="alert-indicator text-danger" style="font-weight: 500;">• ${staff.skillExam || 'Chưa đạt'}</span>`;
             }
 
-            let lockStatusText = staff.serviceLocked
+            let lockStatusText = (staff.serviceLocked || staff.skillLocked)
                 ? `<div style="font-size: 11.5px; color: #DC2626; font-weight: 500; margin-top: 2px;">• Tạm khóa nhận việc</div>`
                 : `<div style="font-size: 11.5px; color: var(--text-muted); font-weight: 500; margin-top: 2px;"></div>`;
 
@@ -271,6 +271,8 @@
                 dropdown.style.top = (rect.bottom + 4) + 'px';
                 dropdown.style.left = Math.max(10, rect.right - 180) + 'px';
                 dropdown.setAttribute('data-current-id', trigger.getAttribute('data-id'));
+                const person=PawpalStaff.state.staff.find(s=>s.id===trigger.getAttribute('data-id'));
+                dropdown.querySelectorAll('[data-action]').forEach(item=>{item.style.display=person?.status==='RESIGNED'&&['lock','delete'].includes(item.dataset.action)?'none':'';});
             };
         });
 
@@ -366,7 +368,19 @@
         return '';
     }
 
+    function clearStaffFieldErrors(){
+        document.querySelectorAll('#staffModalOverlay [data-staff-field-error]').forEach(node=>node.remove());
+        document.querySelectorAll('#staffModalOverlay [aria-invalid]').forEach(field=>{field.removeAttribute('aria-invalid');field.removeAttribute('aria-describedby');});
+    }
+    function invalidStaffField(id,message){
+        const field=document.getElementById(id),errorId=id+'Error';
+        let node=document.getElementById(errorId);
+        if(!node){node=document.createElement('p');node.id=errorId;node.dataset.staffFieldError='true';node.setAttribute('role','alert');node.style.cssText='color:#DC2626;background:transparent;border:none;margin:6px 0 0;font-size:12px';field.after(node);}
+        node.textContent=message;field.setAttribute('aria-invalid','true');field.setAttribute('aria-describedby',errorId);field.focus();field.scrollIntoView({block:'nearest'});
+        return Object.assign(Error(message),{staffAccountError:true,staffFieldError:true});
+    }
     async function openStaffModal(staffId = null) {
+        clearStaffFieldErrors();
         if (staffId) {
             try { if (!await PawpalStaff.ensureStaffDetails([staffId])) return; }
             catch (error) { PawpalStaff.showToast('Không tải được hồ sơ nhân viên. Vui lòng thử lại.', 'error'); return; }
@@ -516,7 +530,7 @@
         const {data}=await window.getSupabaseClient().auth.getSession();if(!data.session?.access_token)throw Error('Vui lòng đăng nhập lại.');
         const response=await fetch('/api/admin/staff/'+path,{method:'POST',headers:{Authorization:'Bearer '+data.session.access_token,'Content-Type':'application/json'},body:JSON.stringify(body)});
         let result;try{result=await response.json();}catch{throw Error('Không thể đọc kết quả quản lý tài khoản.');}
-        if(!response.ok||!result.success){const error=Error((result.message||'Không thể hoàn tất yêu cầu.')+' Mã yêu cầu '+body.requestId);error.staffAccountError=true;throw error;}return result;
+        if(!response.ok||!result.success){const error=Error((result.message||'Không thể hoàn tất yêu cầu.')+' Mã yêu cầu '+body.requestId);error.staffAccountError=true;error.field=result.field;throw error;}return result;
     }
     async function reloadStaffAccount(){
         const original=PawpalStaff.state.profileEditSnapshot;if(!original)return;
@@ -569,8 +583,9 @@
         }catch{document.getElementById('staffAccountError').textContent='Không tải được danh mục quyền. Đóng và mở lại trước khi quản lý tài khoản.';}
     }
     PawpalStaff.createStaffAccount=async profile=>{
-        const invalid=(id,message)=>{const field=document.getElementById(id);field?.setAttribute('aria-invalid','true');field?.setAttribute('aria-describedby','staffProfileError');field?.focus();const error=Error(message);error.staffAccountError=true;throw error;};
-        if(!profile.full_name)invalid('staffInputName','Nhập họ và tên nhân viên.');
+        const invalid=(id,message)=>{throw invalidStaffField(id,message);};
+        if([...String(profile.full_name||'').trim().normalize('NFC')].length<2||profile.full_name.length>200)invalid('staffInputName','Nhập họ và tên từ 2 đến 200 ký tự.');
+        if(/\p{N}/u.test(profile.full_name))invalid('staffInputName','Họ và tên không được chứa số.');
         if(!profile.job_title)invalid('staffInputPosition','Nhập chức vụ của nhân viên.');
         const email=document.getElementById('staffAccountEmail').value.trim(),password=document.getElementById('staffAccountPassword').value;
         if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)invalid('staffAccountEmail','Nhập email công vụ đăng nhập hợp lệ, kể cả khi chưa cho phép đăng nhập.');
@@ -611,6 +626,8 @@
 
     function initStaffListSubtab() {
         initStaffAccountActions();
+        const validField={staffInputName:v=>[...v.normalize('NFC')].length>=2&&v.length<=200&&!/\p{N}/u.test(v),staffInputPosition:v=>v.length>0&&v.length<=200,staffInputPhone:v=>/^(0\d{9}|\+84\d{9})$/.test(v),staffInputEmail:v=>!v||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),staffAccountEmail:v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),staffAccountPassword:v=>v.length>=6&&v.length<=128};
+        document.getElementById('staffModalOverlay').addEventListener('input',event=>{const field=event.target;if(field.getAttribute('aria-invalid')==='true'&&validField[field.id]?.(field.value.trim())){document.getElementById(field.id+'Error')?.remove();field.removeAttribute('aria-invalid');field.removeAttribute('aria-describedby');}});
         const searchInput = document.getElementById('staffSearchInput');
         const clearSearchBtn = document.getElementById('btnClearStaffSearch');
         let staffSearchTimer = null;
@@ -790,16 +807,28 @@
         btnSaveStaff.addEventListener('click',async()=>{
             if(btnSaveStaff.disabled)return;btnSaveStaff.disabled=true;
             document.getElementById('staffProfileError').textContent='';
-            for(const id of ['staffInputName','staffInputPosition','staffAccountEmail','staffAccountPassword','staffPermissionSearch']){const field=document.getElementById(id);field?.removeAttribute('aria-invalid');if(field?.getAttribute('aria-describedby')==='staffProfileError')field.removeAttribute('aria-describedby');}
+            clearStaffFieldErrors();
             const value=id=>document.getElementById(id)?.value.trim()||'',snapshot=PawpalStaff.state.profileEditSnapshot;
             try{
                 const details={full_name:value('staffInputName'),phone_number:value('staffInputPhone'),email:value('staffInputEmail'),address:value('staffInputAddress'),dob:value('staffInputDob')||null,hire_date:value('staffInputJoinDate')||null,job_title:value('staffInputPosition'),specialization:value('staffInputSpecialization'),employment_status:value('staffEmploymentStatus'),service_locked:document.getElementById('staffServiceLocked').checked,staff_level_id:snapshot?.staff_level_id||null,reason:value('staffChangeReason')};
+                const errors=[];const invalid=(id,message)=>{errors.push({id,error:invalidStaffField(id,message)});};
+                if([...details.full_name.normalize('NFC')].length<2||details.full_name.length>200)invalid('staffInputName','Nhập họ và tên từ 2 đến 200 ký tự.');
+                if(/\p{N}/u.test(details.full_name))invalid('staffInputName','Họ và tên không được chứa số.');
+                if(!details.job_title||details.job_title.length>200)invalid('staffInputPosition','Nhập chức vụ từ 1 đến 200 ký tự.');
+                if(!details.phone_number)invalid('staffInputPhone','Nhập số điện thoại nhân viên.');
+                details.phone_number=details.phone_number.replace(/^\+84(?=\d{9}$)/,'0');
+                if(details.phone_number&&!/^0\d{9}$/.test(details.phone_number))invalid('staffInputPhone','Số điện thoại cần đúng 10 chữ số và bắt đầu bằng 0.');
+                if(details.email&&(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.email)||details.email.length>254))invalid('staffInputEmail','Nhập email công việc hợp lệ.');
+                const today=new Date(Date.now()+7*3600000).toISOString().slice(0,10);
+                if(details.dob&&details.dob>today)invalid('staffInputDob','Ngày sinh không được nằm trong tương lai.');
+                if(details.dob&&details.hire_date&&details.hire_date<details.dob)invalid('staffInputJoinDate','Ngày bắt đầu làm không được trước ngày sinh.');
+                if(errors.length){document.getElementById(errors[0].id).focus();document.getElementById(errors[0].id).scrollIntoView({block:'nearest'});throw errors[0].error;}
                 if(!snapshot){await PawpalStaff.createStaffAccount?.(details);if(!PawpalStaff.createStaffAccount)throw Error('staff_creation_not_ready');}
                 else{const {error}=await window.getSupabaseClient().rpc('save_admin_staff_profile',{p_request_id:PawpalStaff.state.profileSaveRequest,p_staff_id:snapshot.id,p_expected_updated_at:snapshot.updated_at,p_details:details});if(error)throw error;}
                 await PawpalStaff.loadStaffModuleData({force:true});renderStaffList();renderStaffAlertBar();
                 document.getElementById('staffAccountPassword').value='';
                 document.getElementById('staffModalOverlay').classList.remove('active');PawpalStaff.showToast('Đã lưu hồ sơ nhân viên.','success');
-            }catch(error){const messages={staff_profile_changed:'Hồ sơ đã thay đổi. Đóng và mở lại để kiểm tra.',staff_handover_required:'Cần bàn giao công việc chưa xong trước khi ngừng việc hoặc khóa phân công.',staff_last_admin_required:'Phải giữ ít nhất một Admin đang hoạt động.',staff_change_reason_required:'Nhập lý do đổi trạng thái.',staff_creation_not_ready:'Phần cấp tài khoản V1 đang được hoàn thiện.'};document.getElementById('staffProfileError').textContent=messages[error.message]||(error.staffAccountError?error.message:'Không thể lưu hồ sơ. Kiểm tra thông tin và quyền thực hiện.');}
+            }catch(error){if(error.field==='staffInputPhone'||error.message==='duplicate_staff_phone'){invalidStaffField('staffInputPhone',error.field?error.message:'S\u1ed1 \u0111i\u1ec7n tho\u1ea1i \u0111\u00e3 thu\u1ed9c m\u1ed9t nh\u00e2n vi\u00ean c\u00f2n l\u00e0m vi\u1ec7c.');error.staffFieldError=true;}const messages={staff_profile_changed:'Hồ sơ đã thay đổi. Đóng và mở lại để kiểm tra.',staff_handover_required:'Cần bàn giao công việc chưa xong trước khi ngừng việc hoặc khóa phân công.',staff_last_admin_required:'Phải giữ ít nhất một Admin đang hoạt động.',staff_change_reason_required:'Nhập lý do đổi trạng thái.',staff_creation_not_ready:'Phần cấp tài khoản V1 đang được hoàn thiện.'};if(error.message==='invalid_staff_name')invalidStaffField('staffInputName','Họ và tên cần từ 2 đến 200 ký tự và không chứa số.');else if(!error.staffFieldError)document.getElementById('staffProfileError').textContent=messages[error.message]||(error.staffAccountError?error.message:'Không thể lưu hồ sơ. Kiểm tra thông tin và quyền thực hiện.');}
             finally{btnSaveStaff.disabled=false;}
         });
 

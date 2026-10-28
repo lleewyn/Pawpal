@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-10-28T01:32:57.052Z",
+  "status": "PASS",
+  "checks": [
+    "Latest failed assessment blocks assignment without changing manual lock",
+    "Actual service assignment blocked for failed skills",
+    "New pass restores automatic eligibility and service candidates",
+    "Passing assessment preserves manual lock",
+    "Resigned staff cannot receive shifts or rescheduled service work; cancellation/history preserved"
+  ],
+  "scope": "Synthetic actors, assessments, service and appointment; all DDL/data rolled back; no Auth API or Logs"
+}

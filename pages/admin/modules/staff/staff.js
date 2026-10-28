@@ -53,7 +53,7 @@
             .replace(/[\u0300-\u036f]/g, '')
             .replace(/[đĐ]/g, m => m === 'đ' ? 'd' : 'D')
             .toLowerCase()
-            .trim();
+            .trim().replace(/\s+/g, ' ');
     }
 
     function matchSearch(sourceText, searchTerm) {
@@ -413,7 +413,7 @@
             accountStatus:!entry.auth_linked?'unlinked':entry.login_blocked?'da_khoa':'dang_hoat_dong',
             join_date:s.hire_date?formatDateVN(s.hire_date):'—',dob:s.dob?formatDateVN(s.dob):'—',address:s.address||'—',
             branch_name:'',avatar:'',skillScore:latest?.score??null,skillResult:latest?.result??null,skillExam:latest?String(latest.score)+'/100':'—',
-            serviceLocked:s.service_locked,note:s.specialization||'',requested_count:null,customer_reviews:[],authUserId:s.auth_user_id,
+            serviceLocked:s.service_locked,skillLocked:['RETRAIN','FAIL'].includes(latest?.result),note:s.specialization||'',requested_count:null,customer_reviews:[],authUserId:s.auth_user_id,
             systemRole:primary?.code||'',roles,permissions:entry.permissions||[],lastLoginAt:entry.last_sign_in_at};
     }
     PawpalStaff.getStaffPage = async function(filters = {}, page = 1) {

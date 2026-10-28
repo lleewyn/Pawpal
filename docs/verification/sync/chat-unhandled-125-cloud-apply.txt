@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-10-27T16:38:46.607Z",
+  "status": "APPLIED",
+  "migration": "125_chat_unhandled_handoff.sql",
+  "sha256": "9f179d242bbe217861cc0e1049335502bbc06ec20ba298d1779e35543a6840e8",
+  "checks": {
+    "durable_counter": true,
+    "resume_reset": true,
+    "old_overload_removed": true,
+    "gateway_available": true,
+    "anonymous_blocked": true,
+    "direct_customer_blocked": true,
+    "legacy_compatible": true,
+    "default_third_turn": true,
+    "configured_rule_supported": true
+  },
+  "scope": "New counter defaults to zero; RPC/reset trigger/grants updated; no old messages/statuses rewritten, no rules seeded, no Logs"
+}

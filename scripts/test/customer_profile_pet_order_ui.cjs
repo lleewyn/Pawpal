@@ -1,0 +1,27 @@
+// Actual profile renderers and actual order/payment mapping; isolated data, no live writes.
+const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+(async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{
+ const p=await b.newPage({viewport:{width:1440,height:1000}});await p.route('**/*',r=>r.abort());
+ await p.setContent(fs.readFileSync('pages/admin/modules/customers/customers.html','utf8'));
+ const shell=fs.readFileSync('pages/admin/index.html','utf8');for(const match of shell.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/[^"?]+)[^"]*"[^>]*>/g))await p.addStyleTag({content:fs.readFileSync(match[1].slice(1),'utf8')});
+ await p.evaluate(()=>{
+  document.body.className='admin-body';window.PawpalCustomers={state:{customerDatabase:{}},subtabs:{},formatDateTime:String,escapeHtml:s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))};
+  const c={id:'CUS-QA',dbId:'customer-qa',_historyStatus:{orders:'loaded'},pets:[{id:'PET-QA',name:'Mochi',species:'Chó',breed:'Corgi',weight:5,status:'active'},{id:'PET-QB',name:'Miu',species:'Mèo',status:'inactive'}]};PawpalCustomers.state.customerDatabase[c.id]=c;
+  const scenarios=[['shipped',100,0,100],['shipping',0,0,100],['returned',100,100,100],['cancelled',0,0,100],['packing',50,0,100],['delivered',100,20,100],['completed',0,0,0]];
+  window.profilePayload={orders:scenarios.map(([order_status,, ,total_amount],i)=>({id:'order-'+i,order_code:'ORD-'+i,order_status,total_amount,created_at:'2026-10-27'})),payments:scenarios.flatMap(([,amount,refunded],i)=>amount?[{order_id:'order-'+i,amount,transaction_status:'succeeded',refunds:refunded?[{refund_status:'succeeded',refunded_amount:refunded}]:[]}]:[])};
+ });
+ const core=fs.readFileSync('pages/admin/modules/customers/customers.js','utf8');const start=core.indexOf("            if (kinds.includes('orders')) cust.orders ="),end=core.indexOf("            if (kinds.includes('bookings'))",start);assert.ok(start>=0&&end>start);
+ await p.addScriptTag({content:"(()=>{const PawpalCustomers=window.PawpalCustomers,cust=PawpalCustomers.state.customerDatabase['CUS-QA'],kinds=['orders'],payload=window.profilePayload;"+core.slice(start,end)+'})();'});
+ const profile=fs.readFileSync('pages/admin/modules/customers/subtabs/tab-customer-profile.js','utf8');await p.addScriptTag({content:profile.slice(0,profile.lastIndexOf("    if (document.readyState === 'loading')"))+'})();'});
+ await p.evaluate(()=>{PawpalCustomers.subtabs.profile.renderDrawerPets('CUS-QA');PawpalCustomers.subtabs.profile.renderDrawerOrders('CUS-QA');document.querySelectorAll('.subtab-content').forEach(el=>el.classList.remove('active'));document.getElementById('subtab-tab-profile').classList.add('active');document.getElementById('customerProfilePlaceholder').hidden=true;document.getElementById('customerProfileData').hidden=false;});
+ const rows=await p.locator('#drawerOrdersTbody tr').evaluateAll(rows=>rows.map(r=>({payment:r.cells[3].textContent,status:r.cells[4].textContent,color:getComputedStyle(r.cells[4].firstElementChild).backgroundColor})));
+ assert.equal(rows[0].status,'Đang giao');assert.equal(rows[1].status,'Đang giao');assert.equal(rows[0].color,rows[1].color);
+ assert.equal(rows[0].payment,'Đã thanh toán');assert.equal(rows[1].payment,'Chưa ghi nhận thanh toán');assert.equal(rows[2].payment,'Đã hoàn tiền');assert.equal(rows[3].payment,'Chưa ghi nhận thanh toán');assert.equal(rows[4].payment,'Thanh toán một phần');assert.equal(rows[5].payment,'Hoàn tiền một phần');assert.equal(rows[6].payment,'Không phát sinh thanh toán');
+ assert.equal(rows[2].status,'Đã trả hàng');assert.equal(rows[3].status,'Đã hủy');assert.notEqual(rows[2].color,rows[3].color);assert.equal(rows[5].status,'Đã giao');assert.equal(rows[6].status,'Hoàn thành');
+ assert.equal(await p.locator('.btn-pet-view-profile.admin-badge').count(),0);assert.equal(await p.locator('.pet-card-actions > button').count(),6);assert.equal(await p.locator('.pet-card-actions > .is-destructive').count(),1);
+ const shapes=await p.locator('.pet-card-actions > button').evaluateAll(buttons=>buttons.map(btn=>({tag:btn.tagName,border:getComputedStyle(btn).borderTopWidth,radius:getComputedStyle(btn).borderRadius})));for(const btn of shapes){assert.equal(btn.tag,'BUTTON');assert.equal(btn.border,'1px');assert.equal(btn.radius,'9px');}
+ const folder='docs/verification/customer-profile-actions';fs.mkdirSync(folder,{recursive:true});
+ await p.evaluate(()=>{document.querySelectorAll('.drawer-tab-panel').forEach(el=>el.classList.remove('active'));document.getElementById('dtab-pets').classList.add('active');});assert.equal(await p.locator('#petCardsListContainer').isVisible(),true);await p.locator('#petCardsListContainer').screenshot({path:folder+'/pet-actions.png'});
+ await p.evaluate(()=>{document.getElementById('dtab-pets').classList.remove('active');document.getElementById('dtab-orders').classList.add('active');});assert.equal(await p.locator('#drawerOrdersTbody').isVisible(),true);await p.locator('#dtab-orders').screenshot({path:folder+'/order-payment-statuses.png'});
+ console.log('PASS pet controls are separate 9px buttons with destructive distinction; 7 order/payment scenarios, shared shipping aliases, delivered/completed distinction, returned/cancelled colors. Isolated data; no business writes.');
+}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

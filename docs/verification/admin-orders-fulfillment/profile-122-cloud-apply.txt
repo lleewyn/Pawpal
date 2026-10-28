@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-10-27T15:15:20.801Z",
+  "status": "APPLIED",
+  "migration": "122_admin_sales_order_profile.sql",
+  "sha256": "e8088a379bc330be99a473ec823be1c78de79649f596d8a872e918a3ce92c825",
+  "checks": {
+    "tracking_correction": true,
+    "handover_guard": true,
+    "receiver_guard": true,
+    "order_history": true,
+    "history_admin": true,
+    "history_anon_blocked": true,
+    "admin_rpc_available": true,
+    "anonymous_blocked": true
+  },
+  "scope": "Fulfillment/history functions, history index and scoped grants; no existing business rows changed; no Logs access"
+}

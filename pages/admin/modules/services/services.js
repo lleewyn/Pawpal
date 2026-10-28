@@ -540,7 +540,7 @@
     }
 
     async function fetchStaffRaw({ force = false } = {}) {
-        const fetcher=()=>allRows(()=>window.getSupabaseClient().from('staff').select('id,full_name,job_title,specialization,phone_number,staff_level_id,service_locked').eq('employment_status','active').order('id'));
+        const fetcher=async()=>{const {data,error}=await window.getSupabaseClient().rpc('admin_service_staff_candidates');if(error)throw error;return data||[];};
         return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:staff',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.CATALOG,force,backgroundRevalidate:false}) : fetcher();
     }
 
@@ -952,7 +952,7 @@
             } else if (['customer','customer_profile','customer_phone','pet_profile','pet_weight_history','hotel_room','room_type'].includes(mutation.entity)) {
                 window.PawpalDataStore.invalidate('services:directory*');
                 window.PawpalDataStore.invalidate('services:bookings*');
-            } else if (mutation.entity === 'staff') {
+            } else if (['staff','staff_assessment'].includes(mutation.entity)) {
                 window.PawpalDataStore.invalidate('services:staff*');
             }
         });
@@ -1216,6 +1216,7 @@
                 .on('postgres_changes', {event:'*',schema:'public',table:'pet_profile'},directoryChanged)
                 .on('postgres_changes', {event:'*',schema:'public',table:'hotel_room'},directoryChanged)
                 .on('postgres_changes', {event:'*',schema:'public',table:'staff'},()=>{window.PawpalDataStore?.invalidate('services:staff');triggerServiceSync('services:bookings*');})
+                .on('postgres_changes', {event:'*',schema:'public',table:'staff_assessment'},()=>{window.PawpalDataStore?.invalidate('services:staff');triggerServiceSync('services:bookings*');})
                 .on('postgres_changes', {event:'*',schema:'public',table:'staff_schedule'},()=>PawpalServices.refreshStaffSchedule?.())
                 .on('postgres_changes', {event:'*',schema:'public',table:'support_ticket'},()=>triggerServiceSync('services:reviews*'))
                 .subscribe();

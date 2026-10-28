@@ -64,7 +64,7 @@ function createStaffAuthHandlers(config){
   }catch{return {authorized:false,status:503,message:'Không thể xác minh phiên công vụ.'};}
  }
  const errorMessage=error=>({staff_profile_changed:'Hồ sơ đã thay đổi. Tải lại trước khi thao tác.',staff_last_admin_required:'Cần giữ ít nhất một Admin đang hoạt động.',staff_use_own_password_workflow:'Dùng chức năng đổi mật khẩu cá nhân; không tự khóa hoặc reset tài khoản đang quản trị.',staff_auth_busy:'Tài khoản đang có yêu cầu xử lý. Chờ hoàn tất rồi tải lại.',staff_request_conflict:'Mã yêu cầu đã được dùng với nội dung khác.',staff_auth_previous_failure:'Lần xử lý trước chưa thành công. Tải lại và tạo yêu cầu mới.',staff_access_forbidden:'Bạn chưa có quyền quản lý tài khoản.',staff_provisioned_identity_required:'Không thể xác nhận tài khoản vừa cấp.',invalid_staff_profile:'Kiểm tra thông tin hồ sơ nhân viên.',invalid_staff_access:'Chọn vai trò và quyền thực tế trong danh mục.'})[error?.message]||'Không thể hoàn tất quản lý tài khoản. Tải lại để kiểm tra trạng thái.';
- const rpcFailure=(res,error)=>fail(res,error?.code==='42501'?403:error?.code==='PT409'?409:400,errorMessage(error));
+ const rpcFailure=(res,error)=>error?.message==='duplicate_staff_phone'?res.status(409).json({success:false,field:'staffInputPhone',message:'Số điện thoại đã thuộc một nhân viên còn làm việc. Kiểm tra hồ sơ hiện có trước khi tạo mới.'}):fail(res,error?.code==='42501'?403:error?.code==='PT409'?409:400,errorMessage(error));
  async function provisionAccount(req,res){
   res.setHeader('Cache-Control','no-store');if(req.method!=='POST')return fail(res,405,'Chỉ hỗ trợ POST.');
   const auth=await verify(req,'ADMIN');if(!auth.authorized)return fail(res,auth.status,auth.message);
@@ -73,6 +73,11 @@ function createStaffAuthHandlers(config){
   const roles=Array.isArray(request.roles)?[...new Set(request.roles)].sort():null,permissions=Array.isArray(request.permissions)?[...new Set(request.permissions)].sort():null;
   if(!uuid(requestId)||!uuid(staffId)||!profile||typeof profile!=='object'||Array.isArray(profile)||typeof email!=='string'||email.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
    ||typeof password!=='string'||password.length<6||password.length>128||typeof enableLogin!=='boolean'||!roles||roles.length>30||!permissions||permissions.length>250||(enableLogin&&roles.length+permissions.length===0)||[...roles,...permissions].some(v=>typeof v!=='string'))return fail(res,400,'Nhập hồ sơ, email đăng nhập, mật khẩu từ 6 đến 128 ký tự và chọn quyền nếu cho phép đăng nhập.');
+  if(typeof profile.full_name!=='string'||[...profile.full_name.trim().normalize('NFC')].length<2||profile.full_name.length>200||/\p{N}/u.test(profile.full_name))return fail(res,400,'Họ và tên cần từ 2 đến 200 ký tự và không chứa số.');
+  if(typeof profile.phone_number!=='string'||!profile.phone_number.trim())return fail(res,400,'Nhập số điện thoại nhân viên.');
+  profile.phone_number=profile.phone_number.trim().replace(/^\+84(?=\d{9}$)/,'0');
+  if(!/^0\d{9}$/.test(profile.phone_number))return fail(res,400,'Số điện thoại cần đúng 10 chữ số và bắt đầu bằng 0.');
+  if(profile.email&&(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(profile.email).trim())||String(profile.email).length>254))return fail(res,400,'Nhập email công việc hợp lệ.');
   const signature=fingerprint({requestId,staffId,profile,email:email.toLowerCase(),password,enableLogin,roles,permissions});
   try{
    const complete=await service.from('audit_log').select('staff_id,description').eq('action','STAFF_PROVISION_DONE').eq('entity_id',requestId).maybeSingle();if(complete.error)return fail(res,503,'Không thể kiểm tra yêu cầu đã lưu.');

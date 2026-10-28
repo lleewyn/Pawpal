@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-27T16:19:43.809Z",
+  "status": "PASS",
+  "checks": [
+    "Active Cloud filters preserve clinical observation",
+    "No false toxicity or masking",
+    "Urgency and handover retained"
+  ],
+  "scope": "Bounded moderation-rule read only; no messages/config changed; no AI calls or Logs"
+}

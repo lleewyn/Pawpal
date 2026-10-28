@@ -9,6 +9,38 @@
     let initialEditingAddressesSnapshot = '';
     let currentEditingPetCustId = null;
     let currentEditPetIndex = null;
+    let relatedDetailListener = null;
+
+    function openRelatedHistory(moduleName, tabId, recordId) {
+        if (relatedDetailListener) window.removeEventListener('admin:module-show', relatedDetailListener);
+        const open = () => {
+            if (moduleName === 'Bán hàng') window.PawpalOrdersModule?.openOrderDetail?.(recordId);
+            else window.PawpalServices?.openBookingDetail?.(recordId);
+        };
+        sessionStorage.setItem('pawpal_admin_active_module', moduleName);
+        if (moduleName === 'Bán hàng') {
+            sessionStorage.setItem('pawpal_admin_order_selected_id', recordId);
+            sessionStorage.setItem('pawpal_admin_order_subtab', tabId);
+            if (window.PawpalOrders?.state) window.PawpalOrders.state.selectedOrderId = recordId;
+        } else {
+            sessionStorage.setItem('pawpal_admin_service_selected_id', recordId);
+            sessionStorage.setItem('pawpal_admin_services_active_subtab', tabId);
+            if (window.PawpalServices?.state) window.PawpalServices.state.selectedBookingId = recordId;
+        }
+        const menu = document.querySelector(`.sidebar-menu-btn[data-title="${moduleName}"]`);
+        if (menu) {
+            relatedDetailListener = event => {
+                window.removeEventListener('admin:module-show', relatedDetailListener);
+                relatedDetailListener = null;
+                if (event.detail?.module === moduleName) open();
+            };
+            window.addEventListener('admin:module-show', relatedDetailListener);
+            menu.click();
+        } else {
+            open();
+            window.location.hash = '#' + tabId;
+        }
+    }
 
     function getCust(id) {
         return (PawpalCustomers.getCustomer && PawpalCustomers.getCustomer(id)) || PawpalCustomers.state?.customerDatabase?.[id];
@@ -93,9 +125,9 @@
                         ${pet.status==='inactive'?'<span class="admin-badge badge-neutral">Ngừng theo dõi</span>':''}
                     </div>
                     <div class="pet-card-actions">
-                        <button type="button" class="btn-pet-action btn-pet-view-profile admin-badge badge-neutral" data-pet-id="${esc(pet.id || ('PET-' + (idx+1)))}" data-pet-name="${esc(pet.name)}">Xem hồ sơ bé</button>
+                        <button type="button" class="btn-pet-action btn-pet-view-profile admin-btn admin-btn-secondary" data-pet-id="${esc(pet.id || ('PET-' + (idx+1)))}" data-pet-name="${esc(pet.name)}">Xem hồ sơ bé</button>
                         <button type="button" class="btn-pet-action btn-pet-edit" data-cust-id="${esc(custId)}" data-pet-index="${idx}">Sửa</button>
-                        <button type="button" class="btn-pet-action btn-pet-delete" data-cust-id="${esc(custId)}" data-pet-index="${idx}">${pet.status==='inactive'?'Khôi phục':'Gỡ bé cưng'}</button>
+                        <button type="button" class="btn-pet-action btn-pet-delete ${pet.status==='inactive'?'':'is-destructive'}" data-cust-id="${esc(custId)}" data-pet-index="${idx}">${pet.status==='inactive'?'Khôi phục':'Gỡ bé cưng'}</button>
                     </div>
                 </div>
                 <div class="pet-card-body">
@@ -197,24 +229,14 @@
                 </td>
                 <td>${esc(ord.date)}</td>
                 <td>${esc(ord.total)}</td>
-                <td><span class="admin-badge ${ord.paymentClass || (ord.payment === 'Đã thanh toán' ? 'badge-success' : 'badge-warning')}">${esc(ord.payment)}</span></td>
-                <td><span class="admin-badge ${esc(ord.statusClass)}">${esc(ord.status)}</span></td>
+                <td><span class="admin-badge customer-order-state ${esc(ord.paymentClass || (ord.payment === 'Đã thanh toán' ? 'badge-success' : 'badge-warning'))}">${esc(ord.payment)}</span></td>
+                <td><span class="admin-badge customer-order-state ${esc(ord.statusClass)}">${esc(ord.status)}</span></td>
                 <td><button type="button" class="admin-btn admin-btn-secondary btn-sm btn-view-order-action" data-order-id="${esc(ord.id)}">Xem chi tiết đơn</button></td>
             </tr>
         `).join('');
 
         const jumpToOrder = (ordId) => {
-            sessionStorage.setItem('pawpal_admin_order_id', ordId);
-            sessionStorage.setItem('pawpal_admin_order_selected_id', ordId);
-            sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-detail');
-            sessionStorage.setItem('pawpal_admin_active_module', 'Bán hàng');
-            PawpalCustomers.showToast(`Mở chi tiết đơn hàng ${ordId} tại phân hệ Bán hàng!`);
-            const menuBtn = document.querySelector('.sidebar-menu-btn[data-title="Bán hàng"]');
-            if (menuBtn) {
-                menuBtn.click();
-            } else {
-                window.location.hash = '#tab-order-detail';
-            }
+            openRelatedHistory('Bán hàng', 'tab-order-detail', ordId);
         };
 
         tbody.querySelectorAll('.btn-jump-order-code, .btn-view-order-action').forEach(btn => {
@@ -253,10 +275,7 @@
         tbody.querySelectorAll('.btn-view-booking-action').forEach(btn => {
             btn.addEventListener('click', () => {
                 const bId = btn.getAttribute('data-booking-id');
-                sessionStorage.setItem('pawpal_admin_booking_id', bId);
-                PawpalCustomers.showToast(`Mở nhật ký quy trình chăm sóc lịch hẹn ${bId} tại phân hệ Dịch vụ!`);
-                const menuBtn = document.querySelector('.sidebar-menu-btn[data-title="Dịch vụ"]');
-                if (menuBtn) menuBtn.click();
+                openRelatedHistory('Dịch vụ', 'tab-service-detail', bId);
             });
         });
     }
@@ -329,7 +348,7 @@
         if (headlineName) headlineName.textContent = data.name;
         if (headlineTier) {
             headlineTier.textContent = data.tierName;
-            headlineTier.className = `admin-badge ${data.tierBadgeClass}`;
+            headlineTier.className = `admin-badge customer-tier-badge ${data.tierBadgeClass || 'badge-neutral'}`;
         }
         if (headlinePhoneBadge) headlinePhoneBadge.textContent = data.phone;
 
@@ -352,7 +371,12 @@
         const alertText = document.getElementById('custEmergencyAlertText');
         if (data.emergencyAlert) {
             if (banner) banner.style.display = 'flex';
-            if (alertText) alertText.textContent = data.emergencyAlert;
+            if (alertText) {
+                const ticket=data.complaints?.find(item=>!item.isClosed);
+                const summary=ticket?PawpalCustomers.ticketSummary(ticket):null;
+                alertText.textContent=summary?'• '+summary.issue+' · '+summary.meta:data.emergencyAlert;
+                alertText.title=summary?.fullText||data.emergencyAlert;
+            }
         } else {
             if (banner) banner.style.display = 'none';
         }

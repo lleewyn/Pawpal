@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-27T09:01:58.583Z",
+  "status": "APPLIED",
+  "migration": "121_admin_sales_fulfillment_validation.sql",
+  "sha256": "d77b6b31fdef3d8b7b1e7cd015df340dd9b78d802b64352710541e2dd7e491ce",
+  "checks": {
+    "tracking_correction": true,
+    "handover_guard": true,
+    "note_guard": true,
+    "admin_rpc_available": true,
+    "anonymous_blocked": true
+  },
+  "scope": "Function replacement and existing grants only; no existing business rows changed; no Logs access"
+}

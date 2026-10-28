@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-10-27T16:28:49.639Z",
+  "status": "APPLIED",
+  "migration": "124_chat_automatic_handoff.sql",
+  "sha256": "779652b3d9a04f84ade0b08241d4716390b89dff82888f334b0fbcfbdee9dcb0",
+  "checks": {
+    "old_overload_removed": true,
+    "gateway_available": true,
+    "anonymous_blocked": true,
+    "direct_customer_blocked": true,
+    "automatic_handoff": true,
+    "legacy_optional_argument": true
+  },
+  "scope": "Public chat RPC signature/body/grants only; old ten-argument clients supported by default parameter; existing conversations/messages untouched; no Logs"
+}

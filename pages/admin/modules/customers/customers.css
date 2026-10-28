@@ -4575,3 +4575,55 @@
 .customers-module table:has(> tbody#membershipTierPolicyTbody) > tbody > tr > td:nth-child(3):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
     text-align: center;
 }
+
+/* Membership tiers share one palette in the list and profile, separate from account status. */
+.customers-module #subtab-tab-profile .pet-card-actions {gap:8px;}
+.customers-module #subtab-tab-profile .pet-card-actions > button.btn-pet-action {
+    display:inline-flex;align-items:center;justify-content:center;min-height:32px;height:auto;
+    padding:6px 10px;box-sizing:border-box;border:1px solid #ECF2EE !important;border-radius:9px !important;
+    background:transparent !important;color:#236B48;text-decoration:none;font:600 12px/1.5 Inter,sans-serif;
+}
+.customers-module #subtab-tab-profile .pet-card-actions > button.btn-pet-delete {color:#236B48;}
+.customers-module #subtab-tab-profile .pet-card-actions > button.is-destructive {color:#8F2424;border-color:#F7DCDC !important;}
+.customers-module #subtab-tab-profile .pet-card-actions > button:focus-visible {outline:2px solid #236B48;outline-offset:2px;}
+.customers-module .customer-order-state {--customer-order-bg:#E2ECE5;--customer-order-text:#2D483B;}
+.customers-module .customer-order-state.badge-success {--customer-order-bg:#DCEEE2;--customer-order-text:#165335;}
+.customers-module .customer-order-state.badge-info {--customer-order-bg:#DCEAF2;--customer-order-text:#20495E;}
+.customers-module .customer-order-state.badge-warning {--customer-order-bg:#F5E8D3;--customer-order-text:#734718;}
+.customers-module .customer-order-state.badge-danger {--customer-order-bg:#F7DCDC;--customer-order-text:#8F2424;}
+.customers-module #subtab-tab-profile .admin-badge.customer-order-state {
+    display:inline-flex !important;align-items:center;justify-content:center;
+    height:24px !important;min-height:24px !important;padding:0 9px !important;
+    background:var(--customer-order-bg) !important;color:var(--customer-order-text) !important;
+    border:none !important;border-radius:9px !important;font-size:12px !important;font-weight:500 !important;
+    line-height:1 !important;white-space:nowrap;
+}
+.customers-module #customerDataTable .customer-ticket-alert {white-space:normal;overflow:visible;}
+.customers-module #customerDataTable .customer-ticket-subject {display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:normal;overflow-wrap:anywhere;}
+.customers-module #customerDataTable .customer-ticket-meta {display:block;margin-top:3px;font-size:11px;font-weight:400;white-space:normal;overflow-wrap:anywhere;}
+.customers-module #custEmergencyAlertText {min-width:0;white-space:normal;overflow-wrap:anywhere;}
+.customers-module .customer-tier-badge {
+    --customer-tier-bg: #E2ECE5;
+    --customer-tier-text: #2D483B;
+}
+.customers-module .customer-tier-badge.badge-tier-bronze { --customer-tier-bg: #F1E4D8; --customer-tier-text: #745134; }
+.customers-module .customer-tier-badge.badge-tier-silver { --customer-tier-bg: #E7EBF0; --customer-tier-text: #435365; }
+.customers-module .customer-tier-badge.badge-tier-gold { --customer-tier-bg: #F6E7CF; --customer-tier-text: #6E4912; }
+.customers-module .customer-tier-badge.badge-tier-diamond { --customer-tier-bg: #D9E8F2; --customer-tier-text: #1C4A65; }
+.customers-module #customerDataTable .admin-badge.customer-tier-badge,
+.customers-module #subtab-tab-profile .admin-badge.customer-tier-badge {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    height: 24px !important;
+    min-height: 24px !important;
+    padding: 0 9px !important;
+    border: none !important;
+    border-radius: 9px !important;
+    background: var(--customer-tier-bg) !important;
+    color: var(--customer-tier-text) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    white-space: nowrap;
+}

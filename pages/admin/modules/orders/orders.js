@@ -16,6 +16,10 @@
  const spec=value=>value&&typeof value==='object'?Object.entries(value).map(([k,v])=>k+': '+String(v)).join('; '):String(value||'');
  const images=list=>[...(list||[])].sort((a,b)=>Number(b.is_thumbnail)-Number(a.is_thumbnail)||a.display_order-b.display_order).map(x=>x.image_url);
  const net=p=>Number(p.amount)-(p.refunds||[]).filter(r=>r.refund_status==='succeeded').reduce((n,r)=>n+Number(r.refunded_amount),0);
+ async function history(orderId){
+  const {data,error}=await db().rpc('get_admin_sales_order_history',{p_order_id:orderId});
+  if(error)throw error;if(!Array.isArray(data))throw Error('invalid_sales_history');return data;
+ }
  async function products({ids,ratings=[],detail=false}={}){
   const categories=await cached('categories',()=>rows(()=>db().from('product_category').select('id,category_name,description').order('id')),{ttlMs:600000});
   if(ids&&!ids.length)return {categories,products:[]};
@@ -55,16 +59,16 @@
    const status=({draft:'pending',pending:'pending',packing:'confirmed',confirmed:'confirmed',shipped:'shipping',shipping:'shipping',delivered:'completed',completed:'completed',cancelled:'cancelled',returned:'returned'})[o.order_status]||o.order_status;
    const requests=returns.filter(r=>r.sales_order_id===o.id),r=requests[0],returnsTotal=payments.reduce((n,p)=>n+(p.refunds||[]).filter(v=>v.refund_status==='succeeded').reduce((s,v)=>s+Number(v.refunded_amount),0),0);
    const paymentStatus=collected>=amount&&amount>0?'paid':collected>0?'partial':gross>0&&refunds>=gross?'refunded':'unpaid';
-   const method=payments[0]?.method?.name||'',paymentMethod=/tiền mặt/i.test(method)?'cash':/chuyển khoản|VietQR/i.test(method)?'bank_transfer':/MoMo/i.test(method)?'momo':/VNPay/i.test(method)?'vnpay':'unknown';
+   const methods=[...new Set(payments.map(p=>one(p.method)?.name).filter(Boolean))],method=methods.join(' và '),paymentMethod=methods.length>1?'mixed':/tiền mặt/i.test(method)?'cash':/chuyển khoản|VietQR/i.test(method)?'bank_transfer':/MoMo/i.test(method)?'momo':/VNPay/i.test(method)?'vnpay':'unknown';
    const items=o.lines.map(d=>({id:d.id,variant_id:d.product_variant_id,sku:d.sku_snapshot,name:d.product_name_snapshot,spec:spec(d.variant?.product?.specs),price:Number(d.unit_price),quantity:Number(d.quantity),discount:Number(d.discount_amount),total:Number(d.unit_price)*Number(d.quantity)-Number(d.discount_amount),image:images(d.variant?.media)[0]||''}));
    const rmaInfo=r?{id:r.id,requestId:r.id,solutionType:r.return_type,solutionTypeName:({refund:'Hoàn tiền',return:'Trả hàng',exchange:'Đổi hàng'})[r.return_type]||'Cần đối soát',reason:r.reason,reasonText:r.reason,restockAction:'',restockText:'Xem sổ kho để đối chiếu',refundMethod:'',refundAmount:returnsTotal,refundText:returnsTotal>0?'Đã ghi nhận hoàn tiền':'Chưa ghi nhận hoàn tiền',items:r.lines.map(v=>({sku:v.line?.sku_snapshot||'',name:v.line?.product_name_snapshot||'',quantity:v.quantity,price:v.line?.unit_price??null,variant_id:v.line?.product_variant_id,sales_order_detail_id:v.sales_order_detail_id})),note:r.description||'',createdAt:r.created_at,status:r.request_status}:null;
    const hasOpenReturn=requests.some(v=>['pending','approved'].includes(v.request_status));
    const overdue=status==='pending'&&Date.now()-Date.parse(o.created_at)>1800000;
-   return {id:o.order_code,rawId:o.id,rawStatus:o.order_status,updatedAt:o.updated_at,userId:o.customer_id,customerType:window.PawpalCustomerIdentity.classify(o.customer),phoneUnverified:window.PawpalCustomerIdentity.contact(o.customer).unverified,customerName:profile(o.customer).full_name||o.receiver_name_snapshot||'Chưa có tên khách',phone:phone(o.customer)||o.receiver_phone_snapshot||'',receiverName:o.receiver_name_snapshot||'',receiverPhone:o.receiver_phone_snapshot||'',address:[o.street_address_snapshot,o.province_snapshot,o.postal_code_snapshot].filter(Boolean).join(', ')||'Chưa ghi nhận địa chỉ giao hàng',status,paymentStatus,paymentMethod,paymentMethodName:method||'Chưa ghi nhận',collected,refunded:refunds,remaining:Math.max(amount-collected,0),payments:o.payments,carrier:o.provider?.provider_name||'Chưa phân công',trackingNumber:o.tracking_code||'—',createdAt:o.created_at,subtotal:o.lines.reduce((n,d)=>n+Number(d.unit_price)*Number(d.quantity),0),shippingFee:Number(o.shipping_fee_snapshot),discount:o.lines.reduce((n,d)=>n+Number(d.discount_amount),0)+redemptions.filter(v=>v.order_id===o.id&&v.status==='applied').reduce((n,v)=>n+Number(v.discount_amount_snapshot),0),pawPointsUsed:null,total:amount,customerNote:o.note||'',internalNote:'',alertType:hasOpenReturn||overdue?'danger':null,alertMessage:hasOpenReturn?'Có yêu cầu đổi trả':overdue?'Chờ xác nhận quá 30 phút':null,rmaInfo,returnRequests:requests,delivery:null,products:items,timeline:[{title:'Tạo đơn hàng',time:o.created_at,desc:'Đơn được ghi nhận trong hệ thống',done:true},...(o.shipped_at?[{title:'Bàn giao vận chuyển',time:o.shipped_at,desc:o.provider?.provider_name||'Chưa ghi nhận đơn vị vận chuyển',done:true}]:[]),...(o.delivered_at?[{title:'Giao hàng',time:o.delivered_at,desc:'Đã ghi nhận thời điểm giao hàng',done:true}]:[])]};
+   return {id:o.order_code,rawId:o.id,rawStatus:o.order_status,shippingReceiver:{name:o.receiver_name_snapshot||'',phone:o.receiver_phone_snapshot||'',province:o.province_snapshot||'',street:o.street_address_snapshot||''},providerId:o.shipping_provider_id,shippedAt:o.shipped_at,deliveryOptionId:o.delivery_option_id,updatedAt:o.updated_at,userId:o.customer_id,customerType:window.PawpalCustomerIdentity.classify(o.customer),phoneUnverified:window.PawpalCustomerIdentity.contact(o.customer).unverified,customerName:profile(o.customer).full_name||o.receiver_name_snapshot||'Chưa có tên khách',phone:phone(o.customer)||o.receiver_phone_snapshot||'',receiverName:o.receiver_name_snapshot||'',receiverPhone:o.receiver_phone_snapshot||'',address:[o.street_address_snapshot,o.province_snapshot,o.postal_code_snapshot].filter(Boolean).join(', ')||'Chưa ghi nhận địa chỉ giao hàng',status,paymentStatus,paymentMethod,paymentMethodName:method||'Chưa ghi nhận',collected,refunded:refunds,remaining:Math.max(amount-collected,0),payments:o.payments,carrier:o.provider?.provider_name||'Chưa phân công',trackingNumber:o.tracking_code||'—',createdAt:o.created_at,subtotal:o.lines.reduce((n,d)=>n+Number(d.unit_price)*Number(d.quantity),0),shippingFee:Number(o.shipping_fee_snapshot),discount:o.lines.reduce((n,d)=>n+Number(d.discount_amount),0)+redemptions.filter(v=>v.order_id===o.id&&v.status==='applied').reduce((n,v)=>n+Number(v.discount_amount_snapshot),0),pawPointsUsed:null,total:amount,customerNote:o.note||'',internalNote:'',alertType:hasOpenReturn||overdue?'danger':null,alertMessage:hasOpenReturn?'Có yêu cầu đổi trả':overdue?'Chờ xác nhận quá 30 phút':null,rmaInfo,returnRequests:requests,delivery:null,products:items,timeline:[{title:'Tạo đơn hàng',time:o.created_at,desc:'Đơn được ghi nhận trong hệ thống',done:true},...(o.shipped_at?[{title:'Bàn giao vận chuyển',time:o.shipped_at,desc:o.provider?.provider_name||'Chưa ghi nhận đơn vị vận chuyển',done:true}]:[]),...(o.delivered_at?[{title:'Giao hàng',time:o.delivered_at,desc:'Đã ghi nhận thời điểm giao hàng',done:true}]:[])]};
   });
  }
  async function customers({id}={}){if(!id)throw Error('sales_customer_id_required');const [list,balances]=await Promise.all([rows(()=>db().from('customer').select('id,auth_user_id,unverified_contact_phone,customer_profile(full_name),customer_phone(phone_number,is_primary),customer_address(*),customer_membership(membership_tier(tier_name,discount_percent,is_active)),pet_profile(id,pet_name)').eq('id',id).eq('customer_status','active').order('id')),rows(()=>db().from('customer_point_balance').select('customer_id,total_paw_points').eq('customer_id',id).order('customer_id'))]);return list.map(c=>({id:c.id,rawName:profile(c).full_name||null,name:profile(c).full_name||'Chưa có tên khách',phone:phone(c),phoneUnverified:window.PawpalCustomerIdentity.contact(c).unverified,customerType:window.PawpalCustomerIdentity.classify(c),rank:one(one(c.customer_membership)?.membership_tier)?.tier_name||'Chưa có hạng',defaultAddress:c.customer_address.find(a=>a.is_default)||null,discountPercent:one(one(c.customer_membership)?.membership_tier)?.discount_percent??null,points:Number(balances.find(b=>b.customer_id===c.id)?.total_paw_points||0),address:[c.customer_address.find(a=>a.is_default)?.street_address,c.customer_address.find(a=>a.is_default)?.province].filter(Boolean).join(', '),pets:c.pet_profile||[]}));}
- window.PawpalOrderV1={rows,products,orders,cached,cacheKey,
+ window.PawpalOrderV1={history,rows,products,orders,cached,cacheKey,
   customers:(options={})=>cached('customers:detail:'+options.id,()=>customers(options),{ttlMs:30000,...options}),
   searchCustomers:query=>cached('customers:search:'+query,async()=>{const {data,error}=await db().rpc('search_admin_sales_customers',{p_query:query});if(error)throw error;return data;},{ttlMs:30000}),
   searchVariants:query=>cached('products:search:'+query,async()=>{const {data,error}=await db().rpc('search_admin_sales_variants',{p_query:query});if(error)throw error;return data;},{ttlMs:30000}),
@@ -459,9 +463,13 @@
     async function ensureOrder(id,{force=false}={}) {
         if(!id)return null;
         const found=window.PawpalOrders.state.orders.find(o=>o.id===id||o.rawId===id);
-        if(found&&!force&&window.PawpalOrders.state.pageOrders?.some(o=>o.rawId===found.rawId))return found;
+        if(found&&window.PawpalOrders.state.pageOrders?.some(o=>o.rawId===found.rawId)){
+            if(force||!found.historyLoaded){found.timeline=await window.PawpalOrderV1.history(found.rawId);found.historyLoaded=true;}
+            return found;
+        }
         const rows=await window.PawpalOrderV1.cached('list:detail:'+id,()=>window.PawpalOrderV1.orders({id}),{force});
         const order=rows[0];
+        if(order){order.timeline=await window.PawpalOrderV1.history(order.rawId);order.historyLoaded=true;}
         if(order)window.PawpalOrders.state.orders=[...window.PawpalOrders.state.orders.filter(o=>o.rawId!==order.rawId),order];
         else window.PawpalOrders.state.orders=window.PawpalOrders.state.orders.filter(o=>o.id!==id&&o.rawId!==id);
         return order||null;
@@ -501,7 +509,7 @@
             const pageIds=new Set(result.rows.map(o=>o.id));
             currentOrdersList=[...state.orders.filter(o=>retained.has(o.id)&&!pageIds.has(o.id)),...result.rows];
             Object.assign(state,{orders:currentOrdersList,pageOrders:result.rows,orderPageMeta:result.meta,ordersLoaded:true,ordersError:false});
-            if(state.selectedOrderId&&!pageIds.has(state.selectedOrderId))await ensureOrder(state.selectedOrderId,{force});
+            if(state.selectedOrderId)await ensureOrder(state.selectedOrderId,{force});
             if(version!==ordersReadVersion)return false;
         } catch (err) {
             if(version!==ordersReadVersion)return false;

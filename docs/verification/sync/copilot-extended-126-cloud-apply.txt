@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-10-27T17:11:30.060Z",
+  "status": "APPLIED",
+  "migration": "126_copilot_extended_facts.sql",
+  "sha256": "92c89bed19858152e2592658bbb97af832ce501f8dbb753acae61d6616e8f1c1",
+  "checks": {
+    "invoker": true,
+    "stable": true,
+    "staff_available": true,
+    "anonymous_blocked": true
+  },
+  "scope": "Read-only RPC with permission checks; no business rows modified"
+}

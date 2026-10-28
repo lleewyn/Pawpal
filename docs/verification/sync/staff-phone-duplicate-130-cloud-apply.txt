@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-10-28T01:25:06.904Z",
+  "status": "APPLIED",
+  "sha256": "f2b47eb931d4ef2fb389310c8a7eb98416b2364f11e325c587b1c7718cff2ca5",
+  "checks": {
+    "trigger_present": true,
+    "direct_call_blocked": true,
+    "anonymous_blocked": true
+  },
+  "scope": "Guard duplicate current staff phones on insert or contact/status change; no existing staff records modified"
+}

@@ -1,0 +1,140 @@
+{
+  "environment": "Supabase Cloud cpzuvaplseielhgcnqrn",
+  "timestamp": "2026-10-27T09:19:31.371Z",
+  "scope": "Migration 122 and one synthetic COD order/SKU; all DDL and data ROLLBACK; no Logs",
+  "checks": [
+    {
+      "name": "Server ignores forged unit price and computes SKU price, shipping and total",
+      "status": "PASS"
+    },
+    {
+      "name": "Server rejects quantity above available stock",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed quote does not leave a partial order",
+      "status": "PASS"
+    },
+    {
+      "name": "Create retry gives one order, one detail/payment and one quantity reservation; Admin sees exact owner/price",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale Admin version cannot confirm order",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads Admin confirmed state",
+      "status": "PASS"
+    },
+    {
+      "name": "B cannot read/cancel A order or invoke Admin fulfillment",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin cancel releases reservation and User reads cancelled",
+      "status": "PASS"
+    },
+    {
+      "name": "User cancel retry is visible to Admin with one fulfillment audit",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_shipping_receiver_required",
+      "status": "PASS"
+    },
+    {
+      "name": "POS order without address can atomically supply validated receiver fields and ship",
+      "status": "PASS"
+    },
+    {
+      "name": "History includes successful confirmation and never treats pending payment as collected",
+      "status": "PASS"
+    },
+    {
+      "name": "Cashier collection is reflected in actual collected balance and history",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_handover_required",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_tracking_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_tracking_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_tracking_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_tracking_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_note_too_long",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_cancel_reason_required",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_cancel_note_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_cancel_note_invalid",
+      "status": "PASS"
+    },
+    {
+      "name": "Admin shipping retry issues stock once and User sees tracking/state",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid_sales_transition",
+      "status": "PASS"
+    },
+    {
+      "name": "Tracking correction and retry preserve shipped state and issue no additional stock",
+      "status": "PASS"
+    },
+    {
+      "name": "History records handover and tracking correction once despite retries",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot read Admin order history RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "sales_handover_required",
+      "status": "PASS"
+    },
+    {
+      "name": "User reads completed state; COD is not falsely marked paid",
+      "status": "PASS"
+    },
+    {
+      "name": "Guest cannot quote private order",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback removes order and synthetic catalog/config/actors",
+      "status": "PASS"
+    }
+  ],
+  "fixtureIds": {
+    "customerA": "9f6bbafa-9adc-4312-9cd6-860ffa0e2f9c",
+    "customerB": "d4cf2d4f-697f-4390-a201-43e2bbe4c094",
+    "product": "776fe0d0-2542-46b9-a4fc-361aa5512de9",
+    "variant": "40d67b9b-a4b8-41f4-b3c2-92658b13551c",
+    "order": "66ba7e99-cb04-4e62-bdd1-2e6b61fe27f4"
+  },
+  "status": "PASS",
+  "queries": 226
+}

@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-10-27T16:08:01.590Z",
+  "status": "PASS",
+  "checks": [
+    "Admin adds pet via installed RPC",
+    "Correct owner, name and allergy",
+    "Other owner has no linked pet",
+    "6.5kg saved once",
+    "Retry creates no duplicate",
+    "Deferred constraints pass"
+  ],
+  "scope": "Synthetic two owners/one pet/actor, all fixtures rolled back; no Logs or committed customer changes"
+}

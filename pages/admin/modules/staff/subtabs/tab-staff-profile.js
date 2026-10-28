@@ -122,7 +122,7 @@
             if (el.id === 'viewStaffCustomerReviewsList' || el.id === 'viewStaffAssessmentHistory') el.textContent = 'Chưa có dữ liệu được ghi nhận.';
             else if (el.id !== 'viewStaffSafetyBadge') el.textContent = values[el.id] || '—';
         });
-        const safety=root.querySelector('#viewStaffSafetyBadge');if(safety){safety.style.display=staff.serviceLocked?'':'none';safety.textContent='Đang khóa phân công';}
+        const safety=root.querySelector('#viewStaffSafetyBadge');if(safety){safety.style.display=staff.serviceLocked||staff.skillLocked?'':'none';safety.textContent=staff.serviceLocked?'Đang khóa phân công':'Tạm khóa nhận việc do kết quả tay nghề';}
         if(assessmentStaffId!==staff.id){assessmentStaffId=staff.id;assessmentPage=1;}
         const history=root.querySelector('#viewStaffAssessmentHistory');
         if (history && root.classList.contains('active')) {

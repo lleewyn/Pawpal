@@ -347,12 +347,13 @@
 /* GRID BANNER CARDS */
 .settings-module-wrapper .banner-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
     gap: 12px;
 }
 
 .settings-module-wrapper .banner-item-card {
     display: flex;
+    min-width: 0;
     flex-direction: column;
     gap: 10px;
     padding: 12px;
@@ -382,6 +383,8 @@
 
 .settings-module-wrapper .banner-card-info {
     display: flex;
+    min-width: 0;
+    overflow-wrap: anywhere;
     flex-direction: column;
     gap: 4px;
 }
@@ -399,6 +402,8 @@
 
 .settings-module-wrapper .banner-card-actions {
     display: flex;
+    flex-wrap: wrap;
+    min-width: 0;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
@@ -1733,6 +1738,9 @@
 
 .settings-module-wrapper .banner-card-inline-actions {
     display: flex;
+    flex: 1 1 180px;
+    min-width: 0;
+    justify-content: flex-end;
     align-items: center;
     gap: 6px;
     flex-wrap: wrap;

@@ -254,9 +254,8 @@
             let alertBadgeHtml = '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
             if (hasEmergency) {
                 const ticket = activeComplaint || (c.complaints && c.complaints[0]);
-                const ticketId = esc(ticket?.id || '');
-                const ticketStatus = esc(ticket?.status || 'Chưa xử lý');
-                alertBadgeHtml = `<span class="alert-indicator text-danger" title="${ticketId} · ${ticketStatus}">• ${ticketId} · ${ticketStatus}</span>`;
+                const summary = PawpalCustomers.ticketSummary(ticket);
+                alertBadgeHtml = `<span class="alert-indicator text-danger customer-ticket-alert" title="${esc(summary.fullText)}"><span class="customer-ticket-subject">• ${esc(summary.issue)}</span><span class="customer-ticket-meta">${esc(summary.meta)}</span></span>`;
             } else if (hasPetAlert && alertPet) {
                 alertBadgeHtml = `<span class="alert-indicator text-warning" title="${esc(alertPet.name)}: ${esc(alertPet.alertNote)}">• ${esc(alertPet.name)}: ${esc(alertPet.alertNote)}</span>`;
             }
@@ -272,7 +271,7 @@
 
             const subCellHtml = esc(c.customerTypeLabel || 'Chưa xác định loại khách');
 
-            const tierPointsHtml = `<span class="admin-badge ${esc(c.tierBadgeClass || 'badge-neutral')}">${esc(c.tierName || 'Chưa có hạng')}</span><span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} điểm</span>`;
+            const tierPointsHtml = `<span class="admin-badge customer-tier-badge ${esc(c.tierBadgeClass || 'badge-neutral')}">${esc(c.tierName || 'Chưa có hạng')}</span><span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} điểm</span>`;
 
             return `
                 <tr class="${rowLockedClass} ${rowComplaintClass}" data-id="${esc(c.id)}">
@@ -336,7 +335,7 @@
 
         container.innerHTML = activeComplaints.map(item => `
             <div class="customer-operation-row">
-                <div class="customer-operation-body"><div class="customer-operation-label" title="${esc(item.status)} — ${esc(item.reason)}">${esc(item.status)} — ${esc(item.reason || 'Khiếu nại cần phản hồi')}</div><div class="customer-operation-description" title="${esc(item.name)} · ${esc(item.ticket)}">${esc(item.name)} · ${esc(item.ticket)}</div></div>
+                <div class="customer-operation-body"><div class="customer-operation-label" title="${esc(item.status)} — ${esc(item.reason)}">${esc(item.reason || 'Khiếu nại cần phản hồi')}</div><div class="customer-operation-description" title="${esc(item.name)} · ${esc(item.status)} · ${esc(item.ticket)}">${esc(item.name)} · ${esc(item.status)} · ${esc(PawpalCustomers.ticketSummary({id:item.ticket}).shortCode)}</div></div>
                 <button type="button" class="customer-operation-open" data-id="${esc(item.id)}">Mở hồ sơ</button>
             </div>
         `).join('');

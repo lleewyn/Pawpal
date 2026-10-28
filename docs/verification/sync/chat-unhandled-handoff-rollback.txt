@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-10-27T16:37:12.227Z",
+  "status": "PASS",
+  "checks": [
+    "Retry of one failed turn is counted once",
+    "Third consecutive failed turn hands off atomically and replaces repeat clarification with truthful transfer message",
+    "Waiting-agent follow-up preserves counter and original response deadline",
+    "Explicit resume starts a fresh bot counter",
+    "Useful answer resets consecutive counter; another conversation is isolated",
+    "Active bot_loop threshold and response deadline override defaults",
+    "Invalid signal cannot alter counter",
+    "Original ten-argument gateway remains compatible"
+  ],
+  "scope": "Migration, counters, policy branch, synthetic actor/customer/conversations/messages all ROLLBACK; no AI calls or Logs"
+}

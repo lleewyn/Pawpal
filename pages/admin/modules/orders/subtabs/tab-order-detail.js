@@ -81,6 +81,8 @@
             } else if (order.status === 'shipping') {
                 btnsHtml += `
                     <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.openShipModal('${order.id}')">Cập nhật vận đơn</button>
+                `;
+                if (order.providerId && order.shippedAt && /^[a-z0-9][a-z0-9_-]{0,199}$/i.test(order.trackingNumber || '')) btnsHtml += `
                     <button type="button" class="admin-btn admin-btn-primary" onclick="PawpalOrdersModule.completeDelivery('${order.id}')">Đã giao hàng thành công</button>
                 `;
             } else if (order.status === 'delivered') {
@@ -184,6 +186,9 @@
             else if (order.paymentMethod === 'bank_transfer') txt = 'Chuyển khoản trực tiếp ngân hàng Vietcombank';
             payMethodEl.textContent = order.paymentMethodName;
         }
+        for(const [id,value] of [['detailPaymentCollected',Number(order.collected||0)+Number(order.refunded||0)],['detailPaymentRefunded',order.refunded],['detailPaymentRemaining',order.remaining]]){
+            const field=document.getElementById(id);if(field)field.textContent=formatVND(value??0);
+        }
         if (payBadgeEl) {
             if (order.total===0) {
                 payBadgeEl.className = 'admin-badge badge-neutral';
@@ -220,7 +225,7 @@
             timelineListEl.innerHTML = (order.timeline || []).map(t => `
                 <div class="timeline-step-item ${t.done ? '' : 'future'}">
                     <span class="timeline-step-title">${escapeText(t.title)}</span>
-                    <span class="timeline-step-time">${escapeText(t.time)}</span>
+                    <span class="timeline-step-time">${escapeText(formatDateTime(new Date(t.time)))}</span>
                     <span class="timeline-step-desc">${escapeText(t.desc)}</span>
                 </div>
             `).join('');

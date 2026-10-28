@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-10-28T01:33:32.153Z",
+  "status": "APPLIED",
+  "sha256": "ecf50eeedef7991e73a9261b833e64941a009661e25361bcdf0fcc1c0c87b82e",
+  "checks": {
+    "assignment_guards": true,
+    "staff_candidates_available": true,
+    "anonymous_blocked": true,
+    "member_availability": true,
+    "guest_availability": true
+  },
+  "scope": "Latest assessment eligibility, service and shift guards, candidate/availability/filter reads; no staff/assessment/booking rows modified"
+}

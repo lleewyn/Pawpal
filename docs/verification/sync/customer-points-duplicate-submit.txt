@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-10-27T16:11:43.439Z",
+  "status": "PASS",
+  "checks": [
+    "Repeated credit request creates one +50 entry",
+    "Repeated debit request creates one -20 entry",
+    "Exact balance 30 and two ledger entries",
+    "Insufficient debit rejected",
+    "Same ID with different amount rejected",
+    "Constraints pass; all fixtures rolled back"
+  ],
+  "scope": "Installed Supabase RPC/RLS with synthetic actor/customer; no committed changes or Logs"
+}

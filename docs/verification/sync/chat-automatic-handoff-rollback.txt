@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-10-27T16:26:54.465Z",
+  "status": "PASS",
+  "cases": 9,
+  "checks": [
+    "Actual gateway payloads save and route atomically",
+    "Normal message remains bot-handled",
+    "Retry creates no duplicate message",
+    "Follow-up keeps handoff deadline",
+    "Ten-argument legacy call remains valid",
+    "Assigned agent is preserved",
+    "All constraints pass"
+  ],
+  "scope": "Migration, synthetic owner/actor/conversations/messages all ROLLBACK; no external AI, real customer messages or Logs"
+}

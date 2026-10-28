@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-10-27T17:29:18.864Z",
+  "status": "APPLIED",
+  "sha256": "8e29d2967e857bb3aa9f442e7c7f26ac8dea5577d82cbb80727f4c2254f4505f",
+  "checks": {
+    "trigger_present": true,
+    "direct_call_blocked": true,
+    "anonymous_blocked": true
+  },
+  "scope": "Validate required phone on insert or changed phone only; no existing staff records modified"
+}

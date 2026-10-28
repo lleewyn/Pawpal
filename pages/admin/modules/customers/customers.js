@@ -15,6 +15,12 @@
     PawpalCustomers.state.pawpointLoadStatus = 'idle';
 
     // 1. FORMATTERS CHUẨN HÓA TOÀN HỆ THỐNG
+    PawpalCustomers.ticketSummary = ticket => {
+        const code=String(ticket?.id||'');
+        const shortCode=code.length>15?code.slice(0,15)+'…':code;
+        const issue=String(ticket?.issue||'Khiếu nại cần phản hồi');
+        return {issue,shortCode,meta:[ticket?.level,ticket?.status,shortCode].filter(Boolean).join(' · '),fullText:[issue,ticket?.level,ticket?.status,code].filter(Boolean).join(' · ')};
+    };
     PawpalCustomers.formatDateTime = window.formatDateTime || function(d) {
         if (!d) return '—';
         const dateObj = new Date(d);
@@ -352,6 +358,7 @@
                 const status = window.PawpalEnum?.ticketStatus(ticket.status);
                 (complaintsMap[ticket.customer_id] ||= []).push({
                     id: ticket.ticket_code, rawId: ticket.id, issue: ticket.subject,
+                    level: window.PawpalEnum?.priority(ticket.priority)?.label || ticket.priority || '',
                     status: status?.label || ticket.status, statusClass: status?.badgeClass || 'badge-neutral',
                     isClosed: ['resolved', 'closed', 'rejected', 'da_giai_quyet', 'da_dong', 'tu_choi'].includes(ticket.status)
                 });
@@ -410,7 +417,7 @@
                     const tierName = mem.membership_tier?.tier_name || 'Chưa có hạng';
                     const tierCodes = { 'Đồng': 'BRONZE', 'Bạc': 'SILVER', 'Vàng': 'GOLD', 'Kim Cương': 'DIAMOND', 'Kim cương': 'DIAMOND' };
                     tier = tierCodes[tierName] || 'NONE';
-                    const tierBadge = tier === 'NONE' || tier === 'BRONZE' ? 'badge-neutral' : `badge-tier-${tier.toLowerCase()}`;
+                    const tierBadge = tier === 'NONE' ? 'badge-neutral' : `badge-tier-${tier.toLowerCase()}`;
 
                     const addrs = addrMap[c.id] || [];
 
@@ -691,9 +698,11 @@
                 const ordStatus = (o.order_status || '').toUpperCase();
                 if (ordStatus === 'PENDING' || ordStatus === 'CHO_XAC_NHAN') { st = 'Chờ xác nhận'; stClass = 'badge-warning'; }
                 else if (ordStatus === 'PROCESSING' || ordStatus === 'CONFIRMED' || ordStatus === 'DA_XAC_NHAN' || ordStatus === 'DANG_DONG_GOI' || ordStatus === 'PACKING') { st = 'Đang chuẩn bị'; stClass = 'badge-info'; }
-                else if (ordStatus === 'SHIPPING' || ordStatus === 'DELIVERING' || ordStatus === 'DANG_GIAO_HANG') { st = 'Đang giao'; stClass = 'badge-info'; }
+                else if (['SHIPPED','SHIPPING','DELIVERING','DANG_GIAO','DANG_GIAO_HANG'].includes(ordStatus)) { st = 'Đang giao'; stClass = 'badge-info'; }
                 else if (ordStatus === 'CANCELLED' || ordStatus === 'DA_HUY') { st = 'Đã hủy'; stClass = 'badge-danger'; }
-                else if (ordStatus === 'DELIVERED' || ordStatus === 'DA_GIAO_HANG' || ordStatus === 'COMPLETED' || ordStatus === 'DA_HOAN_TAT') { st = 'Hoàn thành'; stClass = 'badge-success'; }
+                else if (['DELIVERED','DA_GIAO','DA_GIAO_HANG'].includes(ordStatus)) { st = 'Đã giao'; stClass = 'badge-success'; }
+                else if (['COMPLETED','DA_HOAN_TAT'].includes(ordStatus)) { st = 'Hoàn thành'; stClass = 'badge-success'; }
+                else if (['RETURNED','RETURN','TRA_HANG','DA_TRA_HANG'].includes(ordStatus)) { st = 'Đã trả hàng'; stClass = 'badge-warning'; }
                 const payments=(payload.payments || []).filter(p=>p.order_id===o.id && p.transaction_status==='succeeded');
                 const paid=payments.reduce((sum,p)=>sum+Number(p.amount),0);
                 const refunded=payments.reduce((sum,p)=>sum+(p.refunds || []).filter(r=>r.refund_status==='succeeded').reduce((v,r)=>v+Number(r.refunded_amount),0),0);
@@ -704,7 +713,7 @@
                     date: dateStr,
                     total: totalStr,
                     payment,
-                    paymentClass: refunded>0?'badge-warning':paid>=Number(o.total_amount)?'badge-success':'badge-neutral',
+                    paymentClass: refunded>0?(refunded>=paid?'badge-info':'badge-warning'):Number(o.total_amount)===0&&paid===0?'badge-neutral':paid>=Number(o.total_amount)?'badge-success':paid>0?'badge-warning':'badge-neutral',
                     status: st,
                     statusClass: stClass
                 };

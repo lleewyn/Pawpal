@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-27T15:54:49.756Z",
+  "status": "APPLIED",
+  "migration": "123_settings_validation.sql",
+  "sha256": "76c0741c1ddde66e76e3107f9765e648b737658783a51d3763518aed9f647be9",
+  "checks": {
+    "validation_trigger": true,
+    "store_guard": true,
+    "hotel_guard": true,
+    "anonymous_blocked": true,
+    "helper_private": true
+  },
+  "scope": "Validation function and trigger only; no existing configuration or business rows changed; no Logs"
+}

@@ -27,10 +27,13 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
     let isToxic = false;
     let worstAction = 'none'; // 'none', 'mask', 'warn', 'escalate', 'block'
     let maskedText = rawText;
+    // Symptoms describe the incident; urgency is handled below, independently of abuse.
+    const clinicalTerms = new Set(['chảy máu', 'máu', 'vết thương', 'bị thương', 'co giật', 'ngộ độc']);
 
     // 1. Quét màng lọc từ cấm (Profanity & Abuse)
     filters.forEach(f => {
         const kw = String(f.keyword || '').trim();
+        if (clinicalTerms.has(kw.normalize('NFC').toLowerCase())) return;
         const matchRegex = buildSafeKeywordRegex(kw);
         if (matchRegex && matchRegex.test(rawText)) {
             detectedKeywords.push(f.keyword);
@@ -98,7 +101,7 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
     } else if (/trừ tiền|chưa nhận được tiền|sai tiền|hoàn tiền|mất tiền|thanh toán lỗi/i.test(lower)) {
         riskType = 'billing_dispute';
         detectedLevel = Math.max(detectedLevel, 4);
-    } else if (/giao trễ|giao sai|hỏng hàng|trầy xước|vòi tiền|thái độ/i.test(lower)) {
+    } else if (/giao trễ|giao sai|giao nhầm|hỏng hàng|hàng (?:bị )?(?:hỏng|vỡ|lỗi)|trầy xước|vòi tiền|thái độ/i.test(lower)) {
         riskType = 'service_complaint';
         detectedLevel = Math.max(detectedLevel, 4);
     }
