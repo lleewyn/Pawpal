@@ -47,10 +47,12 @@ let rgLastSearchState = {
 function initReturnGuestPage() {
     const form=document.getElementById('rg-form');
     if(!form||form.dataset.rgRecovery==='true')return;
-    form.dataset.rgRecovery='true';form.hidden=true;
-    Promise.all([import('/scripts/shared/guest-recovery.mjs'),import('/pages/public/return-guest/guest-booking-lookup.mjs')]).then(([recovery,booking])=>{
-        recovery.mountGuestRecoveryLookup(form);booking.mountGuestBookingLookup(form);booking.mountGuestOrderLookup(form);
-    }).catch(()=>{const error=document.createElement('p');error.setAttribute('role','alert');error.textContent='Ch?a t?i ???c tra c?u. Vui l?ng t?i l?i trang.';form.before(error);});
+    form.dataset.rgRecovery='true';form.hidden=false;
+    import('/pages/public/return-guest/guest-phone-lookup.mjs').then(phone=>{
+        phone.mountGuestPhoneLookup(form, {loadMember:loadSupabaseGuestResults, renderMember:(bookings,orders,value)=>{
+            rgVerifiedPhone=value;rgLastSearchState={phone:value,bookings,orders};renderResults(bookings,orders);
+        },clearMember:()=>{rgVerifiedPhone=null;rgLastSearchState={phone:'',bookings:[],orders:[]};}});
+    }).catch(()=>{const error=document.createElement('p');error.setAttribute('role','alert');error.textContent='Chưa tải được tra cứu. Vui lòng tải lại trang.';form.before(error);});
 }
 
 window.initReturnGuestPage = initReturnGuestPage;
@@ -396,6 +398,7 @@ function guestVisibleBookingNote(value) {
 
 function resolveBookingStatus(booking) {
     const rawStatus = (booking?.status || 'upcoming').toLowerCase();
+    if(booking?._receiptOnly)return rawStatus;
     if (['pending', 'cancelled', 'completed', 'in-progress', 'accepted'].includes(rawStatus)) {
         return rawStatus;
     }
@@ -426,6 +429,7 @@ function esc(s) {
 }
 
 function canCancelOrder(o) {
+    if(o._receiptOnly)return false;
     const status = normalizeOrderStatus(o.status);
     if (status !== 'pending') return false;
     if (o.paymentStatus === 'pending_refund' || o.paymentStatus === 'refunded') return false;
@@ -434,6 +438,7 @@ function canCancelOrder(o) {
 }
 
 function canReturnOrder(o) {
+    if(o._receiptOnly)return false;
     const status = normalizeOrderStatus(o.status);
     if (status !== 'delivered' && status !== 'completed') return false;
     if (status === 'returned' || o.status === 'return_pending') return false;
@@ -444,6 +449,7 @@ function canReturnOrder(o) {
     return daysDiff <= 7;
 }
 function canConfirmOrder(o) {
+    if(o._receiptOnly)return false;
     if (o.status !== 'delivered') return false;
     return true;
 }
@@ -456,6 +462,7 @@ function getBookingScheduledAt(booking) {
 }
 
 function canModifyBooking(b) {
+    if(b._receiptOnly)return false;
     const status = resolveBookingStatus(b);
     // 3.1.5: Chỉ kích hoạt đổi lịch khi ca hẹn ở trạng thái "Đã xác nhận" (confirmed)
     if (status !== 'confirmed') return false;
@@ -464,6 +471,7 @@ function canModifyBooking(b) {
 }
 
 function canCancelBooking(b) {
+    if(b._receiptOnly)return false;
     const status = resolveBookingStatus(b);
     // Hủy lịch: Chỉ cho phép khi pending hoặc confirmed. Khóa khi in-progress, accepted, completed, cancelled.
     if (!['pending', 'confirmed'].includes(status)) return false;
@@ -502,10 +510,10 @@ function buildBookingCard(b) {
         </div>
         <hr class="rg-divider">
         <div class="rg-summary rg-booking-summary">
-            <div>
+            ${!b._receiptOnly || b.petName ? `<div>
                 <div class="rg-summary-label">Bé cưng</div>
                 <div class="rg-summary-value">${pet}</div>
-            </div>
+            </div>` : ''}
             <div>
                 <div class="rg-summary-label">Lịch hẹn</div>
                 <div class="rg-summary-value">${esc(date || 'Chưa có ngày')}${time ? ' · ' + esc(time) : ''}</div>
@@ -514,10 +522,10 @@ function buildBookingCard(b) {
                 <div class="rg-summary-label">Kết thúc dự kiến</div>
                 <div class="rg-summary-value">${esc(endTime)}</div>
             </div>` : ''}
-            <div>
+            ${!b._receiptOnly || b.staff ? `<div>
                 <div class="rg-summary-label">Nhân viên</div>
                 <div class="rg-summary-value">${staff}</div>
-            </div>
+            </div>` : ''}
             ${serviceItems ? `<div class="rg-booking-services">
                 <div class="rg-summary-label">Dịch vụ đã đặt</div>
                 <div class="rg-summary-value">${serviceItems}</div>
@@ -527,7 +535,7 @@ function buildBookingCard(b) {
                 <div class="rg-summary-value">${esc(visibleNote)}</div>
             </div>` : ''}
         </div>
-        ${canModifyBooking(b) || canCancelBooking(b) || ['in-progress', 'completed'].includes(resolvedStatus) ? `
+        ${!b._receiptOnly && (canModifyBooking(b) || canCancelBooking(b) || ['in-progress', 'completed'].includes(resolvedStatus)) ? `
         <div class="rg-actions" class="rg-actions-flex">
             ${canCancelBooking(b) ? `
             <button class="btn-track-order text-danger border-danger" onclick="handleGuestBookingAction('${esc(b.id)}', 'cancel')">
@@ -586,7 +594,7 @@ function buildOrderCard(o) {
             <div>
                 <h4 class="rg-item-name">Đơn hàng: ${esc(o.id)}</h4>
                 <div class="rg-item-meta">
-                    <span>Ngày đặt: ${fmtDate(o.createdAt)}</span>
+                    ${o.createdAt ? `<span>Ngày đặt: ${fmtDate(o.createdAt)}</span>` : ''}
                     ${o.delivery?.name ? `<span>Nhận: ${esc(o.delivery.name)}</span>` : ''}
                 </div>
             </div>
@@ -610,7 +618,7 @@ function buildOrderCard(o) {
                 <div class="rg-summary-value fw-medium ${paymentColor}">${paymentLabel}</div>
             </div>
         </div>
-        <div class="rg-actions rg-actions-center">
+        ${!o._receiptOnly ? `<div class="rg-actions rg-actions-center">
             ${(o.status === 'return_pending') ? `
             <div class="flex-grow-1 text-start">
                 <span class="rg-return-alert">
@@ -629,7 +637,7 @@ function buildOrderCard(o) {
             <button class="btn-track-order" onclick="handleGuestReturnRequest('${esc(o.id)}')">
                 Yêu cầu trả hàng/hoàn tiền
             </button>` : ''}
-        </div>
+        </div>` : ''}
     </div>`;
 }
 

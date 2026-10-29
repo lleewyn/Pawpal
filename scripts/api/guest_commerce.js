@@ -37,8 +37,8 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
    if(typeof req.body==='string'){if(Buffer.byteLength(req.body)>16384)throw Error('invalid_body');req.body=JSON.parse(req.body);}
    const body=req.body;
    if(!body||typeof body!=='object'||Array.isArray(body)||Buffer.byteLength(JSON.stringify(body))>16384)throw Error('invalid_body');
-   if(!['session','context','pets','profile-read','profile-update','recover','end','booking-slots','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
-   const keys=action==='pets'?['requestId','contact','pet']:action==='context'?['page']:
+   if(!['session','context','lookup','pets','profile-read','profile-update','recover','end','booking-slots','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
+   const keys=action==='pets'?['requestId','contact','pet']:action==='context'?['page']:action==='lookup'?['phone']:
     action==='booking-slots'?['details','day']:action==='booking-quote'?['details']:action==='booking-create'?['requestId','expectedQuote','details']:action==='booking-receipt'?['requestId']:
     action==='order-quote'?['details','lines']:action==='order-create'?['requestId','expectedQuote','contact','details','lines','paymentMethodId']:action==='order-receipt'?['requestId']:
     action==='profile-read'?['petId']:action==='profile-update'?['requestId','revision','contact','pet']:action==='recover'?['code']:[];
@@ -71,6 +71,18 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
    if(action==='context'){
     const page=body.page??1;if(!Number.isInteger(page)||page<1||page>1000)throw Error('invalid_body');
     return res.json({success:true,...await rpc('guest_commerce_context',{p_hash:session.hash,p_page:page})});
+   }
+   if(action==='lookup'){
+    const phone=normalizePhone(body.phone);
+    const context=await rpc('guest_commerce_context',{p_hash:session.hash,p_page:1});
+    if(!context?.initialized||context.contact?.phone!==phone)return res.status(403).json({success:false,message:'Chưa xác minh được số điện thoại trong phiên này. Vui lòng dùng thiết bị đã đặt đơn hoặc lịch hẹn, đăng nhập hoặc liên hệ PawPal.'});
+    const owner=await admin.from('guest_session').select('customer_id').eq('token_hash',session.hash).maybeSingle();
+    if(owner.error||!owner.data?.customer_id)throw Error('invalid_session');
+    const groups=await Promise.all(['appointment','sales_order'].map(table=>admin.from(table).select('id').eq('customer_id',owner.data.customer_id).order('created_at',{ascending:false}).limit(50)));
+    for(const group of groups)if(group.error)throw group.error;
+    // Each receipt RPC rechecks the session, owner and transaction grant.
+    const [bookings,orders]=await Promise.all(groups.map((group,index)=>Promise.all((group.data||[]).map(row=>rpc(index===0?'guest_booking_receipt':'guest_sales_receipt',{p_hash:session.hash,p_request:row.id})))));
+    return res.json({success:true,bookings,orders});
    }
    if(action==='profile-read'){
     if(body.petId!=null&&!UUID.test(body.petId))throw Error('invalid_body');
