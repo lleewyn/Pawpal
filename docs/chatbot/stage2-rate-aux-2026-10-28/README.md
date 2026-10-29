@@ -55,11 +55,11 @@ Trong lượt kiểm chứng, Auth/REST task-owned đã dừng sau Docker restar
 |Phần còn lại |Trạng thái cụ thể |
 |---|---|
 |Tổng request trước Auth |Chưa có guard chia sẻ tại lớp hosting; rate SQL sau Auth không thay thế được. Chưa thêm dịch vụ theo lựa chọn người dùng. Cần xác minh/cấu hình giới hạn ingress tại hosting hiện có trước cam kết hard cap toàn hệ thống. |
-|Public open/list/read/mode/feedback |Các truy vấn kiểm ownership, revision/history và thao tác ghi vẫn theo đường hiện có, ngoài pool nguồn mới; transcript public có thể lớn hơn trần nguồn Copilot. |
+|Public open/list/read/mode/feedback |Đợt144 đã đưa [body lịch sử/feedback và đọc phần](../stage2-public-history-2026-10-28/README.md) vào source pool/cap. Auth/ownership và open/list/mode/ghi feedback còn đường hiện có ngoài pool. |
 |Lưu exchange/audit/benchmark và runtime model config |Không thuộc trần số lượt nguồn; phải tính vào tổng tải, không bỏ kiểm quyền/audit để giảm request. |
 |Đường RPC/table cũ |Vẫn còn để tương thích; không được gọi pool mới là sandbox cưỡng chế mọi đường DB. Không revoke mù trước kiểm tra nơi đang dùng. |
 |Dữ liệu rule/raw/handlers quá lớn |Hiện từ chối rõ theo trần, chưa có tất cả luồng tìm/đọc chi tiết riêng. Không cắt dữ liệu để sửa hoặc đưa ra quyết định. |
-|Phát hành |Migrations135–143 chưa áp Cloud; giai đoạn2 chưa push. Chưa đo headroom/SLO Production. |
+|Phát hành |Checkpoint đến143 đã push ở472da7ed; phần144 tiếp theo còn local. Migrations135–144 chưa áp Cloud, chưa đo headroom/SLO Production. |
 
 Không dùng một RPC kiểm quota mới cho mỗi lượt Auth để giả rằng đã giảm tải: bản thân RPC control đó vẫn tạo thêm transaction. Không đánh dấu DB16/G2.2 toàn hệ thống đạt khi chưa bao phủ các dòng trên. Đây là điều kiện phát hành còn mở, không phải lỗi được che bằng fallback.
 

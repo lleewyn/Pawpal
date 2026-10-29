@@ -8,7 +8,7 @@ const cases=[
  ['Hôm nay có bao nhiêu lịch Spa đang chờ phục vụ?','appointment.list'],
  ['Lịch hẹn spa ngày mai','appointment.list'],['Lịch hẹn khách sạn hôm qua','appointment.list'],
  ['Lịch hẹn taxi 25/10/2026 chờ duyệt','appointment.list'],['Lịch hẹn Spa ngày 31/02/2026','clarify'],
- ['Lịch hẹn Spa tuần này','clarify'],['Lịch hẹn Spa','clarify'],
+ ['Lịch hẹn Spa tuần này','appointment.search'],['Lịch hẹn Spa','clarify'],
  ['Có bao nhiêu SKU dưới ngưỡng?','inventory.low_stock'],['Sản phẩm sắp hết hàng','inventory.low_stock'],
  ['Liệt kê sản phẩm tồn thấp','inventory.low_stock'],['Tồn kho bằng ngưỡng','clarify'],
  ['Khiếu nại chưa xử lý trong 24 giờ qua','ticket.open'],['Khiếu nại hôm nay','ticket.open'],

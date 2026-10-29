@@ -1,6 +1,30 @@
 # Checklist chỉnh sửa chatbot Admin và chatbot khách hàng
 
-Ngày lập: 28/10/2026. Trạng thái: **Giai đoạn 1 đã push nhánh feat/guest-admin-identity tại af2deee1. Giai đoạn 2 đã có checkpoint mã nguồn và bằng chứng local đến migration143; Gate 2 chưa đóng, migrations135–143 chưa áp Cloud.**
+**Git 29/10/2026:** Người dùng yêu cầu push mã đã hoàn thành rồi tiếp tục giai đoạn4. Đợt này gom thay đổi144–154 và mã giai đoạn4 trên nhánh feat/guest-admin-identity; không áp migration Cloud. Các mô tả chưa push trong hồ sơ bên dưới là mốc kiểm thử trước đợt đồng bộ mã này.
+
+**G4.1/G4.4 bổ sung ngày29/10:** Đã có khách → hồ sơ thú cưng và đơn được tạo mới nhất, cùng UUID đã xác định, tối đa3 nguồn. Thú cưng gồm mọi trạng thái, trả tổng/tối đa10 dòng;đơn theo created_at/UUID, không suy thanh toán/giao hàng.154/rollback đạt8 nhóm SQL/Auth/JWT/REST/API thật;242 kiểm tra offline,40 ca nghiệp vụ và Chrome đạt. Môi trường thử đã dọn. [Bằng chứng](docs/chatbot/stage4-customer-commerce-2026-10-29/README.md). Chưa push/áp Cloud.
+
+**G4.3/G4.4 ngày29/10:** Đã có bảng kiểm tra đơn hủy thu nhiều hơn hoàn và lịch confirmed chưa phân công cả ca/hạng mục.2 nguồn hiện có, không dùng model;đơn lấy toàn bộ tồn đọng, kỳ chỉ lọc lịch, không kết luận SLA/quá hạn hoặc khoản hoàn đã duyệt.7 nhóm SQL/Auth/JWT/REST/API thật,233 kiểm tra offline,40 ca nghiệp vụ và Chrome đạt. Môi trường thử đã dọn;không có migration mới. [Bằng chứng](docs/chatbot/stage4-pending-2026-10-29/README.md). Chưa push/áp Cloud.
+
+**G4.1/G4.4 ngày29/10:** Đã có local luồng một khách → lịch sắp tới/vừa qua gần nhất và phiếu còn mở gắn trực tiếp khách. Xác định UUID duy nhất rồi đọc quan hệ, không ghép tên/điện thoại trùng; tổng3 nguồn hoặc2 nếu thiếu quyền phiếu. Migration153/rollback,8 nhóm SQL/Auth/JWT/REST/API thật và223 kiểm tra offline đạt;40 ca nghiệp vụ và kiểm tra Chrome đạt. Môi trường thử đã dọn. [Phạm vi và bằng chứng](docs/chatbot/stage4-customer-case-2026-10-29/README.md). Chưa push/áp Cloud.
+
+**Bắt đầu giai đoạn4 ngày29/10 theo yêu cầu người dùng:** Đã triển khai local so sánh thực thu ngày/tuần/tháng này với kỳ trước theo phần thời gian đã trôi qua;2 nguồn có quyền, không dùng model tính số. Một nguồn lỗi trả kết quả từng phần có nhãn, không tính chênh lệch.214 kiểm tra offline và40 ca nghiệp vụ đạt. [Phạm vi, công thức và bằng chứng](docs/chatbot/stage4-compare-2026-10-29/README.md). G4.1/G4.3 chưa làm;G4.2/G4.4 mới có luồng này, Gate2/G3.4 còn mở.
+
+**Ma trận G3.4 mở rộng ngày29/10:** 28 công cụ nghiệp vụ được kiểm tra có dấu/không dấu, dữ liệu rỗng, từng quyền cơ sở và lỗi nguồn;118 nhóm mới đạt. Đã sửa “Thanh toán đơn” thiếu mã đi nhầm FAQ và chặn trường số hỏng thành0/NaN ở formatter nhóm mới. Tổng203 kiểm tra offline và40 ca nghiệp vụ đạt. Không thêm query/Gemini/Cloud. [Kết quả và giới hạn](docs/chatbot/stage3-matrix-2026-10-29/README.md).
+
+**Hotel sau152 đã kiểm tra ngày29/10:** Đã chạy đúng1 lượt được đồng ý riêng, đạt PASS_SAMPLE: nêu rõ thiếu giá/sức chứa/tiện ích, không bịa chênh lệch, chỉ cách đối chiếu danh mục. Các mẫu đại diện đặt lịch, nhóm C và Hotel sau sửa đều đã có kết quả đạt; không chứng nhận toàn bộ ma trận. 85 kiểm tra offline đạt, môi trường thử đã dọn. [Bằng chứng](docs/chatbot/stage3-hotel-model-2026-10-29/README.md). Chưa push/áp Cloud.
+
+**Đánh giá model 29/10:** Đã chạy đúng3 lượt mới được đồng ý: đặt lịch và nhóm C đạt trong mẫu, Hotel chưa hữu ích nên kết luận PARTIAL. Đã sửa nguồn FAQ Hotel bằng152 và rollback, đạt7 nhóm SQL local; chưa gọi model sau sửa. 84 kiểm tra offline đạt, môi trường thử đã dọn. [Phản hồi, tiêu chí và giới hạn](docs/chatbot/stage3-model-review-2026-10-29/README.md). Không có lượt ngoài phạm vi được duyệt; chưa push/áp Cloud.
+
+**Hoàn thiện hai phần FAQ 29/10:** Đã sửa FAQ đặt lịch bằng migration150 và bổ sung3 FAQ nhóm C bằng migration151 trong bảng nội bộ riêng, khách không đọc được. 7 nhóm SQL/Auth/JWT/REST tích hợp đạt, ngoài7 nhóm kiểm tra150 trước đó; 82 kiểm tra offline và40 ca nghiệp vụ hồi quy đạt. Môi trường thử đã dọn. [Nội dung, quyền và bằng chứng](docs/chatbot/stage3-faq-internal-2026-10-29/README.md). Phần FAQ local hoàn tất; chưa push/áp Cloud, G3.4 còn đánh giá model và nghiệm thu triển khai.
+
+**FAQ đặt lịch 29/10 — G3.4:** Đã có migration150 và rollback phân biệt guest/member, kiểm tra nội dung cũ trước khi sửa, không bật lại FAQ tắt hoặc ghi đè FAQ đã chỉnh. 7 nhóm PostgreSQL local đạt, môi trường riêng đã dọn. Không tăng truy vấn mỗi câu hỏi, không gọi thêm Gemini. [Bằng chứng](docs/chatbot/stage3-faq-2026-10-29/README.md). FAQ Cloud chưa đổi; G3.4 còn mở.
+
+**Tiếp tục 29/10 — G3.4:** Giữ dữ liệu nghiệp vụ đã tra cứu khi thiếu FAQ hoặc bước soạn AI không sẵn sàng/trả bản nháp rỗng, nêu rõ phần chưa hoàn tất và đưa đường mở phân hệ. Không đọc lại nguồn/gọi lại model; giữ trần 3 nguồn kể cả lịch sử. 81 kiểm tra offline và 40 ca nghiệp vụ đạt; liên kết giao diện đã kiểm chứng ở đợt trước. Lỗi quyền, nguồn và lưu vẫn báo lỗi. [Bằng chứng và giới hạn](docs/chatbot/stage3-staff-2026-10-28/partial-guidance-2026-10-29.md). G3.4 vẫn mở.
+
+**Cập nhật 29/10 — G3.4:** Đã đối chiếu mã nguồn đặt lịch vãng lai/thành viên và soạn FAQ đề xuất; bổ sung chỉ dẫn model nêu rõ phần thiếu thông tin, không áp quy định sai đối tượng; chặn sinh hướng dẫn từ FAQ rỗng. 56 kiểm tra chatbot và 16 kiểm tra guest offline đạt, cùng 40 ca nghiệp vụ hồi quy. Không thêm lượt đọc database hoặc gọi Gemini; FAQ Cloud chưa cập nhật, chất lượng model thật vẫn PARTIAL. [Chi tiết và việc còn lại](docs/chatbot/stage3-staff-2026-10-28/faq-audience-review-2026-10-29.md).
+
+Ngày lập: 28/10/2026. Cập nhật: 29/10/2026. Trạng thái: **Đang triển khai giai đoạn4: so sánh thực thu, hai luồng liên quan khách (lịch/khiếu nại và thú cưng/đơn mới nhất), hai nhóm việc cần kiểm tra, có kết quả từng phần.242 kiểm tra offline,40 ca nghiệp vụ và Chrome đạt;154/rollback mới đạt8 nhóm SQL/Auth/API thật, bên cạnh bằng chứng153 và bảng kiểm tra trước đó. G3.4 và Gate2 còn mở, chưa chứng nhận toàn bộ ma trận hoặc Production. Checkpoint đã push vẫn là472da7ed; phần144–154 và mã giai đoạn4 còn local, migrations135–154 chưa áp Cloud.**
 
 **Kết quả giai đoạn 1:** [Hồ sơ nghiệm thu và giới hạn](docs/chatbot/stage1-acceptance-2026-10-28/README.md). Có 13 nhóm Auth/API/UI/WebSocket thật local, 12 nhóm SQL cạnh tranh/quyền, sửa P0 cộng dồn điểm 50/200 mỗi ca, bảo vệ dữ liệu model và composer đóng ca. Trạng thái đạt bên dưới áp dụng cho bộ nghiệm thu local, không phải chứng nhận Production hoặc chất lượng Gemini thật.
 
@@ -260,7 +284,7 @@ Liên kết mở phân hệ/bộ lọc là chức năng cần triển khai và k
 
 ## 16. Kế hoạch triển khai chi tiết theo giai đoạn
 
-Đây là thứ tự triển khai chính thức của tài liệu kế hoạch này, thay cho thứ tự đợt trước khi bổ sung ma trận phạm vi. Các mục 3–8 là nhóm yêu cầu kỹ thuật để đối chiếu, không phải lịch thực hiện riêng. **Giai đoạn 0–1 đạt trong phạm vi local đã ghi; giai đoạn 2 đang làm, giai đoạn 3–8 chưa bắt đầu theo kế hoạch mới**; chức năng cũ chỉ được đánh dấu đạt sau kiểm chứng tương ứng.
+Đây là thứ tự triển khai chính thức của tài liệu kế hoạch này, thay cho thứ tự đợt trước khi bổ sung ma trận phạm vi. Các mục 3–8 là nhóm yêu cầu kỹ thuật để đối chiếu, không phải lịch thực hiện riêng. **Giai đoạn0–1 đạt trong phạm vi local đã ghi; Gate2 còn mở; giai đoạn3 có công cụ/FAQ/bằng chứng local nhưng G3.4 còn nghiệm thu; giai đoạn4 đã bắt đầu theo yêu cầu người dùng; giai đoạn5–8 chưa bắt đầu**; chức năng cũ chỉ được đánh dấu đạt sau kiểm chứng tương ứng.
 
 ### Giai đoạn 0 — Chốt phạm vi và baseline
 
@@ -337,10 +361,12 @@ Các mục G1.1–G1.4 đã nghiệm thu theo ma trận local trong báo cáo t�
 
 **Cập nhật rate và nguồn còn lại:** [Migrations141–143](docs/chatbot/stage2-rate-aux-2026-10-28/README.md) đã có10 câu mới/phút/staff dùng chung giữa instance trong RPC cấp lượt, không thêm dịch vụ. Raw/handlers/chính sách điểm vào pool4, giữ audit/quyền; nguồn benchmark3→1 RPC, nguồn trả lời public4→2 RPC. Projection kiểm duyệt giảm31.980→12.542 byte trong fixture mà kết quả giữ nguyên. 8 nhóm rate/aux và10 nhóm Auth/API/bundles local,26 test offline cùng UI/hồi quy đạt; rollback và dọn clone đã thực hiện. Chưa áp Cloud/push.
 
-Chưa đóng Gate2 tổng tài nguyên: rate cấp lượt nằm sau Auth; cần giới hạn ingress trên hosting hiện có để chặn tổng tải trước Auth. Người dùng xác nhận không có dịch vụ khác, không thêm Redis/Upstash. Public open/list/read/mode/feedback, kiểm ownership/lưu/audit/model config và đường RPC/table cũ vẫn có phần ngoài pool. Trang rule/raw quá lớn chưa có đủ luồng chi tiết; không cắt dữ liệu để sửa/chèn. Danh mục điều kiện phát hành còn mở được ghi trong báo cáo141–143; DB16 vẫn mở.
+**Tiếp sau push:** [Lịch sử khách hàng144](docs/chatbot/stage2-public-history-2026-10-28/README.md) đã gom messages/feedback thành một source RPC, pool4, SQL cap32 KiB/timeout5 giây, page theo bytes và đọc tin dài theo phần. Cold Auth/DB member5→4, guest4→3; revision giữ3/2 như baseline. Metadata được lọc tại SQL, giữ CSAT/ownership; widget giữ draft/identity, không mất đường đọc khi các trang tin mới chưa nối nhau. 9 nhóm local,32 test và UI/hồi quy đạt; rollback/dọn clone đã thực hiện. Phần144 còn local, chưa push.
+
+Chưa đóng Gate2 tổng tài nguyên: rate cấp lượt nằm sau Auth; cần ingress trên hosting hiện có cho tải trước Auth. Người dùng không có dịch vụ khác, không thêm Redis/Upstash. Public open/list/mode/feedback, kiểm ownership/lưu/audit/model config và đường RPC/table cũ còn phần ngoài pool. Trang rule/raw quá lớn chưa đủ luồng chi tiết; không cắt dữ liệu để sửa/chèn. DB16 vẫn mở.
 
 - [x] G2.1 — Contract planv1 cho các intent hiện có: đối tượng/filter/operation/kỳ/relations/readOnly; không coi relations trống là công cụ join tương lai đã có.
-- [ ] G2.2 — Đã có source pool4 cho registry, Inbox/panel, history/transcript, rules/counts/canned, raw/handlers/policies, benchmark/public source; SQL cap/timeout và kiểm quyền đạt local. Đã có rate10 câu mới/phút/staff chia sẻ giữa instance, kiểm ngay trong cấp lượt. Còn ingress trước Auth, tổng tải các đường ngoài pool và dữ liệu chi tiết quá lớn theo bảng điều kiện phát hành trước đóng gate toàn hệ thống.
+- [ ] G2.2 — Source pool4/cap/timeout/quyền đạt local cho các nhóm đã ghi đến144, gồm lịch sử và đọc phần của guest/member. Có rate10 câu mới/phút/staff dùng chung; source requests đã giảm và idle revision giữ baseline. Còn ingress trước Auth, tổng tải ngoài pool và chi tiết dữ liệu lớn theo các báo cáo trước đóng gate toàn hệ thống.
 - [x] G2.3 — Bộ câu hỏi hiện có có không dấu/typo giới hạn, tiếp nối ngày, hint khách đã chọn; thiếu mã đơn hoặc filter chưa hỗ trợ phải làm rõ. Không tự dùng đơn gần nhất.
 - [x] G2.4 — Contractv1 dữ liệu/phạm vi/nguồn/thời điểm/hạn chế; continuation UI whitelist subtab, không giả deep filter. Phân biệt 403/422/504/source-error và zero kết quả.
 - [x] G2.5 — Facts gọi RPC xác định, descriptor đã validate và freeze; không nhận SQL/tên RPC tùy ý hoặc đưa số liệu cho model tự đếm.
@@ -353,11 +379,13 @@ Chưa đóng Gate2 tổng tài nguyên: rate cấp lượt nằm sau Auth; cần
 
 **Tham chiếu:** A01–A05, A09, mục 12–13, Q02/Q05/Q06. **Phụ thuộc:** Giai đoạn 2.
 
-- [ ] G3.1 — Nhóm A bắt buộc: khách/thú cưng, đơn/thanh toán, lịch/ca dịch vụ, khiếu nại và hội thoại.
-- [ ] G3.2 — Nhóm B bắt buộc: sản phẩm/tồn kho, giá dịch vụ, Pawpoint và ưu đãi theo quyền.
-- [ ] G3.3 — Nhóm C bắt buộc: nhân sự/lịch trực, báo cáo, nội dung/đánh giá và cấu hình được phép đọc.
-- [ ] G3.4 — Trong từng nhóm, hỗ trợ tra chi tiết, tìm/lọc, đếm/tổng hợp, hướng dẫn và soạn nháp khi có nguồn phù hợp.
-- [ ] G3.5 — Thêm khoảng ngày/tuần/tháng theo định nghĩa thống nhất; kiểm tra phân trang, tổng, dữ liệu rỗng và lỗi nguồn.
+- [x] G3.1 — Nhóm A có danh mục công cụ local: khách/thú cưng, đơn/thanh toán và tồn đọng hoàn, lịch theo buổi/phân công, phiếu hỗ trợ và hội thoại. Ba câu hỏi nghiệm thu chạy qua API/Auth thật local, mỗi câu một nguồn.
+- [x] G3.2 — Nhóm B: giữ sản phẩm/tồn kho và giá dịch vụ đã có; thêm tổng sổ Pawpoint và danh mục ưu đãi đang hiệu lực theo quyền. Chưa kết luận khách/đơn đủ điều kiện dùng ưu đãi.
+- [x] G3.3 — Nhóm C có công cụ local: nhân sự/lịch trực, ba số đếm vận hành, bài viết/tóm tắt, đánh giá/đoạn trích và 9 đường dẫn cấu hình cho phép. Không trả lương, ghi chú nghỉ, khóa hoặc tài khoản ngân hàng.
+- [ ] G3.4 — Công cụ/phân trang/nội dung dài/lọc KTV đã đạt trong danh mục local đã công bố;7 nhóm SQL/API149 ngoài11 nhóm147–148 và15 nhóm146. FAQ150–151 đạt7 nhóm tích hợp và7 nhóm150 riêng;152/rollback đạt7 nhóm SQL. Các mẫu Gemini đại diện A/B/C đã có kết quả đạt riêng; giữ nguyên mẫu thất bại cũ. Ma trận offline28 công cụ đạt118 nhóm, tổng203 kiểm tra và40 ca nghiệp vụ đạt; đã sửa thiếu mã thanh toán/kiểm tra trường số. Còn đối chiếu oracle database rộng hơn và môi trường triển khai; không gọi thêm model trong đợt ma trận. [Ma trận và giới hạn](docs/chatbot/stage3-matrix-2026-10-29/README.md), [Hotel đã đạt trong mẫu](docs/chatbot/stage3-hotel-model-2026-10-29/README.md).
+- [x] G3.5 — Đạt local cho danh mục đã công bố: ngày/tuần thứ Hai/tháng lịch, khoảng tối đa31 ngày; 15 công cụ ban đầu và8 danh sách cũ có10 dòng/trang, thêm phân trang mức giá con và phần nội dung2000 ký tự. Có kiểm tra tổng/rỗng/quyền/lease/byte/4 slot/timeout/đổi phiên bản/rollback. Kho tri thức vẫn tìm kiếm top5, không phải duyệt toàn bộ FAQ.
+
+**Hồ sơ:** [Danh mục câu hỏi, giới hạn và kết quả giai đoạn 3](docs/chatbot/stage3-admin-2026-10-28/README.md). Migration145 có rollback; chưa áp Cloud/push. Giữ ngân sách 3 nguồn/câu, 2 đồng thời, 32 KiB/nguồn, 64 KiB/câu và pool4 dùng chung; không phát sinh polling hoặc listener mới.
 
 **Ví dụ nghiệm thu:** “Lịch Spa chiều mai chưa có KTV”, “Khách này có bé nào?”, “Đơn hủy đã thanh toán nhưng chưa hoàn”.
 
@@ -369,10 +397,10 @@ Chưa đóng Gate2 tổng tài nguyên: rate cấp lượt nằm sau Auth; cần
 
 **Tham chiếu:** C04–C08, mục 13, Q02/Q05/Q06. **Phụ thuộc:** Các công cụ nguồn tương ứng của giai đoạn 3 đã đạt.
 
-- [ ] G4.1 — Phối hợp khách/thú cưng/lịch/đơn/khiếu nại mà không trộn đối tượng hoặc đếm trùng quan hệ nhiều dòng.
-- [ ] G4.2 — Bổ sung so sánh kỳ và phân nhóm; chốt công thức doanh số/thực thu/hoàn tiền và các chỉ số mới trước triển khai.
-- [ ] G4.3 — Đối soát ngoại lệ và việc cần xử lý theo trạng thái, hạn, phân công và chính sách có dữ liệu xác nhận.
-- [ ] G4.4 — Nguồn thiếu/lỗi trả kết quả từng phần có nhãn; giải thích nguyên nhân chỉ khi có sự kiện/chứng từ chứng minh.
+- [ ] G4.1 — Đã có local hai luồng một khách → lịch/phiếu còn mở và → thú cưng/đơn tạo mới nhất. Xác định UUID duy nhất, ưu tiên ngữ cảnh hợp lệ, khách trùng thì dừng;không ghép quan hệ theo tên. Thú cưng trả tổng/tối đa10 dòng mọi trạng thái;đơn chọn theo created_at/UUID, không nối dòng hàng hoặc suy thanh toán.3 nguồn có quyền, không dùng model;153 và154/rollback mỗi đợt đạt8 nhóm SQL/Auth/JWT/REST/API thật. Còn các tổ hợp nhiều nhóm hoặc quan hệ qua hạng mục/chi tiết đơn, chưa áp Cloud. [Luồng mới](docs/chatbot/stage4-customer-commerce-2026-10-29/README.md).
+- [ ] G4.2 — Đã có local so sánh thực thu ngày/tuần/tháng này với kỳ trước cùng phần thời gian đã trôi qua, tháng ngắn có giới hạn rõ;2 nguồn `revenue.summary`, thu thành công trừ hoàn thành công theo thời điểm giao dịch. Chênh lệch bằng hiện tại trừ kỳ trước; chỉ tính phần trăm khi kỳ trước dương.11 nhóm mới và tổng214 kiểm tra offline đạt,40 ca nghiệp vụ đạt. Còn oracle SQL cho luồng kết hợp, phân nhóm và chỉ số/công thức khác. [Bằng chứng](docs/chatbot/stage4-compare-2026-10-29/README.md).
+- [ ] G4.3 — Đã có local hai nhóm kiểm tra: đơn cancelled có thu succeeded lớn hơn hoàn succeeded (toàn bộ tồn đọng) và lịch confirmed trong kỳ chưa gán KTV ở cả ca/hạng mục chưa hủy.2 nguồn có quyền, tối đa10 dòng/nhóm và tổng chính xác, không cộng hai tổng/không tự xếp ưu tiên.10 nhóm offline mới và7 nhóm SQL/Auth/JWT/REST/API thật đạt. Chênh lệch cần đối soát, không phải khoản hoàn đã duyệt;chưa gắn nhãn SLA/quá hạn hoặc xử lý ngoại lệ/chính sách khác. [Bằng chứng](docs/chatbot/stage4-pending-2026-10-29/README.md).
+- [ ] G4.4 — Đã có cho so sánh thực thu, hai luồng ca khách và bảng kiểm tra: giữ phần hợp lệ, nguồn lỗi/thiếu quyền không giả0, không suy diễn nguyên nhân;nguồn lệch UUID/bộ lọc bị loại. Luồng thú cưng/đơn còn kiểm tra customer_id từng dòng. Thiếu quyền bỏ RPC tương ứng;replay không đọc lại nguồn. Bảng kiểm tra không có nguồn hợp lệ thì báo lỗi, không lưu phản hồi hoàn tất giả.242 kiểm tra offline và các oracle local đã ghi đạt;chưa áp dụng chung cho mọi câu hỏi liên phân hệ hoặc nghiệm thu triển khai.
 
 **Ví dụ nghiệm thu:** “Khách này có lịch gần nhất và khiếu nại nào còn mở?”, “Tuần này thực thu so tuần trước?”, “Sản phẩm bán nhiều nào sắp thiếu?”.
 

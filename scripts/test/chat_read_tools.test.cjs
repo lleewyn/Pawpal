@@ -7,7 +7,7 @@ test('question variants and selected context preserve intent without arbitrary q
  assert.equal(plan('lich henh spa hom nay cho phuc vu',now).intent,'appointment.list');
  assert.equal(plan('ton kh0 duoi nguong',now).intent,'inventory.low_stock');
  assert.equal(plan('Khách hàng tên Nguyễn An',now).filters.query,'Nguyễn An');
- assert.equal(plan('Lịch Spa chiều mai chưa có KTV',now).intent,'clarify');
+ assert.equal(plan('Lịch Spa chiều mai chưa có KTV',now).intent,'appointment.search');
  assert.equal(contextualPlan('khách này',[],now,{customerQuery:'CUS-01'}).filters.query,'CUS-01');
  assert.equal(contextualPlan('đơn này',[],now,{}).intent,'clarify');
 });

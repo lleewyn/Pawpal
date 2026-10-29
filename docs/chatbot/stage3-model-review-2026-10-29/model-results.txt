@@ -1,0 +1,65 @@
+{
+  "scope": "Real production generator/Gemini, active FAQ from owned local clone, no customer data or Cloud DB",
+  "model": "gemini-2.5-flash",
+  "maxGenerations": 3,
+  "generations": 3,
+  "cases": [
+    {
+      "group": "A",
+      "source": {
+        "question": "Đặt lịch PawPal như thế nào?",
+        "answer": "Chọn dịch vụ, nhập hoặc chọn thông tin bé cưng, chọn thời gian phù hợp, kiểm tra báo giá và gửi yêu cầu đặt lịch. Thành viên đăng nhập để sử dụng hồ sơ bé của tài khoản. Khách vãng lai có thể dùng luồng dành cho khách vãng lai, cung cấp thông tin liên hệ và hồ sơ bé; cần giữ phiên khách hoặc thông tin khôi phục để xem lại yêu cầu. Sau khi gửi, hãy kiểm tra biên nhận và trạng thái lịch; đã tiếp nhận yêu cầu chưa có nghĩa là đã thanh toán hoặc đã được cửa hàng duyệt."
+      },
+      "status": "GENERATED",
+      "reply": "Để đặt lịch PawPal, bạn cần chọn dịch vụ, nhập hoặc chọn thông tin của bé cưng, chọn thời gian phù hợp, kiểm tra báo giá và gửi yêu cầu đặt lịch.\n\n*   **Thành viên:** Đăng nhập để sử dụng hồ sơ bé cưng đã lưu trong tài khoản.\n*   **Khách vãng lai:** Có thể sử dụng luồng dành cho khách vãng lai, cung cấp thông tin liên hệ và hồ sơ bé cưng. Cần giữ phiên khách hoặc thông tin khôi phục để xem lại yêu cầu.\n\nSau khi gửi yêu cầu, hãy kiểm tra biên nhận và trạng thái lịch. Việc yêu cầu đã được tiếp nhận chưa có nghĩa là đã thanh toán hoặc đã được cửa hàng duyệt. (Nguồn: FAQ)",
+      "review": {
+        "grounding": "PASS_SAMPLE",
+        "usefulness": "PASS_SAMPLE",
+        "limitations": "Single sample; does not certify all guest/member flows"
+      },
+      "source_count": 1
+    },
+    {
+      "group": "B",
+      "source": {
+        "question": "Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+        "answer": "PawPal có các loại phòng theo danh mục Pet Hotel. Mình có thể giúp bạn so sánh giá, sức chứa và tiện ích của từng loại phòng.\n(Quy định: Chỉ hiển thị loại phòng đang được cung cấp.)"
+      },
+      "status": "GENERATED",
+      "reply": "PawPal có các loại phòng theo danh mục Pet Hotel. Tôi có thể giúp bạn so sánh giá, sức chứa và tiện ích của từng loại phòng.",
+      "review": {
+        "grounding": "PASS_SAMPLE",
+        "usefulness": "NEEDS_IMPROVEMENT",
+        "limitations": "Repeats a generic offer without acknowledging missing prices; not a useful comparison"
+      },
+      "source_count": 1
+    },
+    {
+      "group": "C",
+      "source": {
+        "question": "Trợ lý Admin hỗ trợ tra cứu nhân sự và lịch trực như thế nào?",
+        "answer": "Bạn có thể hỏi “Nhân viên đang làm việc”, “Nhân viên: họ tên” hoặc “Lịch trực tuần này”. Tra cứu nhân sự hỗ trợ danh sách, chức danh và trạng thái làm việc; lịch trực hỗ trợ khoảng ngày tối đa 31 ngày và tìm theo tên nhân viên. Kết quả chỉ trong quyền được cấp, tối đa 10 dòng mỗi trang; hỏi tiếp “trang 2” để xem thêm. Nếu trùng tên, hãy đối chiếu mã nhân viên để chọn đúng người. Trợ lý không trả lương, tài khoản ngân hàng hoặc ghi chú nghỉ cá nhân và không tự phân ca, chuyển ca hay sửa hồ sơ. Muốn thực hiện nghiệp vụ, mở Nhân sự hoặc Lịch làm việc, kiểm tra thông tin và thao tác theo quyền của bạn."
+      },
+      "status": "GENERATED",
+      "reply": "Trợ lý Admin hỗ trợ tra cứu nhân sự và lịch trực, bài viết và đánh giá, cấu hình và báo cáo vận hành như sau:\n\n**1. Tra cứu nhân sự và lịch trực:**\n\n*   **Cách hỏi:** Bạn có thể hỏi \"Nhân viên đang làm việc\", \"Nhân viên: họ tên\" hoặc \"Lịch trực tuần này\".\n*   **Hỗ trợ:**\n    *   **Nhân sự:** Danh sách, chức danh và trạng thái làm việc.\n    *   **Lịch trực:** Khoảng ngày tối đa 31 ngày và tìm theo tên nhân viên.\n*   **Giới hạn:**\n    *   Kết quả chỉ trong quyền được cấp, tối đa 10 dòng mỗi trang.\n    *   Nếu trùng tên, cần đối chiếu mã nhân viên để chọn đúng người.\n    *   Trợ lý không trả lương, tài khoản ngân hàng hoặc ghi chú nghỉ cá nhân.\n    *   Trợ lý không tự phân ca, chuyển ca hay sửa hồ sơ.\n*   **Cách tiếp tục xử lý:** Hỏi tiếp \"trang 2\" để xem thêm. Muốn thực hiện nghiệp vụ, mở Nhân sự hoặc Lịch làm việc, kiểm tra thông tin và thao tác theo quyền của bạn.\n\n**2. Tra cứu bài viết và đánh giá:**\n\n*   **Cách hỏi:** Bạn có thể hỏi \"Bài viết đã đăng\", \"Bài viết nháp\" hoặc \"Đánh giá thấp tháng này\".\n*   **Hỗ trợ:**\n    *   **Bài viết:** Tìm theo tiêu đề hoặc đường dẫn và lọc trạng thái.\n    *   **Đánh giá:** Khoảng ngày tối đa 31 ngày, từ khóa và số sao; \"đánh giá thấp\" là tối đa 2 sao.\n*   **Giới hạn:**\n    *   Danh sách tối đa 10 dòng mỗi trang.\n    *   Nội dung dài chia thành từng phần và chỉ đọc tiếp khi bạn yêu cầu.\n    *   Nếu nội dung đổi phiên bản, cần tra lại phần đầu.\n    *   Trợ lý không tự đăng bài, sửa bài hoặc gửi phản hồi đánh giá.\n*   **Cách tiếp tục xử lý:** Khi cần đọc nội dung đầy đủ, cung cấp mã bài viết hoặc mã đánh giá, ví dụ \"Nội dung bài viết: mã bài viết\". Bạn cần kiểm tra và thực hiện tại phân hệ tương ứng theo quyền.\n\n**3. Tra cứu cấu hình và báo cáo vận hành:**\n\n*   **Cách hỏi:** Bạn có thể hỏi \"Giờ mở cửa\", \"Thông tin cửa hàng\" hoặc \"Báo cáo vận hành tuần này\".\n*   **Hỗ trợ:**\n    *   **Cấu hình:** Tên, hotline, địa chỉ cửa hàng, giờ mở và đóng ngày thường/cuối tuần, số giờ hủy miễn phí và sức chứa khung giờ.\n    *   **Báo cáo vận hành:** Trả riêng số đơn được tạo, lịch hẹn bắt đầu và phiếu hỗ trợ được tạo trong khoảng tối đa 31 ngày.\n    *   **Thực thu:** Hỏi \"Thực thu tuần này\"; số liệu tính từ giao dịch thu và hoàn thành công theo thời điểm tương ứng, không phải giá trị đơn tạo trong kỳ.\n*   **Giới hạn:**\n    *   Không trả khóa, mật khẩu hoặc thông tin tài khoản thanh toán.\n    *   Không cộng ba số thành một chỉ số chung.\n    *   Trợ lý không sửa cấu hình hoặc thực hiện giao dịch.\n    *   Kết quả cần được đọc cùng phạm vi, thời điểm và giới hạn hiển thị; thiếu quyền hoặc lỗi nguồn không có nghĩa là số liệu bằng 0.\n*   **Cách tiếp tục xử lý:** Chưa có thông tin về cách tiếp tục xử lý cụ thể cho phần này ngoài việc đọc kết quả cùng phạm vi, thời điểm và giới hạn hiển thị.",
+      "review": {
+        "grounding": "PASS_SAMPLE",
+        "usefulness": "PASS_SAMPLE",
+        "limitations": "Combined three-FAQ sample; no end-to-end/API or all-phrasing coverage; configuration next steps limited by source"
+      },
+      "source_count": 3
+    }
+  ],
+  "status": "PARTIAL",
+  "payloadSha256": "c9ee67f8117e7995e1c55cba9f740509f4c510de75238941c5a239556c794007",
+  "approval": {
+    "userApproved": true,
+    "authorizedGenerations": 3,
+    "destination": "https://generativelanguage.googleapis.com",
+    "payloadSha256": "c9ee67f8117e7995e1c55cba9f740509f4c510de75238941c5a239556c794007",
+    "generatorSha256": "e8cd0f449c066b6967f160796070451cd6026b598f8b41534a745fc1151ea572",
+    "sanitizerSha256": "81bf65705efc01455ee778a3b7d1bdd19f011000d0fbeec2eb4399bb0c646966"
+  },
+  "reviewedAt": "2026-10-29T03:03:11.595Z",
+  "reviewScope": "Three approved generator-only samples. Hotel FAQ migration152 was prepared/tested later and has not been sent to Gemini."
+}

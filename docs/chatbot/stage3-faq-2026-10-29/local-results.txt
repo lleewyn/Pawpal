@@ -1,0 +1,18 @@
+{
+  "scope": "Migration 150 on marker-owned local PostgreSQL only; no Cloud or model",
+  "database": "pawpal_chatbot_g0_b71159604edc",
+  "checks": [
+    "Forward changes only the reviewed answer; reapply is a no-op",
+    "Rollback restores exact previous answer; reapply is a no-op",
+    "Both directions preserve independent edits",
+    "Missing FAQ refuses instead of inserting or inventing a row",
+    "Duplicate question refuses without partially updating rows",
+    "Inactive FAQ stays inactive across forward and rollback",
+    "Rollback refuses to overwrite an edit made after migration"
+  ],
+  "status": "PASS",
+  "hashes": {
+    "forward": "f93b36efd518267e6888f23d7852106ed550eae2a60bacaea17ea5d7c87b1ec4",
+    "rollback": "cab63272bfc065c1e0e9d074f9c57a4bc1d1eb19b314f2fb96edd8ef77a64243"
+  }
+}

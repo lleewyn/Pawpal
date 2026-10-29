@@ -1,0 +1,26 @@
+{
+  "scope": "Owned local clone; real SQL/Auth/JWT/REST/API, no Cloud or model",
+  "checks": [
+    "Resolver uses exact code/UUID/name/phone, limits ambiguous matches and does not merge duplicate names or phones",
+    "Nearest future/past SQL oracle excludes another customer/cancelled appointments and cancelled items without multiplying appointments",
+    "Ticket count oracle is twelve with a ten-row sample, excluding closed and other-customer tickets",
+    "Closed SQL filters, per-source rights, actor-owned lease and byte cap are enforced",
+    "Actual Auth/API resolves one customer, reads exactly three sources, saves the scoped reply and never calls a model",
+    "Saved-reply replay does not resolve or reread any relationship source",
+    "Staff missing ticket permission receives appointment-only partial data without a ticket RPC",
+    "Rollback removes only the new gateway/indexes and migration can be reapplied"
+  ],
+  "hashes": {
+    "091_admin_sales_order_page.sql": "60e0811a8202468299f434f92e46481dea2fd96d6b500816b1b4e2b1990842ab",
+    "136_chat_read_admission.sql": "2e1bdbfe4b2a8c27e7ecdaa0a72803d493a8989dc1862f9179956ef3b009bc95",
+    "141_chat_shared_rate.sql": "100254e44bb49edad3cc28869e5f568a8f05a03c5dadcc6e459c76b2a16570be",
+    "153_admin_chat_customer_case.sql": "1b461d46da0268a078f6e260cceb343a1b277e4212224c88156be4856ed2c7e5",
+    "rollback": "dd4f0607c69bf6b187d2d0d8b2dbb9d2b4a99ba31dfc057c58abd7e16a1cb4ff"
+  },
+  "status": "PASS",
+  "api": {
+    "status": 200,
+    "error": null,
+    "sourceCalls": 3
+  }
+}

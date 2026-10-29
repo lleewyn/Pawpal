@@ -66,6 +66,22 @@ test('Booking inputs reject forged owner/price, invalid timestamps, request and 
  assert.equal((await send('booking-receipt',{requestId:'fake'},{cookie})).statusCode,400);
  assert.equal(calls(),0);
 });
+
+test('guest booking create uses a signed guest session without member Auth; missing session is denied before RPC',async()=>{
+ const calls=[],id='11111111-1111-4111-8111-111111111111';
+ const handler=createGuestCommerce({admin:{rpc:async(name,args)=>{calls.push({name,args});return {data:id};}},secret:'test-secret-with-at-least-32-bytes-long',origins:['https://pawpal.test'],production:true,limit:async()=>{}});
+ const send=async(action,body={},cookie)=>{
+  const res={headers:{},statusCode:200,setHeader(k,v){this.headers[k]=v;},status(n){this.statusCode=n;return this;},json(v){this.data=v;return this;}};
+  await handler({method:'POST',body,headers:{origin:'https://pawpal.test','content-type':'application/json',cookie}},res,action);return res;
+ };
+ const body={requestId:id,expectedQuote:'a'.repeat(32),details:{pet_id:id,service_id:'22222222-2222-8222-8222-222222222222',scheduled_start_at:'2030-01-01T10:00:00+07:00'}};
+ assert.equal((await send('booking-create',body)).statusCode,401);assert.equal(calls.length,0);
+ const cookie=(await send('session')).headers['Set-Cookie'].split(';')[0];assert.equal(calls.length,0);
+ const result=await send('booking-create',body,cookie);
+ assert.equal(result.data.success,true);assert.equal(result.data.bookingId,id);assert.equal(calls.length,1);
+ assert.equal(calls[0].name,'guest_booking_create');assert.match(calls[0].args.p_hash,/^[a-f0-9]{64}$/);
+ assert.equal(calls[0].args.p_request,id);assert.equal(calls[0].args.p_customer,undefined);
+});
 test('Checkout rejects client prices/owner/member benefits, malformed lines and payment IDs',async()=>{
  const {send,calls}=setup();const cookie=(await send('session')).headers['Set-Cookie'].split(';')[0];
  const details={delivery:false,discount_mode:'none'},line={variant_id:'33333333-3333-8333-8333-333333333333',quantity:1};

@@ -1,0 +1,9 @@
+{
+  "scope": "Local clone readiness only; no external model or Cloud calls",
+  "rpcAvailable": true,
+  "configured": false,
+  "activeKeyCount": 0,
+  "localProcessKeyPresent": false,
+  "modelCalls": 0,
+  "errorCode": null
+}

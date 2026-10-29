@@ -1,0 +1,1 @@
+PASS selected customer hint sent without preload; approved text-only continuation rendered; arbitrary URL rejected. Offline transport.

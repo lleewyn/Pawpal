@@ -1041,6 +1041,20 @@
     background: #1B5338;
 }
 
+.fab-chat-read-btn {
+    align-self: flex-start;
+    margin: 6px 0;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 9px;
+    background: #EEF5F1;
+    color: #236B48;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+.fab-chat-read-btn:disabled { opacity: .55; cursor: wait; }
+
 .fab-csat-submitted {
     padding: 10px 12px;
     text-align: center;

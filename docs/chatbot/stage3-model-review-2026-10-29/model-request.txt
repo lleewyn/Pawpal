@@ -1,0 +1,73 @@
+{
+  "version": 2,
+  "destination": "https://generativelanguage.googleapis.com",
+  "operation": "generateContent",
+  "model": "gemini-2.5-flash",
+  "maxGenerations": 3,
+  "history": [],
+  "audience": "staff",
+  "promptImplementation": "Existing requestGemini staff system instruction in api/admin-chat.js",
+  "generatorSha256": "e8cd0f449c066b6967f160796070451cd6026b598f8b41534a745fc1151ea572",
+  "sanitizerSha256": "81bf65705efc01455ee778a3b7d1bdd19f011000d0fbeec2eb4399bb0c646966",
+  "cases": [
+    {
+      "group": "A",
+      "status": "READY",
+      "question": "Giải thích ngắn gọn theo FAQ đang bật: Đặt lịch PawPal như thế nào?",
+      "context": {
+        "mode": "workflow.guide",
+        "faq": [
+          {
+            "question": "Đặt lịch PawPal như thế nào?",
+            "answer": "Chọn dịch vụ, nhập hoặc chọn thông tin bé cưng, chọn thời gian phù hợp, kiểm tra báo giá và gửi yêu cầu đặt lịch. Thành viên đăng nhập để sử dụng hồ sơ bé của tài khoản. Khách vãng lai có thể dùng luồng dành cho khách vãng lai, cung cấp thông tin liên hệ và hồ sơ bé; cần giữ phiên khách hoặc thông tin khôi phục để xem lại yêu cầu. Sau khi gửi, hãy kiểm tra biên nhận và trạng thái lịch; đã tiếp nhận yêu cầu chưa có nghĩa là đã thanh toán hoặc đã được cửa hàng duyệt."
+          }
+        ],
+        "limitations": [
+          "Chỉ dùng FAQ đang bật được cung cấp, không thêm bước hoặc cam kết chưa nêu. Không thực hiện thao tác ghi."
+        ]
+      }
+    },
+    {
+      "group": "B",
+      "status": "READY",
+      "question": "Giải thích ngắn gọn theo FAQ đang bật: Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+      "context": {
+        "mode": "workflow.guide",
+        "faq": [
+          {
+            "question": "Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+            "answer": "PawPal có các loại phòng theo danh mục Pet Hotel. Mình có thể giúp bạn so sánh giá, sức chứa và tiện ích của từng loại phòng.\n(Quy định: Chỉ hiển thị loại phòng đang được cung cấp.)"
+          }
+        ],
+        "limitations": [
+          "Chỉ dùng FAQ đang bật được cung cấp, không thêm bước hoặc cam kết chưa nêu. Không thực hiện thao tác ghi."
+        ]
+      }
+    },
+    {
+      "group": "C",
+      "status": "READY",
+      "question": "Trợ lý Admin hỗ trợ tra cứu nhân sự và lịch trực, bài viết và đánh giá, cấu hình và báo cáo vận hành như thế nào? Nêu giới hạn và cách tiếp tục xử lý.",
+      "context": {
+        "mode": "workflow.guide",
+        "faq": [
+          {
+            "question": "Trợ lý Admin hỗ trợ tra cứu nhân sự và lịch trực như thế nào?",
+            "answer": "Bạn có thể hỏi “Nhân viên đang làm việc”, “Nhân viên: họ tên” hoặc “Lịch trực tuần này”. Tra cứu nhân sự hỗ trợ danh sách, chức danh và trạng thái làm việc; lịch trực hỗ trợ khoảng ngày tối đa 31 ngày và tìm theo tên nhân viên. Kết quả chỉ trong quyền được cấp, tối đa 10 dòng mỗi trang; hỏi tiếp “trang 2” để xem thêm. Nếu trùng tên, hãy đối chiếu mã nhân viên để chọn đúng người. Trợ lý không trả lương, tài khoản ngân hàng hoặc ghi chú nghỉ cá nhân và không tự phân ca, chuyển ca hay sửa hồ sơ. Muốn thực hiện nghiệp vụ, mở Nhân sự hoặc Lịch làm việc, kiểm tra thông tin và thao tác theo quyền của bạn."
+          },
+          {
+            "question": "Trợ lý Admin hỗ trợ tra cứu bài viết và đánh giá như thế nào?",
+            "answer": "Bạn có thể hỏi “Bài viết đã đăng”, “Bài viết nháp” hoặc “Đánh giá thấp tháng này”. Bài viết hỗ trợ tìm theo tiêu đề hoặc đường dẫn và lọc trạng thái. Đánh giá hỗ trợ khoảng ngày tối đa 31 ngày, từ khóa và số sao; “đánh giá thấp” là tối đa 2 sao. Danh sách tối đa 10 dòng mỗi trang. Khi cần đọc nội dung đầy đủ, cung cấp mã bài viết hoặc mã đánh giá, ví dụ “Nội dung bài viết: mã bài viết”; nội dung dài chia thành từng phần và chỉ đọc tiếp khi bạn yêu cầu. Nếu nội dung đổi phiên bản, hãy tra lại phần đầu. Trợ lý không tự đăng bài, sửa bài hoặc gửi phản hồi đánh giá; bạn cần kiểm tra và thực hiện tại phân hệ tương ứng theo quyền."
+          },
+          {
+            "question": "Trợ lý Admin hỗ trợ tra cứu cấu hình và báo cáo vận hành như thế nào?",
+            "answer": "Bạn có thể hỏi “Giờ mở cửa”, “Thông tin cửa hàng” hoặc “Báo cáo vận hành tuần này”. Cấu hình được phép tra gồm tên, hotline, địa chỉ cửa hàng, giờ mở và đóng ngày thường/cuối tuần, số giờ hủy miễn phí và sức chứa khung giờ. Không trả khóa, mật khẩu hoặc thông tin tài khoản thanh toán. Báo cáo vận hành trả riêng số đơn được tạo, lịch hẹn bắt đầu và phiếu hỗ trợ được tạo trong khoảng tối đa 31 ngày; không cộng ba số thành một chỉ số chung. Muốn xem thực thu, hỏi “Thực thu tuần này”; số liệu tính từ giao dịch thu và hoàn thành công theo thời điểm tương ứng, không phải giá trị đơn tạo trong kỳ. Trợ lý không sửa cấu hình hoặc thực hiện giao dịch. Kết quả cần được đọc cùng phạm vi, thời điểm và giới hạn hiển thị; thiếu quyền hoặc lỗi nguồn không có nghĩa là số liệu bằng 0."
+          }
+        ],
+        "limitations": [
+          "Chỉ dùng FAQ đang bật được cung cấp, không thêm bước hoặc cam kết chưa nêu. Không thực hiện thao tác ghi."
+        ]
+      }
+    }
+  ]
+}

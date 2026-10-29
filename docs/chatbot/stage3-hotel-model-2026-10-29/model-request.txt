@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "destination": "https://generativelanguage.googleapis.com",
+  "operation": "generateContent",
+  "model": "gemini-2.5-flash",
+  "maxGenerations": 1,
+  "history": [],
+  "audience": "staff",
+  "promptImplementation": "Existing requestGemini staff system instruction in api/admin-chat.js",
+  "generatorSha256": "e8cd0f449c066b6967f160796070451cd6026b598f8b41534a745fc1151ea572",
+  "sanitizerSha256": "81bf65705efc01455ee778a3b7d1bdd19f011000d0fbeec2eb4399bb0c646966",
+  "cases": [
+    {
+      "group": "B",
+      "status": "READY",
+      "question": "Giải thích ngắn gọn theo FAQ đang bật: Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+      "context": {
+        "mode": "workflow.guide",
+        "faq": [
+          {
+            "question": "Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+            "answer": "FAQ này chưa có mức giá cụ thể, sức chứa hoặc tiện ích của phòng thường và VIP nên chưa đủ thông tin để so sánh hoặc tính chênh lệch. Cần đối chiếu bảng giá và thông tin phòng đang được cung cấp trong danh mục Pet Hotel trước khi tư vấn. Không suy đoán giá hoặc tiện ích và không coi nội dung FAQ này là báo giá đã xác nhận."
+          }
+        ],
+        "limitations": [
+          "Chỉ dùng FAQ đang bật được cung cấp, không thêm bước hoặc cam kết chưa nêu. Không thực hiện thao tác ghi."
+        ]
+      }
+    }
+  ]
+}

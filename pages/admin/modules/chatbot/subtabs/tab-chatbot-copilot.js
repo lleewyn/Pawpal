@@ -1,6 +1,7 @@
 (function(){
  'use strict';
  const app=window.PawpalChatbot=window.PawpalChatbot||{};app.subtabs=app.subtabs||{};
+ const detailQuestion=/^(Nội dung bài viết|Nội dung đánh giá): [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12} phần ([1-9][0-9]{0,4}) bản [a-f0-9]{32}$/;
 
  function formatTimeAgo(dateStr){
   if(!dateStr)return '';
@@ -160,7 +161,7 @@
     heading.textContent=(row.role==='user'?'Bạn':'Trợ lý')+' · '+new Date(row.created_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
     const content=document.createElement('div');content.className='copilot-msg-bubble';
     if(row.role==='user'){
-     content.classList.add('copilot-user-content');content.textContent=row.content;
+     content.classList.add('copilot-user-content');const cursor=String(row.content||'').match(detailQuestion);content.textContent=cursor?cursor[1]+' — Phần '+cursor[2]:row.content;
     }else{
      content.innerHTML=renderMarkdown(row.content);
     }
@@ -174,8 +175,12 @@
      }catch(error){app.showToast?.(error.message,'error');more.disabled=false;}};
      card.append(more);
     }
-    const destinations={'#tab-list':'Mở khách hàng','#tab-order-list':'Mở đơn hàng','#tab-order-products':'Mở sản phẩm và kho','#tab-service-bookings':'Mở lịch hẹn','#tab-service-catalog':'Mở bảng giá','#tab-chatbot-rules':'Mở quy định'};
-    const next=row.continuation;if(row.role!=='user'&&next?.type==='open_module'&&Object.hasOwn(destinations,next.href)){const link=document.createElement('a');link.className='admin-btn admin-btn-secondary';link.href=next.href;link.textContent=destinations[next.href];card.append(link);}
+    const destinations={'#tab-list':'Mở khách hàng','#tab-order-list':'Mở đơn hàng','#tab-order-products':'Mở sản phẩm và kho','#tab-service-bookings':'Mở lịch hẹn','#tab-service-catalog':'Mở bảng giá','#tab-chatbot-rules':'Mở quy định','#tab-live-support':'Mở trực chat','#tab-pet-list':'Mở thú cưng','#tab-order-promos':'Mở khuyến mãi','#tab-staff-list':'Mở nhân sự','#tab-staff-schedule':'Mở lịch làm việc','#tab-content-management':'Mở bài viết','#tab-system-config':'Mở cấu hình'};
+    const next=row.continuation||row.metadata?.continuation;if(row.role!=='user'&&next?.type==='open_module'&&Object.hasOwn(destinations,next.href)){const link=document.createElement('a');link.className='admin-btn admin-btn-secondary';link.href=next.href;link.textContent=destinations[next.href];card.append(link);}
+    if(row.role!=='user'&&next?.type==='ask_question'&&typeof next.question==='string'&&detailQuestion.test(next.question)){
+     const more=document.createElement('button');more.type='button';more.className='admin-btn admin-btn-secondary';more.textContent='Đọc phần tiếp';more.disabled=busy;
+     more.onclick=()=>{if(busy)return;input.value=next.question;submit();};card.append(more);
+    }
     timeline.append(card);
    }
    timeline.scrollTop=timeline.scrollHeight;list.replaceChildren();
@@ -253,6 +258,7 @@
    const selected=app.state?.currentConversation,conversationId=selected?.id||null;
    const candidate=selected?.customerId?(/^\+?[\d .-]{9,15}$/.test(selected.phone||'')?selected.phone:selected.customerName):null;
    const readContext=typeof candidate==='string'&&candidate.trim().length>=3&&candidate.length<=120?{customerQuery:candidate.trim()}:{};
+   if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selected?.customerId||''))readContext.customerId=selected.customerId;
    active=active||crypto.randomUUID();const key=JSON.stringify([active,question,conversationId,readContext]);if(request?.key!==key)request={key,id:crypto.randomUUID()};
    busy=true;send.disabled=true;
 

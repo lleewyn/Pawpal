@@ -1,0 +1,49 @@
+{
+  "destination": "https://generativelanguage.googleapis.com",
+  "operation": "generateContent",
+  "model": "gemini-2.5-flash",
+  "maxGenerations": 3,
+  "history": [],
+  "audience": "staff",
+  "promptImplementation": "Existing requestGemini staff system instruction in api/admin-chat.js",
+  "cases": [
+    {
+      "group": "A",
+      "status": "READY",
+      "question": "Giải thích ngắn gọn theo FAQ đang bật: Đặt lịch PawPal như thế nào?",
+      "context": {
+        "mode": "workflow.guide",
+        "faq": [
+          {
+            "question": "Đặt lịch PawPal như thế nào?",
+            "answer": "Bạn chọn dịch vụ, thông tin thú cưng và thời gian phù hợp rồi thực hiện xác nhận đặt lịch theo hướng dẫn trên hệ thống.\n(Quy định: Thành viên cần đăng nhập để sử dụng chức năng đặt lịch.)"
+          }
+        ],
+        "limitations": [
+          "Chỉ dùng FAQ đang bật được cung cấp, không thêm bước hoặc cam kết chưa nêu. Không thực hiện thao tác ghi."
+        ]
+      }
+    },
+    {
+      "group": "B",
+      "status": "READY",
+      "question": "Giải thích ngắn gọn theo FAQ đang bật: Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+      "context": {
+        "mode": "workflow.guide",
+        "faq": [
+          {
+            "question": "Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+            "answer": "PawPal có các loại phòng theo danh mục Pet Hotel. Mình có thể giúp bạn so sánh giá, sức chứa và tiện ích của từng loại phòng.\n(Quy định: Chỉ hiển thị loại phòng đang được cung cấp.)"
+          }
+        ],
+        "limitations": [
+          "Chỉ dùng FAQ đang bật được cung cấp, không thêm bước hoặc cam kết chưa nêu. Không thực hiện thao tác ghi."
+        ]
+      }
+    },
+    {
+      "group": "C",
+      "status": "NO_ACTIVE_FAQ"
+    }
+  ]
+}

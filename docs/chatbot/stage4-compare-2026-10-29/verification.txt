@@ -1,0 +1,13 @@
+{
+  "scope": "Offline sources and handler; no Cloud, model or new SQL oracle",
+  "status": "PASS",
+  "tests": 214,
+  "passed": 214,
+  "failed": 0,
+  "business": "PASS_40_CASES",
+  "hashes": {
+    "scripts/api/admin_copilot.js": "65558f22b1aae89efc05cad21bc1dc7a503cb26316c4062ee512b6cd5aec91a6",
+    "scripts/api/chat_stage4_compare.js": "a0158052ab29aa78fe8024a06e65d08625dcd98968516853d7a1b19299cb41f1",
+    "scripts/test/chat_stage4_compare.test.cjs": "18fbf188f7b1ef239be99e9e420a96b8528c0905e6c5d2ec0137772855905545"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "scope": "Offline sources/handler plus mocked-transport Chrome UI; SQL/Auth evidence separate",
+  "status": "PASS",
+  "tests": 223,
+  "passed": 223,
+  "failed": 0,
+  "business": "PASS_40_CASES",
+  "ui": "PASS",
+  "hashes": {
+    "scripts/api/admin_copilot.js": "0abf15407878d0debe50d9d9089f49d4751623db30cd1881e75ec74f0110d5ed",
+    "scripts/api/chat_read_tools.js": "dcbd2fc1e13f50cd0f40f6787857d986d22675f6664481cf57168f990f10e9ab",
+    "scripts/api/chat_stage4_customer_case.js": "111c85ee95794e2fe680fcbadd1751d3fa623da32587e09ddabfc6c420d0633a",
+    "api/admin-chat.js": "43fa1c0fd7561b37114f848c05779cc9d4172c9377506e000369b765d9d42855",
+    "pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js": "0bea9b298097c6ebb49cfd3cfa4a2167b7142b3271c36298a30e1245b8ca0c72",
+    "scripts/database/v1/153_admin_chat_customer_case.sql": "1b461d46da0268a078f6e260cceb343a1b277e4212224c88156be4856ed2c7e5",
+    "scripts/test/chat_stage4_customer_case.test.cjs": "c3c7e663dfa10a93962be0e3b4cabbe3d6207cc605989806eba180a78498b2e8"
+  }
+}

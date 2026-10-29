@@ -1,0 +1,52 @@
+{
+  "scope": "Real production generator/Gemini, active FAQ from owned local clone, no customer data or Cloud DB",
+  "model": "gemini-2.5-flash",
+  "maxGenerations": 3,
+  "generations": 2,
+  "cases": [
+    {
+      "group": "A",
+      "source": {
+        "question": "Đặt lịch PawPal như thế nào?",
+        "answer": "Bạn chọn dịch vụ, thông tin thú cưng và thời gian phù hợp rồi thực hiện xác nhận đặt lịch theo hướng dẫn trên hệ thống.\n(Quy định: Thành viên cần đăng nhập để sử dụng chức năng đặt lịch.)"
+      },
+      "status": "GENERATED",
+      "reply": "Bạn chọn dịch vụ, thông tin thú cưng và thời gian phù hợp rồi thực hiện xác nhận đặt lịch theo hướng dẫn trên hệ thống. Thành viên cần đăng nhập để sử dụng chức năng đặt lịch. (Nguồn: FAQ)",
+      "review": {
+        "grounding": "PASS_SAMPLE",
+        "usefulness": "PASS_SAMPLE",
+        "limitations": "Repeats member login rule without extending it to every guest; guest workflow and FAQ business correctness not verified"
+      }
+    },
+    {
+      "group": "B",
+      "source": {
+        "question": "Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+        "answer": "PawPal có các loại phòng theo danh mục Pet Hotel. Mình có thể giúp bạn so sánh giá, sức chứa và tiện ích của từng loại phòng.\n(Quy định: Chỉ hiển thị loại phòng đang được cung cấp.)"
+      },
+      "status": "GENERATED",
+      "reply": "PawPal có các loại phòng theo danh mục Pet Hotel. Mình có thể giúp bạn so sánh giá, sức chứa và tiện ích của từng loại phòng. (Quy định: Chỉ hiển thị loại phòng đang được cung cấp.)",
+      "review": {
+        "grounding": "PASS_SAMPLE",
+        "usefulness": "NEEDS_IMPROVEMENT",
+        "limitations": "No invented prices, but no explicit acknowledgement that the FAQ lacks rates; does not actually compare rooms. Admin price question routes to deterministic catalog.service_price instead"
+      }
+    },
+    {
+      "group": "C",
+      "status": "NO_ACTIVE_FAQ",
+      "review": "No source; no model request"
+    }
+  ],
+  "status": "PARTIAL",
+  "payloadSha256": "0e618a6f5e952b52b76b6e46508b02a6567c12c4c7bf1de6313a1ccf5611aa67",
+  "approval": {
+    "userApproved": true,
+    "authorizedGenerations": 2,
+    "destination": "https://generativelanguage.googleapis.com",
+    "payloadSha256": "0e618a6f5e952b52b76b6e46508b02a6567c12c4c7bf1de6313a1ccf5611aa67"
+  },
+  "reviewedAt": "2026-10-28T16:24:48.738Z",
+  "reviewScope": "Manual review of exactly two approved generator requests; not end-to-end API, guest scope, full matrix or Cloud deployment verification",
+  "environmentStatus": "REMOVED"
+}

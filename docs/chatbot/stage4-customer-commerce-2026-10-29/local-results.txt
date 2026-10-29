@@ -1,0 +1,26 @@
+{
+  "scope": "Owned local clone; SQL/Auth/JWT/REST/API only, no Cloud or model",
+  "checks": [
+    "Pet oracle returns twelve profiles with ten distinct rows, includes inactive state and never leaks another owner or health notes",
+    "Latest-order oracle uses created time and UUID tie break, not updated time, global latest order or line-item count",
+    "SQL enforces pet/order rights independently, rejects borrowed leases, arbitrary status filters and excessive source bytes",
+    "Actual Auth/API resolves selected UUID despite duplicate names, reads exactly three sources and saves the customer-scoped response",
+    "Explicit duplicate name overrides selected hint and stops before either relationship source",
+    "Staff without pet rights gets a latest-order-only partial result with no pet RPC",
+    "Replay returns the owned saved reply without rereading customer or relation sources",
+    "Rollback preserves gateway153 behavior and indexes; reapplying154 restores the new fixed tools"
+  ],
+  "hashes": {
+    "091_admin_sales_order_page.sql": "60e0811a8202468299f434f92e46481dea2fd96d6b500816b1b4e2b1990842ab",
+    "136_chat_read_admission.sql": "2e1bdbfe4b2a8c27e7ecdaa0a72803d493a8989dc1862f9179956ef3b009bc95",
+    "141_chat_shared_rate.sql": "100254e44bb49edad3cc28869e5f568a8f05a03c5dadcc6e459c76b2a16570be",
+    "153_admin_chat_customer_case.sql": "1b461d46da0268a078f6e260cceb343a1b277e4212224c88156be4856ed2c7e5",
+    "154_admin_chat_customer_pets_orders.sql": "b736b851643d321fb5d631d3bcd64d6ac3da295063cdf072a76397b550a64f9f",
+    "rollback": "b720a4bd62fca25122201dd23a9f804053c57fa8d178bf8290ee5edbe6b27743"
+  },
+  "status": "PASS",
+  "api": {
+    "status": 200,
+    "error": null
+  }
+}

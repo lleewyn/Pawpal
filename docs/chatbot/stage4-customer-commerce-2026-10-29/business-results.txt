@@ -1,0 +1,1 @@
+PASS 40 intent/date/scope cases; exact total vs sample, strict metric route without Gemini/history, draft labeling, no-source and permission errors, API persistence/auth contracts. Offline only.

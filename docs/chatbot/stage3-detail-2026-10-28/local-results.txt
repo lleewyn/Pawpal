@@ -1,0 +1,103 @@
+{
+  "scope": "Owned local clone; real Auth/JWT/PostgREST, no Cloud or model",
+  "checks": [
+    "All 15 registered tools execute through real JWT/PostgREST with caller RLS, row and byte caps",
+    "All eight existing tools page ten rows through existing gateway, preserve totals, avoid duplicate identities and reject invalid pages",
+    "Legacy page cannot bypass business permissions or borrow another actor lease",
+    "SQL validates closed tools, fields, enums, pagination and 31-day maximum",
+    "Missing permissions, foreign lease and payload overflow fail closed",
+    "Exact totals, stable ten-row pages, no duplicate rows, last-page clamping",
+    "Pet-owner relation and refund sums: two completed refunds never multiply original payment; undated pending refunds retain older orders",
+    "Afternoon boundaries include 12h, exclude 18h and exclude assigned appointments",
+    "Active API authenticates real staff, answers all three acceptance questions plus week schedule through one bounded source each, with no model",
+    "Actual API accepts explicit legacy page without extra count or preload request",
+    "Actual API supplies authorized live facts to draft transport and never generates when entity is absent; external model not called",
+    "New gateway shares all four source slots and rejects overload without queueing",
+    "Real database statement timeout cancels blocked queries in the new gateway",
+    "Legacy rollback restores prior gateway without replacing shared rate admission",
+    "Rollback removes new RPC and migration can be reapplied"
+  ],
+  "tools": [
+    {
+      "intent": "customer.pets",
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "intent": "pet.lookup",
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "intent": "payment.order",
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "intent": "order.refund_pending",
+      "total": 2,
+      "rows": 2
+    },
+    {
+      "intent": "appointment.search",
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "intent": "ticket.lookup",
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "intent": "conversation.list",
+      "total": 8,
+      "rows": 8
+    },
+    {
+      "intent": "points.lookup",
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "intent": "offer.list",
+      "total": 20,
+      "rows": 10
+    },
+    {
+      "intent": "staff.lookup",
+      "total": 61,
+      "rows": 10
+    },
+    {
+      "intent": "staff.schedule",
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "intent": "review.list",
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "intent": "content.list",
+      "total": 17,
+      "rows": 10
+    },
+    {
+      "intent": "report.operations",
+      "total": 3,
+      "rows": 3
+    },
+    {
+      "intent": "settings.read",
+      "total": 9,
+      "rows": 9
+    }
+  ],
+  "status": "PASS",
+  "migrationSha256": {
+    "145_admin_chat_stage3.sql": "fbd8e78a1a4edaf272214dd50fa62942ef352381cf11be74c68ee911edb98a82",
+    "146_admin_chat_legacy_pages.sql": "773d469b3fd5d98438082fa5bad3109ab5880446ab6d34c03ea79506061b3b3e"
+  },
+  "environmentStatus": "REMOVED"
+}

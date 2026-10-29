@@ -1,0 +1,15 @@
+{
+  "scope": "Offline sources and mocked-transport UI; SQL/Auth/API evidence separate",
+  "status": "PASS",
+  "tests": 233,
+  "passed": 233,
+  "failed": 0,
+  "business": "PASS_40_CASES",
+  "ui": "PASS",
+  "hashes": {
+    "scripts/api/admin_copilot.js": "9414059953a5bac11d4d150b028d95f72f43fc962bf909f26b1a0819991b7650",
+    "scripts/api/chat_stage4_pending.js": "b5858fb6a647d8a2a5d6d002e56e14b65432427a32246f83b614e9714ed44d8f",
+    "scripts/test/chat_stage4_pending.test.cjs": "c9d4cfb1bd285d50bb0dc2afe554d0209789f03e1e4304703414f2dc4795c854",
+    "scripts/test/chat_stage4_pending_local.cjs": "4cd49e15879832ebb216965be2932f2112ab3f346511c50f544dbff1da048430"
+  }
+}

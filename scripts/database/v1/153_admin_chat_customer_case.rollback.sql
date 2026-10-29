@@ -1,0 +1,10 @@
+BEGIN;
+SET LOCAL statement_timeout='5s';
+SET LOCAL lock_timeout='1s';
+DROP FUNCTION IF EXISTS public.run_admin_chat_customer_case(uuid,text,jsonb,integer);
+DROP INDEX IF EXISTS public.admin_chat_case_customer_name_idx;
+DROP INDEX IF EXISTS public.admin_chat_case_customer_phone_idx;
+DROP INDEX IF EXISTS public.admin_chat_case_appointment_idx;
+DROP INDEX IF EXISTS public.admin_chat_case_ticket_idx;
+NOTIFY pgrst,'reload schema';
+COMMIT;

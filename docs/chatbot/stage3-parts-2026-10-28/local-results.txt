@@ -1,0 +1,27 @@
+{
+  "scope": "Owned local clone; real Auth/JWT/PostgREST, no Cloud or model",
+  "checks": [
+    "Blog and review Unicode content reconstructed exactly from three bounded revision-bound parts",
+    "Changed source rejects the next part instead of mixing versions",
+    "Duplicate exact titles return ambiguity without downloading either full content",
+    "Twenty-five price rows page 10/10/5 without duplicates; 5kg uses lower-inclusive upper-exclusive matching",
+    "Permissions, lease, byte cap, fixed keys and incompatible price conditions fail closed",
+    "Detail reads share source pool and database timeout cancels a blocked source",
+    "Actual API reads one part per click, persists continuation atomically, replays it without a source and reads next part without history preload",
+    "Existing owned bounded history preserves the next-part button after reload",
+    "Continuation persistence RPC is service-only",
+    "Exact 5-star range includes fixture, low-star filter excludes it, inverted range is invalid",
+    "Rollback removes only new read/persistence functions; reapply and review-range rollback/reapply succeed"
+  ],
+  "tools": [
+    "content.read",
+    "review.read",
+    "catalog.price_rows"
+  ],
+  "status": "PASS",
+  "migrationSha256": {
+    "147_admin_chat_detail_parts.sql": "2abd14355b8f7d88a1896a07ed77748d26add147dd2f3db43072785e117729af",
+    "148_admin_chat_review_range.sql": "2f77a2e66b51d3888b7989faec2067e2089ba2f89b5bc0b574190954c4960dd5"
+  },
+  "environmentStatus": "REMOVED"
+}

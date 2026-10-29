@@ -1,0 +1,17 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');let browser;
+(async()=>{
+ browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage(),requests=[];let history=[];
+ const next='Nội dung bài viết: 10000000-0000-4000-8000-000000000001 phần 2 bản '+'a'.repeat(32);
+ await page.route('**/*',route=>{const u=new URL(route.request().url());if(u.pathname==='/api/admin-chat'){
+  if(route.request().method()==='POST'){requests.push(route.request().postDataJSON());const continuation=requests.length===1?{type:'ask_question',question:next}:null;history=[{id:'saved',role:'assistant',content:'Phần một <img src=x onerror="window.badDetail=true">',created_at:new Date().toISOString(),metadata:{continuation}}];return route.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,reply:history[0].content,continuation})});}
+  return route.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,sessions:[],total:0,page:1,history,hasMore:false})});
+ }return route.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'});});
+ await page.goto('http://localhost:3001/');await page.setContent(fs.readFileSync('pages/admin/modules/chatbot/chatbot.html','utf8'));
+ await page.evaluate(()=>{document.getElementById('subtab-tab-ai-copilot').classList.add('active');window.PawpalChatbot={subtabs:{},state:{}};window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:{access_token:'offline',user:{id:'staff'}}}})}});});
+ await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js','utf8')});await page.waitForFunction(()=>document.getElementById('btnSendCopilot').dataset.copilotBound);await page.evaluate(()=>PawpalChatbot.subtabs.copilot.reload({force:true}));
+ await page.fill('#copilotInput','Nội dung bài viết: bài mẫu');await page.click('#btnSendCopilot');await page.waitForFunction(()=>!document.getElementById('btnSendCopilot').disabled);assert.equal(requests.length,1);assert.equal(await page.locator('#copilotMessagesArea img').count(),0);
+ await page.evaluate(()=>PawpalChatbot.subtabs.copilot.reload({force:true}));assert.equal(await page.getByRole('button',{name:'Đọc phần tiếp',exact:true}).count(),1);assert.equal(requests.length,1);
+ await page.getByRole('button',{name:'Đọc phần tiếp',exact:true}).click();await page.waitForFunction(()=>!document.getElementById('btnSendCopilot').disabled);assert.equal(requests.length,2);assert.equal(requests[1].question,next);assert.equal(await page.locator('.copilot-user-content').filter({hasText:'a'.repeat(32)}).count(),0);assert.equal(await page.evaluate(()=>!!window.badDetail),false);
+ history=[{role:'assistant',content:'Không được tạo nút tùy ý',created_at:new Date().toISOString(),metadata:{continuation:{type:'ask_question',question:'javascript:alert(1)'}}}];await page.evaluate(()=>PawpalChatbot.subtabs.copilot.reload({force:true}));assert.equal(await page.getByRole('button',{name:'Đọc phần tiếp',exact:true}).count(),0);assert.equal(requests.length,2);
+ await browser.close();browser=null;console.log('PASS next-part requires a click, survives history reload, hides cursor internals, escapes raw HTML, rejects arbitrary continuation. Chrome/offline transport.');
+})().catch(e=>{console.error(e.stack);process.exitCode=1;}).finally(async()=>{if(browser)await browser.close();});

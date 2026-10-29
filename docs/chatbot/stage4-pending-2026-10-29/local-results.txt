@@ -1,0 +1,23 @@
+{
+  "scope": "Owned local clone; real SQL/Auth/JWT/REST/API; no Cloud or model",
+  "checks": [
+    "Actual Auth/API uses exactly two existing read sources, saves reply and never calls AI",
+    "Refund oracle: two successful refunds total fifty once; pending refund is not paid, fully refunded/completed/unpaid orders excluded",
+    "All-time outstanding count matches independent aggregate oracle despite appointment period being in 2031",
+    "Appointment oracle counts one confirmed unassigned fixture despite multiple items; assigned header/item, pending and cancelled cases excluded",
+    "Missing finance rights skips that SQL source and saves an appointment-only partial reply",
+    "Idempotent replay reads no operational sources",
+    "Unsupported overdue policy clarifies before any business source query"
+  ],
+  "hashes": {
+    "091_admin_sales_order_page.sql": "60e0811a8202468299f434f92e46481dea2fd96d6b500816b1b4e2b1990842ab",
+    "136_chat_read_admission.sql": "2e1bdbfe4b2a8c27e7ecdaa0a72803d493a8989dc1862f9179956ef3b009bc95",
+    "141_chat_shared_rate.sql": "100254e44bb49edad3cc28869e5f568a8f05a03c5dadcc6e459c76b2a16570be",
+    "149_admin_chat_staff_appointments.sql": "524402a131642dceaf0250b07b48a84499dfcfc4a1691028fc56b10fe4a1f6e9"
+  },
+  "status": "PASS",
+  "api": {
+    "status": 200,
+    "error": null
+  }
+}

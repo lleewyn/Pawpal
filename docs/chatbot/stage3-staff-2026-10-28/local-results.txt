@@ -1,0 +1,18 @@
+{
+  "scope": "Owned local clone; real Auth/JWT/PostgREST, no Cloud or model",
+  "checks": [
+    "Exact normalized name resolves once; header, item and addon assignments match, cancelled/cross-category items excluded, overlapping assignments counted once across 10+6 pages",
+    "UUID lookup and no-category scope retain 17 cases; nonexistent staff has explicit resolution state",
+    "Duplicate full name never chooses a staff record; explicit UUID disambiguates",
+    "Staff read required only for named filter; addon permission additionally required for complete category-aware matching, plus lease/byte/conflicting-filter checks",
+    "Staff resolution and appointments share the existing source slots and real SQL timeout",
+    "Real API authenticates, performs one source for direct named query, shares history+facts budget for next page and clarifies duplicate staff",
+    "Rollback restores previous filter contract without touching data; reapply succeeds"
+  ],
+  "tools": [
+    "appointment.search"
+  ],
+  "status": "PASS",
+  "migrationSha256": "524402a131642dceaf0250b07b48a84499dfcfc4a1691028fc56b10fe4a1f6e9",
+  "environmentStatus": "REMOVED"
+}

@@ -1,0 +1,30 @@
+{
+  "scope": "Owned local clone; actual Auth/JWT/REST/SQL, no Cloud or real model",
+  "checks": [
+    "Three source-backed Admin FAQs stored separately from customer FAQ",
+    "Booking FAQ migration visible through authorized Admin search",
+    "All three Admin FAQ questions reach authorized source and guidance in one read; model stub only",
+    "Anonymous, non-staff authenticated user and staff without FAQ permission cannot read internal FAQ",
+    "Public customer context includes corrected booking FAQ and excludes every internal FAQ",
+    "Internal FAQ rollback refuses to drop independently edited content",
+    "Both rollbacks restore original search and booking answer"
+  ],
+  "status": "PASS",
+  "hashes": {
+    "091_admin_sales_order_page.sql": "60e0811a8202468299f434f92e46481dea2fd96d6b500816b1b4e2b1990842ab",
+    "150_chat_booking_faq_audience.sql": "f93b36efd518267e6888f23d7852106ed550eae2a60bacaea17ea5d7c87b1ec4",
+    "151_admin_chat_internal_faq.sql": "331c4b5586a45c99c95a2d0f6a76b7c6f1fa21a1d37efac093600340a1e1965a",
+    "143_chat_server_read_bundles.sql": "d79c7b96eaa597e6b141fd4c97c2cf8bb86ad3bac4402fdc933d3328bdb5d963",
+    "151_admin_chat_internal_faq.rollback.sql": "bde9ebcb0bb08288217d8b946deb681aab7b708f14fcce2be19c75d48283c958",
+    "150_chat_booking_faq_audience.rollback.sql": "cab63272bfc065c1e0e9d074f9c57a4bc1d1eb19b314f2fb96edd8ef77a64243"
+  },
+  "bookingRead": {
+    "status": 200,
+    "code": null
+  },
+  "publicRead": {
+    "status": 200,
+    "code": null
+  },
+  "rollbackGuardDiagnostic": "psql:<stdin>:20: ERROR:  admin_faq_changed_review_required"
+}

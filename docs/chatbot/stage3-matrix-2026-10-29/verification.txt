@@ -1,0 +1,13 @@
+{
+  "scope": "Offline sources and handler; no Cloud or model",
+  "status": "PASS",
+  "tests": 203,
+  "passed": 203,
+  "failed": 0,
+  "files": 18,
+  "hashes": {
+    "scripts/api/chat_stage3_planner.js": "c0db96ff502a7ee00888ac9be9a02298c6505a73d74776f0d046c97b2cd0b151",
+    "scripts/api/chat_stage3_format.js": "f8c605cce62133435e86d0ce56838efe49c42e2b484584c4a9f007fbce95da84",
+    "scripts/test/chat_stage3_acceptance_matrix.test.cjs": "ed826abfdbd8775abe5d32a98d761f8d2d34916259fba38a05d43c45caa03658"
+  }
+}

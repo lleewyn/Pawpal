@@ -1,0 +1,60 @@
+{
+  "scope": "Owned local clone; actual Auth/JWT/active API/PostgREST; no Cloud/AI",
+  "migrationSha256": "f6088105ccd057ef7c22a33ff792a3e8049477ed98a80e8d7d49b0928f13a473",
+  "checks": [
+    {
+      "name": "Member and guest histories retain 35 complete long messages across byte-aware pages and stable cursor ties, with no raw/private metadata",
+      "status": "PASS"
+    },
+    {
+      "name": "Cold reads reduce member/guest calls from 5/4 to 4/3; unchanged revision keeps baseline 3/2 calls and no history source fetch",
+      "status": "PASS"
+    },
+    {
+      "name": "Wrong member/guest rejected before page source, not only filtered after download",
+      "status": "PASS"
+    },
+    {
+      "name": "CSAT allowlist/submitted state is computed inside SQL without leaking private metadata or feedback",
+      "status": "PASS"
+    },
+    {
+      "name": "Owner reads complete Unicode content by parts; owned conversation cannot be used to read a different conversation message, revision changes conflict",
+      "status": "PASS"
+    },
+    {
+      "name": "New page/part functions are service-only, unavailable directly to members and anonymous callers",
+      "status": "PASS"
+    },
+    {
+      "name": "Public pages/parts share four source transaction slots and do not queue when saturated",
+      "status": "PASS"
+    },
+    {
+      "name": "Real database timeout cancels a blocked public history query",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback drops only new page/part RPCs",
+      "status": "PASS"
+    }
+  ],
+  "metrics": {
+    "member": {
+      "pages": 3,
+      "messages": 35,
+      "maxApiBodyBytes": 32270,
+      "coldAuthDbRequests": 4,
+      "warmAuthDbRequests": 3
+    },
+    "guest": {
+      "pages": 3,
+      "messages": 35,
+      "maxApiBodyBytes": 32270,
+      "coldAuthDbRequests": 3,
+      "warmAuthDbRequests": 2
+    },
+    "largeParts": 10
+  },
+  "status": "PASS"
+}

@@ -1,0 +1,17 @@
+{
+  "scope": "Offline sources/handler plus mocked-transport Chrome; real SQL/Auth/API separate",
+  "status": "PASS",
+  "tests": 242,
+  "passed": 242,
+  "failed": 0,
+  "business": "PASS_40_CASES",
+  "ui": "PASS",
+  "hashes": {
+    "scripts/api/admin_copilot.js": "22500936b93e373886e763bd042f122ba714269ce147aeed155cd77bf98e9b89",
+    "scripts/api/chat_read_tools.js": "08986693c9e6d7ffd277972ae45e5046a6a49d88a0216ca009c5f636bf5b0229",
+    "scripts/api/chat_stage4_customer_case.js": "3c2fdb00d3c95c587cb6140578708cb25c368de1d1e2fc2fe318729a0dbfd40c",
+    "scripts/database/v1/154_admin_chat_customer_pets_orders.sql": "b736b851643d321fb5d631d3bcd64d6ac3da295063cdf072a76397b550a64f9f",
+    "scripts/database/v1/154_admin_chat_customer_pets_orders.rollback.sql": "b720a4bd62fca25122201dd23a9f804053c57fa8d178bf8290ee5edbe6b27743",
+    "scripts/test/chat_stage4_customer_commerce.test.cjs": "fcd354fcddd476ab2eb329bb6a2321fa7e455234ac3b65fba928f2cc083cb151"
+  }
+}
