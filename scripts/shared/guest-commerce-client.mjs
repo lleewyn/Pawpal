@@ -1,7 +1,7 @@
 // Cookie stays HttpOnly. No token, contact, pet or receipt is stored in browser storage.
 import {onGuestAccountChange} from './guest-account-state.mjs';
 const base = '/api/customer/guest/';
-const actions = new Set(['context', 'lookup', 'pets', 'profile-read', 'profile-update', 'booking-slots', 'booking-quote', 'booking-create', 'booking-receipt', 'order-quote', 'order-create', 'order-receipt']);
+const actions = new Set(['context', 'lookup', 'phone-lookup', 'pets', 'profile-read', 'profile-update', 'booking-slots', 'booking-quote', 'booking-create', 'booking-receipt', 'order-quote', 'order-create', 'order-receipt']);
 const writes = new Set(['pets', 'profile-update', 'booking-create', 'order-create']);
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

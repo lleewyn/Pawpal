@@ -49,9 +49,11 @@ function initReturnGuestPage() {
     if(!form||form.dataset.rgRecovery==='true')return;
     form.dataset.rgRecovery='true';form.hidden=false;
     import('/pages/public/return-guest/guest-phone-lookup.mjs').then(phone=>{
-        phone.mountGuestPhoneLookup(form, {loadMember:loadSupabaseGuestResults, renderMember:(bookings,orders,value)=>{
+        phone.mountGuestPhoneLookup(form, {loadMember:loadSupabaseGuestResults,mapHistory:rows=>({customer:rows.customer,bookings:rows.bookings.map(row=>({...mapSupabaseBookingRow(row),_receiptOnly:true})),orders:rows.orders.map(row=>({...mapSupabaseOrderRow(row),_receiptOnly:true}))}), renderMember:(bookings,orders,value,customer)=>{
+            const summary=document.getElementById('rg-result-customer');
+            if(summary){const name=typeof customer?.name==='string'?customer.name.trim():'';summary.textContent=name?`${name} · ${value}`:value;summary.hidden=false;}
             rgVerifiedPhone=value;rgLastSearchState={phone:value,bookings,orders};renderResults(bookings,orders);
-        },clearMember:()=>{rgVerifiedPhone=null;rgLastSearchState={phone:'',bookings:[],orders:[]};}});
+        },clearMember:()=>{rgVerifiedPhone=null;rgLastSearchState={phone:'',bookings:[],orders:[]};const summary=document.getElementById('rg-result-customer');if(summary){summary.textContent='';summary.hidden=true;}}});
     }).catch(()=>{const error=document.createElement('p');error.setAttribute('role','alert');error.textContent='Chưa tải được tra cứu. Vui lòng tải lại trang.';form.before(error);});
 }
 

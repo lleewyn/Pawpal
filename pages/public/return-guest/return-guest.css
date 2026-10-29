@@ -804,6 +804,7 @@ body.lookup-public-page{background:#fff;font-family:Inter,system-ui,sans-serif;c
 /* Readable lookup results, with operational records kept out of the customer summary. */
 .lookup-public-page .rg-results-header{align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:20px}
 .lookup-public-page .rg-results-title{font-size:27px;margin:0}
+.lookup-public-page .rg-result-customer{margin:8px 0 0;font-size:14px;font-weight:500;line-height:1.6;color:#4F7A65;overflow-wrap:anywhere}
 .lookup-public-page .rg-guest-tag{background:#e9dba9;color:#705923;border-radius:4px;font-size:10px}
 .lookup-public-page .rg-tabs{gap:24px}
 .lookup-public-page .rg-tab{background:transparent;border:0;border-radius:0;padding:10px 0;font-size:13px;color:#637a69}

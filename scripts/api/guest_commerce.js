@@ -5,6 +5,7 @@ const {normalizeVietnamPhone:normalizePhone}=require('../shared/phone-normalizat
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TTL=7*86400;
 function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=>Date.now(),randomBytes=crypto.randomBytes}){
+ let phoneHistory;
  if(typeof secret!=='string'||Buffer.byteLength(secret)<32)throw Error('Missing guest cookie secret');
  const allowed=new Set(origins),cookieName=production?'__Host-pawpal_guest':'pawpal_guest_dev';
  const signature=value=>crypto.createHmac('sha256',secret).update('pawpal-commerce-cookie:v1\0'+value).digest('base64url');
@@ -37,8 +38,8 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
    if(typeof req.body==='string'){if(Buffer.byteLength(req.body)>16384)throw Error('invalid_body');req.body=JSON.parse(req.body);}
    const body=req.body;
    if(!body||typeof body!=='object'||Array.isArray(body)||Buffer.byteLength(JSON.stringify(body))>16384)throw Error('invalid_body');
-   if(!['session','context','lookup','pets','profile-read','profile-update','recover','end','booking-slots','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
-   const keys=action==='pets'?['requestId','contact','pet']:action==='context'?['page']:action==='lookup'?['phone']:
+   if(!['session','context','lookup','phone-lookup','pets','profile-read','profile-update','recover','end','booking-slots','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
+   const keys=action==='pets'?['requestId','contact','pet']:action==='context'?['page']:action==='lookup'?['phone']:action==='phone-lookup'?['phone','challengeId','code']:
     action==='booking-slots'?['details','day']:action==='booking-quote'?['details']:action==='booking-create'?['requestId','expectedQuote','details']:action==='booking-receipt'?['requestId']:
     action==='order-quote'?['details','lines']:action==='order-create'?['requestId','expectedQuote','contact','details','lines','paymentMethodId']:action==='order-receipt'?['requestId']:
     action==='profile-read'?['petId']:action==='profile-update'?['requestId','revision','contact','pet']:action==='recover'?['code']:[];
@@ -48,6 +49,10 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
    try{await limiter('guest-commerce:'+action+':'+ip,['pets','profile-update','booking-create','order-create'].includes(action)?20:60,60000);}catch(error){
     if(!String(error.message).includes('thao tác quá')&&error.code!=='RATE_LIMIT')throw error;
     return res.status(429).json({success:false,message:'Bạn thao tác quá nhiều lần. Vui lòng thử lại sau.'});
+   }
+   if(action==='phone-lookup'){
+    if(!phoneHistory)phoneHistory=require('./guest_phone_history').createGuestPhoneHistory({admin,secret,production,now,demo:!process.env.PAWPAL_SMS_MODE||process.env.PAWPAL_SMS_MODE==='demo'});
+    return phoneHistory(req,res);
    }
    if(action==='recover'){
     const match=typeof body.code==='string'&&/^r1\.(booking|order)\.([a-f0-9-]{36})\.(\d{10})\.([A-Za-z0-9_-]{43})$/.exec(body.code.trim());
@@ -82,7 +87,7 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
     for(const group of groups)if(group.error)throw group.error;
     // Each receipt RPC rechecks the session, owner and transaction grant.
     const [bookings,orders]=await Promise.all(groups.map((group,index)=>Promise.all((group.data||[]).map(row=>rpc(index===0?'guest_booking_receipt':'guest_sales_receipt',{p_hash:session.hash,p_request:row.id})))));
-    return res.json({success:true,bookings,orders});
+    return res.json({success:true,customer:{name:context.contact?.name||'',phone},bookings,orders});
    }
    if(action==='profile-read'){
     if(body.petId!=null&&!UUID.test(body.petId))throw Error('invalid_body');
