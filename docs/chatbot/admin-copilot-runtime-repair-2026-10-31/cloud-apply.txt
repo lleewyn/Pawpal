@@ -1,0 +1,136 @@
+{
+  "date": "2026-10-31",
+  "scope": "Copilot runtime dependencies for deployed API; no external model calls",
+  "sourceFiles": [
+    {
+      "name": "136_chat_read_admission.sql",
+      "normalizedSha256": "2e1bdbfe4b2a8c27e7ecdaa0a72803d493a8989dc1862f9179956ef3b009bc95"
+    },
+    {
+      "name": "141_chat_shared_rate.sql",
+      "normalizedSha256": "100254e44bb49edad3cc28869e5f568a8f05a03c5dadcc6e459c76b2a16570be"
+    },
+    {
+      "name": "146_admin_chat_legacy_pages.sql",
+      "normalizedSha256": "773d469b3fd5d98438082fa5bad3109ab5880446ab6d34c03ea79506061b3b3e"
+    },
+    {
+      "name": "149_admin_chat_staff_appointments.sql",
+      "normalizedSha256": "524402a131642dceaf0250b07b48a84499dfcfc4a1691028fc56b10fe4a1f6e9"
+    },
+    {
+      "name": "147_admin_chat_detail_parts.sql",
+      "normalizedSha256": "2abd14355b8f7d88a1896a07ed77748d26add147dd2f3db43072785e117729af"
+    },
+    {
+      "name": "151_admin_chat_internal_faq.sql",
+      "normalizedSha256": "331c4b5586a45c99c95a2d0f6a76b7c6f1fa21a1d37efac093600340a1e1965a"
+    },
+    {
+      "name": "153_admin_chat_customer_case.sql",
+      "normalizedSha256": "1b461d46da0268a078f6e260cceb343a1b277e4212224c88156be4856ed2c7e5"
+    },
+    {
+      "name": "154_admin_chat_customer_pets_orders.sql",
+      "normalizedSha256": "b736b851643d321fb5d631d3bcd64d6ac3da295063cdf072a76397b550a64f9f"
+    }
+  ],
+  "forwardSha256": "e0c0ddc7dc84c8f07ccae18412e106f960cd26abd2eb3afdf5a34be4d0213748",
+  "businessRowsChanged": false,
+  "internalFaqSeeds": 3,
+  "newIndexes": [
+    "admin_chat_case_customer_name_idx",
+    "admin_chat_case_customer_phone_idx",
+    "admin_chat_case_appointment_idx",
+    "admin_chat_case_ticket_idx",
+    "admin_chat_case_pets_idx",
+    "admin_chat_case_orders_idx"
+  ],
+  "applied": true,
+  "grants": [
+    {
+      "proname": "run_admin_chat_page",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "proname": "admin_copilot_sessions_bounded",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "proname": "run_admin_chat_detail",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "proname": "run_admin_stage3_read",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "proname": "admit_chat_read_source",
+      "prosecdef": true,
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "proname": "run_admin_chat_customer_case",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "proname": "release_admin_chat_read",
+      "prosecdef": true,
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "proname": "run_admin_chat_read",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "proname": "acquire_admin_chat_read",
+      "prosecdef": true,
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "proname": "read_admin_chat_benchmark_snapshot",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "proname": "admin_copilot_history_page",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "proname": "save_admin_copilot_detail",
+      "prosecdef": true,
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    }
+  ]
+}

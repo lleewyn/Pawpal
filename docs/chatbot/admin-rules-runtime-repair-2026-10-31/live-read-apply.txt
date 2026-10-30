@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-31",
+  "scope": "Only missing live browser read dependencies extracted from139 plus142; no Copilot history replacement",
+  "sha256": "b786489e07b6f9cfe71f0e8a79683ed896827b46e3a794dccc0a6e0e484058c8",
+  "businessRowsChanged": false,
+  "applied": true,
+  "grants": [
+    {
+      "proname": "read_admin_chat_message_part",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "proname": "get_admin_chat_messages_bounded",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "proname": "read_admin_chat_raw_bounded",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "proname": "admit_chat_aux_read",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "proname": "get_admin_chat_point_policies",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "proname": "admit_chat_history_read",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "proname": "get_admin_chat_handlers_bounded",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true
+    }
+  ],
+  "checks": [
+    {
+      "name": "handlers",
+      "status": "PASS",
+      "rows": 0
+    },
+    {
+      "name": "policies",
+      "status": "PASS",
+      "rows": 33
+    },
+    {
+      "name": "transcript",
+      "status": "PASS",
+      "rows": 14,
+      "bytes": 9535
+    },
+    {
+      "name": "transcript_part",
+      "status": "PASS"
+    }
+  ]
+}

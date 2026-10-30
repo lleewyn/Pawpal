@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-31",
+  "migration": 140,
+  "normalizedSha256": "48290645bde6b36b33d183475401f915ecce4bfcc64b9dd2744cfe575cbdeb2c",
+  "businessRowsChanged": false,
+  "applied": true,
+  "grants": [
+    {
+      "proname": "admin_chat_canned_page",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "proname": "admin_chat_rule_counts",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "proname": "admin_chat_rule_page_bounded",
+      "prosecdef": false,
+      "anon": false,
+      "authenticated": true
+    }
+  ],
+  "adminReadChecks": [
+    {
+      "source": "chatbot_knowledge_faq",
+      "status": "PASS",
+      "rows": 10,
+      "bytes": 10984
+    },
+    {
+      "source": "chatbot_profanity_filter",
+      "status": "PASS",
+      "rows": 10,
+      "bytes": 2059
+    },
+    {
+      "source": "chatbot_canned_response",
+      "status": "PASS",
+      "rows": 10,
+      "bytes": 5344
+    },
+    {
+      "source": "chatbot_compensation_policy",
+      "status": "PASS",
+      "rows": 10,
+      "bytes": 13221
+    },
+    {
+      "source": "chatbot_handover_rule",
+      "status": "PASS",
+      "rows": 1,
+      "bytes": 269
+    },
+    {
+      "source": "chatbot_scenario_matrix",
+      "status": "PASS",
+      "rows": 10,
+      "bytes": 4053
+    },
+    {
+      "source": "counts",
+      "status": "PASS",
+      "sources": 6
+    },
+    {
+      "source": "canned_library",
+      "status": "PASS",
+      "rows": 10
+    },
+    {
+      "source": "inbox_137",
+      "status": "PASS",
+      "rows": 10
+    }
+  ]
+}

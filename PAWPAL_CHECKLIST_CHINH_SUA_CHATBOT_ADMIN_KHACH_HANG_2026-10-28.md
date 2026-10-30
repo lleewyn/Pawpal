@@ -2,6 +2,10 @@
 
 ## Tiến độ hiện tại — 31/10/2026
 
+**Bổ sung sửa runtime Trợ lý AI ngày31/10:** đã đưa các dependency lịch sử/admission/gateway của API lênCloud, gồm136/141/146/147/149/151/153/154 và phần lịch sử139/benchmark143 cần thiết.37 kiểm tra Cloud SQL với quyền Admin/RLS đạt; rà soát24 tên RPC API/gateway động không còn thiếu. Vercel UI thật tải lịch sử và gửi câu hỏi số SKU dưới ngưỡng nhận200/ok, không gọi Gemini. Đây là smoke runtime, không đóng Gate2 hoặc nghiệm thu toàn diện các giai đoạn. [Bằng chứng và giới hạn](docs/chatbot/admin-copilot-runtime-repair-2026-10-31/README.md).
+
+**Bổ sung sửa runtime Quy định và Trực chat ngày31/10:** đã áp140 cho trang quy định/counts/thư viện, cùng các hàm đọc Trực chat còn thiếu trích từ139 và142. Kiểm tra Cloud SQL với quyền authenticated Admin/RLS đạt cho sáu nhóm quy định, counts, thư viện, Inbox, transcript/đọc tiếp, nhân viên và chính sách điểm. Rà soát16 tên RPC literal trong ba module trình duyệt không còn thiếu. Smoke UI Vercel với phiên đăng nhập: bảng Quy định tải được, không có dòng lỗi tải; chưa chứng nhận mọi API/công cụ động hoặc thao tác ghi end-to-end. [Bằng chứng và giới hạn](docs/chatbot/admin-rules-runtime-repair-2026-10-31/README.md).
+
 **Sửa runtime Trực chat trên Vercel ngày31/10:** Cloud thiếu hai RPC Inbox/hồ sơ mà giao diện đã gọi, gây404. Đã áp migration137, giữ quyền caller/RLS và hạn mức đọc. Endpoint trên website thật đã hết404, người chưa đăng nhập vẫn bị từ chối; kiểm thử UI offline PASS. Còn xác nhận danh sách bằng phiên Admin Vercel. [Bằng chứng](docs/chatbot/admin-inbox-runtime-repair-2026-10-31/README.md). Không đồng nghĩa Gate2 hoặc toàn bộ Production đã hoàn tất.
 
 Đây là bảng tiến độ hiện hành; các ghi chú theo ngày phía dưới là lịch sử kiểm thử. Checkbox triển khai chính thức ở **mục16**. Mục3–15 là nhóm yêu cầu tham chiếu, không phải một lịch giai đoạn khác.
@@ -10,9 +14,9 @@
 | --- | --- | --- |
 | 0 — Baseline | Hoàn tất phạm vi chuẩn bị/local | Có kiểm kê, baseline, ngân sách và rollback; runtime Production đầy đủ còn ở phát hành |
 | 1 — Quyền và hội thoại | Hoàn tất nghiệm thu local | Quyền/ownership, cạnh tranh, nháp, hội thoại; chưa coi mọi bản sửa đã triển khai Cloud |
-| 2 — Nền tảng đọc | Phần lớn đã làm; Gate2 mở | Công cụ xác định, quyền, cap/timeout/pool; còn giới hạn ingress trước Auth và tổng tải ngoài pool |
-| 3 — Admin từng phân hệ | Đã triển khai local; G3.4 mở | Có28 công cụ, phân trang/đọc dài/FAQ; còn oracle rộng và nghiệm thu môi trường triển khai |
-| 4 — Admin liên phân hệ | Đang làm | Có2 luồng khách, bảng việc, so sánh thực thu và oracle cặp ngày; còn tổ hợp/phân nhóm/chỉ số khác, oracle tuần/tháng |
+| 2 — Nền tảng đọc | Local và Cloud runtime đã có; Gate2 mở | Đã áp các dependency đọc/admission của API hiện hành; còn giới hạn ingress trước Auth và tổng tải ngoài pool |
+| 3 — Admin từng phân hệ | Đã triển khai local và smoke Cloud; G3.4 mở | Gateway hiện hành đã có trênCloud;37 kiểm tra SQL toàn registry và UI tra cứu đạt; còn oracle rộng, chất lượng model và nghiệm thu đầy đủ |
+| 4 — Admin liên phân hệ | Đang làm; gateway153/154 đã lênCloud | Có2 luồng khách, bảng việc, so sánh thực thu và oracle cặp ngày; còn tổ hợp/phân nhóm/chỉ số khác, oracle tuần/tháng |
 | 5 — Thông tin công khai | Đã có luồng chạy thật trên4000; đang hoàn thiện | Tìm FAQ, giới thiệu gói, giá, chuyển người; RPC đọc tối thiểu và158 đã ápCloud. Còn dữ kiện kinh doanh được xác nhận và chất lượng trả lời diện rộng; FAQ157 mới chuẩn bị/local |
 | 6 — Tra cứu riêng theo danh tính | Chưa triển khai mới trong đợt này | Cần tra chính đơn/lịch/điểm/hồ sơ của mình sau xác minh; không mở bằng tên/SĐT/mã đơn đơn lẻ |
 | 7 — Chất lượng và tài nguyên | Đã làm một phần xuyên suốt | Có test/quyền/cap và backoff30–60–120; chưa nghiệm thu model diện rộng, tổng tải, toàn bộ Rules/UI |

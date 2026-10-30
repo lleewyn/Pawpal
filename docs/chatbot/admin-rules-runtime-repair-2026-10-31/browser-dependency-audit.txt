@@ -1,0 +1,17 @@
+{
+  "scope": "Literal browser RPC names in three chatbot modules; no API/dynamic tool or behavioral certification",
+  "before": {
+    "checked": 16,
+    "missing": [
+      "get_admin_chat_messages_bounded",
+      "read_admin_chat_raw_bounded",
+      "read_admin_chat_message_part",
+      "get_admin_chat_point_policies",
+      "get_admin_chat_handlers_bounded"
+    ]
+  },
+  "after": {
+    "checked": 16,
+    "missing": []
+  }
+}

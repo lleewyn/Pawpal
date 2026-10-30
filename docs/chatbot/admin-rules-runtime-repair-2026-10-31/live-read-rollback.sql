@@ -1,0 +1,11 @@
+BEGIN;
+SET LOCAL lock_timeout='1s';
+DROP FUNCTION public.get_admin_chat_point_policies();
+DROP FUNCTION public.get_admin_chat_handlers_bounded();
+DROP FUNCTION public.read_admin_chat_raw_bounded(uuid);
+DROP FUNCTION pawpal_private.admit_chat_aux_read(text);
+DROP FUNCTION public.read_admin_chat_message_part(text,uuid,integer,text);
+DROP FUNCTION public.get_admin_chat_messages_bounded(uuid,timestamptz,uuid);
+DROP FUNCTION pawpal_private.admit_chat_history_read();
+NOTIFY pgrst,'reload schema';
+COMMIT;

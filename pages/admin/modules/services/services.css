@@ -735,18 +735,23 @@
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
 .services-module .service-headline-group {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
+    flex: 1 1 280px;
 }
 
 .services-module .service-code-title {
     font-size: 20px;
     font-weight: 700;
     color: var(--text-heading);
+    overflow-wrap: anywhere;
 }
 
 .services-module .service-datetime-text {
@@ -759,6 +764,7 @@
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
+    max-width: 100%;
 }
 
 /* CẢNH BÁO AN TOÀN THÚ CƯNG THUẦN CHỮ ĐỎ (KHÔNG KHUNG HỘP, KHÔNG NỀN) */
@@ -779,13 +785,13 @@
 
 .services-module .service-detail-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     gap: 24px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
     .services-module .service-detail-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
 }
@@ -828,7 +834,7 @@
 
 .services-module .info-grid-2col {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px 20px;
     margin-bottom: 0;
 }
@@ -919,6 +925,8 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .services-module .info-label {
@@ -3230,22 +3238,57 @@
 }
 
 .services-module .service-detail-card {
-    padding: 0;
-    overflow: hidden;
-    background: #ffffff;
-    border: 1px solid #d9e0db;
-    border-radius: 8px;
+    padding: 24px;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.70);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius, 9px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow: none;
 }
 
 .services-module .service-detail-header-bar {
-    padding: 16px 18px;
-    background: #ffffff;
-    border-bottom: 1px solid #e7ece8;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.services-module .service-detail-card .detail-info-group {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.services-module .service-detail-card .detail-section-title {
+    color: #236B48;
+}
+
+.services-module .service-detail-card .detail-group-heading,
+.services-module .service-detail-card .detail-group-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.services-module .service-detail-card .pet-safety-banner {
+    color: #DC2626;
+    background: transparent;
+    border: none;
+}
+
+@media (max-width: 600px) {
+    .services-module .service-detail-card { padding: 18px; }
+    .services-module .service-detail-card .info-grid-2col {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .services-module .service-code-title {
-    color: #275e49;
+    color: #236B48;
     font-size: 18px;
     font-weight: 650;
 }
@@ -3854,9 +3897,10 @@
 
 .services-module .svc-inline-6e1d9a51.svc-inline-6e1d9a51.svc-inline-6e1d9a51.svc-inline-6e1d9a51,
 #detailSpecialServiceFields.svc-inline-6e1d9a51 {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed var(--border-neutral);
+    margin-top: 16px;
+    padding: 0;
+    background: transparent;
+    border: none;
 }
 
 .services-module .svc-inline-6e4709cb.svc-inline-6e4709cb.svc-inline-6e4709cb.svc-inline-6e4709cb,

@@ -1,0 +1,190 @@
+{
+  "scope": "Actual Cloud SQL, authenticated ADMIN/RLS; source payloads not exported; lease/rate transaction rolled back; no model",
+  "checks": [
+    {
+      "tool": "sessions",
+      "status": "PASS",
+      "bytes": 805
+    },
+    {
+      "tool": "history",
+      "status": "PASS",
+      "bytes": 17092
+    },
+    {
+      "tool": "appointment.list",
+      "status": "PASS",
+      "bytes": 306
+    },
+    {
+      "tool": "inventory.low_stock",
+      "status": "PASS",
+      "bytes": 284
+    },
+    {
+      "tool": "ticket.open",
+      "status": "PASS",
+      "bytes": 2217
+    },
+    {
+      "tool": "customer.lookup",
+      "status": "PASS",
+      "bytes": 239
+    },
+    {
+      "tool": "order.lookup",
+      "status": "PASS",
+      "bytes": 205
+    },
+    {
+      "tool": "catalog.product",
+      "status": "PASS",
+      "bytes": 1719
+    },
+    {
+      "tool": "catalog.service",
+      "status": "PASS",
+      "bytes": 4006
+    },
+    {
+      "tool": "catalog.service_price",
+      "status": "PASS",
+      "bytes": 4692
+    },
+    {
+      "tool": "revenue.summary",
+      "status": "PASS",
+      "bytes": 281
+    },
+    {
+      "tool": "knowledge.search",
+      "status": "PASS",
+      "bytes": 385
+    },
+    {
+      "tool": "conversation.context",
+      "status": "PASS",
+      "bytes": 2
+    },
+    {
+      "tool": "history.context",
+      "status": "PASS",
+      "bytes": 2
+    },
+    {
+      "tool": "customer.pets",
+      "status": "PASS",
+      "bytes": 221
+    },
+    {
+      "tool": "pet.lookup",
+      "status": "PASS",
+      "bytes": 219
+    },
+    {
+      "tool": "payment.order",
+      "status": "PASS",
+      "bytes": 507
+    },
+    {
+      "tool": "order.refund_pending",
+      "status": "PASS",
+      "bytes": 568
+    },
+    {
+      "tool": "appointment.search",
+      "status": "PASS",
+      "bytes": 498
+    },
+    {
+      "tool": "ticket.lookup",
+      "status": "PASS",
+      "bytes": 222
+    },
+    {
+      "tool": "conversation.list",
+      "status": "PASS",
+      "bytes": 1407
+    },
+    {
+      "tool": "points.lookup",
+      "status": "PASS",
+      "bytes": 222
+    },
+    {
+      "tool": "offer.list",
+      "status": "PASS",
+      "bytes": 1276
+    },
+    {
+      "tool": "staff.lookup",
+      "status": "PASS",
+      "bytes": 1430
+    },
+    {
+      "tool": "staff.schedule",
+      "status": "PASS",
+      "bytes": 384
+    },
+    {
+      "tool": "review.list",
+      "status": "PASS",
+      "bytes": 1275
+    },
+    {
+      "tool": "content.list",
+      "status": "PASS",
+      "bytes": 2710
+    },
+    {
+      "tool": "report.operations",
+      "status": "PASS",
+      "bytes": 646
+    },
+    {
+      "tool": "settings.read",
+      "status": "PASS",
+      "bytes": 773
+    },
+    {
+      "tool": "content.read",
+      "status": "PASS",
+      "bytes": 391
+    },
+    {
+      "tool": "review.read",
+      "status": "PASS",
+      "bytes": 390
+    },
+    {
+      "tool": "catalog.price_rows",
+      "status": "PASS",
+      "bytes": 507
+    },
+    {
+      "tool": "internal.customer_resolve",
+      "status": "PASS",
+      "bytes": 221
+    },
+    {
+      "tool": "internal.customer_appointment",
+      "status": "PASS",
+      "bytes": 249
+    },
+    {
+      "tool": "internal.customer_tickets",
+      "status": "PASS",
+      "bytes": 207
+    },
+    {
+      "tool": "internal.customer_pets",
+      "status": "PASS",
+      "bytes": 225
+    },
+    {
+      "tool": "internal.customer_latest_order",
+      "status": "PASS",
+      "bytes": 209
+    }
+  ]
+}
