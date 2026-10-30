@@ -262,7 +262,7 @@ async function init(){
  try{
   db=window.getSupabaseClient?.() || window.SupabaseClient;if(!db)throw Error('no_database');const auth=await db.auth.getUser();
   if((auth.error||!auth.data?.user)&&isGuestShopper()){
-   state.guest=true;journalKey='pawpal_guest_booking_request_v1';const saved=sessionStorage.getItem(journalKey);requestId=/^[0-9a-f-]{36}$/i.test(saved||'')?saved:crypto.randomUUID();
+   state.guest=true;const firstStepLabel=document.querySelector('#bookingStepper [data-step="1"] .step-label');if(firstStepLabel)firstStepLabel.textContent='Thông tin đặt lịch';journalKey='pawpal_guest_booking_request_v1';const saved=sessionStorage.getItem(journalKey);requestId=/^[0-9a-f-]{36}$/i.test(saved||'')?saved:crypto.randomUUID();
    const receiptId=new URLSearchParams(location.search).get('bookingSuccess')||saved;
    if(receiptId){try{await renderBookingReceipt(root,receiptId);return;}catch(error){if(error.status!==404)throw error;}}
    const data=await loadGuestBookingContext(db);state.catalog=data.catalog;state.breeds=data.breeds;state.guestContext=data.context;state.profile=data.context.contact;
