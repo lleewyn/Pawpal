@@ -4276,6 +4276,7 @@
 
 /* Ordinary lifecycle/account/payment/content status: text only, never pills. */
 .customers-module .admin-badge:is(
+    .customer-tier-badge,
     .badge-success,
     .badge-active,
     .badge-info,
@@ -4602,28 +4603,3 @@
 .customers-module #customerDataTable .customer-ticket-subject {display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:normal;overflow-wrap:anywhere;}
 .customers-module #customerDataTable .customer-ticket-meta {display:block;margin-top:3px;font-size:11px;font-weight:400;white-space:normal;overflow-wrap:anywhere;}
 .customers-module #custEmergencyAlertText {min-width:0;white-space:normal;overflow-wrap:anywhere;}
-.customers-module .customer-tier-badge {
-    --customer-tier-bg: #E2ECE5;
-    --customer-tier-text: #2D483B;
-}
-.customers-module .customer-tier-badge.badge-tier-bronze { --customer-tier-bg: #F1E4D8; --customer-tier-text: #745134; }
-.customers-module .customer-tier-badge.badge-tier-silver { --customer-tier-bg: #E7EBF0; --customer-tier-text: #435365; }
-.customers-module .customer-tier-badge.badge-tier-gold { --customer-tier-bg: #F6E7CF; --customer-tier-text: #6E4912; }
-.customers-module .customer-tier-badge.badge-tier-diamond { --customer-tier-bg: #D9E8F2; --customer-tier-text: #1C4A65; }
-.customers-module #customerDataTable .admin-badge.customer-tier-badge,
-.customers-module #subtab-tab-profile .admin-badge.customer-tier-badge {
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    height: 24px !important;
-    min-height: 24px !important;
-    padding: 0 9px !important;
-    border: none !important;
-    border-radius: 9px !important;
-    background: var(--customer-tier-bg) !important;
-    color: var(--customer-tier-text) !important;
-    font-size: 12px !important;
-    font-weight: 500 !important;
-    line-height: 1 !important;
-    white-space: nowrap;
-}

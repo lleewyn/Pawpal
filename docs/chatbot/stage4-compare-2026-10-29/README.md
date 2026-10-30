@@ -44,3 +44,11 @@ Các bài kiểm tra mới dùng nguồn SQL giả lập và handler API thật,
 - G4.1 và G4.3: chưa triển khai trong đợt này.
 
 Không có migration mới. Migrations135–152 và các thay đổi trước vẫn chưa áp Cloud; Gate2 và phần nghiệm thu G3.4 chưa được đóng chỉ vì bắt đầu giai đoạn4.
+
+## Cập nhật sau push 29/10/2026
+
+Checkpoint `e126355d45026a5de961ff64e25c72fb7487b134` đã push lên `origin/feat/guest-admin-identity`, SHA remote khớp. Mô tả chưa push ở trên là trạng thái lịch sử của đợt đầu.
+
+Bổ sung kiểm tra phạm vi so sánh: chỉ nhận hai khóa `start_at`/`end_at` trong scope; loại nguồn có bộ lọc ẩn hoặc metadata múi giờ khác `Asia/Ho_Chi_Minh`. Múi giờ đúng của RPC hiện hành vẫn được chấp nhận. Một nguồn bị loại giữ kết quả từng phần và không tính chênh lệch/phần trăm. Không tăng số truy vấn, không thêm migration/cache/model.
+
+Kiểm tra sau thay đổi: 12 nhóm so sánh, tổng 243 kiểm tra offline và 40 ca nghiệp vụ đạt; `git diff --check` đạt. Phần bổ sung này đang local sau checkpoint trên. Chưa có oracle SQL mới cho phép so sánh kết hợp; Gate2/G3.4 và các đầu việc G4 còn mở. Không áp migration Cloud.

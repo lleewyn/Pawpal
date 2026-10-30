@@ -62,6 +62,14 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
      return res.status(403).json({success:false,message:'Mã tra cứu riêng không hợp lệ hoặc đã hết hạn.'});
     return res.json({success:true,kind:match[1],receipt:await rpc(match[1]==='booking'?'guest_booking_recover':'guest_sales_recover',{p_request:match[2]})});
    }
+   if(action==='end'){
+    let previous;try{previous=cookie(req);}catch{/* An expired/malformed cookie still needs removal. */}
+    try{if(previous)await rpc('guest_commerce_end',{p_hash:previous.hash});}
+    finally{
+     res.setHeader('Set-Cookie',[`${cookieName}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${production?'; Secure':''}`,`${production?'__Host-pawpal_lookup':'pawpal_lookup_dev'}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${production?'; Secure':''}`]);
+    }
+    return res.json({success:true});
+   }
    let session=cookie(req);requestSession=session;
    if(action==='session'){
     if(session)return res.json({success:true,...await rpc('guest_commerce_context',{p_hash:session.hash,p_page:1})});
@@ -70,9 +78,6 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
     return res.json({success:true,initialized:false,pets:[],page:1,hasMore:false});
    }
    if(!session)throw Error('invalid_session');
-   if(action==='end'){
-    await rpc('guest_commerce_end',{p_hash:session.hash});setCookie(res,'',0);return res.json({success:true});
-   }
    if(action==='context'){
     const page=body.page??1;if(!Number.isInteger(page)||page<1||page>1000)throw Error('invalid_body');
     return res.json({success:true,...await rpc('guest_commerce_context',{p_hash:session.hash,p_page:page})});

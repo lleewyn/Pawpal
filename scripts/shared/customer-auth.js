@@ -33,6 +33,8 @@
         return result;
     }
     async function accept(result) {
+        const {resetGuestSession}=await import('./guest-session-boundary.mjs');
+        await resetGuestSession();
         if (result.session) {
             const db = client();
             if (!db) throw new Error('Chưa tải được dịch vụ xác thực.');

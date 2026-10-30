@@ -63,3 +63,12 @@ test('API admits once, runs at most two sources concurrently, saves complete/par
   else{assert.equal(res.statusCode,200);assert.equal(res.data.ok,true);assert.equal(res.data.partial,mode==='partial');assert.equal(saves,1);assert.equal(res.data.resource_usage.calls,2);}
  }
 });
+
+test('comparison rejects hidden scope filters and conflicting time zones without extra reads',async()=>{
+ for(const mutate of [d=>({...d,scope:{...d.scope,branch_id:'hidden'}}),d=>({...d,time_zone:'UTC'}),d=>({...d,scope:[]})]){
+  const {result:r,calls}=await invoke({run:(filters,index)=>({data:index===2?mutate(source(filters)):source(filters)})});
+  assert.equal(calls.length,2);assert.equal(r.partial,true);assert.equal(r.facts.previous,null);assert.equal(r.facts.delta,null);assert.equal(r.facts.percent,null);
+ }
+ const {result:r}=await invoke({run:filters=>({data:{...source(filters),time_zone:'Asia/Ho_Chi_Minh'}})});
+ assert.equal(r.partial,false);
+});

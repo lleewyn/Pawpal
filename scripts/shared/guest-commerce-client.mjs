@@ -1,5 +1,6 @@
 // Cookie stays HttpOnly. No token, contact, pet or receipt is stored in browser storage.
 import {onGuestAccountChange} from './guest-account-state.mjs';
+import {ensureGuestSessionBoundary} from './guest-session-boundary.mjs';
 const base = '/api/customer/guest/';
 const actions = new Set(['context', 'lookup', 'phone-lookup', 'pets', 'profile-read', 'profile-update', 'booking-slots', 'booking-quote', 'booking-create', 'booking-receipt', 'order-quote', 'order-create', 'order-receipt']);
 const writes = new Set(['pets', 'profile-update', 'booking-create', 'order-create']);
@@ -32,7 +33,8 @@ export function createGuestCommerceClient({
     fetcher = (...args) => globalThis.fetch(...args),
     locks = globalThis.navigator?.locks,
     hasMember = browserHasMember,
-    timeoutMs = 15000
+    timeoutMs = 15000,
+    ensureBoundary = ensureGuestSessionBoundary
 } = {}) {
     if (!Number.isFinite(timeoutMs) || timeoutMs < 1 || timeoutMs > 60000) throw new TypeError('Invalid request timeout');
     let ready = false, starting = null, epoch = 0;
@@ -82,6 +84,8 @@ export function createGuestCommerceClient({
 
     async function ensureSession() {
         assertGuest();
+        await ensureBoundary();
+        assertGuest();
         if (ready) return;
         if (!starting) {
             const expectedEpoch = epoch;
@@ -118,8 +122,10 @@ export function createGuestCommerceClient({
             if (prior.body !== body) return Promise.reject(new GuestCommerceError('Thông tin đang gửi đã thay đổi. Vui lòng chờ kết quả.', {status: 409}));
             return prior.promise;
         }
+        const expectedEpoch=epoch;
         const promise = (async () => {
             await ensureSession();
+            if(epoch!==expectedEpoch)throw new GuestCommerceError('Phiên đã thay đổi. Vui lòng kiểm tra lại kết quả.',{status:401,uncertain:false});
             return post(action, body, mutating);
         })();
         if (key) {

@@ -1,3 +1,6 @@
+import {installGuestSessionBoundary} from './guest-session-boundary.mjs';
+installGuestSessionBoundary();
+
 // ====================================================================
 // CHUẨN HÓA HÀM ĐỊNH DẠNG THỜI GIAN TOÀN HỆ THỐNG
 // Định dạng hiển thị chuẩn: YYYY-MM-DD HH:mm (không giây), YYYY-MM-DD, HH:mm

@@ -538,3 +538,10 @@ Mỗi tính năng phải có bảng **trước/sau** cùng kịch bản: HTTP re
 **Chặn nghiệm thu/phát hành khi:** chưa chốt hoặc vượt ngân sách; xuất hiện tải toàn bảng/N+1/vòng gọi vô hạn; tải nền tiếp tục khi UI ẩn; không dừng truy vấn quá hạn; lỗi/latency tăng vượt ngưỡng đã chốt; hoặc có nguy cơ lộ cache. Với tác vụ cũ cùng điều kiện, request/bytes không được tăng nếu chưa có lý do và ngân sách thay thế được xem xét cụ thể.
 
 Không stress-test Production, không truy vấn Supabase Logs để tạo thêm tải chỉ nhằm cập nhật checklist. Kiểm tra tải dùng test/staging; Production chỉ xác minh có giới hạn theo phạm vi được phép. Các hạng mục trên là yêu cầu triển khai/kiểm chứng, chưa tuyên bố hệ thống hiện tại đã đáp ứng hoặc bảo đảm không thể quá tải.
+
+### Tiếp tục G4.2/G4.4 sau checkpoint e126355d — 29/10/2026
+
+- [x] Đã push checkpoint `e126355d45026a5de961ff64e25c72fb7487b134` lên `origin/feat/guest-admin-identity`; SHA remote khớp. Các ghi chú chưa push/472da7ed phía trên là mốc trước checkpoint này.
+- [x] Siết scope so sánh thực thu: từ chối bộ lọc ngoài start_at/end_at và múi giờ nguồn trái hợp đồng; giữ nguồn hợp lệ, không giả 0 hoặc tính chênh lệch khi thiếu kỳ. Giữ nguyên tối đa 2 nguồn so sánh và ngân sách chung.
+- [x] Bổ sung kiểm tra hồi quy: 12 nhóm so sánh, tổng 243 kiểm tra offline và 40 ca nghiệp vụ đạt; diff sạch lỗi khoảng trắng. Thay đổi bổ sung sau checkpoint đang local.
+- [ ] Oracle SQL cho so sánh kết hợp, phân nhóm và các phần G4 còn lại vẫn chưa hoàn tất. Không áp migrations135–154 lên Cloud trong đợt push này.

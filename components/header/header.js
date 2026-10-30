@@ -511,6 +511,8 @@
             e.preventDefault();
             e.stopPropagation();
         }
+        try{const {resetGuestSession}=await import('/scripts/shared/guest-session-boundary.mjs');await resetGuestSession();}
+        catch(error){console.error('[Header] Chưa dọn được phiên khách:',error.message);}
         const client = window.getSupabaseClient?.() || window.SupabaseClient;
         if (client) {
             const { error } = await client.auth.signOut();

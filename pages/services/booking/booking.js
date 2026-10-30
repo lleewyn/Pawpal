@@ -4,6 +4,7 @@ import {guestCommerce,GuestCommerceError} from '/scripts/shared/guest-commerce-c
 import {isGuestShopper} from '/scripts/shared/guest-cart.mjs';
 import {renderGuestPets,loadGuestBookingContext} from './booking-guest-pets.mjs';
 import {showGuestRecoveryCode} from '/scripts/shared/guest-recovery.mjs';
+import {GUEST_IDENTITY_EPOCH} from '/scripts/shared/guest-session-boundary.mjs';
 const state={step:1,pet:null,service:null,room:null,quote:null,details:null,busy:false,pets:[],profile:null,preferredStaff:null,availability:null,catalog:{services:[],rooms:[]}};
 let db,requestId,journalKey;
 const el=id=>document.getElementById(id);
@@ -29,12 +30,14 @@ function heading(title){return `<div class="step-header"><h2>${title}</h2></div>
 function field(id,label,type='text',extra=''){return `<div class="form-group"><label for="${id}">${label} <span class="required">*</span></label><input id="${id}" type="${type}" required ${extra}><span class="field-error" id="${id}Error" role="alert"></span></div>`;}
 function navigation(step,nextLabel='Tiếp theo'){return `<div class="step-actions">${step>1?`<button type="button" class="btn-step-back btn-green-outline" id="step${step}Back">Quay lại</button>`:''}<button type="button" class="btn-step-next btn-cta" id="step${step}Next">${nextLabel}</button></div>`;}
 function show(step){
+ if(state.disposed)return;
  state.step=step;document.documentElement.className=document.documentElement.className.replace(/booking-pre-step-\d/g,'').trim();
  for(let n=1;n<=4;n++){el('step'+n).classList.toggle('active',n===step);el('step'+n).style.display=n===step?'block':'none';}
  document.querySelectorAll('#bookingStepper .step').forEach(node=>{const n=Number(node.dataset.step);node.classList.toggle('active',n===step);node.classList.toggle('completed',n<step);node.setAttribute('aria-current',n===step?'step':'false');});summary();
 }
 function bindStepper(){document.querySelectorAll('#bookingStepper .step').forEach(node=>{const navigate=()=>{const n=Number(node.dataset.step);if(n<state.step&&!state.busy)show(n);};node.onclick=navigate;node.onkeydown=event=>{if(event.key==='Enter')navigate();};});}
 function summary(){
+ if(state.disposed)return;
  const selectedStart=state.quote?.start_at || (state.step>=3?el('bookingStart')?.value:null);
  const row=(label,value,empty=false)=>`<div class="booking-recap-row"><dt>${label}</dt><dd${empty?' class="recap-placeholder"':''}>${escape(value)}</dd></div>`;
  el('bookingSummary').innerHTML=`<div class="summary-card booking-recap"><h4 class="summary-title">Tóm tắt đặt lịch</h4><div class="summary-content">
@@ -64,6 +67,7 @@ function autocomplete(id,rows,label,onSelect){
 }
 function picker(id,label){return `<div class="form-group booking-entity-wrapper"><label for="${id}">${label} <span class="required">*</span></label><input id="${id}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="${id}Options" aria-expanded="false"><div id="${id}Options" class="booking-entity-options" role="listbox" hidden></div><span class="field-error" id="${id}Error" role="alert"></span></div>`;}
 function renderPets(){
+ if(state.disposed)return;
  if(state.guest)return renderGuestPets({root:el('step1'),db,context:state.guestContext,breeds:state.breeds,
   onChoose:pet=>{state.pet=pet;state.service=null;state.room=null;state.quote=null;summary();},
   onNext:()=>{renderServices();show(2);},onContext:context=>{state.guestContext=context;state.profile=context.contact;}});
@@ -237,6 +241,7 @@ async function renderBookingReceipt(root,id){
  if(!/^[0-9a-f-]{36}$/i.test(id))throw Error('invalid_receipt');
  if(state.guest){
   const {booking,recoveryCode}=await guestCommerce.request('booking-receipt',{requestId:id});
+  if(state.disposed||!root.isConnected)return;
   document.title='PawPal - Lịch hẹn của bạn';
   const statusLabel={pending:'Chờ xác nhận',confirmed:'Đã xác nhận',in_progress:'Đang thực hiện',completed:'Hoàn tất',cancelled:'Đã hủy',no_show:'Không đến'}[booking.status]||'Đang xử lý';
   root.innerHTML=`<section class="booking-receipt"><span class="booking-receipt-label">${booking.status==='cancelled'?'Đã hủy':'Đã tiếp nhận'}</span><h1 tabindex="-1" id="bookingReceiptTitle">${booking.status==='cancelled'?'Lịch hẹn đã được hủy':'PawPal đã nhận yêu cầu đặt lịch!'}</h1><dl><div><dt>Mã lịch hẹn</dt><dd>${escape(booking.code)}</dd></div><div><dt>Thời gian hẹn</dt><dd>${date(booking.start_at)}</dd></div><div><dt>Kết thúc dự kiến</dt><dd>${date(booking.end_at)}</dd></div><div><dt>Tổng tiền dự kiến</dt><dd>${money(booking.total)}</dd></div></dl><p>Chưa thu tiền khi gửi yêu cầu. Cửa hàng sẽ liên hệ xác nhận lịch.</p><div class="booking-receipt-actions"><button type="button" class="btn-cta" id="guestBookingAnother">Đặt lịch cho bé khác</button><a class="btn-green-outline" href="/">Về trang chủ</a></div></section>`;
@@ -247,7 +252,9 @@ async function renderBookingReceipt(root,id){
   el('guestBookingAnother').onclick=()=>{sessionStorage.removeItem(journalKey);location.assign('/booking');};el('bookingReceiptTitle').focus();return;
  }
  const profile=await rpc('customer_profile_snapshot');
+ if(state.disposed||!root.isConnected)return;
  const result=await db.from('appointment').select('id,appointment_status,scheduled_start_at,scheduled_end_at').eq('id',id).eq('customer_id',profile.id).single();
+ if(state.disposed||!root.isConnected)return;
  if(result.error||!result.data)throw Error('unverified_receipt');
  const booking=result.data,cancelled=['cancelled','da_huy'].includes(booking.appointment_status);
  document.title='PawPal - Đã tiếp nhận lịch hẹn';
@@ -257,27 +264,44 @@ async function renderBookingReceipt(root,id){
 async function init(){
  const root=document.querySelector('.booking-main');if(!root)return;
  root.classList.add('booking-live-form');
- const accountChanged=()=>{if(state.guest&&root.isConnected&&!isGuestShopper())location.reload();};
- document.addEventListener('auth_state_changed',accountChanged);window.addEventListener('storage',event=>{if(event.key==='pawpal_current_user'||event.key===null)accountChanged();});
+ const identity=()=>{
+  try{const user=JSON.parse(localStorage.getItem('pawpal_current_user')||'null');return JSON.stringify([user?.id&&!user.is_temporary?user.id:null,localStorage.getItem(GUEST_IDENTITY_EPOCH)]);}
+  catch{return 'unavailable';}
+ };
+ const initialIdentity=identity();
+ const discard=(reload=true)=>{
+  if(!root.isConnected)return;
+  if(!state.disposed){
+   state.disposed=true;state.pet=null;state.pets=[];state.profile=null;state.guestContext=null;state.service=null;state.quote=null;state.details=null;
+   root.replaceChildren();const note=document.createElement('p');note.setAttribute('role','status');note.textContent='Đang cập nhật phiên đăng nhập…';root.append(note);
+  }
+  if(reload)location.reload();
+ };
+ const accountChanged=()=>{if(identity()!==initialIdentity)discard();};
+ document.addEventListener('auth_state_changed',accountChanged);document.addEventListener('guest_session_reset',()=>{if(identity()!==initialIdentity)discard(false);});
+ window.addEventListener('storage',event=>{if(event.key===GUEST_IDENTITY_EPOCH)discard(false);else if(event.key==='pawpal_current_user'||event.key===null)accountChanged();});
+ window.addEventListener('pageshow',event=>{if(event.persisted)accountChanged();});
  try{
   db=window.getSupabaseClient?.() || window.SupabaseClient;if(!db)throw Error('no_database');const auth=await db.auth.getUser();
+  if(state.disposed)return;state.authId=auth.data?.user?.id||null;
+  db.auth.onAuthStateChange?.((event,session)=>{if((event==='SIGNED_OUT'&&state.authId)||(event==='SIGNED_IN'&&session?.user?.id!==state.authId))discard(false);});
   if((auth.error||!auth.data?.user)&&isGuestShopper()){
    state.guest=true;const firstStepLabel=document.querySelector('#bookingStepper [data-step="1"] .step-label');if(firstStepLabel)firstStepLabel.textContent='Thông tin đặt lịch';journalKey='pawpal_guest_booking_request_v1';const saved=sessionStorage.getItem(journalKey);requestId=/^[0-9a-f-]{36}$/i.test(saved||'')?saved:crypto.randomUUID();
    const receiptId=new URLSearchParams(location.search).get('bookingSuccess')||saved;
    if(receiptId){try{await renderBookingReceipt(root,receiptId);return;}catch(error){if(error.status!==404)throw error;}}
-   const data=await loadGuestBookingContext(db);state.catalog=data.catalog;state.breeds=data.breeds;state.guestContext=data.context;state.profile=data.context.contact;
+   const data=await loadGuestBookingContext(db);if(state.disposed)return;state.catalog=data.catalog;state.breeds=data.breeds;state.guestContext=data.context;state.profile=data.context.contact;
    renderPets();show(1);bindStepper();return;
   }
   if(auth.error||!auth.data?.user){el('step1').innerHTML=heading('Đăng nhập để đặt lịch')+'<p>Chọn bé cưng từ hồ sơ của bạn sau khi đăng nhập.</p><a class="btn-cta" href="/login">Đăng nhập</a>';show(1);return;}
   journalKey='pawpal_booking_request:'+auth.data.user.id;const saved=sessionStorage.getItem(journalKey);requestId=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(saved || '')?saved:crypto.randomUUID();sessionStorage.setItem(journalKey,requestId);
   const receiptId=new URLSearchParams(location.search).get('bookingSuccess');
   if(receiptId){try{await renderBookingReceipt(root,receiptId);}catch(error){root.innerHTML='<section class="booking-receipt"><h1>Chưa xác minh được lịch hẹn</h1><p>Vui lòng kiểm tra danh sách lịch hẹn trước khi gửi lại yêu cầu.</p><div class="booking-receipt-actions"><button type="button" class="btn-cta" id="bookingReceiptRetry">Thử lại</button><a class="btn-green-outline" href="/user#bookings">Lịch hẹn của bé</a></div></section>';el('bookingReceiptRetry').onclick=()=>location.reload();}return;}
-  const prior=await db.from('appointment').select('id').eq('id',requestId).maybeSingle();if(prior.error)throw prior.error;
+  const prior=await db.from('appointment').select('id').eq('id',requestId).maybeSingle();if(state.disposed)return;if(prior.error)throw prior.error;
   if(prior.data){sessionStorage.removeItem(journalKey);el('step1').innerHTML=heading('Yêu cầu đã được tiếp nhận')+'<p>Lịch hẹn đã có trên hệ thống. Bạn không cần gửi lại yêu cầu.</p><a class="btn-cta" id="bookingRecovered" href="/user#booking-detail?id='+encodeURIComponent(prior.data.id)+'">Xem lịch hẹn</a>';show(1);return;}
-  const [catalog,pets,profile]=await Promise.all([rpc('customer_service_catalog'),rpc('own_booking_pets'),rpc('customer_profile_snapshot')]);state.catalog=catalog;state.pets=pets;state.profile=profile;renderPets();show(1);
+  const [catalog,pets,profile]=await Promise.all([rpc('customer_service_catalog'),rpc('own_booking_pets'),rpc('customer_profile_snapshot')]);if(state.disposed)return;state.catalog=catalog;state.pets=pets;state.profile=profile;renderPets();show(1);
   if(!pets.length)el('bookingPetSelected').textContent='Bạn chưa có hồ sơ bé cưng đang hoạt động. Hãy thêm hồ sơ trước khi đặt lịch.';
   document.querySelectorAll('#bookingStepper .step').forEach(node=>{const navigate=()=>{const n=Number(node.dataset.step);if(n<state.step&&!state.busy)show(n);};node.onclick=navigate;node.onkeydown=e=>{if(e.key==='Enter')navigate();};});
- }catch(error){el('step1').innerHTML=heading('Chưa tải được thông tin đặt lịch')+'<p role="alert" class="field-error">'+escape(message(error))+'</p><button type="button" class="btn-green-outline" id="bookingReload">Thử lại</button>';el('bookingReload').onclick=()=>location.reload();show(1);}
+ }catch(error){if(state.disposed)return;el('step1').innerHTML=heading('Chưa tải được thông tin đặt lịch')+'<p role="alert" class="field-error">'+escape(message(error))+'</p><button type="button" class="btn-green-outline" id="bookingReload">Thử lại</button>';el('bookingReload').onclick=()=>location.reload();show(1);}
  finally{root.classList.remove('booking-loading');root.setAttribute('aria-busy','false');root.querySelector('.booking-skeleton')?.remove();}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

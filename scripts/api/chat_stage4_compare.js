@@ -23,7 +23,10 @@ async function answerComparison({route,caller,staff,budget,validateFacts}){
  const keys=['current','previous'],prepared=keys.map(key=>readTools.prepare('revenue.summary',route.filters[key],staff.permissions));
  const results=await Promise.allSettled(prepared.map(async descriptor=>{
   const data=await budget.run(caller,descriptor);validateFacts(data);
-  if(!Number.isFinite(Date.parse(data.as_of))||['start_at','end_at'].some(key=>Date.parse(data.scope?.[key])!==Date.parse(descriptor.filters[key])))throw Error('invalid_comparison_scope');
+  if(!Number.isFinite(Date.parse(data.as_of))||!data.scope||Array.isArray(data.scope)
+   ||Object.keys(data.scope).some(key=>!['start_at','end_at'].includes(key))
+   ||['start_at','end_at'].some(key=>Date.parse(data.scope[key])!==Date.parse(descriptor.filters[key]))
+   ||(data.time_zone!==undefined&&data.time_zone!=='Asia/Ho_Chi_Minh'))throw Error('invalid_comparison_scope');
   if(Number(data.collected)<0||Number(data.refunded)<0)throw Error('invalid_comparison_amount');
   return data;
  }));

@@ -18,6 +18,8 @@
             return result;
         },
         async accept(result) {
+            const {resetGuestSession}=await import('/scripts/shared/guest-session-boundary.mjs');
+            await resetGuestSession();
             if (result.session) {
                 const client = window.getSupabaseClient?.() || window.SupabaseClient;
                 if (client) await client.auth.setSession(result.session);

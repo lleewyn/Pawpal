@@ -51,7 +51,7 @@ test('Member state is checked again after queued bootstrap; guest dispatch canno
  const {createGuestCommerceClient}=await load();let member=false,calls=0,release;
  const locks={request(_key,fn){return new Promise(resolve=>release=()=>resolve(fn()));}};
  const client=createGuestCommerceClient({locks,hasMember:()=>member,fetcher:async()=>{calls++;return response();}});
- const pending=client.request('context');member=true;release();
+ const pending=client.request('context');while(!release)await new Promise(r=>setImmediate(r));member=true;release();
  await assert.rejects(pending,error=>error.status===409);assert.equal(calls,0);
 });
 

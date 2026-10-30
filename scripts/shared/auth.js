@@ -78,6 +78,8 @@ function setCurrentUser(user) {
 window.setCurrentUser = setCurrentUser;
 
 async function logout() {
+    try{const {resetGuestSession}=await import('./guest-session-boundary.mjs');await resetGuestSession();}
+    catch(error){console.error('[auth] Chưa dọn được phiên khách:',error.message);}
     const client = window.getSupabaseClient?.() || window.SupabaseClient;
     if (client) {
         const { error } = await client.auth.signOut();
