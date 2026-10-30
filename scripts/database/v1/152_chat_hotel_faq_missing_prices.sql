@@ -4,8 +4,8 @@ SET LOCAL statement_timeout='5s';
 SET LOCAL lock_timeout='1s';
 DO $migration$
 DECLARE
- previous_answer constant text := $previous$PawPal có các loại phòng theo danh mục Pet Hotel. Mình có thể giúp bạn so sánh giá, sức chứa và tiện ích của từng loại phòng.
-(Quy định: Chỉ hiển thị loại phòng đang được cung cấp.)$previous$;
+ previous_answer constant text := replace($previous$PawPal có các loại phòng theo danh mục Pet Hotel. Mình có thể giúp bạn so sánh giá, sức chứa và tiện ích của từng loại phòng.
+(Quy định: Chỉ hiển thị loại phòng đang được cung cấp.)$previous$,E'\r\n',E'\n');
  corrected_answer constant text := $corrected$FAQ này chưa có mức giá cụ thể, sức chứa hoặc tiện ích của phòng thường và VIP nên chưa đủ thông tin để so sánh hoặc tính chênh lệch. Cần đối chiếu bảng giá và thông tin phòng đang được cung cấp trong danh mục Pet Hotel trước khi tư vấn. Không suy đoán giá hoặc tiện ích và không coi nội dung FAQ này là báo giá đã xác nhận.$corrected$;
  faq public.chatbot_knowledge_faq%ROWTYPE;
 BEGIN

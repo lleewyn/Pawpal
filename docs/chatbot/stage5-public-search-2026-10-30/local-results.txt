@@ -1,0 +1,48 @@
+{
+  "scope": "Owned local clone; actual Auth/JWT/REST/SQL, no Cloud or real model",
+  "checks": [
+    "Server search selects five relevant active nonempty public FAQs and bounds answer length/bytes, marking clipped answers incomplete",
+    "Same local FAQ fixture uses fewer context bytes than legacy bulk read, without adding source requests",
+    "Eight Vietnamese public topic fixtures found with unaccented question variants; not a full production relevance score",
+    "No match returns empty FAQ instead of unrelated or inactive content",
+    "Anonymous and member JWTs cannot directly invoke server-only search",
+    "Invalid question length and nonexistent conversation rejected",
+    "Unicode history capped at eight excerpts and total payload remains below 32 KiB",
+    "Partial GIN index installed for matching expression; small-fixture plan recorded without production load claim",
+    "Rollback preserves legacy context and data; reapply restores search",
+    "Actual guest and member ownership/send API use one searched context each and model stub sees only bounded public FAQ",
+    "Actual guest no-match is saved without model invocation",
+    "Real SQL catalog returns active product variant price and only current service/hotel/taxi rows; expired/future/inactive prices excluded",
+    "Catalog is server-only and rejects private/unknown tool kinds and unsupported filters",
+    "Actual guest price answers use rules plus one catalog source and zero model/FAQ calls",
+    "Actual guest internal-data request gets a boundary response without data search or model",
+    "Catalog rollback/reapply preserves source rows and restores server-only function",
+    "Actual guest incomplete-policy answer skips model, saves honest continuation and never rereads full source",
+    "Multibyte FAQ byte-budget omission is marked incomplete even when individual answers are below character cap",
+    "Clipped FAQ question is also marked incomplete even when the answer fits",
+    "Explicit guest staff request transitions to waiting_agent with last-request context, no claim of staff acceptance and zero content/model reads"
+  ],
+  "status": "PASS",
+  "hashes": {
+    "091_admin_sales_order_page.sql": "60e0811a8202468299f434f92e46481dea2fd96d6b500816b1b4e2b1990842ab",
+    "143_chat_server_read_bundles.sql": "0fefd7329f8534c97d5afb84ea081307b4ee49a5a98d2bd191a2f9be40d3e012",
+    "155_public_chat_faq_search.sql": "f80688c94ed98940e3f97f09e734094c996a23a8919fcb2d70b172ba4f9f857e",
+    "156_public_chat_catalog.sql": "e1b3961ef6f394930935874da1d3d16a72badc381392e2f38e26b08bad1a648d",
+    "156_public_chat_catalog.rollback.sql": "af10b594f030447f228e15f54b2215d2bcf46dd239ee8b51ae091713a5ebd30f",
+    "155_public_chat_faq_search.rollback.sql": "12c561fbbff4fad72ed112255ad4669a8c901af019965be6586a1c2b754b8343"
+  },
+  "search": {
+    "status": 200
+  },
+  "metrics": {
+    "contextBytes": 8282,
+    "faqRows": 5,
+    "sourceRequestsPerAnswer": 2,
+    "externalModelCalls": 0,
+    "legacyContextBytes": 43854
+  },
+  "indexAvailable": true,
+  "plan": "Bitmap Heap Scan on chatbot_knowledge_faq  (cost=12.80..17.06 rows=1 width=16)\n  Recheck Cond: ((public_chat_faq_document(question, answer, keywords) @@ '''zebracare'''::tsquery) AND is_active)\n  ->  Bitmap Index Scan on chatbot_public_faq_search_idx  (cost=0.00..12.80 rows=1 width=0)\n        Index Cond: (public_chat_faq_document(question, answer, keywords) @@ '''zebracare'''::tsquery)",
+  "apiStatus": 200,
+  "catalogStatus": 200
+}

@@ -7,7 +7,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=requ
    const row=i=>({id:'id-'+i,sender_type:'bot',content:'Tin '+i,metadata:{},created_at:'2026-10-28T01:00:'+String(i).padStart(2,'0')+'Z'});
    sessionStorage.setItem('pawpal_chat_active_A','chat-A');sessionStorage.setItem('pawpal_chat_active_B','chat-B');
    window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session}}),onAuthStateChange(cb){window.changeAuth=()=>{session={user:{id:'B'},access_token:'token-B'};cb('SIGNED_IN',session);};}}});
-   window.setInterval=fn=>{window.tick=fn;return 1;};
+   window.fakeClock=Date.now();Date.now=()=>fakeClock;window.setInterval=fn=>{window.tick=async()=>{fakeClock+=30000;return fn();};return 1;};
    window.fetch=async(_url,init)=>{const b=JSON.parse(init.body);calls.push({body:b,token:init.headers.Authorization});
     if(b.action==='public_read_part'){if(failPart){failPart=false;return {ok:false,json:async()=>({ok:false,error:'Mất kết nối thử nghiệm'})};}const next=Math.min(chars.length,b.offset+2000),data={ok:true,id:b.messageId,content:chars.slice(b.offset,next).join(''),offset:b.offset,next_offset:next,hasMore:next<chars.length,revision:b.revision};if(deferPart)return new Promise(resolve=>held.push(()=>resolve({ok:true,json:async()=>data})));return {ok:true,json:async()=>data};}
     let messages=[],hasMore=false;if(b.conversationId==='chat-B')messages=[{...row(0),id:'B',content:'Chỉ tài khoản B'}];

@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Three service overview categories return at most five active public packages without private fields",
+    "Overview and price remain server-only",
+    "Exact guest prompt from screenshot saves useful real-catalog answer with one catalog read and no FAQ/model",
+    "Long FAQ excluded while complete relevant FAQ stays available instead of blocking entire request",
+    "Rollback restores old price/search function behavior and reapply passes without changing service data"
+  ],
+  "scope": "Owned local clone, actual REST/SQL/guest API, AI forbidden"
+}

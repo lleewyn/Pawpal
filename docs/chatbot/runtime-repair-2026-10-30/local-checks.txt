@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "scope": "Owned clone, exact runtime repair bundle; no model/Cloud",
+  "checks": [
+    "Exact minimum bundle applies without full migrations",
+    "All five data RPCs resolve for service; anon/member cannot call them",
+    "Rollback removes only new functions/indexes",
+    "Reapply passes"
+  ]
+}

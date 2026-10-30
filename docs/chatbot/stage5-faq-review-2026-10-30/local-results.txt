@@ -1,0 +1,25 @@
+{
+  "scope": "Owned local clone; actual Auth/JWT/REST/SQL, no Cloud or real model",
+  "checks": [
+    "All nineteen reviewed changes apply exactly and idempotently, with no fake business prices/hours/return deadlines",
+    "All eighteen active corrected/added questions can retrieve the reviewed answer through bounded public search with real JWT/REST",
+    "Known synthetic QA question excluded from public retrieval without deleting its source record",
+    "Apply and rollback both refuse to overwrite an independently edited answer",
+    "Rollback protects independently edited metadata of new FAQ rather than deleting it",
+    "Rollback restores all source rows and flags exactly except timestamps; idempotent reverse and reapply pass",
+    "Windows CRLF migration files apply and reverse against actual LF database content without weakening independent-edit guards"
+  ],
+  "status": "PASS",
+  "hashes": {
+    "143_chat_server_read_bundles.sql": "0fefd7329f8534c97d5afb84ea081307b4ee49a5a98d2bd191a2f9be40d3e012",
+    "150_chat_booking_faq_audience.sql": "681b4006a03dd8d67e0f0390c32e5f82f8fdbce6ac3895973a320ef90311628c",
+    "152_chat_hotel_faq_missing_prices.sql": "113ab4835c5c4333393f934b696cc91a20a991ad390e09685b57ba610b5b473d",
+    "155_public_chat_faq_search.sql": "f80688c94ed98940e3f97f09e734094c996a23a8919fcb2d70b172ba4f9f857e",
+    "157_public_faq_content_review.rollback.sql": "302bbed691ad829a73fe1648a3bb9a4b870f55fb5ea607e81a6427c778adf5da",
+    "157_public_faq_content_review.sql": "ea3adeb5614f3594c96addc25e3d6f3de4cd06a148b093f1048a2179d3dde132",
+    "150_chat_booking_faq_audience.rollback.sql": "15ab59a36845ce76f3c5e3eeee0a5f366642912cd764b21f301106eda4f99fde",
+    "152_chat_hotel_faq_missing_prices.rollback.sql": "c0f04c602fad526ca2df74be035384cf3e5e45b2f03a5a2bf4e4c2bc46aa7470"
+  },
+  "reviewedRows": 19,
+  "sourceRows": 92
+}

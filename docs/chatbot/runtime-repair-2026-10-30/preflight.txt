@@ -1,0 +1,62 @@
+{
+  "scope": "Target-matched Cloud READ ONLY metadata, no Logs",
+  "project": "cpzuvaplseielhgcnqrn",
+  "indicesAlreadyPresent": [],
+  "usage": {
+    "private_usage": true
+  },
+  "tables": [
+    {
+      "name": "chat_conversation",
+      "can_read": true
+    },
+    {
+      "name": "chat_message",
+      "can_read": true
+    },
+    {
+      "name": "chat_feedback",
+      "can_read": true
+    },
+    {
+      "name": "chatbot_profanity_filter",
+      "can_read": true
+    },
+    {
+      "name": "chatbot_sentiment_trigger",
+      "can_read": true
+    },
+    {
+      "name": "chatbot_knowledge_faq",
+      "can_read": true
+    },
+    {
+      "name": "product",
+      "can_read": true
+    },
+    {
+      "name": "product_variant",
+      "can_read": true
+    },
+    {
+      "name": "service",
+      "can_read": true
+    },
+    {
+      "name": "service_category",
+      "can_read": true
+    },
+    {
+      "name": "service_price_matrix",
+      "can_read": true
+    },
+    {
+      "name": "hotel_room_type",
+      "can_read": true
+    },
+    {
+      "name": "taxi_price_rule",
+      "can_read": true
+    }
+  ]
+}

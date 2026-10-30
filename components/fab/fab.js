@@ -6,6 +6,9 @@ function initFab(){
  const tokenKey='pawpal_chat_guest_v1';let guest=localStorage.getItem(tokenKey);let issued=Number(localStorage.getItem(tokenKey+'_at'));
  if(!guest||!issued||Date.now()-issued>7*86400000){guest=crypto.randomUUID()+crypto.randomUUID();localStorage.setItem(tokenKey,guest);localStorage.setItem(tokenKey+'_at',Date.now());}
  let identity='guest',epoch=0;const pending=new Set(),partReads=new Map();
+ let readFailures=0,nextReadAt=0,readBlocked=false;
+ function deferReads(error){if(error.stale)return;if(error.retryable===false||[400,401,403,410].includes(error.status)){readBlocked=true;return;}readFailures++;nextReadAt=Date.now()+30000*2**Math.min(readFailures-1,2);}
+ function resetReads(){readFailures=0;readBlocked=false;nextReadAt=Date.now()+30000;}
  const recoveryKey='pawpal_chat_pending_v1';let recovery=null;
  function clearRecovery(){recovery=null;sessionStorage.removeItem(recoveryKey);}
  function persistRecovery(value){try{const encoded=JSON.stringify(value);sessionStorage.setItem(recoveryKey,encoded);if(sessionStorage.getItem(recoveryKey)!==encoded)throw Error('storage_unavailable');recovery=value;}catch{throw Error('Không thể giữ mã gửi an toàn. Vui lòng kiểm tra bộ nhớ trình duyệt rồi thử lại.');}}
@@ -26,8 +29,8 @@ function initFab(){
   const controller=new AbortController();pending.add(controller);const timeout=setTimeout(()=>controller.abort(),30000);
   try{
    const response=await fetch('/api/admin-chat',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json',...(session?.access_token?{Authorization:'Bearer '+session.access_token}:{})},body:JSON.stringify({action,sessionToken:guest,...body})});
-   const data=await response.json();current(stamp);if(!response.ok||!data.ok)throw Error(data.error||'Không thể kết nối chat.');return data;
-  }catch(error){current(stamp);if(error.name==='AbortError')throw Error('Phản hồi quá lâu. Nội dung vẫn được giữ để bạn thử lại.');throw error;}
+   const data=await response.json();current(stamp);if(!response.ok||!data.ok)throw Object.assign(Error(data.error||'Không thể kết nối chat.'),{status:response.status,retryable:data.retryable});if(action==='public_read')resetReads();return data;
+  }catch(error){current(stamp);if(action==='public_read'||action==='public_send')deferReads(error);if(error.name==='AbortError')throw Error('Phản hồi quá lâu. Nội dung vẫn được giữ để bạn thử lại.');throw error;}
   finally{clearTimeout(timeout);pending.delete(controller);}
  }
  function notify(text){$('fabChatStatus').textContent=text;}
@@ -96,7 +99,7 @@ function initFab(){
    await api('public_send',{conversationId:active,question,requestId:request.id});current(stamp);if(input.value.trim()===question)input.value='';request=null;clearRecovery();await read(true);
   }catch(error){showError(error);}finally{if(stamp===epoch){busy=false;send.disabled=['resolved','closed','completed','blocked'].includes(status);}}
  }
- function fresh(){if(busy)return;clearRecovery();active=null;rows=[];version=null;more=false;newPage=null;request=null;input.value='';sessionStorage.removeItem('pawpal_chat_active_'+identity);$('fabChatHistoryView').style.display='none';$('fabChatMainView').style.display='flex';status='bot_handling';render();}
+ function fresh(){if(busy)return;resetReads();clearRecovery();active=null;rows=[];version=null;more=false;newPage=null;request=null;input.value='';sessionStorage.removeItem('pawpal_chat_active_'+identity);$('fabChatHistoryView').style.display='none';$('fabChatMainView').style.display='flex';status='bot_handling';render();}
  async function history(){
   if(busy)return;const view=$('fabChatHistoryView'),list=$('fabHistoryList');view.style.display='flex';$('fabChatMainView').style.display='none';list.textContent='Đang tải...';
   try{const data=await api('public_list',{offset:historyPage*10});list.replaceChildren();if(!data.conversations.length)list.textContent='Chưa có hội thoại.';
@@ -123,10 +126,10 @@ function initFab(){
  document.querySelectorAll('.fab-chat-suggest').forEach(b=>b.addEventListener('click',()=>{input.value=b.dataset.prompt||b.textContent;input.focus();}));
  if($('fabChatAttachBtn')){$('fabChatAttachBtn').disabled=true;$('fabChatAttachBtn').hidden=true;}
  window.addEventListener('scroll',()=>$('fabBookingBtn')?.classList.toggle('visible',scrollY>400),{passive:true});
- function adopt(next){if(next===identity)return;epoch++;for(const controller of pending)controller.abort();identity=next;active=sessionStorage.getItem('pawpal_chat_active_'+identity);rows=[];version=null;more=false;newPage=null;request=null;historyPage=0;busy=false;polling=false;status='bot_handling';input.value='';send.disabled=false;$('fabHistoryList').replaceChildren();restoreRecovery();render();if(panel.classList.contains('open'))read(true).catch(showError);}
+ function adopt(next){if(next===identity)return;epoch++;for(const controller of pending)controller.abort();resetReads();identity=next;active=sessionStorage.getItem('pawpal_chat_active_'+identity);rows=[];version=null;more=false;newPage=null;request=null;historyPage=0;busy=false;polling=false;status='bot_handling';input.value='';send.disabled=false;$('fabHistoryList').replaceChildren();restoreRecovery();render();if(panel.classList.contains('open'))read(true).catch(showError);}
  client?.auth.onAuthStateChange((_event,session)=>adopt(session?.user?.id||'guest'));
  (async()=>{const stamp=epoch;const session=(await client?.auth.getSession())?.data?.session;if(stamp!==epoch)return;const next=session?.user?.id||'guest';if(next!==identity)adopt(next);else{active=sessionStorage.getItem('pawpal_chat_active_'+identity);restoreRecovery();render();}})();
- const timer=setInterval(async()=>{if(polling||busy||document.hidden||!panel.isConnected||!panel.classList.contains('open')||!active)return;const stamp=epoch;polling=true;try{await read();}catch(error){showError(error);}finally{if(stamp===epoch)polling=false;}},10000);
+ const timer=setInterval(async()=>{if(readBlocked||Date.now()<nextReadAt||polling||busy||document.hidden||!panel.isConnected||!panel.classList.contains('open')||!active)return;const stamp=epoch;polling=true;try{await read();}catch(error){showError(error);}finally{if(stamp===epoch)polling=false;}},10000);
  window.addEventListener('beforeunload',()=>{clearInterval(timer);for(const controller of pending)controller.abort();},{once:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initFab);else initFab();

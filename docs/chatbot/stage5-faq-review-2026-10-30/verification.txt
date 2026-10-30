@@ -1,0 +1,19 @@
+{
+  "offlinePassed": 261,
+  "businessPassed": 40,
+  "faqIntegrationGroups": 7,
+  "publicIntegrationGroups": 20,
+  "sourceLocalFaqUnchanged": true,
+  "externalModelCalls": 0,
+  "cloudApplied": false,
+  "hashes": {
+    "api/admin-chat.js": "fcbbb8ec1d7c8054a601d6d430d96e625f2ad15f20ab9bad0cf82a6900c1ed62",
+    "scripts/api/chat_public_catalog.js": "fc500b540116da891da48be88ca1750c1499c9ea4ed5aa93e2e8e74062b788fa",
+    "scripts/database/v1/155_public_chat_faq_search.sql": "f80688c94ed98940e3f97f09e734094c996a23a8919fcb2d70b172ba4f9f857e",
+    "scripts/database/v1/156_public_chat_catalog.sql": "e1b3961ef6f394930935874da1d3d16a72badc381392e2f38e26b08bad1a648d",
+    "scripts/database/v1/157_public_faq_content_review.sql": "ea3adeb5614f3594c96addc25e3d6f3de4cd06a148b093f1048a2179d3dde132",
+    "scripts/test/chat_stage5_public_local.cjs": "90a20ac23badd863f6c08966af0017490f564a3f05cb57dd748d779d013e302c",
+    "scripts/test/chat_stage5_public.test.cjs": "2109cf04745bce5640141eef01b589f58fb455e16e6d74665c00293c03176b19",
+    "scripts/test/chat_stage5_faq_review_local.cjs": "06dfb54c1d6b3ef04268897cb955a435b0e1902477af6dd7cf3f318ced0334d2"
+  }
+}

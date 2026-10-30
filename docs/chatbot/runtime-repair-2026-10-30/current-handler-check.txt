@@ -1,0 +1,8 @@
+{
+  "scope": "Current real handler against Cloud, own QA guest conversation; AI forbidden; no staff handover/orders/bookings",
+  "openStatus": 200,
+  "sendStatus": 200,
+  "readStatus": 200,
+  "botReply": "Cat Condo: 290.000 đ/ngày.\nDaycare: 100.000 đ/ngày.\nDeluxe: 380.000 đ/ngày.\nLuxury: 520.000 đ/ngày.\nPresidential: 850.000 đ/ngày.\nSmall Pet: 120.000 đ/ngày.\nStandard: 180.000 đ/ngày.\nStandard Plus: 220.000 đ/ngày.\n\nDanh sách tối đa 10 mức, có thể chưa đầy đủ. Các mức cấu hình đang hiệu lực, chưa phải báo giá xác nhận cho bé hoặc lịch cụ thể. Cần kiểm tra cân nặng, tuyến đường, thời gian lưu trú và phụ phí tại bước đặt; chưa xác nhận lịch/phòng trống. Dữ liệu lúc 20:37:12 30/10/2026.",
+  "conversationId": "c01ed3fd-e7c7-4423-b452-709f544f8cfb"
+}

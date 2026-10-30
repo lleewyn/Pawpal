@@ -1,0 +1,24 @@
+{
+  "open": 200,
+  "send": 503,
+  "calls": [
+    {
+      "name": "open_public_chat",
+      "code": null,
+      "message": null
+    },
+    {
+      "name": "read_public_chat_rules",
+      "code": null,
+      "message": null
+    },
+    {
+      "name": "search_public_chat_context",
+      "code": null,
+      "message": null
+    },
+    {
+      "name": "AI_BLOCKED"
+    }
+  ]
+}

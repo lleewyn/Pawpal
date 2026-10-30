@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-31",
+  "migration": "137_chat_panel_reads.sql",
+  "normalizedSha256": "dae8d15c2cad2e96c937e4aed1e005af716d13397845248734160ea80c51e637",
+  "preflight": {
+    "inbox": true,
+    "permission": true,
+    "absent_inbox": true,
+    "absent_panel": true,
+    "absent_admission": true
+  },
+  "functions": [
+    {
+      "proname": "get_admin_chat_customer_panel",
+      "prosecdef": false,
+      "authenticated": true,
+      "anon": false
+    },
+    {
+      "proname": "get_admin_chat_inbox_view",
+      "prosecdef": false,
+      "authenticated": true,
+      "anon": false
+    }
+  ],
+  "businessRowsChanged": false
+}

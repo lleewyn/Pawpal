@@ -1,0 +1,17 @@
+{
+  "scope": "Owned local clone; real SQL/Auth/JWT/REST/API; no Cloud or model",
+  "checks": [
+    "Real JWT/RLS/RPC comparison includes start boundary, excludes end boundary and pending payments/refunds; multiple refunds counted once",
+    "Both periods match independent SQL aggregates by transaction timestamp, including refund of a payment from another period",
+    "Real Auth/API admits one request, reads two bounded sources and persists response without AI",
+    "Persisted replay performs zero business reads",
+    "Missing refund permission denies before either financial source is launched"
+  ],
+  "hashes": {
+    "091_admin_sales_order_page.sql": "60e0811a8202468299f434f92e46481dea2fd96d6b500816b1b4e2b1990842ab",
+    "136_chat_read_admission.sql": "195e1bc90898b1f3e4cf5deb9009e053d7e309db5f1047577820f5a599152cf5",
+    "141_chat_shared_rate.sql": "dba47fe494ed1094cb8a7aeda263ab2da69d241f490f07e6acbd1147ef8a84d9",
+    "146_admin_chat_legacy_pages.sql": "ad8689b5d78b5bb36c65b49a714a644350b0062d66e6da4612013e9a5752effa"
+  },
+  "status": "PASS"
+}

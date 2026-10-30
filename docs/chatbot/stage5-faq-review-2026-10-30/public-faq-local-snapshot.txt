@@ -1,0 +1,650 @@
+{
+  "source": "Read-only local baseline, not Cloud",
+  "total": 92,
+  "rows": [
+    {
+      "id": "055782b8-fc16-4109-8045-fa608039131b",
+      "category": "Thông tin dịch vụ",
+      "question": "Tôi chưa từng sử dụng PawPal thì bắt đầu từ đâu?",
+      "answer": "Bạn có thể bắt đầu bằng việc tìm hiểu dịch vụ, giá và điều kiện áp dụng. Khi đã chọn được dịch vụ, bạn có thể thực hiện đặt lịch hoặc yêu cầu nhân viên tư vấn thêm.\n(Quy định: Không bắt buộc khách đặt lịch khi chỉ đang tìm hiểu.)",
+      "is_active": true
+    },
+    {
+      "id": "06fc245b-8e4b-40fa-92a4-0b687a29719e",
+      "category": "Giá dịch vụ",
+      "question": "Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+      "answer": "PawPal có các loại phòng theo danh mục Pet Hotel. Mình có thể giúp bạn so sánh giá, sức chứa và tiện ích của từng loại phòng.\n(Quy định: Chỉ hiển thị loại phòng đang được cung cấp.)",
+      "is_active": true
+    },
+    {
+      "id": "0cbebd64-3ab1-456d-b3df-e78166ce78c2",
+      "category": "Thông tin dịch vụ",
+      "question": "PawPal phục vụ những loài thú cưng nào?",
+      "answer": "Phạm vi tiếp nhận phụ thuộc vào từng dịch vụ và danh mục thú cưng được hỗ trợ. Bạn cho mình biết loài thú cưng và dịch vụ mong muốn để mình kiểm tra chính xác nhé.\n(Quy định: Không tự khẳng định nhận loài chưa được xác nhận trong danh mục.)",
+      "is_active": true
+    },
+    {
+      "id": "112d121d-2dde-4694-8352-950e9a0455f4",
+      "category": "Thông tin dịch vụ",
+      "question": "QA kiểm thử lưu FAQ 2026-10-15",
+      "answer": "Đã cập nhật nội dung trả lời FAQ kiểm thử 2026-10-15.",
+      "is_active": true
+    },
+    {
+      "id": "15089a4c-199a-4de6-827b-f35d3edda5a0",
+      "category": "Dịch vụ Pet Hotel",
+      "question": "Bé có thể gửi Hotel nếu cần chăm sóc đặc biệt không?",
+      "answer": "Bạn nên cung cấp thông tin chăm sóc đặc biệt để PawPal kiểm tra khả năng đáp ứng trước khi đặt.\n(Quy định: Trường hợp đặc biệt cần được xác nhận.)",
+      "is_active": true
+    },
+    {
+      "id": "1a500336-cad5-417b-a5e6-db58b89f97d0",
+      "category": "Giá dịch vụ",
+      "question": "Pet Taxi hai chiều tính giá thế nào?",
+      "answer": "Chi phí phụ thuộc hình thức chuyến đi và quy tắc giá hiện hành. Mình có thể kiểm tra theo nhu cầu một chiều hoặc hai chiều của bạn.\n(Quy định: Không tự mặc định mức giảm giá.)",
+      "is_active": true
+    },
+    {
+      "id": "1f48ed1e-d21e-4b58-97d0-c0f92b881cb5",
+      "category": "Dịch vụ Spa/Grooming",
+      "question": "Bé bị rối lông hoặc có tình trạng đặc biệt có được Spa không?",
+      "answer": "Nhân viên cần đánh giá tình trạng thực tế và phạm vi dịch vụ trước khi thực hiện. Các trường hợp đặc biệt có thể cần nhân viên xác nhận thêm.\n(Quy định: Không cam kết xử lý mọi tình trạng đặc biệt.)",
+      "is_active": true
+    },
+    {
+      "id": "1f6f9e2d-fdde-404e-94bb-3dabb2802ad6",
+      "category": "Đặt lịch",
+      "question": "Đặt lịch PawPal như thế nào?",
+      "answer": "Bạn chọn dịch vụ, thông tin thú cưng và thời gian phù hợp rồi thực hiện xác nhận đặt lịch theo hướng dẫn trên hệ thống.\n(Quy định: Thành viên cần đăng nhập để sử dụng chức năng đặt lịch.)",
+      "is_active": true
+    },
+    {
+      "id": "1fbf1195-9f8d-4315-8980-d93c6511bc1b",
+      "category": "Giá dịch vụ",
+      "question": "Cắt móng hoặc vệ sinh tai có giá bao nhiêu?",
+      "answer": "Các hạng mục này có thể thuộc một gói dịch vụ hoặc được cung cấp riêng tùy danh mục hiện hành.\n(Quy định: Không mặc định mọi gói Spa đều bao gồm các hạng mục này.)",
+      "is_active": true
+    },
+    {
+      "id": "207a3d0a-72bf-4678-888d-e50ae4ce00d5",
+      "category": "Đặt lịch",
+      "question": "Nếu khung giờ tôi muốn đã kín thì sao?",
+      "answer": "Mình có thể kiểm tra các khung giờ còn khả dụng và gợi ý lựa chọn khác nếu hệ thống có dữ liệu phù hợp.\n(Quy định: Không tự tạo hoặc giữ chỗ khi chưa có xác nhận.)",
+      "is_active": true
+    },
+    {
+      "id": "235f3413-4f27-4a3e-9d1e-2f9958e0bd66",
+      "category": "Paw Points",
+      "question": "Paw Points có đổi được voucher không?",
+      "answer": "Paw Points có thể được sử dụng theo các chương trình đổi thưởng hoặc ưu đãi đang được cấu hình.\n(Quy định: Tra cứu danh mục đổi thưởng hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "2468c922-3f6e-4bad-9571-9fb3275e9e58",
+      "category": "Khiếu nại",
+      "question": "Tôi muốn nói chuyện trực tiếp với nhân viên",
+      "answer": "Hoàn toàn được. Mình sẽ chuyển yêu cầu của bạn đến nhân viên hỗ trợ theo quy trình của PawPal.\n(Quy định: Thời gian phản hồi thực hiện theo SLA vận hành hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "2b792d67-268a-418a-b8ea-a2ef7f5bf1d8",
+      "category": "Đơn hàng",
+      "question": "Đơn hàng được giao đến đâu?",
+      "answer": "Bạn cung cấp địa chỉ giao hàng khi đặt đơn và có thể quản lý thông tin giao nhận theo hướng dẫn của hệ thống.\n(Quy định: Địa chỉ phải thuộc phạm vi giao hàng được hỗ trợ.)",
+      "is_active": true
+    },
+    {
+      "id": "2c96d1e5-18b5-4951-95fb-b380c539e89e",
+      "category": "Thông tin dịch vụ",
+      "question": "Tôi muốn hỏi thêm trước khi sử dụng dịch vụ thì liên hệ ai?",
+      "answer": "Bạn có thể tiếp tục trao đổi với mình hoặc yêu cầu kết nối nhân viên PawPal nếu cần được tư vấn cụ thể hơn.\n(Quy định: Chuyển nhân viên theo quy trình hỗ trợ hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "2ce9aa4e-f4d9-4ea0-8852-72c4e59383f9",
+      "category": "Dịch vụ Spa/Grooming",
+      "question": "PawPal có tắm và sấy cho bé không?",
+      "answer": "PawPal có các gói có thể bao gồm tắm và sấy. Bạn nên kiểm tra mô tả gói dịch vụ cụ thể trước khi đặt.\n(Quy định: Hạng mục phụ thuộc danh mục dịch vụ.)",
+      "is_active": true
+    },
+    {
+      "id": "2d19c322-6bff-4d3d-92db-c8dc2b0d1084",
+      "category": "Thanh toán",
+      "question": "Thanh toán không thành công thì sao?",
+      "answer": "Bạn có thể kiểm tra trạng thái giao dịch. Nếu tiền đã bị trừ nhưng hệ thống chưa ghi nhận thành công, PawPal cần đối soát giao dịch để xử lý.\n(Quy định: Chatbot không tự xác nhận giao dịch thành công.)",
+      "is_active": true
+    },
+    {
+      "id": "35256ced-9d1e-4423-a5a6-8e8637494a8d",
+      "category": "Thông tin dịch vụ",
+      "question": "Có thể yêu cầu chăm sóc riêng cho bé không?",
+      "answer": "Bạn có thể cung cấp thông tin về tính cách, thói quen và nhu cầu chăm sóc của bé để nhân viên xem xét và thực hiện trong phạm vi dịch vụ.\n(Quy định: Không cam kết yêu cầu đặc biệt nếu chưa được xác nhận.)",
+      "is_active": true
+    },
+    {
+      "id": "37ec19b9-9b9b-46ce-ada1-8f9fe0a9f4a4",
+      "category": "Dịch vụ Pet Hotel",
+      "question": "Tôi đặt Hotel cho bé như thế nào?",
+      "answer": "Bạn chọn dịch vụ Pet Hotel, cung cấp thông tin thú cưng và thời gian lưu trú rồi thực hiện xác nhận đặt lịch.\n(Quy định: Việc đặt phòng phụ thuộc tình trạng cung cấp.)",
+      "is_active": true
+    },
+    {
+      "id": "38682c9f-7060-45af-a4c4-6e0f35bda112",
+      "category": "Khiếu nại",
+      "question": "Tôi muốn phản ánh thái độ nhân viên thì làm sao?",
+      "answer": "Bạn có thể cung cấp thông tin về lịch hẹn, chi nhánh và sự việc để PawPal ghi nhận và chuyển bộ phận phụ trách kiểm tra.\n(Quy định: Không tự kết luận hoặc công bố hình thức kỷ luật nhân viên.)",
+      "is_active": true
+    },
+    {
+      "id": "3fb93c32-890a-4c8c-9725-e05f00bd55a1",
+      "category": "Đặt lịch",
+      "question": "Tôi có thể đặt lịch cho nhiều bé không?",
+      "answer": "PawPal hỗ trợ quản lý nhiều hồ sơ thú cưng. Bạn có thể đặt lịch cho từng bé theo quy tắc hệ thống.\n(Quy định: Mỗi lịch chỉ gắn với một bé và một dịch vụ.)",
+      "is_active": true
+    },
+    {
+      "id": "44e613e9-3f08-4365-b1c1-e2a96f5646ea",
+      "category": "Dịch vụ Pet Hotel",
+      "question": "Có thể gửi bé nhiều ngày hoặc qua đêm không?",
+      "answer": "PawPal hỗ trợ lưu trú theo thời gian và loại phòng đang được cung cấp. Bạn có thể cho biết ngày gửi và ngày đón để mình kiểm tra.\n(Quy định: Kiểm tra tình trạng phòng và thời gian lưu trú.)",
+      "is_active": true
+    },
+    {
+      "id": "45230125-ffd5-4541-955f-504dfe0c0828",
+      "category": "Thanh toán",
+      "question": "PawPal hỗ trợ những phương thức thanh toán nào?",
+      "answer": "PawPal hỗ trợ các phương thức được cấu hình trên hệ thống, tùy loại giao dịch.\n(Quy định: Phương thức khả dụng phụ thuộc loại giao dịch và cấu hình hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "4707c0e7-1fd2-4105-8170-afbac71308b4",
+      "category": "Thông tin dịch vụ",
+      "question": "PawPal có nhận khách đến trực tiếp không?",
+      "answer": "Bạn nên đặt lịch trước để kiểm tra khung giờ và khả năng tiếp nhận. Việc tiếp nhận khách đến trực tiếp phụ thuộc tình trạng hoạt động và năng lực phục vụ tại chi nhánh.\n(Quy định: Không cam kết có chỗ nếu chưa kiểm tra tình trạng thực tế.)",
+      "is_active": true
+    },
+    {
+      "id": "4c7d461d-1901-4a1b-80c3-e178f5e6a152",
+      "category": "Giá dịch vụ",
+      "question": "Gửi Hotel ngày lễ, Tết có phụ thu không?",
+      "answer": "Mức giá ngày lễ, Tết phụ thuộc chính sách giá và phụ thu đang áp dụng. Bạn cho mình biết ngày gửi và ngày đón để mình kiểm tra.\n(Quy định: Không tự đặt ra mức phụ thu.)",
+      "is_active": true
+    },
+    {
+      "id": "4cb7e47e-d98a-47b7-92d9-763c19d8f48b",
+      "category": "Đặt lịch",
+      "question": "Tôi có thể hủy lịch không?",
+      "answer": "Bạn có thể hủy lịch thông qua chức năng hủy nếu lịch đang ở trạng thái cho phép.\n(Quy định: Điều kiện hủy phụ thuộc trạng thái và chính sách hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "4f716aea-7667-4553-b878-c8663e5d6da9",
+      "category": "Dịch vụ Spa/Grooming",
+      "question": "Spa có cắt móng và vệ sinh cho bé không?",
+      "answer": "Các hạng mục này được cung cấp tùy gói dịch vụ hoặc dịch vụ riêng trong danh mục.\n(Quy định: Chỉ thực hiện hạng mục thuộc phạm vi dịch vụ.)",
+      "is_active": true
+    },
+    {
+      "id": "52d54a78-bfc1-41a6-a562-38e54dcd70dc",
+      "category": "Hồ sơ thú cưng",
+      "question": "Pet ID là gì?",
+      "answer": "Pet ID là mã định danh hồ sơ thú cưng, giúp liên kết bé với lịch hẹn, dịch vụ và thông tin chăm sóc.\n(Quy định: Mỗi hồ sơ thú cưng được quản lý riêng.)",
+      "is_active": true
+    },
+    {
+      "id": "53195c50-ef83-4050-8c8b-253789270af8",
+      "category": "Paw Points",
+      "question": "Mua hàng hoặc đặt lịch lần đầu có được cộng điểm không?",
+      "answer": "Theo Reward Rule hiện hành, giao dịch đầu tiên đủ điều kiện có thể được cộng điểm thưởng tương ứng.\n(Quy định: Điểm được ghi nhận theo trạng thái và điều kiện Reward Rule.)",
+      "is_active": true
+    },
+    {
+      "id": "59ba2ec0-9056-40e5-ae3c-cadeef0cbaef",
+      "category": "Dịch vụ Pet Hotel",
+      "question": "Tôi có được xem hình ảnh hoặc video của bé khi ở Hotel không?",
+      "answer": "Trong thời gian lưu trú, nhân viên có thể cập nhật hình ảnh và ghi chú vào Care Log để bạn theo dõi trên hệ thống.\n(Quy định: Media phụ thuộc việc nhân viên đã cập nhật.)",
+      "is_active": true
+    },
+    {
+      "id": "5ee28925-a483-447c-839e-fe42b77634d9",
+      "category": "Hồ sơ thú cưng",
+      "question": "Tôi tạo hồ sơ cho bé như thế nào?",
+      "answer": "Bạn có thể tạo hồ sơ thú cưng theo biểu mẫu của hệ thống trong quá trình sử dụng dịch vụ hoặc tại khu vực Hồ sơ bé cưng.\n(Quy định: Hồ sơ phải có các thông tin bắt buộc.)",
+      "is_active": true
+    },
+    {
+      "id": "5f02e6eb-ac39-4f9b-be9b-9599b510dd2f",
+      "category": "Dịch vụ Pet Taxi",
+      "question": "PawPal có dịch vụ đưa đón thú cưng không?",
+      "answer": "PawPal cung cấp Pet Taxi theo phạm vi khu vực, điều kiện chuyến đi và quy tắc giá hiện hành.\n(Quy định: Dịch vụ phải khả dụng tại khu vực phù hợp.)",
+      "is_active": true
+    },
+    {
+      "id": "5f84ab8a-a0de-4260-b69d-9deb15ef6cc8",
+      "category": "Dịch vụ Spa/Grooming",
+      "question": "Quy trình Spa của PawPal gồm những bước nào?",
+      "answer": "Quy trình có thể gồm kiểm tra ban đầu, tắm, sấy, chải lông, vệ sinh và tạo kiểu hoặc cắt tỉa tùy gói dịch vụ.\n(Quy định: Chỉ thực hiện hạng mục thuộc dịch vụ đã đặt.)",
+      "is_active": true
+    },
+    {
+      "id": "62566c15-0f4a-4a8c-86f1-c23b8094379c",
+      "category": "Đơn hàng",
+      "question": "Tôi muốn sửa hoặc hủy đơn hàng thì sao?",
+      "answer": "Việc thay đổi hoặc hủy đơn phụ thuộc thời gian và trạng thái đơn hàng. Nếu hệ thống cho phép, bạn có thể thực hiện thao tác tương ứng.\n(Quy định: Không tự xác nhận hủy nếu hệ thống chưa ghi nhận.)",
+      "is_active": true
+    },
+    {
+      "id": "62d179d9-1f51-42c3-9dff-ce3f43641280",
+      "category": "Giá dịch vụ",
+      "question": "Giá tắm và sấy cho bé là bao nhiêu?",
+      "answer": "Mình có thể tra cứu giá gói tắm và sấy phù hợp với bé. Bạn cho mình biết loại thú cưng và cân nặng nhé.\n(Quy định: Giá theo danh mục dịch vụ và điều kiện áp dụng.)",
+      "is_active": true
+    },
+    {
+      "id": "63ae90ff-0d7e-4147-8ce1-9de26ce08023",
+      "category": "Paw Points",
+      "question": "Tôi có bao nhiêu Paw Points?",
+      "answer": "Bạn có thể kiểm tra số dư Paw Points trong tài khoản. Nếu cần tra cứu dữ liệu cá nhân, Chatbot sẽ yêu cầu xác thực phù hợp.\n(Quy định: Không cung cấp thông tin điểm của tài khoản khác.)",
+      "is_active": true
+    },
+    {
+      "id": "65dec66c-562b-4707-8b47-e5a5ebc5f00a",
+      "category": "Giá dịch vụ",
+      "question": "Chưa đặt lịch có thể hỏi giá trước không?",
+      "answer": "Được nhé. Bạn có thể tìm hiểu giá và thông tin dịch vụ trước khi quyết định đặt lịch.\n(Quy định: Khách không cần đăng nhập chỉ để hỏi giá.)",
+      "is_active": true
+    },
+    {
+      "id": "65e2d23e-f5e2-4444-8cd0-6200775b293e",
+      "category": "Giá dịch vụ",
+      "question": "Giá Pet Hotel được tính như thế nào?",
+      "answer": "Giá Pet Hotel phụ thuộc loại phòng, thời gian lưu trú và các điều kiện áp dụng. Bạn cho mình biết thời gian dự kiến và loại phòng để mình tra cứu nhé.\n(Quy định: Kiểm tra giá và phụ thu hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "679d2966-9482-4e4a-8013-154185dd676b",
+      "category": "Đơn hàng",
+      "question": "Tôi xem trạng thái đơn hàng ở đâu?",
+      "answer": "Bạn có thể tra cứu trạng thái đơn hàng theo mã đơn. Thành viên có thể xem thêm trong mục Đơn hàng của tôi.\n(Quy định: Chỉ cung cấp trạng thái được hệ thống ghi nhận.)",
+      "is_active": true
+    },
+    {
+      "id": "67d8ccc7-8cf0-4b59-b12d-23d4535dc5a0",
+      "category": "Giá dịch vụ",
+      "question": "Giá Spa cho chó/mèo là bao nhiêu?",
+      "answer": "Giá Spa phụ thuộc vào loại thú cưng, cân nặng và gói dịch vụ. Bạn cho mình biết loại thú cưng và cân nặng để mình tra cứu nhé.\n(Quy định: Tra cứu quy tắc giá hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "7034fb3c-5118-4057-b7f1-6d74a10f983d",
+      "category": "Đơn hàng",
+      "question": "Nhận thiếu, sai hoặc hư sản phẩm thì phải làm gì?",
+      "answer": "Bạn cung cấp thông tin đơn hàng và mô tả vấn đề để PawPal kiểm tra và hướng dẫn quy trình đổi/trả hoặc hỗ trợ phù hợp.\n(Quy định: Chatbot không tự kết luận nguyên nhân hoặc mức bồi hoàn.)",
+      "is_active": true
+    },
+    {
+      "id": "749d7bec-8135-4bdc-973e-b6650f5049aa",
+      "category": "Dịch vụ Pet Taxi",
+      "question": "Pet Taxi có thể đón bé tại địa chỉ của tôi không?",
+      "answer": "PawPal sẽ kiểm tra phạm vi phục vụ dựa trên địa điểm đón và điểm đến bạn cung cấp.\n(Quy định: Kiểm tra khu vực và khả năng cung cấp tại thời điểm đặt.)",
+      "is_active": true
+    },
+    {
+      "id": "75c74a79-bde0-48a6-b96d-7aeeeda1d87f",
+      "category": "Dịch vụ Spa/Grooming",
+      "question": "PawPal có chải lông, cắt tỉa hoặc tạo kiểu không?",
+      "answer": "PawPal cung cấp các hạng mục này nếu thuộc gói dịch vụ bạn lựa chọn.\n(Quy định: Không cam kết hạng mục không có trong mô tả.)",
+      "is_active": true
+    },
+    {
+      "id": "77ccf5b2-5fb1-45d8-88ba-b5d2f7bfe2f0",
+      "category": "Khiếu nại",
+      "question": "Đơn hàng sai hoặc thiếu sản phẩm khiếu nại thế nào?",
+      "answer": "Bạn cung cấp thông tin đơn hàng và mô tả vấn đề để PawPal kiểm tra và hỗ trợ xử lý.\n(Quy định: Cần thông tin đơn hàng để đối soát.)",
+      "is_active": true
+    },
+    {
+      "id": "7eeaea65-91b7-472e-9b03-8942bebb0e62",
+      "category": "Dịch vụ Spa/Grooming",
+      "question": "Trước khi Spa PawPal có kiểm tra tình trạng bé không?",
+      "answer": "PawPal cần ghi nhận tình trạng của bé trước khi thực hiện dịch vụ để nhân viên có thông tin cần thiết trong quá trình chăm sóc.\n(Quy định: Khách cần cung cấp thông tin sức khỏe quan trọng trong hồ sơ.)",
+      "is_active": true
+    },
+    {
+      "id": "7f3da56f-56b2-407b-947a-a4a9b1c8193f",
+      "category": "Tài khoản cá nhân",
+      "question": "OTP dùng để làm gì?",
+      "answer": "OTP được sử dụng để xác thực một số thao tác tài khoản theo quy trình bảo mật của PawPal.\n(Quy định: Không chia sẻ OTP cho người khác hoặc Chatbot.)",
+      "is_active": true
+    },
+    {
+      "id": "843bc713-5996-4b94-bc98-cc023beef497",
+      "category": "Giá dịch vụ",
+      "question": "Giá cắt tỉa hoặc tạo kiểu là bao nhiêu?",
+      "answer": "Giá cắt tỉa hoặc tạo kiểu phụ thuộc vào gói dịch vụ và tình trạng thực tế của bé. Mình có thể tra cứu mức giá niêm yết và điều kiện áp dụng.\n(Quy định: Không tự cam kết giá xử lý tình trạng đặc biệt.)",
+      "is_active": true
+    },
+    {
+      "id": "859ba884-030f-4737-922e-dc8e85c8edae",
+      "category": "Giá dịch vụ",
+      "question": "Tôi có thể xem chi tiết giá từng gói không?",
+      "answer": "Bạn có thể xem giá, mô tả, hạng mục bao gồm và điều kiện áp dụng của từng gói. Mình cũng có thể giúp bạn so sánh các gói phù hợp.\n(Quy định: Dữ liệu phải khớp danh mục dịch vụ hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "8794adde-5963-4ec5-a46d-3d610912beaf",
+      "category": "Tài khoản cá nhân",
+      "question": "Tôi đăng ký tài khoản PawPal như thế nào?",
+      "answer": "Bạn nhấn Đăng ký, nhập thông tin được yêu cầu và hoàn tất quy trình xác thực theo hướng dẫn.\n(Quy định: Có thể yêu cầu xác thực OTP.)",
+      "is_active": true
+    },
+    {
+      "id": "8ff22394-5753-4977-aab0-c6a6d7a7158e",
+      "category": "Đặt lịch",
+      "question": "Tôi có thể đặt lịch trước bao lâu?",
+      "answer": "Thời gian được phép đặt trước phụ thuộc cấu hình lịch của từng dịch vụ và chi nhánh.\n(Quy định: Tra cứu cấu hình đặt lịch hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "91b89fd8-888d-4c58-8344-4561a8041c6a",
+      "category": "Dịch vụ Pet Hotel",
+      "question": "PawPal có những loại phòng Hotel nào?",
+      "answer": "PawPal cung cấp các loại phòng theo danh mục Pet Hotel đang được cấu hình trên hệ thống.\n(Quy định: Tình trạng phòng phải được kiểm tra tại thời điểm đặt.)",
+      "is_active": true
+    },
+    {
+      "id": "93d8ce50-3523-4336-96fc-17d48103f50f",
+      "category": "Hồ sơ thú cưng",
+      "question": "Tôi có thể cập nhật thông tin của bé không?",
+      "answer": "Bạn có thể cập nhật các thông tin hồ sơ được hệ thống cho phép chỉnh sửa.\n(Quy định: Một số thông tin có thể cần xác thực hoặc nhân viên kiểm tra.)",
+      "is_active": true
+    },
+    {
+      "id": "94c86500-7e54-4ca9-8696-f5fd0bcc0609",
+      "category": "Thông tin dịch vụ",
+      "question": "Tôi cần chuẩn bị gì trước khi đưa bé đến?",
+      "answer": "Bạn nên chuẩn bị thông tin cơ bản của bé, tình trạng sức khỏe, dị ứng và các yêu cầu chăm sóc đặc biệt. Với Pet Hotel, cần kiểm tra thêm điều kiện tiếp nhận và tiêm phòng.\n(Quy định: Yêu cầu cụ thể phụ thuộc từng dịch vụ.)",
+      "is_active": true
+    },
+    {
+      "id": "9e392773-ef0d-4865-ba7f-e7bb0459c033",
+      "category": "Giá dịch vụ",
+      "question": "Có phát sinh chi phí sau khi đưa bé đến không?",
+      "answer": "Nếu tình trạng thực tế của bé cần hạng mục ngoài gói, nhân viên phải thông báo và nhận được sự đồng ý của bạn trước khi thực hiện.\n(Quy định: Không tự xác nhận khoản phát sinh.)",
+      "is_active": true
+    },
+    {
+      "id": "9ea237e1-beba-40dd-b7c2-ab5ffebfc45a",
+      "category": "Thanh toán",
+      "question": "Voucher áp dụng cho những gì?",
+      "answer": "Mỗi Voucher có điều kiện riêng về sản phẩm/dịch vụ, thời gian và giá trị đơn hàng. Hệ thống sẽ xác định voucher nào đủ điều kiện.\n(Quy định: Chatbot phải dựa trên cấu hình Voucher hiện tại.)",
+      "is_active": true
+    },
+    {
+      "id": "a21a7ab0-40c7-4d26-8105-8eaec6d22b50",
+      "category": "Giá dịch vụ",
+      "question": "Giá dịch vụ đã bao gồm các hạng mục đi kèm chưa?",
+      "answer": "Các hạng mục bao gồm sẽ được thể hiện trong mô tả gói dịch vụ. Hạng mục ngoài phạm vi có thể phát sinh chi phí nếu được cung cấp và bạn đồng ý.\n(Quy định: Không tự ý thêm hạng mục hoặc phụ phí.)",
+      "is_active": true
+    },
+    {
+      "id": "a3a83d39-80df-40dc-8f1a-d129cbb7a5cc",
+      "category": "Thanh toán",
+      "question": "Tôi muốn hoàn tiền thì làm sao?",
+      "answer": "Việc hoàn tiền phụ thuộc loại giao dịch, trạng thái và chính sách áp dụng. PawPal cần kiểm tra và xác thực trước khi xác nhận số tiền hoàn.\n(Quy định: Không tự cam kết hoàn tiền hoặc số tiền hoàn.)",
+      "is_active": true
+    },
+    {
+      "id": "aa841462-beb5-49e4-bbd0-6efcb9c8e404",
+      "category": "Thông tin dịch vụ",
+      "question": "Nếu bé không hợp tác khi sử dụng dịch vụ thì sao?",
+      "answer": "Nhân viên sẽ đánh giá tình trạng thực tế và lựa chọn phương án phù hợp trong phạm vi dịch vụ. Nếu không thể tiếp tục an toàn, PawPal sẽ trao đổi với bạn về phương án tiếp theo.\n(Quy định: Không cam kết hoàn thành mọi hạng mục trong mọi trường hợp.)",
+      "is_active": true
+    },
+    {
+      "id": "ad364c70-5b2a-49c8-a402-71030606c1f5",
+      "category": "Đặt lịch",
+      "question": "Tôi có thể đổi ngày hoặc giờ hẹn không?",
+      "answer": "Bạn có thể yêu cầu thay đổi lịch nếu lịch đang ở trạng thái cho phép. Hệ thống sẽ kiểm tra điều kiện và khung giờ còn khả dụng.\n(Quy định: Phụ thuộc trạng thái lịch và chính sách dịch vụ.)",
+      "is_active": true
+    },
+    {
+      "id": "aece3d90-531a-49da-9c21-5b5a279b567e",
+      "category": "Hồ sơ thú cưng",
+      "question": "Care Log của bé chưa có thông tin thì sao?",
+      "answer": "Có thể nhân viên chưa hoàn tất hoặc chưa cập nhật hoạt động mới. Bạn có thể chờ thêm hoặc yêu cầu nhân viên kiểm tra.\n(Quy định: Chatbot không tự tạo nội dung Care Log.)",
+      "is_active": true
+    },
+    {
+      "id": "b1cd3ea7-0441-41f2-b0cb-8d51666eb5e9",
+      "category": "Hồ sơ thú cưng",
+      "question": "Hồ sơ thú cưng lưu những thông tin gì?",
+      "answer": "Hồ sơ có thể lưu thông tin cơ bản, cân nặng, tiêm phòng, dị ứng và ghi chú về thói quen hoặc nhu cầu chăm sóc của bé.\n(Quy định: Chatbot không tự suy đoán hoặc chẩn đoán sức khỏe.)",
+      "is_active": true
+    },
+    {
+      "id": "b21eb012-acf9-41d9-94b6-91943e144bff",
+      "category": "Thông tin dịch vụ",
+      "question": "PawPal có mở cửa cuối tuần hoặc ngày lễ không?",
+      "answer": "Thời gian hoạt động phụ thuộc lịch làm việc của từng chi nhánh. Mình có thể kiểm tra lịch hoạt động và khả năng tiếp nhận theo ngày bạn dự kiến.\n(Quy định: Tra cứu lịch hoạt động thực tế.)",
+      "is_active": true
+    },
+    {
+      "id": "b44caf50-c88f-4506-8629-b7258ce367cc",
+      "category": "Thông tin dịch vụ",
+      "question": "Dịch vụ mất bao lâu?",
+      "answer": "Thời lượng dự kiến phụ thuộc vào gói dịch vụ và đặc điểm thực tế của bé. Mình có thể tra cứu thời lượng được cấu hình cho dịch vụ bạn quan tâm.\n(Quy định: Không tự cam kết thời gian hoàn thành nếu chưa có dữ liệu.)",
+      "is_active": true
+    },
+    {
+      "id": "b47e601c-79a4-4331-904a-ed6ed459f628",
+      "category": "Paw Points",
+      "question": "Paw Points là gì?",
+      "answer": "Paw Points là điểm thưởng được tích lũy từ các hoạt động đủ điều kiện và có thể được sử dụng theo các quy tắc đổi thưởng hiện hành.\n(Quy định: Cộng/trừ điểm tuân theo Reward Rule.)",
+      "is_active": true
+    },
+    {
+      "id": "ba2730f7-7dc2-4502-95f1-6cc85561ad55",
+      "category": "Khiếu nại",
+      "question": "Tôi không hài lòng với dịch vụ thì phải làm sao?",
+      "answer": "PawPal ghi nhận phản ánh của bạn. Vui lòng cung cấp thông tin lịch hẹn, đơn hàng hoặc sự việc để nhân viên kiểm tra và hỗ trợ.\n(Quy định: Chatbot không tự kết luận trách nhiệm.)",
+      "is_active": true
+    },
+    {
+      "id": "ba9077e8-a515-44aa-b2b8-51cc26e3cbe7",
+      "category": "Dịch vụ Pet Hotel",
+      "question": "Có thể mang thức ăn riêng cho bé không?",
+      "answer": "Bạn có thể thông báo nhu cầu ăn uống của bé để nhân viên kiểm tra khả năng đáp ứng theo chính sách Hotel.\n(Quy định: Không tự cam kết nếu chưa có chính sách hoặc xác nhận của nhân viên.)",
+      "is_active": true
+    },
+    {
+      "id": "bdc0c006-56b4-4344-9320-b00b55f069a1",
+      "category": "Giá dịch vụ",
+      "question": "Giá các dịch vụ của PawPal là bao nhiêu?",
+      "answer": "PawPal có bảng giá theo từng dịch vụ và gói dịch vụ. Mình có thể tra cứu mức giá hiện hành theo nhu cầu cụ thể của bạn.\n(Quy định: Giá phải lấy từ danh mục dịch vụ đang hoạt động.)",
+      "is_active": true
+    },
+    {
+      "id": "bdc86b42-6673-49c1-be5d-0b70ee864316",
+      "category": "Thông tin dịch vụ",
+      "question": "Nếu chưa biết nên chọn dịch vụ nào thì sao?",
+      "answer": "Mình có thể giúp bạn so sánh các dịch vụ dựa trên nhu cầu, loại thú cưng và tình trạng của bé để bạn lựa chọn phù hợp.\n(Quy định: Chỉ tư vấn lựa chọn dịch vụ, không chẩn đoán sức khỏe.)",
+      "is_active": true
+    },
+    {
+      "id": "bfd5e13e-b326-4fdd-ba99-4887472bd610",
+      "category": "Tài khoản cá nhân",
+      "question": "Tôi không nhận được OTP thì sao?",
+      "answer": "Bạn kiểm tra số điện thoại và yêu cầu gửi lại OTP. Nếu vẫn không nhận được, hãy thực hiện lại theo hướng dẫn hoặc liên hệ hỗ trợ.\n(Quy định: OTP được gửi thông qua SMS Gateway.)",
+      "is_active": true
+    },
+    {
+      "id": "c0790b68-4583-4542-a788-95e4f284de6b",
+      "category": "Đặt lịch",
+      "question": "Tôi có được đặt lịch mà chưa có tài khoản không?",
+      "answer": "Khách có thể tìm hiểu dịch vụ nhưng để thực hiện đặt lịch, PawPal yêu cầu đăng nhập hoặc hoàn tất quy trình tạo tài khoản theo chính sách hệ thống.\n(Quy định: Đặt lịch yêu cầu tài khoản hợp lệ.)",
+      "is_active": true
+    },
+    {
+      "id": "c215d41d-c3aa-40f6-869f-6d4d4ca8ed21",
+      "category": "Dịch vụ Pet Hotel",
+      "question": "Gửi và nhận bé tại Hotel như thế nào?",
+      "answer": "Bạn thực hiện nhận và trả bé theo thời gian lưu trú đã đăng ký và hướng dẫn của PawPal.\n(Quy định: Thời gian và quy trình phụ thuộc chính sách Hotel hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "c315a5d0-4709-49a2-8791-13a5da72f4b6",
+      "category": "Giá dịch vụ",
+      "question": "PawPal có khuyến mãi dịch vụ không?",
+      "answer": "PawPal có thể triển khai chương trình ưu đãi theo từng thời điểm. Mình có thể kiểm tra các chương trình đang hoạt động và điều kiện áp dụng.\n(Quy định: Chỉ giới thiệu khuyến mãi còn hiệu lực.)",
+      "is_active": true
+    },
+    {
+      "id": "c63ffc20-90c6-463d-b7f1-4b2c86ed2f1c",
+      "category": "Tài khoản cá nhân",
+      "question": "Tôi đăng nhập PawPal thế nào?",
+      "answer": "Bạn sử dụng thông tin đăng nhập đã đăng ký. Nếu quên mật khẩu hoặc gặp lỗi, có thể sử dụng chức năng khôi phục hoặc yêu cầu hỗ trợ.\n(Quy định: Không yêu cầu khách cung cấp mật khẩu cho Chatbot.)",
+      "is_active": true
+    },
+    {
+      "id": "c7603725-70a4-453e-a4e6-46ab6370694c",
+      "category": "Giá dịch vụ",
+      "question": "Giá Pet Taxi được tính như thế nào?",
+      "answer": "Giá Pet Taxi phụ thuộc quy tắc giá hiện hành như quãng đường, cân nặng hoặc điều kiện chuyến đi.\n(Quy định: Sử dụng quy tắc giá và dữ liệu tuyến đường được cấu hình.)",
+      "is_active": true
+    },
+    {
+      "id": "c8b9a460-f5f4-4c0d-8ac7-a4bde1331cb0",
+      "category": "Thông tin dịch vụ",
+      "question": "PawPal có những chi nhánh nào?",
+      "answer": "Bạn có thể xem các chi nhánh đang hoạt động và lựa chọn chi nhánh phù hợp với dịch vụ.\n(Quy định: Danh sách chi nhánh và dịch vụ phải được tra cứu từ dữ liệu hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "caa37459-8566-4e22-aa01-1ea1d5f458d7",
+      "category": "Dịch vụ Pet Taxi",
+      "question": "Tôi có thể chọn thời gian đón bé không?",
+      "answer": "Bạn có thể yêu cầu thời gian đón, sau đó hệ thống kiểm tra khả năng phục vụ và xác nhận chuyến.\n(Quy định: Không đảm bảo khung giờ nếu chưa kiểm tra.)",
+      "is_active": true
+    },
+    {
+      "id": "cc24ea1d-125a-4bdf-a1fe-d56d69f39eac",
+      "category": "Giá dịch vụ",
+      "question": "Giá Chatbot báo có phải giá cuối cùng không?",
+      "answer": "Mình sẽ tra cứu mức giá đang được cấu hình tại thời điểm bạn hỏi. Giá giao dịch cuối cùng phụ thuộc gói dịch vụ và điều kiện áp dụng.\n(Quy định: Không sử dụng giá cũ hoặc tự tạo giá.)",
+      "is_active": true
+    },
+    {
+      "id": "d036b183-9d40-41a1-8b2f-f39b7dafc769",
+      "category": "Hồ sơ thú cưng",
+      "question": "Care Log là gì?",
+      "answer": "Care Log là nhật ký lưu lại các hoạt động và thông tin liên quan đến quá trình chăm sóc bé trong thời gian sử dụng dịch vụ tại PawPal.\n(Quy định: Nội dung phụ thuộc dữ liệu nhân viên ghi nhận.)",
+      "is_active": true
+    },
+    {
+      "id": "d2b7c0aa-6861-4cae-b8d4-ea4b347b72c0",
+      "category": "Dịch vụ Spa/Grooming",
+      "question": "Bé bị bệnh hoặc có vấn đề về da có được Spa không?",
+      "answer": "Tình trạng sức khỏe của bé cần được đánh giá trước khi tiếp nhận. PawPal không để Chatbot tự chẩn đoán hoặc xác nhận bé đủ điều kiện khi chưa có đánh giá phù hợp.\n(Quy định: Trường hợp có nguy cơ lây nhiễm hoặc vấn đề sức khỏe cần chuyển nhân viên.)",
+      "is_active": true
+    },
+    {
+      "id": "d5207e47-fcbd-4370-a7df-e39f6347b1f1",
+      "category": "Thông tin dịch vụ",
+      "question": "Tôi có thể sử dụng nhiều dịch vụ cho bé cùng lúc không?",
+      "answer": "Mỗi lịch hẹn chỉ gắn với một dịch vụ. Nếu muốn sử dụng nhiều dịch vụ, bạn cần tạo các lịch tương ứng theo quy tắc hệ thống.\n(Quy định: Một lịch hẹn chỉ có một dịch vụ.)",
+      "is_active": true
+    },
+    {
+      "id": "d5744cd6-90a1-4a12-ae87-6d2b3d18a9ad",
+      "category": "Dịch vụ Pet Taxi",
+      "question": "Pet Taxi có giới hạn cân nặng hoặc loại thú cưng không?",
+      "answer": "Điều kiện tiếp nhận Pet Taxi phụ thuộc phương tiện, loại thú cưng và quy định dịch vụ.\n(Quy định: Tra cứu điều kiện hiện hành.)",
+      "is_active": true
+    },
+    {
+      "id": "dcf9bf49-85cc-4f38-8f7f-165f75f449a0",
+      "category": "Paw Points",
+      "question": "Đăng ký tài khoản có được cộng điểm không?",
+      "answer": "Theo Reward Rule hiện hành, khách đủ điều kiện đăng ký hoặc kích hoạt tài khoản sẽ nhận số Paw Points được quy định trong hệ thống.\n(Quy định: Tra cứu Reward Rule đang áp dụng.)",
+      "is_active": true
+    },
+    {
+      "id": "debaee8f-8843-4ab8-b364-1e12f66b65ba",
+      "category": "Thông tin dịch vụ",
+      "question": "PawPal hiện có những dịch vụ nào?",
+      "answer": "PawPal cung cấp các nhóm dịch vụ theo danh mục hiện hành như Pet Spa/Grooming, Pet Hotel và Pet Taxi, bên cạnh các sản phẩm dành cho thú cưng.\n(Quy định: Chỉ giới thiệu các dịch vụ đang được cấu hình và cung cấp.)",
+      "is_active": true
+    },
+    {
+      "id": "e601e322-cc87-49bf-b1cd-848d6a7d2ccb",
+      "category": "Tài khoản cá nhân",
+      "question": "Tôi có thể cập nhật thông tin tài khoản không?",
+      "answer": "Bạn có thể cập nhật các thông tin được hệ thống cho phép chỉnh sửa.\n(Quy định: Một số thông tin có thể cần xác thực.)",
+      "is_active": true
+    },
+    {
+      "id": "e63285e2-d300-4077-8e45-2acd83be14ed",
+      "category": "Dịch vụ Pet Taxi",
+      "question": "Tôi có thể đổi hoặc hủy Pet Taxi không?",
+      "answer": "Việc đổi hoặc hủy phụ thuộc trạng thái chuyến và chính sách hiện hành.\n(Quy định: Chatbot không tự xác nhận hủy nếu hệ thống chưa ghi nhận.)",
+      "is_active": true
+    },
+    {
+      "id": "ec8427c3-a7e0-4ec7-8c69-fe8730e037ac",
+      "category": "Dịch vụ Pet Taxi",
+      "question": "Tôi có biết tình trạng chuyến Pet Taxi không?",
+      "answer": "Trạng thái chuyến được cập nhật theo dữ liệu hệ thống. Chatbot không tự suy đoán vị trí hoặc tình trạng xe.\n(Quy định: Chỉ cung cấp dữ liệu trạng thái được hệ thống ghi nhận.)",
+      "is_active": true
+    },
+    {
+      "id": "ecaf0828-6c06-4008-93c7-64d66997b755",
+      "category": "Thanh toán",
+      "question": "Tại sao Voucher của tôi không dùng được?",
+      "answer": "Voucher có thể không sử dụng được do hết hạn, không đủ điều kiện hoặc không áp dụng cho giao dịch hiện tại.\n(Quy định: Không tự thay đổi điều kiện Voucher.)",
+      "is_active": true
+    },
+    {
+      "id": "f18a4507-00a8-4b9c-805c-2c135c76994c",
+      "category": "Dịch vụ Pet Hotel",
+      "question": "Bé gửi Hotel cần điều kiện gì?",
+      "answer": "Để đảm bảo an toàn cho các bé, PawPal yêu cầu thú cưng đáp ứng điều kiện tiêm phòng và sức khỏe theo chính sách Hotel hiện hành.\n(Quy định: Điều kiện áp dụng cho các loại phòng Hotel.)",
+      "is_active": true
+    },
+    {
+      "id": "f26ae5e3-4141-48b6-b6ea-a483d300190d",
+      "category": "Dịch vụ Pet Hotel",
+      "question": "Bé được chăm sóc như thế nào khi ở Hotel?",
+      "answer": "Bé được chăm sóc theo quy trình lưu trú và loại phòng đã chọn. Các thông tin chăm sóc được nhân viên ghi nhận trên hệ thống.\n(Quy định: Chatbot chỉ cung cấp thông tin đã được ghi nhận.)",
+      "is_active": true
+    },
+    {
+      "id": "fa025cfd-43d0-4325-a0b5-57dc80af6648",
+      "category": "Khiếu nại",
+      "question": "Bé gặp vấn đề sau khi sử dụng Spa/Hotel thì sao?",
+      "answer": "PawPal sẽ ghi nhận sự việc và kiểm tra hồ sơ dịch vụ, Care Log cùng các dữ liệu liên quan.\n(Quy định: Không tự chẩn đoán hoặc quy trách nhiệm.)",
+      "is_active": true
+    },
+    {
+      "id": "fd248d31-b6d6-4237-90a6-06d7bbbfa861",
+      "category": "Dịch vụ Spa/Grooming",
+      "question": "Nếu không hài lòng với kết quả Spa thì làm sao?",
+      "answer": "Bạn có thể gửi phản ánh kèm thông tin lịch hẹn hoặc hình ảnh để PawPal kiểm tra và hỗ trợ.\n(Quy định: Không tự cam kết bồi hoàn trước khi kiểm tra.)",
+      "is_active": true
+    },
+    {
+      "id": "fe94de15-8e2d-47c1-8f8e-427e575c388b",
+      "category": "Tài khoản cá nhân",
+      "question": "Tôi quên mật khẩu thì làm sao?",
+      "answer": "Bạn sử dụng chức năng khôi phục mật khẩu và thực hiện xác thực theo hướng dẫn của hệ thống.\n(Quy định: Không cung cấp mật khẩu hoặc mã xác thực cho Chatbot.)",
+      "is_active": true
+    },
+    {
+      "id": "ff17d777-6a4a-4faa-ad8d-14eee3bb8b13",
+      "category": "Tài khoản cá nhân",
+      "question": "Tôi có bắt buộc phải có tài khoản mới được mua hàng không?",
+      "answer": "Khách có thể tìm hiểu dịch vụ và sản phẩm mà không cần tài khoản. Khi thực hiện giao dịch, hệ thống có thể tạo tài khoản tạm thời theo quy trình phù hợp.\n(Quy định: Tài khoản tạm thời được xử lý theo quy trình hệ thống.)",
+      "is_active": true
+    }
+  ]
+}

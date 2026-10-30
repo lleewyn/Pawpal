@@ -1,5 +1,41 @@
 # Checklist chỉnh sửa chatbot Admin và chatbot khách hàng
 
+## Tiến độ hiện tại — 31/10/2026
+
+**Sửa runtime Trực chat trên Vercel ngày31/10:** Cloud thiếu hai RPC Inbox/hồ sơ mà giao diện đã gọi, gây404. Đã áp migration137, giữ quyền caller/RLS và hạn mức đọc. Endpoint trên website thật đã hết404, người chưa đăng nhập vẫn bị từ chối; kiểm thử UI offline PASS. Còn xác nhận danh sách bằng phiên Admin Vercel. [Bằng chứng](docs/chatbot/admin-inbox-runtime-repair-2026-10-31/README.md). Không đồng nghĩa Gate2 hoặc toàn bộ Production đã hoàn tất.
+
+Đây là bảng tiến độ hiện hành; các ghi chú theo ngày phía dưới là lịch sử kiểm thử. Checkbox triển khai chính thức ở **mục16**. Mục3–15 là nhóm yêu cầu tham chiếu, không phải một lịch giai đoạn khác.
+
+| Giai đoạn | Trạng thái thực tế | Đã làm và phần còn lại |
+| --- | --- | --- |
+| 0 — Baseline | Hoàn tất phạm vi chuẩn bị/local | Có kiểm kê, baseline, ngân sách và rollback; runtime Production đầy đủ còn ở phát hành |
+| 1 — Quyền và hội thoại | Hoàn tất nghiệm thu local | Quyền/ownership, cạnh tranh, nháp, hội thoại; chưa coi mọi bản sửa đã triển khai Cloud |
+| 2 — Nền tảng đọc | Phần lớn đã làm; Gate2 mở | Công cụ xác định, quyền, cap/timeout/pool; còn giới hạn ingress trước Auth và tổng tải ngoài pool |
+| 3 — Admin từng phân hệ | Đã triển khai local; G3.4 mở | Có28 công cụ, phân trang/đọc dài/FAQ; còn oracle rộng và nghiệm thu môi trường triển khai |
+| 4 — Admin liên phân hệ | Đang làm | Có2 luồng khách, bảng việc, so sánh thực thu và oracle cặp ngày; còn tổ hợp/phân nhóm/chỉ số khác, oracle tuần/tháng |
+| 5 — Thông tin công khai | Đã có luồng chạy thật trên4000; đang hoàn thiện | Tìm FAQ, giới thiệu gói, giá, chuyển người; RPC đọc tối thiểu và158 đã ápCloud. Còn dữ kiện kinh doanh được xác nhận và chất lượng trả lời diện rộng; FAQ157 mới chuẩn bị/local |
+| 6 — Tra cứu riêng theo danh tính | Chưa triển khai mới trong đợt này | Cần tra chính đơn/lịch/điểm/hồ sơ của mình sau xác minh; không mở bằng tên/SĐT/mã đơn đơn lẻ |
+| 7 — Chất lượng và tài nguyên | Đã làm một phần xuyên suốt | Có test/quyền/cap và backoff30–60–120; chưa nghiệm thu model diện rộng, tổng tải, toàn bộ Rules/UI |
+| 8 — Phát hành | Đã phát hành phần sửa runtime công khai; chưa hoàn tất | RPC tối thiểu+158 và server4000 đã chạy, đã thử giá/tư vấn trên browser; còn phát hành đầy đủ API/frontend Production, smoke hai phía và theo dõi |
+
+**Nguyên tắc đã chốt:** Khách vãng lai được hỏi mọi thông tin **công khai** cần để tìm hiểu và sử dụng PawPal: dịch vụ, gói, giá, chuẩn bị, sản phẩm, tình trạng hàng/lịch được công bố, điểm/hạng theo chính sách, ưu đãi, đặt/mua, giao nhận, đổi trả và liên hệ. Không chặn câu hỏi chỉ vì có từ “Paw Points”, “mã đơn”, “còn hàng” hoặc là khách vãng lai. Dữ liệu cá nhân/giao dịch của user và dữ liệu Admin/nội bộ chưa công khai vẫn cần đúng quyền/xác minh. Chưa có nguồn xác nhận thì nói rõ điều chưa biết và hướng tiếp tục; đó là thiếu dữ liệu, không phải cấm guest hỏi.
+
+**Bằng chứng hiện có:** [Sửa runtime4000](docs/chatbot/runtime-repair-2026-10-30/README.md), [tư vấn dịch vụ trên web](docs/chatbot/stage5-service-guidance-2026-10-30/README.md), [rà92 FAQ](docs/chatbot/stage5-faq-review-2026-10-30/README.md). Không dùng testlocal để suy mọi luồng đã đạt Production.
+
+**Đợt nới phân tuyến theo chỉ đạo người dùng:** Đã kiểm tra guest hỏi khái niệm điểm/cách tra cứu/còn hàng bằng API offline có fixture và model stub, giữ chặn số dư/hồ sơ riêng;266 kiểm tra offline và40 ca nghiệp vụ đạt. Web4000 hỏi “Giá tắm và cắt tỉa”, “So sánh giá Hotel” trả nguồn thật. Không thêm Gemini, migration hoặc quyền trong đợt này. [Phạm vi và kiểm chứng](docs/chatbot/guest-public-scope-2026-10-30.md).
+
+### Nhật ký các đợt trước
+
+**Sửa tư vấn bị chặn bởi FAQ dài —30/10:** Đã sửa planner/formatter giới thiệu tối đa5 gói active từ catalog cho nhóm tắm/cắt tỉa/Hotel/Taxi;không gọi FAQ/model cho câu giới thiệu.158 đã ápCloud chỉ thay2 hàm đọc: loại FAQ bị cắt, giữ mục đầy đủ, không chặn cả câu khi còn nguồn hoàn chỉnh. Bỏ lời đáp kỹ thuật ra khỏi luồng khách. Đã thử đúng “Tư vấn dịch vụ tắm và cắt tỉa” trên web4000: có gói/thời lượng và hỏi thêm nhu cầu bé.5 nhóm tích hợp mới,264 offline+40 nghiệp vụ đạt;clone dọn, không thêm Gemini. [Bằng chứng](docs/chatbot/stage5-service-guidance-2026-10-30/README.md). Code chưa push;chưa coi toàn bộ chatbot đạt nghiệm thu.
+
+**Đã sửa503 trên web4000 —30/10:** Đã ápCloud gói đọc tối thiểu:5 RPC dữ liệu service-only,2 helper văn bản,1 helper admission,3 index;không sửa FAQ/khách/đơn/lịch hoặc áp toàn bộ135–157. Nạp lại server4000 sau xác minh đúng tiến trình. Trình duyệt thật hỏi giá Hotel/Taxi/tắm đều có trả lời, request mới200, ô nhập xóa đúng. Sửa đọc nền30 giây/backoff30–60–120, thiếuRPC dừng tự đọc và giữ draft;Chrome/hồi quy262 kiểm tra offline+40 nghiệp vụ đạt. [Gói sửa, ảnh và rollback](docs/chatbot/runtime-repair-2026-10-30/README.md). Các mốc “chưa ápCloud/chưa đạt4000” bên dưới là lịch sử trước đợt sửa;FAQ157 và phần khác vẫn chưa áp, chưa nghiệm thu toàn bộ chatbot.
+
+**Kiểm tra web4000 thực tế30/10 — CHƯA ĐẠT:** Trang/khung chat mở được, nhưng gửi “Giá Pet Hotel” nhận503, không có trả lời; draft được giữ. Probe chỉ đọc read_public_chat_rules và read_public_chat_catalog trảPGRST202 từ backend theo cấu hìnhlocal. Chưa ápCloud;không suy từ testlocal rằng bản4000 đã hoạt động. Đã lưu ảnh, đóng khung để ngừng polling lỗi10 giây và dọn clone chuẩn bị. [Bằng chứng và bước cần làm](docs/chatbot/stage5-browser-2026-10-30/README.md).
+
+**Tiếp tục30/10 — FAQ bị cắt:** SQL155 trả cờ incomplete khi câu hỏi/answer bị cắt hoặc FAQ bị bỏ vì trần16KB;API yêu cầu cờ boolean và không đưa đoạn trích thiếu sang model. Lưu lời hỏi rõ/gặp nhân viên với understood=false, không đọc lại nguồn hoặc tăng trần bytes.20 nhóm tích hợp công cụ và7 nhóm FAQ chạy lại đạt;18 FAQ đã rà vẫn có nguồn đầy đủ.261 kiểm tra offline,40 ca nghiệp vụ đạt;hai môi trường thử đã dọn. Xem [điều kiện đầy đủ của FAQ](docs/chatbot/stage5-public-search-2026-10-30/context-completeness.md). Chưa push/áp Cloud;G5.2 vẫn còn dữ kiện kinh doanh chưa được xác nhận.
+
+**Mới nhất30/10 — G5.2:** Đã rà92 FAQ baseline local, chuẩn bị157 sửa15 câu/tắt1 QA/thêm3 hướng dẫn có nguồn;18 mục active sau sửa truy xuất đúng qua RPC. Sửa CRLF guard150/152, ưu tiên FAQ trùng nguyên văn trong155 và nhận diện đúng yêu cầu nói chuyện trực tiếp với nhân viên.7 nhóm tích hợp FAQ mới và17 nhóm tìm kiếm/catalog/chuyển giao chạy lại đạt;259 kiểm tra offline,40 ca nghiệp vụ đạt. Môi trường đã dọn. [Bằng chứng và dữ kiện còn thiếu](docs/chatbot/stage5-faq-review-2026-10-30/README.md). Các thay đổi mới vẫn local, chưa áp Cloud.
+
 **Git 29/10/2026:** Người dùng yêu cầu push mã đã hoàn thành rồi tiếp tục giai đoạn4. Đợt này gom thay đổi144–154 và mã giai đoạn4 trên nhánh feat/guest-admin-identity; không áp migration Cloud. Các mô tả chưa push trong hồ sơ bên dưới là mốc kiểm thử trước đợt đồng bộ mã này.
 
 **G4.1/G4.4 bổ sung ngày29/10:** Đã có khách → hồ sơ thú cưng và đơn được tạo mới nhất, cùng UUID đã xác định, tối đa3 nguồn. Thú cưng gồm mọi trạng thái, trả tổng/tối đa10 dòng;đơn theo created_at/UUID, không suy thanh toán/giao hàng.154/rollback đạt8 nhóm SQL/Auth/JWT/REST/API thật;242 kiểm tra offline,40 ca nghiệp vụ và Chrome đạt. Môi trường thử đã dọn. [Bằng chứng](docs/chatbot/stage4-customer-commerce-2026-10-29/README.md). Chưa push/áp Cloud.
@@ -24,7 +60,7 @@
 
 **Cập nhật 29/10 — G3.4:** Đã đối chiếu mã nguồn đặt lịch vãng lai/thành viên và soạn FAQ đề xuất; bổ sung chỉ dẫn model nêu rõ phần thiếu thông tin, không áp quy định sai đối tượng; chặn sinh hướng dẫn từ FAQ rỗng. 56 kiểm tra chatbot và 16 kiểm tra guest offline đạt, cùng 40 ca nghiệp vụ hồi quy. Không thêm lượt đọc database hoặc gọi Gemini; FAQ Cloud chưa cập nhật, chất lượng model thật vẫn PARTIAL. [Chi tiết và việc còn lại](docs/chatbot/stage3-staff-2026-10-28/faq-audience-review-2026-10-29.md).
 
-Ngày lập: 28/10/2026. Cập nhật: 29/10/2026. Trạng thái: **Đang triển khai giai đoạn4: so sánh thực thu, hai luồng liên quan khách (lịch/khiếu nại và thú cưng/đơn mới nhất), hai nhóm việc cần kiểm tra, có kết quả từng phần.242 kiểm tra offline,40 ca nghiệp vụ và Chrome đạt;154/rollback mới đạt8 nhóm SQL/Auth/API thật, bên cạnh bằng chứng153 và bảng kiểm tra trước đó. G3.4 và Gate2 còn mở, chưa chứng nhận toàn bộ ma trận hoặc Production. Checkpoint đã push vẫn là472da7ed; phần144–154 và mã giai đoạn4 còn local, migrations135–154 chưa áp Cloud.**
+Ngày lập:28/10/2026. Cập nhật:30/10/2026. Trạng thái: **Đang hoàn thiện giai đoạn5 theo phạm vi công khai rộng. Có web4000 hoạt động cho giá Hotel/Taxi/tắm và giới thiệu gói, đã ápCloud gói RPC đọc tối thiểu và158;không có nghĩa toàn bộ135–158 đã áp hoặc frontend/API Production đã đồng bộ. G4,Gate2,G3.4 còn mở;G6 chưa triển khai mới;G7/G8 đã làm một phần. FAQ157 và nguồn chính sách/giờ/địa chỉ xác nhận còn riêng. Xem bảng đầu tài liệu và checkbox mục16 để biết trạng thái hiện hành;không đọc các số test/mốc “chưa ápCloud” cũ như trạng thái mới nhất.**
 
 **Kết quả giai đoạn 1:** [Hồ sơ nghiệm thu và giới hạn](docs/chatbot/stage1-acceptance-2026-10-28/README.md). Có 13 nhóm Auth/API/UI/WebSocket thật local, 12 nhóm SQL cạnh tranh/quyền, sửa P0 cộng dồn điểm 50/200 mỗi ca, bảo vệ dữ liệu model và composer đóng ca. Trạng thái đạt bên dưới áp dụng cho bộ nghiệm thu local, không phải chứng nhận Production hoặc chất lượng Gemini thật.
 
@@ -59,37 +95,37 @@ Nguồn active cần theo dõi: `api/admin-chat.js`, `api/chat.js`, `scripts/api
 
 Không dùng kết quả test `scripts/api/chat.js` cũ để thay cho kiểm thử gateway hiện tại. Không khôi phục ba tài liệu đang được Git ghi nhận xóa nếu chưa thuộc yêu cầu riêng.
 
-## 3. Giai đoạn 0 — Xác nhận baseline và khả năng khôi phục
+## 3. Nhóm yêu cầu baseline và khả năng khôi phục
 
 **P0 — thực hiện trước mọi thay đổi backend.**
 
-- [ ] B01 — Ghi branch, SHA, thay đổi chưa commit, URL local/test/Production và phiên bản API/frontend đang phục vụ.
-- [ ] B02 — Lập bản đồ frontend → endpoint active → RPC → bảng → quyền cho từng luồng của hai chatbot.
-- [ ] B03 — Đối chiếu schema/grants/RLS/body RPC thực tế; xác minh migrations 109, 124, 125, 126 và cấu hình SLA hiện hành từ nguồn thật.
-- [ ] B04 — Đối chiếu tài liệu cũ với status, thang cảm xúc, chính sách điểm và chuyển giao hiện tại; ghi rõ chỗ mâu thuẫn trước khi chọn cách sửa.
-- [ ] B05 — Lưu định nghĩa/schema/quyền liên quan và hướng dẫn rollback cho phạm vi thay đổi; không chạy lại toàn bộ migration cũ.
-- [ ] B06 — Chạy bộ offline active làm baseline; chuẩn bị fixture riêng cho thành viên, guest, hai nhân viên và hai khách khác nhau.
-- [ ] B07 — Đo request, bytes và thời gian các luồng mở chat, gửi, nhận tin, đổi ca, tra cứu và mở Rules. Phân biệt HTTP request, DB statement và token AI.
+- B01 — Ghi branch, SHA, thay đổi chưa commit, URL local/test/Production và phiên bản API/frontend đang phục vụ.
+- B02 — Lập bản đồ frontend → endpoint active → RPC → bảng → quyền cho từng luồng của hai chatbot.
+- B03 — Đối chiếu schema/grants/RLS/body RPC thực tế; xác minh migrations 109, 124, 125, 126 và cấu hình SLA hiện hành từ nguồn thật.
+- B04 — Đối chiếu tài liệu cũ với status, thang cảm xúc, chính sách điểm và chuyển giao hiện tại; ghi rõ chỗ mâu thuẫn trước khi chọn cách sửa.
+- B05 — Lưu định nghĩa/schema/quyền liên quan và hướng dẫn rollback cho phạm vi thay đổi; không chạy lại toàn bộ migration cũ.
+- B06 — Chạy bộ offline active làm baseline; chuẩn bị fixture riêng cho thành viên, guest, hai nhân viên và hai khách khác nhau.
+- B07 — Đo request, bytes và thời gian các luồng mở chat, gửi, nhận tin, đổi ca, tra cứu và mở Rules. Phân biệt HTTP request, DB statement và token AI.
 
 **Điều kiện đóng:** Có danh sách nguồn active, môi trường, quyền, bằng chứng baseline và cách khôi phục. Không coi API trả 401 là bằng chứng bản deploy trùng mã local.
 
-## 4. Giai đoạn 1 — Quyền, đúng đối tượng và toàn vẹn dữ liệu
+## 4. Nhóm yêu cầu quyền, đúng đối tượng và toàn vẹn dữ liệu
 
 **P0 — ưu tiên cao nhất.**
 
-- [x] S01 — Thành viên A không đọc/gửi/đánh giá/đổi chế độ hội thoại B; guest không truy cập hội thoại guest khác hoặc thành viên.
-- [x] S02 — Xác minh quyền qua API và DB: guest, khách, nhân viên trực chat, người nhận ca, nhân viên không phụ trách và quản trị.
-- [x] S03 — Các modal ghi theo ca giữ đúng ID ca/khách/phiên bản khi mở; đổi ca trước xác nhận bị chặn; không chọn ngầm ca đầu tiên.
-- [x] S04 — Request khác ID cạnh tranh cùng revision cho tiếp nhận/chuyển/hoàn tất: một thắng và một conflict; cùng ID retry vẫn được xác nhận.
-- [x] S05 — Retry gửi tin, tạo khiếu nại, chuyển ca, điều chỉnh điểm và đánh giá không tạo bản ghi hoặc cộng điểm trùng; requestId dùng với payload khác bị từ chối.
-- [x] S06 — Ghi chú riêng và nguyên văn hạn chế không xuất hiện trong response khách hoặc nhân viên thiếu quyền; đọc nguyên văn hợp lệ có audit.
-- [x] S07 — Nhân viên A không đọc/xóa nội dung phiên trợ lý của B; ID sai/thiếu quyền/bị khóa được kiểm tra server. Xóa session người khác có thể no-op, không coi là luôn trả403.
-- [x] S08 — Rà và thêm redaction ở model boundary cho trường/mẫu nhạy cảm đã nhận diện, có test payload không token/key/raw. Không tuyên bố nhận diện hoàn hảo mọi PII tự do; xem giới hạn báo cáo.
-- [x] S09 — Renderer thật escape HTML độc hại; test injection không tạo SQL/công cụ ghi hoặc vượt quyền trong đường facts. Chất lượng Gemini thật nghiệm thu riêng ở giai đoạn sau.
+- S01 — Thành viên A không đọc/gửi/đánh giá/đổi chế độ hội thoại B; guest không truy cập hội thoại guest khác hoặc thành viên.
+- S02 — Xác minh quyền qua API và DB: guest, khách, nhân viên trực chat, người nhận ca, nhân viên không phụ trách và quản trị.
+- S03 — Các modal ghi theo ca giữ đúng ID ca/khách/phiên bản khi mở; đổi ca trước xác nhận bị chặn; không chọn ngầm ca đầu tiên.
+- S04 — Request khác ID cạnh tranh cùng revision cho tiếp nhận/chuyển/hoàn tất: một thắng và một conflict; cùng ID retry vẫn được xác nhận.
+- S05 — Retry gửi tin, tạo khiếu nại, chuyển ca, điều chỉnh điểm và đánh giá không tạo bản ghi hoặc cộng điểm trùng; requestId dùng với payload khác bị từ chối.
+- S06 — Ghi chú riêng và nguyên văn hạn chế không xuất hiện trong response khách hoặc nhân viên thiếu quyền; đọc nguyên văn hợp lệ có audit.
+- S07 — Nhân viên A không đọc/xóa nội dung phiên trợ lý của B; ID sai/thiếu quyền/bị khóa được kiểm tra server. Xóa session người khác có thể no-op, không coi là luôn trả403.
+- S08 — Rà và thêm redaction ở model boundary cho trường/mẫu nhạy cảm đã nhận diện, có test payload không token/key/raw. Không tuyên bố nhận diện hoàn hảo mọi PII tự do; xem giới hạn báo cáo.
+- S09 — Renderer thật escape HTML độc hại; test injection không tạo SQL/công cụ ghi hoặc vượt quyền trong đường facts. Chất lượng Gemini thật nghiệm thu riêng ở giai đoạn sau.
 
 **Điều kiện đóng:** Ma trận quyền có kết quả thực tế; không có ghi sai khách/ca, lộ dữ liệu hoặc nhân đôi tác vụ. Test thiếu bằng chứng vẫn để chưa hoàn tất.
 
-## 5. Giai đoạn 2 — Hội thoại và chuyển nhân viên
+## 5. Nhóm yêu cầu hội thoại và chuyển nhân viên
 
 **P1 — hoàn thiện luồng đang có trước khi mở rộng.**
 
@@ -105,52 +141,52 @@ Không dùng kết quả test `scripts/api/chat.js` cũ để thay cho kiểm th
 
 **Điều kiện đóng:** Toàn chuỗi chạy với tài khoản thật trên môi trường kiểm thử, có đối chiếu UI/API/DB và xác minh dọn fixture.
 
-## 6. Giai đoạn 3 — Nâng chất lượng chatbot khách hàng
+## 6. Nhóm yêu cầu chất lượng chatbot khách hàng
 
 **P1 — triển khai theo thứ tự K01 → K04, rồi mới mở tra cứu cá nhân.**
 
-- [ ] K01 — Thay nạp tối đa 500 FAQ bằng tìm kiếm server chọn các mục liên quan. Tận dụng RPC/search hiện có sau khi kiểm tra quyền, không cấp RPC Admin trực tiếp cho khách.
-- [ ] K02 — Giới hạn số mục và tổng độ dài FAQ/ngữ cảnh; đo bytes/token trước và sau; không có kết quả thì hỏi làm rõ hoặc chuyển nhân viên.
-- [ ] K03 — Giá/gói dịch vụ phải lấy từ nguồn đang có hiệu lực; nếu FAQ chỉ là thông tin tham khảo thì không diễn đạt thành báo giá cá nhân đã xác nhận.
-- [ ] K04 — Trả lời tự nhiên, không lộ tên bảng/RPC/SQL, không hứa đã kiểm tra hồ sơ hoặc tạo yêu cầu khi chưa thực hiện.
-- [ ] K05 — Bổ sung tra đơn của chính thành viên: mã đơn, trạng thái và giao nhận theo dữ liệu thực. Không cho tra bằng số điện thoại hoặc mã đơn đơn lẻ để vượt quyền sở hữu.
-- [ ] K06 — Bổ sung tra lịch hẹn của chính thành viên: ngày giờ, dịch vụ, thú cưng và trạng thái; thiếu thông tin thì hỏi chọn lịch.
-- [ ] K07 — Bổ sung xem Pawpoint/hạng và thú cưng của chính thành viên nếu schema và quyền hỗ trợ; chỉ trả trường cần thiết.
-- [ ] K08 — Guest hỏi dữ liệu giao dịch: chuyển sang cơ chế xác minh đã có hoặc đăng nhập; nếu chưa có cơ chế hợp lệ thì chuyển nhân viên, không tự dựng xác thực yếu.
-- [ ] K09 — Chỉ đường đến màn hình đặt lịch/mua hàng có sẵn, giữ lựa chọn phù hợp nếu luồng hiện tại hỗ trợ; không báo đã đặt/tạo đơn từ câu tư vấn.
-- [ ] K10 — Test đổi tài khoản/đăng xuất/phiên hết hạn: không mang hội thoại, kết quả tra cứu hoặc nháp của tài khoản trước sang tài khoản sau.
+- K01 — Thay nạp tối đa 500 FAQ bằng tìm kiếm server chọn các mục liên quan. Tận dụng RPC/search hiện có sau khi kiểm tra quyền, không cấp RPC Admin trực tiếp cho khách.
+- K02 — Giới hạn số mục và tổng độ dài FAQ/ngữ cảnh; đo bytes/token trước và sau; không có kết quả thì hỏi làm rõ hoặc chuyển nhân viên.
+- K03 — Giá/gói dịch vụ phải lấy từ nguồn đang có hiệu lực; nếu FAQ chỉ là thông tin tham khảo thì không diễn đạt thành báo giá cá nhân đã xác nhận.
+- K04 — Trả lời tự nhiên, không lộ tên bảng/RPC/SQL, không hứa đã kiểm tra hồ sơ hoặc tạo yêu cầu khi chưa thực hiện.
+- K05 — Bổ sung tra đơn của chính thành viên: mã đơn, trạng thái và giao nhận theo dữ liệu thực. Không cho tra bằng số điện thoại hoặc mã đơn đơn lẻ để vượt quyền sở hữu.
+- K06 — Bổ sung tra lịch hẹn của chính thành viên: ngày giờ, dịch vụ, thú cưng và trạng thái; thiếu thông tin thì hỏi chọn lịch.
+- K07 — Bổ sung xem Pawpoint/hạng và thú cưng của chính thành viên nếu schema và quyền hỗ trợ; chỉ trả trường cần thiết.
+- K08 — Guest hỏi dữ liệu giao dịch: chuyển sang cơ chế xác minh đã có hoặc đăng nhập; nếu chưa có cơ chế hợp lệ thì chuyển nhân viên, không tự dựng xác thực yếu.
+- K09 — Chỉ đường đến màn hình đặt lịch/mua hàng có sẵn, giữ lựa chọn phù hợp nếu luồng hiện tại hỗ trợ; không báo đã đặt/tạo đơn từ câu tư vấn.
+- K10 — Test đổi tài khoản/đăng xuất/phiên hết hạn: không mang hội thoại, kết quả tra cứu hoặc nháp của tài khoản trước sang tài khoản sau.
 
 **Điều kiện đóng:** Mỗi chức năng cá nhân có test đúng chủ sở hữu, chặn khách khác, dữ liệu thay đổi và trạng thái không tìm thấy; số liệu lấy từ Supabase, không từ mô hình suy đoán.
 
-## 7. Giai đoạn 4 — Trợ lý Admin và kho quy định
+## 7. Nhóm yêu cầu trợ lý Admin và kho quy định
 
 **P1.**
 
-- [ ] A01 — Lập bộ câu hỏi thực tế và cách diễn đạt tương đương cho lịch, tồn kho, đơn, khách, khiếu nại, giá, thực thu và tri thức.
-- [ ] A02 — Mỗi ý định định lượng có SQL oracle độc lập; kiểm tra tổng, giới hạn danh sách, trạng thái, ngày Việt Nam và lịch nhiều dịch vụ.
-- [ ] A03 — Câu ngoài bộ lọc hỗ trợ phải yêu cầu làm rõ; không bỏ qua điều kiện khách nói rồi trả số của phạm vi khác.
-- [ ] A04 — Mở rộng ngữ cảnh nhiều lượt có kiểm soát: kế thừa ngày/nhóm dịch vụ/đối tượng đúng; không trộn phiên hoặc quyền nhân viên.
-- [ ] A05 — Lỗi DB/quyền/timeout không biến thành 0; bản nháp không được ghi là đã gửi; phản hồi số liệu thể hiện phạm vi và thời điểm phù hợp.
-- [ ] A06 — CRUD FAQ/bộ lọc/câu mẫu: lưu/đọc lại, bật/tắt, xóa, thiếu quyền, lỗi mạng và hai người cùng sửa.
-- [ ] A07 — Phân biệt rule đã có engine thực thi với cấu hình chưa hỗ trợ; không hiển thị tự phân công hoặc xử lý thành công khi chỉ mới lưu cấu hình.
-- [ ] A08 — Benchmark tách đạt/không đạt/chờ; tình huống cần công cụ chưa có vẫn chờ; không dùng điểm benchmark để suy ra chất lượng Gemini.
-- [ ] A09 — Đánh giá bản nháp Gemini thật bằng tình huống ẩn danh: đúng vấn đề, đúng chính sách, hành động tiếp theo hữu ích và không hứa bồi hoàn.
+- A01 — Lập bộ câu hỏi thực tế và cách diễn đạt tương đương cho lịch, tồn kho, đơn, khách, khiếu nại, giá, thực thu và tri thức.
+- A02 — Mỗi ý định định lượng có SQL oracle độc lập; kiểm tra tổng, giới hạn danh sách, trạng thái, ngày Việt Nam và lịch nhiều dịch vụ.
+- A03 — Câu ngoài bộ lọc hỗ trợ phải yêu cầu làm rõ; không bỏ qua điều kiện khách nói rồi trả số của phạm vi khác.
+- A04 — Mở rộng ngữ cảnh nhiều lượt có kiểm soát: kế thừa ngày/nhóm dịch vụ/đối tượng đúng; không trộn phiên hoặc quyền nhân viên.
+- A05 — Lỗi DB/quyền/timeout không biến thành 0; bản nháp không được ghi là đã gửi; phản hồi số liệu thể hiện phạm vi và thời điểm phù hợp.
+- A06 — CRUD FAQ/bộ lọc/câu mẫu: lưu/đọc lại, bật/tắt, xóa, thiếu quyền, lỗi mạng và hai người cùng sửa.
+- A07 — Phân biệt rule đã có engine thực thi với cấu hình chưa hỗ trợ; không hiển thị tự phân công hoặc xử lý thành công khi chỉ mới lưu cấu hình.
+- A08 — Benchmark tách đạt/không đạt/chờ; tình huống cần công cụ chưa có vẫn chờ; không dùng điểm benchmark để suy ra chất lượng Gemini.
+- A09 — Đánh giá bản nháp Gemini thật bằng tình huống ẩn danh: đúng vấn đề, đúng chính sách, hành động tiếp theo hữu ích và không hứa bồi hoàn.
 
 **Điều kiện đóng:** Các câu định lượng trong bộ nghiệm thu khớp oracle 100%; chất lượng câu trả lời sinh bằng AI được đánh giá riêng bởi người duyệt.
 
-## 8. Giai đoạn 5 — Băng thông, độ ổn định và giao diện
+## 8. Nhóm yêu cầu băng thông, độ ổn định và giao diện
 
 **P1 cho tài nguyên/ổn định; P2 cho hoàn thiện trình bày.**
 
-- [ ] P01 — Thiết kế cập nhật chat khách cho cả guest và thành viên: sự kiện chỉ báo thay đổi theo quyền rồi đọc API; không mở quyền đọc trực tiếp bảng để có Realtime.
-- [ ] P02 — Khi kênh khỏe, tránh polling song song; khi mất kênh dùng backoff; dừng khi chat đóng/tab ẩn và cleanup khi rời trang. Nếu guest chưa có kênh an toàn, giữ polling có điều kiện và ghi rõ giới hạn.
-- [ ] P03 — Dùng revision/cursor để tránh tải lại toàn lịch sử; debounce, gộp sự kiện và chia sẻ request đang chạy; cache tách theo danh tính/quyền và vô hiệu hóa khi đổi tài khoản.
-- [ ] P04 — Đánh giá hạn mức dùng chung phía server thay Map theo tiến trình; chặn spam mở phiên/gửi/AI mà không làm người dùng hợp lệ bị ảnh hưởng hàng loạt.
-- [ ] P05 — Đo p50/p95, tỷ lệ lỗi, request/bytes/token với cùng kịch bản trước/sau; thử đồng thời có giới hạn trên môi trường test, không stress Cloud thật.
-- [ ] U01 — Rà toàn bộ ba tab Admin theo AGENTS.md: text-only ngoài sidebar, tiếng Việt, Sentence case, bo góc 9px, màu/surface, phân trang và modal.
-- [ ] U02 — Rà loading/trống/lỗi/thiếu quyền; bàn phím, focus modal, Escape và không mất nháp khi lỗi.
-- [ ] U03 — Kiểm tra desktop 1366/1440/1920, zoom 125% và chat khách 390px; không tràn/cắt nút hoặc nội dung.
-- [ ] U04 — Chỉ dọn CSS phụ/inline và mã cũ sau kiểm tra dependency; giữ ID/event hook nghiệp vụ đang dùng.
+- P01 — Thiết kế cập nhật chat khách cho cả guest và thành viên: sự kiện chỉ báo thay đổi theo quyền rồi đọc API; không mở quyền đọc trực tiếp bảng để có Realtime.
+- P02 — Khi kênh khỏe, tránh polling song song; khi mất kênh dùng backoff; dừng khi chat đóng/tab ẩn và cleanup khi rời trang. Nếu guest chưa có kênh an toàn, giữ polling có điều kiện và ghi rõ giới hạn.
+- P03 — Dùng revision/cursor để tránh tải lại toàn lịch sử; debounce, gộp sự kiện và chia sẻ request đang chạy; cache tách theo danh tính/quyền và vô hiệu hóa khi đổi tài khoản.
+- P04 — Đánh giá hạn mức dùng chung phía server thay Map theo tiến trình; chặn spam mở phiên/gửi/AI mà không làm người dùng hợp lệ bị ảnh hưởng hàng loạt.
+- P05 — Đo p50/p95, tỷ lệ lỗi, request/bytes/token với cùng kịch bản trước/sau; thử đồng thời có giới hạn trên môi trường test, không stress Cloud thật.
+- U01 — Rà toàn bộ ba tab Admin theo AGENTS.md: text-only ngoài sidebar, tiếng Việt, Sentence case, bo góc 9px, màu/surface, phân trang và modal.
+- U02 — Rà loading/trống/lỗi/thiếu quyền; bàn phím, focus modal, Escape và không mất nháp khi lỗi.
+- U03 — Kiểm tra desktop 1366/1440/1920, zoom 125% và chat khách 390px; không tràn/cắt nút hoặc nội dung.
+- U04 — Chỉ dọn CSS phụ/inline và mã cũ sau kiểm tra dependency; giữ ID/event hook nghiệp vụ đang dùng.
 
 **Điều kiện đóng:** Có bảng đo so sánh, không suy tổng egress từ số SQL; không rò phiên/cache, tăng channel/timer hoặc làm sai luồng sau tối ưu.
 
@@ -172,14 +208,14 @@ Sửa lỗi UI chặn thao tác và chặn lộ dữ liệu được đưa lên 
 
 ## 10. Checklist nghiệm thu và bàn giao
 
-- [ ] D01 — Mỗi test ghi mã mục, môi trường/SHA, vai trò, expected/actual, kết quả và bằng chứng đã che dữ liệu cá nhân.
-- [ ] D02 — Tách rõ test offline, SQL rollback, Auth/API thật, Realtime và E2E hai giao diện; không thay thế kết quả giữa các loại.
-- [ ] D03 — Test DB dùng fixture riêng và rollback khi phù hợp; xác minh không còn dữ liệu thử. Các lượt commit có kế hoạch dọn và giữ audit theo thiết kế.
-- [ ] D04 — Lỗi phát hiện có mức P0/P1/P2 và test tái hiện; sau sửa chạy lại nhóm liên quan và smoke test hai chatbot.
-- [ ] D05 — Không có dữ liệu mock/JSON fallback trong đường nghiệp vụ; trống hiển thị trống, lỗi hiển thị lỗi.
-- [ ] D06 — Trước phát hành: đối chiếu migration/API/frontend tương thích, biến cấu hình và quyền; chuẩn bị bản thay đổi cụ thể để duyệt triển khai.
-- [ ] D07 — Sau phát hành: xác minh đúng SHA/phiên bản, smoke test tài khoản kiểm thử, nhận/gửi/chuyển/đóng và một truy vấn số liệu có oracle.
-- [ ] D08 — Bàn giao danh sách đã đạt, chưa đạt, ngoài phạm vi, chỉ số trước/sau, giới hạn còn lại và hướng dẫn rollback theo từng đợt.
+- D01 — Mỗi test ghi mã mục, môi trường/SHA, vai trò, expected/actual, kết quả và bằng chứng đã che dữ liệu cá nhân.
+- D02 — Tách rõ test offline, SQL rollback, Auth/API thật, Realtime và E2E hai giao diện; không thay thế kết quả giữa các loại.
+- D03 — Test DB dùng fixture riêng và rollback khi phù hợp; xác minh không còn dữ liệu thử. Các lượt commit có kế hoạch dọn và giữ audit theo thiết kế.
+- D04 — Lỗi phát hiện có mức P0/P1/P2 và test tái hiện; sau sửa chạy lại nhóm liên quan và smoke test hai chatbot.
+- D05 — Không có dữ liệu mock/JSON fallback trong đường nghiệp vụ; trống hiển thị trống, lỗi hiển thị lỗi.
+- D06 — Trước phát hành: đối chiếu migration/API/frontend tương thích, biến cấu hình và quyền; chuẩn bị bản thay đổi cụ thể để duyệt triển khai.
+- D07 — Sau phát hành: xác minh đúng SHA/phiên bản, smoke test tài khoản kiểm thử, nhận/gửi/chuyển/đóng và một truy vấn số liệu có oracle.
+- D08 — Bàn giao danh sách đã đạt, chưa đạt, ngoài phạm vi, chỉ số trước/sau, giới hạn còn lại và hướng dẫn rollback theo từng đợt.
 
 **Tiêu chí chốt:** Không còn lỗi P0/P1 trong phạm vi phát hành; số liệu định lượng đúng oracle; không ghi sai/trùng hoặc lộ dữ liệu; không tuyên bố hoàn tất các hạng mục chưa có bằng chứng.
 
@@ -246,14 +282,14 @@ Mỗi chỉ số mới phải có định nghĩa, nguồn, phép nối, thời g
 
 ### 14.1. Mở rộng độ bao phủ
 
-- [ ] C01 — Lập danh mục năng lực cho mọi hàng trong ma trận mục 12: đối tượng được dùng, trường trả về, bộ lọc, phép tổng hợp, quyền, nguồn/RPC, liên kết mở màn hình và trạng thái hỗ trợ.
-- [ ] C02 — Mô hình hiểu ngôn ngữ chuyển câu hỏi thành kế hoạch có cấu trúc: đối tượng, dữ kiện cần xem, điều kiện, kỳ thời gian, phép tổng hợp và quan hệ. Server xác thực kế hoạch và quyền trước khi thực thi.
-- [ ] C03 — Dùng công cụ đọc đã đăng ký và tham số được kiểm tra; không cho mô hình chạy SQL tùy ý, chọn service role để vượt quyền hoặc nhận tên bảng/cột tùy ý từ câu hỏi.
-- [ ] C04 — Cho phép phối hợp nhiều công cụ đọc trong ngân sách request/thời gian; kết quả có nguồn, thời điểm và điều kiện. Kiểm tra quyền từng nguồn, không chỉ quyền chat.
-- [ ] C05 — Hỗ trợ hôm nay/chiều mai/tuần/tháng/khoảng ngày và câu tiếp nối; chuẩn hóa timezone, khoảng đầu/cuối và tiêu chí so sánh trước khi truy vấn.
-- [ ] C06 — Nhận ngữ cảnh trang, đối tượng và bộ lọc Admin đang mở. Ngữ cảnh chỉ giúp hiểu “đơn này/khách này”, server vẫn xác minh ID/quyền; không ghi nhầm theo lựa chọn cũ.
-- [ ] C07 — Kết quả lớn dùng phân trang/tóm tắt hoặc mở danh sách lọc đúng; tổng phải tính trên toàn phạm vi, không tải hết dữ liệu vào AI.
-- [ ] C08 — Tiếp tục giữ đường tra cứu số liệu xác định hiện có; chỉ dùng mô hình để hiểu/diễn giải khi cần. Cache phụ thuộc danh tính, quyền, bộ lọc và phiên bản dữ liệu.
+- C01 — Lập danh mục năng lực cho mọi hàng trong ma trận mục 12: đối tượng được dùng, trường trả về, bộ lọc, phép tổng hợp, quyền, nguồn/RPC, liên kết mở màn hình và trạng thái hỗ trợ.
+- C02 — Mô hình hiểu ngôn ngữ chuyển câu hỏi thành kế hoạch có cấu trúc: đối tượng, dữ kiện cần xem, điều kiện, kỳ thời gian, phép tổng hợp và quan hệ. Server xác thực kế hoạch và quyền trước khi thực thi.
+- C03 — Dùng công cụ đọc đã đăng ký và tham số được kiểm tra; không cho mô hình chạy SQL tùy ý, chọn service role để vượt quyền hoặc nhận tên bảng/cột tùy ý từ câu hỏi.
+- C04 — Cho phép phối hợp nhiều công cụ đọc trong ngân sách request/thời gian; kết quả có nguồn, thời điểm và điều kiện. Kiểm tra quyền từng nguồn, không chỉ quyền chat.
+- C05 — Hỗ trợ hôm nay/chiều mai/tuần/tháng/khoảng ngày và câu tiếp nối; chuẩn hóa timezone, khoảng đầu/cuối và tiêu chí so sánh trước khi truy vấn.
+- C06 — Nhận ngữ cảnh trang, đối tượng và bộ lọc Admin đang mở. Ngữ cảnh chỉ giúp hiểu “đơn này/khách này”, server vẫn xác minh ID/quyền; không ghi nhầm theo lựa chọn cũ.
+- C07 — Kết quả lớn dùng phân trang/tóm tắt hoặc mở danh sách lọc đúng; tổng phải tính trên toàn phạm vi, không tải hết dữ liệu vào AI.
+- C08 — Tiếp tục giữ đường tra cứu số liệu xác định hiện có; chỉ dùng mô hình để hiểu/diễn giải khi cần. Cache phụ thuộc danh tính, quyền, bộ lọc và phiên bản dữ liệu.
 
 ### 14.2. Không để người dùng gặp ngõ cụt
 
@@ -273,18 +309,18 @@ Liên kết mở phân hệ/bộ lọc là chức năng cần triển khai và k
 
 ## 15. Kiểm chứng độ bao phủ và chất lượng theo từng đối tượng
 
-- [ ] Q01 — Thu thập câu hỏi công việc thật đã ẩn danh; chia theo nhóm thông tin, kiểu câu hỏi và ba đối tượng. Bộ nghiệm thu phải có cách nói khác nhau, viết thiếu dấu/lỗi gõ và câu tiếp nối.
-- [ ] Q02 — Mỗi năng lực có ít nhất: câu chuẩn, câu diễn đạt khác, câu thiếu điều kiện, không có dữ liệu, thiếu quyền và lỗi nguồn. Năng lực liên phân hệ có thêm kiểm tra join không đếm trùng.
-- [ ] Q03 — Tạo cặp câu hỏi giống nhau cho guest/thành viên/Admin để chứng minh khác biệt quyền; test cố tình khai vai trò trong nội dung không đổi quyền server.
-- [ ] Q04 — Kiểm tra lịch sử guest → đăng nhập, đăng xuất → tài khoản khác; không ghép/lộ dữ liệu ngoài luồng xác minh.
-- [ ] Q05 — Đo riêng: hiểu đúng ý, lấy đúng dữ liệu, trả lời đúng, hoàn thành công việc và khả năng tiếp tục khi thiếu hỗ trợ. Câu trả lời tự tin không được tính là đúng nếu thiếu nguồn.
-- [ ] Q06 — Mục tiêu đề xuất cho bộ câu hỏi phổ biến đã chốt: ít nhất 95% trả lời đúng và đủ; 100% câu định lượng có oracle phải khớp; 0 lộ quyền/ghi sai. Chốt danh sách và cách chấm trước khi đo, không loại câu thất bại để đạt tỷ lệ.
-- [ ] Q07 — 100% trường hợp ngoài hỗ trợ/lỗi/thiếu quyền trong bộ test có thông báo đúng và hướng tiếp tục phù hợp; không yêu cầu chatbot biết mọi câu hỏi mở.
-- [ ] Q08 — Ghi nhận có giới hạn các yêu cầu chưa đáp ứng bằng mã năng lực/lý do và phản hồi người dùng; ưu tiên mở rộng theo tần suất và mức gián đoạn. Không ghi mặc định toàn bộ PII/nguyên văn vào hệ thống phân tích.
+- Q01 — Thu thập câu hỏi công việc thật đã ẩn danh; chia theo nhóm thông tin, kiểu câu hỏi và ba đối tượng. Bộ nghiệm thu phải có cách nói khác nhau, viết thiếu dấu/lỗi gõ và câu tiếp nối.
+- Q02 — Mỗi năng lực có ít nhất: câu chuẩn, câu diễn đạt khác, câu thiếu điều kiện, không có dữ liệu, thiếu quyền và lỗi nguồn. Năng lực liên phân hệ có thêm kiểm tra join không đếm trùng.
+- Q03 — Tạo cặp câu hỏi giống nhau cho guest/thành viên/Admin để chứng minh khác biệt quyền; test cố tình khai vai trò trong nội dung không đổi quyền server.
+- Q04 — Kiểm tra lịch sử guest → đăng nhập, đăng xuất → tài khoản khác; không ghép/lộ dữ liệu ngoài luồng xác minh.
+- Q05 — Đo riêng: hiểu đúng ý, lấy đúng dữ liệu, trả lời đúng, hoàn thành công việc và khả năng tiếp tục khi thiếu hỗ trợ. Câu trả lời tự tin không được tính là đúng nếu thiếu nguồn.
+- Q06 — Mục tiêu đề xuất cho bộ câu hỏi phổ biến đã chốt: ít nhất 95% trả lời đúng và đủ; 100% câu định lượng có oracle phải khớp; 0 lộ quyền/ghi sai. Chốt danh sách và cách chấm trước khi đo, không loại câu thất bại để đạt tỷ lệ.
+- Q07 — 100% trường hợp ngoài hỗ trợ/lỗi/thiếu quyền trong bộ test có thông báo đúng và hướng tiếp tục phù hợp; không yêu cầu chatbot biết mọi câu hỏi mở.
+- Q08 — Ghi nhận có giới hạn các yêu cầu chưa đáp ứng bằng mã năng lực/lý do và phản hồi người dùng; ưu tiên mở rộng theo tần suất và mức gián đoạn. Không ghi mặc định toàn bộ PII/nguyên văn vào hệ thống phân tích.
 
 ## 16. Kế hoạch triển khai chi tiết theo giai đoạn
 
-Đây là thứ tự triển khai chính thức của tài liệu kế hoạch này, thay cho thứ tự đợt trước khi bổ sung ma trận phạm vi. Các mục 3–8 là nhóm yêu cầu kỹ thuật để đối chiếu, không phải lịch thực hiện riêng. **Giai đoạn0–1 đạt trong phạm vi local đã ghi; Gate2 còn mở; giai đoạn3 có công cụ/FAQ/bằng chứng local nhưng G3.4 còn nghiệm thu; giai đoạn4 đã bắt đầu theo yêu cầu người dùng; giai đoạn5–8 chưa bắt đầu**; chức năng cũ chỉ được đánh dấu đạt sau kiểm chứng tương ứng.
+Đây là thứ tự triển khai và bộ checkbox tiến độ chính thức. Các mục3–15 là yêu cầu tham chiếu, không phải bộ giai đoạn thứ hai. **Giai đoạn0–1 đạt local;2 còn Gate2;3 còn G3.4;4 đang làm;5 có luồng chạy thật trên4000 và RPC đọc đã ápCloud nhưng chưa hoàn tất nội dung/chất lượng;6 chưa triển khai mới;7–8 đã thực hiện một phần.** Mỗi dấu đạt chỉ áp dụng phạm vi và môi trường ghi ngay tại mục đó.
 
 ### Giai đoạn 0 — Chốt phạm vi và baseline
 
@@ -398,7 +434,7 @@ Chưa đóng Gate2 tổng tài nguyên: rate cấp lượt nằm sau Auth; cần
 **Tham chiếu:** C04–C08, mục 13, Q02/Q05/Q06. **Phụ thuộc:** Các công cụ nguồn tương ứng của giai đoạn 3 đã đạt.
 
 - [ ] G4.1 — Đã có local hai luồng một khách → lịch/phiếu còn mở và → thú cưng/đơn tạo mới nhất. Xác định UUID duy nhất, ưu tiên ngữ cảnh hợp lệ, khách trùng thì dừng;không ghép quan hệ theo tên. Thú cưng trả tổng/tối đa10 dòng mọi trạng thái;đơn chọn theo created_at/UUID, không nối dòng hàng hoặc suy thanh toán.3 nguồn có quyền, không dùng model;153 và154/rollback mỗi đợt đạt8 nhóm SQL/Auth/JWT/REST/API thật. Còn các tổ hợp nhiều nhóm hoặc quan hệ qua hạng mục/chi tiết đơn, chưa áp Cloud. [Luồng mới](docs/chatbot/stage4-customer-commerce-2026-10-29/README.md).
-- [ ] G4.2 — Đã có local so sánh thực thu ngày/tuần/tháng này với kỳ trước cùng phần thời gian đã trôi qua, tháng ngắn có giới hạn rõ;2 nguồn `revenue.summary`, thu thành công trừ hoàn thành công theo thời điểm giao dịch. Chênh lệch bằng hiện tại trừ kỳ trước; chỉ tính phần trăm khi kỳ trước dương.11 nhóm mới và tổng214 kiểm tra offline đạt,40 ca nghiệp vụ đạt. Còn oracle SQL cho luồng kết hợp, phân nhóm và chỉ số/công thức khác. [Bằng chứng](docs/chatbot/stage4-compare-2026-10-29/README.md).
+- [ ] G4.2 — Có so sánh thực thu ngày/tuần/tháng cùng phần thời gian đã trôi qua;2 nguồn có quyền, không dùng model tính số. Đã bổ sung5 nhóm SQL/Auth/API thật cho cặp ngày, ranh giới thu/hoàn và replay. Còn oracle SQL riêng tuần/tháng, phân nhóm và chỉ số/công thức khác;chưa nghiệm thu Admin liên phân hệ trên Cloud. [Oracle cặp ngày](docs/chatbot/stage4-compare-sql-2026-10-30/README.md), [công thức](docs/chatbot/stage4-compare-2026-10-29/README.md).
 - [ ] G4.3 — Đã có local hai nhóm kiểm tra: đơn cancelled có thu succeeded lớn hơn hoàn succeeded (toàn bộ tồn đọng) và lịch confirmed trong kỳ chưa gán KTV ở cả ca/hạng mục chưa hủy.2 nguồn có quyền, tối đa10 dòng/nhóm và tổng chính xác, không cộng hai tổng/không tự xếp ưu tiên.10 nhóm offline mới và7 nhóm SQL/Auth/JWT/REST/API thật đạt. Chênh lệch cần đối soát, không phải khoản hoàn đã duyệt;chưa gắn nhãn SLA/quá hạn hoặc xử lý ngoại lệ/chính sách khác. [Bằng chứng](docs/chatbot/stage4-pending-2026-10-29/README.md).
 - [ ] G4.4 — Đã có cho so sánh thực thu, hai luồng ca khách và bảng kiểm tra: giữ phần hợp lệ, nguồn lỗi/thiếu quyền không giả0, không suy diễn nguyên nhân;nguồn lệch UUID/bộ lọc bị loại. Luồng thú cưng/đơn còn kiểm tra customer_id từng dòng. Thiếu quyền bỏ RPC tương ứng;replay không đọc lại nguồn. Bảng kiểm tra không có nguồn hợp lệ thì báo lỗi, không lưu phản hồi hoàn tất giả.242 kiểm tra offline và các oracle local đã ghi đạt;chưa áp dụng chung cho mọi câu hỏi liên phân hệ hoặc nghiệm thu triển khai.
 
@@ -412,10 +448,10 @@ Chưa đóng Gate2 tổng tài nguyên: rate cấp lượt nằm sau Auth; cần
 
 **Tham chiếu:** K01–K04, K09, Q02/Q03/Q05. **Phụ thuộc:** Giai đoạn 2 và nguồn công khai đã xác minh; không bắt buộc đợi toàn bộ giai đoạn 3–4.
 
-- [ ] G5.1 — Tìm FAQ liên quan thay nạp hàng loạt; giới hạn ngữ cảnh và ưu tiên thông tin đang có hiệu lực.
-- [ ] G5.2 — Bao phủ cửa hàng, dịch vụ/chuẩn bị, sản phẩm/biến thể, chính sách giao nhận/đổi trả, ưu đãi công khai và hướng dẫn đặt/mua.
-- [ ] G5.3 — Giá lấy đúng nguồn; ước tính có điều kiện, không hứa lịch trống/tồn hàng/ưu đãi nếu chưa có dữ liệu xác nhận.
-- [ ] G5.4 — Từ chối dữ liệu nội bộ, hỏi làm rõ phù hợp và chuyển nhân viên kèm tóm tắt khi cần.
+- [x] G5.1 — Đã triển khai RPC đọc trên Cloud và kiểm chứng local: tìm tối đa5 FAQ active,context32KiB,lịch sử8 đoạn.158 loại riêng bài bị cắt và giữ mục đầy đủ để trả lời;không chặn cả câu vì một FAQ dài. Giới thiệu gói đọc catalog trực tiếp, đã thử browser4000. Ngân sách2 nguồn giữ nguyên;chưa coi truy xuất/model mọi cách diễn đạt đều đạt.
+- [ ] G5.2 — Đã có đường FAQ cho cửa hàng/dịch vụ/chuẩn bị/giao nhận/đổi trả/ưu đãi/hướng dẫn đặt mua và nguồn giá sản phẩm/biến thể. Đã rà92 FAQ local,157 sửa15 câu/tắt1 QA/thêm3 hướng dẫn theo mã hiện hành;18 câu active sửa/thêm truy xuất đúng qua RPC. Còn dữ kiện vận hành chưa có nguồn xác nhận: địa chỉ/giờ hoạt động theo chi nhánh, điều kiện/thời hạn/phí đổi trả và ưu đãi hiện hành. Không bịa các dữ kiện này hoặc coi baseline local là Production. [Rà nội dung](docs/chatbot/stage5-faq-review-2026-10-30/README.md).
+- [x] G5.3 — Luồng giá đã có RPC Cloud và thử trực tiếp browser4000: Hotel,Taxi,tắm trả nguồn thật200. Có biến thể/product active và giá dịch vụ hiệu lực, tối đa10 mức/16KiB. Cho hỏi giá tắm và cắt tỉa/các loại phòng hoặc ngày dự kiến;ghi rõ giá hiện tại, chưa phải báo giá đã xác nhận cho mọi ngày/điều kiện. Không dùng model tính giá hoặc hứa còn hàng/lịch trống chưa được kiểm tra.
+- [x] G5.4 — Đạt local ranh giới nguồn/quyền và chuyển waiting_agent. Đã bỏ chặn từ khóa quá rộng: khái niệm Paw Points/mã đơn, hướng dẫn tra cứu, hỏi còn hàng/lịch công khai không bị từ chối như dữ liệu cá nhân. Yêu cầu xem số dư/hồ sơ/giao dịch cụ thể và nội bộ vẫn cần xác minh;không có RPC dữ liệu riêng được cấp cho guest. Chuyển nhân viên giữ yêu cầu mới nhất/hội thoại, không hứa có người nhận ca. Chưa kiểm thử mọi cách diễn đạt hoặc chuyển người thật trên web4000.
 
 **Ví dụ nghiệm thu:** “Bé 7 kg tắm bao nhiêu?”, “Gửi bé cần chuẩn bị gì?”, “Có giao hàng không?”, “Tôi chưa có tài khoản có đặt lịch được không?”.
 
@@ -445,7 +481,7 @@ Chưa đóng Gate2 tổng tài nguyên: rate cấp lượt nằm sau Auth; cần
 
 - [ ] G7.1 — Nghiệm thu Rules CRUD, conflict, benchmark và hiệu lực chính sách; không gắn nhãn chức năng cho engine chưa có.
 - [ ] G7.2 — Đánh giá Gemini thật trên bộ câu hỏi ẩn danh; đo đúng/đủ, hiểu ý, khả năng tiếp tục và tỷ lệ hoàn thành công việc riêng từng đối tượng.
-- [ ] G7.3 — Hoàn thiện cập nhật khách, cache, hạn mức dùng chung, cleanup và backoff theo ngân sách đã đo.
+- [ ] G7.3 — Đã sửa lỗi retry thực tế: đọc nền30 giây, lỗi tạm thời30/60/120, thiếuRPC/quyền dừng nền, đóng/ẩn không đọc, giữ draft;Chrome đã kiểm tra. Còn hoàn thiện cache/cập nhật/hạn mức dùng chung toàn hệ thống và đo tải ngoài pool;không tăng query vì mở phạm vi câu hỏi công khai.
 - [ ] G7.4 — Kiểm tra toàn bộ UI theo AGENTS.md, trạng thái lỗi, bàn phím, responsive và không mất nháp.
 - [ ] G7.5 — Ghi nhận câu hỏi chưa đáp ứng có giới hạn để xếp ưu tiên vòng mở rộng tiếp theo.
 
@@ -458,8 +494,8 @@ Chưa đóng Gate2 tổng tài nguyên: rate cấp lượt nằm sau Auth; cần
 **Tham chiếu:** D01–D08. **Phụ thuộc:** Nhóm phát hành đã hoàn tất các bước nguồn, quyền, chất lượng và tài nguyên liên quan.
 
 - [ ] G8.1 — Chốt danh sách tính năng từng bản, lỗi còn mở và phần ngoài phạm vi; kiểm tra migration/API/frontend tương thích.
-- [ ] G8.2 — Chuẩn bị diff, test evidence, cấu hình và rollback cụ thể; triển khai theo phạm vi được cho phép.
-- [ ] G8.3 — Xác minh bản chạy đúng phiên bản; smoke test hai phía bằng tài khoản/fixture kiểm thử; kiểm tra nhận/gửi và truy vấn nguồn thật.
+- [ ] G8.2 — Đã có diff/evidence/rollback và áp gói runtime đọc tối thiểu+158 lên Cloud, nạp lại server4000. Còn phát hành đầy đủ từng nhóm tính năng và đồng bộ API/frontend Production;không coi mọi migration trong repo đã áp.
+- [ ] G8.3 — Đã smoke guest trên4000 với backend thật cho3 nhóm giá và câu giới thiệu tắm/cắt tỉa;chưa smoke đầy đủ Admin/thành viên/FAQ Gemini/chuyển nhân viên thật hoặc xác nhận toàn bộ runtime Production.
 - [ ] G8.4 — Theo dõi lỗi/chất lượng/tài nguyên; rollback nhóm lỗi nếu cần, giữ các năng lực ổn định và cập nhật checklist.
 
 **Đầu ra:** Bản phát hành có bằng chứng và hồ sơ bàn giao; không coi triển khai xong là tự động nghiệm thu đạt.
@@ -538,6 +574,24 @@ Mỗi tính năng phải có bảng **trước/sau** cùng kịch bản: HTTP re
 **Chặn nghiệm thu/phát hành khi:** chưa chốt hoặc vượt ngân sách; xuất hiện tải toàn bảng/N+1/vòng gọi vô hạn; tải nền tiếp tục khi UI ẩn; không dừng truy vấn quá hạn; lỗi/latency tăng vượt ngưỡng đã chốt; hoặc có nguy cơ lộ cache. Với tác vụ cũ cùng điều kiện, request/bytes không được tăng nếu chưa có lý do và ngân sách thay thế được xem xét cụ thể.
 
 Không stress-test Production, không truy vấn Supabase Logs để tạo thêm tải chỉ nhằm cập nhật checklist. Kiểm tra tải dùng test/staging; Production chỉ xác minh có giới hạn theo phạm vi được phép. Các hạng mục trên là yêu cầu triển khai/kiểm chứng, chưa tuyên bố hệ thống hiện tại đã đáp ứng hoặc bảo đảm không thể quá tải.
+
+## 18. Nhật ký tiến độ chi tiết
+
+Các mốc sau giữ lại kết quả tại thời điểm thực hiện, không thay thế bảng đầu tài liệu hoặc checkbox mục16.
+
+### Bắt đầu giai đoạn5 — 30/10/2026
+
+- [x] G5.1 có tìm FAQ phía server: tối đa5 mục liên quan đang bật, không đọc FAQ Admin; FAQ16KB/context32KiB, lịch sử8 đoạn có cắt độ dài, giữ2 nguồn/câu và4 slot chung. Có partial GIN index và rollback155; không thêm polling/cache/model ngoài.
+- [x] Không tìm thấy: hỏi làm rõ/hướng nhân viên, lưu understood=false theo luồng chuyển giao hiện hành, không gọi model. API chặn context quá số dòng/bytes hoặc sai kiểu trước model.
+- [x] 9 nhóm SQL/Auth/JWT/REST/API thật đạt, gồm guest/member và rollback/reapply;248 kiểm tra offline và40 ca nghiệp vụ đạt. Clone và container thử đã dọn. [Bằng chứng và giới hạn](docs/chatbot/stage5-public-search-2026-10-30/README.md).
+- [ ] G5.1 còn đo trước–sau/độ liên quan bằng bộ câu hỏi tiếng Việt đại diện;G5.2–G5.4 còn nguồn công khai từng nhóm, giá có hiệu lực, điều kiện tư vấn và phạm vi dữ liệu riêng. G4 còn mở theo ghi chú trước;không đánh dấu hoàn tất chỉ vì chuyển giai đoạn.
+- [ ] API mới cần155 trước khi phát hành;chưa push/áp Cloud, không có lượt Gemini mới.
+
+### G4.2 — Bổ sung oracle tích hợp ngày 30/10/2026
+
+- [x] So sánh thực thu cặp ngày đã chạy qua JWT/RLS/RPC thật trên clone riêng: đầu kỳ tính/cuối kỳ loại, bỏ pending, cộng nhiều khoản hoàn đúng và đối chiếu cả hai kỳ bằng SQL độc lập. Thu/hoàn theo thời điểm giao dịch, không theo ngày tạo đơn.
+- [x] Handler Auth/API thật đọc đúng2 nguồn, lưu phản hồi; replay0 nguồn; thiếu quyền hoàn403 trước nguồn nghiệp vụ. Tổng5 nhóm tích hợp đạt;40 kiểm tra offline giai đoạn4 và40 ca nghiệp vụ đạt. Môi trường đã dọn, nguồn giữ nguyên. [Bằng chứng](docs/chatbot/stage4-compare-sql-2026-10-30/README.md).
+- [ ] G4.2 vẫn mở cho phân nhóm/chỉ số khác và oracle SQL riêng ranh giới tuần/tháng. Không áp Cloud, không gọi model, không push trong đợt này.
 
 ### Tiếp tục G4.2/G4.4 sau checkpoint e126355d — 29/10/2026
 

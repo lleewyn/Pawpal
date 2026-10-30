@@ -1,0 +1,45 @@
+{
+  "status": "APPLIED",
+  "project": "cpzuvaplseielhgcnqrn",
+  "sha256": "8f42585d15d5d4638da9c938023efc42228c52e0508675531c59897c1b7159b4",
+  "scope": "Runtime-only read RPC repair; no business rows modified, no AI calls, no Logs",
+  "functions": [
+    {
+      "name": "read_public_chat_catalog",
+      "invoker": true,
+      "server_allowed": true,
+      "anon_blocked": true,
+      "member_blocked": true
+    },
+    {
+      "name": "read_public_chat_page",
+      "invoker": true,
+      "server_allowed": true,
+      "anon_blocked": true,
+      "member_blocked": true
+    },
+    {
+      "name": "read_public_chat_part",
+      "invoker": true,
+      "server_allowed": true,
+      "anon_blocked": true,
+      "member_blocked": true
+    },
+    {
+      "name": "read_public_chat_rules",
+      "invoker": true,
+      "server_allowed": true,
+      "anon_blocked": true,
+      "member_blocked": true
+    },
+    {
+      "name": "search_public_chat_context",
+      "invoker": true,
+      "server_allowed": true,
+      "anon_blocked": true,
+      "member_blocked": true
+    }
+  ],
+  "rollback": "rollback.sql",
+  "at": "2026-10-30T13:32:04.289Z"
+}

@@ -1,0 +1,20 @@
+{
+  "status": "APPLIED",
+  "sha256": "3a75d982b2a017d385bfa1966157239e68efac5daae85717aaa42f57f954ed3f",
+  "scope": "Replace only two read RPC definitions; no data/index changes or AI calls",
+  "checks": [
+    {
+      "proname": "read_public_chat_catalog",
+      "invoker": true,
+      "anon_blocked": true,
+      "member_blocked": true
+    },
+    {
+      "proname": "search_public_chat_context",
+      "invoker": true,
+      "anon_blocked": true,
+      "member_blocked": true
+    }
+  ],
+  "at": "2026-10-30T14:03:16.479Z"
+}

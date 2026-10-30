@@ -4,8 +4,8 @@ SET LOCAL statement_timeout='5s';
 SET LOCAL lock_timeout='1s';
 DO $migration$
 DECLARE
- previous_answer constant text := $previous$Bạn chọn dịch vụ, thông tin thú cưng và thời gian phù hợp rồi thực hiện xác nhận đặt lịch theo hướng dẫn trên hệ thống.
-(Quy định: Thành viên cần đăng nhập để sử dụng chức năng đặt lịch.)$previous$;
+ previous_answer constant text := replace($previous$Bạn chọn dịch vụ, thông tin thú cưng và thời gian phù hợp rồi thực hiện xác nhận đặt lịch theo hướng dẫn trên hệ thống.
+(Quy định: Thành viên cần đăng nhập để sử dụng chức năng đặt lịch.)$previous$,E'\r\n',E'\n');
  corrected_answer constant text := $corrected$Chọn dịch vụ, nhập hoặc chọn thông tin bé cưng, chọn thời gian phù hợp, kiểm tra báo giá và gửi yêu cầu đặt lịch. Thành viên đăng nhập để sử dụng hồ sơ bé của tài khoản. Khách vãng lai có thể dùng luồng dành cho khách vãng lai, cung cấp thông tin liên hệ và hồ sơ bé; cần giữ phiên khách hoặc thông tin khôi phục để xem lại yêu cầu. Sau khi gửi, hãy kiểm tra biên nhận và trạng thái lịch; đã tiếp nhận yêu cầu chưa có nghĩa là đã thanh toán hoặc đã được cửa hàng duyệt.$corrected$;
  faq public.chatbot_knowledge_faq%ROWTYPE;
 BEGIN

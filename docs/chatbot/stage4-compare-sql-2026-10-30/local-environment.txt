@@ -1,0 +1,69 @@
+{
+  "createdAt": "2026-10-30T10:30:02.989Z",
+  "sourceDatabase": "pawpal_customers_3daa55e18acd",
+  "database": "pawpal_chatbot_g0_b6f11476f2c4",
+  "ownerMarker": "pawpal-chatbot-g0-b6f11476f2c4",
+  "containers": [
+    {
+      "name": "pawpal-chatbot-g0-b6f11476f2c4-rest",
+      "id": "3cd1010163808373c1ba34df1c79668d081c215eecc7f45d373e11563f8593f8",
+      "kind": "rest"
+    },
+    {
+      "name": "pawpal-chatbot-g0-b6f11476f2c4-auth",
+      "id": "6ae05046e046ca17a670b2ac13a65de654ce25704b6f8ae7d7bf7cb21364cd70",
+      "kind": "auth"
+    }
+  ],
+  "migrations": [
+    {
+      "name": "089_admin_chat_inbox_page.sql",
+      "sha256": "6edff5ca26b7030f878ef9dbdc52761982f3aeb7b35dd4b4333e9725921e8c89"
+    },
+    {
+      "name": "099_admin_copilot_session_page.sql",
+      "sha256": "33e24034773a9d2fb320b1817fa54912fe57308e233a3dc46e2cc7c8873c18d0"
+    },
+    {
+      "name": "100_admin_chat_rule_page.sql",
+      "sha256": "2cf15ccb94069be1bb0d69413d966f268a37ee0c51610822ac183bcdedf401a5"
+    },
+    {
+      "name": "101_admin_copilot_facts.sql",
+      "sha256": "aaf89f8870b36066bfb92e8838e4cbb5ee71a7cf9d68e2c9b128dc1f5bc4fc0f"
+    },
+    {
+      "name": "102_chat_points_context.sql",
+      "sha256": "328cf342f2b87ea7de8ecb74b1f05c91f90595dea0b71f9f82aba521eeb438ed"
+    },
+    {
+      "name": "109_chat_handoff_sla.sql",
+      "sha256": "6449971538addebad6badcceb7efb2ec8f5fb36d0e5254900915e087fd3c2ba4"
+    },
+    {
+      "name": "124_chat_automatic_handoff.sql",
+      "sha256": "779652b3d9a04f84ade0b08241d4716390b89dff82888f334b0fbcfbdee9dcb0"
+    },
+    {
+      "name": "125_chat_unhandled_handoff.sql",
+      "sha256": "9f179d242bbe217861cc0e1049335502bbc06ec20ba298d1779e35543a6840e8"
+    },
+    {
+      "name": "126_copilot_extended_facts.sql",
+      "sha256": "571112d251d7a06cb28fd7aa4c92b6c56624836cd96e1b1f32b798bed546d90b"
+    }
+  ],
+  "privateDir": "C:\\Users\\QUYEN\\AppData\\Local\\Temp\\pawpal-chatbot-local-6ofETR",
+  "status": "REMOVED",
+  "network": "supabase_default",
+  "databaseCreated": true,
+  "attemptingMigration": "126_copilot_extended_facts.sql",
+  "cleanedAt": "2026-10-30T10:31:08.908Z",
+  "cleanup": {
+    "ownershipVerified": true,
+    "databaseAbsent": true,
+    "containersRemoved": 2,
+    "privateCredentialFilesRemoved": true,
+    "sourceDatabaseRetained": true
+  }
+}
