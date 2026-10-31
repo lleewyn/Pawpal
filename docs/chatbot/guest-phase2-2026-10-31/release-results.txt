@@ -1,0 +1,39 @@
+{
+  "commit": "556729ad",
+  "marker": "20261031_guest_phase2",
+  "desktop": {
+    "deployed": true,
+    "status": 200,
+    "ms": 9248,
+    "pass": true,
+    "reply": "Bạn có thể mua bằng luồng khách vãng lai mà không phải tạo tài khoản thành viên. Chọn sản phẩm và biến thể, nhập thông tin liên hệ, chọn nhận tại cửa hàng hoặc hình thức giao nhận được hỗ trợ, kiểm tra tổng tiền rồi đặt hàng. Giữ phiên khách hoặc mã khôi phục để tra cứu. Tạo đơn thành công không đồng nghĩa đã thanh toán; hệ thống không tự ghép hồ sơ thành viên chỉ vì trùng số điện thoại. Xem sản phẩm Tra cứu đơn và lịch guest",
+    "scope": "One deterministic public UI smoke on new release; no Gemini. Explicit1280x900 viewport and wait for completed opening animation."
+  },
+  "mobile": {
+    "pass": true,
+    "elapsedMs": 7466,
+    "calls": [
+      {
+        "action": "public_open",
+        "status": 200,
+        "requestBytes": 170,
+        "responseBytes": 67
+      },
+      {
+        "action": "public_send",
+        "status": 200,
+        "requestBytes": 259,
+        "responseBytes": 11
+      },
+      {
+        "action": "public_read",
+        "status": 200,
+        "requestBytes": 170,
+        "responseBytes": 1283
+      }
+    ],
+    "mobileFits": true,
+    "scope": "Production mobile deterministic price smoke; browser JSON body sizes only, not total DB/network egress; no Gemini"
+  },
+  "initialAutomationFailures": "Two early attempts did not complete a send: one response wait timed out, one click was intercepted by page content. Retried with explicit viewport and completed opening animation; no forced clicks, no Gemini calls."
+}

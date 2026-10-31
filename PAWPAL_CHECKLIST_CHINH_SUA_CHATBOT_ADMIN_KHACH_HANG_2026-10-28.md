@@ -4,7 +4,7 @@ Cập nhật31/10/2026. Đây là danh sách công việc hiện hành. Dấu[x]
 
 **Ưu tiên hiện tại: hoàn thiện trải nghiệm khách vãng lai theo [file công việc riêng](PAWPAL_HOAN_THIEN_CHATBOT_KHACH_VANG_LAI.md).** Theo dõi bằng câu hỏi khách được giải đáp và bước đi tiếp; checklist này chỉ giữ tiến độ chung và các điều kiện tài nguyên/quyền.
 
-**Guest đã đạt nghiệm thu local đợt2:**31 câu hỏi khác nhau, hai câu Gemini được duyệt, bốn link bấm đi tiếp, phục hồi mạng/nháp và vòng hai UI chuyển nhân viên/CSAT.43 test tự động đạt. Chờ push/kiểm tra bản triển khai mới; Gate2 và dữ liệu riêng thành viên vẫn mở. [Kết quả và lỗi đã sửa](docs/chatbot/guest-phase2-2026-10-31/README.md).
+**Guest đã đạt nghiệm thu local đợt2 và push main556729ad:**31 câu hỏi khác nhau, hai câu Gemini được duyệt, bốn link bấm đi tiếp, phục hồi mạng/nháp và vòng hai UI chuyển nhân viên/CSAT.43 test tự động đạt. Vercel mới đã smoke mua guest và giá cắt tỉa desktop/mobile; chưa lặp toàn bộ matrix trênProduction. Gate2 và dữ liệu riêng thành viên vẫn mở. [Kết quả và lỗi đã sửa](docs/chatbot/guest-phase2-2026-10-31/README.md).
 
 ## 1. Phạm vi cần giữ
 

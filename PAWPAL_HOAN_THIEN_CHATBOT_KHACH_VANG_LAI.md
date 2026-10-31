@@ -2,7 +2,7 @@
 
 Ngày lập31/10/2026. Đây là đầu việc ưu tiên hiện tại: giúp khách chưa đăng nhập tìm hiểu PawPal, chọn dịch vụ/sản phẩm và biết cách đặt/mua. Theo dõi bằng câu hỏi khách được giải đáp, không lấy số lượng công cụ kỹ thuật làm thước đo hoàn thành.
 
-**Tiến độ hiện tại: đợt1 và nghiệm thu local đợt2 đã đạt.**31 câu hỏi khác nhau, hai câu Gemini được duyệt, bốn liên kết đi tiếp và vòng chuyển nhân viên/CSAT đạt trên browser thật;43 test tự động đạt. Đã sửa thêm bốn lỗi phát hiện trong đợt2. Chờ push và kiểm tra bản triển khai mới theo yêu cầu người dùng. [Báo cáo đợt2 và giới hạn](docs/chatbot/guest-phase2-2026-10-31/README.md).
+**Tiến độ hiện tại: đợt1 và đợt2 đã hoàn thành trong phạm vi nghiệm thu ghi dưới đây; đã push main556729ad.**31 câu hỏi khác nhau, hai câu Gemini được duyệt, bốn liên kết đi tiếp và vòng chuyển nhân viên/CSAT đạt trên browser localhost thật;43 test tự động đạt. Đã sửa thêm bốn lỗi phát hiện trong đợt2. Vercel đã cập nhật và smoke mua guest/giá cắt tỉa desktop/mobile đạt; chưa lặp toàn bộ matrix trên Production. [Báo cáo đợt2 và giới hạn](docs/chatbot/guest-phase2-2026-10-31/README.md).
 
 ## 1. Kết quả cần đạt
 
@@ -61,12 +61,12 @@ Dấu[x] chỉ cho phần đã thử thực tế; mỗi hàng chưa hoàn tất 
 
 ### Đợt2 — Nghiệm thu trực tiếp bằng browser localhost
 
-- [ ] VL09-release — Khi được yêu cầu push/phát hành, đưa bản sửa lên môi trường dùng thực tế và kiểm tra lại; không tự coi code local đã phát hành.
+- [x] VL09-release — Đã push main556729ad và thấy marker mới trênVercel; smoke công khai desktop/mobile đạt. Vòng hai UI/CSAT đã đạt local dùngCloud thật; chưa lặp vòng Admin/CSAT trênProduction.
 
 - [x] VL11 —31 câu hỏi khác nhau theo13 nhóm thông tin và vòng chuyển người cho nhu cầu thứ14; có hỏi tiếp/không dấu/giá/đổi chủ đề, cùng hai câu model đại diện. Đã ghi lỗi ban đầu và lượt sửa/thử lại, không hứa hiểu mọi cách hỏi.
 - [x] VL12 — UI localhost/API và Cloud thật đạt. Bốn link bấm đi tiếp, mobile/bàn phím/nháp và vòng hai UI/CSAT đạt; mất response/gửi lại không trùng, quyền khác chủ bị chặn. Fault injection an toàn được ghi riêng, không thay nghiệm thu dữ liệu thật.
 - [x] VL13 — Hai câu Gemini đã được duyệt đạt qua UI, chỉ FAQ công khai/lịch sử trống, đúng hai lượt gửi và không thử tay lại; trần backend tối đa8 provider attempts theo phê duyệt. Chưa đánh giá mọi câu tự do.
-- [ ] VL14 — Thử bản phát hành, đo số request/bytes và cập nhật file này. Còn thiếu nguồn/năng lực nào phải nêu đích danh, không ghi chung “guest đã hoàn tất”.
+- [x] VL14 — Smoke bảnVercel mới đạt mua guest/giá cắt tỉa. Một câu giá:3 request,599bytes gửi/1.361bytes nhận body browser,7,466 giây. Không coi đây là tổng egress DB hoặc thử tải đồng thời. Thiếu nguồn: ngưỡng điểm/tỷ lệ, danh sách ưu đãi hiện hành, mọi phí/điều kiện chưa công bố; chat chưa xác nhận phòng/lịch hoặc tra giao dịch riêng. Có hướng dẫn tiếp tục thay vì bịa.
 
 ## 4. Điều kiện không được bỏ
 

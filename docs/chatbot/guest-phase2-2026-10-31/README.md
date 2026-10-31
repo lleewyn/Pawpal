@@ -31,4 +31,6 @@ Phần chưa có nguồn/năng lực vẫn được nói rõ: xác nhận phòng
 
 ## Phát hành
 
-Local đã đạt và đủ điều kiện push theo yêu cầu người dùng. Chưa ghi Production đạt trước khi kiểm tra bản triển khai mới. Không đánh dấu hoàn tất dữ liệu riêng thành viên, Admin nâng cao, Gate2 hoặc toàn bộ checklist hệ thống.
+Đã push main commit556729ad. Vercel đã có marker20261031_guest_phase2; smoke UI Production đạt mua guest có link cửa hàng trên desktop và giá cắt tỉa trên mobile. Câu giá dùng3 request200,599bytes gửi/1.361bytes nhận ở body browser,7.466ms; widget vừa viewport390px. Không gọi thêm Gemini. Hai lần automation đầu chưa thao tác gửi thành công (timeout/chặn click); chạy lại với viewport rõ và chờ animation mở xong đạt, không ép click. [Bằng chứng phát hành](release-results.txt).
+
+Nghiệm thu đầy đủ hai UI/CSAT thực hiện ở localhost với Cloud thật; Production chỉ smoke công khai như trên, chưa lặp toàn bộ matrix hay Admin/thành viên. Không đánh dấu hoàn tất dữ liệu riêng thành viên, Admin nâng cao, Gate2 hoặc toàn bộ checklist hệ thống.
