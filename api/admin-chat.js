@@ -56,7 +56,11 @@ function createGenerator({serviceClient,request=requestGemini,environmentKey=()=
  };
 }
 const generate=createGenerator();
-function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceClient,readAdmission=admission}={}){
+function memberCaller(token){
+ const url=process.env.PAWPAL_ADMIN_SUPABASE_URL,key=process.env.PAWPAL_ADMIN_SUPABASE_ANON_KEY;if(!url||!key||!token)throw Error('member_config_unavailable');
+ return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false},global:{headers:{Authorization:'Bearer '+token}}});
+}
+function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceClient,readAdmission=admission,createMemberCaller=memberCaller}={}){
  return async(req,res)=>{
   res.setHeader('Cache-Control','no-store');
   let stream;const fail=(status,error,extra={})=>stream?.started?stream.fail(status,error,extra):res.status(status).json({ok:false,error,...extra});
@@ -108,13 +112,16 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     if(prior.data){if(prior.data.conversation_id!==c.id||prior.data.raw_content!==question||prior.data.sender_account_id!==(user?.id||null)||prior.data.sender_guest_session_id!==(guest?.id||null))return fail(409,'Yêu cầu đã được dùng.');return stream.enabled?stream.done({replayed:true}):res.json({ok:true,replayed:true});}
     if(['resolved','closed','completed','blocked'].includes(c.status))return fail(409,'Hội thoại đã kết thúc. Hãy tạo đoạn chat mới.');
     const now=Date.now(),key='public:'+c.id,window=(limits.get(key)||[]).filter(t=>now-t<60000);if(window.length>=10)return fail(429,'Vui lòng chờ trước khi gửi thêm.');window.push(now);limits.set(key,window);
-    const guestHelp=require('../scripts/api/chat_public_guest.js');
-    const rules=await service.rpc(guestHelp.isFollowup(question)?'read_public_guest_seed':'read_public_chat_rules',guestHelp.isFollowup(question)?{p_conversation:c.id}:undefined);if(rules.error)throw rules.error;
+    const guestHelp=require('../scripts/api/chat_public_guest.js'),memberHelp=require('../scripts/api/chat_member.js'),needsSeed=guestHelp.isFollowup(question)||memberHelp.isFollowup(question);
+    const rules=await service.rpc(needsSeed?'read_public_guest_seed':'read_public_chat_rules',needsSeed?{p_conversation:c.id}:undefined);if(rules.error)throw rules.error;
     if(rules.data.recent_questions!==undefined&&(!Array.isArray(rules.data.recent_questions)||rules.data.recent_questions.length>4||rules.data.recent_questions.some(x=>typeof x!=='string'||x.length>600)))throw Error('invalid_guest_seed');
     const evaluation=require('../scripts/api/chat_moderation.js').evaluateToxicAndSentiment(question,rules.data.profanity,rules.data.sentiment);
     if(evaluation.worstAction==='block')return fail(400,'Vui lòng điều chỉnh nội dung trước khi gửi.');
     const requestedStaff=require('../scripts/api/chat_public_catalog.js').requestsStaff(question);
     if(requestedStaff)evaluation.shouldHandover=true;
+    if(memberHelp.neutralSupport(question)&&!requestedStaff&&!evaluation.isToxic&&evaluation.riskType==='none'){
+     evaluation.shouldHandover=false;evaluation.detectedLevel=Math.min(evaluation.detectedLevel,2);
+    }
     let reply=null,understood=true;
     if(!['waiting_agent','agent_handling'].includes(c.status)){
      if(evaluation.shouldHandover){
@@ -123,8 +130,12 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      }else if(understanding.isUnclearInput(question)){
       reply=understanding.clarification;understood=false;
      }else{
-     const publicCatalog=require('../scripts/api/chat_public_catalog.js'),publicRoute=guestHelp.plan(question,rules.data.recent_questions||[]);
-     if(publicRoute?.request){
+     const publicCatalog=require('../scripts/api/chat_public_catalog.js'),memberRoute=memberHelp.plan(question,rules.data.recent_questions||[]),publicRoute=memberRoute?null:guestHelp.plan(question,rules.data.recent_questions||[]);
+     if(memberRoute){
+      if(memberRoute.reply)({reply,understood}=memberRoute);
+      else if(!customer){reply='Đây là thông tin thuộc hồ sơ riêng của bạn. Bạn [Đăng nhập](/login) rồi hỏi lại nhé; PawPal chỉ tra dữ liệu thuộc tài khoản đã xác minh.';understood=false;}
+      else{const own=await memberHelp.read(createMemberCaller(token),memberRoute.request);({reply,understood}=memberHelp.format(own,memberRoute,customer.id));}
+     }else if(publicRoute?.request){
       const advice=await service.rpc('read_public_guest_advice',{p_request:publicRoute.request});if(advice.error)throw advice.error;
       ({reply,understood}=guestHelp.format(advice.data,publicRoute));
      }else if(publicRoute&&!publicRoute.faq){
@@ -142,7 +153,8 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      }else if(context.data.faq.length===0){
       reply='PawPal chưa có đủ thông tin xác nhận cho câu hỏi này. Bạn có thể nói rõ dịch vụ hoặc sản phẩm cần tìm, hoặc chọn gặp nhân viên để được hỗ trợ.';understood=false;
      }else{
-     const history=(context.data.recent||[]).slice().reverse().map(m=>({role:['customer','guest'].includes(m.sender_type)?'user':'model',content:m.content||''}));
+     // Member transcripts may now contain private projections. Never include them in public model calls.
+     const history=customer?[]:(context.data.recent||[]).slice().reverse().map(m=>({role:['customer','guest'].includes(m.sender_type)?'user':'model',content:m.content||''}));
      let timer,acceptChunks=true;try{const generated=await Promise.race([generateReply(question,{thongTinPawpal:usableFaq.map(r=>({question:r.question,answer:r.answer}))},history,{audience:'customer',...(stream.enabled?{onDelta:text=>{if(acceptChunks)stream.delta(text);},onReset:()=>{if(acceptChunks)stream.reset();}}:{})}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('ai_timeout')),25000);})]);({reply,understood}=understanding.parseCustomerReply(generated));}finally{acceptChunks=false;clearTimeout(timer);}
      }
      }

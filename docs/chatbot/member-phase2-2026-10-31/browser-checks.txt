@@ -1,0 +1,62 @@
+{
+  "initial": {
+    "checks": [
+      {
+        "kind": "point_history",
+        "status": 200,
+        "oracleRows": 5,
+        "pass": true,
+        "hasAccountLink": true
+      },
+      {
+        "kind": "wallet",
+        "status": 200,
+        "oracleRows": 5,
+        "pass": true,
+        "hasAccountLink": true
+      },
+      {
+        "kind": "care",
+        "status": 200,
+        "oracleRows": 0,
+        "pass": true,
+        "hasAccountLink": true
+      },
+      {
+        "kind": "hotel",
+        "status": 200,
+        "oracleRows": 0,
+        "pass": true,
+        "hasAccountLink": true
+      },
+      {
+        "kind": "taxi",
+        "status": 200,
+        "oracleRows": 0,
+        "pass": true,
+        "hasAccountLink": true
+      },
+      {
+        "kind": "support",
+        "status": 200,
+        "oracleRows": 3,
+        "pass": false,
+        "hasAccountLink": false
+      }
+    ],
+    "error": "Mismatch support"
+  },
+  "supportRetest": {
+    "pass": true,
+    "oracleRows": 3,
+    "mode": "Hỗ trợ tự động",
+    "accountLink": true,
+    "scope": "Actual member UI/Cloud support lookup after narrow neutral-sentiment fix; no private contents exported and no model"
+  },
+  "finalSixScopesPass": true,
+  "qaQueueCleanup": {
+    "count": 2,
+    "scope": "Own exact two-message diagnostic support lookups accidentally queued by reproduced neutral-sentiment bug; returned to bot, no real service cases touched"
+  },
+  "tests": 68
+}

@@ -1,0 +1,20 @@
+{
+  "applied": true,
+  "migration": "160_member_chat_context.sql",
+  "sha256": "9897c2fe901b339a4978fb649c81218b150c49a44c5ef84d6112beb43e9ecd34",
+  "meta": [
+    {
+      "proname": "read_member_chat_context",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, public",
+        "statement_timeout=5s",
+        "lock_timeout=1s"
+      ],
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    }
+  ],
+  "scope": "Bounded member source and ownership-checked totals helper only; no business data migrated or modified; preceding transaction fixtures rolled back"
+}

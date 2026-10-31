@@ -1,0 +1,237 @@
+{
+  "checks": [
+    {
+      "kind": "appointments",
+      "status": 200,
+      "oracleRows": 0,
+      "pass": true,
+      "oneUserBubble": true
+    },
+    {
+      "flow": "Account link appointments",
+      "pass": true
+    },
+    {
+      "kind": "orders",
+      "status": 200,
+      "oracleRows": 5,
+      "pass": true,
+      "oneUserBubble": true
+    },
+    {
+      "flow": "Account link orders",
+      "pass": true
+    },
+    {
+      "kind": "pets",
+      "status": 200,
+      "oracleRows": 5,
+      "pass": true,
+      "oneUserBubble": true
+    },
+    {
+      "flow": "Account link pets",
+      "pass": true
+    },
+    {
+      "kind": "loyalty",
+      "status": 200,
+      "oracleRows": 1,
+      "pass": true,
+      "oneUserBubble": true
+    },
+    {
+      "flow": "Account link loyalty",
+      "pass": true
+    },
+    {
+      "flow": "Đơn hàng của tôi trang 2",
+      "pass": true
+    },
+    {
+      "flow": "Lịch hẹn của Lan",
+      "pass": true
+    },
+    {
+      "flow": "Hủy đơn hàng của tôi",
+      "pass": true
+    },
+    {
+      "flow": "Paw Points là gì?",
+      "pass": true
+    }
+  ],
+  "metrics": [
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 274
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 641
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 641
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 1743
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 2117
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 2117
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 894
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 1253
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 1253
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 260
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 627
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 627
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 1808
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 2173
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 298
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 655
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 269
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 632
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 247
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 600
+    }
+  ],
+  "pass": true,
+  "scope": "Actual signed-in browser/API/Cloud; four bounded caller-JWT oracles, only own data inspected in memory; no private text/IDs/tokens exported; no model or business mutation",
+  "followup": [
+    {
+      "flow": "Actual member UI: orders then Xem tiếp matches page2 oracle",
+      "pass": true
+    },
+    {
+      "flow": "Actual member UI: own order detail link preserves chosen ID",
+      "pass": true
+    }
+  ],
+  "guestBoundary": {
+    "checks": [
+      {
+        "question": "Đơn hàng của tôi",
+        "pass": true,
+        "reply": "Đây là thông tin thuộc hồ sơ riêng của bạn. Bạn Đăng nhập rồi hỏi lại nhé; PawPal chỉ tra dữ liệu thuộc tài khoản đã xác minh."
+      },
+      {
+        "question": "Tôi còn bao nhiêu Paw Points?",
+        "pass": true,
+        "reply": "Đây là thông tin thuộc hồ sơ riêng của bạn. Bạn Đăng nhập rồi hỏi lại nhé; PawPal chỉ tra dữ liệu thuộc tài khoản đã xác minh."
+      }
+    ],
+    "scope": "Actual localhost/API/Supabase; isolated anonymous session, no model or private source calls"
+  },
+  "nodeTests": 61,
+  "controlledBrowser": "chat_member_identity_ui.cjs PASS: A/B/logout/stale reply; controlled transport, not a second real account browser login",
+  "totalsFix": "Updated160 after SQL oracle with applied10000 discount on100000 order:90000; original raw view RLS undercounted deductions. Scoped totals helper checks owner and cap6, no new table access granted.",
+  "release": "Local frontend/API unpushed; migration160 applied to Cloud. No model calls."
+}

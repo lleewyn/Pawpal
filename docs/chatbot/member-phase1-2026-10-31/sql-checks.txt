@@ -1,0 +1,23 @@
+{
+  "checks": [
+    "Migration compiles",
+    "orders: owner rows, cap5, disjoint next page and payload budget",
+    "appointments: owner rows, cap5, disjoint next page and payload budget",
+    "pets: owner rows, cap5, disjoint next page and payload budget",
+    "Order total includes an applied discount hidden by child-table RLS; payment remains separate",
+    "Foreign and absent order IDs both reveal no rows",
+    "Duplicate pet names remain distinct, never merged",
+    "Upcoming and past are filtered at source",
+    "Points ledger and assigned tier oracle match",
+    "Malformed/oversize/filter/owner parameters fail closed",
+    "B cannot read A pets/order/points/tier",
+    "Inactive customer denied",
+    "Banned Auth identity denied",
+    "Guest execution denied",
+    "Service-role shortcut denied",
+    "All fixture records and dry-run function changes rolled back"
+  ],
+  "pass": true,
+  "scope": "Real SQL/RLS with two synthetic identities in a rollback-only transaction; existing business records unchanged; no model/Logs",
+  "applied": false
+}

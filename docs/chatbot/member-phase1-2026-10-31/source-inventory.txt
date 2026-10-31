@@ -1,0 +1,1102 @@
+{
+  "scope": "Read-only schema/index metadata; no private records or Logs",
+  "columns": [
+    {
+      "table_name": "appointment",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "appointment_code",
+      "data_type": "text"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "customer_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "pet_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "staff_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "check_in_time",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "check_out_time",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "note",
+      "data_type": "text"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "change_count",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "appointment_status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "scheduled_start_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "scheduled_end_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "appointment_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "service_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "service_addon_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "is_primary",
+      "data_type": "boolean"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "name_snapshot",
+      "data_type": "text"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "quantity",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "unit_price",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "discount_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "duration_minutes",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "weight_snapshot",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "staff_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "appointment_item",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "customer",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "customer",
+      "column_name": "auth_user_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "customer",
+      "column_name": "customer_code",
+      "data_type": "text"
+    },
+    {
+      "table_name": "customer",
+      "column_name": "customer_status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "customer",
+      "column_name": "registered_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "customer",
+      "column_name": "note",
+      "data_type": "text"
+    },
+    {
+      "table_name": "customer",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "customer",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "customer",
+      "column_name": "contact_email",
+      "data_type": "text"
+    },
+    {
+      "table_name": "customer",
+      "column_name": "unverified_contact_phone",
+      "data_type": "text"
+    },
+    {
+      "table_name": "customer_membership",
+      "column_name": "customer_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "customer_membership",
+      "column_name": "membership_tier_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "customer_membership",
+      "column_name": "assigned_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "customer_membership",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "customer_membership",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "membership_tier",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "membership_tier",
+      "column_name": "tier_name",
+      "data_type": "text"
+    },
+    {
+      "table_name": "membership_tier",
+      "column_name": "minimum_expenditure",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "membership_tier",
+      "column_name": "discount_percent",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "membership_tier",
+      "column_name": "description",
+      "data_type": "text"
+    },
+    {
+      "table_name": "membership_tier",
+      "column_name": "is_active",
+      "data_type": "boolean"
+    },
+    {
+      "table_name": "membership_tier",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "membership_tier",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "customer_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "payment_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "review_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "reward_rule_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "points",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "description",
+      "data_type": "text"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "refund_transaction_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "voucher_redemption_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "customer_voucher_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "idempotency_key",
+      "data_type": "text"
+    },
+    {
+      "table_name": "paw_point_transaction",
+      "column_name": "sequence_no",
+      "data_type": "bigint"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "payment_code",
+      "data_type": "text"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "customer_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "payment_method_config_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "payment_type",
+      "data_type": "text"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "transaction_status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "succeeded_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "gateway_transaction_id",
+      "data_type": "text"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "idempotency_key",
+      "data_type": "text"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "order_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "appointment_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "payment",
+      "column_name": "eligible_spend_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pet_breed",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "pet_breed",
+      "column_name": "species_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "pet_breed",
+      "column_name": "breed_name",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_breed",
+      "column_name": "is_active",
+      "data_type": "boolean"
+    },
+    {
+      "table_name": "pet_breed",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pet_breed",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "customer_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "pet_code",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "pet_name",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "avatar_url",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "gender",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "date_of_birth",
+      "data_type": "date"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "color",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "routine",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "allergy",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "breed_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "safety_note",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_species",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "pet_species",
+      "column_name": "species_name",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_species",
+      "column_name": "is_active",
+      "data_type": "boolean"
+    },
+    {
+      "table_name": "pet_species",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pet_species",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pet_weight_history",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "pet_weight_history",
+      "column_name": "pet_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "pet_weight_history",
+      "column_name": "weight",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pet_weight_history",
+      "column_name": "measured_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pet_weight_history",
+      "column_name": "recorded_by",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "pet_weight_history",
+      "column_name": "note",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pet_weight_history",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "refund_code",
+      "data_type": "text"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "ticket_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "payment_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "refund_type",
+      "data_type": "text"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "requested_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "approved_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "refunded_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "refund_method",
+      "data_type": "text"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "refund_status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "gateway_transaction_id",
+      "data_type": "text"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "note",
+      "data_type": "text"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "processed_by",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "processed_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "completed_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "return_request_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "refund_transaction",
+      "column_name": "eligible_refund_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "order_code",
+      "data_type": "text"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "customer_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "order_status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "note",
+      "data_type": "text"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "shipping_fee_snapshot",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "receiver_name_snapshot",
+      "data_type": "text"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "receiver_phone_snapshot",
+      "data_type": "text"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "province_snapshot",
+      "data_type": "text"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "street_address_snapshot",
+      "data_type": "text"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "postal_code_snapshot",
+      "data_type": "text"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "delivery_option_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "shipping_provider_id",
+      "data_type": "uuid"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "tracking_code",
+      "data_type": "text"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "shipped_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "delivered_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "sales_order",
+      "column_name": "shipping_status",
+      "data_type": "text"
+    }
+  ],
+  "indexes": [
+    {
+      "tablename": "appointment",
+      "indexname": "admin_chat_case_appointment_idx",
+      "indexdef": "CREATE INDEX admin_chat_case_appointment_idx ON public.appointment USING btree (customer_id, scheduled_start_at, id)"
+    },
+    {
+      "tablename": "appointment",
+      "indexname": "appointment_appointment_code_key",
+      "indexdef": "CREATE UNIQUE INDEX appointment_appointment_code_key ON public.appointment USING btree (appointment_code)"
+    },
+    {
+      "tablename": "appointment",
+      "indexname": "appointment_pkey",
+      "indexdef": "CREATE UNIQUE INDEX appointment_pkey ON public.appointment USING btree (id)"
+    },
+    {
+      "tablename": "appointment",
+      "indexname": "v1fk_adc9c3114f37fa9622",
+      "indexdef": "CREATE INDEX v1fk_adc9c3114f37fa9622 ON public.appointment USING btree (staff_id)"
+    },
+    {
+      "tablename": "appointment",
+      "indexname": "v1fk_b715937196a06007e5",
+      "indexdef": "CREATE INDEX v1fk_b715937196a06007e5 ON public.appointment USING btree (customer_id)"
+    },
+    {
+      "tablename": "appointment",
+      "indexname": "v1fk_e0c33cff566dadf471",
+      "indexdef": "CREATE INDEX v1fk_e0c33cff566dadf471 ON public.appointment USING btree (pet_id)"
+    },
+    {
+      "tablename": "appointment_item",
+      "indexname": "appointment_item_appointment_id_idx",
+      "indexdef": "CREATE UNIQUE INDEX appointment_item_appointment_id_idx ON public.appointment_item USING btree (appointment_id) WHERE is_primary"
+    },
+    {
+      "tablename": "appointment_item",
+      "indexname": "appointment_item_pkey",
+      "indexdef": "CREATE UNIQUE INDEX appointment_item_pkey ON public.appointment_item USING btree (id)"
+    },
+    {
+      "tablename": "appointment_item",
+      "indexname": "v1fk_b13b31a4a40dfe904a",
+      "indexdef": "CREATE INDEX v1fk_b13b31a4a40dfe904a ON public.appointment_item USING btree (service_id)"
+    },
+    {
+      "tablename": "appointment_item",
+      "indexname": "v1fk_ba6faca544ee9bcc94",
+      "indexdef": "CREATE INDEX v1fk_ba6faca544ee9bcc94 ON public.appointment_item USING btree (appointment_id)"
+    },
+    {
+      "tablename": "appointment_item",
+      "indexname": "v1fk_c278c1198a36eb3714",
+      "indexdef": "CREATE INDEX v1fk_c278c1198a36eb3714 ON public.appointment_item USING btree (staff_id)"
+    },
+    {
+      "tablename": "appointment_item",
+      "indexname": "v1fk_c3133fdd7568d79c60",
+      "indexdef": "CREATE INDEX v1fk_c3133fdd7568d79c60 ON public.appointment_item USING btree (service_addon_id)"
+    },
+    {
+      "tablename": "customer",
+      "indexname": "customer_auth_user_id_key",
+      "indexdef": "CREATE UNIQUE INDEX customer_auth_user_id_key ON public.customer USING btree (auth_user_id)"
+    },
+    {
+      "tablename": "customer",
+      "indexname": "customer_customer_code_key",
+      "indexdef": "CREATE UNIQUE INDEX customer_customer_code_key ON public.customer USING btree (customer_code)"
+    },
+    {
+      "tablename": "customer",
+      "indexname": "customer_pkey",
+      "indexdef": "CREATE UNIQUE INDEX customer_pkey ON public.customer USING btree (id)"
+    },
+    {
+      "tablename": "customer",
+      "indexname": "customer_unverified_contact_phone_idx",
+      "indexdef": "CREATE INDEX customer_unverified_contact_phone_idx ON public.customer USING btree (unverified_contact_phone) WHERE (unverified_contact_phone IS NOT NULL)"
+    },
+    {
+      "tablename": "customer",
+      "indexname": "v1fk_35a91f2ed61eb91e09",
+      "indexdef": "CREATE INDEX v1fk_35a91f2ed61eb91e09 ON public.customer USING btree (auth_user_id)"
+    },
+    {
+      "tablename": "customer_membership",
+      "indexname": "customer_membership_pkey",
+      "indexdef": "CREATE UNIQUE INDEX customer_membership_pkey ON public.customer_membership USING btree (customer_id)"
+    },
+    {
+      "tablename": "customer_membership",
+      "indexname": "v1fk_39675f2efc5b35fa1e",
+      "indexdef": "CREATE INDEX v1fk_39675f2efc5b35fa1e ON public.customer_membership USING btree (customer_id)"
+    },
+    {
+      "tablename": "customer_membership",
+      "indexname": "v1fk_4f9c9ac4666e7ae85f",
+      "indexdef": "CREATE INDEX v1fk_4f9c9ac4666e7ae85f ON public.customer_membership USING btree (membership_tier_id)"
+    },
+    {
+      "tablename": "membership_tier",
+      "indexname": "membership_tier_pkey",
+      "indexdef": "CREATE UNIQUE INDEX membership_tier_pkey ON public.membership_tier USING btree (id)"
+    },
+    {
+      "tablename": "membership_tier",
+      "indexname": "membership_tier_tier_name_key",
+      "indexdef": "CREATE UNIQUE INDEX membership_tier_tier_name_key ON public.membership_tier USING btree (tier_name)"
+    },
+    {
+      "tablename": "paw_point_transaction",
+      "indexname": "paw_point_transaction_customer_id_sequence_no_key",
+      "indexdef": "CREATE UNIQUE INDEX paw_point_transaction_customer_id_sequence_no_key ON public.paw_point_transaction USING btree (customer_id, sequence_no)"
+    },
+    {
+      "tablename": "paw_point_transaction",
+      "indexname": "paw_point_transaction_idempotency_key_key",
+      "indexdef": "CREATE UNIQUE INDEX paw_point_transaction_idempotency_key_key ON public.paw_point_transaction USING btree (idempotency_key)"
+    },
+    {
+      "tablename": "paw_point_transaction",
+      "indexname": "paw_point_transaction_pkey",
+      "indexdef": "CREATE UNIQUE INDEX paw_point_transaction_pkey ON public.paw_point_transaction USING btree (id)"
+    },
+    {
+      "tablename": "paw_point_transaction",
+      "indexname": "v1fk_12ffe73197c4691238",
+      "indexdef": "CREATE INDEX v1fk_12ffe73197c4691238 ON public.paw_point_transaction USING btree (voucher_redemption_id)"
+    },
+    {
+      "tablename": "paw_point_transaction",
+      "indexname": "v1fk_347d934e0d972b4114",
+      "indexdef": "CREATE INDEX v1fk_347d934e0d972b4114 ON public.paw_point_transaction USING btree (payment_id)"
+    },
+    {
+      "tablename": "paw_point_transaction",
+      "indexname": "v1fk_464c6773db186e4299",
+      "indexdef": "CREATE INDEX v1fk_464c6773db186e4299 ON public.paw_point_transaction USING btree (refund_transaction_id)"
+    },
+    {
+      "tablename": "paw_point_transaction",
+      "indexname": "v1fk_64f7026b29777a0560",
+      "indexdef": "CREATE INDEX v1fk_64f7026b29777a0560 ON public.paw_point_transaction USING btree (customer_voucher_id)"
+    },
+    {
+      "tablename": "paw_point_transaction",
+      "indexname": "v1fk_852db3927afc56322f",
+      "indexdef": "CREATE INDEX v1fk_852db3927afc56322f ON public.paw_point_transaction USING btree (customer_id)"
+    },
+    {
+      "tablename": "paw_point_transaction",
+      "indexname": "v1fk_af273a8969f8a0bcb8",
+      "indexdef": "CREATE INDEX v1fk_af273a8969f8a0bcb8 ON public.paw_point_transaction USING btree (review_id)"
+    },
+    {
+      "tablename": "paw_point_transaction",
+      "indexname": "v1fk_e28e44706bd1276a10",
+      "indexdef": "CREATE INDEX v1fk_e28e44706bd1276a10 ON public.paw_point_transaction USING btree (reward_rule_id)"
+    },
+    {
+      "tablename": "payment",
+      "indexname": "payment_idempotency_key_key",
+      "indexdef": "CREATE UNIQUE INDEX payment_idempotency_key_key ON public.payment USING btree (idempotency_key)"
+    },
+    {
+      "tablename": "payment",
+      "indexname": "payment_payment_code_key",
+      "indexdef": "CREATE UNIQUE INDEX payment_payment_code_key ON public.payment USING btree (payment_code)"
+    },
+    {
+      "tablename": "payment",
+      "indexname": "payment_pkey",
+      "indexdef": "CREATE UNIQUE INDEX payment_pkey ON public.payment USING btree (id)"
+    },
+    {
+      "tablename": "payment",
+      "indexname": "v1fk_0831f9316c3bc262c6",
+      "indexdef": "CREATE INDEX v1fk_0831f9316c3bc262c6 ON public.payment USING btree (payment_method_config_id)"
+    },
+    {
+      "tablename": "payment",
+      "indexname": "v1fk_2494d3ddf9ba98b38a",
+      "indexdef": "CREATE INDEX v1fk_2494d3ddf9ba98b38a ON public.payment USING btree (customer_id)"
+    },
+    {
+      "tablename": "payment",
+      "indexname": "v1fk_cffd5f257141f1c185",
+      "indexdef": "CREATE INDEX v1fk_cffd5f257141f1c185 ON public.payment USING btree (appointment_id)"
+    },
+    {
+      "tablename": "payment",
+      "indexname": "v1fk_e3f445a136d7d059a9",
+      "indexdef": "CREATE INDEX v1fk_e3f445a136d7d059a9 ON public.payment USING btree (order_id)"
+    },
+    {
+      "tablename": "pet_breed",
+      "indexname": "pet_breed_pkey",
+      "indexdef": "CREATE UNIQUE INDEX pet_breed_pkey ON public.pet_breed USING btree (id)"
+    },
+    {
+      "tablename": "pet_breed",
+      "indexname": "pet_breed_species_id_breed_name_key",
+      "indexdef": "CREATE UNIQUE INDEX pet_breed_species_id_breed_name_key ON public.pet_breed USING btree (species_id, breed_name)"
+    },
+    {
+      "tablename": "pet_breed",
+      "indexname": "v1fk_7c6c36d32dbb90c1f4",
+      "indexdef": "CREATE INDEX v1fk_7c6c36d32dbb90c1f4 ON public.pet_breed USING btree (species_id)"
+    },
+    {
+      "tablename": "pet_profile",
+      "indexname": "admin_chat_case_pets_idx",
+      "indexdef": "CREATE INDEX admin_chat_case_pets_idx ON public.pet_profile USING btree (customer_id, created_at DESC, id DESC)"
+    },
+    {
+      "tablename": "pet_profile",
+      "indexname": "pet_profile_pet_code_key",
+      "indexdef": "CREATE UNIQUE INDEX pet_profile_pet_code_key ON public.pet_profile USING btree (pet_code)"
+    },
+    {
+      "tablename": "pet_profile",
+      "indexname": "pet_profile_pkey",
+      "indexdef": "CREATE UNIQUE INDEX pet_profile_pkey ON public.pet_profile USING btree (id)"
+    },
+    {
+      "tablename": "pet_profile",
+      "indexname": "v1fk_a15c7ef67018e5cdb2",
+      "indexdef": "CREATE INDEX v1fk_a15c7ef67018e5cdb2 ON public.pet_profile USING btree (breed_id)"
+    },
+    {
+      "tablename": "pet_profile",
+      "indexname": "v1fk_a70f7522e469f44638",
+      "indexdef": "CREATE INDEX v1fk_a70f7522e469f44638 ON public.pet_profile USING btree (customer_id)"
+    },
+    {
+      "tablename": "pet_species",
+      "indexname": "pet_species_pkey",
+      "indexdef": "CREATE UNIQUE INDEX pet_species_pkey ON public.pet_species USING btree (id)"
+    },
+    {
+      "tablename": "pet_species",
+      "indexname": "pet_species_species_name_key",
+      "indexdef": "CREATE UNIQUE INDEX pet_species_species_name_key ON public.pet_species USING btree (species_name)"
+    },
+    {
+      "tablename": "pet_weight_history",
+      "indexname": "pet_weight_history_pkey",
+      "indexdef": "CREATE UNIQUE INDEX pet_weight_history_pkey ON public.pet_weight_history USING btree (id)"
+    },
+    {
+      "tablename": "pet_weight_history",
+      "indexname": "v1fk_5c91a90cb7bc15dc68",
+      "indexdef": "CREATE INDEX v1fk_5c91a90cb7bc15dc68 ON public.pet_weight_history USING btree (recorded_by)"
+    },
+    {
+      "tablename": "pet_weight_history",
+      "indexname": "v1fk_d6a357a42230a04608",
+      "indexdef": "CREATE INDEX v1fk_d6a357a42230a04608 ON public.pet_weight_history USING btree (pet_id)"
+    },
+    {
+      "tablename": "refund_transaction",
+      "indexname": "refund_transaction_pkey",
+      "indexdef": "CREATE UNIQUE INDEX refund_transaction_pkey ON public.refund_transaction USING btree (id)"
+    },
+    {
+      "tablename": "refund_transaction",
+      "indexname": "refund_transaction_refund_code_key",
+      "indexdef": "CREATE UNIQUE INDEX refund_transaction_refund_code_key ON public.refund_transaction USING btree (refund_code)"
+    },
+    {
+      "tablename": "refund_transaction",
+      "indexname": "v1fk_0a2228678d7254814c",
+      "indexdef": "CREATE INDEX v1fk_0a2228678d7254814c ON public.refund_transaction USING btree (payment_id)"
+    },
+    {
+      "tablename": "refund_transaction",
+      "indexname": "v1fk_0bf022973af3a548f5",
+      "indexdef": "CREATE INDEX v1fk_0bf022973af3a548f5 ON public.refund_transaction USING btree (ticket_id)"
+    },
+    {
+      "tablename": "refund_transaction",
+      "indexname": "v1fk_70a3f93a8827800e6f",
+      "indexdef": "CREATE INDEX v1fk_70a3f93a8827800e6f ON public.refund_transaction USING btree (processed_by)"
+    },
+    {
+      "tablename": "refund_transaction",
+      "indexname": "v1fk_ec02684b6b657449d7",
+      "indexdef": "CREATE INDEX v1fk_ec02684b6b657449d7 ON public.refund_transaction USING btree (return_request_id)"
+    },
+    {
+      "tablename": "sales_order",
+      "indexname": "admin_chat_case_orders_idx",
+      "indexdef": "CREATE INDEX admin_chat_case_orders_idx ON public.sales_order USING btree (customer_id, created_at DESC, id DESC)"
+    },
+    {
+      "tablename": "sales_order",
+      "indexname": "sales_order_order_code_key",
+      "indexdef": "CREATE UNIQUE INDEX sales_order_order_code_key ON public.sales_order USING btree (order_code)"
+    },
+    {
+      "tablename": "sales_order",
+      "indexname": "sales_order_pkey",
+      "indexdef": "CREATE UNIQUE INDEX sales_order_pkey ON public.sales_order USING btree (id)"
+    },
+    {
+      "tablename": "sales_order",
+      "indexname": "v1fk_97e6f5e8ae76df6e14",
+      "indexdef": "CREATE INDEX v1fk_97e6f5e8ae76df6e14 ON public.sales_order USING btree (delivery_option_id)"
+    },
+    {
+      "tablename": "sales_order",
+      "indexname": "v1fk_d338ae97d3866ee692",
+      "indexdef": "CREATE INDEX v1fk_d338ae97d3866ee692 ON public.sales_order USING btree (shipping_provider_id)"
+    },
+    {
+      "tablename": "sales_order",
+      "indexname": "v1fk_e7f5af1fdbf76553ac",
+      "indexdef": "CREATE INDEX v1fk_e7f5af1fdbf76553ac ON public.sales_order USING btree (customer_id)"
+    }
+  ],
+  "views": [
+    {
+      "relname": "appointment_totals",
+      "reloptions": [
+        "security_invoker=true"
+      ]
+    },
+    {
+      "relname": "customer_point_balance",
+      "reloptions": [
+        "security_invoker=true"
+      ]
+    },
+    {
+      "relname": "sales_order_totals",
+      "reloptions": [
+        "security_invoker=true"
+      ]
+    }
+  ]
+}

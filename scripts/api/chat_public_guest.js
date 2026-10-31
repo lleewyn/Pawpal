@@ -1,6 +1,6 @@
 'use strict';
 const catalog=require('./chat_public_catalog.js');
-const fold=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase().replace(/\bhotle\b|\bhottel\b/g,'hotel').replace(/\bdatlich\b/g,'dat lich').replace(/\bpawpoints?\b/g,'paw points').replace(/\bbao nhiu\b|\bbn\b/g,'bao nhieu').replace(/\s+/g,' ').trim();
+const fold=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().replace(/\bhotle\b|\bhottel\b/g,'hotel').replace(/\bdatlich\b/g,'dat lich').replace(/\bpawpoints?\b/g,'paw points').replace(/\bbao nhiu\b|\bbn\b/g,'bao nhieu').replace(/\s+/g,' ').trim();
 const group=q=>/hotel|khach san|luu tru|gui be|qua dem/.test(q)?'hotel':/taxi|dua don|dua ruoc/.test(q)?'taxi':/\btam\b|cat tia|grooming|\bspa\b/.test(q)?'grooming':null;
 const faq=(question,topic,notice)=>({faq:question,topic,...(notice?{notice}:{})});
 const link=(label,path)=>`[${label}](${path})`;

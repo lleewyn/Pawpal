@@ -1,0 +1,22 @@
+{
+  "pass": true,
+  "checks": [
+    "161 compiles",
+    "point_history: owner, cap5, disjoint pages and payload cap",
+    "wallet: owner, cap5, disjoint pages and payload cap",
+    "care: owner, cap5, disjoint pages and payload cap",
+    "hotel: owner, cap5, disjoint pages and payload cap",
+    "taxi: owner, cap5, disjoint pages and payload cap",
+    "support: owner, cap5, disjoint pages and payload cap",
+    "Support excludes internal messages/investigation and pending resolution",
+    "Logistics and care select exact owned appointment",
+    "Invalid filters/owner/page are rejected",
+    "Real B SQL caller cannot see any A scope or selected IDs",
+    "Banned member denied",
+    "Guest and service-role denied",
+    "All QA fixtures and dry-run function rolled back",
+    "161 applied separately without fixtures"
+  ],
+  "applied": true,
+  "scope": "Real SQL/RLS/owner checks with two synthetic Auth identities and six nonempty scopes; transaction rolled back. No business records modified, no model or Logs."
+}

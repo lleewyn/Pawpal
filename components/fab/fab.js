@@ -87,7 +87,7 @@ function initFab(){
    }else{const content=document.createElement('div');content.className='fab-message-content';content.style.whiteSpace='pre-wrap';
     const value=String(row.content||'');let start=0;
     if(row.sender_type==='bot')for(const match of value.matchAll(/\[([^\]\n]{1,100})\]\((\/[^\s)]{1,200})\)/g)){
-     const safe=/^\/(?:booking(?:\?service=[0-9a-f-]{36})?|product-detail\?id=[0-9a-f-]{36}|shop|services|return-guest|contact)$/.test(match[2]);if(!safe)continue;
+     const safe=/^\/(?:booking(?:\?service=[0-9a-f-]{36})?|product-detail\?id=[0-9a-f-]{36}|shop|services|return-guest|contact|login|user#(?:orders|bookings|pets|loyalty|diary|support|(?:order-detail|booking-detail)\?id=[0-9a-f-]{36}))$/.test(match[2]);if(!safe)continue;
      content.append(document.createTextNode(value.slice(start,match.index)));const a=document.createElement('a');a.className='fab-answer-link';a.textContent=match[1];a.href=match[2];content.append(a);start=match.index+match[0].length;
     }
     content.append(document.createTextNode(value.slice(start)));div.append(content);
