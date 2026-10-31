@@ -1,0 +1,181 @@
+{
+  "date": "2026-10-31",
+  "url": "http://localhost:4000",
+  "backend": "Local UI/API with configured Supabase Cloud; not an isolated local database",
+  "transport": "Actual UI clicks and HTTP; no intercepted/stubbed transport",
+  "modelCalls": 0,
+  "admin": {
+    "checks": [
+      {
+        "flow": "Admin history",
+        "pass": true
+      },
+      {
+        "flow": "Có bao nhiêu SKU dưới ngưỡng?",
+        "status": 200,
+        "pass": true,
+        "answerType": "inventory.low_stock",
+        "replyLength": 136
+      },
+      {
+        "flow": "Thực thu hôm nay",
+        "status": 200,
+        "pass": true,
+        "answerType": "revenue.summary",
+        "replyLength": 211
+      },
+      {
+        "flow": "Reload own Admin test session",
+        "pass": true
+      },
+      {
+        "flow": "Rules faq",
+        "pass": true,
+        "rows": 10
+      },
+      {
+        "flow": "Rules profanity",
+        "pass": true,
+        "rows": 10
+      },
+      {
+        "flow": "Rules canned",
+        "pass": true,
+        "rows": 10
+      },
+      {
+        "flow": "Rules policy",
+        "pass": true,
+        "rows": 10
+      },
+      {
+        "flow": "Rules matrix",
+        "pass": true,
+        "rows": 10
+      },
+      {
+        "flow": "Rules handover",
+        "pass": true
+      },
+      {
+        "flow": "FAQ search empty state",
+        "pass": true
+      },
+      {
+        "flow": "Inbox filterTabUrgent",
+        "pass": true
+      },
+      {
+        "flow": "Inbox filterTabActive",
+        "pass": true
+      },
+      {
+        "flow": "Inbox filterTabAll",
+        "pass": true
+      }
+    ],
+    "failedRequests": [],
+    "jsErrors": []
+  },
+  "guest": {
+    "checks": [
+      {
+        "flow": "Guest welcome",
+        "pass": true
+      },
+      {
+        "flow": "Tư vấn dịch vụ tắm và cắt tỉa",
+        "status": 200,
+        "pass": true,
+        "replyLength": 430,
+        "technicalFallback": false,
+        "draftCleared": true
+      },
+      {
+        "flow": "Giá tắm và cắt tỉa",
+        "status": 200,
+        "pass": true,
+        "replyLength": 826,
+        "technicalFallback": false,
+        "draftCleared": true
+      },
+      {
+        "flow": "So sánh giá Hotel",
+        "status": 200,
+        "pass": true,
+        "replyLength": 487,
+        "technicalFallback": false,
+        "draftCleared": true
+      },
+      {
+        "flow": "Giá Pet Taxi",
+        "status": 200,
+        "pass": true,
+        "replyLength": 1057,
+        "technicalFallback": false,
+        "draftCleared": true
+      },
+      {
+        "flow": "Số dư Paw Points của tôi",
+        "status": 200,
+        "pass": true,
+        "replyLength": 193,
+        "technicalFallback": false,
+        "draftCleared": true,
+        "privateGuard": true
+      },
+      {
+        "flow": "Guest close/reopen keeps unsent draft",
+        "pass": true
+      },
+      {
+        "flow": "Guest reload restores own transcript",
+        "pass": true
+      }
+    ],
+    "failedRequests": [],
+    "jsErrors": []
+  },
+  "handover": {
+    "checks": [
+      {
+        "flow": "Handover button unlocks immediately after answer",
+        "pass": true
+      },
+      {
+        "flow": "Guest requests staff via button",
+        "pass": true,
+        "status": 200
+      },
+      {
+        "flow": "Admin selects and takes only own test guest case",
+        "pass": true,
+        "status": 200
+      },
+      {
+        "flow": "Staff UI reply appears in own guest UI on reopen",
+        "pass": true,
+        "status": 200
+      },
+      {
+        "flow": "Admin completes own case; guest gets CSAT and send is locked",
+        "pass": true,
+        "status": 200
+      },
+      {
+        "flow": "Guest submits CSAT for own test case",
+        "pass": true,
+        "status": 200
+      }
+    ]
+  },
+  "finalPassCount": 28,
+  "limitations": [
+    "Member private-data flow not tested",
+    "No Gemini/FAQ generation quality test",
+    "No business Rules create/update/delete",
+    "Guest received staff reply and CSAT after manually closing/reopening widget; no realtime latency certification",
+    "Diagnostic guest conversations retained; only the handover case was completed and rated"
+  ],
+  "repair": "Split control-state sync from status messages; unlock handover immediately after send and retain failed-handover error/draft"
+}

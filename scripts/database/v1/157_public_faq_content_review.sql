@@ -30,7 +30,7 @@ BEGIN
    IF r.is_new OR f.id<>r.id OR f.answer IS DISTINCT FROM r.old_answer OR f.is_active IS DISTINCT FROM r.old_active THEN RAISE EXCEPTION 'public_faq_changed_review_required' USING ERRCODE='22023'; END IF;
    UPDATE public.chatbot_knowledge_faq SET answer=r.new_answer,is_active=r.new_active,updated_at=clock_timestamp() WHERE id=r.id;
   ELSIF r.is_new THEN
-   INSERT INTO public.chatbot_knowledge_faq(id,category,question,answer,keywords,is_active,priority) VALUES(r.id,'H??ng d?n c?ng khai',r.question,r.new_answer,'{}'::text[],true,20);
+   INSERT INTO public.chatbot_knowledge_faq(id,category,question,answer,keywords,is_active,priority) VALUES(r.id,'Hướng dẫn công khai',r.question,r.new_answer,'{}'::text[],true,20);
   ELSE RAISE EXCEPTION 'public_faq_missing_review_required' USING ERRCODE='22023'; END IF;
  END LOOP;
 END $review$;

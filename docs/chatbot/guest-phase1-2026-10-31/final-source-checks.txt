@@ -1,0 +1,10 @@
+{
+  "applied": true,
+  "sha256": "83a38d33146dba1159738130b601440fc2bc1b00b9414783141b6e5f5d06872d",
+  "checks": [
+    "Source replacement guard",
+    "Bounded cat-targeted public recommendations",
+    "Configured holiday notice whitelist",
+    "Existing active-catalog partial-index predicates retained"
+  ]
+}

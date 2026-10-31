@@ -1,0 +1,13 @@
+{
+  "scope": "Localhost4000 actual HTTP/API and Cloud, two deterministic routes; no browser acceptance",
+  "checks": [
+    {
+      "status": "PASS",
+      "question": "PawPal ở đâu?"
+    },
+    {
+      "status": "PASS",
+      "question": "Không đăng nhập đặt lịch được không?"
+    }
+  ]
+}

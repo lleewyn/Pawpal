@@ -101,7 +101,9 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     if(prior.data){if(prior.data.conversation_id!==c.id||prior.data.raw_content!==question||prior.data.sender_account_id!==(user?.id||null)||prior.data.sender_guest_session_id!==(guest?.id||null))return fail(409,'Yêu cầu đã được dùng.');return res.json({ok:true,replayed:true});}
     if(['resolved','closed','completed','blocked'].includes(c.status))return fail(409,'Hội thoại đã kết thúc. Hãy tạo đoạn chat mới.');
     const now=Date.now(),key='public:'+c.id,window=(limits.get(key)||[]).filter(t=>now-t<60000);if(window.length>=10)return fail(429,'Vui lòng chờ trước khi gửi thêm.');window.push(now);limits.set(key,window);
-    const rules=await service.rpc('read_public_chat_rules');if(rules.error)throw rules.error;
+    const guestHelp=require('../scripts/api/chat_public_guest.js');
+    const rules=await service.rpc(guestHelp.isFollowup(question)?'read_public_guest_seed':'read_public_chat_rules',guestHelp.isFollowup(question)?{p_conversation:c.id}:undefined);if(rules.error)throw rules.error;
+    if(rules.data.recent_questions!==undefined&&(!Array.isArray(rules.data.recent_questions)||rules.data.recent_questions.length>4||rules.data.recent_questions.some(x=>typeof x!=='string'||x.length>600)))throw Error('invalid_guest_seed');
     const evaluation=require('../scripts/api/chat_moderation.js').evaluateToxicAndSentiment(question,rules.data.profanity,rules.data.sentiment);
     if(evaluation.worstAction==='block')return fail(400,'Vui lòng điều chỉnh nội dung trước khi gửi.');
     const requestedStaff=require('../scripts/api/chat_public_catalog.js').requestsStaff(question);
@@ -114,15 +116,21 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      }else if(understanding.isUnclearInput(question)){
       reply=understanding.clarification;understood=false;
      }else{
-     const publicCatalog=require('../scripts/api/chat_public_catalog.js'),publicRoute=publicCatalog.plan(question);
-     if(publicRoute){
+     const publicCatalog=require('../scripts/api/chat_public_catalog.js'),publicRoute=guestHelp.plan(question,rules.data.recent_questions||[]);
+     if(publicRoute?.request){
+      const advice=await service.rpc('read_public_guest_advice',{p_request:publicRoute.request});if(advice.error)throw advice.error;
+      ({reply,understood}=guestHelp.format(advice.data,publicRoute));
+     }else if(publicRoute&&!publicRoute.faq){
       if(publicRoute.reply)({reply,understood}=publicRoute);
       else{const catalog=await service.rpc('read_public_chat_catalog',{p_kind:publicRoute.kind,p_query:publicRoute.query});if(catalog.error)throw catalog.error;({reply,understood}=publicCatalog.format(catalog.data,publicRoute));}
      }else{
-     const context=await service.rpc('search_public_chat_context',{p_conversation:c.id,p_question:question});if(context.error)throw context.error;
+     const context=await service.rpc('search_public_chat_context',{p_conversation:c.id,p_question:publicRoute?.faq||question});if(context.error)throw context.error;
      if(!context.data||typeof context.data.incomplete!=='boolean'||!Array.isArray(context.data.faq)||!Array.isArray(context.data.recent)||context.data.faq.length>5||context.data.recent.length>8||context.data.faq.some(r=>!r||typeof r.question!=='string'||typeof r.answer!=='string'||!r.answer.trim())||context.data.recent.some(r=>!r||typeof r.sender_type!=='string'||typeof r.content!=='string')||Buffer.byteLength(JSON.stringify(context.data),'utf8')>32768)throw Error('invalid_public_context');
      const usableFaq=context.data.faq.filter(r=>!context.data.incomplete||r.complete===true);
-     if(context.data.incomplete&&usableFaq.length===0){
+     const direct=publicRoute?.faq?guestHelp.faqReply(publicRoute,usableFaq):null;
+     if(direct){({reply,understood}=direct);}
+     else if(publicRoute?.faq){reply='Mình chưa có đủ hướng dẫn đã xác nhận cho mục này. Bạn có thể xem lựa chọn tại [Dịch vụ](/services), [Cửa hàng](/shop), [Tra cứu](/return-guest) hoặc chọn Gặp chuyên viên. Mình chưa xác nhận giao dịch hay điều kiện riêng của bạn.';understood=false;}
+     else if(context.data.incomplete&&usableFaq.length===0){
       reply='Mình chưa có đủ thông tin để tư vấn chính xác cho yêu cầu này. Bạn cho mình biết dịch vụ quan tâm và nhu cầu của bé, hoặc chọn Gặp chuyên viên để được hỗ trợ thêm nhé.';understood=false;
      }else if(context.data.faq.length===0){
       reply='PawPal chưa có đủ thông tin xác nhận cho câu hỏi này. Bạn có thể nói rõ dịch vụ hoặc sản phẩm cần tìm, hoặc chọn gặp nhân viên để được hỗ trợ.';understood=false;

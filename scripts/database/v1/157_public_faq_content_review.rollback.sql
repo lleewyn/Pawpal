@@ -28,7 +28,7 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'public_faq_missing_review_required' USING ERRCODE='22023'; END IF;
   IF NOT r.is_new AND f.question=r.question AND f.answer=r.old_answer AND f.is_active=r.old_active THEN CONTINUE; END IF;
   IF f.question<>r.question OR f.answer IS DISTINCT FROM r.new_answer OR f.is_active IS DISTINCT FROM r.new_active THEN RAISE EXCEPTION 'public_faq_changed_review_required' USING ERRCODE='22023'; END IF;
-  IF r.is_new AND (f.category<>'H??ng d?n c?ng khai' OR f.keywords<>'{}'::text[] OR f.priority<>20) THEN RAISE EXCEPTION 'public_faq_metadata_changed_review_required' USING ERRCODE='22023'; END IF;
+  IF r.is_new AND (f.category<>'Hướng dẫn công khai' OR f.keywords<>'{}'::text[] OR f.priority<>20) THEN RAISE EXCEPTION 'public_faq_metadata_changed_review_required' USING ERRCODE='22023'; END IF;
   IF r.is_new THEN DELETE FROM public.chatbot_knowledge_faq WHERE id=r.id;
   ELSE UPDATE public.chatbot_knowledge_faq SET answer=r.old_answer,is_active=r.old_active,updated_at=clock_timestamp() WHERE id=r.id; END IF;
  END LOOP;

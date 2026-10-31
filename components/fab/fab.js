@@ -4,7 +4,7 @@ function initFab(){
  if(!panel||!messages||!input||!send)return;window.__pawpalFabInitialized=true;
  const client=window.getSupabaseClient?.();let active=null,rows=[],status='bot_handling',version=null,busy=false,request=null,historyPage=0,more=false,polling=false,newPage=null;
  const tokenKey='pawpal_chat_guest_v1';let guest=localStorage.getItem(tokenKey);let issued=Number(localStorage.getItem(tokenKey+'_at'));
- if(!guest||!issued||Date.now()-issued>7*86400000){guest=crypto.randomUUID()+crypto.randomUUID();localStorage.setItem(tokenKey,guest);localStorage.setItem(tokenKey+'_at',Date.now());}
+ if(!guest||!issued||Date.now()-issued>7*86400000){guest=crypto.randomUUID()+crypto.randomUUID();issued=Date.now();localStorage.setItem(tokenKey,guest);localStorage.setItem(tokenKey+'_at',issued);}
  let identity='guest',epoch=0;const pending=new Set(),partReads=new Map();
  let readFailures=0,nextReadAt=0,readBlocked=false;
  function deferReads(error){if(error.stale)return;if(error.retryable===false||[400,401,403,410].includes(error.status)){readBlocked=true;return;}readFailures++;nextReadAt=Date.now()+30000*2**Math.min(readFailures-1,2);}
@@ -35,11 +35,14 @@ function initFab(){
  }
  function notify(text){$('fabChatStatus').textContent=text;}
  function showError(error){if(!error.stale)notify(error.message);}
- function setMode(){
+ function syncControls(){
   const closed=['resolved','closed','completed','blocked'].includes(status);input.disabled=closed;send.disabled=busy||closed;
+  const button=$('fabHandoverBtn');if(button){button.textContent=status==='waiting_agent'?'Hỏi lại trợ lý':'Gặp chuyên viên';button.disabled=busy||['agent_handling','resolved','closed','completed','blocked'].includes(status);}
+ }
+ function setMode(){
+  syncControls();
   const labels={bot_handling:'Hỗ trợ tự động',waiting_agent:'Đang chờ nhân viên',agent_handling:'Nhân viên đang hỗ trợ',resolved:'Đã hoàn tất',closed:'Đã đóng',completed:'Đã hoàn tất',blocked:'Tạm khóa'};
   notify(labels[status]||'Đang xử lý');$('fabChatTitleText').textContent='PawPal hỗ trợ';
-  const button=$('fabHandoverBtn');if(button){button.textContent=status==='waiting_agent'?'Hỏi lại trợ lý':'Gặp chuyên viên';button.disabled=busy||['agent_handling','resolved','closed','completed'].includes(status);}
  }
  function remember(){if(active)sessionStorage.setItem('pawpal_chat_active_'+identity,active);}
  function render(){
@@ -62,7 +65,13 @@ function initFab(){
     const submit=document.createElement('button');submit.type='button';submit.className='fab-csat-submit-btn';submit.textContent='Gửi đánh giá';
     submit.onclick=async()=>{if(!select.value)return;submit.disabled=true;try{await api('feedback',{conversationId:active,score:Number(select.value),comment:comment.value.trim()});row.metadata.submitted=true;div.textContent='Pawpal đã nhận đánh giá. Cảm ơn bạn!';}catch(error){showError(error);submit.disabled=false;}};
     div.append(select,comment,submit);
-   }else{const content=document.createElement('div');content.className='fab-message-content';content.style.whiteSpace='pre-wrap';content.textContent=row.content;div.append(content);
+   }else{const content=document.createElement('div');content.className='fab-message-content';content.style.whiteSpace='pre-wrap';
+    const value=String(row.content||'');let start=0;
+    if(row.sender_type==='bot')for(const match of value.matchAll(/\[([^\]\n]{1,100})\]\((\/[^\s)]{1,200})\)/g)){
+     const safe=/^\/(?:booking(?:\?service=[0-9a-f-]{36})?|product-detail\?id=[0-9a-f-]{36}|shop|services|return-guest|contact)$/.test(match[2]);if(!safe)continue;
+     content.append(document.createTextNode(value.slice(start,match.index)));const a=document.createElement('a');a.className='fab-answer-link';a.textContent=match[1];a.href=match[2];content.append(a);start=match.index+match[0].length;
+    }
+    content.append(document.createTextNode(value.slice(start)));div.append(content);
     if(row.content_partial){const b=document.createElement('button');b.type='button';b.className='fab-chat-read-btn';b.textContent='Đọc tiếp tin nhắn';
      b.onclick=async()=>{const target=active,offset=row.content_offset,revision=row.content_revision,key=epoch+':'+target+':'+row.id+':'+offset+':'+revision;b.disabled=true;
       try{if(!partReads.has(key))partReads.set(key,api('public_read_part',{conversationId:target,messageId:row.id,offset,revision}).finally(()=>partReads.delete(key)));const data=await partReads.get(key);if(active!==target)return;
@@ -91,13 +100,13 @@ function initFab(){
  }
  async function ensure(){const stamp=epoch;if(!active){const value=recovery||{owner:identity,guestIssued:issued,conversation:crypto.randomUUID(),needsOpen:true,question:null,at:Date.now()};persistRecovery(value);await api('public_open',{conversationId:value.conversation});current(stamp);active=value.conversation;remember();if(value.question)persistRecovery({...value,needsOpen:false});else clearRecovery();}return active;}
  async function submit(){
-  const question=input.value.trim();if(busy||input.disabled||!question)return;if(question.length>2000)return notify('Tin nhắn tối đa 2.000 ký tự.');const stamp=epoch;busy=true;send.disabled=true;
+  const question=input.value.trim();if(busy||input.disabled||!question)return;if(question.length>2000)return notify('Tin nhắn tối đa 2.000 ký tự.');const stamp=epoch;busy=true;syncControls();
   try{
    const target=active||recovery?.conversation||crypto.randomUUID(),key=JSON.stringify([target,question]);if(request?.key!==key)request={id:crypto.randomUUID(),key};
    persistRecovery({owner:identity,guestIssued:issued,conversation:target,needsOpen:!active,question,requestId:request.id,at:Date.now()});
    await ensure();current(stamp);
    await api('public_send',{conversationId:active,question,requestId:request.id});current(stamp);if(input.value.trim()===question)input.value='';request=null;clearRecovery();await read(true);
-  }catch(error){showError(error);}finally{if(stamp===epoch){busy=false;send.disabled=['resolved','closed','completed','blocked'].includes(status);}}
+  }catch(error){showError(error);}finally{if(stamp===epoch){busy=false;syncControls();}}
  }
  function fresh(){if(busy)return;resetReads();clearRecovery();active=null;rows=[];version=null;more=false;newPage=null;request=null;input.value='';sessionStorage.removeItem('pawpal_chat_active_'+identity);$('fabChatHistoryView').style.display='none';$('fabChatMainView').style.display='flex';status='bot_handling';render();}
  async function history(){
@@ -121,7 +130,7 @@ function initFab(){
  $('fabChatExpand')?.addEventListener('click',()=>panel.classList.toggle('expanded'));
  $('fabChatNewBtn')?.addEventListener('click',fresh);$('fabHistoryNewBtn')?.addEventListener('click',fresh);$('fabChatHistoryBtn')?.addEventListener('click',()=>{historyPage=0;history();});
  $('fabHistoryBackBtn')?.addEventListener('click',()=>{$('fabChatHistoryView').style.display='none';$('fabChatMainView').style.display='flex';});
- $('fabHandoverBtn')?.addEventListener('click',async()=>{if(busy)return;const stamp=epoch;busy=true;try{await ensure();current(stamp);await api('public_mode',{conversationId:active,mode:status==='waiting_agent'?'bot_handling':'waiting_agent'});current(stamp);await read(true);}catch(error){showError(error);}finally{if(stamp===epoch){busy=false;setMode();}}});
+ $('fabHandoverBtn')?.addEventListener('click',async()=>{if(busy)return;const stamp=epoch;busy=true;syncControls();try{await ensure();current(stamp);await api('public_mode',{conversationId:active,mode:status==='waiting_agent'?'bot_handling':'waiting_agent'});current(stamp);await read(true);}catch(error){showError(error);}finally{if(stamp===epoch){busy=false;syncControls();}}});
  send.addEventListener('click',submit);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit();}});
  document.querySelectorAll('.fab-chat-suggest').forEach(b=>b.addEventListener('click',()=>{input.value=b.dataset.prompt||b.textContent;input.focus();}));
  if($('fabChatAttachBtn')){$('fabChatAttachBtn').disabled=true;$('fabChatAttachBtn').hidden=true;}

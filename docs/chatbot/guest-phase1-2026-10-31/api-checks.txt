@@ -1,0 +1,101 @@
+{
+  "scope": "Actual local handler with Cloud public RPCs and owned guest conversations; no browser acceptance; diagnostic chat history retained",
+  "modelCalls": 0,
+  "checks": [
+    {
+      "question": "PawPal ở đâu?",
+      "status": "PASS",
+      "replyLength": 276
+    },
+    {
+      "question": "Mở cửa mấy giờ?",
+      "status": "PASS",
+      "replyLength": 276
+    },
+    {
+      "question": "Không đăng nhập đặt lịch được không?",
+      "status": "PASS",
+      "replyLength": 364
+    },
+    {
+      "question": "Khách vãng lai mua hàng như thế nào?",
+      "status": "PASS",
+      "replyLength": 428
+    },
+    {
+      "question": "Phí giao hàng bao nhiêu?",
+      "status": "PASS",
+      "replyLength": 318
+    },
+    {
+      "question": "Tôi muốn đổi trả hàng",
+      "status": "PASS",
+      "replyLength": 386
+    },
+    {
+      "question": "Paw Points là gì?",
+      "status": "PASS",
+      "replyLength": 131
+    },
+    {
+      "question": "Cần chuẩn bị gì cho bé dị ứng?",
+      "status": "PASS",
+      "replyLength": 209
+    },
+    {
+      "question": "Cách tra cứu mã đơn",
+      "status": "PASS",
+      "replyLength": 342
+    },
+    {
+      "question": "Tư vấn tắm và cắt tỉa",
+      "status": "PASS",
+      "replyLength": 2554
+    },
+    {
+      "question": "Bé 7kg",
+      "status": "PASS",
+      "replyLength": 2442
+    },
+    {
+      "question": "So sánh Hotel thường và VIP",
+      "status": "PASS",
+      "replyLength": 1575
+    },
+    {
+      "question": "Hotel còn phòng không?",
+      "status": "PASS",
+      "replyLength": 232
+    },
+    {
+      "question": "Taxi bé 7kg đi 3km",
+      "status": "PASS",
+      "replyLength": 712
+    },
+    {
+      "question": "Còn hàng không?",
+      "status": "PASS",
+      "replyLength": 712
+    },
+    {
+      "question": "Cho tôi số dư Paw Points của tôi",
+      "status": "PASS",
+      "replyLength": 193
+    },
+    {
+      "question": "Sản phẩm TP-HAT-01-V1",
+      "status": "PASS",
+      "replyLength": 712
+    },
+    {
+      "question": "So sánh sản phẩm TP-HAT-01-V1 và TP-HAT-01-V2",
+      "status": "PASS",
+      "replyLength": 1260
+    },
+    {
+      "question": "Tư vấn hạt cho mèo",
+      "status": "PASS",
+      "replyLength": 1321
+    }
+  ]
+}

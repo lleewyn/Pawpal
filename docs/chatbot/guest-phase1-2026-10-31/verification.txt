@@ -1,0 +1,25 @@
+{
+  "checks": {
+    "markdownLinks": true,
+    "credentialPatterns": true,
+    "nodeTests": 42
+  },
+  "sourceHashes": [
+    {
+      "file": "api/admin-chat.js",
+      "sha256": "aa343fa201451b302ef2d558ce6bf4bac38c93f3e9e4c230a3488201043abc8c"
+    },
+    {
+      "file": "scripts/api/chat_public_guest.js",
+      "sha256": "8a437b7feb73b342a1791d4039381b504852c059a1a50a1a39ca5dd9a50617bb"
+    },
+    {
+      "file": "components/fab/fab.js",
+      "sha256": "42c6b0880fc7993a846600d936082dde3ae65f772f5b96003b79518f349f6882"
+    },
+    {
+      "file": "scripts/database/v1/159_public_guest_advice.sql",
+      "sha256": "df943afeb3a54ef521eb95660b26c253f791a15f2f93c7ab12f7535d82e22f40"
+    }
+  ]
+}

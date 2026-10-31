@@ -1,0 +1,42 @@
+{
+  "applied": true,
+  "sha256": "f7941e593ce4a4cd7bc651fd0239f10a29d606143d3937d58f4b945f1b93fc36",
+  "checks": [
+    {
+      "kind": "grooming",
+      "pet": "cat",
+      "rows": 5,
+      "status": "PASS"
+    },
+    {
+      "kind": "grooming",
+      "pet": "dog",
+      "rows": 5,
+      "status": "PASS"
+    },
+    {
+      "kind": "hotel",
+      "pet": "cat",
+      "rows": 5,
+      "status": "PASS"
+    },
+    {
+      "kind": "hotel",
+      "pet": "dog",
+      "rows": 5,
+      "status": "PASS"
+    },
+    {
+      "kind": "taxi",
+      "pet": "cat",
+      "rows": 4,
+      "status": "PASS"
+    },
+    {
+      "kind": "taxi",
+      "pet": "dog",
+      "rows": 4,
+      "status": "PASS"
+    }
+  ]
+}

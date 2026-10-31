@@ -1,0 +1,1038 @@
+{
+  "date": "2026-10-31",
+  "environment": "localhost:4000 with real Supabase Cloud; not a local isolated database",
+  "initialBatches": [
+    {
+      "batch": "A",
+      "checks": [
+        {
+          "group": "G01",
+          "name": "Cửa hàng",
+          "question": "PawPal ở đâu?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Địa chỉ: 120 Nguyễn Thị Minh Khai, P.6, Q.3, TP.HCM\nHotline: 1900 888 999\nNgày thường: 08:00–20:00\nCuối tuần: 08:00–21:00\nLưu ý ngày lễ: Mở cửa phục vụ xuyên suốt tất cả các ngày lễ và Tết Nguyên Đán.\nKhả năng nhận lịch cần kiểm tra cho ngày cụ thể. Liên hệ PawPal",
+          "links": [
+            {
+              "text": "Liên hệ PawPal",
+              "path": "/contact",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G01",
+          "name": "Cửa hàng",
+          "question": "Mo cua may gio?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Địa chỉ: 120 Nguyễn Thị Minh Khai, P.6, Q.3, TP.HCM\nHotline: 1900 888 999\nNgày thường: 08:00–20:00\nCuối tuần: 08:00–21:00\nLưu ý ngày lễ: Mở cửa phục vụ xuyên suốt tất cả các ngày lễ và Tết Nguyên Đán.\nKhả năng nhận lịch cần kiểm tra cho ngày cụ thể. Liên hệ PawPal",
+          "links": [
+            {
+              "text": "Liên hệ PawPal",
+              "path": "/contact",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G02",
+          "name": "Dịch vụ và hỏi tiếp",
+          "question": "Có tắm cho mèo không?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "• Gói Tắm Vệ Sinh Cơ Bản — 0–5 kg (không gồm cận trên): 120.000 đ. Thời lượng dự kiến 60 phút. Dịch vụ tắm và vệ sinh toàn diện giúp loại bỏ bụi bẩn, bã nhờn và mùi hôi khó chịu. Chúng tôi sử dụng sữa tắm chuyên dụng an toàn cho da nhạy cảm, kết hợp sấy và chải lông chuẩn kỹ thuật giúp bé yêu luôn sạch sẽ và thoải mái nhất. Làm sạch da lông; giảm mùi hôi; hỗ trợ vệ sinh tai móng gọn gàng. Dành cho thú cưng siêu nhỏ Chọn gói này\n\n• Gói Tắm Vệ Sinh Cơ Bản — 5–10 kg (không gồm cận trên): 170.000 đ. Thời lượng dự kiến 75 phút. Dịch vụ tắm và vệ sinh toàn diện giúp loại bỏ bụi bẩn, bã nhờn và mùi hôi khó chịu. Chúng tôi sử dụng sữa tắm chuyên dụng an toàn cho da nhạy cảm, kết hợp sấy và chải lông chuẩn kỹ thuật giúp bé yêu luôn sạch sẽ và thoải mái nhất. Làm sạch da lông; giảm mùi hôi; hỗ trợ vệ sinh tai móng gọn gàng. Dành cho thú cưng nhỏ Chọn gói này\n\n• Gói Tắm Vệ Sinh Cơ Bản — 10–20 kg (không gồm cận trên): 220.000 đ. Thời lượng dự kiến 90 phút. Dịch vụ tắm và vệ sinh toàn diện giúp loại bỏ bụi bẩn, bã nhờn và mùi hôi khó chịu. Chúng tôi sử dụng sữa tắm chuyên dụng an toàn cho da nhạy cảm, kết hợp sấy và chải lông chuẩn kỹ thuật giúp bé yêu luôn sạch sẽ và thoải mái nhất. Làm sạch da lông; giảm mùi hôi; hỗ trợ vệ sinh tai móng gọn gàng. Dành cho thú cưng cỡ vừa Chọn gói này\n\n• Gói Tắm Vệ Sinh Cơ Bản — 20 kg trở lên: 270.000 đ. Thời lượng dự kiến 120 phút. Dịch vụ tắm và vệ sinh toàn diện giúp loại bỏ bụi bẩn, bã nhờn và mùi hôi khó chịu. Chúng tôi sử dụng sữa tắm chuyên dụng an toàn cho da nhạy cảm, kết hợp sấy và chải lông chuẩn kỹ thuật giúp bé yêu luôn sạch sẽ và thoải mái nhất. Làm sạch da lông; giảm mùi hôi; hỗ trợ vệ sinh tai móng gọn gàng. Dành cho thú cưng cỡ lớn Chọn gói này\n\n• Gói Tắm Dưỡng Premium — 0–10 kg (không gồm cận trên): 220.000 đ. Thời lượng dự kiến 90 phút. Liệu trình chăm sóc da và lông cao cấp dành riêng cho các bé có bộ lông khô xơ, rụng nhiều. Sự kết hợp giữa tinh chất Collagen, dầu dưỡng ẩm và kỹ thuật massage thư giãn chuyên sâu giúp kích thích mọc lông, mang lại làn da khỏe mạnh từ bên trong. Phục hồi nang lông; dưỡng ẩm da; giảm căng thẳng qua massage. Dành cho thú cưng dưới 10kg Chọn gói này\n\nBé nặng bao nhiêu kg, cần tắm hay cắt tỉa? Mình sẽ lọc mức phù hợp. Giá hiện hành chưa xác nhận giá cho ngày tương lai hoặc mọi phụ phí. Chọn dịch vụ và thời gian\nĐang hiển thị một phần kết quả; hãy nêu gói hoặc SKU cụ thể.",
+          "links": [
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000001",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000001",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000001",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000001",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000002",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G02",
+          "name": "Dịch vụ và hỏi tiếp",
+          "question": "Bé 7kg",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "• Gói Tắm Vệ Sinh Cơ Bản — 5–10 kg (không gồm cận trên): 170.000 đ. Thời lượng dự kiến 75 phút. Dịch vụ tắm và vệ sinh toàn diện giúp loại bỏ bụi bẩn, bã nhờn và mùi hôi khó chịu. Chúng tôi sử dụng sữa tắm chuyên dụng an toàn cho da nhạy cảm, kết hợp sấy và chải lông chuẩn kỹ thuật giúp bé yêu luôn sạch sẽ và thoải mái nhất. Làm sạch da lông; giảm mùi hôi; hỗ trợ vệ sinh tai móng gọn gàng. Dành cho thú cưng nhỏ Chọn gói này\n\n• Gói Tắm Dưỡng Premium — 0–10 kg (không gồm cận trên): 220.000 đ. Thời lượng dự kiến 90 phút. Liệu trình chăm sóc da và lông cao cấp dành riêng cho các bé có bộ lông khô xơ, rụng nhiều. Sự kết hợp giữa tinh chất Collagen, dầu dưỡng ẩm và kỹ thuật massage thư giãn chuyên sâu giúp kích thích mọc lông, mang lại làn da khỏe mạnh từ bên trong. Phục hồi nang lông; dưỡng ẩm da; giảm căng thẳng qua massage. Dành cho thú cưng dưới 10kg Chọn gói này\n\n• Tắm Khô Khử Mùi — 0–99 kg (gồm cận trên): 90.000 đ. Thời lượng dự kiến 25 phút. Sự lựa chọn an toàn cho thú cưng đang trong thai kỳ, đang ốm hoặc đặc biệt sợ nước. Bọt tắm khô công nghệ mới giúp lấy đi dầu nhờn, bụi bẩn mà không cần xả lại với nước, giữ ấm cơ thể tuyệt đối. Không cần dùng nước; ngăn ngừa cảm lạnh; khử mùi tức thì. Đồng giá mọi hạng cân Chọn gói này\n\n• Tắm Thuốc Trị Liệu Da Liễu — 0–99 kg (gồm cận trên): 280.000 đ. Thời lượng dự kiến 90 phút. Giải pháp hỗ trợ điều trị dứt điểm các vấn đề da liễu như nấm, viêm da, ghẻ lở. Liệu trình sử dụng sữa tắm y khoa theo tư vấn của bác sĩ, kết hợp thoa kem dưỡng giúp làm dịu vết thương và kích thích tái tạo da. Giảm ngứa ngáy; tiêu diệt vi nấm; phục hồi tổn thương da. Đồng giá mọi hạng cân Chọn gói này\n\nCác mức trên đã lọc theo cân nặng bạn cung cấp. Cần chọn đúng gói và kiểm tra điều kiện nhận loài tại bước đặt. Giá hiện hành chưa xác nhận giá cho ngày tương lai hoặc mọi phụ phí. Chọn dịch vụ và thời gian",
+          "links": [
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000001",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000002",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000006",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=8d8d0107-b113-4dcb-9812-5394de6d0fde",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G02",
+          "name": "Dịch vụ và hỏi tiếp",
+          "question": "Giá bao nhiêu?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "• Gói Tắm Vệ Sinh Cơ Bản — 5–10 kg (không gồm cận trên): 170.000 đ. Thời lượng dự kiến 75 phút. Dịch vụ tắm và vệ sinh toàn diện giúp loại bỏ bụi bẩn, bã nhờn và mùi hôi khó chịu. Chúng tôi sử dụng sữa tắm chuyên dụng an toàn cho da nhạy cảm, kết hợp sấy và chải lông chuẩn kỹ thuật giúp bé yêu luôn sạch sẽ và thoải mái nhất. Làm sạch da lông; giảm mùi hôi; hỗ trợ vệ sinh tai móng gọn gàng. Dành cho thú cưng nhỏ Chọn gói này\n\n• Gói Tắm Dưỡng Premium — 0–10 kg (không gồm cận trên): 220.000 đ. Thời lượng dự kiến 90 phút. Liệu trình chăm sóc da và lông cao cấp dành riêng cho các bé có bộ lông khô xơ, rụng nhiều. Sự kết hợp giữa tinh chất Collagen, dầu dưỡng ẩm và kỹ thuật massage thư giãn chuyên sâu giúp kích thích mọc lông, mang lại làn da khỏe mạnh từ bên trong. Phục hồi nang lông; dưỡng ẩm da; giảm căng thẳng qua massage. Dành cho thú cưng dưới 10kg Chọn gói này\n\n• Tắm Khô Khử Mùi — 0–99 kg (gồm cận trên): 90.000 đ. Thời lượng dự kiến 25 phút. Sự lựa chọn an toàn cho thú cưng đang trong thai kỳ, đang ốm hoặc đặc biệt sợ nước. Bọt tắm khô công nghệ mới giúp lấy đi dầu nhờn, bụi bẩn mà không cần xả lại với nước, giữ ấm cơ thể tuyệt đối. Không cần dùng nước; ngăn ngừa cảm lạnh; khử mùi tức thì. Đồng giá mọi hạng cân Chọn gói này\n\n• Tắm Thuốc Trị Liệu Da Liễu — 0–99 kg (gồm cận trên): 280.000 đ. Thời lượng dự kiến 90 phút. Giải pháp hỗ trợ điều trị dứt điểm các vấn đề da liễu như nấm, viêm da, ghẻ lở. Liệu trình sử dụng sữa tắm y khoa theo tư vấn của bác sĩ, kết hợp thoa kem dưỡng giúp làm dịu vết thương và kích thích tái tạo da. Giảm ngứa ngáy; tiêu diệt vi nấm; phục hồi tổn thương da. Đồng giá mọi hạng cân Chọn gói này\n\nCác mức trên đã lọc theo cân nặng bạn cung cấp. Cần chọn đúng gói và kiểm tra điều kiện nhận loài tại bước đặt. Giá hiện hành chưa xác nhận giá cho ngày tương lai hoặc mọi phụ phí. Chọn dịch vụ và thời gian",
+          "links": [
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000001",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000002",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000006",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=8d8d0107-b113-4dcb-9812-5394de6d0fde",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G03",
+          "name": "Hotel và giới hạn VIP",
+          "question": "So sánh Hotel thường và VIP",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "• Standard: 180.000 đ/24 giờ. Sức chứa theo danh mục: 1. Phòng tiêu chuẩn thông gió, khay vệ sinh Khay vệ sinh; bát ăn/nước; điều hòa 2 chiều Không phân biệt cân nặng Chọn gói này\n\n• Standard Plus: 220.000 đ/24 giờ. Sức chứa theo danh mục: 2. Phòng rộng rãi hơn, nệm ngủ êm ái Nệm nằm êm ái; không gian rộng hơn Không phân biệt cân nặng Chọn gói này\n\nCác loại phòng được đối chiếu theo giá/đơn vị tính và mô tả hiện có; mục chưa ghi không được coi là tiện ích đã bao gồm. Bạn gửi ngày/giờ nhận và trả, cân nặng của bé để kiểm tra báo giá ở bước đặt; đây chưa phải xác nhận phòng trống. Giá hiện hành chưa xác nhận giá cho ngày tương lai hoặc mọi phụ phí. Chọn dịch vụ và thời gian Chưa có mục tên VIP khớp trong kết quả; không tự coi Luxury hoặc Deluxe là VIP để so sánh.",
+          "links": [
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000015",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000016",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G03",
+          "name": "Hotel và giới hạn VIP",
+          "question": "Bé 7kg",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "• Standard: 180.000 đ/24 giờ. Sức chứa theo danh mục: 1. Phòng tiêu chuẩn thông gió, khay vệ sinh Khay vệ sinh; bát ăn/nước; điều hòa 2 chiều Không phân biệt cân nặng Chọn gói này\n\n• Standard Plus: 220.000 đ/24 giờ. Sức chứa theo danh mục: 2. Phòng rộng rãi hơn, nệm ngủ êm ái Nệm nằm êm ái; không gian rộng hơn Không phân biệt cân nặng Chọn gói này\n\nCác loại phòng được đối chiếu theo giá/đơn vị tính và mô tả hiện có; mục chưa ghi không được coi là tiện ích đã bao gồm. Bạn gửi ngày/giờ nhận và trả để kiểm tra báo giá ở bước đặt; đây chưa phải xác nhận phòng trống. Giá hiện hành chưa xác nhận giá cho ngày tương lai hoặc mọi phụ phí. Chọn dịch vụ và thời gian Chưa có mục tên VIP khớp trong kết quả; không tự coi Luxury hoặc Deluxe là VIP để so sánh.",
+          "links": [
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000015",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000016",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G04",
+          "name": "Taxi",
+          "question": "Taxi bé 7kg đi 3km",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "• Đưa Đón 1 Chiều — 0–15 km (không gồm cận trên), 0–10 kg (không gồm cận trên): giá cơ bản 150.000 đ, phụ phí hiện công bố 0 đ. Pet có cân nặng nhỏ hơn 10kg Chọn gói này\n\n• Đưa Đón Khứ Hồi — 0–15 km (không gồm cận trên), 0–10 kg (không gồm cận trên): giá cơ bản 280.000 đ, phụ phí hiện công bố 0 đ. Pet có cân nặng nhỏ hơn 10kg Chọn gói này\n\nCác mức đã lọc theo cân nặng và khoảng cách bạn cung cấp. Chọn một chiều/khứ hồi và thời gian tại bước đặt. Các mức trên chưa phải xác nhận chuyến hoặc tổng tiền cho mọi lượt đi/về. Giá hiện hành chưa xác nhận giá cho ngày tương lai hoặc mọi phụ phí. Chọn dịch vụ và thời gian",
+          "links": [
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000023",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=d39b37da-e655-4866-b2e5-862b687b8eff",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G05",
+          "name": "Giá tắm/cắt tỉa",
+          "question": "Gia tam be 7kg",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "• Gói Tắm Vệ Sinh Cơ Bản — 5–10 kg (không gồm cận trên): 170.000 đ. Thời lượng dự kiến 75 phút. Dịch vụ tắm và vệ sinh toàn diện giúp loại bỏ bụi bẩn, bã nhờn và mùi hôi khó chịu. Chúng tôi sử dụng sữa tắm chuyên dụng an toàn cho da nhạy cảm, kết hợp sấy và chải lông chuẩn kỹ thuật giúp bé yêu luôn sạch sẽ và thoải mái nhất. Làm sạch da lông; giảm mùi hôi; hỗ trợ vệ sinh tai móng gọn gàng. Dành cho thú cưng nhỏ Chọn gói này\n\n• Gói Tắm Dưỡng Premium — 0–10 kg (không gồm cận trên): 220.000 đ. Thời lượng dự kiến 90 phút. Liệu trình chăm sóc da và lông cao cấp dành riêng cho các bé có bộ lông khô xơ, rụng nhiều. Sự kết hợp giữa tinh chất Collagen, dầu dưỡng ẩm và kỹ thuật massage thư giãn chuyên sâu giúp kích thích mọc lông, mang lại làn da khỏe mạnh từ bên trong. Phục hồi nang lông; dưỡng ẩm da; giảm căng thẳng qua massage. Dành cho thú cưng dưới 10kg Chọn gói này\n\n• Tắm Khô Khử Mùi — 0–99 kg (gồm cận trên): 90.000 đ. Thời lượng dự kiến 25 phút. Sự lựa chọn an toàn cho thú cưng đang trong thai kỳ, đang ốm hoặc đặc biệt sợ nước. Bọt tắm khô công nghệ mới giúp lấy đi dầu nhờn, bụi bẩn mà không cần xả lại với nước, giữ ấm cơ thể tuyệt đối. Không cần dùng nước; ngăn ngừa cảm lạnh; khử mùi tức thì. Đồng giá mọi hạng cân Chọn gói này\n\n• Tắm Thuốc Trị Liệu Da Liễu — 0–99 kg (gồm cận trên): 280.000 đ. Thời lượng dự kiến 90 phút. Giải pháp hỗ trợ điều trị dứt điểm các vấn đề da liễu như nấm, viêm da, ghẻ lở. Liệu trình sử dụng sữa tắm y khoa theo tư vấn của bác sĩ, kết hợp thoa kem dưỡng giúp làm dịu vết thương và kích thích tái tạo da. Giảm ngứa ngáy; tiêu diệt vi nấm; phục hồi tổn thương da. Đồng giá mọi hạng cân Chọn gói này\n\nCác mức trên đã lọc theo cân nặng bạn cung cấp. Cần chọn đúng gói và kiểm tra điều kiện nhận loài tại bước đặt. Giá hiện hành chưa xác nhận giá cho ngày tương lai hoặc mọi phụ phí. Chọn dịch vụ và thời gian",
+          "links": [
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000001",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000002",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=c0000000-0000-0000-0000-000000000006",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn gói này",
+              "path": "/booking?service=8d8d0107-b113-4dcb-9812-5394de6d0fde",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G05",
+          "name": "Giá tắm/cắt tỉa",
+          "question": "Giá cắt tỉa bé 7kg",
+          "status": 200,
+          "pass": false,
+          "missing": [
+            "kg"
+          ],
+          "reply": "Chưa tìm thấy lựa chọn đang cung cấp khớp yêu cầu. Bạn kiểm tra lại tên/SKU hoặc xem lựa chọn khác; mình chưa xác nhận hết hàng, hết phòng hay ngừng dịch vụ. Chọn dịch vụ và thời gian",
+          "links": [
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G06",
+          "name": "Sản phẩm và hàng công khai",
+          "question": "Sản phẩm TP-HAT-01-V1",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "• Thức ăn hạt cao cấp Royal Canin Mother và Babycat — 400g (TP-HAT-01-V1): 185.000 đ. Còn hàng tại lúc kiểm tra. Đối tượng theo mô tả: Mèo. Xem sản phẩm Thức ăn hạt khô được thiết kế đặc biệt dành riêng cho mèo mẹ đang mang thai, cho con bú và mèo con từ 1 đến 4 tháng tuổi. Hạt có kết cấu xốp, cực kỳ dễ ngâm mềm bằng nước hoặc sữa, giúp mèo con dễ dàng nhai nuốt trong giai đoạn chuyển từ sữa mẹ sang thức ăn đặc. Công thức giàu dinh dưỡng hỗ trợ tối đa sự phát triển của hệ miễn dịch và bảo vệ hệ tiê Thức ăn hạt\n\nĐối chiếu đúng mã/biến thể và mô tả trên; nhiều lựa chọn khớp thì bạn chọn SKU cụ thể để so sánh chính xác. Hàng có thể thay đổi và được kiểm tra lại tại bước mua.",
+          "links": [
+            {
+              "text": "Xem sản phẩm",
+              "path": "/product-detail?id=a0000000-0000-0000-0000-000000000001",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G06",
+          "name": "Sản phẩm và hàng công khai",
+          "question": "Còn hàng không?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "• Thức ăn hạt cao cấp Royal Canin Mother và Babycat — 400g (TP-HAT-01-V1): 185.000 đ. Còn hàng tại lúc kiểm tra. Đối tượng theo mô tả: Mèo. Xem sản phẩm Thức ăn hạt khô được thiết kế đặc biệt dành riêng cho mèo mẹ đang mang thai, cho con bú và mèo con từ 1 đến 4 tháng tuổi. Hạt có kết cấu xốp, cực kỳ dễ ngâm mềm bằng nước hoặc sữa, giúp mèo con dễ dàng nhai nuốt trong giai đoạn chuyển từ sữa mẹ sang thức ăn đặc. Công thức giàu dinh dưỡng hỗ trợ tối đa sự phát triển của hệ miễn dịch và bảo vệ hệ tiê Thức ăn hạt\n\nĐối chiếu đúng mã/biến thể và mô tả trên; nhiều lựa chọn khớp thì bạn chọn SKU cụ thể để so sánh chính xác. Hàng có thể thay đổi và được kiểm tra lại tại bước mua.",
+          "links": [
+            {
+              "text": "Xem sản phẩm",
+              "path": "/product-detail?id=a0000000-0000-0000-0000-000000000001",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G06",
+          "name": "Sản phẩm và hàng công khai",
+          "question": "So sánh sản phẩm TP-HAT-01-V1 và TP-HAT-01-V2",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "• Thức ăn hạt cao cấp Royal Canin Mother và Babycat — 400g (TP-HAT-01-V1): 185.000 đ. Còn hàng tại lúc kiểm tra. Đối tượng theo mô tả: Mèo. Xem sản phẩm Thức ăn hạt khô được thiết kế đặc biệt dành riêng cho mèo mẹ đang mang thai, cho con bú và mèo con từ 1 đến 4 tháng tuổi. Hạt có kết cấu xốp, cực kỳ dễ ngâm mềm bằng nước hoặc sữa, giúp mèo con dễ dàng nhai nuốt trong giai đoạn chuyển từ sữa mẹ sang thức ăn đặc. Công thức giàu dinh dưỡng hỗ trợ tối đa sự phát triển của hệ miễn dịch và bảo vệ hệ tiê Thức ăn hạt\n\n• Thức ăn hạt cao cấp Royal Canin Mother và Babycat — 1kg (TP-HAT-01-V2): 295.000 đ. Còn hàng tại lúc kiểm tra. Đối tượng theo mô tả: Mèo. Xem sản phẩm Thức ăn hạt khô được thiết kế đặc biệt dành riêng cho mèo mẹ đang mang thai, cho con bú và mèo con từ 1 đến 4 tháng tuổi. Hạt có kết cấu xốp, cực kỳ dễ ngâm mềm bằng nước hoặc sữa, giúp mèo con dễ dàng nhai nuốt trong giai đoạn chuyển từ sữa mẹ sang thức ăn đặc. Công thức giàu dinh dưỡng hỗ trợ tối đa sự phát triển của hệ miễn dịch và bảo vệ hệ tiê Thức ăn hạt\n\nĐối chiếu đúng mã/biến thể và mô tả trên; nhiều lựa chọn khớp thì bạn chọn SKU cụ thể để so sánh chính xác. Hàng có thể thay đổi và được kiểm tra lại tại bước mua.",
+          "links": [
+            {
+              "text": "Xem sản phẩm",
+              "path": "/product-detail?id=a0000000-0000-0000-0000-000000000001",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Xem sản phẩm",
+              "path": "/product-detail?id=a0000000-0000-0000-0000-000000000001",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G07",
+          "name": "Không bịa lịch/phòng trống",
+          "question": "Hotel còn phòng mai không?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Bạn chọn dịch vụ, thông tin bé và ngày/giờ ở bước đặt để xem lựa chọn hiện còn khả dụng. Mình chưa xác nhận phòng hoặc khung giờ trống trong chat; lựa chọn có thể thay đổi trước khi gửi yêu cầu. Chọn dịch vụ và thời gian",
+          "links": [
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G07",
+          "name": "Không bịa lịch/phòng trống",
+          "question": "Mai còn giờ tắm nào?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Bạn chọn dịch vụ, thông tin bé và ngày/giờ ở bước đặt để xem lựa chọn hiện còn khả dụng. Mình chưa xác nhận phòng hoặc khung giờ trống trong chat; lựa chọn có thể thay đổi trước khi gửi yêu cầu. Chọn dịch vụ và thời gian",
+          "links": [
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        }
+      ],
+      "dimensions": [
+        {
+          "viewport": 1164,
+          "left": 652.0028076171875,
+          "right": 1062.0028076171875,
+          "width": 410,
+          "pass": true
+        },
+        {
+          "viewport": 698,
+          "left": 186.5482940673828,
+          "right": 596.5482940673828,
+          "width": 410,
+          "pass": true
+        },
+        {
+          "viewport": 355,
+          "left": 12.017045021057129,
+          "right": 328.9204568862915,
+          "width": 316.9034118652344,
+          "pass": true
+        }
+      ],
+      "networkErrors": [],
+      "jsErrors": [],
+      "apiCalls": 37,
+      "actions": {
+        "public_open": 7,
+        "public_send": 15,
+        "public_read": 15
+      }
+    },
+    {
+      "batch": "B",
+      "checks": [
+        {
+          "group": "G08",
+          "name": "Đặt lịch guest",
+          "question": "Không đăng nhập đặt lịch được không?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Có luồng đặt lịch dành cho khách vãng lai mà không bắt buộc tạo tài khoản thành viên. Bạn cung cấp thông tin liên hệ và hồ sơ bé, chọn dịch vụ, thời gian, xem lại báo giá rồi gửi yêu cầu. Giữ phiên khách hoặc thông tin khôi phục để xem lại biên nhận. Đã tiếp nhận yêu cầu chưa có nghĩa là đã thanh toán hoặc cửa hàng đã duyệt. Chọn dịch vụ và thời gian",
+          "links": [
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G08",
+          "name": "Đặt lịch guest",
+          "question": "Đặt cho hai bé thế nào?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Mỗi yêu cầu đặt lịch hiện chọn một bé. Nếu có nhiều bé, bạn thực hiện yêu cầu riêng cho từng bé. Một lịch có gói chính và có thể có phần thêm được hệ thống cho phép; không có nghĩa mọi dịch vụ đều ghép chung được. Hãy kiểm tra báo giá và lịch khả dụng cho từng yêu cầu. Chọn dịch vụ và thời gian",
+          "links": [
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G09",
+          "name": "Mua hàng guest",
+          "question": "Không có tài khoản mua hàng được không?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Bạn có thể mua bằng luồng khách vãng lai mà không phải tạo tài khoản thành viên. Chọn sản phẩm và biến thể, nhập thông tin liên hệ, chọn nhận tại cửa hàng hoặc hình thức giao nhận được hỗ trợ, kiểm tra tổng tiền rồi đặt hàng. Giữ phiên khách hoặc mã khôi phục để tra cứu. Tạo đơn thành công không đồng nghĩa đã thanh toán; hệ thống không tự ghép hồ sơ thành viên chỉ vì trùng số điện thoại. Chọn dịch vụ và thời gian",
+          "links": [
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G09",
+          "name": "Mua hàng guest",
+          "question": "Thanh toán bằng cách nào?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Chọn sản phẩm và biến thể, thêm vào giỏ hoặc vào bước mua, nhập thông tin liên hệ và giao nhận cần thiết, chọn phương thức thanh toán được hiển thị rồi kiểm tra đơn hàng. Chỉ bấm đặt khi đã xem kết quả kiểm tra. Sau khi tạo, giữ biên nhận và thông tin khôi phục; trạng thái đơn và thanh toán được hiển thị riêng. Xem sản phẩm Tra cứu đơn và lịch guest",
+          "links": [
+            {
+              "text": "Xem sản phẩm",
+              "path": "/shop",
+              "origin": "http://localhost:4000"
+            },
+            {
+              "text": "Tra cứu đơn và lịch guest",
+              "path": "/return-guest",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G10",
+          "name": "Giao nhận/đổi trả/hủy",
+          "question": "Phí giao hàng bao nhiêu?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Chọn hình thức giao nhận và cung cấp địa chỉ cần thiết tại bước mua hàng, sau đó dùng chức năng kiểm tra đơn để xem phí và tổng tiền hiện được áp dụng. Không mặc định miễn phí hoặc giao được mọi địa chỉ. Nếu hệ thống không đưa ra lựa chọn phù hợp, hãy nhờ nhân viên kiểm tra. Tra cứu đơn và lịch guest",
+          "links": [
+            {
+              "text": "Tra cứu đơn và lịch guest",
+              "path": "/return-guest",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G10",
+          "name": "Giao nhận/đổi trả/hủy",
+          "question": "Tôi muốn đổi trả hàng",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Bạn sử dụng mục đổi trả trong tài khoản hoặc luồng tra cứu dành cho khách vãng lai khi đã xác minh được quyền với giao dịch, hoặc nhờ nhân viên hỗ trợ. Chuẩn bị thông tin đơn và lý do cần đổi trả. FAQ này chưa xác nhận thời hạn, phí, điều kiện được chấp thuận hoặc khoản hoàn cho trường hợp của bạn; gửi yêu cầu không đồng nghĩa đã được duyệt. Tra cứu đơn và lịch guest",
+          "links": [
+            {
+              "text": "Tra cứu đơn và lịch guest",
+              "path": "/return-guest",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G10",
+          "name": "Giao nhận/đổi trả/hủy",
+          "question": "Hủy lịch thế nào?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Bạn có thể hủy lịch thông qua chức năng hủy nếu lịch đang ở trạng thái cho phép. Tra cứu đơn và lịch guest",
+          "links": [
+            {
+              "text": "Tra cứu đơn và lịch guest",
+              "path": "/return-guest",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G11",
+          "name": "Điểm và ưu đãi công khai",
+          "question": "Paw Points là gì?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Paw Points là điểm thưởng được tích lũy từ các hoạt động đủ điều kiện và có thể được sử dụng theo các quy tắc đổi thưởng hiện hành.",
+          "links": [],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G11",
+          "name": "Điểm và ưu đãi công khai",
+          "question": "Cần bao nhiêu điểm để lên hạng?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Paw Points là điểm thưởng được tích lũy từ các hoạt động đủ điều kiện và có thể được sử dụng theo các quy tắc đổi thưởng hiện hành. Hướng dẫn này chưa có bảng ngưỡng điểm hoặc tỷ lệ đổi thưởng cụ thể đã xác nhận. Bạn có thể chọn Gặp chuyên viên để kiểm tra điều kiện công khai, không cần gửi số dư hay hồ sơ cá nhân.",
+          "links": [],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G11",
+          "name": "Điểm và ưu đãi công khai",
+          "question": "Có khuyến mãi không?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Ưu đãi có thể thay đổi theo thời điểm và điều kiện áp dụng. FAQ này chưa cung cấp danh sách chương trình còn hiệu lực hoặc xác nhận bạn đủ điều kiện. Hãy kiểm tra ưu đãi được hiển thị và kết quả áp dụng tại bước xem giá, hoặc nhờ nhân viên xác nhận; không mặc định được giảm giá.",
+          "links": [],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G12",
+          "name": "Chuẩn bị/an toàn",
+          "question": "Bé bị dị ứng cần chuẩn bị gì?",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Bạn nên chuẩn bị thông tin cơ bản của bé, tình trạng sức khỏe, dị ứng và các yêu cầu chăm sóc đặc biệt. Với Pet Hotel, cần kiểm tra thêm điều kiện tiếp nhận và tiêm phòng. Nếu bé có vấn đề sức khỏe hoặc tập tính cần lưu ý, hãy báo nhân viên trước khi đặt; chat không tự xác nhận bé đủ điều kiện tiếp nhận hoặc thay thế tư vấn thú y. Chọn dịch vụ và thời gian",
+          "links": [
+            {
+              "text": "Chọn dịch vụ và thời gian",
+              "path": "/booking",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G13",
+          "name": "Tra cứu/khôi phục",
+          "question": "Cách tra cứu đơn guest",
+          "status": 200,
+          "pass": true,
+          "missing": [],
+          "reply": "Thành viên xem đơn trong tài khoản của mình. Khách vãng lai sử dụng phiên khách hoặc cơ chế khôi phục và xác minh tại mục tra cứu, hoặc nhờ nhân viên hỗ trợ. Chỉ biết mã đơn hay số điện thoại không tự tạo quyền xem đơn; chat tư vấn công khai này chưa xác minh hoặc tra trạng thái giao dịch thay bạn. Tra cứu đơn và lịch guest",
+          "links": [
+            {
+              "text": "Tra cứu đơn và lịch guest",
+              "path": "/return-guest",
+              "origin": "http://localhost:4000"
+            }
+          ],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        },
+        {
+          "group": "G13",
+          "name": "Tra cứu/khôi phục",
+          "question": "Không nhận được mã đơn thì làm sao?",
+          "status": 200,
+          "pass": false,
+          "missing": [
+            "khôi phục"
+          ],
+          "reply": "Kiểm tra lại số điện thoại và thông báo trên màn hình, chờ đến khi hệ thống cho phép gửi lại rồi thử theo hướng dẫn. Khả năng gửi và kênh nhận mã phụ thuộc cấu hình xác thực đang vận hành; FAQ này không xác nhận SMS đã được gửi thành công. Nếu vẫn không nhận được, hãy liên hệ nhân viên. Không gửi mã OTP hoặc mật khẩu vào chat.",
+          "links": [],
+          "sendEnabled": true,
+          "handoverEnabled": true
+        }
+      ],
+      "dimensions": [
+        {
+          "viewport": 1164,
+          "left": 652.0028076171875,
+          "right": 1062.0028076171875,
+          "width": 410,
+          "pass": true
+        },
+        {
+          "viewport": 698,
+          "left": 186.5482940673828,
+          "right": 596.5482940673828,
+          "width": 410,
+          "pass": true
+        },
+        {
+          "viewport": 355,
+          "left": 12.017045021057129,
+          "right": 328.9204568862915,
+          "width": 316.9034118652344,
+          "pass": true
+        }
+      ],
+      "networkErrors": [],
+      "jsErrors": [],
+      "apiCalls": 32,
+      "actions": {
+        "public_open": 6,
+        "public_send": 13,
+        "public_read": 13
+      }
+    }
+  ],
+  "focusedRetest": {
+    "batch": "C",
+    "checks": [
+      {
+        "group": "G05",
+        "name": "Giá tắm/cắt tỉa",
+        "question": "Gia tam be 7kg",
+        "status": 200,
+        "pass": true,
+        "missing": [],
+        "reply": "• Gói Tắm Vệ Sinh Cơ Bản — 5–10 kg (không gồm cận trên): 170.000 đ. Thời lượng dự kiến 75 phút. Dịch vụ tắm và vệ sinh toàn diện giúp loại bỏ bụi bẩn, bã nhờn và mùi hôi khó chịu. Chúng tôi sử dụng sữa tắm chuyên dụng an toàn cho da nhạy cảm, kết hợp sấy và chải lông chuẩn kỹ thuật giúp bé yêu luôn sạch sẽ và thoải mái nhất. Làm sạch da lông; giảm mùi hôi; hỗ trợ vệ sinh tai móng gọn gàng. Dành cho thú cưng nhỏ Chọn gói này\n\n• Gói Tắm Dưỡng Premium — 0–10 kg (không gồm cận trên): 220.000 đ. Thời lượng dự kiến 90 phút. Liệu trình chăm sóc da và lông cao cấp dành riêng cho các bé có bộ lông khô xơ, rụng nhiều. Sự kết hợp giữa tinh chất Collagen, dầu dưỡng ẩm và kỹ thuật massage thư giãn chuyên sâu giúp kích thích mọc lông, mang lại làn da khỏe mạnh từ bên trong. Phục hồi nang lông; dưỡng ẩm da; giảm căng thẳng qua massage. Dành cho thú cưng dưới 10kg Chọn gói này\n\n• Tắm Khô Khử Mùi — 0–99 kg (gồm cận trên): 90.000 đ. Thời lượng dự kiến 25 phút. Sự lựa chọn an toàn cho thú cưng đang trong thai kỳ, đang ốm hoặc đặc biệt sợ nước. Bọt tắm khô công nghệ mới giúp lấy đi dầu nhờn, bụi bẩn mà không cần xả lại với nước, giữ ấm cơ thể tuyệt đối. Không cần dùng nước; ngăn ngừa cảm lạnh; khử mùi tức thì. Đồng giá mọi hạng cân Chọn gói này\n\n• Tắm Thuốc Trị Liệu Da Liễu — 0–99 kg (gồm cận trên): 280.000 đ. Thời lượng dự kiến 90 phút. Giải pháp hỗ trợ điều trị dứt điểm các vấn đề da liễu như nấm, viêm da, ghẻ lở. Liệu trình sử dụng sữa tắm y khoa theo tư vấn của bác sĩ, kết hợp thoa kem dưỡng giúp làm dịu vết thương và kích thích tái tạo da. Giảm ngứa ngáy; tiêu diệt vi nấm; phục hồi tổn thương da. Đồng giá mọi hạng cân Chọn gói này\n\nCác mức trên đã lọc theo cân nặng bạn cung cấp. Cần chọn đúng gói và kiểm tra điều kiện nhận loài tại bước đặt. Giá hiện hành chưa xác nhận giá cho ngày tương lai hoặc mọi phụ phí. Chọn dịch vụ và thời gian",
+        "links": [
+          {
+            "text": "Chọn gói này",
+            "path": "/booking?service=c0000000-0000-0000-0000-000000000001",
+            "origin": "http://localhost:4000"
+          },
+          {
+            "text": "Chọn gói này",
+            "path": "/booking?service=c0000000-0000-0000-0000-000000000002",
+            "origin": "http://localhost:4000"
+          },
+          {
+            "text": "Chọn gói này",
+            "path": "/booking?service=c0000000-0000-0000-0000-000000000006",
+            "origin": "http://localhost:4000"
+          },
+          {
+            "text": "Chọn gói này",
+            "path": "/booking?service=8d8d0107-b113-4dcb-9812-5394de6d0fde",
+            "origin": "http://localhost:4000"
+          },
+          {
+            "text": "Chọn dịch vụ và thời gian",
+            "path": "/booking",
+            "origin": "http://localhost:4000"
+          }
+        ],
+        "sendEnabled": true,
+        "handoverEnabled": true
+      },
+      {
+        "group": "G05",
+        "name": "Giá tắm/cắt tỉa",
+        "question": "Giá cắt tỉa bé 7kg",
+        "status": 200,
+        "pass": true,
+        "missing": [],
+        "reply": "• Cắt Grooming Chuyên Biệt Mèo — 0–99 kg (gồm cận trên): 380.000 đ. Thời lượng dự kiến 120 phút. Quy trình làm đẹp thiết kế độc quyền dành riêng cho sự nhạy cảm của loài mèo. Môi trường yên tĩnh, thao tác điềm tĩnh kết hợp túi tắm chuyên dụng giúp các Hoàng thượng an tâm hợp tác mà không bị stress. An toàn tuyệt đối; hạn chế tối đa hoảng sợ và stress cho mèo. Đồng giá mọi hạng cân Chọn gói này\n\nCác mức trên đã lọc theo cân nặng bạn cung cấp. Cần chọn đúng gói và kiểm tra điều kiện nhận loài tại bước đặt. Giá hiện hành chưa xác nhận giá cho ngày tương lai hoặc mọi phụ phí. Chọn dịch vụ và thời gian",
+        "links": [
+          {
+            "text": "Chọn gói này",
+            "path": "/booking?service=c0000000-0000-0000-0000-000000000009",
+            "origin": "http://localhost:4000"
+          },
+          {
+            "text": "Chọn dịch vụ và thời gian",
+            "path": "/booking",
+            "origin": "http://localhost:4000"
+          }
+        ],
+        "sendEnabled": true,
+        "handoverEnabled": true
+      },
+      {
+        "group": "G13",
+        "name": "Tra cứu/khôi phục",
+        "question": "Cách tra cứu đơn guest",
+        "status": 200,
+        "pass": true,
+        "missing": [],
+        "reply": "Thành viên xem đơn trong tài khoản của mình. Khách vãng lai sử dụng phiên khách hoặc cơ chế khôi phục và xác minh tại mục tra cứu, hoặc nhờ nhân viên hỗ trợ. Chỉ biết mã đơn hay số điện thoại không tự tạo quyền xem đơn; chat tư vấn công khai này chưa xác minh hoặc tra trạng thái giao dịch thay bạn. Tra cứu đơn và lịch guest",
+        "links": [
+          {
+            "text": "Tra cứu đơn và lịch guest",
+            "path": "/return-guest",
+            "origin": "http://localhost:4000"
+          }
+        ],
+        "sendEnabled": true,
+        "handoverEnabled": true
+      },
+      {
+        "group": "G13",
+        "name": "Tra cứu/khôi phục",
+        "question": "Không nhận được mã đơn thì làm sao?",
+        "status": 200,
+        "pass": true,
+        "missing": [],
+        "reply": "Thành viên xem đơn trong tài khoản của mình. Khách vãng lai sử dụng phiên khách hoặc cơ chế khôi phục và xác minh tại mục tra cứu, hoặc nhờ nhân viên hỗ trợ. Chỉ biết mã đơn hay số điện thoại không tự tạo quyền xem đơn; chat tư vấn công khai này chưa xác minh hoặc tra trạng thái giao dịch thay bạn. Tra cứu đơn và lịch guest",
+        "links": [
+          {
+            "text": "Tra cứu đơn và lịch guest",
+            "path": "/return-guest",
+            "origin": "http://localhost:4000"
+          }
+        ],
+        "sendEnabled": true,
+        "handoverEnabled": true
+      },
+      {
+        "group": "G15",
+        "name": "Phân biệt loại mã",
+        "question": "Không nhận được OTP thì sao?",
+        "status": 200,
+        "pass": true,
+        "missing": [],
+        "reply": "Kiểm tra lại số điện thoại và thông báo trên màn hình, chờ đến khi hệ thống cho phép gửi lại rồi thử theo hướng dẫn. Khả năng gửi và kênh nhận mã phụ thuộc cấu hình xác thực đang vận hành; FAQ này không xác nhận SMS đã được gửi thành công. Nếu vẫn không nhận được, hãy liên hệ nhân viên. Không gửi mã OTP hoặc mật khẩu vào chat.",
+        "links": [],
+        "sendEnabled": true,
+        "handoverEnabled": true
+      },
+      {
+        "group": "G15",
+        "name": "Phân biệt loại mã",
+        "question": "Chưa nhận được mã xác thực",
+        "status": 200,
+        "pass": true,
+        "missing": [],
+        "reply": "Kiểm tra lại số điện thoại và thông báo trên màn hình, chờ đến khi hệ thống cho phép gửi lại rồi thử theo hướng dẫn. Khả năng gửi và kênh nhận mã phụ thuộc cấu hình xác thực đang vận hành; FAQ này không xác nhận SMS đã được gửi thành công. Nếu vẫn không nhận được, hãy liên hệ nhân viên. Không gửi mã OTP hoặc mật khẩu vào chat.",
+        "links": [],
+        "sendEnabled": true,
+        "handoverEnabled": true
+      },
+      {
+        "group": "G15",
+        "name": "Phân biệt loại mã",
+        "question": "Không nhận được mã thì sao?",
+        "status": 200,
+        "pass": true,
+        "missing": [],
+        "reply": "Bạn chưa nhận mã OTP/xác thực, hay mã đơn/lịch và mã khôi phục? Bạn chỉ cần nói loại mã, không gửi mã bí mật vào chat. Với giao dịch guest, bạn có thể mở Tra cứu đơn và lịch guest.",
+        "links": [
+          {
+            "text": "Tra cứu đơn và lịch guest",
+            "path": "/return-guest",
+            "origin": "http://localhost:4000"
+          }
+        ],
+        "sendEnabled": true,
+        "handoverEnabled": true
+      }
+    ],
+    "dimensions": [
+      {
+        "viewport": 1164,
+        "left": 652.0028076171875,
+        "right": 1062.0028076171875,
+        "width": 410,
+        "pass": true
+      },
+      {
+        "viewport": 698,
+        "left": 186.5482940673828,
+        "right": 596.5482940673828,
+        "width": 410,
+        "pass": true
+      },
+      {
+        "viewport": 355,
+        "left": 12.017045021057129,
+        "right": 328.9204568862915,
+        "width": 316.9034118652344,
+        "pass": true
+      }
+    ],
+    "networkErrors": [],
+    "jsErrors": [],
+    "apiCalls": 17,
+    "actions": {
+      "public_open": 3,
+      "public_send": 7,
+      "public_read": 7
+    }
+  },
+  "latestUniqueQuestions": 31,
+  "latestUniqueQuestionsPass": 31,
+  "linksInitial": {
+    "checks": [
+      {
+        "flow": "Click actual chat link",
+        "question": "Giá tắm bé 7kg",
+        "path": "/booking",
+        "pass": true,
+        "retainedSelection": true
+      },
+      {
+        "flow": "Click actual chat link",
+        "question": "Sản phẩm TP-HAT-01-V1",
+        "path": "/product-detail",
+        "pass": true
+      },
+      {
+        "flow": "Click actual chat link",
+        "question": "Cách tra cứu đơn guest",
+        "path": "/return-guest",
+        "pass": true
+      },
+      {
+        "question": "Không có tài khoản mua hàng được không?",
+        "path": "/shop",
+        "pass": false,
+        "error": "locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.fab-chat-bubble--bot').last().locator('a[href^=\"/shop\"]').first() to be visible\u001b[22m\n"
+      },
+      {
+        "flow": "Mobile Shift+Enter/Escape/reopen keeps unsent draft",
+        "pass": true
+      },
+      {
+        "flow": "Mobile widget fits viewport",
+        "pass": true,
+        "box": {
+          "x": 12.017045021057129,
+          "y": 135.28408813476562,
+          "width": 316.903395652771,
+          "height": 619.9999694824219
+        }
+      }
+    ],
+    "screenshot": "D:/Aboutme/Pawpal-infra/browser-check/guest-phase2-mobile.png"
+  },
+  "shopLinkRetest": {
+    "flow": "Guest buying guide links to shop, not booking",
+    "pass": true,
+    "status": 200
+  },
+  "recovery": {
+    "checks": [
+      {
+        "flow": "Lost response after real server persist keeps draft and permits retry",
+        "pass": true
+      },
+      {
+        "flow": "Pending record exists before reload",
+        "record": {
+          "owner": "guest",
+          "guestIssued": 1793457186883,
+          "issued": 1793457186883,
+          "needsOpen": false,
+          "question": "Paw Points là gì?",
+          "age": 3844,
+          "uuid": true,
+          "request": true,
+          "sameActive": true
+        }
+      },
+      {
+        "flow": "Reload retry reuses requestId, server replays, transcript has no duplicate",
+        "pass": true,
+        "status": 200
+      },
+      {
+        "flow": "Short ambiguous question asks topic without denying guest",
+        "pass": true
+      },
+      {
+        "flow": "Input length bound enforced by field",
+        "pass": true
+      },
+      {
+        "flow": "Another guest has an empty independent history",
+        "pass": true
+      },
+      {
+        "flow": "Another guest cannot read owned diagnostic conversation",
+        "pass": true,
+        "status": 403
+      },
+      {
+        "flow": "Renderer refuses external/javascript links and HTML execution",
+        "pass": true
+      }
+    ],
+    "scope": "Real local UI/API; one intentional response loss, one expected403 and one isolated response-injection renderer check. Diagnostic conversations only."
+  },
+  "handover": {
+    "checks": [
+      {
+        "flow": "Handover enabled immediately after answer",
+        "pass": true
+      },
+      {
+        "flow": "Guest queues own conversation",
+        "pass": true
+      },
+      {
+        "flow": "Admin takes and replies; guest updates without reopening",
+        "pass": true,
+        "foregroundLatencyMs": 32342
+      },
+      {
+        "flow": "Guest reply automatically reaches Admin UI",
+        "pass": true
+      },
+      {
+        "flow": "Own case resolved, CSAT submitted and composer locked",
+        "pass": true
+      },
+      {
+        "flow": "Natural request for human and return to bot work",
+        "pass": true
+      }
+    ],
+    "scope": "Two actual UIs and live database; only own diagnostic conversation selected/modified. Resolution refresh explicitly reopens widget; staff reply measured foreground polling."
+  },
+  "model": {
+    "scope": "Exactly two approved UI questions; public FAQ/empty history; each generator bounded by existing max4 attempts; no manual retry",
+    "checks": [
+      {
+        "question": "PawPal có những dịch vụ gì?",
+        "status": 200,
+        "pass": true,
+        "reply": "PawPal hiện có các dịch vụ Pet Spa/Grooming, Pet Hotel và Pet Taxi, ngoài ra còn có các sản phẩm dành cho thú cưng.",
+        "ms": 9125,
+        "emptyHistory": true
+      },
+      {
+        "question": "Lần đầu đến PawPal có điều gì cần lưu ý?",
+        "status": 200,
+        "pass": true,
+        "reply": "Chào bạn, lần đầu đến PawPal bạn có thể tìm hiểu về các dịch vụ, giá cả và điều kiện áp dụng. Sau đó, bạn có thể đặt lịch hoặc yêu cầu nhân viên tư vấn thêm. Bạn cũng nên chuẩn bị thông tin cơ bản của bé như tình trạng sức khỏe, dị ứng và các yêu cầu chăm sóc đặc biệt. Đối với dịch vụ Pet Hotel, bạn cần kiểm tra thêm điều kiện tiếp nhận và tiêm phòng. Giao dịch đầu tiên đủ điều kiện có thể được cộng điểm thưởng.",
+        "ms": 8093,
+        "emptyHistory": true
+      }
+    ]
+  },
+  "budget": {
+    "pass": true,
+    "elapsedMs": 4933,
+    "calls": [
+      {
+        "action": "public_open",
+        "status": 200,
+        "requestBytes": 170,
+        "responseBytes": 67
+      },
+      {
+        "action": "public_send",
+        "status": 200,
+        "requestBytes": 259,
+        "responseBytes": 11
+      },
+      {
+        "action": "public_read",
+        "status": 200,
+        "requestBytes": 170,
+        "responseBytes": 1284
+      }
+    ],
+    "scope": "Browser JSON request/response bodies only; not total DB/provider/network egress and not a concurrency load test"
+  }
+}

@@ -82,7 +82,7 @@
         var rootPath = getRootPath();
         if (!document.querySelector('script[src*="fab.js"]')) {
             var fabScript = document.createElement('script');
-            fabScript.src = rootPath + 'components/fab/fab.js';
+            fabScript.src = rootPath + 'components/fab/fab.js?v=20261031_guest_phase2';
             fabScript.defer = true;
             document.head.appendChild(fabScript);
         }
@@ -219,7 +219,7 @@
         var root = getRootPath();
         console.log('[components.js] root detected:', root);
         injectComponent('site-header', root + 'components/header/header.html');
-        injectComponent('site-footer', root + 'components/footer/footer.html');
+        injectComponent('site-footer', root + 'components/footer/footer.html?v=20261031_store');
         injectComponent('site-fab', root + 'components/fab/fab.html');
         injectComponent('user-sidebar', root + 'components/user-sidebar/user-sidebar.html');
         

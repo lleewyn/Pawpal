@@ -1,0 +1,101 @@
+{
+  "scope": "Phase1 additive service-only public reads; no browser or model test",
+  "checks": [
+    {
+      "kind": "store",
+      "status": "PASS",
+      "rows": 1,
+      "bytes": 264
+    },
+    {
+      "kind": "grooming",
+      "status": "PASS",
+      "rows": 5,
+      "bytes": 3433
+    },
+    {
+      "kind": "grooming",
+      "status": "PASS",
+      "rows": 5,
+      "bytes": 3261
+    },
+    {
+      "kind": "hotel",
+      "status": "PASS",
+      "rows": 5,
+      "bytes": 1895
+    },
+    {
+      "kind": "hotel",
+      "status": "PASS",
+      "rows": 5,
+      "bytes": 1901
+    },
+    {
+      "kind": "taxi",
+      "status": "PASS",
+      "rows": 2,
+      "bytes": 663
+    },
+    {
+      "kind": "product",
+      "status": "PASS",
+      "rows": 1,
+      "bytes": 751
+    },
+    {
+      "kind": "product",
+      "status": "PASS",
+      "rows": 1,
+      "bytes": 750
+    },
+    {
+      "invalid": "customer",
+      "status": "PASS",
+      "code": "22023"
+    },
+    {
+      "invalid": "product",
+      "status": "PASS",
+      "code": "22023"
+    },
+    {
+      "invalid": "product",
+      "status": "PASS",
+      "code": "22023"
+    },
+    {
+      "invalid": "grooming",
+      "status": "PASS",
+      "code": "22023"
+    },
+    {
+      "invalid": "taxi",
+      "status": "PASS",
+      "code": "22023"
+    },
+    {
+      "invalid": "store",
+      "status": "PASS",
+      "code": "22023"
+    }
+  ],
+  "applied": true,
+  "sha256": "43d2c6e59c50d16d94f1ecbd2e45b2c7d95794f830495379f3cefc986154767d",
+  "grants": [
+    {
+      "proname": "read_public_guest_advice",
+      "prosecdef": false,
+      "anon": false,
+      "member": false,
+      "service": true
+    },
+    {
+      "proname": "read_public_guest_seed",
+      "prosecdef": false,
+      "anon": false,
+      "member": false,
+      "service": true
+    }
+  ]
+}

@@ -1198,3 +1198,5 @@ body:not(.admin-body) .fab-history-pagination{display:flex;align-items:center;ju
 body:not(.admin-body) .fab-history-pagination button{width:30px;height:30px;border:0;background:transparent;color:#214939;border-radius:9px;font:500 15px Inter,system-ui,sans-serif;cursor:pointer}
 body:not(.admin-body) .fab-history-pagination button:disabled{opacity:.3;cursor:default}
 body:not(.admin-body) .fab-history-pagination span{display:grid;place-items:center;width:30px;height:30px;background:#214939;color:#fff;border-radius:9px;font-size:12px}
+body:not(.admin-body) .fab-answer-link{color:#236B48;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere;font-weight:600}
+body:not(.admin-body) .fab-answer-link:focus-visible{outline:2px solid #236B48;outline-offset:3px;border-radius:3px}

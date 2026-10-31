@@ -1,0 +1,6 @@
+{
+  "applied": true,
+  "sha256": "e886ce615ced07c4691c206032bc8f20eb250e2698d0d0b79c41dec1b3f5e861",
+  "check": "Customer cut/trim wording maps to actual public Grooming names; no nail-trim false match",
+  "rows": 3
+}

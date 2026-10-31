@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-31",
+  "scope": "Public guest FAQ corrections only; no Gemini/Cloud Logs or business transaction mutation",
+  "files": [
+    {
+      "name": "150_chat_booking_faq_audience.sql",
+      "normalizedSha256": "b82ccd6f84df6c664256736d3268f69a6cbd1b9c9506e4e85db27cbe00532d5b"
+    },
+    {
+      "name": "152_chat_hotel_faq_missing_prices.sql",
+      "normalizedSha256": "bf58670276321fa823f1d1adafb8fd4e049ee37e30a495c022003bb55426b0d2"
+    },
+    {
+      "name": "157_public_faq_content_review.sql",
+      "normalizedSha256": "fd6a47a5c0a67f244ae7d763c1eb4b2c11a37681218a9fd77c4bb1be5bde1012"
+    }
+  ],
+  "checks": [
+    {
+      "name": "All21 reviewed FAQ states match corrected content",
+      "status": "PASS"
+    },
+    {
+      "name": "Three new public guides have readable Vietnamese category",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Tôi có thể đặt lịch cho nhiều bé không?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Tôi có thể sử dụng nhiều dịch vụ cho bé cùng lúc không?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Tôi không nhận được OTP thì sao?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Tôi có bắt buộc phải có tài khoản mới được mua hàng không?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Tôi có được đặt lịch mà chưa có tài khoản không?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "PawPal có mở cửa cuối tuần hoặc ngày lễ không?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "PawPal có những chi nhánh nào?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Nếu khung giờ tôi muốn đã kín thì sao?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "PawPal có khuyến mãi dịch vụ không?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Khách vãng lai mua hàng như thế nào?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Phí giao hàng và phạm vi giao nhận được xác nhận ở đâu?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Tôi muốn đổi trả hàng thì làm thế nào?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "PawPal phục vụ những loài thú cưng nào?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Có thể gửi bé nhiều ngày hoặc qua đêm không?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Gửi Hotel ngày lễ, Tết có phụ thu không?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Dịch vụ mất bao lâu?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Tôi xem trạng thái đơn hàng ở đâu?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Tôi có bao nhiêu Paw Points?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Đặt lịch PawPal như thế nào?",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete public source retrieved",
+      "question": "Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+      "status": "PASS"
+    }
+  ],
+  "applied": true
+}

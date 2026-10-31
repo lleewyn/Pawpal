@@ -1,0 +1,6 @@
+{
+  "applied": true,
+  "sha256": "df943afeb3a54ef521eb95660b26c253f791a15f2f93c7ab12f7535d82e22f40",
+  "check": "Hotel explicit name filtering, no invented VIP equivalence",
+  "rows": 2
+}

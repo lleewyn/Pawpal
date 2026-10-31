@@ -1,0 +1,101 @@
+{
+  "scope": "All canonical public guide sources extracted from UTF8 runtime module; no model",
+  "checks": [
+    {
+      "question": "Tôi cần chuẩn bị gì trước khi đưa bé đến?",
+      "is_active": true,
+      "length": 222,
+      "status": "PASS"
+    },
+    {
+      "question": "Tôi muốn hoàn tiền thì làm sao?",
+      "is_active": true,
+      "length": 197,
+      "status": "PASS"
+    },
+    {
+      "question": "Paw Points là gì?",
+      "is_active": true,
+      "length": 180,
+      "status": "PASS"
+    },
+    {
+      "question": "Tôi quên mật khẩu thì làm sao?",
+      "is_active": true,
+      "length": 157,
+      "status": "PASS"
+    },
+    {
+      "question": "Tôi có thể đặt lịch cho nhiều bé không?",
+      "is_active": true,
+      "length": 269,
+      "status": "PASS"
+    },
+    {
+      "question": "Tôi có thể sử dụng nhiều dịch vụ cho bé cùng lúc không?",
+      "is_active": true,
+      "length": 284,
+      "status": "PASS"
+    },
+    {
+      "question": "Tôi không nhận được OTP thì sao?",
+      "is_active": true,
+      "length": 328,
+      "status": "PASS"
+    },
+    {
+      "question": "Đặt lịch PawPal như thế nào?",
+      "is_active": true,
+      "length": 469,
+      "status": "PASS"
+    },
+    {
+      "question": "PawPal có những chi nhánh nào?",
+      "is_active": true,
+      "length": 232,
+      "status": "PASS"
+    },
+    {
+      "question": "PawPal có khuyến mãi dịch vụ không?",
+      "is_active": true,
+      "length": 279,
+      "status": "PASS"
+    },
+    {
+      "question": "Khách vãng lai mua hàng như thế nào?",
+      "is_active": true,
+      "length": 312,
+      "status": "PASS"
+    },
+    {
+      "question": "Phí giao hàng và phạm vi giao nhận được xác nhận ở đâu?",
+      "is_active": true,
+      "length": 275,
+      "status": "PASS"
+    },
+    {
+      "question": "Tôi muốn đổi trả hàng thì làm thế nào?",
+      "is_active": true,
+      "length": 343,
+      "status": "PASS"
+    },
+    {
+      "question": "Gửi Hotel ngày lễ, Tết có phụ thu không?",
+      "is_active": true,
+      "length": 252,
+      "status": "PASS"
+    },
+    {
+      "question": "Dịch vụ mất bao lâu?",
+      "is_active": true,
+      "length": 324,
+      "status": "PASS"
+    },
+    {
+      "question": "Tôi xem trạng thái đơn hàng ở đâu?",
+      "is_active": true,
+      "length": 299,
+      "status": "PASS"
+    }
+  ]
+}

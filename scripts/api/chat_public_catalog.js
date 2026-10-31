@@ -42,5 +42,5 @@ function format(data,route){
  const caveat=route.kind==='product'?'Giá niêm yết của biến thể đang bật; chưa gồm phí giao nhận hoặc ưu đãi cá nhân, chưa xác nhận còn hàng.':'Các mức cấu hình đang hiệu lực, chưa phải báo giá xác nhận cho bé hoặc lịch cụ thể. Cần kiểm tra cân nặng, tuyến đường, thời gian lưu trú và phụ phí tại bước đặt; chưa xác nhận lịch/phòng trống.';
  return {reply:lines.join('\n')+'\n\nDanh sách tối đa 10 mức, có thể chưa đầy đủ. '+caveat+' Dữ liệu lúc '+new Date(data.as_of).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})+'.',understood:true};
 }
-const requestsStaff=question=>{const q=fold(question);return !/(?:khong|chua|ko) (?:can|muon)|dung chuyen/.test(q)&&/(?:gap|noi chuyen (?:truc tiep )?voi|ket noi(?: voi)?|chuyen (?:cho|sang)|can) (?:nhan vien|chuyen vien)|ho tro truc tiep/.test(q);};
+const requestsStaff=question=>{const q=fold(question);return !/(?:khong|chua|ko) (?:can|muon)|dung chuyen/.test(q)&&/(?:gap|noi chuyen (?:truc tiep )?voi|ket noi(?: voi)?|chuyen (?:cho|sang)|can) (?:nhan vien|chuyen vien|nguoi that)|ho tro truc tiep/.test(q);};
 module.exports={plan,format,requestsStaff};

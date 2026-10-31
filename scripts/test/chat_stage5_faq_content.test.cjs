@@ -1,6 +1,14 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const changes=JSON.parse(fs.readFileSync('docs/chatbot/stage5-faq-review-2026-10-30/reviewed-changes.txt','utf8'));
 const answer=q=>changes.find(r=>r.question===q).answer;
+
+test('public guidance seed category stays readable Vietnamese and rollback guards the same category',()=>{
+ for(const name of ['157_public_faq_content_review.sql','157_public_faq_content_review.rollback.sql']){
+  const sql=fs.readFileSync('scripts/database/v1/'+name,'utf8');
+  assert.ok(sql.includes("'Hướng dẫn công khai'"));
+  assert.ok(!sql.includes('H??ng d?n c?ng khai'));
+ }
+});
 test('guest buying and booking guidance does not reintroduce mandatory member accounts',()=>{
  assert.match(answer('Tôi có được đặt lịch mà chưa có tài khoản không?'),/không bắt buộc tạo tài khoản/);
  assert.match(answer('Tôi có bắt buộc phải có tài khoản mới được mua hàng không?'),/không phải tạo tài khoản/);

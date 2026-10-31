@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-31",
+  "scope": "Read-only public FAQ content readiness; no model, private customer data or Cloud Logs",
+  "checks": [
+    {
+      "question": "Có thể gửi bé nhiều ngày hoặc qua đêm không?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Dịch vụ mất bao lâu?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Gửi Hotel ngày lễ, Tết có phụ thu không?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Khách vãng lai mua hàng như thế nào?",
+      "status": "ready_to_insert"
+    },
+    {
+      "question": "Nếu khung giờ tôi muốn đã kín thì sao?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "PawPal có khuyến mãi dịch vụ không?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "PawPal có mở cửa cuối tuần hoặc ngày lễ không?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "PawPal có những chi nhánh nào?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "PawPal phục vụ những loài thú cưng nào?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Phí giao hàng và phạm vi giao nhận được xác nhận ở đâu?",
+      "status": "ready_to_insert"
+    },
+    {
+      "question": "QA kiểm thử lưu FAQ 2026-10-15",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Tôi có bao nhiêu Paw Points?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Tôi có bắt buộc phải có tài khoản mới được mua hàng không?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Tôi có được đặt lịch mà chưa có tài khoản không?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Tôi có thể đặt lịch cho nhiều bé không?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Tôi có thể sử dụng nhiều dịch vụ cho bé cùng lúc không?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Tôi không nhận được OTP thì sao?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Tôi muốn đổi trả hàng thì làm thế nào?",
+      "status": "ready_to_insert"
+    },
+    {
+      "question": "Tôi xem trạng thái đơn hàng ở đâu?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Đặt lịch PawPal như thế nào?",
+      "status": "ready_to_update"
+    },
+    {
+      "question": "Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+      "status": "ready_to_update"
+    }
+  ],
+  "totals": {
+    "ready_to_update": 18,
+    "ready_to_insert": 3
+  }
+}

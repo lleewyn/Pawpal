@@ -1,0 +1,36 @@
+{
+  "url": "http://localhost:4000/admin#tab-chatbot-rules",
+  "checks": [
+    {
+      "question": "Tôi có được đặt lịch mà chưa có tài khoản không?",
+      "pass": true,
+      "rows": 1
+    },
+    {
+      "question": "Tôi có bắt buộc phải có tài khoản mới được mua hàng không?",
+      "pass": true,
+      "rows": 1
+    },
+    {
+      "question": "Tôi không nhận được OTP thì sao?",
+      "pass": true,
+      "rows": 1
+    },
+    {
+      "question": "Tôi muốn đổi trả hàng thì làm thế nào?",
+      "pass": true,
+      "rows": 1
+    },
+    {
+      "question": "Đặt lịch PawPal như thế nào?",
+      "pass": true,
+      "rows": 1
+    },
+    {
+      "question": "Phòng Hotel thường và VIP khác nhau về giá thế nào?",
+      "pass": true,
+      "rows": 1
+    }
+  ],
+  "scope": "Actual local Admin FAQ reader; no Gemini call, not a guest generated-answer quality test"
+}

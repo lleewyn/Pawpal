@@ -1,0 +1,48 @@
+{
+  "destination": "Google Gemini / generativelanguage.googleapis.com",
+  "scope": "Two new guest questions, public FAQ only, empty history. Each UI question may rotate at most four keys; maximum eight outbound generation calls total. No customer records or real chat history.",
+  "packets": [
+    {
+      "question": "PawPal có những dịch vụ gì?",
+      "context": {
+        "thongTinPawpal": [
+          {
+            "question": "PawPal hiện có những dịch vụ nào?",
+            "answer": "PawPal cung cấp các nhóm dịch vụ theo danh mục hiện hành như Pet Spa/Grooming, Pet Hotel và Pet Taxi, bên cạnh các sản phẩm dành cho thú cưng.\n(Quy định: Chỉ giới thiệu các dịch vụ đang được cấu hình và cung cấp.)"
+          },
+          {
+            "question": "Thanh toán không thành công thì sao?",
+            "answer": "Bạn có thể kiểm tra trạng thái giao dịch. Nếu tiền đã bị trừ nhưng hệ thống chưa ghi nhận thành công, PawPal cần đối soát giao dịch để xử lý.\n(Quy định: Chatbot không tự xác nhận giao dịch thành công.)"
+          },
+          {
+            "question": "Giá các dịch vụ của PawPal là bao nhiêu?",
+            "answer": "PawPal có bảng giá theo từng dịch vụ và gói dịch vụ. Mình có thể tra cứu mức giá hiện hành theo nhu cầu cụ thể của bạn.\n(Quy định: Giá phải lấy từ danh mục dịch vụ đang hoạt động.)"
+          }
+        ]
+      },
+      "history": [],
+      "audience": "customer"
+    },
+    {
+      "question": "Lần đầu đến PawPal có điều gì cần lưu ý?",
+      "context": {
+        "thongTinPawpal": [
+          {
+            "question": "Tôi chưa từng sử dụng PawPal thì bắt đầu từ đâu?",
+            "answer": "Bạn có thể bắt đầu bằng việc tìm hiểu dịch vụ, giá và điều kiện áp dụng. Khi đã chọn được dịch vụ, bạn có thể thực hiện đặt lịch hoặc yêu cầu nhân viên tư vấn thêm.\n(Quy định: Không bắt buộc khách đặt lịch khi chỉ đang tìm hiểu.)"
+          },
+          {
+            "question": "Mua hàng hoặc đặt lịch lần đầu có được cộng điểm không?",
+            "answer": "Theo Reward Rule hiện hành, giao dịch đầu tiên đủ điều kiện có thể được cộng điểm thưởng tương ứng.\n(Quy định: Điểm được ghi nhận theo trạng thái và điều kiện Reward Rule.)"
+          },
+          {
+            "question": "Tôi cần chuẩn bị gì trước khi đưa bé đến?",
+            "answer": "Bạn nên chuẩn bị thông tin cơ bản của bé, tình trạng sức khỏe, dị ứng và các yêu cầu chăm sóc đặc biệt. Với Pet Hotel, cần kiểm tra thêm điều kiện tiếp nhận và tiêm phòng.\n(Quy định: Yêu cầu cụ thể phụ thuộc từng dịch vụ.)"
+          }
+        ]
+      },
+      "history": [],
+      "audience": "customer"
+    }
+  ]
+}
