@@ -1,8 +1,8 @@
 # Checklist chatbot Admin và khách hàng
 
-Cập nhật31/10/2026. Đây là danh sách công việc hiện hành. Dấu[x] chỉ xác nhận phần ghi rõ trong mục đó; kiểm thử local, smoke Cloud và nghiệm thu Production là các mức khác nhau.
+Cập nhật01/11/2026. Đây là danh sách công việc hiện hành. Dấu[x] chỉ xác nhận phần ghi rõ trong mục đó; kiểm thử local, smoke Cloud và nghiệm thu Production là các mức khác nhau.
 
-**Ưu tiên hiện tại: chatbot khách thành viên theo [file công việc riêng](PAWPAL_HOAN_THIEN_CHATBOT_KHACH_THANH_VIEN.md).** Đã hoàn thiện local bốn nhóm cơ bản cùng nhật ký/Hotel/Taxi/lịch sử điểm/ví ưu đãi/hỗ trợ riêng; browser hai tài khoản thật đạt. Migration160/161 đã ápCloud; API/frontend chưa push. Giữ [phạm vi khách vãng lai](PAWPAL_HOAN_THIEN_CHATBOT_KHACH_VANG_LAI.md) và các điều kiện tài nguyên/quyền.
+**Admin đã hoàn thành đợt local AD01–AD09 theo [file công việc riêng](PAWPAL_HOAN_THIEN_CHATBOT_ADMIN.md).**213 test tự động và24 lượt browser mở rộng đạt, cùng8 lượt đợt đầu. Thêm nguồn phòng/lưu trú Hotel và chuyến Taxi; sửa giá Hotel đúng dịch vụ và đơn vị. SQL162–164 đã áp dụng; code chưa push, chưa nghiệm thu Admin Vercel hoặc đóng Gate2. [Báo cáo Admin](docs/chatbot/admin-completion-2026-11-01/README.md). Thành viên đã phát hành9b5e0ccd và kiểmVercel10 nhóm cùng hai tài khoản thật; [báo cáo thành viên](docs/chatbot/member-vercel-2026-11-01/README.md).
 
 **Guest đã đạt nghiệm thu local đợt2 và push main556729ad:**31 câu hỏi khác nhau, hai câu Gemini được duyệt, bốn link bấm đi tiếp, phục hồi mạng/nháp và vòng hai UI chuyển nhân viên/CSAT.43 test tự động đạt. Vercel mới đã smoke mua guest và giá cắt tỉa desktop/mobile; chưa lặp toàn bộ matrix trênProduction. Gate2 và dữ liệu riêng thành viên vẫn mở. [Kết quả và lỗi đã sửa](docs/chatbot/guest-phase2-2026-10-31/README.md).
 
@@ -51,9 +51,9 @@ Chỉ để checkbox cho công việc có thể nghiệm thu. Các nguyên tắc
 ### Giai đoạn3–4: Admin
 
 - [x] G3.1–G3.3 — Có công cụ cho cả nhóm A/B/C theo danh mục hiện hành; không loại các nhóm Admin ít gặp. [Ma trận](docs/chatbot/stage3-matrix-2026-10-29/README.md).
-- [ ] G3.4 — Bổ sung SQL oracle và kiểm tra quyền cho các ca chưa bao phủ; so sánh dữ liệu thật, tổng/trang, mã đối tượng và điều kiện. Không lấy37 smoke nguồn làm chứng nhận mọi câu hỏi.
+- [x] G3.4-local — Bổ sung SQL oracle Hotel/Taxi, giá theo biên cân/cự ly, lịch buổi sáng, việc chờ và hai luồng cùng khách; kiểm tra thiếu quyền/nhân viên chấm dứt.213 test và24 câu browser mở rộng đạt; không coi là chứng nhận mọi câu hỏi hoặc Production. [Bằng chứng](docs/chatbot/admin-completion-2026-11-01/README.md).
 - [ ] G4.1 — Mở rộng liên phân hệ ngoài hai luồng một khách → lịch/phiếu và → thú cưng/đơn mới nhất. Xác định UUID duy nhất; trùng tên phải chọn lại, không ghép theo tên.
-- [ ] G4.2 — Oracle tuần/tháng cho so sánh thực thu cùng phần thời gian đã trôi qua; thêm chỉ số/phân nhóm khi có công thức và nguồn chuẩn. [Oracle ngày đã có](docs/chatbot/stage4-compare-sql-2026-10-30/README.md).
+- [x] G4.2-oracle — Đã đối chiếu độc lập SQL thực thu ngày/tuần/tháng ở cả hai kỳ theo cùng phần thời gian đã trôi qua; browser tuần/tháng đạt. Chỉ số/phân nhóm khác chờ công thức và nguồn chuẩn. [Oracle mới](docs/chatbot/admin-completion-2026-11-01/source-oracles.txt).
 - [ ] G4.3 — Bổ sung ngoại lệ/SLA/ưu tiên theo chính sách thật ngoài đơn hủy còn tiền và lịch confirmed chưa có KTV. Không coi chênh lệch đối soát là khoản hoàn được duyệt.
 - [ ] G4.4 — Mở rộng nghiệm thu lỗi từng nguồn/thiếu quyền/UUID lệch/response cũ; giữ phần hợp lệ và nói rõ phần thiếu, không giả số0.
 
@@ -64,7 +64,7 @@ Chỉ để checkbox cho công việc có thể nghiệm thu. Các nguyên tắc
 - [ ] G5.2 —21 trạng thái FAQ150/152/157 đã được đối chiếu và cập nhậtCloud; còn chốt dữ kiện kinh doanh và kiểm tra câu trả lời cuối. Không bịa tồn hàng, phòng/lịch trống, điều kiện ưu đãi, giao nhận hoặc đổi trả. [Kết quả nội dung](docs/chatbot/guest-completion-2026-10-31/README.md).
 - [x] G5-handover — Hai giao diện localhost thật đạt guest → Admin nhận/trả lời → guest tự nhận khi mở foreground sau32,3 giây → trả lời ngược Admin → hoàn tất/CSAT. Bước hoàn tất có mở lại widget; không suy ra cập nhật mọi trạng thái khi ẩn tab. [Bằng chứng đợt2](docs/chatbot/guest-phase2-2026-10-31/README.md).
 - [x] G6.1–G6.2-local — Thành viên tra đúng đơn/lịch/thú cưng/điểm qua JWT và RLS, nhiều nhóm hỏi chọn, cap5/16KiB và link chi tiết; không dùng Gemini cho dữ liệu riêng. SQL/RLS hai danh tính rollback và browser một thành viên thật đạt. Nguồn160 đã ápCloud, API/frontend còn local. [Bằng chứng và giới hạn](docs/chatbot/member-phase1-2026-10-31/README.md).
-- [ ] G6.1-release — Push theo yêu cầu và smoke bản triển khai cho bốn nhóm; không coi nguồnCloud đã đủ thay frontend/API mới.
+- [x] G6.1-release — Đã push9b5e0ccd và smokeVercel10 nhóm qua phiên thành viên thật, đúng nguồncaller-JWT; guest mobile và link chi tiết đơn đạt. Không bao gồm benchmark tải hoặc model streaming Production.
 - [x] G6-member-details-local — Nhật ký/Hotel/Taxi, lịch sử điểm, ví ưu đãi và hỗ trợ riêng đã có projection theo đúng chủ, cap5/16KiB, không lộ internal note/không gọi Gemini. SQL161 và browser local đã đạt; trạng thái trống của ba nhóm đúng nguồn tài khoản hiện có. [Báo cáo](docs/chatbot/member-phase2-2026-10-31/README.md).
 - [ ] G6.3–G6.4 — Thiết kế/kiểm chứng bằng chứng sở hữu giao dịch guest; chưa đủ thì giữ hướng dẫn công khai và chuyển nhân viên.
 - [x] G6.5-member-local — Hai tài khoản QA đăng nhập/đăng xuất/đổi chủ thật, đọc chéo403/rỗng và tài khoản QA bị khóa đã đạt; dữ liệu QA đã dọn. Response cũ có hồi quy kiểm soát transport. Không tự đăng xuất/sửa tài khoản người dùng. Liên kết giao dịch guest vẫn theoG6.3–G6.4, không gộp vào nghiệm thu này.

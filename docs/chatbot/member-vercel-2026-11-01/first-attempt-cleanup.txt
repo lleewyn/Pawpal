@@ -1,0 +1,10 @@
+{
+  "verified": true,
+  "remaining": {
+    "auth": 0,
+    "customers": 0,
+    "pets": 0,
+    "chats": 0
+  },
+  "scope": "Exact two QA fixture IDs from first failed automation only; no existing users affected"
+}

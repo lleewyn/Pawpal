@@ -1,0 +1,18 @@
+{
+  "pass": true,
+  "checks": [
+    "Independent payment/refund oracle: ngày equal-elapsed current and previous",
+    "Independent payment/refund oracle: tuần equal-elapsed current and previous",
+    "Independent payment/refund oracle: tháng equal-elapsed current and previous",
+    "Active Spa price source: lower-inclusive / upper-exclusive weight boundary oracle",
+    "Active Taxi price source: lower-inclusive / upper-exclusive weight and distance boundary oracle",
+    "Pending appointments full total equals independent unassigned confirmed predicate",
+    "Pending refunds full total equals independent outstanding transaction balance",
+    "Real remaining source retained when financial source permission absent",
+    "Vietnam morning/category appointment filter independent total",
+    "Live resolved customer: independent pets total and newest order; three sources, no AI",
+    "Live resolved customer: independent next appointment and unresolved tickets, no cross-customer merge",
+    "QA Auth/staff/role rolled back; no business mutations or private rows in report"
+  ],
+  "scope": "Cloud SQL / authenticated caller RLS; bounded real aggregates; no Cloud Logs or model"
+}

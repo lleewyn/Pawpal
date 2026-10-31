@@ -41,6 +41,9 @@ definitions['internal.customer_appointment']={internal:true,keys:['customerId','
 definitions['internal.customer_tickets']={internal:true,keys:['customerId'],permissions:['customer.read','support_ticket.read'],uuid:'customerId',arrayResult:false,rows:10,gateway:'run_admin_chat_customer_case',target:'#tab-list'};
 definitions['internal.customer_pets']={internal:true,keys:['customerId'],permissions:['customer.read','pet_profile.read','pet_breed.read','pet_species.read'],uuid:'customerId',arrayResult:false,rows:10,gateway:'run_admin_chat_customer_case',target:'#tab-pet-list'};
 definitions['internal.customer_latest_order']={internal:true,keys:['customerId'],permissions:['customer.read','sales_order.read'],uuid:'customerId',arrayResult:false,rows:1,gateway:'run_admin_chat_customer_case',target:'#tab-order-list'};
+definitions['hotel.availability']={keys:['start_at','end_at','query','page'],permissions:['hotel_room.read','hotel_room_type.read','hotel_booking.read'],date:true,rows:10,gateway:'run_admin_chat_logistics',target:'#tab-service-bookings'};
+definitions['hotel.stays']={keys:['start_at','end_at','query','page'],permissions:['hotel_booking.read','hotel_room.read','hotel_room_type.read','appointment.read','pet_profile.read'],date:true,rows:10,gateway:'run_admin_chat_logistics',target:'#tab-service-bookings'};
+definitions['taxi.trips']={keys:['start_at','end_at','query','page'],permissions:['taxi_trip.read','appointment.read','pet_profile.read'],date:true,rows:10,gateway:'run_admin_chat_logistics',target:'#tab-service-bookings'};
 for(const value of Object.values(definitions)){Object.freeze(value.keys);Object.freeze(value.permissions);if(value.statuses)Object.freeze(value.statuses);Object.freeze(value);}Object.freeze(definitions);
 const fail=(message,code='22023')=>Object.assign(Error(message),{code});
 const preparedReads=new WeakSet();

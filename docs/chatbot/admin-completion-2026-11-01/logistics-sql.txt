@@ -1,0 +1,19 @@
+{
+  "pass": true,
+  "checks": [
+    "162/163/164 compile with existing gateway guards",
+    "Physical rooms distinct, checkout boundary exclusive, stale checked-in still blocks, capacity not summed as rooms",
+    "Reserved overlap blocks exactly the affected room",
+    "Own authorized Hotel stay identity, interval and hourly unit",
+    "Taxi start boundary included, end boundary excluded; source price preserved",
+    "Price detail returns only the selected service room type and correct hourly unit",
+    "Paged price summary returns the same linked room type/unit, excludes other services",
+    "Unknown filter and payload budget fail closed",
+    "Missing one base permission denied, not a false room count",
+    "Terminated staff denied before business read",
+    "All fixtures and dry-run migrations rolled back",
+    "Reviewed162/163/164 applied separately without fixture writes"
+  ],
+  "applied": true,
+  "scope": "Real SQL/caller role/RLS with transaction QA data; no Cloud Logs, models or real business mutations"
+}

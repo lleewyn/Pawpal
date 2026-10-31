@@ -1,0 +1,5 @@
+{
+  "pass": true,
+  "flow": "Vercel actual chat link opens chosen own order detail",
+  "scope": "No private fields or identifiers exported; no model"
+}

@@ -1,0 +1,75 @@
+{
+  "checks": [
+    {
+      "question": "Lịch ngày mai",
+      "status": 200,
+      "intent": "appointment.list",
+      "expected": "appointment.list",
+      "pass": true,
+      "readCalls": 1,
+      "ms": 5161
+    },
+    {
+      "question": "Khách hàng QA-NATURAL-NOT-FOUND",
+      "status": 200,
+      "intent": "customer.lookup",
+      "expected": "customer.lookup",
+      "pass": true,
+      "readCalls": 1,
+      "ms": 2293
+    },
+    {
+      "question": "Thú cưng QA-NATURAL-NOT-FOUND",
+      "status": 200,
+      "intent": "pet.lookup",
+      "expected": "pet.lookup",
+      "pass": true,
+      "readCalls": 1,
+      "ms": 2507
+    },
+    {
+      "question": "Sản phẩm Royal Canin",
+      "status": 200,
+      "intent": "catalog.product",
+      "expected": "catalog.product",
+      "pass": true,
+      "readCalls": 1,
+      "ms": 2139
+    },
+    {
+      "question": "Điểm của khách CUS-QA-NOT-FOUND",
+      "status": 200,
+      "intent": "points.lookup",
+      "expected": "points.lookup",
+      "pass": true,
+      "readCalls": 1,
+      "ms": 2546
+    },
+    {
+      "question": "Hotel hôm nay",
+      "status": 200,
+      "intent": "appointment.list",
+      "expected": "appointment.list",
+      "pass": true,
+      "readCalls": 1,
+      "ms": 2015
+    },
+    {
+      "question": "Khách sạn còn phòng không?",
+      "status": 200,
+      "intent": "clarify",
+      "expected": "clarify",
+      "pass": true,
+      "ms": 1596
+    },
+    {
+      "question": "Giá tắm bé 7kg",
+      "status": 200,
+      "intent": "clarify",
+      "expected": "clarify",
+      "pass": true,
+      "ms": 1720
+    }
+  ],
+  "scope": "Actual localhost Admin UI/API and Cloud, new own diagnostic sessions only, source contents/IDs not exported. No model or business mutation."
+}

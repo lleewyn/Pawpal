@@ -1,0 +1,25 @@
+{
+  "marker": "20261031_member_complete",
+  "commit": "9b5e0ccd",
+  "markerObserved": true,
+  "guest": {
+    "checks": [
+      {
+        "question": "Không có tài khoản mua hàng được không?",
+        "pass": true,
+        "elapsedMs": 10520
+      },
+      {
+        "question": "Đơn hàng của tôi",
+        "pass": true,
+        "elapsedMs": 6319
+      },
+      {
+        "flow": "Mobile390 widget fits viewport",
+        "pass": true
+      }
+    ],
+    "scope": "Actual Vercel anonymous UI/API, deterministic questions, no Gemini"
+  },
+  "scope": "Production version marker plus real anonymous mobile UI/API tests; no Gemini"
+}

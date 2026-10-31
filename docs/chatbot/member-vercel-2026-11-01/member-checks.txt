@@ -1,0 +1,218 @@
+{
+  "checks": [
+    {
+      "kind": "appointments",
+      "oracleRows": 0,
+      "pass": true,
+      "elapsedMs": 7380
+    },
+    {
+      "kind": "orders",
+      "oracleRows": 5,
+      "pass": true,
+      "elapsedMs": 5794
+    },
+    {
+      "kind": "pets",
+      "oracleRows": 5,
+      "pass": true,
+      "elapsedMs": 6360
+    },
+    {
+      "kind": "loyalty",
+      "oracleRows": 1,
+      "pass": true,
+      "elapsedMs": 6426
+    },
+    {
+      "kind": "point_history",
+      "oracleRows": 5,
+      "pass": true,
+      "elapsedMs": 5843
+    },
+    {
+      "kind": "wallet",
+      "oracleRows": 5,
+      "pass": true,
+      "elapsedMs": 6530
+    },
+    {
+      "kind": "care",
+      "oracleRows": 0,
+      "pass": true,
+      "elapsedMs": 6180
+    },
+    {
+      "kind": "hotel",
+      "oracleRows": 0,
+      "pass": true,
+      "elapsedMs": 4443
+    },
+    {
+      "kind": "taxi",
+      "oracleRows": 0,
+      "pass": true,
+      "elapsedMs": 6609
+    },
+    {
+      "kind": "support",
+      "oracleRows": 3,
+      "pass": true,
+      "elapsedMs": 6044
+    }
+  ],
+  "metrics": [
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 274
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 642
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 1743
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 2117
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 894
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 1255
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 260
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 627
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 589
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 954
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 1562
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 1921
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 235
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 601
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 226
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 600
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 222
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 589
+    },
+    {
+      "action": "public_open",
+      "status": 200,
+      "bytes": 67
+    },
+    {
+      "action": "public_send",
+      "status": 200,
+      "bytes": 1077
+    },
+    {
+      "action": "public_read",
+      "status": 200,
+      "bytes": 1467
+    }
+  ],
+  "pass": true,
+  "scope": "Real Vercel UI/API/Cloud and caller-JWT bounded oracle. No private fields/tokens exported, no Gemini or business mutation. Own diagnostic chats only."
+}

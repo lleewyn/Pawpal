@@ -1,0 +1,13 @@
+{
+  "pass": false,
+  "base": "https://pawpalgr3.vercel.app",
+  "checks": [
+    "Two real disposable Auth/customer/pet fixtures created",
+    "Actual login A sees only own pet",
+    "Actual logout UI completes",
+    "Actual login B does not reuse A transcript or data",
+    "B real JWT denied A diagnostic chat by HTTP403",
+    "B real JWT gets no A pet when UUID is supplied"
+  ],
+  "scope": "Two disposable real Auth logins via phone/password UI, real API/Cloud; actual customer sessions untouched. Only QA data created and cleaned. No model or Cloud Logs."
+}

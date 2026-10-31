@@ -1,0 +1,14 @@
+Status: RESPONSE_RECEIVED; manually review the public draft below.
+Scope: exact approved public FAQ, empty history, staff audience. No business records.
+
+Chào bạn,
+
+Bạn có thể đặt lịch PawPal mà không cần tài khoản. Vui lòng thực hiện theo các bước sau:
+
+1. Chọn dịch vụ bạn muốn sử dụng.
+2. Cung cấp thông tin về thú cưng của bạn.
+3. Chọn thời gian bạn mong muốn.
+4. Điền thông tin liên hệ của bạn.
+5. Kiểm tra báo giá và gửi yêu cầu đặt lịch.
+
+Lưu ý: Việc gửi yêu cầu đặt lịch thành công chưa có nghĩa là bạn đã thanh toán hoặc cửa hàng đã duyệt lịch hẹn của bạn.

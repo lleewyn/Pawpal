@@ -1,0 +1,25 @@
+{
+  "pass": true,
+  "base": "https://pawpalgr3.vercel.app",
+  "checks": [
+    "Two real disposable Auth/customer/pet fixtures created",
+    "Actual login A sees only own pet",
+    "Vercel appointments empty/zero state and account link",
+    "Vercel orders empty/zero state and account link",
+    "Vercel loyalty empty/zero state and account link",
+    "Vercel point_history empty/zero state and account link",
+    "Vercel wallet empty/zero state and account link",
+    "Vercel care empty/zero state and account link",
+    "Vercel hotel empty/zero state and account link",
+    "Vercel taxi empty/zero state and account link",
+    "Vercel support empty/zero state and account link",
+    "Actual logout UI completes",
+    "Actual login B does not reuse A transcript or data",
+    "B real JWT denied A diagnostic chat by HTTP403",
+    "B real JWT gets no A pet when UUID is supplied",
+    "Logging back into A restores correct owner",
+    "Banned disposable account does not receive fresh private answers",
+    "All disposable Auth/customer/pet/chat data removed"
+  ],
+  "scope": "Two disposable real Auth logins via phone/password UI, real API/Cloud; actual customer sessions untouched. Only QA data created and cleaned. No model or Cloud Logs."
+}

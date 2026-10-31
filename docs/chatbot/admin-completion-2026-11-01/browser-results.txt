@@ -1,0 +1,368 @@
+{
+  "date": "2026-11-01",
+  "tests": {
+    "regression": 193,
+    "authAndBudgets": 20,
+    "total": 213,
+    "pass": 213
+  },
+  "browser": [
+    {
+      "batch": 0,
+      "checks": [
+        {
+          "question": "Hotel còn phòng ngày mai không?",
+          "status": 200,
+          "intent": "hotel.availability",
+          "expected": "hotel.availability",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 1434,
+          "scope": {
+            "start_at": "2026-11-01T17:00:00.000Z",
+            "end_at": "2026-11-02T17:00:00.000Z"
+          },
+          "ms": 2788
+        },
+        {
+          "question": "Lượt lưu trú hôm nay",
+          "status": 200,
+          "intent": "hotel.stays",
+          "expected": "hotel.stays",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 716,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 2786
+        },
+        {
+          "question": "Chuyến Taxi hôm nay",
+          "status": 200,
+          "intent": "taxi.trips",
+          "expected": "taxi.trips",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 413,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 3199
+        },
+        {
+          "question": "Lịch Spa ngày mai buổi sáng",
+          "status": 200,
+          "intent": "appointment.search",
+          "expected": "appointment.search",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 545,
+          "scope": {
+            "start_at": "2026-11-01T17:00:00.000Z",
+            "end_at": "2026-11-02T17:00:00.000Z",
+            "category": "grooming_spa",
+            "day_part": "morning"
+          },
+          "ms": 5453
+        },
+        {
+          "question": "Lịch hẹn hôm nay theo KTV: QA-ADMIN-NOT-FOUND",
+          "status": 200,
+          "intent": "appointment.search",
+          "expected": "appointment.search",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 360,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z",
+            "staff_query": "QA-ADMIN-NOT-FOUND"
+          },
+          "ms": 8536
+        },
+        {
+          "question": "So sánh thực thu tuần này và tuần trước",
+          "status": 200,
+          "intent": "revenue.compare",
+          "expected": "revenue.compare",
+          "pass": true,
+          "readCalls": 2,
+          "bytes": 586,
+          "scope": {
+            "period": "week",
+            "comparison": "previous_elapsed",
+            "current": {
+              "start_at": "2026-10-25T17:00:00.000Z",
+              "end_at": "2026-10-31T17:34:00.679Z"
+            },
+            "previous": {
+              "start_at": "2026-10-18T17:00:00.000Z",
+              "end_at": "2026-10-24T17:34:00.679Z"
+            },
+            "previous_capped": false
+          },
+          "ms": 3670
+        },
+        {
+          "question": "So sánh thực thu tháng này và tháng trước",
+          "status": 200,
+          "intent": "revenue.compare",
+          "expected": "revenue.compare",
+          "pass": true,
+          "readCalls": 2,
+          "bytes": 562,
+          "scope": {
+            "period": "month",
+            "comparison": "previous_elapsed",
+            "current": {
+              "start_at": "2026-10-31T17:00:00.000Z",
+              "end_at": "2026-10-31T17:34:13.112Z"
+            },
+            "previous": {
+              "start_at": "2026-09-30T17:00:00.000Z",
+              "end_at": "2026-09-30T17:34:13.112Z"
+            },
+            "previous_capped": false
+          },
+          "ms": 3807
+        },
+        {
+          "question": "Việc cần xử lý hôm nay",
+          "status": 200,
+          "intent": "operations.pending",
+          "expected": "operations.pending",
+          "pass": true,
+          "readCalls": 2,
+          "bytes": 1030,
+          "scope": {
+            "appointments": {
+              "start_at": "2026-10-31T17:00:00.000Z",
+              "end_at": "2026-11-01T17:00:00.000Z",
+              "status": "confirmed",
+              "unassigned": "true"
+            },
+            "refunds": "all_outstanding"
+          },
+          "ms": 3478
+        }
+      ],
+      "scope": "Actual localhost Admin UI/API and Cloud. Own new diagnostic chat sessions only. No private source rows exported. No Gemini or business mutations."
+    },
+    {
+      "batch": 1,
+      "checks": [
+        {
+          "question": "Bảng giá chi tiết Hotel: Dịch Vụ Daycare",
+          "status": 200,
+          "intent": "catalog.price_rows",
+          "expected": "catalog.price_rows",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 654,
+          "scope": {
+            "query": "Dịch Vụ Daycare",
+            "category": "pet_hotel"
+          },
+          "ms": 2594
+        },
+        {
+          "question": "Đơn hàng ORD-QA-NOT-FOUND",
+          "status": 200,
+          "intent": "order.lookup",
+          "expected": "order.lookup",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 210,
+          "scope": {
+            "query": "ORD-QA-NOT-FOUND"
+          },
+          "ms": 3256
+        },
+        {
+          "question": "Khiếu nại chưa xử lý hôm nay",
+          "status": 200,
+          "intent": "ticket.open",
+          "expected": "ticket.open",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 351,
+          "scope": {
+            "start_at": "2026-11-01T00:00:00+07:00",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 3835
+        },
+        {
+          "question": "Sản phẩm sắp hết hàng",
+          "status": 200,
+          "intent": "inventory.low_stock",
+          "expected": "inventory.low_stock",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 285,
+          "scope": {},
+          "ms": 4404
+        },
+        {
+          "question": "Danh sách hội thoại hôm nay",
+          "status": 200,
+          "intent": "conversation.list",
+          "expected": "conversation.list",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 3334,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 2663
+        },
+        {
+          "question": "Doanh thu tuần này",
+          "status": 200,
+          "intent": "revenue.summary",
+          "expected": "revenue.summary",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 295,
+          "scope": {
+            "start_at": "2026-10-25T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 4316
+        },
+        {
+          "question": "Đơn hủy chưa hoàn",
+          "status": 200,
+          "intent": "order.refund_pending",
+          "expected": "order.refund_pending",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 492,
+          "scope": {},
+          "ms": 2795
+        },
+        {
+          "question": "Lịch trực hôm nay",
+          "status": 200,
+          "intent": "staff.schedule",
+          "expected": "staff.schedule",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 384,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 5360
+        }
+      ],
+      "scope": "Actual localhost Admin UI/API and Cloud. Own new diagnostic chat sessions only. No private source rows exported. No Gemini or business mutations."
+    },
+    {
+      "batch": 2,
+      "checks": [
+        {
+          "question": "Đánh giá một sao hôm nay",
+          "status": 200,
+          "intent": "review.list",
+          "expected": "review.list",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 308,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z",
+            "rating_min": "1",
+            "rating_max": "1"
+          },
+          "ms": 3422
+        },
+        {
+          "question": "Bài viết bản nháp",
+          "status": 200,
+          "intent": "content.list",
+          "expected": "content.list",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 216,
+          "scope": {
+            "status": "draft"
+          },
+          "ms": 2452
+        },
+        {
+          "question": "Hotline cửa hàng",
+          "status": 200,
+          "intent": "settings.read",
+          "expected": "settings.read",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 773,
+          "scope": {},
+          "ms": 2755
+        },
+        {
+          "question": "Khách này có thú cưng và đơn hàng mới nhất?: CUS-QA-NOT-FOUND",
+          "status": 200,
+          "intent": "clarify",
+          "expected": "clarify",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 226,
+          "scope": {},
+          "ms": 2081
+        },
+        {
+          "question": "Khách này có lịch sắp tới và khiếu nại nào còn mở?: CUS-QA-NOT-FOUND",
+          "status": 200,
+          "intent": "clarify",
+          "expected": "clarify",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 226,
+          "scope": {},
+          "ms": 2524
+        },
+        {
+          "question": "Xóa khách hàng CUS-QA-NOT-FOUND",
+          "status": 200,
+          "intent": "refuse.write",
+          "expected": "refuse.write",
+          "pass": true,
+          "scope": {},
+          "ms": 1759
+        },
+        {
+          "question": "Khách sạn còn phòng không?",
+          "status": 200,
+          "intent": "clarify",
+          "expected": "clarify",
+          "pass": true,
+          "scope": {},
+          "ms": 1536
+        },
+        {
+          "question": "Giá tắm bé 7kg",
+          "status": 200,
+          "intent": "clarify",
+          "expected": "clarify",
+          "pass": true,
+          "scope": {},
+          "ms": 1586
+        }
+      ],
+      "scope": "Actual localhost Admin UI/API and Cloud. Own new diagnostic chat sessions only. No private source rows exported. No Gemini or business mutations."
+    }
+  ],
+  "notes": [
+    "Eight earlier natural-language smoke requests also passed; 30 distinct questions across the two rounds.",
+    "Intermediate fast runs triggered the existing 10/min guard; final batches are paced and all pass.",
+    "Source bytes only; not total Auth/PostgREST/DB transfer or a concurrency load certification.",
+    "No Gemini during browser batches. Exactly one separately approved public-only staff draft generation was reviewed.",
+    "SQL migrations162/163/164 applied. Backend changes remain local, no git push."
+  ]
+}

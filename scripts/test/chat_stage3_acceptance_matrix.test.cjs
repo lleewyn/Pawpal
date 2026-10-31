@@ -33,9 +33,12 @@ const cases=[
  ['settings.read',['Giờ mở cửa','Gio mo cua'],{code:'weekday_open',value:'08:00'},'08:00'],
  ['content.read',[`Nội dung bài viết: ${id}`,`Noi dung bai viet: ${id}`],{code:id,name:'QA đầy đủ',status:'published',body:'QA toàn văn',part:1,parts:1,revision,has_more:false},'QA toàn văn'],
  ['review.read',[`Nội dung đánh giá: ${id}`,`Noi dung danh gia: ${id}`],{code:id,name:'QA đánh giá',status:'published',body:'QA toàn văn',part:1,parts:1,revision,has_more:false},'QA toàn văn'],
- ['catalog.price_rows',['Bảng giá chi tiết Spa 5kg: QA-SPA','Bang gia chi tiet Spa 5kg: QA-SPA'],{kind:'service',weight_from:0,weight_to:10,price:10000},'10.000']
+ ['catalog.price_rows',['Bảng giá chi tiết Spa 5kg: QA-SPA','Bang gia chi tiet Spa 5kg: QA-SPA'],{kind:'service',weight_from:0,weight_to:10,price:10000},'10.000'],
+ ['hotel.availability',['Hotel còn phòng ngày mai không?','Hotel con phong ngay mai khong?'],{code:'QA-ROOM',name:'QA type',capacity:2,available:true,reserved:false,occupied:false},'QA-ROOM'],
+ ['hotel.stays',['Lượt lưu trú hôm nay','Luot luu tru hom nay'],{code:'QA-HOTEL',appointment_code:'QA-APT',name:'QA bé',room:'QA room',room_type:'QA type',status:'pending',check_in_at:now.toISOString(),check_out_at:new Date(+now+3600000).toISOString(),price:100000,billing_minutes:60},'QA-HOTEL'],
+ ['taxi.trips',['Chuyến Taxi hôm nay','Chuyen Taxi hom nay'],{code:'QA-TAXI',name:'QA bé',status:'pending',outbound_at:now.toISOString(),trip_type:'one_way',distance:3,price:100000,pickup:'QA đón',dropoff:'QA trả'},'QA-TAXI']
 ];
-function facts(intent,row,empty=false){return {intent,total:empty?0:1,items:empty||!row?[]:[row],page:1,pages:1,scope:{},source:'QA scoped source',as_of:now.toISOString(),limitations:[],...(intent==='revenue.summary'?{collected:empty?0:10000,refunded:0,net:empty?0:10000}:{})};}
+function facts(intent,row,empty=false){return {intent,total:empty?0:1,items:empty||!row?[]:[row],page:1,pages:1,scope:{},source:'QA scoped source',as_of:now.toISOString(),limitations:[],...(intent==='hotel.availability'?{available:empty?0:1,unavailable:0}:{}),...(intent==='revenue.summary'?{collected:empty?0:10000,refunded:0,net:empty?0:10000}:{})};}
 function invoke(question,rights,run){return answer({question,now,staff:{permissions:rights},readBudget:createReadBudget({lease}),caller:{rpc:run},generateReply:()=>assert.fail('deterministic data must not call a model')});}
 
 test('matrix covers every public business read tool; internal and context tools have separate suites',()=>{

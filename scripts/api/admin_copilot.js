@@ -14,6 +14,7 @@ const needsContext=question=>/^(the\b|vay\b|con\b|ngay mai\b|mai\b|ngay mot\b|tr
 const statuses={pending:'Chờ duyệt',confirmed:'Chờ phục vụ',checked_in:'Đã tiếp nhận',in_progress:'Đang thực hiện',completed:'Hoàn tất',cancelled:'Đã hủy',no_show:'Không đến',active:'Hoạt động',inactive:'Tạm ngừng',open:'Đang mở',new:'Mới',investigating:'Đang xác minh',resolved:'Đã giải quyết',closed:'Đã đóng',processing:'Đang xử lý',published:'Đã đăng',draft:'Bản nháp',archived:'Đã lưu trữ',terminated:'Đã nghỉ việc',available:'Có mặt',off:'Nghỉ',busy:'Đang bận',waiting_agent:'Chờ nhân viên',agent_handling:'Nhân viên đang hỗ trợ',bot_handling:'Hỗ trợ tự động',blocked:'Bị khóa'};
 const status=v=>statuses[v]||v||'Chưa xác định';
 function plan(question,now=new Date(),readContext={}){
+ question=require('./chat_admin_natural.js').rewrite(question);
  const pageSuffix=String(question).match(/\s+trang\s+(\d+)\s*\??$/iu);
  if(pageSuffix){const previous=plan(String(question).slice(0,pageSuffix.index),now,readContext);if(readTools.definitions[previous.intent]?.keys.includes('page'))return {...previous,filters:{...previous.filters,page:pageSuffix[1]}};return previous.intent==='refuse.write'?previous:{intent:'clarify',answer:'Tra cứu này chưa hỗ trợ chuyển trang. Hãy nêu lại phạm vi cần xem.'};}
  const q=normalize(question).trim().replace(/\s+/g,' ').replace(/\blich henh\b/g,'lich hen').replace(/\bton kh0\b/g,'ton kho');
@@ -24,6 +25,7 @@ function plan(question,now=new Date(),readContext={}){
  if(/soan|viet.*(loi|tin|tra loi)/.test(q)||/ban nhap/.test(q)&&!/bai viet/.test(q))return {intent:'draft.reply'};
  if(/tom tat.*(hoi thoai|ca chat|cuoc chat)/.test(q))return {intent:'conversation.summary'};
  if(/quy trinh|huong dan|chinh sach|cach xu ly/.test(q))return {intent:'workflow.guide'};
+ const natural=require('./chat_admin_natural.js').route(question,readContext,now);if(natural)return natural;
  const customerCase=planCustomerCase(question,readContext);if(customerCase)return customerCase;
  const pending=planPending(question,now);if(pending)return pending;
  const comparison=planComparison(question,now);if(comparison)return comparison;
@@ -103,6 +105,7 @@ function formatFacts(data,{includeSource=true}={}){
  const n=Number(data.total);if(!Number.isSafeInteger(n)||n<0||!Array.isArray(data.items)||data.items.length>n||n===0&&data.items.length)throw Error('invalid_copilot_facts');
  if(data.intent==='revenue.summary'&&(!['collected','refunded','net'].every(k=>numeric(data[k]))||Math.abs(Number(data.net)-(Number(data.collected)-Number(data.refunded)))>0.001))throw Error('invalid_copilot_facts');
  if(data.intent==='inventory.low_stock'&&data.items.some(r=>!numeric(r.stock)||!numeric(r.minimum)))throw Error('invalid_copilot_facts');
+ if(data.intent==='hotel.availability'&&(!Number.isSafeInteger(data.available)||!Number.isSafeInteger(data.unavailable)||data.available<0||data.unavailable<0||data.available+data.unavailable!==n))throw Error('invalid_hotel_capacity');
  const title=labels[data.intent]||'Kết quả';const scope=data.scope||{};
  const date=scope.start_at?new Date(scope.start_at).toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}):'';
  const category={grooming_spa:'Spa và cắt tỉa',pet_hotel:'Khách sạn thú cưng',pet_taxi:'Đưa đón thú cưng'}[scope.category];
@@ -114,7 +117,7 @@ function formatFacts(data,{includeSource=true}={}){
   if(data.intent==='catalog.service')return `- ${text(r.code)} — ${text(r.name)}: ${text(r.description)}.`;
   if(data.intent==='knowledge.search')return `${text(r.question)}\n${String(r.answer||'')}`;
   if(data.intent==='catalog.service_price'){
-   const rules=(r.prices||[]).map(p=>p.kind==='taxi'?`${p.distance_from}–${p.distance_to??'trở lên'} km, ${p.weight_from}–${p.weight_to??'trở lên'} kg: ${Number(p.price).toLocaleString('vi-VN')} đ${Number(p.surcharge)?', phụ phí '+Number(p.surcharge).toLocaleString('vi-VN')+' đ':''}`:p.kind==='hotel'?`${text(p.name)}: ${Number(p.price).toLocaleString('vi-VN')} đ/ngày`:`${p.weight_from}–${p.weight_to??'trở lên'} kg: ${Number(p.price).toLocaleString('vi-VN')} đ`);
+   const rules=(r.prices||[]).map(p=>p.kind==='taxi'?`${p.distance_from}–${p.distance_to??'trở lên'} km, ${p.weight_from}–${p.weight_to??'trở lên'} kg: ${Number(p.price).toLocaleString('vi-VN')} đ${Number(p.surcharge)?', phụ phí '+Number(p.surcharge).toLocaleString('vi-VN')+' đ':''}`:p.kind==='hotel'?`${text(p.name)}: ${Number(p.price).toLocaleString('vi-VN')} đ${Number.isSafeInteger(p.billing_minutes)&&p.billing_minutes>0?'/'+(p.billing_minutes===1440?'24 giờ':p.billing_minutes+' phút'):' (nguồn này chưa xác nhận đơn vị tính)'}`:`${p.weight_from}–${p.weight_to??'trở lên'} kg: ${Number(p.price).toLocaleString('vi-VN')} đ`);
    return `- **${text(r.name)}** (${text(r.code)}): ${rules.length?rules.join('; '):'chưa có mức giá đang áp dụng.'}`;
   }
   if(data.intent==='customer.lookup')return `- ${text(r.code)} — ${text(r.name)}, ${text(r.phone)}, ${status(r.status)}.`;
@@ -125,6 +128,8 @@ function formatFacts(data,{includeSource=true}={}){
  if(data.intent==='revenue.summary')heading=`Ngày ${date}: đã thu **${Number(data.collected).toLocaleString('vi-VN')} đ**, đã hoàn **${Number(data.refunded).toLocaleString('vi-VN')} đ**.\n\nThực thu: **${Number(data.net).toLocaleString('vi-VN')} đ**. Chỉ tính giao dịch thành công theo thời điểm thu/hoàn, không phải tổng giá trị đơn tạo trong ngày.`;
  if(scope.start_at&&Date.parse(scope.end_at)-Date.parse(scope.start_at)>86400000)heading=heading.replace(/^Ngày [^:]+:/,`Trong kỳ từ ${date} đến ${new Date(Date.parse(scope.end_at)-1).toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})}:`);
  if(stage3Format.labels[data.intent])heading=`${title}: **${n}**${data.unit?' '+data.unit:' kết quả'}${scope.start_at?` trong kỳ ${date}–${new Date(Date.parse(scope.end_at)-1).toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})}`:''}.`;
+ if(data.intent==='hotel.availability')heading+=` Có **${data.available} phòng** có thể nhận trọn khoảng; **${data.unavailable} phòng** vướng lịch giữ hoặc đang ở. Đây không phải số bé tối đa và chưa giữ phòng.`;
+ if(['hotel.availability','hotel.stays','taxi.trips'].includes(data.intent)&&scope.start_at&&scope.end_at){const clock=v=>new Date(v).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});heading+=` Khoảng kiểm tra: từ ${clock(scope.start_at)} đến trước ${clock(scope.end_at)} theo giờ Việt Nam. Khoảng hỏi theo ngày bao gồm trọn ngày kết thúc, chưa mặc định giờ nhận/trả của một đặt lịch.`;}
  if(data.intent==='appointment.search'&&scope.staff_name)heading+=` KTV: **${text(scope.staff_name)}**.`;
  if(n===0){
   const empty={'knowledge.search':'Chưa tìm thấy thông tin phù hợp trong kho tri thức đang bật. Bạn vui lòng nêu cụ thể nội dung cần tra cứu.','catalog.service_price':'Chưa có dịch vụ đang hoạt động phù hợp để tra bảng giá.','catalog.service':'Không tìm thấy dịch vụ phù hợp.','catalog.product':'Không tìm thấy sản phẩm phù hợp.','customer.lookup':'Không tìm thấy khách hàng phù hợp.','order.lookup':'Không tìm thấy đơn hàng phù hợp.','ticket.open':'Hiện không có khiếu nại chưa kết thúc phù hợp với điều kiện tra cứu.'};
@@ -217,6 +222,7 @@ async function answerInternal({question,caller,staff,conversationId,generateRepl
 }
 async function answer(args){
  const result=await answerInternal(args);
+ if(result.answer_type==='capabilities')result.reply+='\n\nHotel: hỏi “Hotel còn phòng ngày mai không?” để xem số phòng có thể nhận trọn khoảng, hoặc “Lượt lưu trú hôm nay”. Taxi: hỏi “Chuyến Taxi hôm nay”. Đây là tra cứu, chưa xác nhận giữ phòng hay điều phối tài xế.';
  const route=result.answer_type,filters=result.scope||{};
  const entity=route?.split('.')[0]||'conversation';
  return {contract_version:1,source:null,as_of:null,limitations:[],continuation:null,

@@ -1,8 +1,8 @@
 # Hoàn thiện chatbot khách thành viên
 
-Phát hành: người dùng đã yêu cầu push toàn bộ phần thành viên lên main. Kết quả nghiệm thu bên dưới là localhost/API vàCloud; smoke bảnVercel sau phát hành vẫn là bước riêng, chưa đánh dấu đạt.
+Phát hành: đã push main9b5e0ccd. Ngày01/11/2026 đã kiểm tra đúng bảnVercel qua marker20261031_member_complete;10 nhóm trên phiên thành viên thật và mobile guest đạt. Kết quả A/B và giới hạn được ghi trong [báo cáoVercel](docs/chatbot/member-vercel-2026-11-01/README.md).
 
-Ngày31/10/2026. Đã hoàn thành phạm vi tra cứu thành viên gồm bốn nhóm cơ bản và sáu nhóm sâu bên dưới, nghiệm thu local/API và Cloud thật. Migration160/161 đã ápCloud; API/frontend chưa push.68 test Node đạt; SQL/RLS với dữ liệu QA rollback và browser hai tài khoản thật đạt. [Báo cáo đợt hoàn thiện](docs/chatbot/member-phase2-2026-10-31/README.md), [đợt cơ bản](docs/chatbot/member-phase1-2026-10-31/README.md).
+Ngày31/10/2026. Đã hoàn thành phạm vi tra cứu thành viên gồm bốn nhóm cơ bản và sáu nhóm sâu bên dưới, nghiệm thu local/API và Cloud thật. Migration160/161 đã ápCloud; API/frontend đã push9b5e0ccd.68 test Node đạt; SQL/RLS với dữ liệu QA rollback và browser hai tài khoản thật đạt. [Báo cáo đợt hoàn thiện](docs/chatbot/member-phase2-2026-10-31/README.md), [đợt cơ bản](docs/chatbot/member-phase1-2026-10-31/README.md).
 
 ## Câu hỏi cần trả lời
 
@@ -34,8 +34,8 @@ Ngày31/10/2026. Đã hoàn thành phạm vi tra cứu thành viên gồm bốn 
 - [x] TV06 —16 ca SQL/RLS vớiA/B/guest/blocked/foreignID, transaction rollback; không ghép theo liên hệ. Nguồn160 đã áp riêng sau tests.
 - [x] TV07 — Browser/API thật đối chiếu bốn nguồn callerJWT; Node API kiểm ownership/lỗi/cap/không model, SQL ca voucher và thanh toán riêng. Không gọi fixture là API Cloud thật.
 - [x] TV08 — Đợt đầu14 kiểm tra browser thành viên thật đạt. Đợt hoàn thiện thêm sáu nhóm sâu, hai tài khoản QA đăng nhập/đăng xuất bằng UI thật, truy cập chéo403/rỗng và tài khoản QA bị khóa; dữ liệu QA đã dọn. Response cũ khi đổi danh tính có hồi quy transport kiểm soát; không tự đăng xuất phiên người dùng.
-- [x] TV09-local — Đã ghi request/body và giới hạn, chưa đo toàn tảiDB đồng thời. API/frontend còn local; chưa push.
-- [ ] TV09-release — Push khi được yêu cầu và smoke bản triển khai, không coi local làProduction.
+- [x] TV09-local — Đã ghi request/body và giới hạn, chưa đo toàn tảiDB đồng thời. API/frontend đã phát hành9b5e0ccd; kết quả Vercel ghi riêng bên dưới.
+- [x] TV09-release — Đã push9b5e0ccd, marker đúng trênVercel;10 nhóm thành viên đối chiếu caller-JWT, mobile guest và link chi tiết đơn đạt. Chưa đo tải đồng thời hoặc streamingGemini trênProduction trong lượt này.
 
 ## Hoàn thiện phần sâu theo yêu cầu “làm hết thành viên”
 

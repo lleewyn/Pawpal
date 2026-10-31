@@ -1,0 +1,6 @@
+Đích: Google Gemini, generativelanguage.googleapis.com.
+Phạm vi: đúng1 lượt soạn nháp Admin; backend tối đa4 lần thử do đổi khóa. Không gửi hồ sơ khách, đơn/lịch thật, lịch sử chat hoặc dữ liệu nội bộ.
+Câu hỏi: Soạn một tin hướng dẫn khách vãng lai đặt lịch PawPal, chưa có xác nhận đặt thành công.
+Ngữ cảnh FAQ công khai đã rà: Khách có thể đặt lịch mà không cần tài khoản. Chọn dịch vụ, thông tin bé, thời gian và thông tin liên hệ, kiểm tra báo giá rồi gửi yêu cầu. Đã tiếp nhận yêu cầu chưa có nghĩa là đã thanh toán hoặc cửa hàng đã duyệt.
+Lịch sử: trống. Audience: staff. Dùng nguyên system instruction Admin trong api/admin-chat.js.
+Tiêu chí: chỉ soạn nháp dễ đọc; không bắt đăng ký, không nói đã đặt/đã thanh toán/đã duyệt, không nhắc bảng/SQL hoặc tạo dữ liệu.
