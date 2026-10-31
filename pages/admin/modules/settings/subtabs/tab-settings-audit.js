@@ -16,9 +16,19 @@
             el.innerHTML = '';
             return;
         }
+        // Keep the first/last pages reachable without growing with the log count.
+        const pages = new Set([1, totalPages, page]);
+        const start = Math.max(2, Math.min(page - 1, totalPages - 3));
+        for (let p = start; p <= Math.min(totalPages - 1, start + 2); p++) pages.add(p);
+        let previous = 0;
+        const numbers = [...pages].sort((a, b) => a - b).map(p => {
+            const gap = previous && p - previous > 1 ? '<span class="pagination-ellipsis" aria-hidden="true">…</span>' : '';
+            previous = p;
+            return `${gap}<button type="button" class="pagination-btn ${p === page ? 'active' : ''}" data-p="${p}" aria-label="Trang ${p}" ${p === page ? 'aria-current="page"' : ''}>${p}</button>`;
+        }).join('');
         el.innerHTML = `
             <button type="button" class="pagination-btn ${page === 1 ? 'disabled' : ''}" ${page === 1 ? 'disabled' : ''} data-p="prev" title="Trang trước">&lt;</button>
-            ${Array.from({ length: totalPages }, (_, i) => `<button type="button" class="pagination-btn ${i + 1 === page ? 'active' : ''}" data-p="${i + 1}">${i + 1}</button>`).join('')}
+            ${numbers}
             <button type="button" class="pagination-btn ${page === totalPages ? 'disabled' : ''}" ${page === totalPages ? 'disabled' : ''} data-p="next" title="Trang sau">&gt;</button>
         `;
         el.querySelectorAll('[data-p]').forEach(btn => btn.addEventListener('click', () => {

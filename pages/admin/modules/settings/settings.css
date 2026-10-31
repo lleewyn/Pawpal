@@ -3,6 +3,7 @@
    ==================================================================== */
 
 .settings-module-wrapper {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -2364,4 +2365,103 @@
 .settings-module-wrapper table:has(> tbody#articlesTableBody) > tbody > tr > td:nth-child(5):not([colspan]) input:not([type="checkbox"]):not([type="radio"]),
 .settings-module-wrapper table:has(> tbody#articlesTableBody) > tbody > tr > td:nth-child(9):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
     text-align: center;
+}
+
+/* Audit workspace: bounded pager and a single vertical content scroll. */
+#subtab-tab-audit-logs {
+    min-width: 0;
+    --admin-radius: 9px;
+    --settings-primary: #236B48;
+    --settings-text: #203A2C;
+    --settings-muted: #4F7A65;
+    --settings-border: #ECF2EE;
+}
+#subtab-tab-audit-logs .settings-kpi-grid,
+#subtab-tab-audit-logs .settings-master-card {
+    min-width: 0;
+    border: 1px solid var(--settings-border);
+    border-radius: var(--admin-radius);
+    background: rgba(255, 255, 255, 0.70);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+#subtab-tab-audit-logs .kpi-card {
+    background: transparent;
+}
+#subtab-tab-audit-logs .kpi-val,
+#subtab-tab-audit-logs .settings-audit-actor-name {
+    color: #236B48;
+}
+#subtab-tab-audit-logs .filter-actions-right {
+    flex-wrap: wrap;
+}
+#subtab-tab-audit-logs .admin-input,
+#subtab-tab-audit-logs .admin-select,
+#subtab-tab-audit-logs .safe-mode-badge {
+    border-radius: var(--admin-radius);
+}
+#btnToggleSafeModeAudit {
+    border: none;
+    background: transparent;
+    color: #236B48;
+    font: 600 12px/1.5 Inter, sans-serif;
+    padding: 6px 8px;
+    border-radius: 9px;
+    cursor: pointer;
+}
+#btnToggleSafeModeAudit:hover {
+    background: #EEF5F1;
+}
+#subtab-tab-audit-logs .table-responsive-wrapper {
+    min-width: 0;
+    max-height: none;
+    overflow-x: auto;
+    overscroll-behavior: contain;
+    border-radius: 0 0 9px 9px;
+}
+#subtab-tab-audit-logs .admin-table {
+    min-width: 820px;
+    table-layout: fixed;
+}
+#subtab-tab-audit-logs .admin-table thead th {
+    position: static;
+    color: #236B48;
+    background: rgba(238, 245, 241, 0.75);
+}
+#subtab-tab-audit-logs .admin-table tbody tr,
+#subtab-tab-audit-logs .admin-table tbody td {
+    background: transparent;
+}
+#subtab-tab-audit-logs .admin-table td:first-child {
+    border-left: 3px solid transparent;
+}
+#subtab-tab-audit-logs .admin-table th:first-child {
+    border-left: 3px solid rgba(238, 245, 241, 0.75);
+}
+#subtab-tab-audit-logs .settings-col-audit-module {
+    width: 160px;
+}
+#auditPaginationBar {
+    padding: 2px 0;
+    margin-top: -6px;
+}
+#auditPaginationControls {
+    max-width: 100%;
+    gap: 2px;
+}
+#auditPaginationControls .pagination-btn {
+    flex: 0 0 auto;
+    min-width: 28px;
+    padding: 0 4px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+}
+#auditPaginationControls .pagination-btn.active {
+    background: #236B48;
+    color: #fff;
+}
+#auditPaginationControls .pagination-ellipsis {
+    color: #4F7A65;
+    padding: 0 2px;
 }
