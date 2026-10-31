@@ -91,6 +91,12 @@ Tra dữ liệu cá nhân của thành viên, báo cáo Admin nâng cao, trợ l
 
 ## 7. Nhật ký thực hiện
 
+- 31/10/2026: người dùng yêu cầu push phần hiện câu hỏi ngay, streaming và giọng trò chuyện mới lên main. Các mục “còn local” bên dưới ghi trạng thái lúc nghiệm thu; đợt phát hành này bao gồm các sửa đó. Chưa có số đo streaming Gemini từng đoạn trên Vercel, không gọi thêm model ngoài phạm vi đã duyệt.
+
+- 31/10/2026, streaming và giọng trò chuyện: đã có Gemini stream thật qua SSE, FAQ/giá trả trực tiếp; xưng PawPal, gọi bạn/bé, hạn chế văn phong máy móc.54 test Node và browser local đạt; một câu Gemini được duyệt đã chạy xong, kết quả đã lưu và đối chiếu, không gửi lại. Công cụ không đọc lại được body SSE nên chưa có số đo từng chunk thật; kiểm thử chia đoạn/ngắt/reset/không trùng được ghi riêng. Đã sửa thêm “cắt” bị hiểu thành English cat. Còn local, chưa push. [Báo cáo và giới hạn](docs/chatbot/guest-phase2-2026-10-31/streaming-and-tone.md).
+
+- 31/10/2026, cải thiện khi gửi: câu hỏi hiện ngay trong chat, có “PawPal đang trả lời…” trong lúc chờ; giữ bản nháp câu tiếp theo, lỗi có “Gửi lại” dùng requestId cũ, đối chiếu theo ID tin để không lặp. Phân biệt gửi thất bại với đã gửi nhưng đọc phản hồi lỗi. Browser localhost/API thật đạt; cố ý giữ một response thật để quan sát trạng thái chờ, không gọi Gemini. Hồi quy mất mạng/reload/ownership và Chrome controls/backoff đạt. Không thêm request/polling; thay đổi này còn local, chưa push. [Bằng chứng](docs/chatbot/guest-phase2-2026-10-31/immediate-send-results.txt).
+
 - 31/10/2026: tách kế hoạch theo nhu cầu khách vãng lai; giữ các năng lực đã có và phần thiếu cụ thể. Chưa đánh dấu hoàn tất FAQ, tra tồn/lịch/phòng hoặc Gemini chỉ từ các smoke trước.
 - 31/10/2026, bắt đầu đợt1: đã rà/cập nhật nhóm21 FAQ trênCloud và kiểm tra nguồn/nhãn tiếng Việt/UI. Ưu tiên tiếp: VL01 phần dữ kiện công khai còn thiếu và VL03–VL04 về cách hỏi/câu trả lời; sau đó mới mở thêm năng lực chọn gói/tra trạng thái. Xem [kết quả đợt đầu](docs/chatbot/guest-completion-2026-10-31/README.md).
 - 31/10/2026: đổi kế hoạch từ bốn nhóm thực hiện sang đúng hai đợt theo yêu cầu: đợt1 hoàn thiện cả nội dung/chức năng, đợt2 nghiệm thu browser. Giữ nguyên trạng thái các mục còn mở, không đánh dấu đã làm từ lời hứa hoặc các smoke cũ.

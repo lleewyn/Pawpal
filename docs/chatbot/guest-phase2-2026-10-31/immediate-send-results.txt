@@ -1,0 +1,78 @@
+{
+  "local": {
+    "pass": true,
+    "immediate": {
+      "questionVisible": true,
+      "waiting": true,
+      "inputCleared": true,
+      "sendDisabled": true,
+      "welcomeHidden": true
+    },
+    "final": {
+      "oneUserBubble": true,
+      "realReply": true,
+      "nextDraftPreserved": true
+    },
+    "calls": [
+      "public_open",
+      "public_send",
+      "public_read"
+    ],
+    "scope": "Actual localhost UI/API/Supabase; delivery of one real deterministic response held to observe waiting UI. No Gemini, no fake response content."
+  },
+  "recovery": {
+    "checks": [
+      {
+        "flow": "Lost response after real server persist keeps draft and permits retry",
+        "pass": true
+      },
+      {
+        "flow": "Pending record exists before reload",
+        "record": {
+          "owner": "guest",
+          "guestIssued": 1793458182897,
+          "issued": 1793458182897,
+          "needsOpen": false,
+          "question": "Paw Points là gì?",
+          "age": 3127,
+          "uuid": true,
+          "request": true,
+          "sameActive": true
+        }
+      },
+      {
+        "flow": "Reload retry reuses requestId, server replays, transcript has no duplicate",
+        "pass": true,
+        "status": 200
+      },
+      {
+        "flow": "Short ambiguous question asks topic without denying guest",
+        "pass": true
+      },
+      {
+        "flow": "Input length bound enforced by field",
+        "pass": true
+      },
+      {
+        "flow": "Another guest has an empty independent history",
+        "pass": true
+      },
+      {
+        "flow": "Another guest cannot read owned diagnostic conversation",
+        "pass": true,
+        "status": 403
+      },
+      {
+        "flow": "Renderer refuses external/javascript links and HTML execution",
+        "pass": true
+      }
+    ],
+    "scope": "Real local UI/API; one intentional response loss, one expected403 and one isolated response-injection renderer check. Diagnostic conversations only."
+  },
+  "regressions": [
+    "chat_public_immediate_send_ui.cjs PASS (controlled transport, delayed send, acknowledgement/read failure, auth switch)",
+    "chat_public_controls_ui.cjs PASS (controlled transport)",
+    "chat_public_backoff_ui.cjs PASS (controlled transport)"
+  ],
+  "release": "Local only; no new push requested for this UI change. Prior guest-phase2 release remains on main."
+}

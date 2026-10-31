@@ -16,7 +16,7 @@ async(page)=>{
   await p.reload({waitUntil:'domcontentloaded'});await p.locator('#fabAiBtn').click();
   await p.waitForFunction(q=>document.querySelector('#fabChatInput').value===q,question,{timeout:10000});
   const [response]=await Promise.all([p.waitForResponse(r=>new URL(r.url()).pathname==='/api/admin-chat'&&r.request().method()==='POST'&&JSON.parse(r.request().postData()||'{}').action==='public_send',{timeout:20000}),p.locator('#fabChatSend').click()]);
-  const ack=await response.json();await p.waitForFunction(()=>!document.querySelector('#fabChatSend').disabled&&document.querySelector('#fabChatInput').value==='',null,{timeout:15000});
+  const rawAck=await response.text(),ack=response.headers()['content-type']?.includes('text/event-stream')?JSON.parse(rawAck.split('\n\n').find(x=>x.startsWith('event: done\n')).split('\ndata: ')[1]):JSON.parse(rawAck);await p.waitForFunction(()=>!document.querySelector('#fabChatSend').disabled&&document.querySelector('#fabChatInput').value==='',null,{timeout:15000});
   checks.push({flow:'Reload retry reuses requestId, server replays, transcript has no duplicate',pass:response.ok()&&ack.replayed===true&&ids.length===2&&ids[0]===ids[1]&&await p.locator('.fab-message-content').count()===2,status:response.status()});
   await p.locator('#fabChatNewBtn').click();await p.locator('#fabChatInput').fill('7kg');
   const [clarify]=await Promise.all([p.waitForResponse(r=>new URL(r.url()).pathname==='/api/admin-chat'&&r.request().method()==='POST'&&JSON.parse(r.request().postData()||'{}').action==='public_send',{timeout:20000}),p.locator('#fabChatSend').click()]);

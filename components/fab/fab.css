@@ -1200,3 +1200,5 @@ body:not(.admin-body) .fab-history-pagination button:disabled{opacity:.3;cursor:
 body:not(.admin-body) .fab-history-pagination span{display:grid;place-items:center;width:30px;height:30px;background:#214939;color:#fff;border-radius:9px;font-size:12px}
 body:not(.admin-body) .fab-answer-link{color:#236B48;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere;font-weight:600}
 body:not(.admin-body) .fab-answer-link:focus-visible{outline:2px solid #236B48;outline-offset:3px;border-radius:3px}
+body:not(.admin-body) .fab-send-state{align-self:flex-start;color:#526d5b;font:12px/1.7 Inter,system-ui,sans-serif;overflow-wrap:anywhere}
+body:not(.admin-body) .fab-send-state button{margin-left:8px}

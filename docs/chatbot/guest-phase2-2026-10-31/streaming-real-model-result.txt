@@ -1,0 +1,6 @@
+{
+  "question": "PawPal có những dịch vụ gì?",
+  "reply": "Chào bạn, PawPal hiện có các dịch vụ như Pet Spa/Grooming, Pet Hotel và Pet Taxi nhé. Ngoài ra, PawPal cũng có các sản phẩm dành cho thú cưng nữa. Bạn muốn tìm hiểu thêm về dịch vụ nào không?",
+  "pass": true,
+  "scope": "Read-only exact approved diagnostic since test file creation; one result only. Real UI finished before CDP failed reading its SSE body; per-chunk timing was not recovered. No second Gemini/UI send."
+}

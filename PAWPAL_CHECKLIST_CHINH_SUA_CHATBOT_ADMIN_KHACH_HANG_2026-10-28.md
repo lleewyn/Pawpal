@@ -6,6 +6,10 @@ Cập nhật31/10/2026. Đây là danh sách công việc hiện hành. Dấu[x]
 
 **Guest đã đạt nghiệm thu local đợt2 và push main556729ad:**31 câu hỏi khác nhau, hai câu Gemini được duyệt, bốn link bấm đi tiếp, phục hồi mạng/nháp và vòng hai UI chuyển nhân viên/CSAT.43 test tự động đạt. Vercel mới đã smoke mua guest và giá cắt tỉa desktop/mobile; chưa lặp toàn bộ matrix trênProduction. Gate2 và dữ liệu riêng thành viên vẫn mở. [Kết quả và lỗi đã sửa](docs/chatbot/guest-phase2-2026-10-31/README.md).
 
+**Bổ sung UI trong lần phát hành tiếp theo theo yêu cầu push:** câu hỏi hiện ngay khi gửi, có trạng thái chờ trả lời và nút gửi lại an toàn khi lỗi. Đã thử browser localhost/API thật cùng hồi quy nháp/reload/ownership, không thêm request database hoặc gọi Gemini. [Kết quả](docs/chatbot/guest-phase2-2026-10-31/immediate-send-results.txt).
+
+**Bổ sung streaming trong cùng lần phát hành theo yêu cầu push:** Gemini trả từng đoạn qua SSE, giọng khách hàng xưng PawPal và gọi bạn/bé; FAQ/giá trả trực tiếp.54 test Node và kiểm tra browser local đạt; đúng một câu Gemini đã được duyệt và chạy, kết quả lưu đúng nhưng chưa thu được thời gian từng chunk thật do công cụ. Chưa kiểm buffering Gemini trên Vercel. [Chi tiết](docs/chatbot/guest-phase2-2026-10-31/streaming-and-tone.md).
+
 ## 1. Phạm vi cần giữ
 
 | Đối tượng | Được hỏi | Ranh giới |

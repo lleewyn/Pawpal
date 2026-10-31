@@ -39,7 +39,7 @@ async(page)=>{
       p.waitForResponse(r=>new URL(r.url()).pathname==='/api/admin-chat'&&r.request().method()==='POST'&&JSON.parse(r.request().postData()||'{}').action==='public_send',{timeout:35000}),
       question==='Mo cua may gio?'?p.locator('#fabChatInput').press('Enter'):p.locator('#fabChatSend').click()
      ]);
-     const data=await response.json();if(!response.ok()||!data.ok)throw Error('Send HTTP '+response.status()+': '+data.error);
+     const rawAck=await response.text(),data=response.headers()['content-type']?.includes('text/event-stream')?JSON.parse(rawAck.split('\n\n').find(x=>x.startsWith('event: done\n')).split('\ndata: ')[1]):JSON.parse(rawAck);if(!response.ok()||!data.ok)throw Error('Send HTTP '+response.status()+': '+data.error);
      await p.waitForFunction(n=>document.querySelectorAll('.fab-message-content').length>n+1,before,{timeout:20000});
      await p.waitForFunction(()=>!document.querySelector('#fabChatSend').disabled,null,{timeout:10000});
      for(let i=0;i<4;i++){

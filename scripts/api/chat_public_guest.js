@@ -10,7 +10,7 @@ const lookup=link('Tra cứu đơn và lịch guest','/return-guest');
 const advice=(kind,extra={})=>({request:{kind,...extra},topic:kind});
 function isFollowup(text){const q=fold(text);return q.length<180&&(/^(?:(?:be|cho|meo|nang|khoang|tam|con|loai|gia|vay|the|dat|mua)(?: |$)|[0-9])/.test(q)||/kg|\bkm\b/.test(q))&&!/ho so|doanh thu|mat khau|tai khoan ngan hang/.test(q);}
 function measure(text,unit,max){const m=fold(text).match(new RegExp('(\\d+(?:[.,]\\d+)?)\\s*'+unit+'\\b'));if(!m)return null;const n=Number(m[1].replace(',','.'));return n>0&&n<=max?n:null;}
-function petOf(value){const q=fold(value),cat=/\bmeo\b|\bcat\b/.test(q),dog=/chó/iu.test(value||'')||/\bdog\b|cho con|cho truong thanh|cho nho|cho lon|cho$/.test(q);return cat===dog?null:cat?'cat':'dog';}
+function petOf(value){const q=fold(value),cat=/\bmeo\b/.test(q)||/\bcat\b/i.test(String(value||'')),dog=/chó/iu.test(value||'')||/\bdog\b|cho con|cho truong thanh|cho nho|cho lon|cho$/.test(q);return cat===dog?null:cat?'cat':'dog';}
 function plan(question,recent=[]){
  const q=fold(question),old=catalog.plan(question);
  // Public explanations still go through; concrete private records never become public tools.
@@ -76,7 +76,17 @@ function faqReply(route,rows){
  const destination=['booking','prepare','guest'].includes(route.topic)?booking:['buy','delivery','returns','cancel','lookup'].includes(route.topic)?lookup:route.topic==='store'?link('Thông tin liên hệ','/contact'):null;
  if(route.topic==='buy')reply+=' '+shop;
  if(destination)reply+=' '+destination;
- return {reply,understood:true};
+ return {reply:friendly(reply),understood:true};
+}
+function friendly(value){
+ return String(value||'')
+  .replace(/(^|[.!?;]\s+)(?:Mình|mình)(?=\s)/gu,'$1PawPal')
+  .replace(/cho mình(?=[\s,.!?])/gu,'cho PawPal')
+  .replace('Có luồng đặt lịch dành cho khách vãng lai mà không bắt buộc tạo tài khoản thành viên.','Được bạn nhé, bạn có thể đặt lịch cho bé mà không cần tạo tài khoản.')
+  .replace('Bạn có thể mua bằng luồng khách vãng lai mà không phải tạo tài khoản thành viên.','Bạn có thể mua hàng mà không cần tạo tài khoản nhé.')
+  .replace('Mỗi yêu cầu đặt lịch hiện chọn một bé.','Bạn đặt riêng cho từng bé nhé, vì mỗi yêu cầu hiện chọn một bé.')
+  .replace(/FAQ này chưa (?:xác nhận|cung cấp)/gu,'PawPal chưa có thông tin xác nhận')
+  .replace(/Hướng dẫn này chưa xác nhận/gu,'PawPal chưa có thông tin xác nhận');
 }
 const text=(value,max=600)=>typeof value==='string'?value.slice(0,max).trim():'';
 const num=v=>{if(typeof v!=='number'||!Number.isFinite(v)||v<0)throw Error('invalid_guest_number');return v;};
@@ -98,6 +108,7 @@ function format(data,route){
  let follow=kind==='product'?'Đối chiếu đúng mã/biến thể và mô tả trên; nhiều lựa chọn khớp thì bạn chọn SKU cụ thể để so sánh chính xác. Hàng có thể thay đổi và được kiểm tra lại tại bước mua.':kind==='grooming'?(route.request.weight?'Các mức trên đã lọc theo cân nặng bạn cung cấp. Cần chọn đúng gói và kiểm tra điều kiện nhận loài tại bước đặt.':(route.request.pet?'Bé nặng bao nhiêu kg, cần tắm hay cắt tỉa?':'Bé là chó hay mèo, nặng bao nhiêu kg, cần tắm hay cắt tỉa?')+' Mình sẽ lọc mức phù hợp.') :kind==='hotel'?'Các loại phòng được đối chiếu theo giá/đơn vị tính và mô tả hiện có; mục chưa ghi không được coi là tiện ích đã bao gồm. Bạn gửi ngày/giờ nhận và trả'+(route.request.weight?'':', cân nặng của bé')+' để kiểm tra báo giá ở bước đặt; đây chưa phải xác nhận phòng trống.':(route.request.weight&&route.request.distance?'Các mức đã lọc theo cân nặng và khoảng cách bạn cung cấp. ': 'Bạn cho biết '+(!route.request.weight?'cân nặng của bé':'')+(!route.request.weight&&!route.request.distance?' và ':'')+(!route.request.distance?'khoảng cách km dự kiến':'')+'. ')+'Chọn một chiều/khứ hồi và thời gian tại bước đặt. Các mức trên chưa phải xác nhận chuyến hoặc tổng tiền cho mọi lượt đi/về.';
  if(kind!=='product')follow+=' Giá hiện hành chưa xác nhận giá cho ngày tương lai hoặc mọi phụ phí. '+booking;
  if(kind==='hotel'&&route.request.query?.includes('vip')&&!data.items.some(r=>/\bvip\b/.test(fold(r.name))))follow+=' Chưa có mục tên VIP khớp trong kết quả; không tự coi Luxury hoặc Deluxe là VIP để so sánh.';
- return {reply:lines.join('\n\n')+'\n\n'+follow+(data.has_more?'\nĐang hiển thị một phần kết quả; hãy nêu gói hoặc SKU cụ thể.':''),understood:true};
+ const intro=kind==='product'?'PawPal tìm được những lựa chọn này, bạn xem thử nhé:':kind==='hotel'?'PawPal gửi bạn các lựa chọn lưu trú cho bé nhé:':kind==='taxi'?'PawPal gửi bạn các lựa chọn đưa đón để tham khảo nhé:':'PawPal gửi bạn một số gói chăm sóc để tham khảo nhé:';
+ return {reply:friendly(intro+'\n\n'+lines.join('\n\n')+'\n\n'+follow+(data.has_more?'\nBạn cho PawPal tên gói hoặc sản phẩm cụ thể để tìm sát nhu cầu hơn nhé.':'')),understood:true};
 }
-module.exports={plan,isFollowup,faqReply,format,fold};
+module.exports={plan,isFollowup,faqReply,format,fold,friendly};
