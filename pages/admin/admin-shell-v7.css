@@ -7,14 +7,15 @@ body.admin-body{--sidebar-width:220px;--header-height:56px;--canvas-bg:#f5f7f5;-
 .admin-body .btn-sidebar-toggle{display:none}
 .admin-body .admin-sidebar-nav{padding:18px 10px;gap:1px}
 .admin-body .admin-nav-group-label{font-size:10px;line-height:1.5;color:#809188;font-weight:500;text-transform:uppercase;letter-spacing:.3px;padding:5px 10px 10px;flex-shrink:0}
+.admin-body .nav-group-short{display:none}
 .admin-body .admin-nav-group-divider{border-top:1px solid #dce3dd;margin:15px 10px 12px;padding:21px 0 0}
-.admin-body .sidebar-menu-btn{min-height:37px;padding:9px 11px;gap:11px;border-radius:3px;border:0;background:transparent;color:#30483a;font-size:12px;line-height:1.5;font-weight:500;box-shadow:none}
+.admin-body .sidebar-menu-btn{height:38px;min-height:38px;flex-shrink:0;padding:9px 11px;gap:11px;border-radius:var(--admin-radius);border:0;background:transparent;color:#30483a;font-size:12px;line-height:1.5;font-weight:500;box-shadow:none}
 .admin-body .sidebar-menu-btn:hover{background:#f2f6f2;color:#173d30}
 .admin-body .sidebar-menu-btn.active{background:#315e49;color:#fff;font-weight:650}
 .admin-body .sidebar-menu-btn .menu-icon{width:18px;height:18px;color:inherit}
 .admin-body .sidebar-menu-btn .menu-icon svg{width:17px;height:17px;stroke-width:1.7}
 .admin-body .admin-sidebar-footer{padding:14px 18px;border-top:1px solid #dce3dd;gap:2px;background:#fff}
-.admin-body .btn-sidebar-footer{font-size:11px;font-weight:400;line-height:1.6;padding:7px 2px;border:0;border-radius:0;color:#526359;background:transparent;justify-content:flex-start;box-shadow:none}
+.admin-body .btn-sidebar-footer{height:36px;min-height:36px;flex-shrink:0;font-size:11px;font-weight:400;line-height:1.6;padding:7px 2px;border:0;border-radius:var(--admin-radius);color:#526359;background:transparent;justify-content:flex-start;box-shadow:none}
 .admin-body .btn-sidebar-footer .menu-icon{display:none}
 .admin-body .btn-sidebar-footer.btn-logout-danger{color:#ba4745}
 .admin-body .admin-header{height:56px;min-height:56px;padding:0 22px;gap:18px;background:#fff;border-bottom:1px solid #dce4df;backdrop-filter:none;box-shadow:none}
@@ -37,12 +38,17 @@ body.admin-body{--sidebar-width:220px;--header-height:56px;--canvas-bg:#f5f7f5;-
 @media(min-width:769px){.admin-body .admin-layout.sidebar-collapsed .admin-sidebar{max-width:220px}.admin-body .admin-layout.sidebar-collapsed .brand-title{display:block!important}.admin-body .admin-layout.sidebar-collapsed .sidebar-menu-btn .menu-text,.admin-body .admin-layout.sidebar-collapsed .btn-sidebar-footer span:not(.menu-icon){display:inline!important}.admin-body .admin-layout.sidebar-collapsed .admin-sidebar-nav,.admin-body .admin-layout.sidebar-collapsed .admin-sidebar-footer{align-items:stretch}.admin-body .admin-layout.sidebar-collapsed .sidebar-menu-btn{width:100%;height:auto;min-height:37px;margin:0}.admin-body .admin-layout.sidebar-collapsed .btn-sidebar-footer{width:100%;height:auto;margin:0;padding:7px 2px;font-size:11px;justify-content:flex-start}}
 @media(max-width:768px){.admin-body .admin-sidebar{left:0;width:220px!important;min-width:220px!important;max-width:80vw!important;transform:translateX(-100%)!important;transition:none}.admin-body .admin-layout.mobile-sidebar-open .admin-sidebar{transform:translateX(0)!important}}
 /* Restore the existing sidebar toggle and its persisted collapsed state. */
-.admin-body .btn-sidebar-toggle{display:inline-flex;width:28px;height:28px;color:#6f8176;flex-shrink:0;border-radius:3px}
+.admin-body .btn-sidebar-toggle{display:inline-flex;width:28px;height:28px;color:#6f8176;flex-shrink:0;border-radius:var(--admin-radius)}
 @media(min-width:769px){
 .admin-body .admin-layout.sidebar-collapsed .admin-sidebar{width:68px;min-width:68px;max-width:68px}
 .admin-body .admin-layout.sidebar-collapsed .admin-sidebar-brand{padding:0;justify-content:center}
-.admin-body .admin-layout.sidebar-collapsed .brand-title,.admin-body .admin-layout.sidebar-collapsed .sidebar-menu-btn .menu-text,.admin-body .admin-layout.sidebar-collapsed .admin-nav-group-label,.admin-body .admin-layout.sidebar-collapsed .btn-sidebar-footer span:not(.menu-icon){display:none!important}
-.admin-body .admin-layout.sidebar-collapsed .admin-sidebar-nav{padding:18px 10px;align-items:center}
+.admin-body .admin-layout.sidebar-collapsed .brand-title,.admin-body .admin-layout.sidebar-collapsed .sidebar-menu-btn .menu-text,.admin-body .admin-layout.sidebar-collapsed .btn-sidebar-footer span:not(.menu-icon){display:none!important}
+/* Abbreviated headings preserve the expanded menu's rows and group divider. */
+.admin-body .admin-layout.sidebar-collapsed .admin-nav-group-label{display:block!important;padding:5px 0 10px;text-align:center}
+.admin-body .admin-layout.sidebar-collapsed .nav-group-full{display:none}
+.admin-body .admin-layout.sidebar-collapsed .nav-group-short{display:inline}
+.admin-body .admin-layout.sidebar-collapsed .admin-nav-group-divider{padding:21px 0 0;margin:15px 0 12px}
+.admin-body .admin-layout.sidebar-collapsed .admin-sidebar-nav{padding:18px 10px;gap:1px;align-items:stretch}
 .admin-body .admin-layout.sidebar-collapsed .sidebar-menu-btn{padding:0;width:44px;height:38px;min-height:38px;justify-content:center;margin:0 auto}
 .admin-body .admin-layout.sidebar-collapsed .admin-sidebar-footer{padding:14px 10px;align-items:center}
 .admin-body .admin-layout.sidebar-collapsed .btn-sidebar-footer{width:44px;height:36px;padding:0;font-size:0;justify-content:center}
