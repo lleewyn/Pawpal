@@ -635,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261101_chat_feedback';
+    const MODULE_SCRIPT_VERSION = '20261101_table_codes';
 
     function resolveModulePath(path) {
         if (!path) return path;

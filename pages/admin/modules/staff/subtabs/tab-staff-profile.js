@@ -147,7 +147,7 @@
                 row.append(title,text('div',item.score+'/100 · '+result,'staff-profile-history-score'),text('div','Người đánh giá: '+(item.evaluator||'—'),'staff-profile-history-meta'));
                 if(item.note)row.append(text('p',item.note,'staff-profile-history-meta'));history.append(row);
             }
-            if(pages>1){const pager=document.createElement('div');pager.className='staff-calendar-pager';for(const [label,page] of [['<',assessmentPage-1],[String(assessmentPage),assessmentPage],['>',assessmentPage+1]]){const button=text('button',label,'admin-btn admin-btn-secondary');button.type='button';button.disabled=page<1||page>pages;button.onclick=()=>{assessmentPage=page;renderStaffProfile(staff.id);};pager.append(button);}history.append(pager);}
+            if(pages>1){const pager=document.createElement('div');pager.className='staff-calendar-pager';for(const [label,page] of [['<',assessmentPage-1],[String(assessmentPage),assessmentPage],['>',assessmentPage+1]]){const button=text('button',label,'btn-pagination'+(label===String(assessmentPage)?' active':''));button.type='button';button.disabled=page<1||page>pages;button.onclick=()=>{assessmentPage=page;renderStaffProfile(staff.id);};pager.append(button);}history.append(pager);}
         }
         if (staff) { PawpalStaff.state.selectedStaffId = staff.id; PawpalStaff.updateBreadcrumb?.(staff.name); }
     }

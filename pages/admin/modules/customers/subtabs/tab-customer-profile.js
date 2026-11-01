@@ -225,7 +225,7 @@
         tbody.innerHTML = historyPage(tbody,orders,custId,renderDrawerOrders).map(ord => `
             <tr>
                 <td>
-                    <a href="javascript:void(0)" class="user-name-link btn-jump-order-code" data-order-id="${esc(ord.id)}" style="font-weight: 600; color: var(--text-heading); text-decoration: none;">${esc(ord.id)}</a>
+                    <a href="javascript:void(0)" class="user-name-link btn-jump-order-code admin-table-code" title="${esc(ord.id)}" data-order-id="${esc(ord.id)}" style="font-weight: 600; color: var(--text-heading); text-decoration: none;">${esc(ord.id)}</a>
                 </td>
                 <td>${esc(ord.date)}</td>
                 <td>${esc(ord.total)}</td>
@@ -263,7 +263,7 @@
 
         tbody.innerHTML = historyPage(tbody,bookings,custId,renderDrawerBookings).map(b => `
             <tr>
-                <td><strong>${esc(b.id)}</strong></td>
+                <td><strong class="admin-table-code" title="${esc(b.id)}">${esc(b.id)}</strong></td>
                 <td>${esc(b.date)}</td>
                 <td>${esc(b.service)}</td>
                 <td>${esc(b.staff)}</td>
@@ -295,7 +295,7 @@
 
         tbody.innerHTML = historyPage(tbody,complaints,custId,renderDrawerComplaints).map(c => `
             <tr>
-                <td><strong>${esc(c.id)}</strong></td>
+                <td><strong class="admin-table-code" title="${esc(c.id)}">${esc(c.id)}</strong></td>
                 <td>${esc(c.date)}</td>
                 <td>${esc(c.issue)}</td>
                 <td><span class="admin-badge badge-danger">${esc(c.level)}</span></td>

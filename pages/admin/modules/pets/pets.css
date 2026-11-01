@@ -3024,6 +3024,14 @@
     width: 115px;
 }
 
+.pets-module #petDataTable .pet-code-text {
+    display: block;
+    max-width: 115px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .pets-module #petDataTable th:nth-child(3) {
     width: 175px;
 }

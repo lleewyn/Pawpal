@@ -479,7 +479,7 @@
                         <input type="checkbox" class="admin-checkbox order-row-checkbox" data-id="${safeId}" ${isChecked ? 'checked' : ''}>
                     </td>
                     <td>
-                        <a href="javascript:void(0)" class="order-code-link btn-open-order-detail" data-id="${safeId}">${safeId}</a>
+                        <a href="javascript:void(0)" class="order-code-link btn-open-order-detail admin-table-code" title="${safeId}" data-id="${safeId}">${safeId}</a>
                     </td>
                     <td>
                         <div>
@@ -500,7 +500,7 @@
                     </td>
                     <td>
                         <div>${safeCarrier}</div>
-                        <div class="sub-meta-text" style="font-family: monospace;">${safeTracking}</div>
+                        <div class="sub-meta-text admin-table-code" title="${safeTracking}">${safeTracking}</div>
                     </td>
                     <td>${statusBadge}</td>
                     <td>${alertLabel}</td>
@@ -1464,7 +1464,7 @@
   for(const o of batch.orders.slice((batchPage-1)*10,batchPage*10)){
    const row=root.insertRow();row.insertCell().textContent=o.id;row.insertCell().textContent=o.customerName;const tracking=document.createElement('input');tracking.className='admin-input';tracking.maxLength=200;tracking.value=batch.tracking.get(o.rawId)||'';tracking.setAttribute('aria-label','Mã vận đơn '+o.id);tracking.oninput=()=>batch.tracking.set(o.rawId,tracking.value.trim());row.insertCell().append(tracking);
   }
-  const pager=el('salesBatchDispatchPager');pager.replaceChildren();for(const [label,page] of [['<',batchPage-1],[String(batchPage),batchPage],['>',batchPage+1]]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.style.cssText='background:transparent;border:none';button.textContent=label;button.disabled=page<1||page>Math.max(1,Math.ceil(batch.orders.length/10));button.onclick=()=>{batchPage=page;renderBatch();};pager.append(button);}
+  const pager=el('salesBatchDispatchPager');pager.replaceChildren();for(const [label,page] of [['<',batchPage-1],[String(batchPage),batchPage],['>',batchPage+1]]){const button=document.createElement('button');button.type='button';button.className='btn-pagination'+(label===String(batchPage)?' active':'');button.textContent=label;button.disabled=page<1||page>Math.max(1,Math.ceil(batch.orders.length/10));button.onclick=()=>{batchPage=page;renderBatch();};pager.append(button);}
  }
  api.openBatchDispatchModal=async()=>{
   const selected=m.state.selectedBatchOrderIds||[];if(!selected.length||selected.length>100){m.helpers.showToast('Chọn từ 1 đến 100 đơn để bàn giao.','warning');return;}

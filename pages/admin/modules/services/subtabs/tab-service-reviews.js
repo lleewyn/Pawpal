@@ -206,7 +206,7 @@
             return `
                 <tr data-review-id="${esc(r.id)}">
                     <td style="${borderLeftStyle} font-weight: 600; color: var(--text-heading);">
-                        <div>${esc(r.bookingId || '—')}</div>
+                        <div class="admin-table-code" title="${esc(r.bookingId || '—')}">${esc(r.bookingId || '—')}</div>
                         <div style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${esc(r.reviewCode || r.id)}</div>
                     </td>
                     <td>

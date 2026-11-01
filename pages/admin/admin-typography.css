@@ -1,0 +1,82 @@
+/* Typography reference: Customer list and Customer forms.
+   Only text properties belong here; module layout and status colors stay local.
+   Customer remains the reference and is deliberately excluded from overrides. */
+body.admin-body {
+    --admin-font: Inter, "Segoe UI", Arial, sans-serif;
+    --admin-table-font: 550 12px/1.35 var(--admin-font);
+    --admin-table-heading-font: 650 11px/1.46 var(--admin-font);
+    --admin-name-font: 650 12px/1.35 var(--admin-font);
+    --admin-secondary-font: 400 10.5px/1.35 var(--admin-font);
+    --admin-code-font: 500 11px/1.35 var(--admin-font);
+}
+body.admin-body :is(.admin-main, .admin-modal-overlay, .admin-modal-card) {
+    font-family: var(--admin-font);
+}
+/* Explicit overrides prevent module shorthands and inline fonts drifting apart. */
+body.admin-body .admin-table:not(.customers-module *) {
+    font: 400 13px/1.46 var(--admin-font) !important;
+    letter-spacing: normal !important;
+}
+body.admin-body .admin-table th:not(.customers-module *) {
+    font: var(--admin-table-heading-font) !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+}
+body.admin-body .admin-table td:not(.customers-module *) {
+    font: var(--admin-table-font) !important;
+    letter-spacing: -0.2px !important;
+}
+body.admin-body .admin-table td > strong:not(.customers-module *) {
+    font-weight: 500;
+}
+body.admin-body .admin-table :is(.user-name-link, .pet-name-link, .name-cell-text, .admin-table__primary, .user-link-text):not(.customers-module *) {
+    font: var(--admin-name-font) !important;
+    letter-spacing: normal !important;
+    color: #264E38;
+}
+body.admin-body .admin-table :is(.sub-meta-text, .pet-sub-cell, .user-sub-cell, .customer-pet-sub, .admin-table__secondary, .staff-calendar-meta):not(.customers-module *) {
+    font: var(--admin-secondary-font) !important;
+    letter-spacing: normal !important;
+    color: #728579;
+}
+body.admin-body .admin-table :is(.admin-table__code, .pet-code-text, .customer-code-text, .voucher-code-badge, .order-code-link, .bkg-code-link, .leave-req-code):not(.customers-module *) {
+    font: var(--admin-code-font) !important;
+    letter-spacing: normal !important;
+    color: #79897F;
+}
+body.admin-body .admin-table .admin-badge:not(.customers-module *),
+body.admin-body #contentArea .admin-table .admin-badge:not(.customers-module *) {
+    font: 550 12.5px/1.45 var(--admin-font) !important;
+    letter-spacing: normal !important;
+}
+/* Shared controls and labels use the Customer toolbar's text scale. */
+body.admin-body :is(.filter-label, .kpi-label):not(.customers-module *) {
+    font: 500 11px/1.2 var(--admin-font) !important;
+    letter-spacing: normal !important;
+}
+body.admin-body :is(.admin-input, .admin-select, .search-input):not(.customers-module *) {
+    font-family: var(--admin-font) !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    letter-spacing: normal !important;
+}
+body.admin-body :is(.admin-btn, .admin-btn-filter-toggle):not(.customers-module *) {
+    font: 600 12px/1.4 var(--admin-font) !important;
+    letter-spacing: normal !important;
+}
+body.admin-body :is(.form-label, .form-label-clean):not(.customers-module *) {
+    font: 550 12px/1.5 var(--admin-font) !important;
+    letter-spacing: normal !important;
+}
+body.admin-body :is(.admin-card-title, .customer-workspace-title, .module-workspace-title):not(.customers-module *) {
+    font: 650 13px/1.5 var(--admin-font) !important;
+    letter-spacing: normal !important;
+}
+body.admin-body :is(.modal-title-clean, .admin-modal-title):not(.customers-module *) {
+    font: 650 20px/1.4 var(--admin-font) !important;
+    letter-spacing: normal !important;
+}
+/* Match Customer forms while keeping the compact toolbar above. */
+body.admin-body :is(.admin-modal-overlay, .admin-modal-card) :is(.admin-input, .admin-select):not(.customers-module *) {
+    font-size: 13px !important;
+}

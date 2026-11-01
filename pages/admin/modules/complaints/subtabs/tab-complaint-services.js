@@ -199,7 +199,7 @@
             return `
                 <tr class="${alertBorderClass}" data-ticket-id="${item.id}">
                     <td style="font-weight: 600; white-space: nowrap;">
-                        <a href="javascript:void(0)" class="user-link-text btn-open-complaint-detail" data-ticket-id="${item.id}">${item.id}</a>
+                        <a href="javascript:void(0)" class="user-link-text btn-open-complaint-detail admin-table-code" title="${escapeHtml(item.id)}" data-ticket-id="${escapeHtml(item.id)}">${escapeHtml(item.id)}</a>
                     </td>
                     <td>
                         <div style="font-weight: 600; color: var(--text-main); white-space: nowrap;">${escapeHtml(item.customerName)}</div>
@@ -210,7 +210,7 @@
                         <div style="font-size: 11.5px; color: var(--text-muted); white-space: nowrap;">${escapeHtml(item.petBreed || '')}</div>
                     </td>
                     <td>
-                        <span style="font-weight: 500; color: var(--text-muted); font-size: 12px; white-space: nowrap;">${escapeHtml(item.bookingId || '—')}</span>
+                        <span class="admin-table-code" title="${escapeHtml(item.bookingId || '—')}">${escapeHtml(item.bookingId || '—')}</span>
                     </td>
                     <td>
                         <div style="font-weight: 500; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(item.serviceName || item.serviceType || 'Dịch vụ')}">${escapeHtml(item.serviceName || item.serviceType || 'Dịch vụ')}</div>

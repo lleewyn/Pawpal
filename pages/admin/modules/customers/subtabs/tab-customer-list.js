@@ -275,7 +275,7 @@
 
             return `
                 <tr class="${rowLockedClass} ${rowComplaintClass}" data-id="${esc(c.id)}">
-                    <td style="${firstTdBorder}"><strong class="customer-code-text" title="${esc(c.id)}">${esc(c.id)}</strong></td>
+                    <td style="${firstTdBorder}"><strong class="customer-code-text admin-table-code" title="${esc(c.id)}">${esc(c.id)}</strong></td>
                     <td>
                         <div class="user-name-cell">
                             <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" title="${esc(c.name)}" data-id="${esc(c.id)}">${esc(c.name)}</a>

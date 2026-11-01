@@ -129,7 +129,7 @@
                             </div>
                         </div>
                     </td>
-                    <td style="font-family: monospace; color: var(--text-muted);">${escapeText(p.sku)}</td>
+                    <td><span class="admin-table-code" title="${escapeText(p.sku)}">${escapeText(p.sku)}</span></td>
                     <td>${formatVND(p.price)}</td>
                     <td style="text-align: center; font-weight: 600;">${p.quantity}</td>
                     <td style="text-align: right; font-weight: 700; color: var(--text-heading);">${formatVND(p.total || (p.price * p.quantity))}</td>

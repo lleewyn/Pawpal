@@ -377,7 +377,7 @@
             if (rowAlertClass) tr.className = rowAlertClass;
 
             tr.innerHTML = `
-                <td><strong class="settings-voucher-code">${esc(v.code)}</strong></td>
+                <td><strong class="settings-voucher-code admin-table-code" title="${esc(v.code)}">${esc(v.code)}</strong></td>
                 <td>${esc(v.name)}</td>
                 <td>${v.type === 'percent' ? 'Giảm %' : 'Giảm tiền'}</td>
                 <td><span class="admin-badge badge-neutral">${esc(v.target)}</span></td>

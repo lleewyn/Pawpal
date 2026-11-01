@@ -70,7 +70,7 @@
             return `
                 <tr>
                     <td>
-                        <span class="voucher-code-badge">${escapeText(v.code)}</span>
+                        <span class="voucher-code-badge admin-table-code" title="${escapeText(v.code)}">${escapeText(v.code)}</span>
                     </td>
                     <td>
                         <div style="font-weight: 600; color: var(--text-heading);">${escapeText(v.title || v.name)}</div>

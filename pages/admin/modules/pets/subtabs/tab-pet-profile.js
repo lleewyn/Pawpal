@@ -157,7 +157,7 @@
                 historyTbody.innerHTML = sHistory.map(h => `
                     <tr>
                         <td>
-                            <a href="javascript:void(0)" class="user-name-link btn-jump-service-booking pet-booking-link" data-booking-id="${esc(h.id)}">${esc(h.id)}</a>
+                            <a href="javascript:void(0)" class="user-name-link btn-jump-service-booking pet-booking-link admin-table-code" title="${esc(h.id)}" data-booking-id="${esc(h.id)}">${esc(h.id)}</a>
                         </td>
                         <td>${esc(h.service)}</td>
                         <td>${esc(h.time)}</td>

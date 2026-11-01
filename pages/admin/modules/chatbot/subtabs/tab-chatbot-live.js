@@ -382,7 +382,7 @@
         const pages=Math.max(1,Math.ceil((meta?.total||0)/10));inboxPage=Math.min(inboxPage,pages);
         const pager=document.getElementById('chatInboxPager');pager?.replaceChildren();
         for(const [text,disabled,delta] of [['<',inboxPage===1,-1],[String(inboxPage),true,0],['>',inboxPage===pages,1]]){
-            const b=document.createElement('button');b.type='button';b.className='admin-btn admin-btn-secondary';b.textContent=text;b.disabled=disabled;
+            const b=document.createElement('button');b.type='button';b.className='rules-page-btn'+(delta===0?' active':'');b.textContent=text;b.disabled=disabled;
             b.onclick=()=>{inboxPage+=delta;sessionStorage.setItem('pawpal_chat_inbox_page',inboxPage);PawpalChatbot.loadInboxSummary({page:inboxPage});};pager?.append(b);
         }
         filtered.forEach(conv => {

@@ -1,0 +1,8 @@
+/* Constrain only identifier text; full values and action data stay intact. */
+body.admin-body .admin-table .admin-table-code {
+    display: block;
+    max-width: 125px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

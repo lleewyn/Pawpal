@@ -1,0 +1,66 @@
+/* Shared pagination reference: bordered buttons with a solid active page.
+   Important declarations intentionally supersede legacy module and inline styles. */
+body.admin-body :is(.admin-pagination-bar, .admin-pagination-container, .pagination-container, .rules-pagination-wrap, .staff-calendar-pager) {
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0 !important;
+    padding: 10px 0 18px !important;
+    flex-shrink: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+body.admin-body :is(.pagination-controls, .voucher-page-numbers, .article-page-numbers, #customerPageNumbersContainer, #petPageNumbersContainer, #remPageNumbersContainer) {
+    display: flex;
+    align-items: center;
+    gap: 0 !important;
+}
+body.admin-body :is(.pagination-btn, .btn-pagination, .rules-page-btn) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+    min-width: 32px !important;
+    width: auto !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 8px !important;
+    margin: 0 !important;
+    border: 1px solid #DCE4DE !important;
+    border-radius: 3px !important;
+    background: #FFFFFF !important;
+    color: #315E49 !important;
+    font: 500 13px/1 Inter, 'Segoe UI', Arial, sans-serif !important;
+    box-shadow: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    cursor: pointer;
+}
+/* Number buttons sit together; only navigation arrows have a small gap. */
+body.admin-body :is(.admin-pagination-bar, .admin-pagination-container, .pagination-container, .pagination-controls, .rules-pagination-wrap, .staff-calendar-pager) > :is(.pagination-btn, .btn-pagination, .rules-page-btn):first-child {
+    margin-right: 4px !important;
+}
+body.admin-body :is(.admin-pagination-bar, .admin-pagination-container, .pagination-container, .pagination-controls, .rules-pagination-wrap, .staff-calendar-pager) > :is(.pagination-btn, .btn-pagination, .rules-page-btn):last-child {
+    margin-left: 4px !important;
+}
+body.admin-body :is(.pagination-btn, .btn-pagination, .rules-page-btn):hover:not(:disabled):not(.disabled):not(.active):not([aria-current="page"]) {
+    background: #EEF5F1 !important;
+    border-color: #C3DEC7 !important;
+}
+body.admin-body :is(.pagination-btn, .btn-pagination, .rules-page-btn):is(.active, [aria-current="page"]) {
+    background: #315E49 !important;
+    border-color: #315E49 !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+body.admin-body :is(.pagination-btn, .btn-pagination, .rules-page-btn):is(:disabled, .disabled):not(.active):not([aria-current="page"]) {
+    background: #FFFFFF !important;
+    color: #AEC8B9 !important;
+    border-color: #ECF2EE !important;
+    cursor: default;
+}
+body.admin-body :is(.pagination-btn, .btn-pagination, .rules-page-btn):focus-visible {
+    outline: 2px solid #236B48;
+    outline-offset: 2px;
+}

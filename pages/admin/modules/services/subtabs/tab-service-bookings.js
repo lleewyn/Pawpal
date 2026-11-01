@@ -397,7 +397,7 @@
             return `
                 <tr class="service-table-row ${alertClass} ${isLocked}" data-booking-id="${escapeBookingText(item.id)}">
                     <td class="alert-border-cell" style="width: 100px; min-width: 100px; font-weight: 600;">
-                        <a href="javascript:void(0)" class="user-name-link btn-view-booking-detail" data-booking-id="${escapeBookingText(item.id)}">${escapeBookingText(item.id)}</a>
+                        <a href="javascript:void(0)" class="user-name-link btn-view-booking-detail admin-table-code" title="${escapeBookingText(item.id)}" data-booking-id="${escapeBookingText(item.id)}">${escapeBookingText(item.id)}</a>
                     </td>
                     <td style="min-width: 130px;">
                         ${datetimeCellHtml}

@@ -23,7 +23,7 @@
         legacy.style.display = editingVariantRows.length ? 'none' : '';
         editor.hidden = !editingVariantRows.length;
         editor.style.display = editingVariantRows.length ? '' : 'none';
-        editor.innerHTML = editingVariantRows.length ? `<label class="form-label-clean">Biến thể và giá dịch vụ</label><div style="overflow-x:auto;overscroll-behavior:contain"><table class="admin-table" style="min-width:0;width:100%;table-layout:fixed"><thead><tr><th style="width:44%">Biến thể</th><th>Giá niêm yết</th>${service.group==='spa'?'<th>Thời lượng (phút)</th>':''}</tr></thead><tbody>${editingVariantRows.map((p,i)=>`<tr><td><strong>${esc(p.variant_code||'')}</strong><div style="color:var(--text-muted);font-size:11.5px">${esc(p.variant_condition||'')}${p.distance_from!=null?` · ${Number(p.distance_from)}–${Number(p.distance_to)} km`:''}</div></td><td><input type="number" min="0" step="1" class="admin-input" aria-label="Giá ${esc(p.variant_code)}" data-variant-price="${i}" value="${Number(p.unit_price)}"/></td>${service.group==='spa'?`<td><input type="number" min="1" max="10080" step="1" class="admin-input" aria-label="Thời lượng ${esc(p.variant_code)}" data-variant-duration="${i}" value="${Number(p.duration_minutes||service.durationMinutes)}"/></td>`:''}</tr>`).join('')}</tbody></table></div>` : '';
+        editor.innerHTML = editingVariantRows.length ? `<label class="form-label-clean">Biến thể và giá dịch vụ</label><div style="overflow-x:auto;overscroll-behavior:contain"><table class="admin-table" style="min-width:0;width:100%;table-layout:fixed"><thead><tr><th style="width:44%">Biến thể</th><th>Giá niêm yết</th>${service.group==='spa'?'<th>Thời lượng (phút)</th>':''}</tr></thead><tbody>${editingVariantRows.map((p,i)=>`<tr><td><strong class="admin-table-code" title="${esc(p.variant_code||'')}">${esc(p.variant_code||'')}</strong><div style="color:var(--text-muted);font-size:11.5px">${esc(p.variant_condition||'')}${p.distance_from!=null?` · ${Number(p.distance_from)}–${Number(p.distance_to)} km`:''}</div></td><td><input type="number" min="0" step="1" class="admin-input" aria-label="Giá ${esc(p.variant_code)}" data-variant-price="${i}" value="${Number(p.unit_price)}"/></td>${service.group==='spa'?`<td><input type="number" min="1" max="10080" step="1" class="admin-input" aria-label="Thời lượng ${esc(p.variant_code)}" data-variant-duration="${i}" value="${Number(p.duration_minutes||service.durationMinutes)}"/></td>`:''}</tr>`).join('')}</tbody></table></div>` : '';
     }
 
     function parsePetTypes(str) {
@@ -283,7 +283,7 @@
                         ${svc.image ? `<img src="${esc(svc.image)}" class="service-thumb-cell" alt="${esc(svc.name)}" style="width:38px;height:38px;border-radius:9px;object-fit:cover;">` : '—'}
                     </td>
                     <td>
-                        <span style="font-weight: 600; color: #203A2C; font-size: 13px;">${esc(svc.code || svc.id)}</span>
+                        <span class="admin-table-code" title="${esc(svc.code || svc.id)}">${esc(svc.code || svc.id)}</span>
                     </td>
                     <td>
                         <div style="font-weight: 600; color: var(--text-heading);">${esc(svc.name)}</div>

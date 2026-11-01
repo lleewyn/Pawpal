@@ -68,7 +68,7 @@
         }
         tbody.innerHTML = logs.slice((currentPage-1)*pageSize, currentPage*pageSize).map(({log,pet,owner}) => `<tr>
             <td>${escapeText(log.recorded_at || log.created_at ? PawpalPets.formatDateTime(log.recorded_at || log.created_at) : '—')}</td>
-            <td>${escapeText(pet?.name || 'Chưa có thông tin bé cưng')}<div class="pet-meta-11">${escapeText(pet?.code || '')}</div></td>
+            <td>${escapeText(pet?.name || 'Chưa có thông tin bé cưng')}<div class="pet-meta-11 admin-table-code" title="${escapeText(pet?.code || '')}">${escapeText(pet?.code || '')}</div></td>
             <td>${escapeText(owner?.name || pet?.ownerName || 'Chưa có thông tin chủ nuôi')}</td>
             <td class="pet-text-wrap">${escapeText(log.description || '—')}</td>
             <td class="pet-text-wrap">${escapeText(log.observed_condition || log.health_status || '—')}</td>

@@ -383,7 +383,7 @@
                     <td class="pet-u-text-center">
                         <img src="${esc(pet.avatar || '/assets/images/publics/dogcute3.jpg')}" class="pet-avatar-cell" alt="${esc(pet.name)}">
                     </td>
-                    <td><strong>${esc(pet.code)}</strong></td>
+                    <td><strong class="pet-code-text admin-table-code" title="${esc(pet.code)}">${esc(pet.code)}</strong></td>
                     <td>
                         <div class="pet-name-cell">
                             <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="${esc(pet.code)}">${esc(pet.name)}</a>

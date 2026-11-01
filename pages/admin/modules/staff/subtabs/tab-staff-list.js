@@ -202,7 +202,7 @@
             }
 
             tr.innerHTML = `
-                <td>${staff.id}</td>
+                <td><span class="admin-table-code" title="${escapeHtml(staff.id)}">${escapeHtml(staff.id)}</span></td>
                 <td><a href="javascript:void(0)" class="user-link-text btn-view-profile" data-id="${staff.id}" title="${escapeHtml(staff.name)}">${escapeHtml(staff.name)}</a></td>
                 <td>${escapeHtml(staff.position==='cham_soc_thu_cung'?'Chăm sóc thú cưng':staff.position)}</td>
                 <td>${escapeHtml(staff.phone)}</td>
@@ -495,8 +495,8 @@
             for(const text of [task.appointment_code,[profile?.full_name,task.pet?.pet_name].filter(Boolean).join(' · ')||'—',task.items.map(i=>i.name_snapshot).join(', '),new Date(task.scheduled_start_at).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok'})])row.insertCell().textContent=text;
             const select=document.createElement('select');select.className='admin-select reassign-select-row';select.dataset.bookingRawId=task.id;select.append(new Option('Chọn nhân viên',''),...state.replacements.map(s=>new Option(s.name+' · '+s.position,s.rawId)));select.value=state.choices.get(task.id)||'';select.onchange=()=>state.choices.set(task.id,select.value);row.insertCell().append(select);PawpalStaff.enhanceEntitySelect(select);
         }
-        let pager=document.getElementById('staffHandoverPager');if(!pager){pager=document.createElement('div');pager.id='staffHandoverPager';pager.style.cssText='display:flex;justify-content:center;gap:8px;margin-top:6px';body.closest('.table-responsive-wrapper').after(pager);}
-        pager.replaceChildren();const pages=Math.ceil(state.tasks.length/10)||1;for(const [text,target] of [['<',handoverPage-1],[String(handoverPage),handoverPage],['>',handoverPage+1]]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.style.cssText=target===handoverPage&&text!=='<'&&text!=='>'?'border:none;background:#236B48;color:white':'border:none;background:transparent';button.textContent=text;button.disabled=target<1||target>pages;button.onclick=()=>{handoverPage=target;renderHandoverRows();};pager.append(button);}
+        let pager=document.getElementById('staffHandoverPager');if(!pager){pager=document.createElement('div');pager.id='staffHandoverPager';pager.className='admin-pagination-container';body.closest('.table-responsive-wrapper').after(pager);}
+        pager.replaceChildren();const pages=Math.ceil(state.tasks.length/10)||1;for(const [text,target] of [['<',handoverPage-1],[String(handoverPage),handoverPage],['>',handoverPage+1]]){const button=document.createElement('button');button.type='button';button.className='btn-pagination'+(target===handoverPage&&text!=='<'&&text!=='>'?' active':'');button.textContent=text;button.disabled=target<1||target>pages;button.onclick=()=>{handoverPage=target;renderHandoverRows();};pager.append(button);}
     }
     async function openReassignModal(staffId){
         try { if (!await PawpalStaff.ensureStaffDetails([staffId])) return; }

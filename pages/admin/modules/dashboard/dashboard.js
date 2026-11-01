@@ -616,7 +616,7 @@
             if(calendarView==='all'&&!_dashLoadError){
                 const pages=Math.max(1,Math.ceil(calendarAllTotal/10));
                 for(const [label,target,disabled] of [['<',allPage-1,allPage<=1],[String(allPage)+' / '+pages,allPage,true],['>',allPage+1,allPage>=pages]]){
-                    const btn=document.createElement('button');btn.type='button';btn.className='pagination-btn';btn.textContent=label;btn.disabled=disabled;btn.onclick=()=>{allPage=target;renderCalendar();};pager.append(btn);
+                    const btn=document.createElement('button');btn.type='button';btn.className='pagination-btn'+(target===allPage?' active':'');btn.textContent=label;btn.disabled=disabled;btn.onclick=()=>{allPage=target;renderCalendar();};pager.append(btn);
                 }
             }
             const count=document.getElementById('dashAppointmentCount');

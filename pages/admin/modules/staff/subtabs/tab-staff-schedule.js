@@ -84,7 +84,7 @@
         }
         let pager=el('staffSchedulePager');if(!pager){pager=make('div','staff-calendar-pager');pager.id='staffSchedulePager';el('scheduleDayViewWrapper').closest('.admin-card').after(pager);}
         pager.replaceChildren();const pages=Math.ceil(people.length/10)||1;pager.hidden=!people.length;
-        for(const [text,target] of [['<',schedulePage-1],[String(schedulePage),schedulePage],['>',schedulePage+1]]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.textContent=text;button.style.cssText='border:none;background:transparent';if(target===schedulePage&&text!=='<'&&text!=='>')button.style.cssText='border:none;background:#236B48;color:white';button.disabled=target<1||target>pages;button.onclick=()=>{schedulePage=target;renderScheduleTable();};pager.append(button);}
+        for(const [text,target] of [['<',schedulePage-1],[String(schedulePage),schedulePage],['>',schedulePage+1]]){const button=document.createElement('button');button.type='button';button.className='btn-pagination'+(target===schedulePage&&text!=='<'&&text!=='>'?' active':'');button.textContent=text;button.disabled=target<1||target>pages;button.onclick=()=>{schedulePage=target;renderScheduleTable();};pager.append(button);}
         renderLiveWorkstations();renderLeaveRequestsList();
     }
     function openShiftModal(dateStr,unused,preselectedStaffId=null,schedule=null){

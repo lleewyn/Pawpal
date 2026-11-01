@@ -170,7 +170,7 @@
 
             return `
                 <tr class="${rowAlertClass}">
-                    <td style="font-family: monospace; font-weight: 600; color: #236B48;">${esc(p.sku)}</td>
+                    <td><span class="admin-table-code" title="${esc(p.sku)}">${esc(p.sku)}</span></td>
                     <td>
                         <div class="prod-item-row">
                             ${imgSrc?`<img src="${esc(imgSrc)}" alt="${esc(p.name)}" class="prod-thumb" loading="lazy" decoding="async" onerror="this.style.display='none'">`:""}
@@ -284,7 +284,7 @@
         state.grnPage=Math.min(state.grnPage||1,Math.max(1,Math.ceil(items.length/10)));
         if(!items.length){const row=tbody.insertRow(),cell=row.insertCell();cell.colSpan=6;cell.textContent='Ch\u01b0a c\u00f3 m\u1eb7t h\u00e0ng. Ch\u1ecdn bi\u1ebfn th\u1ec3 v\u00e0 b\u1ea5m Th\u00eam d\u00f2ng.';}
         for(const item of items.slice((state.grnPage-1)*10,state.grnPage*10)){
-            const row=tbody.insertRow();row.insertCell().textContent=item.sku;row.insertCell().textContent=item.name;
+            const row=tbody.insertRow(),skuText=document.createElement('span');skuText.className='admin-table-code';skuText.textContent=item.sku;skuText.title=item.sku;row.insertCell().append(skuText);row.insertCell().textContent=item.name;
             const quantity=document.createElement('input');quantity.type='number';quantity.className='admin-input';quantity.min=1;quantity.step=1;quantity.value=item.qty;
             const price=document.createElement('input');price.type='number';price.className='admin-input';price.min=0;price.step='any';price.value=item.price;
             const total=document.createElement('td');total.textContent=formatVND(Number(item.qty||0)*Number(item.price||0));
@@ -292,8 +292,8 @@
             quantity.oninput=sync;price.oninput=sync;row.insertCell().append(quantity);row.insertCell().append(price);row.append(total);
             const remove=document.createElement('button');remove.type='button';remove.className='admin-btn';remove.textContent='X\u00f3a';remove.onclick=()=>{state.activeGrnItems=items.filter(i=>i!==item);renderGrnItemsTable();};row.insertCell().append(remove);
         }
-        let pager=document.getElementById('salesReceiptPager');if(!pager){pager=document.createElement('div');pager.id='salesReceiptPager';pager.style.cssText='display:flex;justify-content:center;gap:12px;margin-top:6px';tbody.closest('.table-responsive-wrapper').after(pager);}pager.replaceChildren();
-        for(const [label,page] of [['<',state.grnPage-1],[String(state.grnPage),state.grnPage],['>',state.grnPage+1]]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.textContent=label;button.style.cssText='background:transparent;border:none;padding:2px 8px;color:#236B48';if(label!=='<'&&label!=='>')button.style.cssText='background:#236B48;border:none;padding:2px 8px;color:#fff';button.disabled=page<1||page>Math.max(1,Math.ceil(items.length/10));button.onclick=()=>{state.grnPage=page;renderGrnItemsTable();};pager.append(button);}
+        let pager=document.getElementById('salesReceiptPager');if(!pager){pager=document.createElement('div');pager.id='salesReceiptPager';pager.className='admin-pagination-container';tbody.closest('.table-responsive-wrapper').after(pager);}pager.replaceChildren();
+        for(const [label,page] of [['<',state.grnPage-1],[String(state.grnPage),state.grnPage],['>',state.grnPage+1]]){const button=document.createElement('button');button.type='button';button.className='btn-pagination'+(label!=='<'&&label!=='>'?' active':'');button.textContent=label;button.disabled=page<1||page>Math.max(1,Math.ceil(items.length/10));button.onclick=()=>{state.grnPage=page;renderGrnItemsTable();};pager.append(button);}
     }
 
     function renderAttributeTags(group) {
@@ -1131,7 +1131,7 @@
         const list=filtered.slice((state.stocktakePage-1)*10,state.stocktakePage*10);
         for(const v of list){
             const row=document.createElement('tr');row.className='stk-row-item';row.dataset.variantId=v.id;
-            const sku=document.createElement('td');sku.textContent=v.sku;
+            const sku=document.createElement('td'),skuText=document.createElement('span');skuText.className='admin-table-code';skuText.textContent=v.sku;skuText.title=v.sku;sku.append(skuText);
             const name=document.createElement('td');name.textContent=v.name;
             const expected=document.createElement('td');expected.textContent=v.stock===null?'\u2014':v.stock;
             const countCell=document.createElement('td'),input=document.createElement('input');input.type='number';input.min=0;input.step=1;input.className='admin-input stk-count-input';input.style.width='80px';input.value=state.stocktakeCounts.get(v.id)?.quantity??'';
@@ -1141,8 +1141,8 @@
             input.oninput=sync;reason.oninput=sync;countCell.append(input);reasonCell.append(reason);row.append(sku,name,expected,countCell,diff,reasonCell);tbody.append(row);
             diff.textContent=input.value===''?'\u2014':String(Number(input.value)-Number(v.stock));
         }
-        let pager=document.getElementById('salesStocktakePager');if(!pager){pager=document.createElement('div');pager.id='salesStocktakePager';pager.style.cssText='display:flex;justify-content:center;gap:12px;margin-top:6px';tbody.closest('.table-responsive-wrapper').after(pager);}pager.replaceChildren();
-        for(const [label,page] of [['<',state.stocktakePage-1],[String(state.stocktakePage),state.stocktakePage],['>',state.stocktakePage+1]]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.textContent=label;button.style.cssText='background:transparent;border:none;padding:2px 8px;color:#236B48';if(label!=='<'&&label!=='>')button.style.cssText='background:#236B48;border:none;padding:2px 8px;color:#fff';button.disabled=page<1||page>Math.max(1,Math.ceil(filtered.length/10));button.onclick=()=>{state.stocktakePage=page;renderStocktakePage();};pager.append(button);}
+        let pager=document.getElementById('salesStocktakePager');if(!pager){pager=document.createElement('div');pager.id='salesStocktakePager';pager.className='admin-pagination-container';tbody.closest('.table-responsive-wrapper').after(pager);}pager.replaceChildren();
+        for(const [label,page] of [['<',state.stocktakePage-1],[String(state.stocktakePage),state.stocktakePage],['>',state.stocktakePage+1]]){const button=document.createElement('button');button.type='button';button.className='btn-pagination'+(label!=='<'&&label!=='>'?' active':'');button.textContent=label;button.disabled=page<1||page>Math.max(1,Math.ceil(filtered.length/10));button.onclick=()=>{state.stocktakePage=page;renderStocktakePage();};pager.append(button);}
     }
     window.PawpalOrdersModule.openStocktakeModal = async function(){
         if(!await loadInventoryChoices())return;

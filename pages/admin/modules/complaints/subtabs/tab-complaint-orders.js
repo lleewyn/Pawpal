@@ -224,18 +224,18 @@
             return `
                 <tr class="${alertBorderClass}" data-ticket-id="${item.id}">
                     <td style="font-weight: 600; white-space: nowrap;">
-                        <a href="javascript:void(0)" class="user-link-text btn-open-order-complaint-detail" data-ticket-id="${item.id}">${item.id}</a>
+                        <a href="javascript:void(0)" class="user-link-text btn-open-order-complaint-detail admin-table-code" title="${escapeHtml(item.id)}" data-ticket-id="${escapeHtml(item.id)}">${escapeHtml(item.id)}</a>
                     </td>
                     <td>
                         <div style="font-weight: 600; color: var(--text-main); white-space: nowrap;">${escapeHtml(item.customerName)}</div>
                         <div style="font-size: 11.5px; color: var(--text-muted);">${escapeHtml(item.phone || '')}</div>
                     </td>
                     <td>
-                        <span style="font-weight: 500; font-size: 12px; color: var(--text-muted); white-space: nowrap;">${escapeHtml(item.orderId || '—')}</span>
+                        <span class="admin-table-code" title="${escapeHtml(item.orderId || '—')}">${escapeHtml(item.orderId || '—')}</span>
                     </td>
                     <td>
                         <div style="font-weight: 500; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(item.productName || 'Sản phẩm đơn hàng')}">${escapeHtml(item.productName || 'Sản phẩm đơn hàng')}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted); white-space: nowrap;">${escapeHtml(item.productSku || '')}</div>
+                        <div class="admin-table-code" title="${escapeHtml(item.productSku || '')}">${escapeHtml(item.productSku || '')}</div>
                     </td>
                     <td style="white-space: nowrap;">${issueTypeName}</td>
                     <td style="white-space: nowrap;">${escapeHtml(item.customerDemand || 'Đổi sản phẩm mới')}</td>
