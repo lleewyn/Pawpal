@@ -1,0 +1,20 @@
+{
+  "scope": "Real localhost UI/Auth/API/Cloud history reads, no new questions, no Gemini, no private history exported",
+  "pending": {
+    "loadingVisible": true,
+    "timelineBusy": "true",
+    "sidebarBusy": "true",
+    "reloadDisabled": true,
+    "fakeGreeting": false,
+    "emptyHint": 0
+  },
+  "statuses": [
+    200,
+    200
+  ],
+  "ready": {
+    "loadingCount": 0,
+    "reloadDisabled": false,
+    "historyError": 0
+  }
+}

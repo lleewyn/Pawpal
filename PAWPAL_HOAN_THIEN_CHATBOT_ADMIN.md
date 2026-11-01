@@ -1,6 +1,6 @@
 # Hoàn thiện chatbot Admin
 
-Cập nhật 01/11/2026. Đã hoàn thành đợt triển khai và nghiệm thu **local** bên dưới. Người dùng đã yêu cầu phát hành lên main; kết quả local chưa chứng minh Vercel đã có bản mới hoặc đã nghiệm thu. SQL162–164 đã áp dụng trên Supabase sau khi kiểm tra bằng giao dịch QA và hoàn tác dữ liệu thử.
+Cập nhật 01/11/2026. Đã push main003d5e85 và smoke Admin Vercel:24/24 câu browser đạt, Trực chat/Quy định tải được, API lịch sử chặn phiên chưa đăng nhập bằng401. [Kết quả Vercel và giới hạn](docs/chatbot/admin-vercel-2026-11-01/README.md). SQL162–164 đã áp dụng trên Supabase; Gate2 vẫn mở.
 
 [Báo cáo nghiệm thu](docs/chatbot/admin-completion-2026-11-01/README.md). Kết quả: **213/213 test tự động, 24/24 lượt browser mở rộng**, cùng 8 lượt browser đợt đầu. Tổng cộng30 câu khác nhau; kiểm tra đại diện, không có nghĩa hiểu được mọi cách diễn đạt.
 
@@ -46,6 +46,12 @@ JWT và quyền từng nguồn của nhân viên; tối đa3 nguồn/câu,2 đ�
 
 ## Phần phát hành và mở rộng còn riêng
 
-- [ ] Push code khi người dùng yêu cầu, chờ bản triển khai rồi nghiệm thu Vercel bằng phiên Admin thật. Local đạt chưa chứng minh Production đạt.
+Phát hành UI: người dùng yêu cầu push toàn bộ UI-local01–03 ngày01/11/2026; nghiệm thu Vercel cho các thay đổi UI mới vẫn còn chờ.
+
+- [x] UI-local01/11 — Sửa câu hỏi hiện ngay/trạng thái chờ, gửi lại không lặp, lời hướng dẫn trống căn trái và nhóm tác vụ Trực chat căn phải. Browser local/API thật, ca lỗi kiểm soát và desktop/mobile đạt. [Bằng chứng](docs/chatbot/admin-ui-feedback-2026-11-01/README.md). Nghiệm thu Vercel cho UI mới còn chờ.
+- [x] UI-local02 — Thêm nhãn tải rõ, nội dung hiện dần ở frontend sau xác nhận dữ liệu; Hotel thành bảng, lịch trực rỗng tự nhiên hơn, bỏTrang1/1.217 test và browser local thật đạt, không thêm nguồn đọc/model. [Kết quả và giới hạn](docs/chatbot/admin-answer-ui-2026-11-01/README.md). SSE Admin chưa triển khai; nghiệm thu Vercel cho UI mới còn chờ.
+- [x] UI-local03 — Khi mới mở tab, HTML báo đang tải phiên/lịch sử ngay; bỏ lời chào tĩnh, có lỗi/thử lại, chống phản hồi cũ đè phiên mới và tải chồng bị kẹt.6 kiểm tra UI kiểm soát, hồi quy lịch sử và browser/API local thật đạt. [Bằng chứng](docs/chatbot/admin-history-loading-2026-11-01/README.md). Nghiệm thu Vercel cho UI mới còn chờ.
+
+- [x] Phát hành main003d5e85 và kiểm tra Vercel bằng phiên Admin thật:24/24 câu, Trực chat/Quy định và chặn401 đạt. Đây là smoke các luồng đã chọn, không thay toàn bộ oracle/quyền/lỗi nguồn trên Production.
 - [ ] Gate2: đo tổng lưu lượng Auth/PostgREST/database và tải nhiều phiên. Số byte nguồn đã ghi không thay phép đo này; hiện chưa có Redis/proxy dùng chung ngoài database.
 - [ ] Mở thêm SLA, ưu tiên, lợi nhuận/phân nhóm hoặc luồng liên phân hệ khác khi có chính sách/công thức cụ thể. Đây là mở rộng ngoài các nguồn đã nghiệm thu, không tự tạo quy tắc thay người quản trị.

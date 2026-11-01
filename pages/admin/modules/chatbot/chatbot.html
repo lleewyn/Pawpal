@@ -66,6 +66,7 @@
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnChatContext">Thông tin khách</button>
                     <span class="admin-badge badge-neutral" id="currentChatSentimentBadge" style="display: none;">—</span>
 
+                    <div class="chat-header-tools">
                     <!-- NÚT 3 CHẤM VÀ DROPDOWN TÁC VỤ -->
                     <div class="chat-actions-menu-wrap" id="chatActionsMenuWrap">
                         <button type="button" class="btn-chat-actions-dots" id="btnChatActionsDots" title="Tác vụ thêm">•••</button>
@@ -79,10 +80,10 @@
 
                     <button type="button" class="btn-toggle-context-pill" id="btnShowAiContext">Mở tóm tắt AI</button>
 
-                    <div class="chat-header-actions-spacer"></div>
                     <span class="sla-timer-pill" id="currentChatSlaBadge" style="display: none;">—</span>
                     <button type="button" class="admin-btn btn-resolve-compact" id="btnHeaderResolveChat" style="display: none; background: #EEF5F1; color: #236B48; border: 1px solid #C3DEC7; border-radius: 9px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;">Hoàn tất ca</button>
                     <button type="button" class="admin-btn admin-btn-primary btn-takeover-compact" id="btnToggleTakeover">Tiếp nhận</button>
+                    </div>
                 </div>
 
                 <!-- THẺ TÓM TẮT NGỮ CẢNH AI (MẶC ĐỊNH ẨN BAN ĐẦU - ĐỂ NGƯỜI DÙNG TỰ MỞ KHI CẦN) -->
@@ -232,8 +233,8 @@
                     <button type="button" class="admin-btn admin-btn-primary btn-new-copilot-session" id="btnNewCopilotSession">Đoạn chat mới</button>
                     <input type="text" class="admin-input copilot-session-search-input" id="inputCopilotSessionSearch" placeholder="Tìm kiếm phiên chat...">
                 </div>
-                <div class="copilot-sessions-list" id="copilotSessionsList">
-                    <!-- Danh sách phiên chat render động bởi JS -->
+                <div class="copilot-sessions-list" id="copilotSessionsList" aria-busy="true">
+                    <div class="copilot-session-empty" role="status">Đang tải các phiên chat…</div>
                 </div>
             </div>
 
@@ -248,21 +249,15 @@
                     </div>
                     <div class="copilot-quick-actions">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnClearCopilotChat">Xóa lịch sử chat</button>
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnSyncRagData">Tải lại lịch sử</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnSyncRagData" disabled>Đang tải lịch sử</button>
                     </div>
                 </div>
 
                 <!-- VÙNG HIỂN THỊ HỘI THOẠI COPILOT -->
-                <div class="copilot-messages-scroll" id="copilotMessagesArea">
-                    <!-- Tin nhắn khởi đầu của AI Copilot -->
-                    <div class="copilot-msg msg-ai">
-                        <div class="copilot-msg-header">
-                            <span class="copilot-sender-name">PawPal Copilot (Nội bộ)</span>
-                            <span class="copilot-msg-time">Hôm nay</span>
-                        </div>
-                        <div class="copilot-msg-bubble">
-                            Xin chào Quản trị viên! Tôi là trợ lý AI nội bộ của PawPal. Tôi có thể hỗ trợ tra cứu nhanh số lượng lịch hẹn hôm nay, danh sách sản phẩm sắp hết hàng, doanh thu ước tính theo chi nhánh hoặc soạn thảo các mẫu phản hồi khách hàng chuyên nghiệp.
-                        </div>
+                <div class="copilot-messages-scroll" id="copilotMessagesArea" aria-busy="true">
+                    <div class="copilot-history-loading" role="status">
+                        <div class="copilot-loading-title">Đang tải lịch sử trò chuyện<span class="copilot-loading-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></div>
+                        <div class="copilot-loading-hint">Mình đang lấy các phiên và tin nhắn gần đây. Bạn chờ một chút nhé.</div>
                     </div>
                 </div>
 

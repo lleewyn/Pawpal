@@ -1,0 +1,16 @@
+{
+  "pass": true,
+  "scope": "Controlled offline network, actual production HTML/CSS/JS, no database/model",
+  "checks": [
+    "Question visible before API reply; empty hint removed; waiting follows question",
+    "503 retains one question and editable draft; retry reuses request/session IDs",
+    "Success has exactly one user and one assistant message; waiting/failure removed",
+    "Header tools right aligned with no viewport overflow"
+  ],
+  "widths": [
+    1440,
+    800,
+    390
+  ],
+  "postRequests": 2
+}

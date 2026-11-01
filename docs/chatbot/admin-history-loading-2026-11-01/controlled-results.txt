@@ -1,0 +1,12 @@
+{
+  "pass": true,
+  "checks": [
+    "HTML and pending session request show loading, no fake greeting or empty state",
+    "Loading continues between sessions and actual message response without flashing empty",
+    "Confirmed history replaces loading and reload becomes available",
+    "Reentrant reload during message read adds no request and cannot leave loading stuck",
+    "503 displays explicit retry; confirmed empty history is shown only after retry succeeds",
+    "Late initial load failure cannot overwrite a new session and confirmed reply"
+  ],
+  "scope": "Controlled transport and test-only history, no DB or Gemini"
+}

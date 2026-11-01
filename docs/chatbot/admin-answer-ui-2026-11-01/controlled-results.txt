@@ -1,0 +1,16 @@
+{
+  "pass": true,
+  "scope": "Controlled offline API, actual formatter/HTML/CSS/JS; no database or model",
+  "checks": [
+    "Visible loading label and animated dots before response",
+    "Reply text grows over time while Markdown stays formatted",
+    "Nine source rows retained in table; no hidden nodes after completion",
+    "No viewport overflow at390px",
+    "Reduced-motion preference skips reveal; empty schedule is helpful and compact"
+  ],
+  "sampleLengths": [
+    1,
+    112
+  ],
+  "requests": 2
+}

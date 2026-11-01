@@ -1,0 +1,32 @@
+{
+  "checks": [
+    {
+      "scope": "Actual localhost UI/API, existing staff session, one public capabilities question, no Gemini",
+      "pending": {
+        "userCount": 1,
+        "emptyCount": 0,
+        "belowQuestion": true,
+        "busy": "true"
+      },
+      "status": 200,
+      "intent": "capabilities",
+      "userCount": 1,
+      "assistantCount": 1,
+      "thinkingCount": 0
+    },
+    {
+      "scope": "Actual localhost UI/API; public capabilities only; sidebar and account header masked in screenshot; no Gemini",
+      "pending": {
+        "userCount": 1,
+        "emptyCount": 0,
+        "belowQuestion": true,
+        "questionInsideViewport": true,
+        "busy": "true"
+      },
+      "status": 200,
+      "intent": "capabilities",
+      "userCount": 1,
+      "assistantCount": 1
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 Cập nhật01/11/2026. Đây là danh sách công việc hiện hành. Dấu[x] chỉ xác nhận phần ghi rõ trong mục đó; kiểm thử local, smoke Cloud và nghiệm thu Production là các mức khác nhau.
 
-**Admin đã hoàn thành đợt local AD01–AD09 theo [file công việc riêng](PAWPAL_HOAN_THIEN_CHATBOT_ADMIN.md).**213 test tự động và24 lượt browser mở rộng đạt, cùng8 lượt đợt đầu. Thêm nguồn phòng/lưu trú Hotel và chuyến Taxi; sửa giá Hotel đúng dịch vụ và đơn vị. SQL162–164 đã áp dụng; code chưa push, chưa nghiệm thu Admin Vercel hoặc đóng Gate2. [Báo cáo Admin](docs/chatbot/admin-completion-2026-11-01/README.md). Thành viên đã phát hành9b5e0ccd và kiểmVercel10 nhóm cùng hai tài khoản thật; [báo cáo thành viên](docs/chatbot/member-vercel-2026-11-01/README.md).
+**Admin đã push main003d5e85 và kiểm Vercel theo [file công việc riêng](PAWPAL_HOAN_THIEN_CHATBOT_ADMIN.md).**213 test tự động local đạt; Vercel24/24 câu browser, tab Trực chat/Quy định và chặn401 khi chưa đăng nhập đạt. SQL162–164 đã áp dụng; Gate2 về tổng lưu lượng/tải nhiều phiên vẫn mở. [Báo cáo Vercel Admin](docs/chatbot/admin-vercel-2026-11-01/README.md). Thành viên đã phát hành9b5e0ccd và kiểmVercel10 nhóm cùng hai tài khoản thật; [báo cáo thành viên](docs/chatbot/member-vercel-2026-11-01/README.md).
 
 **Guest đã đạt nghiệm thu local đợt2 và push main556729ad:**31 câu hỏi khác nhau, hai câu Gemini được duyệt, bốn link bấm đi tiếp, phục hồi mạng/nháp và vòng hai UI chuyển nhân viên/CSAT.43 test tự động đạt. Vercel mới đã smoke mua guest và giá cắt tỉa desktop/mobile; chưa lặp toàn bộ matrix trênProduction. Gate2 và dữ liệu riêng thành viên vẫn mở. [Kết quả và lỗi đã sửa](docs/chatbot/guest-phase2-2026-10-31/README.md).
 

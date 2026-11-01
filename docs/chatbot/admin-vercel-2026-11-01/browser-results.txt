@@ -1,0 +1,654 @@
+{
+  "date": "2026-11-01",
+  "target": "https://pawpalgr3.vercel.app",
+  "pushedCommit": "003d5e85",
+  "deploymentEvidence": "Live endpoint returned hotel.availability/hotel.stays/taxi.trips and correct natural routing; no claim of reading Vercel deployment metadata.",
+  "stats": {
+    "questions": 24,
+    "pass": 24,
+    "sourceBytes": 13415,
+    "maxSourceBytes": 3334,
+    "maxCalls": 2,
+    "minMs": 1880,
+    "maxMs": 6460,
+    "measuredTraffic": {
+      "batches": 4,
+      "responses": 32,
+      "decodedBytes": 98600,
+      "failed": 0,
+      "postDecodedBytes": 23727
+    }
+  },
+  "batches": [
+    {
+      "batch": 0,
+      "checks": [
+        {
+          "question": "Hotel còn phòng ngày mai không?",
+          "status": 200,
+          "intent": "hotel.availability",
+          "expected": "hotel.availability",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 1434,
+          "scope": {
+            "start_at": "2026-11-01T17:00:00.000Z",
+            "end_at": "2026-11-02T17:00:00.000Z"
+          },
+          "ms": 4248
+        },
+        {
+          "question": "Lượt lưu trú hôm nay",
+          "status": 200,
+          "intent": "hotel.stays",
+          "expected": "hotel.stays",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 715,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 4690
+        },
+        {
+          "question": "Chuyến Taxi hôm nay",
+          "status": 200,
+          "intent": "taxi.trips",
+          "expected": "taxi.trips",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 413,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 4578
+        },
+        {
+          "question": "Lịch Spa ngày mai buổi sáng",
+          "status": 200,
+          "intent": "appointment.search",
+          "expected": "appointment.search",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 544,
+          "scope": {
+            "start_at": "2026-11-01T17:00:00.000Z",
+            "end_at": "2026-11-02T17:00:00.000Z",
+            "category": "grooming_spa",
+            "day_part": "morning"
+          },
+          "ms": 4994
+        },
+        {
+          "question": "Lịch hẹn hôm nay theo KTV: QA-ADMIN-NOT-FOUND",
+          "status": 200,
+          "intent": "appointment.search",
+          "expected": "appointment.search",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 360,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z",
+            "staff_query": "QA-ADMIN-NOT-FOUND"
+          },
+          "ms": 3161
+        },
+        {
+          "question": "So sánh thực thu tuần này và tuần trước",
+          "status": 200,
+          "intent": "revenue.compare",
+          "expected": "revenue.compare",
+          "pass": true,
+          "readCalls": 2,
+          "bytes": 589,
+          "scope": {
+            "period": "week",
+            "comparison": "previous_elapsed",
+            "current": {
+              "start_at": "2026-10-25T17:00:00.000Z",
+              "end_at": "2026-11-01T04:09:15.461Z"
+            },
+            "previous": {
+              "start_at": "2026-10-18T17:00:00.000Z",
+              "end_at": "2026-10-25T04:09:15.461Z"
+            },
+            "previous_capped": false
+          },
+          "ms": 3621
+        },
+        {
+          "question": "So sánh thực thu tháng này và tháng trước",
+          "status": 200,
+          "intent": "revenue.compare",
+          "expected": "revenue.compare",
+          "pass": true,
+          "readCalls": 2,
+          "bytes": 574,
+          "scope": {
+            "period": "month",
+            "comparison": "previous_elapsed",
+            "current": {
+              "start_at": "2026-10-31T17:00:00.000Z",
+              "end_at": "2026-11-01T04:09:28.209Z"
+            },
+            "previous": {
+              "start_at": "2026-09-30T17:00:00.000Z",
+              "end_at": "2026-10-01T04:09:28.209Z"
+            },
+            "previous_capped": false
+          },
+          "ms": 3726
+        },
+        {
+          "question": "Việc cần xử lý hôm nay",
+          "status": 200,
+          "intent": "operations.pending",
+          "expected": "operations.pending",
+          "pass": true,
+          "readCalls": 2,
+          "bytes": 1031,
+          "scope": {
+            "appointments": {
+              "start_at": "2026-10-31T17:00:00.000Z",
+              "end_at": "2026-11-01T17:00:00.000Z",
+              "status": "confirmed",
+              "unassigned": "true"
+            },
+            "refunds": "all_outstanding"
+          },
+          "ms": 4641
+        }
+      ],
+      "scope": "Actual Vercel Admin UI/API and Cloud. Own new diagnostic chat sessions only. No private source rows exported. No Gemini or business mutations."
+    },
+    {
+      "batch": 1,
+      "checks": [
+        {
+          "question": "Bảng giá chi tiết Hotel: Dịch Vụ Daycare",
+          "status": 200,
+          "intent": "catalog.price_rows",
+          "expected": "catalog.price_rows",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 654,
+          "scope": {
+            "query": "Dịch Vụ Daycare",
+            "category": "pet_hotel"
+          },
+          "ms": 4101
+        },
+        {
+          "question": "Đơn hàng ORD-QA-NOT-FOUND",
+          "status": 200,
+          "intent": "order.lookup",
+          "expected": "order.lookup",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 210,
+          "scope": {
+            "query": "ORD-QA-NOT-FOUND"
+          },
+          "ms": 3743
+        },
+        {
+          "question": "Khiếu nại chưa xử lý hôm nay",
+          "status": 200,
+          "intent": "ticket.open",
+          "expected": "ticket.open",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 352,
+          "scope": {
+            "start_at": "2026-11-01T00:00:00+07:00",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 5677
+        },
+        {
+          "question": "Sản phẩm sắp hết hàng",
+          "status": 200,
+          "intent": "inventory.low_stock",
+          "expected": "inventory.low_stock",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 284,
+          "scope": {},
+          "ms": 4732
+        }
+      ],
+      "traffic": [
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-config",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 322
+        },
+        {
+          "kind": "database",
+          "endpoint": "/rest/v1/rpc/get_admin_chat_inbox_view",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 15644
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 1597
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 2203
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 2056
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 873
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 1224
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 1013
+        }
+      ],
+      "scope": "Actual Vercel Admin UI/API and Cloud. Own new diagnostic chat sessions only. No private source rows exported. No Gemini or business mutations."
+    },
+    {
+      "batch": 2,
+      "checks": [
+        {
+          "question": "Danh sách hội thoại hôm nay",
+          "status": 200,
+          "intent": "conversation.list",
+          "expected": "conversation.list",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 3334,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 3178
+        },
+        {
+          "question": "Doanh thu tuần này",
+          "status": 200,
+          "intent": "revenue.summary",
+          "expected": "revenue.summary",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 298,
+          "scope": {
+            "start_at": "2026-10-25T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 5072
+        },
+        {
+          "question": "Đơn hủy chưa hoàn",
+          "status": 200,
+          "intent": "order.refund_pending",
+          "expected": "order.refund_pending",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 492,
+          "scope": {},
+          "ms": 6460
+        },
+        {
+          "question": "Lịch trực hôm nay",
+          "status": 200,
+          "intent": "staff.schedule",
+          "expected": "staff.schedule",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 384,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z"
+          },
+          "ms": 6026
+        }
+      ],
+      "traffic": [
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-config",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 322
+        },
+        {
+          "kind": "database",
+          "endpoint": "/rest/v1/rpc/get_admin_chat_inbox_view",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 15644
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 1625
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 768
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 7148
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 1331
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 1706
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 1494
+        }
+      ],
+      "scope": "Actual Vercel Admin UI/API and Cloud. Own new diagnostic chat sessions only. No private source rows exported. No Gemini or business mutations."
+    },
+    {
+      "batch": 3,
+      "checks": [
+        {
+          "question": "Đánh giá một sao hôm nay",
+          "status": 200,
+          "intent": "review.list",
+          "expected": "review.list",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 308,
+          "scope": {
+            "start_at": "2026-10-31T17:00:00.000Z",
+            "end_at": "2026-11-01T17:00:00.000Z",
+            "rating_min": "1",
+            "rating_max": "1"
+          },
+          "ms": 3215
+        },
+        {
+          "question": "Bài viết bản nháp",
+          "status": 200,
+          "intent": "content.list",
+          "expected": "content.list",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 216,
+          "scope": {
+            "status": "draft"
+          },
+          "ms": 1880
+        },
+        {
+          "question": "Hotline cửa hàng",
+          "status": 200,
+          "intent": "settings.read",
+          "expected": "settings.read",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 772,
+          "scope": {},
+          "ms": 5615
+        },
+        {
+          "question": "Khách này có thú cưng và đơn hàng mới nhất?: CUS-QA-NOT-FOUND",
+          "status": 200,
+          "intent": "clarify",
+          "expected": "clarify",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 226,
+          "scope": {},
+          "ms": 3629
+        }
+      ],
+      "traffic": [
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-config",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 322
+        },
+        {
+          "kind": "database",
+          "endpoint": "/rest/v1/rpc/get_admin_chat_inbox_view",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 15644
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 1568
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 814
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 1220
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 872
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 1872
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 614
+        }
+      ],
+      "scope": "Actual Vercel Admin UI/API and Cloud. Own new diagnostic chat sessions only. No private source rows exported. No Gemini or business mutations."
+    },
+    {
+      "batch": 4,
+      "checks": [
+        {
+          "question": "Khách này có lịch sắp tới và khiếu nại nào còn mở?: CUS-QA-NOT-FOUND",
+          "status": 200,
+          "intent": "clarify",
+          "expected": "clarify",
+          "pass": true,
+          "readCalls": 1,
+          "bytes": 225,
+          "scope": {},
+          "ms": 3567
+        },
+        {
+          "question": "Xóa khách hàng CUS-QA-NOT-FOUND",
+          "status": 200,
+          "intent": "refuse.write",
+          "expected": "refuse.write",
+          "pass": true,
+          "scope": {},
+          "ms": 3331
+        },
+        {
+          "question": "Khách sạn còn phòng không?",
+          "status": 200,
+          "intent": "clarify",
+          "expected": "clarify",
+          "pass": true,
+          "scope": {},
+          "ms": 2406
+        },
+        {
+          "question": "Giá tắm bé 7kg",
+          "status": 200,
+          "intent": "clarify",
+          "expected": "clarify",
+          "pass": true,
+          "scope": {},
+          "ms": 2921
+        }
+      ],
+      "traffic": [
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-config",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 322
+        },
+        {
+          "kind": "database",
+          "endpoint": "/rest/v1/rpc/get_admin_chat_inbox_view",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 15644
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 1556
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "GET",
+          "status": 200,
+          "decodedBytes": 878
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 614
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 616
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 511
+        },
+        {
+          "kind": "api",
+          "endpoint": "/api/admin-chat",
+          "method": "POST",
+          "status": 200,
+          "decodedBytes": 563
+        }
+      ],
+      "scope": "Actual Vercel Admin UI/API and Cloud. Own new diagnostic chat sessions only. No private source rows exported. No Gemini or business mutations."
+    }
+  ],
+  "tabs": {
+    "checks": [
+      {
+        "tab": "tab-live-support",
+        "rpc": "get_admin_chat_inbox_view",
+        "status": 200,
+        "visible": true,
+        "loadError": false
+      },
+      {
+        "tab": "tab-chatbot-rules",
+        "rpc": "admin_chat_rule_page_bounded",
+        "status": 200,
+        "visible": true,
+        "loadError": false,
+        "rows": 10
+      }
+    ],
+    "failures": []
+  },
+  "unauthenticatedHistory": {
+    "test": "Unauthenticated staff history blocked",
+    "status": 401,
+    "pass": true
+  },
+  "concurrencyProbe": {
+    "status": "INCONCLUSIVE",
+    "note": "Automation-only parallel capability probe did not produce usable measurements; not counted as a successful admission/load test."
+  },
+  "limits": [
+    "No Gemini called, no Cloud Logs queried, no real business records modified. Own diagnostic chat histories created.",
+    "Decoded browser-visible response bodies only. Backend Auth/caller RPC/service-role traffic, TLS, headers and DB egress are not included.",
+    "Network instrumentation covers the final sixteen questions plus four fresh page initializations, not all24 requests.",
+    "Read-only and refusal/clarification smoke. Not an exhaustive oracle for every source, locked staff or outage scenario.",
+    "Gate2 remains open."
+  ]
+}

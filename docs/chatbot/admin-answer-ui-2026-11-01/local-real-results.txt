@@ -1,0 +1,43 @@
+{
+  "checks": [
+    {
+      "question": "Hotel còn phòng ngày mai không?",
+      "status": 200,
+      "intent": "hotel.availability",
+      "expected": "hotel.availability",
+      "loadingVisible": true,
+      "progressive": true,
+      "samples": [
+        1,
+        80
+      ],
+      "sourceCalls": 1,
+      "sourceBytes": 1434,
+      "rows": 9,
+      "tableRows": 9,
+      "rawMarkdown": false,
+      "singlePageFooter": false,
+      "userMessages": 1
+    },
+    {
+      "question": "Lịch trực hôm nay",
+      "status": 200,
+      "intent": "staff.schedule",
+      "expected": "staff.schedule",
+      "loadingVisible": true,
+      "progressive": true,
+      "samples": [
+        0,
+        50
+      ],
+      "sourceCalls": 1,
+      "sourceBytes": 382,
+      "rows": 0,
+      "tableRows": 0,
+      "rawMarkdown": false,
+      "singlePageFooter": false,
+      "userMessages": 1
+    }
+  ],
+  "scope": "Real localhost UI/API/Cloud; no Gemini, no private source content exported. Own test sessions only."
+}
