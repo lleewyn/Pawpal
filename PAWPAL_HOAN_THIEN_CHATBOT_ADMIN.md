@@ -46,6 +46,8 @@ JWT và quyền từng nguồn của nhân viên; tối đa3 nguồn/câu,2 đ�
 
 ## Phần phát hành và mở rộng còn riêng
 
+- [x] UI-local04/11 — Đã thêm SSE thật cho trạng thái và câu trả lời Admin đã xác minh/lưu; browser đọc delta trực tiếp, không gõ lại.220 test và HTTP SSE/browser local thật đạt. Chưa streaming token trực tiếp từ Gemini, chưa push/kiểm Vercel mới. [Chi tiết](docs/chatbot/admin-stream-2026-11-04/README.md).
+
 Phát hành UI: người dùng yêu cầu push toàn bộ UI-local01–03 ngày01/11/2026; nghiệm thu Vercel cho các thay đổi UI mới vẫn còn chờ.
 
 - [x] UI-local01/11 — Sửa câu hỏi hiện ngay/trạng thái chờ, gửi lại không lặp, lời hướng dẫn trống căn trái và nhóm tác vụ Trực chat căn phải. Browser local/API thật, ca lỗi kiểm soát và desktop/mobile đạt. [Bằng chứng](docs/chatbot/admin-ui-feedback-2026-11-01/README.md). Nghiệm thu Vercel cho UI mới còn chờ.

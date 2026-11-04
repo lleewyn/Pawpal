@@ -1,0 +1,12 @@
+{
+  "pass": true,
+  "scope": "Actual HTTP SSE controlled server, production HTML/CSS/controller; no database/model",
+  "checks": [
+    "Status received before any reply text",
+    "First Unicode delta visible while response still open",
+    "Completion renders final answer without artificial replay",
+    "Truncated stream removes partial answer and retains question",
+    "Retry keeps request ID and avoids duplicate messages"
+  ],
+  "posts": 3
+}

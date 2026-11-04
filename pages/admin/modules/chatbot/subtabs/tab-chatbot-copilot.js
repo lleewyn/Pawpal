@@ -126,7 +126,7 @@
   localStorage.removeItem('pawpal_copilot_sessions');sessionStorage.removeItem('pawpal_copilot_sessions');
 
   const reads=new Map(),details=new Map();let totalSessions=0,loadVersion=0;
-  async function api(method,body,params={},force=false){
+  async function api(method,body,params={},force=false,onStream){
    const session=(await client.auth.getSession()).data.session;if(!session)throw Error('Phiên đăng nhập đã hết hạn.');
    const suffix=new URLSearchParams(typeof params==='number'?{offset:params}:params).toString();
    const key=session.user.id+':'+suffix;
@@ -136,9 +136,17 @@
     const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),30000);
     let response;
     try{response=await fetch('/api/admin-chat'+(suffix?'?'+suffix:''),{method,signal:controller.signal,headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});}
-    catch(error){throw Error(error.name==='AbortError'?'Trợ lý phản hồi quá lâu. Câu hỏi vẫn được giữ để bạn thử lại.':'Mất kết nối. Câu hỏi vẫn được giữ để bạn thử lại.');}
-    finally{clearTimeout(timer);}
-    const result=await response.json();if(!response.ok||!result.ok)throw Error(result.error||'Không thể kết nối trợ lý.');
+    catch(error){clearTimeout(timer);throw Error(error.name==='AbortError'?'Trợ lý phản hồi quá lâu. Câu hỏi vẫn được giữ để bạn thử lại.':'Mất kết nối. Câu hỏi vẫn được giữ để bạn thử lại.');}
+    let result;
+    try{
+     if(response.ok&&response.headers.get('Content-Type')?.includes('text/event-stream')){
+      const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='',size=0,done=false;
+      const dispatch=frame=>{const lines=frame.split('\n'),type=lines.find(s=>s.startsWith('event:'))?.slice(6).trim(),raw=lines.filter(s=>s.startsWith('data:')).map(s=>s.slice(5).trimStart()).join('\n');if(!raw)return;const data=JSON.parse(raw);if(type==='error')throw Error(data.error||'Chưa thể hoàn tất phản hồi.');if(type==='done'){result=data;done=true;}else if(!done)onStream?.(type,data);};
+      try{while(true){const part=await reader.read();if(part.done)break;size+=part.value.byteLength;if(size>524288)throw Error('Phản hồi vượt giới hạn.');buffer+=decoder.decode(part.value,{stream:true}).replace(/\r\n/g,'\n');let end;while((end=buffer.indexOf('\n\n'))>=0){dispatch(buffer.slice(0,end));buffer=buffer.slice(end+2);}}buffer+=decoder.decode();if(buffer.trim())dispatch(buffer);if(!done)throw Error('Kết nối bị ngắt trước khi xác nhận phản hồi. Bạn có thể gửi lại.');}
+      finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
+     }else result=await response.json();
+    }finally{clearTimeout(timer);}
+    if(!response.ok||!result?.ok)throw Error(result?.error||'Không thể kết nối trợ lý.');
     if(method==='GET')reads.set(key,{at:Date.now(),data:result});
     else {reads.clear();if(method==='DELETE'){details.delete(body.sessionId);if(active===body.sessionId)active=null;}}
     return result;
@@ -320,8 +328,14 @@
    timeline.append(thinkingCard);
    timeline.scrollTop=timeline.scrollHeight;
 
+   let streamedCard=null,streamedBubble=null,streamedText='';
    try{
-    const result=await api('POST',{sessionId:active,requestId:request.id,question,conversationId,readContext});
+    const result=await api('POST',{sessionId:active,requestId:request.id,question,conversationId,readContext,stream:true},{},false,(type,data)=>{
+     if(type==='status'){statusHint.textContent=data.phase==='answering'?'Đã kiểm tra xong. Mình đang gửi câu trả lời.':'Mình đang đọc dữ liệu trong phạm vi bạn được xem.';return;}
+     if(type!=='delta'||typeof data.text!=='string')return;
+     if(!streamedCard){thinkingCard.remove();send.textContent='Đang trả lời';streamedCard=document.createElement('div');streamedCard.className='copilot-msg msg-ai';const heading=document.createElement('div');heading.className='copilot-msg-header';heading.textContent='Trợ lý · Đang trả lời';streamedBubble=document.createElement('div');streamedBubble.className='copilot-msg-bubble';streamedBubble.setAttribute('aria-busy','true');streamedCard.append(heading,streamedBubble);timeline.append(streamedCard);}
+     streamedText+=data.text;streamedBubble.innerHTML=renderMarkdown(streamedText);timeline.scrollTop=timeline.scrollHeight;
+    });
     thinkingCard.remove();
     send.textContent='Đang trả lời';
     const replyText=result.reply||'';
@@ -330,13 +344,13 @@
     currSession.messages.push(aiMsg);
     if(input.value.trim()===question)input.value='';
 
-    const aiCard=document.createElement('div');aiCard.className='copilot-msg msg-ai';
+    const aiCard=streamedCard||document.createElement('div');aiCard.className='copilot-msg msg-ai';
     const heading=document.createElement('div');heading.className='copilot-msg-header';heading.textContent='Trợ lý · Vừa xong';
     const contentBubble=document.createElement('div');contentBubble.className='copilot-msg-bubble';
-    aiCard.append(heading,contentBubble);
+    aiCard.replaceChildren(heading,contentBubble);
     timeline.append(aiCard);
 
-    await typewriteText(contentBubble,timeline,replyText);
+    if(streamedCard)contentBubble.innerHTML=renderMarkdown(replyText);else await typewriteText(contentBubble,timeline,replyText);
     request=null;
     currSession.updated=aiMsg.created_at;
     const existing=sessions.find(s=>s.id===active);
@@ -346,6 +360,7 @@
    }
    catch(error){
     thinkingCard.remove();
+    streamedCard?.remove();
     pendingMessage.delivery='failed';
     app.showToast?.(error.message,'error');
    }

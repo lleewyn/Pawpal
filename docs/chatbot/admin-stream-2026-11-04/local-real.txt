@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "contentType": "text/event-stream; charset=utf-8",
+  "networkReads": 3,
+  "statusEvents": 2,
+  "deltas": 8,
+  "completion": "done",
+  "timeToAnswerAfterStatus": 1078.5,
+  "userMessages": 1,
+  "assistantMessages": 1,
+  "tableRows": 9,
+  "deliveryError": 0,
+  "artificialReveal": false
+}

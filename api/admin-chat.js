@@ -189,6 +189,7 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
   const auth=await verify(req,'admin_copilot_history.read');if(!auth.authorized)return fail(auth.status,auth.message);
   const {caller,staff,user}=auth;
   let body=req.body||{};try{if(typeof body==='string')body=JSON.parse(body);}catch{return fail(400,'Dữ liệu không hợp lệ.');}
+  const adminStream=require('../scripts/api/chat_admin_stream.js').createAdminStream({method:req.method,body},res);
   let lease=null,answerTask=null;
   try{
    if(req.method==='GET'){
@@ -234,7 +235,7 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
    if(prior){
     if(prior.staff_id!==staff.id||prior.session_id!==body.sessionId||prior.content!==question)return fail(409,'Yêu cầu đã được dùng cho nội dung khác.');
     const {data,error}=await service.from('admin_copilot_history').select('content,metadata').eq('staff_id',staff.id).eq('metadata->>request_id',body.requestId).eq('role','assistant').single();if(error)throw error;
-    return res.json({ok:true,reply:data.content,replayed:true,contract_version:1,answer_type:'saved.reply',plan:null,scope:{},source:null,as_of:null,continuation:data.metadata?.continuation||null,limitations:['Phản hồi đã lưu, chưa tra cứu lại dữ liệu.']});
+    const result={ok:true,reply:data.content,replayed:true,contract_version:1,answer_type:'saved.reply',plan:null,scope:{},source:null,as_of:null,continuation:data.metadata?.continuation||null,limitations:['Phản hồi đã lưu, chưa tra cứu lại dữ liệu.']};return adminStream.enabled?await adminStream.finish(result):res.json(result);
    }
    const now=Date.now(),window=limits.get(staff.id)||[];const recent=window.filter(t=>now-t<60000);
    if(recent.length>=10)return fail(429,'Vui lòng chờ trước khi gửi thêm câu hỏi.');
@@ -245,6 +246,7 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
    const route=copilot.contextualPlan(question,[],new Date(),readContext);
    // All new questions share the identity rate window; replay above consumes no slot.
    lease=await readAdmission.acquire(caller,body.requestId);
+   if(adminStream.enabled)adminStream.status('reading');
    const readBudget=readTools.createReadBudget({lease});let history=[];
    if(copilot.needsContext(question)||['draft.reply','workflow.guide','conversation.summary'].includes(route.intent)){
     history=await readBudget.run(caller,readTools.prepare('history.context',{sessionId:body.sessionId},staff.permissions));
@@ -255,10 +257,11 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
    const reply=answer.reply;
    const nextQuestion=answer.continuation?.type==='ask_question'?answer.continuation.question:null;
    const saved=await service.rpc(nextQuestion?'save_admin_copilot_detail':'save_admin_copilot_exchange',{p_actor:user.id,p_request:body.requestId,p_session:body.sessionId,p_question:question,p_answer:reply,p_title:question.slice(0,80),...(nextQuestion?{p_next:nextQuestion}:{})});if(saved.error)throw saved.error;
-   return res.json({...answer,ok:true,reply:saved.data,request_id:body.requestId});
+   const result={...answer,ok:true,reply:saved.data,request_id:body.requestId};return adminStream.enabled?await adminStream.finish(result):res.json(result);
   }catch(error){
    const status=error.code==='PT429'?429:error.code==='42501'?403:error.code==='PT409'?409:error.code==='22023'?400:error.code==='54000'?422:error.code==='57014'?504:503;
    const message=status===403?'Bạn chưa có quyền xem dữ liệu được yêu cầu.':status===409?(error.message==='detail_content_changed'?'Nội dung đã được sửa. Hãy tra cứu lại phần đầu để đọc đúng phiên bản mới.':'Yêu cầu đã thay đổi hoặc trùng với nội dung khác. Hãy kiểm tra và tải lại.'):status===400?'Điều kiện tra cứu chưa hợp lệ. Hãy ghi rõ mã hoặc ngày cần xem.':status===422?'Phạm vi tra cứu vượt giới hạn tài nguyên. Hãy thu hẹp điều kiện hoặc mở phân hệ liên quan để tiếp tục.':status===504?'Tra cứu quá thời gian cho phép. Câu hỏi chưa được xác nhận lưu; hãy thu hẹp điều kiện rồi thử lại.':error.message==='ai_timeout'?'Trợ lý phản hồi quá lâu. Câu hỏi chưa được xác nhận lưu; bạn có thể thử lại.':'Nguồn dữ liệu hoặc AI chưa sẵn sàng. Không thể kết luận số liệu; câu hỏi chưa được xác nhận lưu.';
+   if(adminStream.started)return adminStream.fail(status,message);
    if(status===429)res.setHeader('Retry-After',error.message==='chat_read_rate_limited'?'60':'1');
    return fail(status,status===429?(error.message==='chat_read_rate_limited'?'Bạn đã đạt giới hạn câu hỏi trong một phút. Vui lòng chờ rồi gửi lại.':'Trợ lý đang xử lý các câu hỏi khác. Vui lòng chờ rồi gửi lại.'):message);
   }finally{
