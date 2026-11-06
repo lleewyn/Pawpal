@@ -1,8 +1,9 @@
 // Real browser + scoped PostgREST. Set PAWPAL_PHASE3_REAL_AUTH=1 to run every session through real isolated GoTrue.
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),crypto=require('node:crypto'),jwt=require('jsonwebtoken'),assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const sessionOnly=process.env.PAWPAL_PHASE4_SESSIONS==='1',gatewayOnly=process.env.PAWPAL_PHASE4_GATEWAY==='1',historyOnly=process.env.PAWPAL_PHASE4_HISTORY==='1',relationsOnly=process.env.PAWPAL_PHASE4_RELATIONS==='1',bookingOnly=process.env.PAWPAL_PHASE4_BOOKING==='1',historyApiOnly=process.env.PAWPAL_PHASE4_HISTORY_API==='1',requestOnly=process.env.PAWPAL_PHASE4_REQUEST==='1',answerOnly=process.env.PAWPAL_PHASE4_ANSWER==='1',copilotUiOnly=process.env.PAWPAL_PHASE4_COPILOT_UI==='1',realtimeOnly=process.env.PAWPAL_PHASE4_REALTIME==='1',realAuth=sessionOnly||gatewayOnly||historyOnly||relationsOnly||bookingOnly||historyApiOnly||requestOnly||answerOnly||copilotUiOnly||realtimeOnly||process.env.PAWPAL_PHASE3_REAL_AUTH==='1';
-const root=process.cwd(),folder=sessionOnly?'docs/security/phase4/session':gatewayOnly?'docs/security/phase4/gateway':historyOnly?'docs/security/phase4/history':relationsOnly?'docs/security/phase4/relations':bookingOnly?'docs/security/phase4/booking':historyApiOnly?'docs/security/phase4/history-api':requestOnly?'docs/security/phase4/request':answerOnly?'docs/security/phase4/answer':copilotUiOnly?'docs/security/phase4/copilot-ui':realtimeOnly?'docs/security/phase4/realtime':realAuth?'docs/security/phase3/auth-integration':'docs/security/phase3';fs.mkdirSync(folder,{recursive:true});
+const phase5Boundaries=process.env.PAWPAL_PHASE5_BOUNDARIES==='1',phase5Only=phase5Boundaries||process.env.PAWPAL_PHASE5_ACCEPTANCE==='1';
+const sessionOnly=process.env.PAWPAL_PHASE4_SESSIONS==='1',gatewayOnly=process.env.PAWPAL_PHASE4_GATEWAY==='1',historyOnly=process.env.PAWPAL_PHASE4_HISTORY==='1',relationsOnly=process.env.PAWPAL_PHASE4_RELATIONS==='1',bookingOnly=process.env.PAWPAL_PHASE4_BOOKING==='1',historyApiOnly=process.env.PAWPAL_PHASE4_HISTORY_API==='1',requestOnly=process.env.PAWPAL_PHASE4_REQUEST==='1',answerOnly=process.env.PAWPAL_PHASE4_ANSWER==='1',copilotUiOnly=process.env.PAWPAL_PHASE4_COPILOT_UI==='1',realtimeOnly=process.env.PAWPAL_PHASE4_REALTIME==='1',realAuth=phase5Only||sessionOnly||gatewayOnly||historyOnly||relationsOnly||bookingOnly||historyApiOnly||requestOnly||answerOnly||copilotUiOnly||realtimeOnly||process.env.PAWPAL_PHASE3_REAL_AUTH==='1';
+const root=process.cwd(),folder=phase5Boundaries?'docs/security/phase5/boundaries':phase5Only?'docs/security/phase5/full':sessionOnly?'docs/security/phase4/session':gatewayOnly?'docs/security/phase4/gateway':historyOnly?'docs/security/phase4/history':relationsOnly?'docs/security/phase4/relations':bookingOnly?'docs/security/phase4/booking':historyApiOnly?'docs/security/phase4/history-api':requestOnly?'docs/security/phase4/request':answerOnly?'docs/security/phase4/answer':copilotUiOnly?'docs/security/phase4/copilot-ui':realtimeOnly?'docs/security/phase4/realtime':realAuth?'docs/security/phase3/auth-integration':'docs/security/phase3';fs.mkdirSync(folder,{recursive:true});
 const env=JSON.parse(fs.readFileSync('docs/security/phase2/local-environment.txt','utf8'));
 assert.match(env.database,/^pawpal_access_[a-f0-9]{12}$/);
 const docker=(args,input)=>execFileSync('docker',args,{input,encoding:'utf8',windowsHide:true,stdio:['pipe','pipe','pipe'],timeout:30000,maxBuffer:8*1024*1024}).trim();
@@ -45,6 +46,9 @@ let assistantTestHandler;let realtimeContainer,realtimeEnvFile,realtimePort;
 let container,browser,server,envFile,authContainer,authEnvFile,authOrigin,serviceCaller,bookingDefinitions,careGuardDefinition,logisticsDefinition,workspaceDefinition,complaintWorkspaceDefinition,chatWorkspaceDefinition,legacyChatComplaintDefinition;
 const authCredentials=new Map();
 const authId=n=>realAuth?authCredentials.get(id(n)).userId:id(n);
+const phase4Migrations=['177_staff_copilot_reads','178_staff_copilot_history','179_staff_copilot_customer_relations','180_staff_copilot_booking_reads','181_staff_copilot_request_budget','182_staff_copilot_source_validation','183_safe_realtime_signals','184_staff_access_audit','185_staff_provision_required_phone','186_work_assignment_handlers'];
+if(phase5Only){report.scope='Phase 5 full business browser regression with real local Auth/PostgREST and migrations through 186; no Cloud writes; WebSocket payloads covered separately';for(const file of [__filename,'scripts/test/admin_access_phase5_remaining_cases.cjs','scripts/api/staff_auth.js','scripts/api/staff-password-handler.cjs',...phase4Migrations.flatMap(n=>['scripts/database/v1/'+n+'.sql','scripts/database/v1/'+n+'.rollback.sql'])])report.sourceSha256[path.relative(root,path.resolve(file)).replaceAll('\\','/')]=crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');}
+
 const pass=name=>{report.checks.push({name,status:'PASS'});console.log('PASS '+name);};
 (async()=>{try{
  runSQL('postgres',`CREATE DATABASE ${database} TEMPLATE ${env.database}; COMMENT ON DATABASE ${database} IS '${marker}';`);
@@ -75,6 +79,7 @@ const pass=name=>{report.checks.push({name,status:'PASS'});console.log('PASS '+n
  INSERT INTO public.hotel_room_type(id,room_type,capacity,daily_price,service_id,weight_from,weight_to,billing_minutes,effective_from) VALUES ('${id(95)}','Phòng thử nghiệm',1,200000,'${id(91)}',0,20,1440,now()-interval '1 day');
  INSERT INTO public.hotel_room(id,room_number,room_type_id) VALUES ('${id(96)}','QA-01','${id(95)}');
  INSERT INTO public.taxi_price_rule(service_id,distance_from,distance_to,weight_from,weight_to,base_price,surcharge,effective_from) VALUES ('${id(92)}',0,100,0,20,50000,10000,now()-interval '1 day');`);
+ if(phase5Only){sql("DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_publication WHERE pubname='supabase_realtime') THEN CREATE PUBLICATION supabase_realtime; END IF; END $$; ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_conversation,public.chat_message,public.notification,public.audit_log");for(const name of phase4Migrations)sql(fs.readFileSync('scripts/database/v1/'+name+'.sql','utf8'));}
  const source=JSON.parse(docker(['inspect','supabase-rest']))[0],vars=Object.fromEntries(source.Config.Env.map(v=>{const p=v.indexOf('=');return [v.slice(0,p),v.slice(p+1)];}));
  const uri=new URL(vars.PGRST_DB_URI);uri.pathname='/'+database;vars.PGRST_DB_URI=uri.toString();const secret=crypto.randomBytes(48).toString('hex');
  vars.PGRST_JWT_SECRET=secret;vars.PGRST_DB_SCHEMAS='public';vars.PGRST_SERVER_PORT='3000';envFile=path.join(env.privateDir,'phase3-rest.private.env');
@@ -142,7 +147,9 @@ const pass=name=>{report.checks.push({name,status:'PASS'});console.log('PASS '+n
   await context.route(/^https:\/\/(unpkg\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//,async route=>{try{await route.fulfill({response:await route.fetch({timeout:8000})});}catch{await route.abort();}});
   return context;
  }
- if(sessionOnly){
+ if(phase5Boundaries){
+  await require('./admin_access_phase5_remaining_cases.cjs')({browser,session,sql,id,authId,authCredentials,origin,folder,pass,serviceCaller});report.status='PASS';
+ }else if(sessionOnly){
   await require('./admin_access_phase4_cases.cjs')({browser,session,sql,id,authCredentials,authId,origin,folder,pass});report.status='PASS';
  }else if(gatewayOnly){
   await require('./admin_access_phase4_gateway_cases.cjs')({browser,session,sql,id,authCredentials,authId,origin,folder,pass});report.status='PASS';
@@ -677,6 +684,7 @@ const pass=name=>{report.checks.push({name,status:'PASS'});console.log('PASS '+n
  await worker.setViewportSize({width:390,height:844});await worker.goto(origin+'/admin#tab-staff-schedule');await worker.locator('.staff-workspace').waitFor();await worker.screenshot({path:folder+'/staff-workspace-mobile.png'});
  assert.equal(await worker.evaluate(()=>document.body.scrollWidth<=innerWidth),true);pass('Staff workspace stays within the mobile viewport');
  assert.deepEqual(errors,[]);
+ if(phase5Only){await require('./admin_access_phase5_remaining_cases.cjs')({browser,session,sql,id,authId,authCredentials,origin,folder,pass,serviceCaller});for(const name of [...phase4Migrations].reverse())sql(fs.readFileSync('scripts/database/v1/'+name+'.rollback.sql','utf8'));pass('Phase 5 rolls back migrations 186 through 177 before exercising earlier rollback chain');}
  sql(fs.readFileSync('scripts/database/v1/176_chat_complaint_content.rollback.sql','utf8'));assert.equal(sql("SELECT to_regprocedure('public.create_chat_complaint(uuid,uuid,timestamptz,uuid,text,text,text,text)') IS NULL"),'t');assert.equal(sql("SELECT md5(pg_get_functiondef('public.create_chat_complaint(uuid,uuid,timestamptz,uuid,text,text,text)'::regprocedure))"),legacyChatComplaintDefinition);pass('Migration 176 rollback removes only the content-capable overload and preserves the exact preceding seven-argument function');
  sql(fs.readFileSync('scripts/database/v1/175_staff_service_receipt.rollback.sql','utf8'));assert.equal(sql("SELECT to_regprocedure('public.get_staff_service_receipt(uuid)') IS NULL"),'t');pass('Migration 175 rollback removes only the assigned-service receipt RPC');
  sql(fs.readFileSync('scripts/database/v1/174_staff_sales_receipt.rollback.sql','utf8'));assert.equal(sql("SELECT to_regprocedure('public.get_staff_sales_receipt(uuid)') IS NULL"),'t');pass('Migration 174 rollback removes only the single-order receipt RPC');

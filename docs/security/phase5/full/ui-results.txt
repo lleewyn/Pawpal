@@ -1,0 +1,1327 @@
+{
+  "capturedAt": "2026-11-06T07:21:13.319Z",
+  "scope": "Phase 5 full business browser regression with real local Auth/PostgREST and migrations through 186; no Cloud writes; WebSocket payloads covered separately",
+  "checks": [
+    {
+      "name": "Four real isolated Auth accounts map to existing staff IDs without changing fixed roles or assignment links",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual STAFF login form rejects a wrong password then enters its database-verified role on mobile",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual ADMIN login form rejects a wrong password then enters its database-verified role on desktop",
+      "status": "PASS"
+    },
+    {
+      "name": "Six management domain bodies remain identical to the Git baseline after normalizing line endings; shared service writes are exercised separately",
+      "status": "PASS"
+    },
+    {
+      "name": "Real ADMIN initializes Khách hàng management UI and its namespace without entering the staff renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "Real ADMIN initializes Thú cưng management UI and its namespace without entering the staff renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "Real ADMIN initializes Dịch vụ management UI and its namespace without entering the staff renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "Real ADMIN initializes Bán hàng management UI and its namespace without entering the staff renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "Real ADMIN initializes Khiếu nại management UI and its namespace without entering the staff renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "Real ADMIN initializes Chatbot management UI and its namespace without entering the staff renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "Real ADMIN initializes Nhân sự management UI and its namespace without entering the staff renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "Real ADMIN initializes Dashboard management UI and its namespace without entering the staff renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "Real ADMIN initializes Cấu hình management UI and its namespace without entering the staff renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "Real ADMIN creates a customer through the original management form and persists exactly one phone record",
+      "status": "PASS"
+    },
+    {
+      "name": "Management navigation and customer save finish without JavaScript errors or failed database reads and fit mobile",
+      "status": "PASS"
+    },
+    {
+      "name": "Role modal shows two exclusive roles and no personal permission grid",
+      "status": "PASS"
+    },
+    {
+      "name": "Keyboard changes the single role without losing the radio group",
+      "status": "PASS"
+    },
+    {
+      "name": "Role save persists through the real RPC and reloads the employee record",
+      "status": "PASS"
+    },
+    {
+      "name": "A newly created account always displays the required first password change",
+      "status": "PASS"
+    },
+    {
+      "name": "The same role modal fits the mobile viewport",
+      "status": "PASS"
+    },
+    {
+      "name": "Mobile role modal has no horizontally clipped fields",
+      "status": "PASS"
+    },
+    {
+      "name": "Enter in the account form does not reload or close the page",
+      "status": "PASS"
+    },
+    {
+      "name": "Role modal closes with Escape",
+      "status": "PASS"
+    },
+    {
+      "name": "Role modal also closes through Cancel and the backdrop",
+      "status": "PASS"
+    },
+    {
+      "name": "Changing the current manager role reloads into verified staff scope",
+      "status": "PASS"
+    },
+    {
+      "name": "Forged cached ADMIN and settings deep link cannot initialize management loaders",
+      "status": "PASS"
+    },
+    {
+      "name": "Personal profile ignores a foreign staff ID and comes from the authenticated actor",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer search uses the actual scoped workspace RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Reload preserves the scoped search state and re-verifies the current role",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer dialog validates required fields without sending an invalid write",
+      "status": "PASS"
+    },
+    {
+      "name": "Duplicate phone is rejected by the actual database and preserves the input",
+      "status": "PASS"
+    },
+    {
+      "name": "Create customer normalizes phone, stores null email and opens the actual saved profile",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer dialog fits mobile without clipped fields",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer dialog supports all four close methods",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet creation requires an actual selected owner before writing",
+      "status": "PASS"
+    },
+    {
+      "name": "Closing the autocomplete preserves the modal and clearing its owner removes the linked phone",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet owner phone auto-fills and breed autocomplete supports keyboard selection",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet form rejects invalid weight and future birth without a database write",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet dialog fits mobile and keeps its two-column fields readable",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet creation saves owner, breed, personalized notes and one staff-attributed weight in the actual database",
+      "status": "PASS"
+    },
+    {
+      "name": "Created pet profile persists after a full browser reload",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer profile preselects its owner and the database rejects duplicate pet names without losing input",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet dialog supports all four close methods",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet editing loads fresh saved fields and locks the existing owner",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet edits persist after reload with the same owner and exactly one new weight measurement",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent pet change rejects the stale save and rolls back its weight while preserving input",
+      "status": "PASS"
+    },
+    {
+      "name": "Reopening refreshes the version and a forged owner transfer is rejected by the actual RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Edit form prevents implicit submission and traps keyboard focus inside the dialog",
+      "status": "PASS"
+    },
+    {
+      "name": "Pet edit form supports all four close methods",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer edit loads current contact fields without membership or account controls",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer edit rejects malformed email and future birth before sending a write",
+      "status": "PASS"
+    },
+    {
+      "name": "Duplicate customer phone rolls back other edited fields and preserves the form",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer edits persist real normalized contact data while preserving membership, addresses and Auth link",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale customer edit is rejected without overwriting another session and preserves input",
+      "status": "PASS"
+    },
+    {
+      "name": "Reopening customer edit reads the new version and empty email is stored as null",
+      "status": "PASS"
+    },
+    {
+      "name": "Forged membership removal is rejected by the real customer update RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer edit fits mobile, traps focus, prevents implicit submission and supports four close methods",
+      "status": "PASS"
+    },
+    {
+      "name": "Address editor loads every scoped page and preserves all eleven addresses on save",
+      "status": "PASS"
+    },
+    {
+      "name": "New address auto-fills recipient contact and validates required fields and phone before writing",
+      "status": "PASS"
+    },
+    {
+      "name": "Address add/delete and default switch persist while contact, membership and Auth fields stay unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "Address reload preserves the default and a stale save cannot overwrite the newer customer version",
+      "status": "PASS"
+    },
+    {
+      "name": "Deleting the default address selects and saves the remaining address as the sole default",
+      "status": "PASS"
+    },
+    {
+      "name": "Removing the final address saves a true empty address book",
+      "status": "PASS"
+    },
+    {
+      "name": "An address ID belonging to another customer is rejected by the actual database",
+      "status": "PASS"
+    },
+    {
+      "name": "Address loading failure keeps save disabled instead of treating missing data as an empty book",
+      "status": "PASS"
+    },
+    {
+      "name": "Address dialog fits mobile, prevents implicit submission, traps focus and supports four close methods",
+      "status": "PASS"
+    },
+    {
+      "name": "Selecting a pet first fills its actual owner and phone without replacing the selected pet",
+      "status": "PASS"
+    },
+    {
+      "name": "Booking loads owner, pets, stored weight and actual date-applicable price while hiding unrelated service fields",
+      "status": "PASS"
+    },
+    {
+      "name": "Booking uses database price, stays unassigned and retries a lost committed response without creating a duplicate",
+      "status": "PASS"
+    },
+    {
+      "name": "A forged staff assignment in a worker booking is rejected by the actual database",
+      "status": "PASS"
+    },
+    {
+      "name": "Grooming fields appear only for grooming services and are cleared when switching to a basic bath",
+      "status": "PASS"
+    },
+    {
+      "name": "Hotel booking uses the selected service room and database billing interval to save a real two-day stay",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent room occupancy rejects a second hotel booking without creating partial data",
+      "status": "PASS"
+    },
+    {
+      "name": "Taxi booking shows only taxi fields and saves both legs using date-specific database prices",
+      "status": "PASS"
+    },
+    {
+      "name": "Booking dialog fits mobile, prevents implicit submission, traps focus and supports four close methods",
+      "status": "PASS"
+    },
+    {
+      "name": "Anonymous callers cannot access the staff booking catalog",
+      "status": "PASS"
+    },
+    {
+      "name": "Intake loads assigned case, pet safety and weight with the authenticated performer and no fabricated observations or confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "Intake validates weight and all four required observations before writing",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale intake is rejected without recording weight, changing status or losing observations",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassignment while intake is open revokes the save at the database boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "A forged intake performer cannot impersonate a different employee",
+      "status": "PASS"
+    },
+    {
+      "name": "Intake atomically saves observations, snapshots, one weight and in-progress status; a lost response retry is idempotent and does not invent customer confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "A later confirmed intake creates a new revision and retains the prior pending record",
+      "status": "PASS"
+    },
+    {
+      "name": "A direct foreign case modal cannot load context or enable intake save",
+      "status": "PASS"
+    },
+    {
+      "name": "Intake context load failure keeps saving disabled",
+      "status": "PASS"
+    },
+    {
+      "name": "Intake fits mobile, prevents implicit submission, traps focus and supports all four close methods",
+      "status": "PASS"
+    },
+    {
+      "name": "Care log uses the current performer and validates title and future time before a write",
+      "status": "PASS"
+    },
+    {
+      "name": "The real RPC rejects a care log timestamp before intake without partial data",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale appointment version rejects care log creation while keeping entered notes",
+      "status": "PASS"
+    },
+    {
+      "name": "Care log create and lost-response retry persist one real record attributed to the authenticated employee",
+      "status": "PASS"
+    },
+    {
+      "name": "Own log edit reconciles a lost response using scoped persisted data and preserves the exact original timestamp",
+      "status": "PASS"
+    },
+    {
+      "name": "An independently changed care log cannot be overwritten by a stale edit",
+      "status": "PASS"
+    },
+    {
+      "name": "Co-worker logs are read-only; real RPCs reject impersonation, foreign edits and deletion",
+      "status": "PASS"
+    },
+    {
+      "name": "A foreign or non-active case cannot open an enabled care-log form",
+      "status": "PASS"
+    },
+    {
+      "name": "Care-log form fits mobile, traps focus, prevents implicit submit and supports four close methods",
+      "status": "PASS"
+    },
+    {
+      "name": "Staff item list excludes a colleague item and stale versions cannot transition",
+      "status": "PASS"
+    },
+    {
+      "name": "Own item start and completion persist with actor audit; a lost response is reconciled with one transition",
+      "status": "PASS"
+    },
+    {
+      "name": "Direct item mutation for a co-worker is rejected without changing its status",
+      "status": "PASS"
+    },
+    {
+      "name": "Handover displays the actual intake and requires three explicit unchecked confirmations before writing",
+      "status": "PASS"
+    },
+    {
+      "name": "Handover cannot complete a co-worker pending item or create a partial handover record",
+      "status": "PASS"
+    },
+    {
+      "name": "Both modal and real RPC require the latest intake confirmation even when an older revision is confirmed",
+      "status": "PASS"
+    },
+    {
+      "name": "Pending approval and approved adjustments without customer consent both block handover atomically",
+      "status": "PASS"
+    },
+    {
+      "name": "A stale handover keeps entered confirmation data and cannot complete the case",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassignment while handover is open revokes the save at the database boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "Foreign case and failed intake reads cannot enable handover or expose case context",
+      "status": "PASS"
+    },
+    {
+      "name": "Handover fits mobile, prevents implicit submit, traps focus and supports four close methods",
+      "status": "PASS"
+    },
+    {
+      "name": "A null logistics lead cannot bypass the restricted staff transition guard through SQL null semantics",
+      "status": "PASS"
+    },
+    {
+      "name": "A real hotel stay remains blocked from handover until its room checkout is complete",
+      "status": "PASS"
+    },
+    {
+      "name": "Checkout shows the actual booked room, pet, schedule and agreed price without editable price or assignment controls",
+      "status": "PASS"
+    },
+    {
+      "name": "A stale case version cannot close a hotel stay",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassigning an open hotel case revokes checkout save without releasing the room",
+      "status": "PASS"
+    },
+    {
+      "name": "A worker assigned only a service item cannot check out a hotel case led by another employee",
+      "status": "PASS"
+    },
+    {
+      "name": "Foreign hotel context and failed stay reads keep checkout disabled",
+      "status": "PASS"
+    },
+    {
+      "name": "Checkout fits mobile, traps focus and supports all four close methods",
+      "status": "PASS"
+    },
+    {
+      "name": "Checkout reconciles a lost committed response once, releases the stay and preserves agreed price, items and payment without completing the case",
+      "status": "PASS"
+    },
+    {
+      "name": "Closed room status persists after reload and a direct reopen cannot check it out again",
+      "status": "PASS"
+    },
+    {
+      "name": "The released room accepts a new real reservation within the old planned stay window",
+      "status": "PASS"
+    },
+    {
+      "name": "Assigned staff can complete the actual hotel handover after its room is closed without legacy admin grants",
+      "status": "PASS"
+    },
+    {
+      "name": "Assigned taxi driver transitions preserve outbound and return time gates and complete only when due",
+      "status": "PASS"
+    },
+    {
+      "name": "Handover atomically saves one confirmed record and completes the case and items; lost-response retry is idempotent and reload removes work actions",
+      "status": "PASS"
+    },
+    {
+      "name": "Counter order starts without a quote and exposes no price, refund or assignment controls",
+      "status": "PASS"
+    },
+    {
+      "name": "Scoped product selection adds a variant once, increases quantity and uses the actual customer phone and server total",
+      "status": "PASS"
+    },
+    {
+      "name": "Invalid quantity is blocked locally and excess available stock is rejected by the real quote without creating an order",
+      "status": "PASS"
+    },
+    {
+      "name": "Member discount is calculated from real membership configuration rather than a browser-entered price",
+      "status": "PASS"
+    },
+    {
+      "name": "Invalid vouchers and insufficient points cannot produce a payable quote",
+      "status": "PASS"
+    },
+    {
+      "name": "A price change after quoting rejects stale creation and preserves the draft without reserving stock",
+      "status": "PASS"
+    },
+    {
+      "name": "Counter order fits mobile, keeps the footer reachable and Enter does not submit or reload",
+      "status": "PASS"
+    },
+    {
+      "name": "Lost-response retry creates exactly one real pending order, server-priced line and reservation, preserves the actor audit, takes no payment and survives reload",
+      "status": "PASS"
+    },
+    {
+      "name": "A later quote subtracts an existing order reservation from actual sellable stock",
+      "status": "PASS"
+    },
+    {
+      "name": "Counter modal supports four closing methods and traps keyboard focus",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer autocomplete Escape preserves the sales modal and clearing selection clears the linked phone",
+      "status": "PASS"
+    },
+    {
+      "name": "Sales collection opens with actual total, remaining balance and cash method, without refund controls or pre-confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "Missing receipt confirmation, reason and over-balance amounts are rejected before sending money writes",
+      "status": "PASS"
+    },
+    {
+      "name": "Bank collection requires a reconciled reference and changing an amount clears the receipt confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "An uncertain uncommitted collection freezes its payload and retries with the same UUID to create one partial bank payment",
+      "status": "PASS"
+    },
+    {
+      "name": "Persisted history and remaining balance reload correctly; duplicate bank references are rejected without another payment",
+      "status": "PASS"
+    },
+    {
+      "name": "A stale order version rejects collection atomically and retains the receipt draft for review",
+      "status": "PASS"
+    },
+    {
+      "name": "Disabling a payment method after the form opened revokes collection at the real RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "A lost committed receipt is reconciled from the actual payment with one write and correct actor audit, preserving prices, stock and reservations",
+      "status": "PASS"
+    },
+    {
+      "name": "Sales cashier fits desktop and mobile with reachable history and footer, while Enter cannot implicitly collect",
+      "status": "PASS"
+    },
+    {
+      "name": "A forged STAFF refund is denied at the money RPC and creates no refund transaction",
+      "status": "PASS"
+    },
+    {
+      "name": "Sales cashier traps keyboard focus and supports all four closing methods",
+      "status": "PASS"
+    },
+    {
+      "name": "An unresolved receipt survives closing and reopens by reconciling its exact payment instead of issuing a second collection",
+      "status": "PASS"
+    },
+    {
+      "name": "Collecting the remaining balance persists the exact total and reopening a fully paid order disables additional collection",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed reads and missing orders cannot retain stale cashier context or enable collection",
+      "status": "PASS"
+    },
+    {
+      "name": "Service cashier reads the actual assigned-case balance, starts unconfirmed and blocks over-balance or unconfirmed collection without using sales money RPCs",
+      "status": "PASS"
+    },
+    {
+      "name": "A stale service version cannot record a payment or overwrite the current case state",
+      "status": "PASS"
+    },
+    {
+      "name": "Both a pending service adjustment and an approved adjustment without customer consent block collection atomically",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassigning the case and its work while collection is open revokes both payment writes and a fresh cashier read",
+      "status": "PASS"
+    },
+    {
+      "name": "A direct foreign-case cashier cannot expose balance or enable service collection",
+      "status": "PASS"
+    },
+    {
+      "name": "Service method picker has three real allowed methods, supports keyboard and Escape, and rejects a bank reference already used in sales",
+      "status": "PASS"
+    },
+    {
+      "name": "Lost committed service collection reconciles one actual partial receipt and actor audit while preserving case details, item prices and signed records",
+      "status": "PASS"
+    },
+    {
+      "name": "An uncommitted service transport failure freezes the payload and retries the same UUID to record one additional receipt",
+      "status": "PASS"
+    },
+    {
+      "name": "Service collection shows persisted balance and history on desktop and mobile with no clipping or implicit Enter payment",
+      "status": "PASS"
+    },
+    {
+      "name": "STAFF cannot forge a service refund through the collection RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Service cashier supports all four closing methods and traps keyboard focus",
+      "status": "PASS"
+    },
+    {
+      "name": "Collecting the exact service remainder persists a fully paid balance without changing appointment completion",
+      "status": "PASS"
+    },
+    {
+      "name": "A failed service cashier read clears prior payment context and keeps collection disabled",
+      "status": "PASS"
+    },
+    {
+      "name": "Assigned complaint history uses real scoped pages of ten rows and labels internal versus customer-visible messages",
+      "status": "PASS"
+    },
+    {
+      "name": "Complaint modal defaults to internal notes, contains no approval or closure actions, and validates content before writing",
+      "status": "PASS"
+    },
+    {
+      "name": "An internal note persists under the authenticated staff without recording a customer response time",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer reply persists as non-internal, sets first response and fits desktop and mobile without clipped controls",
+      "status": "PASS"
+    },
+    {
+      "name": "A stale complaint version rejects a write without losing the draft or inserting a message",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassignment revokes complaint writes and a new modal cannot read the former assigned ticket",
+      "status": "PASS"
+    },
+    {
+      "name": "Direct foreign complaint IDs cannot expose context or enable communication",
+      "status": "PASS"
+    },
+    {
+      "name": "Lost committed complaint response survives closing and reopens with the same immutable request UUID, creating one message and one actor audit",
+      "status": "PASS"
+    },
+    {
+      "name": "Recording a real contact request changes the ticket to waiting customer with internal channel evidence and Vietnamese history, without auto-sending external messages",
+      "status": "PASS"
+    },
+    {
+      "name": "Waiting-approval tickets allow notes but UI and native RPC both prevent request-info status changes or compensation approval",
+      "status": "PASS"
+    },
+    {
+      "name": "Forged complaint approval, resolution, closure, completion, reopening and source linking are denied without monetary effects",
+      "status": "PASS"
+    },
+    {
+      "name": "Closed complaints have no communication CTA and a direct modal cannot append a new exchange",
+      "status": "PASS"
+    },
+    {
+      "name": "Complaint communication traps focus, supports four closing methods and Enter only adds a note line without submitting",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed complaint reads clear prior context and keep communication disabled",
+      "status": "PASS"
+    },
+    {
+      "name": "Service proposal reads the linked case, offers only service methods and validates method, amount and note while clearing hidden money fields",
+      "status": "PASS"
+    },
+    {
+      "name": "A stale proposal is rejected atomically with its amount and note retained",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassignment revokes proposal writes and the scoped projection cannot reveal source context afterward",
+      "status": "PASS"
+    },
+    {
+      "name": "Unlinked, customer-mismatched and foreign tickets cannot offer proposal methods or disclose valid source codes",
+      "status": "PASS"
+    },
+    {
+      "name": "Both the UI and real proposal RPC reject a sales-only resolution for a service ticket",
+      "status": "PASS"
+    },
+    {
+      "name": "Proposal form fits desktop and mobile with reachable footer and Enter cannot submit a compensation proposal",
+      "status": "PASS"
+    },
+    {
+      "name": "Lost committed proposal retries the same UUID once, persists a single private proposal and actor audit, stays unapproved and reload prevents duplicate proposals",
+      "status": "PASS"
+    },
+    {
+      "name": "An order-linked ticket offers only order resolutions and exchange is recorded solely as a pending proposal",
+      "status": "PASS"
+    },
+    {
+      "name": "Redo-service and change-staff proposals send zero amount even with hidden-field tampering and remain subject to manager approval",
+      "status": "PASS"
+    },
+    {
+      "name": "Return-and-refund proposal retries an uncommitted request with the same UUID; all proposal types preserve payments, refunds, returns, stock and staff assignments",
+      "status": "PASS"
+    },
+    {
+      "name": "Closed proposals stay blocked; proposal dialog traps focus and supports four closing methods even when no source is available",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed proposal context reads clear the preceding source and leave proposal submission disabled",
+      "status": "PASS"
+    },
+    {
+      "name": "Complaint creation defaults to service and normal priority, requires a real customer and an explicit source or unknown-source choice, and auto-fills phone",
+      "status": "PASS"
+    },
+    {
+      "name": "Complaint subject and content are validated before writes; clearing customer clears phone and source, and changing category clears the previous source",
+      "status": "PASS"
+    },
+    {
+      "name": "Complaint service source catalog returns only customer-matching assigned cases with no cashier or aggregate data",
+      "status": "PASS"
+    },
+    {
+      "name": "Forged complaint creation for a mismatched customer or foreign service case is rejected by the real RPC without partial tickets",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassignment after selecting a source revokes complaint creation and preserves the entered report",
+      "status": "PASS"
+    },
+    {
+      "name": "Complaint creation fits mobile with reachable footer and Enter cannot submit or reload the page",
+      "status": "PASS"
+    },
+    {
+      "name": "Lost-response retry creates exactly one ticket, initial customer-visible message and actor audit; it remains pending and unassigned, without granting its creator handling access",
+      "status": "PASS"
+    },
+    {
+      "name": "Order complaint creation links the selected customer order and never carries over the service source or assigns itself",
+      "status": "PASS"
+    },
+    {
+      "name": "Explicit unknown-source choice creates an unlinked intake ticket for manager follow-up rather than inventing a transaction",
+      "status": "PASS"
+    },
+    {
+      "name": "Complaint source search pages actual customer orders in batches of ten and allows selecting beyond the first page",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed source lookup cannot fabricate a selection or silently turn the complaint into an unlinked ticket",
+      "status": "PASS"
+    },
+    {
+      "name": "Complaint creation supports four closing methods, traps focus and closes autocomplete before the modal",
+      "status": "PASS"
+    },
+    {
+      "name": "Anonymous access and invalid source kinds cannot use the new complaint source RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Inline reply saves one actual message under the authenticated assigned staff",
+      "status": "PASS"
+    },
+    {
+      "name": "Foreign transcript is not fetched or rendered by the staff workspace",
+      "status": "PASS"
+    },
+    {
+      "name": "Staff queue deep links and reload stay in Chatbot, fetch no transcript and expose only a thin versioned queue row",
+      "status": "PASS"
+    },
+    {
+      "name": "A stale queue row cannot assign the conversation",
+      "status": "PASS"
+    },
+    {
+      "name": "Two actual STAFF requests racing for a queue item yield exactly one assignee",
+      "status": "PASS"
+    },
+    {
+      "name": "A lost queue-take response uses the actor receipt to open the newly assigned transcript with one take operation",
+      "status": "PASS"
+    },
+    {
+      "name": "Own chat transcript pages ten rows and never fetches or renders raw-content fields",
+      "status": "PASS"
+    },
+    {
+      "name": "Own internal note persists through the scoped RPC and is not inserted as a customer-facing message",
+      "status": "PASS"
+    },
+    {
+      "name": "Own reply lost-response recovery records one message and receipts cannot be read by another staff identity",
+      "status": "PASS"
+    },
+    {
+      "name": "Chat resolution requires a chosen outcome and explicit unchecked completion; survey defaults off and modal fits desktop/mobile",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale, reassigned and foreign conversations cannot be resolved or expose a context through the modal",
+      "status": "PASS"
+    },
+    {
+      "name": "Resolution modal prevents implicit submission, traps focus and supports all four close methods",
+      "status": "PASS"
+    },
+    {
+      "name": "A lost committed resolution is reconciled after assignment is cleared; exactly one audit/survey is recorded and the resolved transcript no longer remains accessible",
+      "status": "PASS"
+    },
+    {
+      "name": "Anonymous callers cannot use the chat receipt endpoint",
+      "status": "PASS"
+    },
+    {
+      "name": "All eight staff sections use scoped reads without running the management modules",
+      "status": "PASS"
+    },
+    {
+      "name": "A failed role re-verification closes the open booking, clears its entity data and hides account actions before retry",
+      "status": "PASS"
+    },
+    {
+      "name": "Pickup loads its actual scoped customer and pet, offers no recipient reassignment and requires an unchecked readiness confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "Blank content and unconfirmed readiness cannot send a pickup notification",
+      "status": "PASS"
+    },
+    {
+      "name": "Pickup fits desktop and mobile with a solid white surface; editing content clears readiness",
+      "status": "PASS"
+    },
+    {
+      "name": "Pickup traps focus and supports all four close methods while clearing visible customer data",
+      "status": "PASS"
+    },
+    {
+      "name": "A stale pickup form is rejected at the database boundary without sending",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassignment while pickup is open revokes the actual send",
+      "status": "PASS"
+    },
+    {
+      "name": "Foreign cases and failed pickup context reads expose no summary and keep sending disabled",
+      "status": "PASS"
+    },
+    {
+      "name": "The actual RPC requires the latest intake to be customer-confirmed before pickup",
+      "status": "PASS"
+    },
+    {
+      "name": "Pending approval and approved-but-unconfirmed adjustments both block pickup notifications",
+      "status": "PASS"
+    },
+    {
+      "name": "Lost committed pickup response locks content and retains the UUID across modal reopen; retry produces one internal notification and one actor audit",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed role re-verification closes pickup and clears its customer summary and draft",
+      "status": "PASS"
+    },
+    {
+      "name": "Selected customer context exposes exactly note, current tier and actual point sum without expenditure, ledger, Auth or management controls",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer context requires one customer ID, returns null for unknown customers and denies anonymous reads",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer note loads the current saved text, allows personalized multiline entry and fits both desktop and mobile",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer note traps focus and all four closing methods clear displayed customer identity and unsaved draft",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent profile changes reject a stale note write, preserve its draft and reload the latest note on reopen",
+      "status": "PASS"
+    },
+    {
+      "name": "Saved note persists and renders as plain text after reload without changing membership, points, account or other customer fields",
+      "status": "PASS"
+    },
+    {
+      "name": "Clearing an existing note intentionally stores null and shows the actual empty state",
+      "status": "PASS"
+    },
+    {
+      "name": "A lost successful note response blocks blind retry and reopens the actual committed note without another write",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed note context reads clear prior text and keep saving disabled",
+      "status": "PASS"
+    },
+    {
+      "name": "Revoking staff activity while the note is open denies both context reads and writes at the database boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed role re-verification closes the customer-note modal and clears its content",
+      "status": "PASS"
+    },
+    {
+      "name": "Single-order receipt returns only customer contact, sold snapshots and exact order financial totals without raw payments, cost, Auth or store aggregates",
+      "status": "PASS"
+    },
+    {
+      "name": "Receipt preview uses a white read-only modal on desktop and mobile, with a horizontally scrollable product table and reachable print footer",
+      "status": "PASS"
+    },
+    {
+      "name": "Receipt preview traps focus and supports all four close methods while clearing customer and money data",
+      "status": "PASS"
+    },
+    {
+      "name": "Receipt rejects null IDs and anonymous access; missing orders leave no previous receipt or enabled print action",
+      "status": "PASS"
+    },
+    {
+      "name": "Receipt preview paginates an actual twelve-line order at ten rows while retaining full-order totals",
+      "status": "PASS"
+    },
+    {
+      "name": "Print re-reads live data after preview, includes all twelve lines and changed shipping, treats markup as text and performs no business write; closing removes the isolated print frame",
+      "status": "PASS"
+    },
+    {
+      "name": "A failed fresh receipt read clears preview and blocks printing rather than using cached financial data",
+      "status": "PASS"
+    },
+    {
+      "name": "Revoked staff activity is checked again by the receipt RPC and cannot print a previously opened order",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed role verification closes receipts and removes displayed or printable customer financial data",
+      "status": "PASS"
+    },
+    {
+      "name": "Service receipt exposes only assigned-case contact, pet, billed snapshots and exact case totals; net collected and remaining match the actual payment ledger",
+      "status": "PASS"
+    },
+    {
+      "name": "Service receipt shows actual pet and case amounts in a read-only white modal, with mobile table scrolling and a reachable print action",
+      "status": "PASS"
+    },
+    {
+      "name": "Service receipt supports four close methods and keyboard focus trapping, clearing its customer and case details",
+      "status": "PASS"
+    },
+    {
+      "name": "Foreign case IDs, null IDs and anonymous requests cannot expose or print a service receipt",
+      "status": "PASS"
+    },
+    {
+      "name": "Service preview paginates ten billed items per page and excludes cancelled charges from both rows and totals",
+      "status": "PASS"
+    },
+    {
+      "name": "Service totals include signed approved-and-confirmed adjustments only; pending or unconfirmed amounts are excluded and cancelled items never contribute",
+      "status": "PASS"
+    },
+    {
+      "name": "Service print fetches the new confirmed adjustment and every billed line, renders markup as text, writes no case/payment/signed record and returns focus after removing the print frame",
+      "status": "PASS"
+    },
+    {
+      "name": "A failed fresh service receipt read clears financial data and does not print cached content",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassigning the case and its items after preview revokes service receipt printing at the database boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed role verification closes the service receipt and removes displayed or printable case data",
+      "status": "PASS"
+    },
+    {
+      "name": "Service-profile complaint entry re-reads the assigned case and customer, preselects their exact link and locks changing customer/category/source without inventing complaint text",
+      "status": "PASS"
+    },
+    {
+      "name": "Locked-origin complaint form keeps desktop/mobile fields readable, its footer reachable and keyboard focus contained",
+      "status": "PASS"
+    },
+    {
+      "name": "A service-origin complaint validates its description and saves one pending correctly linked ticket without assigning itself",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassignment after opening a contextual complaint is denied by the real create RPC, retains text and creates no ticket",
+      "status": "PASS"
+    },
+    {
+      "name": "Foreign source IDs and failed customer reads clear prior contact/source information and leave contextual complaint creation disabled",
+      "status": "PASS"
+    },
+    {
+      "name": "Uncertain contextual creation keeps its original UUID and service link even when reopened from an order; retry produces one ticket and one message",
+      "status": "PASS"
+    },
+    {
+      "name": "Opening from an order after resolving the prior attempt selects the new order and saves the correct unassigned sales complaint",
+      "status": "PASS"
+    },
+    {
+      "name": "The normal complaint-list entry stays editable with an explicit unknown-source option and does not retain the previous origin",
+      "status": "PASS"
+    },
+    {
+      "name": "Role verification failure closes and clears the contextual complaint and its locked customer/source information",
+      "status": "PASS"
+    },
+    {
+      "name": "Chat complaint entry re-reads the assigned handling conversation, locks its real customer and phone while leaving category/source selection explicit",
+      "status": "PASS"
+    },
+    {
+      "name": "An explicit unlinked chat complaint preserves the entire multiline body in ticket and message, records its actor/conversation source and remains pending without assignment",
+      "status": "PASS"
+    },
+    {
+      "name": "Chat complaint mode retains mobile layout, focus trapping and all four closing methods",
+      "status": "PASS"
+    },
+    {
+      "name": "The content-capable chat RPC links only the selected customer-matching assigned service case",
+      "status": "PASS"
+    },
+    {
+      "name": "A stale handling-conversation version cannot create a new complaint or its message/source audit",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassigning the conversation after modal open revokes chat complaint creation at the database boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "Foreign conversations, missing customers and failed chat context reads expose no previous contact and leave creation disabled",
+      "status": "PASS"
+    },
+    {
+      "name": "A lost committed chat complaint retries the same UUID/body/source across opening another conversation and a newer chat version, creating one ticket, message and source audit",
+      "status": "PASS"
+    },
+    {
+      "name": "A chat complaint UUID cannot be rebound to another conversation or reused with changed complaint content",
+      "status": "PASS"
+    },
+    {
+      "name": "The new overload preserves all 8000 content characters without adding a truncating prefix and rejects empty or oversized content atomically",
+      "status": "PASS"
+    },
+    {
+      "name": "The chat customer is derived server-side and forged foreign-customer orders or unassigned service references cannot create partial tickets",
+      "status": "PASS"
+    },
+    {
+      "name": "Anonymous and inactive staff identities cannot invoke the new chat complaint overload",
+      "status": "PASS"
+    },
+    {
+      "name": "PostgREST still dispatches the unchanged seven-argument legacy chat caller while the new eight-argument caller preserves content",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed role verification closes chat complaint creation and clears its customer, source and detailed content",
+      "status": "PASS"
+    },
+    {
+      "name": "Service items paginate 10/10/3 real rows without duplicates while the two history tables keep independent page state",
+      "status": "PASS"
+    },
+    {
+      "name": "Service records and care logs expose all 23 scoped history entries and keep a co-worker log on the last page read-only",
+      "status": "PASS"
+    },
+    {
+      "name": "Each service history pager remains outside its card and the long-history profile fits the mobile viewport",
+      "status": "PASS"
+    },
+    {
+      "name": "A lost committed item update from page two reconciles across scoped pages and records one write and one actor audit",
+      "status": "PASS"
+    },
+    {
+      "name": "A failed history page removes the previous rows and stale paging actions instead of presenting cached history as current",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassigning the service revokes subsequent history pages and reload cannot expose any history for the former assignee",
+      "status": "PASS"
+    },
+    {
+      "name": "Shared care-log writer supports a real manager write for a selected performer and preserves the actual manager actor audit",
+      "status": "PASS"
+    },
+    {
+      "name": "The same shared writer propagates server denial when STAFF attempts the manager-only care-log delete",
+      "status": "PASS"
+    },
+    {
+      "name": "Shared care-log writer keeps manager delete behavior with current case and log versions",
+      "status": "PASS"
+    },
+    {
+      "name": "A blocked account cannot load data even if the cached role says ADMIN",
+      "status": "PASS"
+    },
+    {
+      "name": "Verification failure shows a retry/login state instead of trusting cached ADMIN",
+      "status": "PASS"
+    },
+    {
+      "name": "Staff workspace stays within the mobile viewport",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-01: actual provisioning handler creates a STAFF account with no personal grants, real first sign-in enforces password change, then real Auth exposes the fixed STAFF permissions",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-08/PQ-09: ADMIN adds, removes and reconciles stock with actor ledger evidence; STAFF adjustment is denied and stock remains unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-07/PQ-09: a paid eligible order can be refunded by ADMIN only; STAFF denial creates no refund before the valid management action",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-11/PQ-12: ADMIN transfers a conversation and approves a real STAFF refund proposal; STAFF cannot transfer or approve compensation",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-15: ADMIN creates and updates a real configuration record with version control; STAFF cannot alter the same record",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-28: two real managers using the same original version cannot silently overwrite the first role update",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-27: concurrent HTTP cross-demotions serialize the last-manager guard and retain exactly one active ADMIN",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-26: the last active ADMIN cannot be demoted or suspended through either actual management RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-29: current-schema role audit records actor, target, time and before/after roles and resists STAFF HTTP edits/deletes",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-18/public regression: real customer Auth retains own-row access and anonymous catalog reads while customer/anonymous administrative RPCs are denied",
+      "status": "PASS"
+    },
+    {
+      "name": "Public booking regression: customer availability, authoritative quote and real hotel booking persist and replay once after migrations 165–184; STAFF cannot impersonate the owner",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-18 browser: a genuine customer token and an unsigned visitor cannot initialize any management domain or STAFF workspace",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-30: actual browser offline role verification fails closed, then an online reload restores only the database STAFF role",
+      "status": "PASS"
+    },
+    {
+      "name": "Phase 5 rolls back migrations 186 through 177 before exercising earlier rollback chain",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 176 rollback removes only the content-capable overload and preserves the exact preceding seven-argument function",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 175 rollback removes only the assigned-service receipt RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 174 rollback removes only the single-order receipt RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 173 rollback removes only the selected-customer context RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 172 rollback removes receipts and exactly restores the preceding queue projection",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 171 rollback removes only the complaint source catalog",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 170 rollback restores the exact previous assigned-ticket workspace definition",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 169 rollback restores the exact previous scoped workspace definition",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 168 rollback restores the exact previous logistics trigger definition",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 167 rollback restores the exact previous work guard definition",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 166 rollback removes its catalog and assignment guard without removing booking RPCs",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS",
+  "sourceSha256": {
+    "pages/admin/admin.js": "92397b692a0ce0f996a54c2dd6a67ef904a436713154ed13fa96f388886f9629",
+    "pages/admin/admin-access.js": "bb5e28027d07a3fca81b12c0f3a61aaa7457e377114b8c40340f2ceb69b2d896",
+    "pages/admin/modules/customers/customers.js": "740b891ba4c3e6e96399e709e63243c777aceb7d60f02f851bc7961241be411e",
+    "pages/admin/modules/services/services.js": "47d9e704664586470b7a11c08d949a8fabbe9b765c034fb3b10209932a7654e3",
+    "scripts/database/v1/169_staff_hotel_checkout_context.sql": "cebf56accddb3bf083082a08af22b9175e9b4aae63b580da0e2cdaa34488c0e8",
+    "scripts/database/v1/168_staff_logistics_transition.sql": "46b1ebd23f23949449f54d36b1a34a4e02cf354f0c9a951df4a75a8b1115a205",
+    "scripts/database/v1/167_staff_care_log_performer.sql": "696bfcdde8a8cb516c83c691ff59da37b542d008e769520a6aa1aefd6ba6a1e0",
+    "scripts/database/v1/166_staff_booking_catalog.sql": "2f078fdab13ac1e041d03db74abc5a3f9e8c7548340e2039193fa4d8c94d6675",
+    "pages/admin/admin-components.css": "5a29c57b282c19deaa586d63764703f68d460a1e751890e12d6e47ff01433a26",
+    "pages/admin/index.html": "6d9eece1194e88e752f45031574eafd4d9e3e1d82977e72fbc60fb518a3535fa",
+    "pages/admin/login/login.js": "43a95bd924242bbb6344e0683616bc65317b75f188a87dc192c28d0afb45389d",
+    "pages/admin/login/login.html": "4a9df959481d40e02578b4ca7d90bc6575e925bf6318ac0cde3b6a5a3a393ba4",
+    "pages/admin/modules/staff/staff.html": "6d7fd0514db22054abf80279697d5a32cb3ce998ba5ee6de8a2ee52015986554",
+    "pages/admin/modules/staff/staff.css": "9f23e4aa7d6d98242419f4b31caacc18e155422b0c2507829481a4822599c42b",
+    "pages/admin/modules/staff/subtabs/tab-staff-list.js": "10cdfd5dbb2f23b96904afde862fa794e6d440a326513977bd371e674a830ad0",
+    "pages/admin/modules/staff/subtabs/tab-staff-profile.js": "950047c77bb1a0c413cb1963c299ac46b339934b146517b32cfc126138757e4d",
+    "pages/admin/modules/orders/orders.js": "6a58be1d32ab6b7d625c9db07bb674d6eff358e13cf0d959290be6608969aa36",
+    "pages/admin/modules/complaints/complaints.js": "0738257b7140db11d2b63a3d145aa18afcd123a7f16ed87a4c6fb8560c366fb9",
+    "scripts/database/v1/170_staff_complaint_proposal_context.sql": "dfd0e4e99d42177a8d1df2e72fd05949f48167d8687fa2b8dfe0504e6fa46a93",
+    "scripts/database/v1/170_staff_complaint_proposal_context.rollback.sql": "77619b244b01f040d5e12cf374ea7866e5d9f82c5590b88400f8853c53f28577",
+    "scripts/database/v1/171_staff_complaint_sources.sql": "94dc90313c8f50a5f75677557906ff25d17f336a1742d26d81cb75174da74e43",
+    "scripts/database/v1/171_staff_complaint_sources.rollback.sql": "c76010ca582f0cbb8293dad1d8a17452a80b337b34e9c1a46526e7215060ee91",
+    "pages/admin/admin-own-password.js": "e3e5dae19a402df868439022e5f5f93d1af78bc4b83deb17d540ff3fe4834b7f",
+    "pages/admin/modules/chatbot/chatbot.js": "f4aa17c1cf012d2f4b2d31feae443ae5be8de4e5481cf14691cbc9e8b7978438",
+    "scripts/database/v1/172_staff_chat_completion.sql": "7f6dc8757d873943e4cb99edee1142bbe144df3fd137a09b9ada1d1f042cf86a",
+    "scripts/database/v1/172_staff_chat_completion.rollback.sql": "64c30b1e7bc1c1baaaf7abf4be1b5eb0602a3c18cf143e65642e726d3763be4c",
+    "scripts/database/v1/173_staff_customer_context.sql": "0266f1c4eedaa373f0495f4a1b02c12c3e7f14f3bfac8ec939cf675df8c1e4d3",
+    "scripts/database/v1/173_staff_customer_context.rollback.sql": "4dd909d3060c230d8820ba8b18eb0a2b5d351081accc955c09e0ea6d3def068c",
+    "scripts/database/v1/174_staff_sales_receipt.sql": "60f4d7459a4b99c09231579bd4e32369098df6d6c6d10c2f98083e58efc0b65c",
+    "scripts/database/v1/174_staff_sales_receipt.rollback.sql": "7d5c5c3c2f5ad32b0b9a25a56651cbbc03d0b7cfee6034bd0dd110b84e126b83",
+    "scripts/database/v1/175_staff_service_receipt.sql": "d63a6ec8af65eacffc23c1e59a7060957583a24db505fd13950f6fb9ec473bb5",
+    "scripts/database/v1/175_staff_service_receipt.rollback.sql": "f8eb932d0752a70466117c2265e8fe4fad07d8188e52d520ac445eb7212fa691",
+    "pages/admin/modules/pets/pets.js": "afc5bf8eb3fcbf56b66ffdcc97c86c46808500b142a26e580d1535f13ca83042",
+    "pages/admin/modules/staff/staff.js": "e55b6a1e3642473e758b10da20b0b24af9481be098ac16371963ef7163212522",
+    "scripts/database/v1/176_chat_complaint_content.sql": "8f4c46ba800d427497052b6cd298322db528b34956cd9947a6a1c3ef1775a905",
+    "scripts/database/v1/176_chat_complaint_content.rollback.sql": "3cdecb18f6ba29a071cf98b6240ae77eb2c85258886417eff3e4e687b9794636",
+    "scripts/test/admin_access_phase3_ui.cjs": "c017778f8ced319919ae1ccf2db9c6693476060021cbcd2517156893f4ce84f4",
+    "scripts/test/admin_access_phase5_remaining_cases.cjs": "b95cab3b8f1b3c8ce68accf02bb0e55efba7d51c5358da9f5987b53e9f5578bc",
+    "scripts/api/staff_auth.js": "3cf33066156161585d9328c292ae324b676a092b2c7c2bac5d5700758607fffd",
+    "scripts/api/staff-password-handler.cjs": "450afe08c0d019b72238ff83f2808e833fa0b2c0ce7628e26c8db6cadc9fc2b4",
+    "scripts/database/v1/177_staff_copilot_reads.sql": "9fd91080bb75289031bb2d91217d6e8436d12ba68dea9b3a051a10aac32fab15",
+    "scripts/database/v1/177_staff_copilot_reads.rollback.sql": "d9514a61e3b6a10a73c968d46483b24fae4341859b10dd3dba6cbb6a0ac04b2b",
+    "scripts/database/v1/178_staff_copilot_history.sql": "9e24b1c59f69edc11defa1f9a32a4df28ac3bb8775499da10728098e689468c8",
+    "scripts/database/v1/178_staff_copilot_history.rollback.sql": "dfba516b0119c49650db4b5c6051c45aa053b6ac3df96f50b75cbd687cac3f37",
+    "scripts/database/v1/179_staff_copilot_customer_relations.sql": "e0a9286c914af615c933c2e37ac353ee6f73689434553d0bfacea1472d8a2c7c",
+    "scripts/database/v1/179_staff_copilot_customer_relations.rollback.sql": "4683e7f741f36a7f56bc842f7d2ed1355e28193d0641bd3bdefbaf522939be58",
+    "scripts/database/v1/180_staff_copilot_booking_reads.sql": "c3ae467e2db08d9497ab5dfddd22a7d0be04ac409a19eab0dc0b003aa8e32436",
+    "scripts/database/v1/180_staff_copilot_booking_reads.rollback.sql": "da7fbef3cc1829f03646ad45d56d1ac71fad2aff66b62bc115b253e846d553c9",
+    "scripts/database/v1/181_staff_copilot_request_budget.sql": "f6def13763c3bca2419e4c3abbfab87f9df833bb837239c74322d083d3397a0e",
+    "scripts/database/v1/181_staff_copilot_request_budget.rollback.sql": "b74b353b8691a5ea1c9b5facc1f5f928dd228df7595fa35454bbdffcca88f72f",
+    "scripts/database/v1/182_staff_copilot_source_validation.sql": "abf98258cd7ad958c9f41e9b032c5bc63821f0598f1468b6da8b7900a8f6e877",
+    "scripts/database/v1/182_staff_copilot_source_validation.rollback.sql": "8133bb82c47a6c66ed842b5cbc66b948e296892f676ee4fd2545f21377b13601",
+    "scripts/database/v1/183_safe_realtime_signals.sql": "6d2655ecc0ad35635b5683c6477c51f2721f2a2aeee641cca2438e67a6e8ab12",
+    "scripts/database/v1/183_safe_realtime_signals.rollback.sql": "9afa3a6bf24d613e5441760e8bf34ef5c89fa2f5faf9cc9adfc151efc5050ed7",
+    "scripts/database/v1/184_staff_access_audit.sql": "84d15b3bb5ba0272d9de578b338eda2e30701a292219c6f738353d6b1ae53616",
+    "scripts/database/v1/184_staff_access_audit.rollback.sql": "338edf06588b0e3e8fa330e6e06db04698a7a1faf61bac3d2bcf364508befacf",
+    "scripts/database/v1/185_staff_provision_required_phone.sql": "8a3056ca082de820a8d09196f40633d527d1566a7d7201c07e418560f566a333",
+    "scripts/database/v1/185_staff_provision_required_phone.rollback.sql": "7000726fc2c9f5b4cfb898f89187ad8d06b4e42ef01326b987a66b843be1973e",
+    "scripts/database/v1/186_work_assignment_handlers.sql": "b35c3a740d0bbac6d48de9738ca724eb7654f4d3a7dcdd5c3c9b2b1e3d736e7c",
+    "scripts/database/v1/186_work_assignment_handlers.rollback.sql": "f1cea7fec4e44a4a53f27789c0dec63ade44cf54c3836bad9a6943f328f63028"
+  },
+  "realAuthSignIns": 12,
+  "disposableDatabaseRemoved": true
+}

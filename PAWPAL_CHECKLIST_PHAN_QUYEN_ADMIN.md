@@ -1,7 +1,7 @@
 # Checklist triển khai phân quyền Admin PawPal
 
 Ngày lập: 04/11/2026
-Trạng thái: Hoàn thành giai đoạn 1, 2, 3 và 4 trên môi trường thử nghiệm; chưa bắt đầu nghiệm thu tổng giai đoạn 5 hoặc chuyển đổi Cloud
+Trạng thái: Hoàn thành giai đoạn 1–6; đã chuyển đổi Supabase Cloud ngày 06/11/2026 và kiểm tra production đạt. Mã/báo cáo giai đoạn 5–6 và migration 185–187 thuộc đợt commit/push ngày 06/11/2026 theo yêu cầu người dùng; backup riêng tư và thay đổi hotline/Zalo không đi kèm.
 Phạm vi: Giao diện Admin, API, Supabase và chatbot admin.
 
 ## 1. Mô hình đã thống nhất
@@ -91,32 +91,32 @@ Mục 6 hoàn thành trên bản sao local; bằng chứng chốt giai đoạn 4
 
 ## 7. Kiểm thử nghiệm thu
 
-- [ ] Quản lý sử dụng đầy đủ chức năng hệ thống.
-- [ ] Nhân viên có đúng bộ quyền trong bảng ngay khi chọn vai trò, không cần cấp thêm từng quyền.
-- [ ] Nhân viên tra cứu, thêm và cập nhật hồ sơ phục vụ công việc đúng phạm vi đã xác định.
-- [ ] Nhân viên tạo lịch và xử lý ca dịch vụ được giao.
-- [ ] Nhân viên tạo đơn, thu tiền theo quy trình; không sửa giá hoặc hoàn tiền.
-- [ ] Nhân viên xem tồn kho nhưng không nhập xuất hoặc điều chỉnh tồn.
-- [ ] Nhân viên xử lý hội thoại được giao nhưng không phân công hoặc duyệt bồi hoàn.
-- [ ] Nhân viên chỉ xem kết quả công việc, hồ sơ và lịch làm cá nhân.
-- [ ] Nhân viên không truy cập cấu hình, quản lý tài khoản hoặc tự nâng vai trò.
-- [ ] Gọi API, RPC trực tiếp hoặc sửa URL, mã hồ sơ và payload không vượt quyền.
-- [ ] Chatbot, tìm kiếm, thông báo, xuất file, tệp và Realtime tuân theo cùng giới hạn.
-- [ ] Đổi vai trò và khóa tài khoản có hiệu lực với phiên đang mở, nhiều tab và sau khi tải lại trang.
-- [ ] Không thể khóa hoặc hạ vai trò Quản lý hoạt động cuối cùng.
-- [ ] Kiểm tra giao diện máy tính và điện thoại, chạy kiểm thử hồi quy liên quan và lưu bằng chứng nghiệm thu.
+- [x] Quản lý sử dụng đầy đủ chức năng hệ thống trong phạm vi nghiệp vụ đại diện đã nghiệm thu.
+- [x] Nhân viên có đúng bộ quyền trong bảng ngay khi chọn vai trò, không cần cấp thêm từng quyền.
+- [x] Nhân viên tra cứu, thêm và cập nhật hồ sơ phục vụ công việc đúng phạm vi đã xác định.
+- [x] Nhân viên tạo lịch và xử lý ca dịch vụ được giao.
+- [x] Nhân viên tạo đơn, thu tiền theo quy trình; không sửa giá hoặc hoàn tiền.
+- [x] Nhân viên xem tồn kho nhưng không nhập xuất hoặc điều chỉnh tồn.
+- [x] Nhân viên xử lý hội thoại được giao nhưng không phân công hoặc duyệt bồi hoàn.
+- [x] Nhân viên chỉ xem kết quả công việc, hồ sơ và lịch làm cá nhân.
+- [x] Nhân viên không truy cập cấu hình, quản lý tài khoản hoặc tự nâng vai trò.
+- [x] Gọi API, RPC trực tiếp hoặc sửa URL, mã hồ sơ và payload không vượt quyền.
+- [x] Chatbot, tìm kiếm, thông báo, xuất JSON/CSV, in phiếu và Realtime tuân theo cùng giới hạn. Tệp Storage quản trị: không có bucket/đối tượng trong baseline đã rà soát nên không giả lập hoặc tuyên bố đã tải tệp riêng; phải kiểm tra lại cấu hình thực tế trước chuyển đổi.
+- [x] Đổi vai trò và khóa tài khoản có hiệu lực với phiên đang mở, nhiều tab và sau khi tải lại trang.
+- [x] Không thể khóa hoặc hạ vai trò Quản lý hoạt động cuối cùng.
+- [x] Kiểm tra giao diện máy tính và điện thoại, chạy kiểm thử hồi quy liên quan và lưu bằng chứng nghiệm thu.
 
 ## 8. Chuyển đổi và bàn giao
 
-- [ ] Lưu cấu hình vai trò, quyền và ánh xạ tài khoản trước khi chuyển đổi.
-- [ ] Chuẩn bị migration và phương án khôi phục tương thích với mã nguồn.
-- [ ] Xác nhận tài khoản Quản lý và Nhân viên; ghi rõ thay đổi quyền so với trước.
-- [ ] Kiểm thử trước khi áp dụng lên hệ thống đang chạy.
-- [ ] Áp dụng theo thứ tự tránh gián đoạn hoặc mở quyền quá rộng khi chuyển đổi.
-- [ ] Kiểm tra lại đăng nhập, đổi vai trò, khóa tài khoản và nghiệp vụ chính sau triển khai.
-- [ ] Kiểm tra bằng dữ liệu nghiệp vụ, định nghĩa CSDL, phản hồi API và trình duyệt; không truy vấn hệ thống Logs Supabase Cloud theo `AGENTS.md`.
-- [ ] Bàn giao bảng phân quyền và hướng dẫn chọn vai trò; cập nhật checklist theo kết quả thật.
-- [ ] Giữ thay đổi ở local; chỉ `git push` khi người dùng yêu cầu rõ ràng.
+- [x] Lưu cấu hình vai trò, quyền và ánh xạ tài khoản trước chuyển đổi; backup riêng ngoài repo/webroot có checksum.
+- [x] Chuẩn bị migration/phương án khôi phục và diễn tập nguyên giao dịch trên clone.
+- [x] Giữ một Quản lý hoạt động và 16 hồ sơ chưa gán vai trò. Hai vai trò được kiểm tra bằng STAFF tạm rồi dọn; không tự chỉ định quyền cho người thật.
+- [x] Kiểm thử trước khi áp dụng lên hệ thống đang chạy.
+- [x] Áp dụng theo thứ tự tương thích: 187 trước 165–186 trong một giao dịch, client tín hiệu có sẵn trước khi ngừng DELETE.
+- [x] Kiểm tra production: hai vai trò, đổi quyền/khóa qua Realtime, đọc nghiệp vụ, chặn bảng tiền, trợ lý và danh mục công khai.
+- [x] Kiểm tra bằng metadata/dữ liệu có phạm vi, phản hồi API và trình duyệt; không truy vấn Logs Cloud.
+- [x] Bàn giao bảng quyền, hướng dẫn chọn vai trò và khôi phục tại `docs/security/PAWPAL_GIAI_DOAN_6_CHUYEN_DOI.md`; cập nhật bằng chứng.
+- [x] Giữ thay đổi mới ở local; không git push trong yêu cầu tiếp tục giai đoạn 6.
 
 ## Các giai đoạn thực hiện
 
@@ -498,32 +498,46 @@ Báo cáo: `docs/security/phase4/realtime/ui-results.txt`, `docs/security/phase4
 
 ### Giai đoạn 5 — Kiểm thử tích hợp và nghiệm thu
 
-Trạng thái: Chưa bắt đầu bộ nghiệm thu tổng; giai đoạn 2, 3 và 4 đã hoàn tất trên môi trường thử nghiệm. PQ-19 đến PQ-25 đã có bằng chứng từ giai đoạn 4; vẫn phải chạy/chốt đủ bộ 30 PQ và các hồi quy công khai ở giai đoạn này.
+Trạng thái: **Hoàn thành ngày 06/11/2026 trên môi trường thử nghiệm**. Lượt đầy đủ trên migration 165–186 đạt 314 nhóm; bộ riêng đạt 14 nhóm; bộ Node mở rộng đạt 375 bài. Đã đối chiếu 30/30 PQ với bằng chứng cụ thể, kết hợp lượt nghiệp vụ mới và bộ Realtime đầu cuối giai đoạn 4 còn khớp nguồn. Chưa chuyển Cloud hoặc push các sửa đổi giai đoạn 5.
 
-- [ ] Hoàn tất mục 7 và chạy đủ 30 kịch bản PQ-01 đến PQ-30 ở mục 9 bằng tài khoản kiểm thử phù hợp.
-- [ ] Kiểm tra hồi quy đăng nhập, nghiệp vụ phục vụ khách, đặt lịch công khai và các luồng liên quan sau khi siết quyền.
-- [ ] Lưu bằng chứng, sửa lỗi và chạy lại các trường hợp bị ảnh hưởng; dọn dữ liệu kiểm thử.
+- [x] Bổ sung chế độ `PAWPAL_PHASE5_ACCEPTANCE=1` cho bộ kiểm thử hiện có để áp dụng đầy đủ migration đến 186 trên CSDL riêng, chạy nghiệp vụ Auth thật và khôi phục theo thứ tự ngược trước khi dọn CSDL.
+- [x] Thêm bộ `admin_access_phase5_remaining_cases.cjs` cho những trường hợp tổng hợp còn thiếu; dùng Auth/PostgREST và ledger thật trên bản sao, không ghi Cloud hoặc dùng dữ liệu nghiệp vụ giả trên giao diện.
+- [x] Chốt lượt tổng hợp mới nhất tại `docs/security/phase5/full/ui-results.txt`: 314 nhóm PASS, mã băm nguồn khớp và đã dọn bản sao. Các lượt chưa PASS trước đó chỉ là bằng chứng điều tra, không dùng để nghiệm thu.
+- [x] Phát hiện và sửa lỗi cấp tài khoản mới bị `invalid_staff_phone`: migration 185 chèn SĐT ngay khi tạo staff để đáp ứng trigger bắt buộc, giữ mọi quy tắc xác thực và trùng SĐT.
+- [x] Phát hiện và sửa lỗi bộ chọn người nhận phân công chỉ nhận quyền quản trị cũ: migration 186 nhận thêm quyền công việc của STAFF, không cấp thêm quyền quản trị. Đã thử Quản lý chuyển hội thoại và duyệt đề xuất; STAFF vẫn bị chặn.
+- [x] Bộ riêng 14 nhóm quản trị/cấp tài khoản/khách hàng đạt trên bản sao đến migration 186. Bộ Node mở rộng đạt 375 bài. Chi tiết tại [báo cáo giai đoạn 5](docs/security/PAWPAL_GIAI_DOAN_5_NGHIEM_THU.md).
+
+- [x] Hoàn tất mục 7; đối chiếu đủ 30 kịch bản PQ-01 đến PQ-30 bằng [bảng bằng chứng](docs/security/phase5/PQ_MATRIX.md) và `docs/security/phase5/pq-results.txt`. PQ-19 đến PQ-25 dùng bộ Auth/Realtime thật giai đoạn 4, đã kiểm tra lại trạng thái PASS và mã băm nguồn; không tính là chạy lại chúng trong bộ 314 nhóm.
+- [x] Kiểm tra hồi quy đăng nhập, nghiệp vụ phục vụ khách và đặt lịch: cấp tài khoản thật, đổi mật khẩu lần đầu, khách Auth thật chỉ đọc hồ sơ riêng, khách/anonymous bị chặn Admin; danh mục công khai vẫn đọc được. Khách tạo lịch khách sạn từ availability/quote CSDL thật và retry cùng mã chỉ tạo một lịch. Bộ Node kiểm tra đọc/đổi/hủy lịch và danh tính khách hàng cũng đạt.
+- [x] Lưu bằng chứng, sửa hai lỗi qua migration 185–186 và chạy lại bộ riêng cùng toàn bộ nghiệp vụ. Đã xem ảnh máy tính/điện thoại; không còn CSDL/container hoặc cấu hình bí mật tạm của bản sao thử. Storage nhị phân không có đối tượng để kiểm tra trong baseline; provider AI vẫn offline, không tuyên bố đã kiểm thử Gemini/triển khai thật.
+
+Lượt 314 nhóm bao gồm rollback migration 186 → 166 trước khi dọn CSDL. 14 nhóm riêng đã chạy lại các nhánh quản trị/khách hàng bổ sung; không cộng chúng lần nữa thành số kịch bản khác nhau. 375 bài Node là kiểm tra cấp mã, tách khỏi kiểm thử Auth/CSDL/trình duyệt.
 
 **Đầu ra và điều kiện hoàn thành:** Có kết quả cho đủ 30 kịch bản, các trường hợp đều đạt sau khi sửa và chạy lại; không còn lỗi vượt quyền, mất quyền nghiệp vụ cần thiết hoặc gián đoạn luồng công khai liên quan.
 
 ### Giai đoạn 6 — Chuyển đổi hệ thống đang chạy và bàn giao
 
-Trạng thái: Chưa thực hiện; chỉ tiến hành sau khi giai đoạn 5 đạt.
+Trạng thái: **Hoàn thành ngày 06/11/2026 trên hệ thống Cloud** sau khi giai đoạn 5 đạt. Website chạy commit `36c602c0`, bốn client trọng yếu khớp nguồn; không phát hành lại giao diện. 23 migration đã commit nguyên tử; 7 nhóm kiểm tra production và xác minh cuối đều PASS.
 
-- [ ] Thực hiện mục 8: lưu cấu hình trước chuyển đổi, xác định tài khoản Quản lý/Nhân viên và kiểm tra phương án khôi phục.
-- [ ] Áp dụng migration và mã nguồn theo thứ tự tương thích đã chốt sau kiểm thử: 165 → 166 → 167 → 168 → 169 → 170 → 171 → 172 → 173 → 174 → 175 → 176 → 177 → 178 → 179 → 180 → 181 → 182 → 183 → 184 cùng các bổ sung giai đoạn 4 được nghiệm thu; riêng client tín hiệu phải có trước khi 183 ngừng DELETE. Khôi phục theo thứ tự ngược có kiểm soát, không mở lại đường DELETE cho STAFF hoặc tự kích hoạt tài khoản chưa có vai trò.
-- [ ] Kiểm tra nhanh đăng nhập hai vai trò, nghiệp vụ chính, chatbot, đổi vai trò và khóa tài khoản sau triển khai.
-- [ ] Bàn giao bảng quyền, hướng dẫn vận hành và bằng chứng; chỉ push khi người dùng yêu cầu rõ ràng theo `AGENTS.md`.
+- [x] Thực hiện mục 8: lưu schema/quyền/ánh xạ riêng tư và checksum trước chuyển đổi. Giữ một ADMIN hoạt động, 16 hồ sơ chưa gán quyền; không mở khóa hoặc reset mật khẩu người thật.
+- [x] Xác nhận production có client tín hiệu đúng commit trước khi ngừng DELETE; 31 fingerprint nền khớp; Storage không có bucket/policy.
+- [x] Lần áp dụng đầu bị `duplicate_staff_phone` khi chuẩn hóa `ACTIVE` → `active` đã rollback toàn bộ. Migration 187 chỉ bỏ qua thay đổi kiểu chữ của cùng trạng thái/SĐT không đổi; clone tái hiện dữ liệu trùng legacy và xác nhận đổi SĐT trùng/kích hoạt lại vẫn bị chặn.
+- [x] Diễn tập rồi áp dụng **187 → 165 → … → 186** trong một transaction repeatable-read có snapshot đối chiếu. Giữ nguyên nghiệp vụ, vai trò đã gán, mật khẩu/ban Auth; chỉ chuẩn hóa chữ trạng thái và version. Giữ ADMIN hiện tại; publication không còn DELETE/TRUNCATE thô.
+- [x] 7 nhóm production PASS: xác thực ADMIN không reset mật khẩu/gửi email; cấp STAFF bằng API và đổi mật khẩu lần đầu; quyền cố định; chặn bảng tiền; picker nhận STAFF; trợ lý đọc hồ sơ riêng/chặn doanh thu/xóa lịch sử thử; mobile; STAFF → ADMIN → STAFF qua Realtime; khóa phiên đang mở; danh mục anonymous còn đọc được.
+- [x] Dọn role/hồ sơ/Auth của tài khoản thử, giữ audit quản trị bất biến. Xác minh cuối PASS: 17 hồ sơ gốc, ADMIN hoạt động 1, quyền cá nhân 0, role catalog ADMIN/STAFF, Auth hash gốc không đổi và hàm mới đúng. Không tạo đơn/tiền/hoàn tiền hoặc gửi tin cho khách thật.
+- [x] Bàn giao [báo cáo và hướng dẫn giai đoạn 6](docs/security/PAWPAL_GIAI_DOAN_6_CHUYEN_DOI.md), backup riêng, phương án khôi phục và bằng chứng trong `docs/security/phase6/`. Chưa push thay đổi mới; giữ riêng `components/fab/fab.html` theo `AGENTS.md`.
+
+**Bằng chứng chính:** `phase6/cloud-apply-results.txt`, `phase6/cloud-smoke-results.txt`, `phase6/cloud-verify-results.txt`, `phase6/cloud-rehearse-results.txt`, `phase6/website-readiness.txt`. Không rollback 183 riêng khi có người dùng kết nối vì sẽ khôi phục DELETE thô; thứ tự ngược toàn chuỗi là 186 → … → 165 → 187, cần bảo vệ phiên/publication trước khi thực hiện.
 
 **Đầu ra và điều kiện hoàn thành:** Hệ thống đang chạy áp dụng đúng hai vai trò, có thể khôi phục khi cần và đáp ứng toàn bộ tiêu chí hoàn thành bên dưới.
 
 ## Tiêu chí hoàn thành
 
-- [ ] Chỉ có hai vai trò vận hành: Quản lý và Nhân viên.
-- [ ] Tạo tài khoản chỉ cần chọn vai trò, không cấp quyền riêng cho từng người.
-- [ ] Các chức năng hoạt động đúng bảng ở giao diện, máy chủ và CSDL.
-- [ ] Đổi vai trò và khóa tài khoản có hiệu lực với phiên đang mở.
-- [ ] Có nhật ký thay đổi, bằng chứng kiểm thử và phương án khôi phục.
+- [x] Chỉ có hai vai trò vận hành: Quản lý và Nhân viên; hồ sơ chưa được chỉ định không tự nhận quyền.
+- [x] Tạo tài khoản chỉ cần chọn vai trò, không cấp quyền riêng; giữ yêu cầu liên hệ và đổi mật khẩu lần đầu.
+- [x] Các chức năng hoạt động đúng bảng theo phạm vi nghiệm thu local và kiểm tra production đã ghi rõ.
+- [x] Đổi vai trò và khóa tài khoản có hiệu lực với phiên đang mở, đã kiểm tra Realtime thật trên production.
+- [x] Có nhật ký, bằng chứng kiểm thử, backup riêng và phương án khôi phục bảo vệ publication.
 
 ## Nhật ký thực hiện
 
@@ -577,35 +591,35 @@ Trạng thái: Chưa thực hiện; chỉ tiến hành sau khi giai đoạn 5 đ
 - Chuẩn bị hồ sơ khách hàng, thú cưng, lịch hẹn, đơn hàng, sản phẩm và hội thoại kiểm thử trong Supabase. Có ca dịch vụ và hội thoại giao cho A, có ca giao cho B.
 - Dữ liệu kiểm thử lưu trong CSDL kiểm thử, không nạp file JSON hoặc chèn dữ liệu mẫu vào giao diện Admin. Không thu tiền, hoàn tiền hoặc gửi tin nhắn thật cho khách trong quá trình test.
 - Ghi trạng thái dữ liệu trước mỗi thao tác nhạy cảm để đối chiếu và khôi phục sau test.
-- Mỗi dòng chỉ đánh dấu hoàn thành khi đã thực hiện và có bằng chứng. Các kịch bản dưới đây chưa được chạy.
+- Mỗi dòng chỉ đánh dấu hoàn thành khi có bằng chứng. Đã chốt 30/30 trên môi trường local ở giai đoạn 5; xem `docs/security/phase5/PQ_MATRIX.md` cho nhóm kiểm tra và báo cáo tương ứng. Các phần không áp dụng/giới hạn được ghi rõ, không suy ra đã triển khai Cloud.
 
 ### Chức năng theo vai trò
 
 | Xong | Mã | Vai trò | Bước thực hiện | Kết quả mong đợi |
 |---|---|---|---|---|
-| [ ] | PQ-01 | Quản lý | Tạo tài khoản Nhân viên, đăng nhập bằng tài khoản mới | Chỉ cần chọn vai trò; Nhân viên nhận đúng bộ quyền cố định, không cần tích quyền riêng |
-| [ ] | PQ-02 | Quản lý | Mở từng phân hệ và thực hiện một thao tác hợp lệ đại diện | Truy cập được toàn bộ phân hệ; thao tác hợp lệ được ghi nhận đúng vào CSDL |
-| [ ] | PQ-03 | Nhân viên | Tìm khách, xem thú cưng, thêm và cập nhật hồ sơ phục vụ công việc | Thao tác thành công trong phạm vi đã xác định; tải lại vẫn thấy dữ liệu đã lưu |
-| [ ] | PQ-04 | Nhân viên A | Tạo lịch hẹn, mở và cập nhật ca dịch vụ được giao cho A | Tạo lịch thành công; cập nhật ca được giao đúng quy trình |
-| [ ] | PQ-05 | Nhân viên A | Mở ca giao cho B qua đường dẫn và gọi yêu cầu cập nhật trực tiếp | Không được cập nhật ca của B; quyền đọc áp dụng đúng phạm vi đã chốt, không tự mở rộng dữ liệu |
-| [ ] | PQ-06 | Nhân viên | Tạo đơn và ghi nhận thu tiền bằng phương thức kiểm thử theo quy trình | Đơn và thanh toán được lưu đúng; không tự sửa giá niêm yết |
-| [ ] | PQ-07 | Nhân viên | Thử sửa giá, hoàn tiền, điều phối và duyệt hủy lịch qua màn hình và API | Không có thao tác quản trị trên giao diện; API từ chối, giá, thanh toán và lịch không bị thay đổi |
-| [ ] | PQ-08 | Nhân viên | Tra cứu tồn kho, sau đó thử nhập xuất và điều chỉnh tồn | Xem tồn kho được; các yêu cầu thay đổi kho bị chặn, tồn kho không đổi |
-| [ ] | PQ-09 | Quản lý | Nhập xuất, duyệt điều chỉnh kho và hoàn tiền cho đơn đủ điều kiện trên môi trường test | Các thao tác hợp lệ thành công, cập nhật dữ liệu và lịch sử nghiệp vụ đúng quy trình |
-| [ ] | PQ-10 | Nhân viên A | Mở, trả lời và xử lý hội thoại giao cho A; thử xử lý hội thoại giao cho B | Xử lý được hội thoại của A; không trả lời hoặc thay đổi hội thoại của B |
-| [ ] | PQ-11 | Nhân viên | Thử phân công hội thoại và duyệt bồi hoàn | Bị chặn cả giao diện và API; không thay đổi phân công hoặc phát sinh bồi hoàn |
-| [ ] | PQ-12 | Quản lý | Phân công hội thoại, giám sát và duyệt bồi hoàn hợp lệ | Thao tác thành công theo quy trình; người được giao và lịch sử được cập nhật |
-| [ ] | PQ-13 | Nhân viên A | Xem kết quả công việc, hồ sơ và lịch làm cá nhân; sửa mã nhân viên sang B | Chỉ nhận dữ liệu cá nhân của A; không lấy được hồ sơ nội bộ, lịch và kết quả cá nhân của B |
-| [ ] | PQ-14 | Nhân viên | Mở doanh thu tổng hợp, quản lý tài khoản và cấu hình bằng URL trực tiếp | Bị chặn; phản hồi mạng và mã trang không chứa dữ liệu bị hạn chế |
-| [ ] | PQ-15 | Quản lý | Mở báo cáo doanh thu, quản lý nhân sự và sửa một cấu hình kiểm thử hợp lệ | Truy cập và lưu được; tải lại phản ánh dữ liệu thật đã lưu |
-| [ ] | PQ-16 | Nhân viên | Sửa vai trò trong bộ nhớ trình duyệt hoặc gửi payload tự nhận ADMIN | Không được nâng quyền; vai trò thật trong CSDL không đổi |
+| [x] | PQ-01 | Quản lý | Tạo tài khoản Nhân viên, đăng nhập bằng tài khoản mới | Chỉ cần chọn vai trò; Nhân viên nhận đúng bộ quyền cố định, không cần tích quyền riêng |
+| [x] | PQ-02 | Quản lý | Mở từng phân hệ và thực hiện một thao tác hợp lệ đại diện | Truy cập được toàn bộ phân hệ; thao tác hợp lệ được ghi nhận đúng vào CSDL |
+| [x] | PQ-03 | Nhân viên | Tìm khách, xem thú cưng, thêm và cập nhật hồ sơ phục vụ công việc | Thao tác thành công trong phạm vi đã xác định; tải lại vẫn thấy dữ liệu đã lưu |
+| [x] | PQ-04 | Nhân viên A | Tạo lịch hẹn, mở và cập nhật ca dịch vụ được giao cho A | Tạo lịch thành công; cập nhật ca được giao đúng quy trình |
+| [x] | PQ-05 | Nhân viên A | Mở ca giao cho B qua đường dẫn và gọi yêu cầu cập nhật trực tiếp | Không được cập nhật ca của B; quyền đọc áp dụng đúng phạm vi đã chốt, không tự mở rộng dữ liệu |
+| [x] | PQ-06 | Nhân viên | Tạo đơn và ghi nhận thu tiền bằng phương thức kiểm thử theo quy trình | Đơn và thanh toán được lưu đúng; không tự sửa giá niêm yết |
+| [x] | PQ-07 | Nhân viên | Thử sửa giá, hoàn tiền, điều phối và duyệt hủy lịch qua màn hình và API | Không có thao tác quản trị trên giao diện; API từ chối, giá, thanh toán và lịch không bị thay đổi |
+| [x] | PQ-08 | Nhân viên | Tra cứu tồn kho, sau đó thử nhập xuất và điều chỉnh tồn | Xem tồn kho được; các yêu cầu thay đổi kho bị chặn, tồn kho không đổi |
+| [x] | PQ-09 | Quản lý | Nhập xuất, duyệt điều chỉnh kho và hoàn tiền cho đơn đủ điều kiện trên môi trường test | Các thao tác hợp lệ thành công, cập nhật dữ liệu và lịch sử nghiệp vụ đúng quy trình |
+| [x] | PQ-10 | Nhân viên A | Mở, trả lời và xử lý hội thoại giao cho A; thử xử lý hội thoại giao cho B | Xử lý được hội thoại của A; không trả lời hoặc thay đổi hội thoại của B |
+| [x] | PQ-11 | Nhân viên | Thử phân công hội thoại và duyệt bồi hoàn | Bị chặn cả giao diện và API; không thay đổi phân công hoặc phát sinh bồi hoàn |
+| [x] | PQ-12 | Quản lý | Phân công hội thoại, giám sát và duyệt bồi hoàn hợp lệ | Thao tác thành công theo quy trình; người được giao và lịch sử được cập nhật |
+| [x] | PQ-13 | Nhân viên A | Xem kết quả công việc, hồ sơ và lịch làm cá nhân; sửa mã nhân viên sang B | Chỉ nhận dữ liệu cá nhân của A; không lấy được hồ sơ nội bộ, lịch và kết quả cá nhân của B |
+| [x] | PQ-14 | Nhân viên | Mở doanh thu tổng hợp, quản lý tài khoản và cấu hình bằng URL trực tiếp | Bị chặn; phản hồi mạng và mã trang không chứa dữ liệu bị hạn chế |
+| [x] | PQ-15 | Quản lý | Mở báo cáo doanh thu, quản lý nhân sự và sửa một cấu hình kiểm thử hợp lệ | Truy cập và lưu được; tải lại phản ánh dữ liệu thật đã lưu |
+| [x] | PQ-16 | Nhân viên | Sửa vai trò trong bộ nhớ trình duyệt hoặc gửi payload tự nhận ADMIN | Không được nâng quyền; vai trò thật trong CSDL không đổi |
 
 ### Đường truy cập trực tiếp và chatbot
 
 | Xong | Mã | Vai trò | Bước thực hiện | Kết quả mong đợi |
 |---|---|---|---|---|
-| [ ] | PQ-17 | Nhân viên | Dùng phiên hợp lệ gọi trực tiếp API, RPC, truy vấn bảng và tệp dành cho Quản lý | Bị từ chối hoặc không trả dữ liệu theo chính sách; không phát sinh thay đổi nghiệp vụ |
-| [ ] | PQ-18 | Khách hàng hoặc chưa đăng nhập | Mở Admin và gọi các API quản trị | Không nhận dữ liệu admin; API yêu cầu xác thực hoặc từ chối đúng quyền |
+| [x] | PQ-17 | Nhân viên | Dùng phiên hợp lệ gọi trực tiếp API, RPC, truy vấn bảng và tệp dành cho Quản lý | Bị từ chối hoặc không trả dữ liệu theo chính sách; không phát sinh thay đổi nghiệp vụ |
+| [x] | PQ-18 | Khách hàng hoặc chưa đăng nhập | Mở Admin và gọi các API quản trị | Không nhận dữ liệu admin; API yêu cầu xác thực hoặc từ chối đúng quyền |
 | [x] | PQ-19 | Nhân viên | Hỏi chatbot doanh thu toàn cửa hàng, danh sách nhân sự và yêu cầu hoàn tiền | Chatbot báo không đủ quyền; công cụ không trả dữ liệu hạn chế và không thực hiện hoàn tiền |
 | [x] | PQ-20 | Nhân viên A | Hỏi chatbot về công việc của A, sau đó yêu cầu thông tin hoặc xử lý công việc ngoài phạm vi của A | Trả lời được thông tin được phép; yêu cầu vượt phạm vi bị chặn tại công cụ truy xuất |
 | [x] | PQ-21 | Quản lý | Hỏi chatbot về doanh thu trong khoảng ngày có dữ liệu kiểm thử | Trả lời theo dữ liệu thật và đúng khoảng ngày; không bị chặn nhầm bởi vai trò |
@@ -618,11 +632,11 @@ Trạng thái: Chưa thực hiện; chỉ tiến hành sau khi giai đoạn 5 đ
 | [x] | PQ-23 | Hai Quản lý | Quản lý thứ nhất mở báo cáo và chat trên hai tab; Quản lý thứ hai đổi tài khoản thứ nhất thành Nhân viên | Yêu cầu tiếp theo bị giới hạn theo Nhân viên; giao diện dọn dữ liệu vượt quyền, kể cả ngữ cảnh chat, bộ nhớ đệm và kênh Realtime |
 | [x] | PQ-24 | Quản lý và Nhân viên | Nhân viên đang đăng nhập; Quản lý đổi tài khoản đó thành Quản lý | Phiên cập nhật vai trò từ nguồn tin cậy và có đầy đủ quyền Quản lý; tải lại hoặc đăng nhập lại vẫn đúng |
 | [x] | PQ-25 | Quản lý và Nhân viên | Quản lý khóa tài khoản Nhân viên đang mở nhiều tab; dùng lại token cũ để gọi API và RPC | Không tiếp tục truy cập nghiệp vụ; kênh Realtime không tiếp tục nhận dữ liệu và giao diện chuyển về trạng thái phù hợp |
-| [ ] | PQ-26 | Quản lý | Trên môi trường kiểm thử chỉ còn một Quản lý hoạt động, thử khóa hoặc hạ vai trò tài khoản đó | Bị từ chối; luôn còn ít nhất một Quản lý hoạt động |
-| [ ] | PQ-27 | Hai Quản lý | Gửi đồng thời hai yêu cầu khóa hoặc hạ vai trò hai Quản lý đang hoạt động | Không thể làm mất toàn bộ Quản lý; CSDL giữ điều kiện có ít nhất một Quản lý hoạt động |
-| [ ] | PQ-28 | Hai Quản lý | Cùng mở hồ sơ một nhân viên, lần lượt lưu thay đổi vai trò từ hai phiên dùng cùng dữ liệu ban đầu | Phát hiện dữ liệu cũ, yêu cầu tải lại theo cơ chế xử lý đồng thời; không âm thầm ghi đè thay đổi mới |
-| [ ] | PQ-29 | Quản lý | Đổi vai trò một nhân viên và xem nhật ký; Nhân viên thử sửa hoặc xóa bản ghi đó | Nhật ký có người thực hiện, đối tượng, thời điểm và vai trò trước/sau; Nhân viên không sửa hoặc xóa được |
-| [ ] | PQ-30 | Nhân viên | Ngắt kết nối khi xác minh vai trò, sau đó tải lại và đăng nhập lại | Không tự nhận quyền Quản lý hoặc hiển thị dữ liệu vượt quyền; khi kết nối lại áp dụng vai trò thật |
+| [x] | PQ-26 | Quản lý | Trên môi trường kiểm thử chỉ còn một Quản lý hoạt động, thử khóa hoặc hạ vai trò tài khoản đó | Bị từ chối; luôn còn ít nhất một Quản lý hoạt động |
+| [x] | PQ-27 | Hai Quản lý | Gửi đồng thời hai yêu cầu khóa hoặc hạ vai trò hai Quản lý đang hoạt động | Không thể làm mất toàn bộ Quản lý; CSDL giữ điều kiện có ít nhất một Quản lý hoạt động |
+| [x] | PQ-28 | Hai Quản lý | Cùng mở hồ sơ một nhân viên, lần lượt lưu thay đổi vai trò từ hai phiên dùng cùng dữ liệu ban đầu | Phát hiện dữ liệu cũ, yêu cầu tải lại theo cơ chế xử lý đồng thời; không âm thầm ghi đè thay đổi mới |
+| [x] | PQ-29 | Quản lý | Đổi vai trò một nhân viên và xem nhật ký; Nhân viên thử sửa hoặc xóa bản ghi đó | Nhật ký có người thực hiện, đối tượng, thời điểm và vai trò trước/sau; Nhân viên không sửa hoặc xóa được |
+| [x] | PQ-30 | Nhân viên | Ngắt kết nối khi xác minh vai trò, sau đó tải lại và đăng nhập lại | Không tự nhận quyền Quản lý hoặc hiển thị dữ liệu vượt quyền; khi kết nối lại áp dụng vai trò thật |
 
 ### Ghi nhận kết quả
 

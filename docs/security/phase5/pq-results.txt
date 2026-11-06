@@ -1,0 +1,483 @@
+{
+  "capturedAt": "2026-11-06T08:45:50.004Z",
+  "status": "PASS",
+  "scope": "Local acceptance index; full 165-186 Auth/browser regression plus retained phase-4 real Realtime/answer evidence. No Cloud deployment or live model calls.",
+  "rows": [
+    {
+      "code": "PQ-01",
+      "status": "PASS",
+      "scenario": "Tạo tài khoản Nhân viên, đăng nhập bằng tài khoản mới",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-01: actual provisioning handler creates a STAFF account with no personal grants, real first sign-in enforces password change, then real Auth exposes the fixed STAFF permissions"
+        }
+      ]
+    },
+    {
+      "code": "PQ-02",
+      "status": "PASS",
+      "scenario": "Mở từng phân hệ và thực hiện một thao tác hợp lệ đại diện",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Real ADMIN initializes Khách hàng management UI and its namespace without entering the staff renderer"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Real ADMIN initializes Thú cưng management UI and its namespace without entering the staff renderer"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Real ADMIN initializes Dịch vụ management UI and its namespace without entering the staff renderer"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Real ADMIN initializes Bán hàng management UI and its namespace without entering the staff renderer"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Real ADMIN initializes Khiếu nại management UI and its namespace without entering the staff renderer"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Real ADMIN initializes Chatbot management UI and its namespace without entering the staff renderer"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Real ADMIN initializes Nhân sự management UI and its namespace without entering the staff renderer"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Real ADMIN initializes Dashboard management UI and its namespace without entering the staff renderer"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Real ADMIN initializes Cấu hình management UI and its namespace without entering the staff renderer"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Real ADMIN creates a customer through the original management form and persists exactly one phone record"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-15: ADMIN creates and updates a real configuration record with version control; STAFF cannot alter the same record"
+        }
+      ]
+    },
+    {
+      "code": "PQ-03",
+      "status": "PASS",
+      "scenario": "Tìm khách, xem thú cưng, thêm và cập nhật hồ sơ phục vụ công việc",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Pet edits persist after reload with the same owner and exactly one new weight measurement"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Customer edits persist real normalized contact data while preserving membership, addresses and Auth link"
+        }
+      ]
+    },
+    {
+      "code": "PQ-04",
+      "status": "PASS",
+      "scenario": "Tạo lịch hẹn, mở và cập nhật ca dịch vụ được giao cho A",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Booking uses database price, stays unassigned and retries a lost committed response without creating a duplicate"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Own item start and completion persist with actor audit; a lost response is reconciled with one transition"
+        }
+      ]
+    },
+    {
+      "code": "PQ-05",
+      "status": "PASS",
+      "scenario": "Mở ca giao cho B qua đường dẫn và gọi yêu cầu cập nhật trực tiếp",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Direct item mutation for a co-worker is rejected without changing its status"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Reassignment while intake is open revokes the save at the database boundary"
+        }
+      ]
+    },
+    {
+      "code": "PQ-06",
+      "status": "PASS",
+      "scenario": "Tạo đơn và ghi nhận thu tiền bằng phương thức kiểm thử theo quy trình",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Lost-response retry creates exactly one real pending order, server-priced line and reservation, preserves the actor audit, takes no payment and survives reload"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Collecting the remaining balance persists the exact total and reopening a fully paid order disables additional collection"
+        }
+      ]
+    },
+    {
+      "code": "PQ-07",
+      "status": "PASS",
+      "scenario": "Thử sửa giá, hoàn tiền, điều phối và duyệt hủy lịch qua màn hình và API",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "A forged STAFF refund is denied at the money RPC and creates no refund transaction"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-07/PQ-09: a paid eligible order can be refunded by ADMIN only; STAFF denial creates no refund before the valid management action"
+        }
+      ]
+    },
+    {
+      "code": "PQ-08",
+      "status": "PASS",
+      "scenario": "Tra cứu tồn kho, sau đó thử nhập xuất và điều chỉnh tồn",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-08/PQ-09: ADMIN adds, removes and reconciles stock with actor ledger evidence; STAFF adjustment is denied and stock remains unchanged"
+        }
+      ]
+    },
+    {
+      "code": "PQ-09",
+      "status": "PASS",
+      "scenario": "Nhập xuất, duyệt điều chỉnh kho và hoàn tiền cho đơn đủ điều kiện trên môi trường test",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-08/PQ-09: ADMIN adds, removes and reconciles stock with actor ledger evidence; STAFF adjustment is denied and stock remains unchanged"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-07/PQ-09: a paid eligible order can be refunded by ADMIN only; STAFF denial creates no refund before the valid management action"
+        }
+      ]
+    },
+    {
+      "code": "PQ-10",
+      "status": "PASS",
+      "scenario": "Mở, trả lời và xử lý hội thoại giao cho A; thử xử lý hội thoại giao cho B",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Inline reply saves one actual message under the authenticated assigned staff"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Foreign transcript is not fetched or rendered by the staff workspace"
+        }
+      ]
+    },
+    {
+      "code": "PQ-11",
+      "status": "PASS",
+      "scenario": "Thử phân công hội thoại và duyệt bồi hoàn",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-11/PQ-12: ADMIN transfers a conversation and approves a real STAFF refund proposal; STAFF cannot transfer or approve compensation"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Forged complaint approval, resolution, closure, completion, reopening and source linking are denied without monetary effects"
+        }
+      ]
+    },
+    {
+      "code": "PQ-12",
+      "status": "PASS",
+      "scenario": "Phân công hội thoại, giám sát và duyệt bồi hoàn hợp lệ",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-11/PQ-12: ADMIN transfers a conversation and approves a real STAFF refund proposal; STAFF cannot transfer or approve compensation"
+        }
+      ]
+    },
+    {
+      "code": "PQ-13",
+      "status": "PASS",
+      "scenario": "Xem kết quả công việc, hồ sơ và lịch làm cá nhân; sửa mã nhân viên sang B",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Personal profile ignores a foreign staff ID and comes from the authenticated actor"
+        },
+        {
+          "report": "docs/security/phase4/realtime/ui-results.txt",
+          "capturedAt": "2026-11-06T04:44:35.960Z",
+          "check": "Legacy search RPCs remain ADMIN-only; scoped work searches reject foreign assignment and forged self IDs"
+        }
+      ]
+    },
+    {
+      "code": "PQ-14",
+      "status": "PASS",
+      "scenario": "Mở doanh thu tổng hợp, quản lý tài khoản và cấu hình bằng URL trực tiếp",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Forged cached ADMIN and settings deep link cannot initialize management loaders"
+        }
+      ]
+    },
+    {
+      "code": "PQ-15",
+      "status": "PASS",
+      "scenario": "Mở báo cáo doanh thu, quản lý nhân sự và sửa một cấu hình kiểm thử hợp lệ",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-15: ADMIN creates and updates a real configuration record with version control; STAFF cannot alter the same record"
+        },
+        {
+          "report": "docs/security/phase4/realtime/ui-results.txt",
+          "capturedAt": "2026-11-06T04:44:35.960Z",
+          "check": "PQ-21: ADMIN real HTTP assistant reports the exact seeded daily collection and excludes a payment at the next-day boundary"
+        }
+      ]
+    },
+    {
+      "code": "PQ-16",
+      "status": "PASS",
+      "scenario": "Sửa vai trò trong bộ nhớ trình duyệt hoặc gửi payload tự nhận ADMIN",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "Forged cached ADMIN and settings deep link cannot initialize management loaders"
+        },
+        {
+          "report": "docs/security/phase4/realtime/ui-results.txt",
+          "capturedAt": "2026-11-06T04:44:35.960Z",
+          "check": "PQ-19: real HTTP STAFF requests for store revenue, all staff and refunds disclose no answer and perform no financial mutation"
+        }
+      ]
+    },
+    {
+      "code": "PQ-17",
+      "status": "PASS",
+      "scenario": "Dùng phiên hợp lệ gọi trực tiếp API, RPC, truy vấn bảng và tệp dành cho Quản lý",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "A forged STAFF refund is denied at the money RPC and creates no refund transaction"
+        },
+        {
+          "report": "docs/security/phase4/realtime/ui-results.txt",
+          "capturedAt": "2026-11-06T04:44:35.960Z",
+          "check": "STAFF direct JSON and CSV exports cannot bypass raw money/cost/staff/audit/notification/chat/history RLS"
+        }
+      ],
+      "fileScope": "No management Storage bucket/object exists in the reviewed baseline; no private binary-transfer test is claimed. See phase2/storage-readonly.txt. JSON/CSV and printable receipts are tested."
+    },
+    {
+      "code": "PQ-18",
+      "status": "PASS",
+      "scenario": "Mở Admin và gọi các API quản trị",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-18/public regression: real customer Auth retains own-row access and anonymous catalog reads while customer/anonymous administrative RPCs are denied"
+        },
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-18 browser: a genuine customer token and an unsigned visitor cannot initialize any management domain or STAFF workspace"
+        }
+      ]
+    },
+    {
+      "code": "PQ-19",
+      "status": "PASS",
+      "scenario": "Hỏi chatbot doanh thu toàn cửa hàng, danh sách nhân sự và yêu cầu hoàn tiền",
+      "evidence": [
+        {
+          "report": "docs/security/phase4/realtime/ui-results.txt",
+          "capturedAt": "2026-11-06T04:44:35.960Z",
+          "check": "PQ-19: real HTTP STAFF requests for store revenue, all staff and refunds disclose no answer and perform no financial mutation"
+        }
+      ]
+    },
+    {
+      "code": "PQ-20",
+      "status": "PASS",
+      "scenario": "Hỏi chatbot về công việc của A, sau đó yêu cầu thông tin hoặc xử lý công việc ngoài phạm vi của A",
+      "evidence": [
+        {
+          "report": "docs/security/phase4/realtime/ui-results.txt",
+          "capturedAt": "2026-11-06T04:44:35.960Z",
+          "check": "PQ-20: actual answer API returns own staff facts and denies another employee conversation before provider dispatch"
+        }
+      ]
+    },
+    {
+      "code": "PQ-21",
+      "status": "PASS",
+      "scenario": "Hỏi chatbot về doanh thu trong khoảng ngày có dữ liệu kiểm thử",
+      "evidence": [
+        {
+          "report": "docs/security/phase4/realtime/ui-results.txt",
+          "capturedAt": "2026-11-06T04:44:35.960Z",
+          "check": "PQ-21: ADMIN real HTTP assistant reports the exact seeded daily collection and excludes a payment at the next-day boundary"
+        }
+      ]
+    },
+    {
+      "code": "PQ-22",
+      "status": "PASS",
+      "scenario": "Tìm kiếm, xem thông báo, số đếm và thử xuất báo cáo doanh thu",
+      "evidence": [
+        {
+          "report": "docs/security/phase4/realtime/ui-results.txt",
+          "capturedAt": "2026-11-06T04:44:35.960Z",
+          "check": "PQ-22: populated real payment canaries remain absent from STAFF JSON, exact counts and CSV while ADMIN revenue reads both under date filtering"
+        }
+      ]
+    },
+    {
+      "code": "PQ-23",
+      "status": "PASS",
+      "scenario": "Quản lý thứ nhất mở báo cáo và chat trên hai tab; Quản lý thứ hai đổi tài khoản thứ nhất thành Nhân viên",
+      "evidence": [
+        {
+          "report": "docs/security/phase4/realtime/ui-results.txt",
+          "capturedAt": "2026-11-06T04:44:35.960Z",
+          "check": "PQ-23: demotion on two live tabs destroys the old ADMIN realm/cache and immediately denies aggregate revenue with the existing Auth token"
+        }
+      ]
+    },
+    {
+      "code": "PQ-24",
+      "status": "PASS",
+      "scenario": "Nhân viên đang đăng nhập; Quản lý đổi tài khoản đó thành Quản lý",
+      "evidence": [
+        {
+          "report": "docs/security/phase4/realtime/ui-results.txt",
+          "capturedAt": "2026-11-06T04:44:35.960Z",
+          "check": "PQ-24: a real management RPC promotes STAFF on two open tabs through actual Realtime, without sign-out or trusting cached roles"
+        }
+      ]
+    },
+    {
+      "code": "PQ-25",
+      "status": "PASS",
+      "scenario": "Quản lý khóa tài khoản Nhân viên đang mở nhiều tab; dùng lại token cũ để gọi API và RPC",
+      "evidence": [
+        {
+          "report": "docs/security/phase4/realtime/ui-results.txt",
+          "capturedAt": "2026-11-06T04:44:35.960Z",
+          "check": "PQ-25: suspension removes every channel and work view in both tabs; a captured pre-suspension token cannot call the work RPC"
+        }
+      ]
+    },
+    {
+      "code": "PQ-26",
+      "status": "PASS",
+      "scenario": "Trên môi trường kiểm thử chỉ còn một Quản lý hoạt động, thử khóa hoặc hạ vai trò tài khoản đó",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-26: the last active ADMIN cannot be demoted or suspended through either actual management RPC"
+        }
+      ]
+    },
+    {
+      "code": "PQ-27",
+      "status": "PASS",
+      "scenario": "Gửi đồng thời hai yêu cầu khóa hoặc hạ vai trò hai Quản lý đang hoạt động",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-27: concurrent HTTP cross-demotions serialize the last-manager guard and retain exactly one active ADMIN"
+        }
+      ]
+    },
+    {
+      "code": "PQ-28",
+      "status": "PASS",
+      "scenario": "Cùng mở hồ sơ một nhân viên, lần lượt lưu thay đổi vai trò từ hai phiên dùng cùng dữ liệu ban đầu",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-28: two real managers using the same original version cannot silently overwrite the first role update"
+        }
+      ]
+    },
+    {
+      "code": "PQ-29",
+      "status": "PASS",
+      "scenario": "Đổi vai trò một nhân viên và xem nhật ký; Nhân viên thử sửa hoặc xóa bản ghi đó",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-29: current-schema role audit records actor, target, time and before/after roles and resists STAFF HTTP edits/deletes"
+        }
+      ]
+    },
+    {
+      "code": "PQ-30",
+      "status": "PASS",
+      "scenario": "Ngắt kết nối khi xác minh vai trò, sau đó tải lại và đăng nhập lại",
+      "evidence": [
+        {
+          "report": "docs/security/phase5/full/ui-results.txt",
+          "capturedAt": "2026-11-06T07:21:13.319Z",
+          "check": "PQ-30: actual browser offline role verification fails closed, then an online reload restores only the database STAFF role"
+        }
+      ]
+    }
+  ]
+}

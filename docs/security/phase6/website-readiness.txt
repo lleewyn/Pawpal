@@ -1,0 +1,35 @@
+{
+  "capturedAt": "2026-11-06T08:39:20.128Z",
+  "site": "https://pawpalgr3.vercel.app",
+  "deploymentId": "dpl_8WCLMxRgGneymNqstY7oKR4qTNis",
+  "commit": "36c602c0d22ff1cffe05364a6fd4fe34132c9718",
+  "readyState": "READY",
+  "checks": [
+    {
+      "file": "pages/admin/admin-access.js",
+      "status": 200,
+      "sha256": "bb5e28027d07a3fca81b12c0f3a61aaa7457e377114b8c40340f2ceb69b2d896",
+      "matchesReviewedSource": true
+    },
+    {
+      "file": "pages/admin/admin.js",
+      "status": 200,
+      "sha256": "f48bb48441b7b624a1a7b41bb61e9410221b9ff69af8c1c31ccfd24dd591071d",
+      "matchesReviewedSource": true
+    },
+    {
+      "file": "pages/admin/modules/chatbot/chatbot.js",
+      "status": 200,
+      "sha256": "9140011d7f0ac0db490278ba806de9ed073d1b88dad24fa8e6810f5adb3b97ec",
+      "matchesReviewedSource": true
+    },
+    {
+      "file": "scripts/api/supabase-client.js",
+      "status": 200,
+      "sha256": "08470a10be5c5710dfa98453a6af094c77a4feb83384802e4a97ad204fb0e5de",
+      "matchesReviewedSource": true
+    }
+  ],
+  "status": "PASS",
+  "configurationValuesNotRecorded": true
+}

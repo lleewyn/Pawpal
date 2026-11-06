@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-11-06T08:38:07.299595+00:00",
+  "role_counts": {
+    "ADMIN": 1
+  },
+  "role_catalog": [
+    "ADMIN",
+    "STAFF"
+  ],
+  "active_admins": 1,
+  "personal_grants": 0,
+  "real_staff_count": 17,
+  "unsafe_publication": false,
+  "fixed_roles_applied": true,
+  "new_function_checks": {
+    "case_guard": true,
+    "role_audit": true,
+    "phone_at_insert": true,
+    "staff_assignment": true
+  },
+  "non_normalized_statuses": 0,
+  "workspace_signal_published": true,
+  "originalAuthPasswordsAndBansStillUnchanged": true,
+  "originalStaffCountRetained": true,
+  "status": "PASS"
+}

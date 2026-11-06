@@ -1,0 +1,39 @@
+{
+  "capturedAt": "2026-11-06T08:36:46.674Z",
+  "checks": [
+    {
+      "name": "Preserved production ADMIN authenticates without changing its password or delivering email and sees the verified ADMIN role",
+      "status": "PASS"
+    },
+    {
+      "name": "Deployed provisioning API creates a temporary STAFF, requires first password change and grants only the fixed STAFF permissions",
+      "status": "PASS"
+    },
+    {
+      "name": "Live STAFF reads its own projection but no raw payments; production management picker recognizes the new STAFF work role",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual Vercel STAFF assistant returns deterministic own facts, denies store revenue and deletes only its temporary history",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual production browser on mobile switches STAFF to ADMIN and back through the real Cloud Realtime signal without a manual reload",
+      "status": "PASS"
+    },
+    {
+      "name": "Deployed account-lock API invalidates the live browser and all registered channels; the pre-lock STAFF token loses work access",
+      "status": "PASS"
+    },
+    {
+      "name": "Anonymous service catalog remains available and the original ADMIN remains active after smoke tests",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS",
+  "scope": "Actual deployed Vercel API/browser and Supabase Auth/RPC with one temporary STAFF identity; no Cloud Logs or financial mutations",
+  "temporaryIdentityRemoved": true,
+  "cleanup": [
+    "Temporary STAFF role/profile/Auth removed; immutable management audit retained"
+  ]
+}

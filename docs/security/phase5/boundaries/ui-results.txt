@@ -1,0 +1,127 @@
+{
+  "capturedAt": "2026-11-06T07:19:44.751Z",
+  "scope": "Phase 5 full business browser regression with real local Auth/PostgREST and migrations through 186; no Cloud writes; WebSocket payloads covered separately",
+  "checks": [
+    {
+      "name": "Four real isolated Auth accounts map to existing staff IDs without changing fixed roles or assignment links",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-01: actual provisioning handler creates a STAFF account with no personal grants, real first sign-in enforces password change, then real Auth exposes the fixed STAFF permissions",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-08/PQ-09: ADMIN adds, removes and reconciles stock with actor ledger evidence; STAFF adjustment is denied and stock remains unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-07/PQ-09: a paid eligible order can be refunded by ADMIN only; STAFF denial creates no refund before the valid management action",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-11/PQ-12: ADMIN transfers a conversation and approves a real STAFF refund proposal; STAFF cannot transfer or approve compensation",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-15: ADMIN creates and updates a real configuration record with version control; STAFF cannot alter the same record",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-28: two real managers using the same original version cannot silently overwrite the first role update",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-27: concurrent HTTP cross-demotions serialize the last-manager guard and retain exactly one active ADMIN",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-26: the last active ADMIN cannot be demoted or suspended through either actual management RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-29: current-schema role audit records actor, target, time and before/after roles and resists STAFF HTTP edits/deletes",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-18/public regression: real customer Auth retains own-row access and anonymous catalog reads while customer/anonymous administrative RPCs are denied",
+      "status": "PASS"
+    },
+    {
+      "name": "Public booking regression: customer availability, authoritative quote and real hotel booking persist and replay once after migrations 165–184; STAFF cannot impersonate the owner",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-18 browser: a genuine customer token and an unsigned visitor cannot initialize any management domain or STAFF workspace",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-30: actual browser offline role verification fails closed, then an online reload restores only the database STAFF role",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS",
+  "sourceSha256": {
+    "pages/admin/admin.js": "92397b692a0ce0f996a54c2dd6a67ef904a436713154ed13fa96f388886f9629",
+    "pages/admin/admin-access.js": "bb5e28027d07a3fca81b12c0f3a61aaa7457e377114b8c40340f2ceb69b2d896",
+    "pages/admin/modules/customers/customers.js": "740b891ba4c3e6e96399e709e63243c777aceb7d60f02f851bc7961241be411e",
+    "pages/admin/modules/services/services.js": "47d9e704664586470b7a11c08d949a8fabbe9b765c034fb3b10209932a7654e3",
+    "scripts/database/v1/169_staff_hotel_checkout_context.sql": "cebf56accddb3bf083082a08af22b9175e9b4aae63b580da0e2cdaa34488c0e8",
+    "scripts/database/v1/168_staff_logistics_transition.sql": "46b1ebd23f23949449f54d36b1a34a4e02cf354f0c9a951df4a75a8b1115a205",
+    "scripts/database/v1/167_staff_care_log_performer.sql": "696bfcdde8a8cb516c83c691ff59da37b542d008e769520a6aa1aefd6ba6a1e0",
+    "scripts/database/v1/166_staff_booking_catalog.sql": "2f078fdab13ac1e041d03db74abc5a3f9e8c7548340e2039193fa4d8c94d6675",
+    "pages/admin/admin-components.css": "5a29c57b282c19deaa586d63764703f68d460a1e751890e12d6e47ff01433a26",
+    "pages/admin/index.html": "6d9eece1194e88e752f45031574eafd4d9e3e1d82977e72fbc60fb518a3535fa",
+    "pages/admin/login/login.js": "43a95bd924242bbb6344e0683616bc65317b75f188a87dc192c28d0afb45389d",
+    "pages/admin/login/login.html": "4a9df959481d40e02578b4ca7d90bc6575e925bf6318ac0cde3b6a5a3a393ba4",
+    "pages/admin/modules/staff/staff.html": "6d7fd0514db22054abf80279697d5a32cb3ce998ba5ee6de8a2ee52015986554",
+    "pages/admin/modules/staff/staff.css": "9f23e4aa7d6d98242419f4b31caacc18e155422b0c2507829481a4822599c42b",
+    "pages/admin/modules/staff/subtabs/tab-staff-list.js": "10cdfd5dbb2f23b96904afde862fa794e6d440a326513977bd371e674a830ad0",
+    "pages/admin/modules/staff/subtabs/tab-staff-profile.js": "950047c77bb1a0c413cb1963c299ac46b339934b146517b32cfc126138757e4d",
+    "pages/admin/modules/orders/orders.js": "6a58be1d32ab6b7d625c9db07bb674d6eff358e13cf0d959290be6608969aa36",
+    "pages/admin/modules/complaints/complaints.js": "0738257b7140db11d2b63a3d145aa18afcd123a7f16ed87a4c6fb8560c366fb9",
+    "scripts/database/v1/170_staff_complaint_proposal_context.sql": "dfd0e4e99d42177a8d1df2e72fd05949f48167d8687fa2b8dfe0504e6fa46a93",
+    "scripts/database/v1/170_staff_complaint_proposal_context.rollback.sql": "77619b244b01f040d5e12cf374ea7866e5d9f82c5590b88400f8853c53f28577",
+    "scripts/database/v1/171_staff_complaint_sources.sql": "94dc90313c8f50a5f75677557906ff25d17f336a1742d26d81cb75174da74e43",
+    "scripts/database/v1/171_staff_complaint_sources.rollback.sql": "c76010ca582f0cbb8293dad1d8a17452a80b337b34e9c1a46526e7215060ee91",
+    "pages/admin/admin-own-password.js": "e3e5dae19a402df868439022e5f5f93d1af78bc4b83deb17d540ff3fe4834b7f",
+    "pages/admin/modules/chatbot/chatbot.js": "f4aa17c1cf012d2f4b2d31feae443ae5be8de4e5481cf14691cbc9e8b7978438",
+    "scripts/database/v1/172_staff_chat_completion.sql": "7f6dc8757d873943e4cb99edee1142bbe144df3fd137a09b9ada1d1f042cf86a",
+    "scripts/database/v1/172_staff_chat_completion.rollback.sql": "64c30b1e7bc1c1baaaf7abf4be1b5eb0602a3c18cf143e65642e726d3763be4c",
+    "scripts/database/v1/173_staff_customer_context.sql": "0266f1c4eedaa373f0495f4a1b02c12c3e7f14f3bfac8ec939cf675df8c1e4d3",
+    "scripts/database/v1/173_staff_customer_context.rollback.sql": "4dd909d3060c230d8820ba8b18eb0a2b5d351081accc955c09e0ea6d3def068c",
+    "scripts/database/v1/174_staff_sales_receipt.sql": "60f4d7459a4b99c09231579bd4e32369098df6d6c6d10c2f98083e58efc0b65c",
+    "scripts/database/v1/174_staff_sales_receipt.rollback.sql": "7d5c5c3c2f5ad32b0b9a25a56651cbbc03d0b7cfee6034bd0dd110b84e126b83",
+    "scripts/database/v1/175_staff_service_receipt.sql": "d63a6ec8af65eacffc23c1e59a7060957583a24db505fd13950f6fb9ec473bb5",
+    "scripts/database/v1/175_staff_service_receipt.rollback.sql": "f8eb932d0752a70466117c2265e8fe4fad07d8188e52d520ac445eb7212fa691",
+    "pages/admin/modules/pets/pets.js": "afc5bf8eb3fcbf56b66ffdcc97c86c46808500b142a26e580d1535f13ca83042",
+    "pages/admin/modules/staff/staff.js": "e55b6a1e3642473e758b10da20b0b24af9481be098ac16371963ef7163212522",
+    "scripts/database/v1/176_chat_complaint_content.sql": "8f4c46ba800d427497052b6cd298322db528b34956cd9947a6a1c3ef1775a905",
+    "scripts/database/v1/176_chat_complaint_content.rollback.sql": "3cdecb18f6ba29a071cf98b6240ae77eb2c85258886417eff3e4e687b9794636",
+    "scripts/test/admin_access_phase3_ui.cjs": "c017778f8ced319919ae1ccf2db9c6693476060021cbcd2517156893f4ce84f4",
+    "scripts/test/admin_access_phase5_remaining_cases.cjs": "b95cab3b8f1b3c8ce68accf02bb0e55efba7d51c5358da9f5987b53e9f5578bc",
+    "scripts/api/staff_auth.js": "3cf33066156161585d9328c292ae324b676a092b2c7c2bac5d5700758607fffd",
+    "scripts/api/staff-password-handler.cjs": "450afe08c0d019b72238ff83f2808e833fa0b2c0ce7628e26c8db6cadc9fc2b4",
+    "scripts/database/v1/177_staff_copilot_reads.sql": "9fd91080bb75289031bb2d91217d6e8436d12ba68dea9b3a051a10aac32fab15",
+    "scripts/database/v1/177_staff_copilot_reads.rollback.sql": "d9514a61e3b6a10a73c968d46483b24fae4341859b10dd3dba6cbb6a0ac04b2b",
+    "scripts/database/v1/178_staff_copilot_history.sql": "9e24b1c59f69edc11defa1f9a32a4df28ac3bb8775499da10728098e689468c8",
+    "scripts/database/v1/178_staff_copilot_history.rollback.sql": "dfba516b0119c49650db4b5c6051c45aa053b6ac3df96f50b75cbd687cac3f37",
+    "scripts/database/v1/179_staff_copilot_customer_relations.sql": "e0a9286c914af615c933c2e37ac353ee6f73689434553d0bfacea1472d8a2c7c",
+    "scripts/database/v1/179_staff_copilot_customer_relations.rollback.sql": "4683e7f741f36a7f56bc842f7d2ed1355e28193d0641bd3bdefbaf522939be58",
+    "scripts/database/v1/180_staff_copilot_booking_reads.sql": "c3ae467e2db08d9497ab5dfddd22a7d0be04ac409a19eab0dc0b003aa8e32436",
+    "scripts/database/v1/180_staff_copilot_booking_reads.rollback.sql": "da7fbef3cc1829f03646ad45d56d1ac71fad2aff66b62bc115b253e846d553c9",
+    "scripts/database/v1/181_staff_copilot_request_budget.sql": "f6def13763c3bca2419e4c3abbfab87f9df833bb837239c74322d083d3397a0e",
+    "scripts/database/v1/181_staff_copilot_request_budget.rollback.sql": "b74b353b8691a5ea1c9b5facc1f5f928dd228df7595fa35454bbdffcca88f72f",
+    "scripts/database/v1/182_staff_copilot_source_validation.sql": "abf98258cd7ad958c9f41e9b032c5bc63821f0598f1468b6da8b7900a8f6e877",
+    "scripts/database/v1/182_staff_copilot_source_validation.rollback.sql": "8133bb82c47a6c66ed842b5cbc66b948e296892f676ee4fd2545f21377b13601",
+    "scripts/database/v1/183_safe_realtime_signals.sql": "6d2655ecc0ad35635b5683c6477c51f2721f2a2aeee641cca2438e67a6e8ab12",
+    "scripts/database/v1/183_safe_realtime_signals.rollback.sql": "9afa3a6bf24d613e5441760e8bf34ef5c89fa2f5faf9cc9adfc151efc5050ed7",
+    "scripts/database/v1/184_staff_access_audit.sql": "84d15b3bb5ba0272d9de578b338eda2e30701a292219c6f738353d6b1ae53616",
+    "scripts/database/v1/184_staff_access_audit.rollback.sql": "338edf06588b0e3e8fa330e6e06db04698a7a1faf61bac3d2bcf364508befacf",
+    "scripts/database/v1/185_staff_provision_required_phone.sql": "8a3056ca082de820a8d09196f40633d527d1566a7d7201c07e418560f566a333",
+    "scripts/database/v1/185_staff_provision_required_phone.rollback.sql": "7000726fc2c9f5b4cfb898f89187ad8d06b4e42ef01326b987a66b843be1973e",
+    "scripts/database/v1/186_work_assignment_handlers.sql": "b35c3a740d0bbac6d48de9738ca724eb7654f4d3a7dcdd5c3c9b2b1e3d736e7c",
+    "scripts/database/v1/186_work_assignment_handlers.rollback.sql": "f1cea7fec4e44a4a53f27789c0dec63ade44cf54c3836bad9a6943f328f63028"
+  },
+  "realAuthSignIns": 4,
+  "disposableDatabaseRemoved": true
+}
