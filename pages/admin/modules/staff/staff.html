@@ -610,7 +610,7 @@
                         <!-- DÒNG TRẠNG THÁI HIỆN TẠI (KHI ĐÃ CÓ TÀI KHOẢN) -->
                         <div id="staffAccountStatusRow" style="display: none; align-items: center; justify-content: space-between; padding: 8px 12px; background-color: #EEF5F1; border-radius: 9px; margin-bottom: 12px;">
                             <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                                <span style="color: var(--text-muted);">Trạng thái:</span>
+                                <span style="color: var(--text-muted);">Trạng thái</span>
                                 <span class="admin-badge" id="staffAccountStatusBadge">Chưa cấp tài khoản</span>
                                 <span id="staffAccountLastLoginText" style="color: var(--text-muted); font-size: 12px; margin-left: 6px;"></span>
                             </div>
@@ -637,8 +637,9 @@
 
                         <div class="form-row-2col" style="margin-top: 10px;">
                             <div class="form-group-item">
-                            <label class="form-label-clean">Vai trò</label>
-                                <input type="hidden" id="staffAccountSystemRole"><div id="staffAccountRoles"></div>
+                            <label class="form-label-clean">Vai trò <span style="color: #DC2626;">*</span></label>
+                                <input type="hidden" id="staffAccountSystemRole"><div id="staffAccountRoles" class="staff-role-options" role="radiogroup" aria-label="Vai trò tài khoản" aria-required="true" tabindex="-1"></div>
+                                <p id="staffRoleDescription" class="staff-role-description"></p>
                             </div>
                             <div class="form-group-item" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
                                 <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text-main);">
@@ -649,13 +650,10 @@
                         </div>
                     </div>
 
-                    <details id="staffAccessDetails"><summary>Vai trò và quyền riêng</summary>
-                    <input class="admin-input" id="staffPermissionSearch" placeholder="Tìm tên hoặc mã quyền" aria-label="Tìm quyền truy cập">
-                    <div class="permissions-grid" id="staffPermissionsGrid"></div>
-                    <button type="button" class="admin-btn admin-btn-secondary" id="staffPermissionMore">Xem thêm quyền</button>
-                    <div class="form-group-item" id="staffAccessReasonGroup"><label class="form-label-clean" for="staffAccessReason">Lý do thay đổi quyền</label><input class="admin-input" id="staffAccessReason" maxlength="2000"></div>
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnSaveStaffAccess">Lưu quyền truy cập</button>
-                    </details>
+                    <div id="staffAccessDetails">
+                    <div class="form-group-item" id="staffAccessReasonGroup"><label class="form-label-clean" for="staffAccessReason">Lý do thay đổi vai trò <span style="color:#DC2626">*</span></label><input class="admin-input" id="staffAccessReason" maxlength="2000" aria-required="true"></div>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnSaveStaffAccess">Lưu vai trò</button>
+                    </div>
                     <p id="staffAccountError" style="color:#DC2626;background:transparent;border:none"></p>
 
                 <div class="form-row-2col">

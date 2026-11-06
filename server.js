@@ -13,6 +13,7 @@ app.use(express.json());
 // Use the same scoped Admin configuration and password endpoint as Vercel.
 app.get('/api/admin-config', require('./api/admin-config.js'));
 app.post('/api/admin/auth/complete-password-change', require('./api/staff-auth.js'));
+app.post('/api/admin/staff/change-own-password', require('./scripts/api/staff-own-password.cjs').handle);
 
 const customerAuth = require('./scripts/api/customer_auth.js');
 const guestCommerce = require('./scripts/api/guest_commerce.js');

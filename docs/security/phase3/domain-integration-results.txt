@@ -1,0 +1,150 @@
+{
+  "capturedAt": "2026-11-05T13:13:52.900Z",
+  "status": "PASS",
+  "scope": "Move role-specific operations into existing domain JS; preserve management bodies; split pet form into pets.js; no database changes",
+  "domains": [
+    {
+      "target": "pages/admin/modules/customers/customers.js",
+      "legacySha256": "32da1f19e7156466242c942021547fed79a88d4d17ae24a2a37cfbf3c72e2f9e",
+      "legacyPreserved": true,
+      "sources": [
+        {
+          "from": "pages/admin/modules/staff-workspace/customers/admin-staff-forms.js",
+          "sha256": "4f2135fcafe5ca2efb6354b7902f2e2089855d19900cb9e50070e19726c5d05f",
+          "unchangedBody": false
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/customers/admin-staff-customer-note.js",
+          "sha256": "1459e48b2d51f493fa1a5aa64f37bc5312a1a8c9d844f42586a4acb0a60d8a78",
+          "unchangedBody": true
+        }
+      ]
+    },
+    {
+      "target": "pages/admin/modules/pets/pets.js",
+      "legacySha256": "488253cd9e0b767fd3a2e72109bbbe2436b202cc6584fdc8ed2782fe390151be",
+      "legacyPreserved": true,
+      "sources": []
+    },
+    {
+      "target": "pages/admin/modules/services/services.js",
+      "legacySha256": "3b8d671b5f9aa846c5e5bc29d7a3d8418e7837737a25cea9a977d2a6f4874775",
+      "legacyPreserved": true,
+      "sources": [
+        {
+          "from": "pages/admin/modules/services/care-log.js",
+          "sha256": "da3bb5f7dea911f3094c52576dabd2f3fa946799d87aaa8f6d4cd2c25f8db675",
+          "unchangedBody": true
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/services/admin-staff-booking.js",
+          "sha256": "2f822e60d84c33ab8f035d897b87bc2c4f3c769c532688bc79c6e369f92f7266",
+          "unchangedBody": true
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/services/admin-staff-intake.js",
+          "sha256": "d4047d37c3ebe671757d73db3bc79379876ea4d59233dee4854772585c6e7b78",
+          "unchangedBody": true
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/services/admin-staff-handover.js",
+          "sha256": "e7ec3f2f6884bcd5a0e7670d6128aee66edd0b37c1b3a746740b7991ababc333",
+          "unchangedBody": true
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/services/admin-staff-hotel-checkout.js",
+          "sha256": "e6c5cf633193777752975451142fd3f12f542515d1c751f3869d09d5799cdfb9",
+          "unchangedBody": true
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/services/admin-staff-pickup.js",
+          "sha256": "630612ebb82cea38a68757bfa7349d37d25f25fae223f8c5d13c364ab26862dc",
+          "unchangedBody": true
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/services/admin-staff-service-cashier.js",
+          "sha256": "9c597255530fed589f52e3f8c606f3cf7722684043b9000852265101d4d39e2d",
+          "unchangedBody": true
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/services/admin-staff-service-receipt.js",
+          "sha256": "cd671abd7e140d26ae6d0fed373c0b299fc980c5a0e3311a802b403df67c1d31",
+          "unchangedBody": true
+        }
+      ]
+    },
+    {
+      "target": "pages/admin/modules/orders/orders.js",
+      "legacySha256": "d1843c22fdcfa3c4cd183e0da929c00c10124225ef5cb61f2674764f2332296b",
+      "legacyPreserved": true,
+      "sources": [
+        {
+          "from": "pages/admin/modules/staff-workspace/sales/admin-staff-sales.js",
+          "sha256": "7efa2442ad2e91249eacd4bdbd2521c64e61bee425503798be99aab2db2bf930",
+          "unchangedBody": true
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/sales/admin-staff-cashier.js",
+          "sha256": "d09f0538c5c290255465eb4c27e5698b0fdf58fece4847643ae8995706f46abf",
+          "unchangedBody": true
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/sales/admin-staff-sales-receipt.js",
+          "sha256": "ce665c7e16017f575d78f23450a9c2f23f9a4c7a2dfcf4970eabef872013eefa",
+          "unchangedBody": true
+        }
+      ]
+    },
+    {
+      "target": "pages/admin/modules/complaints/complaints.js",
+      "legacySha256": "641766ea219b19b0fa2bb98c33ae980f9dc484afcd52b2b43600de9815a7c607",
+      "legacyPreserved": true,
+      "sources": [
+        {
+          "from": "pages/admin/modules/staff-workspace/support/admin-staff-complaint-message.js",
+          "sha256": "32cad3218be1a429a3a674e44a433fe691ceabb53f998f7d06bc186283caf3f8",
+          "unchangedBody": true
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/support/admin-staff-complaint-proposal.js",
+          "sha256": "8a13a00e4946c8c96212a34af214f20a05b17d858ce491273189f04705c85cca",
+          "unchangedBody": true
+        },
+        {
+          "from": "pages/admin/modules/staff-workspace/support/admin-staff-complaint-create.js",
+          "sha256": "04f6d226be0f7f3c087aa9d30766f8e23075b9ea8791e548dbcd7621e53c061d",
+          "unchangedBody": true
+        }
+      ]
+    },
+    {
+      "target": "pages/admin/modules/chatbot/chatbot.js",
+      "legacySha256": "449da46f7d3b3ec759f19cfae35414183ffc54ee7f1ed6696ac0e4bf4dc918a7",
+      "legacyPreserved": true,
+      "sources": [
+        {
+          "from": "pages/admin/modules/staff-workspace/support/admin-staff-chat-resolution.js",
+          "sha256": "0cf0bebd67f50b1d24f567650dbfe7b13e77d0b22c6e52e2d9ca31c87a515384",
+          "unchangedBody": true
+        }
+      ]
+    }
+  ],
+  "regression": [
+    {
+      "report": "ui-results.txt",
+      "status": "PASS",
+      "checks": 255,
+      "capturedAt": "2026-11-05T13:14:51.223Z",
+      "disposableDatabaseRemoved": true
+    },
+    {
+      "report": "password-ui-results.txt",
+      "status": "PASS",
+      "checks": 10,
+      "capturedAt": "2026-11-05T13:18:18.915Z",
+      "disposableDatabaseRemoved": true
+    }
+  ],
+  "verifiedAt": "2026-11-05T13:21:01.557Z"
+}

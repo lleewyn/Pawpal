@@ -1,3 +1,15 @@
+
+// Role-scoped screens belong to this domain.
+(function registerRoleViews(){
+ const views=window.PawpalAdminViews;if(!views)return;const {date,money,status}=views.helpers;
+ views.register("Nhân sự",{columns:{schedule:[['Bắt đầu', r => date(r.start_at)], ['Kết thúc', r => date(r.end_at)], ['Trạng thái', r => status(r.availability_status)], ['Ghi chú', 'reason']],assessment:[['Ngày đánh giá', r => date(r.assessment_date)], ['Điểm', 'score'], ['Kết quả', r => status(r.result)], ['Ghi chú', 'note']]},
+targets:{},
+render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,status,read,table,card,facts,go,root,kind,id,target,turn}=ctx;
+                const [row] = await read('self'); if (!ctx.isCurrent()) return true;
+                facts(root, 'Hồ sơ của tôi', [['Họ tên', row?.full_name], ['Vai trò', 'Nhân viên'], ['Chức danh', row?.job_title], ['Số điện thoại', row?.phone_number], ['Email', row?.email]]); return true;return true;}});
+})();
+
+(function initializeManagementStaff(){if(!window.PawpalAdminAccess?.isAdmin())return;
 // staff.js - Phân hệ Quản trị Nhân sự Pawpal-er (Core Orchestrator)
 (function() {
     'use strict';
@@ -785,4 +797,6 @@
     } else {
         initStaffModule();
     }
+})();
+
 })();

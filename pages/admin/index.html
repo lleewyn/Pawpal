@@ -16,14 +16,14 @@
     <link rel="stylesheet" href="/pages/admin/modules/customers/customers.css?v=8.0">
     <link rel="stylesheet" href="/pages/admin/modules/pets/pets.css?v=20261101_code_ellipsis">
     <link rel="stylesheet" href="/pages/admin/modules/orders/orders.css?v=44">
-    <link rel="stylesheet" href="/pages/admin/modules/staff/staff.css?v=16">
+    <link rel="stylesheet" href="/pages/admin/modules/staff/staff.css?v=20261104_roles_phase3">
     <link rel="stylesheet" href="/pages/admin/modules/complaints/complaints.css?v=20261024_reference_3">
     <link rel="stylesheet" href="/pages/admin/admin-shell-v7.css?v=20261101_sidebar_groups">
     <link rel="stylesheet" href="/pages/admin/modules/dashboard/dashboard-v8.css?v=2">
     <link rel="stylesheet" href="/pages/admin/modules/services/services-v8.css?v=1">
     <link rel="stylesheet" href="/pages/admin/modules/orders/orders-v8.css?v=2">
     <script src="/pages/admin/modules/orders/order-modal-v8.js?v=2" defer></script>
-    <link rel="stylesheet" href="/pages/admin/admin-components.css?v=4">
+    <link rel="stylesheet" href="/pages/admin/admin-components.css?v=20261105_domain_views">
     <link rel="stylesheet" href="/pages/admin/modules/orders/orders-pos.css?v=2">
     <link rel="stylesheet" href="/pages/admin/modules/services/services.css?v=20261031_detail_layout">
     <link rel="stylesheet" href="/pages/admin/modules/chatbot/chatbot.css?v=20261101_chat_feedback">
@@ -116,6 +116,7 @@
                 <div class="admin-header-right">
                     <span class="header-sync-status" id="headerSyncStatus" title="Trạng thái đồng bộ dữ liệu">Đã đồng bộ</span>
                     <button type="button" class="btn-header-refresh" id="btnHeaderRefresh" title="Làm mới dữ liệu phân hệ hiện tại">Làm mới</button>
+                    <button type="button" class="btn-header-refresh" id="btnOwnPassword" hidden>Đổi mật khẩu</button>
                     <span class="header-user-tag">Quản trị viên</span>
                 </div>
             </header>
@@ -131,6 +132,8 @@
     <script>window.__PAWPAL_SUPABASE_CONFIG__={required:true};</script>
     <script src="/api/admin-config"></script>
     <script src="/scripts/api/supabase-client.js?v=20261021_bandwidth1"></script>
+    <script src="/pages/admin/admin-access.js?v=20261105_session_invalidation"></script>
+    <script src="/pages/admin/admin-own-password.js?v=20261105_roles20"></script>
 
     <!-- SheetJS (XLSX) Library -->
     <script src="/scripts/xlsx.full.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'"></script>
@@ -140,6 +143,6 @@
     <script src="/pages/admin/admin-data-store.js?v=20261022_copilot_v4"></script>
 
     <!-- Script điều hướng hệ thống Admin -->
-    <script src="/pages/admin/admin.js?v=20261104_admin_sse"></script>
+    <script src="/pages/admin/admin.js?v=20261105_session_invalidation"></script>
 </body>
 </html>

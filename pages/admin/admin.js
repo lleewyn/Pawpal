@@ -1,3 +1,139 @@
+// Staff reads use only the scoped stage-2 RPCs. Never initialize the management module loaders.
+(function () {
+    'use strict';
+    const modules = {
+        Dashboard: [['tab-dashboard', 'Công việc của tôi', 'appointments']],
+        'Khách hàng': [['tab-list', 'Khách hàng', 'customers'], ['tab-profile', 'Hồ sơ', 'customer-profile']],
+        'Thú cưng': [['tab-pet-list', 'Thú cưng', 'pets'], ['tab-pet-profile', 'Hồ sơ', 'pet-profile']],
+        'Dịch vụ': [['tab-service-bookings', 'Được giao', 'appointments'], ['tab-service-detail', 'Hồ sơ', 'service-profile'], ['tab-service-catalog', 'Bảng giá', 'services']],
+        'Bán hàng': [['tab-order-list', 'Đơn hàng', 'orders'], ['tab-order-detail', 'Hồ sơ', 'order-profile'], ['tab-order-products', 'Sản phẩm và kho', 'stock'], ['tab-order-promos', 'Ưu đãi', 'offers']],
+        'Nhân sự': [['tab-staff-profile', 'Hồ sơ của tôi', 'self'], ['tab-staff-schedule', 'Lịch của tôi', 'schedule'], ['tab-staff-assessment', 'Kết quả của tôi', 'assessment']],
+        'Khiếu nại': [['tab-complaint-services', 'Được giao', 'complaints'], ['tab-complaint-detail', 'Hồ sơ', 'complaint-profile']],
+        Chatbot: [['tab-live-support', 'Hội thoại của tôi', 'conversations'], ['tab-support-queue', 'Chờ tiếp nhận', 'chat_queue']]
+    };
+    const labels = { active: 'Đang hoạt động', available: 'Có thể nhận việc', pending: 'Chờ xử lý', confirmed: 'Đã xác nhận', checked_in: 'Đã tiếp nhận',
+        in_progress: 'Đang thực hiện', completed: 'Hoàn thành', cancelled: 'Đã hủy', no_show: 'Vắng mặt', agent_handling: 'Đang hỗ trợ', waiting_agent: 'Chờ tiếp nhận',
+        processing: 'Đang xử lý', waiting_manager_approval: 'Chờ Quản lý duyệt', closed: 'Đã đóng', resolved: 'Đã xử lý', leave: 'Nghỉ phép', absent: 'Vắng mặt',
+        unavailable: 'Không nhận việc', delivered: 'Đã giao', returned: 'Đã trả hàng', draft: 'Bản nháp', shipping: 'Đang giao', shipped: 'Đã gửi hàng', packing: 'Đang chuẩn bị',
+        PASS: 'Đạt', FAIL: 'Chưa đạt', male: 'Đực', female: 'Cái', unknown: 'Chưa rõ', normal: 'Thông thường', high: 'Cần chú ý', urgent: 'Khẩn cấp', low: 'Thấp', reserved: 'Đã giữ phòng', checked_out: 'Đã trả phòng', waiting_customer: 'Chờ khách bổ sung', reprocessing: 'Đang xử lý lại', new: 'Đang tiếp nhận', open: 'Đang tiếp nhận', rejected: 'Đã từ chối' };
+    const el = (tag, text, className) => { const node = document.createElement(tag); if (text != null) node.textContent = text; if (className) node.className = className; return node; };
+    const date = value => value ? new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Bangkok', dateStyle: 'short', timeStyle: 'short' }) : '—';
+    const money = value => new Intl.NumberFormat('vi-VN').format(Number(value) || 0) + ' đ';
+    const status = value => labels[value] || 'Chưa cập nhật';
+    let revision = 0, currentModule = 'Dashboard';
+    const storageKey = name => 'pawpal_staff_workspace:' + (window.PawpalAdminAccess?.state.user?.id || '') + ':' + name;
+    function defaultHash(name) {
+        const list = modules[name] || modules.Dashboard, saved = sessionStorage.getItem(storageKey(name));
+        return saved && list.some(tab => '#' + tab[0] === saved.split('?')[0]) ? saved : '#' + list[0][0];
+    }
+    const columns = {}, targets = {}, profiles = {}, toolbars = {}, rowActions = {}, rowAlerts = {}, screens = {};
+    function register(name, config) { Object.assign(columns,config.columns);Object.assign(targets,config.targets);Object.assign(profiles,config.profiles);Object.assign(toolbars,config.toolbars);Object.assign(rowActions,config.rowActions);Object.assign(rowAlerts,config.rowAlerts);if(config.render)screens[name]=config.render; }
+    function context(root,target,turn,extra={}) { return {el,date,money,status,read,table,card,facts,go,root,target,turn,isCurrent:()=>turn===revision,refresh:()=>mount(currentModule,target),...extra}; }
+    function currentTab(moduleName) {
+        const list = modules[moduleName] || modules.Dashboard, hash = location.hash.slice(1).split('?')[0];
+        return list.find(tab => tab[0] === hash) || list[0];
+    }
+    function go(hash, id) { location.hash = hash + (id ? '?id=' + encodeURIComponent(id) : ''); }
+    function header(moduleName) {
+        const title = document.getElementById('headerModuleTitle'), group = document.getElementById('headerSubtabsGroup');
+        if (title) { title.textContent = moduleName === 'Dashboard' ? 'Công việc của tôi' : ''; title.style.display = moduleName === 'Dashboard' ? '' : 'none'; }
+        if (!group) return;
+        group.replaceChildren();
+        if (moduleName === 'Dashboard') return;
+        const active = currentTab(moduleName)[0];
+        for (const [index, tab] of (modules[moduleName] || []).entries()) {
+            if (index) group.append(el('span', '|', 'workspace-tab-divider'));
+            const button = el('button', tab[1], 'header-subtab-btn' + (active === tab[0] ? ' active' : ''));
+            button.type = 'button'; button.dataset.tab = tab[0]; group.append(button);
+        }
+    }
+    async function read(kind, { query = '', id = null, page = 1 } = {}) {
+        const { data, error } = await window.getSupabaseClient().rpc('get_staff_workspace', { p_kind: kind, p_query: query, p_id: id, p_page: page });
+        if (error) throw Error(error.code === '42501' ? 'Bạn không có quyền xem nội dung này.' : 'Không tải được dữ liệu. Vui lòng thử lại.');
+        return data.items || [];
+    }
+    function table(kind, rows, parent, options = {}) {
+        const spec = columns[kind] || [], wrapper = el('div', null, 'table-responsive-wrapper'), table = el('table', null, 'admin-table');
+        const thead = document.createElement('thead'), tr = document.createElement('tr');
+        spec.forEach(([name]) => tr.append(el('th', name)));
+
+        const rowAction=rowActions[kind],hasActions=!!rowAction?.enabled(options);
+        if (targets[kind] || hasActions) tr.append(el('th', 'Tác vụ'));
+        thead.append(tr); table.append(thead);
+        const tbody = document.createElement('tbody');
+        for (const row of rows) {
+            const line = document.createElement('tr');
+            line.dataset.recordId=row.id;
+            const alert=rowAlerts[kind]?.(row);if(alert)line.dataset.alert=alert;
+            spec.forEach(([, field]) => line.append(el('td', (typeof field === 'function' ? field(row) : row[field]) ?? '—')));
+            if (targets[kind]) {
+                const td = document.createElement('td'), link = el('button', 'Xem hồ sơ', 'workspace-text-button');
+                link.type = 'button'; link.onclick = () => go(targets[kind], row.id); td.append(link); line.append(td);
+            }
+            if(hasActions)line.append(rowAction.render({el,read,go,kind,row,options}));
+            tbody.append(line);
+        }
+        if (!rows.length) { const row = document.createElement('tr'), td = el('td', 'Chưa có dữ liệu phù hợp.'); td.colSpan = spec.length + (targets[kind] || hasActions ? 1 : 0); row.append(td); tbody.append(row); }
+        table.append(tbody); wrapper.append(table); parent.append(wrapper);
+    }
+    function card(parent, title) { const node = el('section', null, 'admin-card customer-master-card'); if (title) node.append(el('h2', title, 'admin-card-title')); parent.append(node); return node; }
+    function facts(parent, title, pairs) {
+        const node = card(parent, title), list = el('dl', null, 'workspace-facts');
+        pairs.forEach(([key, value]) => { list.append(el('dt', key), el('dd', value ?? '—')); }); node.append(list); return node;
+    }
+    async function profile(kind,id,root,turn,target){
+        if(!id){card(root).append(el('p','Chọn hồ sơ từ danh sách để xem thông tin.'));return;}
+        const spec=profiles[kind];if(!spec)throw Error('Không tìm thấy chức năng hồ sơ.');const result=await read(spec.read,{id});if(turn!==revision)return;const row=result.find(item=>item.id===id);if(!row){card(root).append(el('p','Không tìm thấy hồ sơ trong phạm vi được xem.'));return;}await spec.render(context(root,target,turn,{kind,id,row}));
+    }
+    document.addEventListener('click',event=>document.querySelectorAll('.workspace-item-menu[open]').forEach(menu=>{if(!menu.contains(event.target))menu.open=false;}));
+    document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;const menu=document.activeElement?.closest('.workspace-item-menu[open]');if(menu){menu.open=false;menu.querySelector('summary').focus();}});
+    async function mount(moduleName, target) {
+        if (!window.PawpalAdminAccess?.isStaff()) return;
+        currentModule = modules[moduleName] ? moduleName : 'Dashboard';
+        if (!modules[currentModule].some(tab => tab[0] === location.hash.slice(1).split('?')[0])) history.replaceState(null, '', defaultHash(currentModule));
+        sessionStorage.setItem(storageKey(currentModule), location.hash);
+        header(currentModule);
+        const turn = ++revision, root = el('div', null, 'staff-workspace'); target.replaceChildren(root);
+        const [, title, kind] = currentTab(currentModule), params = new URLSearchParams(location.hash.split('?')[1] || '');
+        const id = params.get('id');
+        if (id && !/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)) { card(root).append(el('p', 'Mã hồ sơ chưa hợp lệ.')); return; }
+        const errorText = el('p', '', 'workspace-error'); errorText.setAttribute('role', 'alert'); root.append(errorText);
+        try {
+            if (kind.endsWith('-profile')) { await profile(kind, id, root, turn,target); return; }
+            if(screens[currentModule]&&await screens[currentModule](context(root,target,turn,{kind,id})))return;
+            const main = card(root), tools = el('form', null, 'workspace-toolbar'); tools.setAttribute('onsubmit', 'return false;');
+            const heading = el('h2', currentModule === 'Dashboard' ? 'Lịch công việc' : title, 'admin-card-title'); tools.append(heading); main.append(tools);
+            toolbars[kind]?.({el,go,tools});
+            const searchable = ['customers', 'pets', 'stock', 'orders'].includes(kind), requiredSearch = ['customers', 'pets', 'orders'].includes(kind);
+            let query = params.get('q') || '', page = Math.max(1, Number(params.get('page')) || 1), input;
+            const content = el('div'), pager = el('nav', null, 'workspace-pager'); pager.setAttribute('aria-label', 'Phân trang'); main.append(content); root.append(pager);
+            async function load() {
+                errorText.textContent = ''; content.textContent = 'Đang tải...'; pager.replaceChildren();
+                if (requiredSearch && query.trim().length < 3) { content.textContent = 'Nhập ít nhất 3 ký tự hoặc mã để tra cứu.'; return; }
+                try {
+                    const rows = await read(kind, { query, page }); if (turn !== revision) return;
+                    content.replaceChildren(); table(kind, rows, content);
+                    const prev = el('button', '<'), active = el('button', String(page), 'active'), next = el('button', '>');
+                    for (const button of [prev, active, next]) button.type = 'button';
+                    active.setAttribute('aria-current', 'page'); prev.disabled = page <= 1; next.disabled = rows.length < 10;
+                    const jump = value => { const nextParams = new URLSearchParams(); if (query) nextParams.set('q', query); if (value > 1) nextParams.set('page', String(value)); go(currentTab(currentModule)[0] + (nextParams.size ? '?' + nextParams : '')); };
+                    prev.onclick = () => jump(page - 1); next.onclick = () => jump(page + 1); pager.append(prev, active, next);
+                } catch (error) { if (turn === revision) { content.replaceChildren(); errorText.textContent = error.message; } }
+            }
+            if (searchable) {
+                input = el('input', null, 'admin-input'); input.type = 'search'; input.placeholder = kind === 'orders' ? 'Nhập mã đơn hàng' : 'Nhập tên hoặc mã để tìm'; input.setAttribute('aria-label', input.placeholder); input.value = query; input.maxLength = 120;
+                const search = el('button', 'Tìm kiếm', 'admin-btn admin-btn-secondary'); search.type = 'button';
+                const submit = () => { query = input.value.trim(); const p = new URLSearchParams(); if (query) p.set('q', query); go(currentTab(currentModule)[0] + (p.size ? '?' + p : '')); };
+                search.onclick = submit; tools.addEventListener('submit', event => { event.preventDefault(); submit(); }); tools.append(input, search);
+            }
+            await load();
+        } catch (error) { if (turn === revision) errorText.textContent = error.message; }
+    }
+    window.PawpalAdminViews = Object.freeze({ register, helpers:Object.freeze({date,money,status}), mount, header, defaultHash,
+        refresh: () => mount(currentModule, document.querySelector('.admin-preview-content')) });
+})();
+
+;
 // admin.js - Quản trị hệ thống Pawpal-er
 
 // ====================================================================
@@ -321,7 +457,14 @@ function getAdminSessionUser() {
     return null;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const access = window.PawpalAdminAccess;
+    const verified = await access?.ready;
+    if (!verified) {
+        access?.showError(access.state.error);
+        return;
+    }
+    access.applyNavigation();
     // Tắt tính năng tự khôi phục vị trí cuộn của trình duyệt để triệt tiêu 100% hiện tượng trôi Header bar
     if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
@@ -337,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, { passive: false });
 
-    const adminUser = getAdminSessionUser();
+    const adminUser = verified.user;
     if (!adminUser) {
         window.location.replace('/admin/login');
         return;
@@ -345,7 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const headerUserTag = document.querySelector('.header-user-tag');
     if (headerUserTag && adminUser) {
         const name = adminUser.name || adminUser.full_name;
-        const roleLabel = adminUser.system_role === 'ADMIN' ? 'Quản trị' : (adminUser.position || 'Nhân sự');
+        const roleLabel = access.isAdmin() ? 'Quản lý' : 'Nhân viên';
         headerUserTag.textContent = name ? `${name} (${roleLabel})` : 'Quản trị viên';
     }
     const sidebarBtns = document.querySelectorAll('.sidebar-menu-btn');
@@ -384,6 +527,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btnHeaderRefreshEl.style.opacity = '0.6';
 
         try {
+            await access.verify();
+            if (access.isStaff()) {
+                await window.PawpalAdminViews.refresh();
+                updateHeaderSync('idle');
+                return;
+            }
             if (activeMod === 'Dashboard' && window.PawpalDashboard?.loadDashboardData) {
                 window.PawpalDataStore?.invalidate('dashboard:*');
                 await window.PawpalDashboard.loadDashboardData({ force: true });
@@ -418,6 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             updateHeaderSync('idle');
         } catch (err) {
+            if (!access.state.role) access.showError(err);
             console.warn('[Admin] Lỗi làm mới dữ liệu phân hệ:', err);
             updateHeaderSync('error', 'Lỗi làm mới');
         } finally {
@@ -446,6 +596,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tabButton) return;
         const tabId = tabButton.getAttribute('data-tab') || tabButton.getAttribute('data-subtab');
         if (!tabId) return;
+        if (access.isStaff()) {
+            event.preventDefault();
+            window.location.hash = '#' + tabId;
+            return;
+        }
         const moduleName = sessionStorage.getItem('pawpal_admin_active_module');
         const config = MODULE_SUBTABS_MAP[moduleName];
         if (!config || !config.subtabs.some(tab => tab.id === tabId)) return;
@@ -558,6 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function renderHeaderSubtabsInstant(moduleName) {
+        if (access.isStaff()) { window.PawpalAdminViews.header(moduleName); return; }
         const config = MODULE_SUBTABS_MAP[moduleName];
         if (!config) return;
 
@@ -635,7 +791,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261104_admin_sse';
+    const MODULE_SCRIPT_VERSION = '20261105_service_history_pages';
+    let staffDomainScriptsReady;
+    async function loadStaffDomainScripts() {
+        if (!staffDomainScriptsReady) staffDomainScriptsReady = (async () => {
+            const scripts = ['modules/customers/customers.js','modules/pets/pets.js','modules/services/services.js','modules/orders/orders.js','modules/complaints/complaints.js','modules/chatbot/chatbot.js','modules/staff/staff.js'];
+            await loadModuleScripts(scripts);
+            if (scripts.some(src => !_moduleScriptsLoaded.has(src))) throw Error('Không tải đủ chức năng làm việc. Vui lòng tải lại trang.');
+        })().catch(error => { staffDomainScriptsReady = null; throw error; });
+        return staffDomainScriptsReady;
+    }
 
     function resolveModulePath(path) {
         if (!path) return path;
@@ -673,6 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Prefetch HTML + Script của một module vào cache trong nền (không render, không chạy init)
     async function prefetchModule(moduleName) {
+        if (!access.isAdmin()) return;
         const modCfg = MODULE_CONFIG[moduleName];
         if (!modCfg) return;
         // Prefetch HTML vào in-memory cache
@@ -806,6 +972,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let moduleLoadRevision = 0;
     let moduleActivation = Promise.resolve();
     let requestedModuleSequence = 0;
+    window.addEventListener('pawpal:access-invalidated', () => {
+        requestedModuleSequence++;
+        moduleLoadRevision++;
+        _activeModuleLoadId++;
+        _moduleDomCache.clear();
+    });
     function loadModule(moduleName) {
         const requested = ++requestedModuleSequence;
         // Keep a module's DOM attached until its scripts finish initializing.
@@ -822,6 +994,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadRevision = ++moduleLoadRevision;
         if (!contentArea) return;
         const thisLoadId = ++_activeModuleLoadId;
+        try {
+            if (_currentModule !== null) await access.verify();
+        } catch (error) { access.showError(error); return; }
+        access.applyNavigation();
+        if (!access.canModule(moduleName)) {
+            moduleName = 'Dashboard';
+            history.replaceState(null, '', '#tab-dashboard');
+        }
+        if (access.isStaff()) {
+            try { await loadStaffDomainScripts(); }
+            catch (error) { contentArea.replaceChildren(); const message=document.createElement('p');message.className='workspace-error';message.setAttribute('role','alert');message.textContent=error.message;contentArea.append(message);return; }
+            if (!access.isStaff()) return;
+            _currentModule = moduleName;
+            sessionStorage.setItem('pawpal_admin_active_module', moduleName);
+            sidebarBtns.forEach(button => button.classList.toggle('active', button.dataset.title === moduleName));
+            const breadcrumb = document.getElementById('headerDeepBreadcrumb'); if (breadcrumb) breadcrumb.replaceChildren();
+            await window.PawpalAdminViews.mount(moduleName, contentArea);
+            return;
+        }
 
         // Cập nhật module active
         sessionStorage.setItem('pawpal_admin_active_module', moduleName);
@@ -1019,6 +1210,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resolveModuleFromHash(hash) {
         if (!hash) return null;
+        if (access.isStaff() && String(hash).split('?')[0] === '#tab-support-queue') return 'Chatbot';
         const base = String(hash).split('?')[0];
         if (base.startsWith('#tab-service') || base.startsWith('#tab-booking') || base.startsWith('#tab-calendar') || base === '#services') return 'Dịch vụ';
         if (base.startsWith('#tab-order') || base.startsWith('#tab-inventory')) return 'Bán hàng';
@@ -1033,6 +1225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleEntityDeepLink(targetMod, cleanHash, params) {
+        if (!access.isAdmin()) return;
         if (!targetMod || !params) return;
         try {
             if (targetMod === 'Khách hàng' && cleanHash === 'tab-profile') {
@@ -1098,6 +1291,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getTargetHashForModule(moduleName) {
+        if (access.isStaff()) return window.PawpalAdminViews.defaultHash(moduleName);
         if (moduleName === 'Dashboard') return '#tab-dashboard';
         if (moduleName === 'Khách hàng') {
             const saved = sessionStorage.getItem('pawpal_admin_customer_subtab');
@@ -1220,6 +1414,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tải trước toàn bộ 9 template HTML và scripts của các phân hệ quan trọng trong nền
     // Giúp khi bấm sang phân hệ mới, HTML & scripts đã có sẵn trong memory/disk cache (0ms network)
     setTimeout(() => {
+        if (!access.isAdmin()) return;
         Object.values(MODULE_CONFIG).forEach(cfg => {
             if (cfg && cfg.html) fetchModuleHtml(cfg.html).catch(() => {});
         });
@@ -1232,6 +1427,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Lắng nghe thay đổi URL Hash liên phân hệ để chuyển module mượt mà
     window.addEventListener('hashchange', () => {
+        if (access.isStaff()) {
+            loadModule(resolveModuleFromHash(window.location.hash) || 'Dashboard');
+            return;
+        }
         const fullHash = window.location.hash || '';
         const [hashBase, queryString] = fullHash.split('?');
         const targetMod = resolveModuleFromHash(hashBase);
@@ -1509,6 +1708,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Global Modal Handler: Tự động đóng modal toàn hệ thống khi bấm nút Đóng, Hủy bỏ, click outside hoặc phím ESC
     document.addEventListener('click', (e) => {
+        const explicitClose = e.target.closest('[data-close-modal]');
+        if (explicitClose) {
+            const modal = document.getElementById(explicitClose.dataset.closeModal);
+            if (modal?.classList.contains('admin-modal-overlay')) modal.classList.remove('active');
+            return;
+        }
         // 1. Click vào nút đóng header (.modal-btn-close-text, .modal-btn-close, .btn-close-modal, [data-dismiss="modal"])
         const closeBtn = e.target.closest('.modal-btn-close-text, .modal-btn-close, .btn-close-modal, [data-dismiss="modal"]');
         if (closeBtn) {

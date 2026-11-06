@@ -215,7 +215,12 @@
     // Hoàn tất phiên đăng nhập và chuyển hướng
     async function finalizeAdminLogin(staff, authUser) {
         const roles = Array.isArray(staff.access_roles) ? staff.access_roles : [];
-        const primaryRole = roles.includes('ADMIN') ? 'ADMIN' : (roles[0] || 'STAFF');
+        if (roles.length !== 1 || !['ADMIN', 'STAFF'].includes(roles[0])) {
+            await clearAdminLogin(getSupabaseClient());
+            showError('Tài khoản chưa có vai trò hợp lệ. Vui lòng liên hệ Quản lý.');
+            return;
+        }
+        const primaryRole = roles[0];
 
         const adminSession = {
             id: staff.id,
@@ -245,6 +250,6 @@
             }
         } catch (e) {}
 
-        window.location.replace('/admin#tab-list');
+        window.location.replace(primaryRole === 'ADMIN' ? '/admin#tab-list' : '/admin#tab-dashboard');
     }
 })();

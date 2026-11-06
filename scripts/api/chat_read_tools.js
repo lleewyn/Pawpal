@@ -47,6 +47,57 @@ definitions['taxi.trips']={keys:['start_at','end_at','query','page'],permissions
 for(const value of Object.values(definitions)){Object.freeze(value.keys);Object.freeze(value.permissions);if(value.statuses)Object.freeze(value.statuses);Object.freeze(value);}Object.freeze(definitions);
 const fail=(message,code='22023')=>Object.assign(Error(message),{code});
 const preparedReads=new WeakSet();
+// Separate work-role registry. Never translate work permissions into legacy table permissions.
+const staffDefinitions={
+ 'customer.lookup':{permission:'work.customer.read',keys:['query','page'],query:true,target:'#tab-list'},
+ 'pet.lookup':{permission:'work.pet.read',keys:['query','page'],query:true,target:'#tab-pet-list'},
+ 'order.lookup':{permission:'work.sales.create',keys:['query','page'],query:true,target:'#tab-order-list'},
+ 'payment.order':{permission:'work.cashier.collect',keys:['query','page'],query:true,target:'#tab-order-list'},
+ 'points.lookup':{permission:'work.customer.read',keys:['query','page'],query:true,target:'#tab-list'},
+ 'catalog.product':{permission:'work.stock.read',keys:['query','page'],target:'#tab-order-products'},
+ 'inventory.low_stock':{permission:'work.stock.read',keys:['query','page'],target:'#tab-order-products'},
+ 'catalog.service':{permission:'work.service.perform',keys:['query','page'],target:'#tab-service-catalog'},
+ 'appointment.list':{permission:'work.service.perform',keys:['start_at','end_at','category','status','page'],target:'#tab-service-bookings'},
+ 'appointment.search':{permission:'work.service.perform',keys:['start_at','end_at','category','status','day_part','page'],target:'#tab-service-bookings'},
+ 'ticket.open':{permission:'work.complaint.handle',keys:['start_at','end_at','page'],target:'#tab-complaint-services'},
+ 'ticket.lookup':{permission:'work.complaint.handle',keys:['query','page'],query:true,target:'#tab-complaint-services'},
+ 'conversation.list':{permission:'work.chat.handle',keys:['query','start_at','end_at','status','page'],target:'#tab-live-support'},
+ 'conversation.context':{permission:'work.chat.handle',keys:['conversationId','page'],uuid:'conversationId',target:'#tab-live-support'},
+ 'staff.lookup':{permission:'work.self.read',keys:['query','page'],target:'#tab-staff-profile'},
+ 'staff.schedule':{permission:'work.self.read',keys:['query','start_at','end_at','page'],target:'#tab-staff-schedule'},
+ 'hotel.stays':{permission:'work.service.perform',keys:['query','start_at','end_at','page'],target:'#tab-service-bookings'},
+ 'taxi.trips':{permission:'work.service.perform',keys:['query','start_at','end_at','page'],target:'#tab-service-bookings'},
+ 'knowledge.search':{permission:'work.copilot.use',keys:['query','page'],query:true,target:null},
+ 'offer.list':{permission:'work.sales.create',keys:['query','page'],target:'#tab-order-promos'},
+ 'internal.customer_resolve':{permission:'work.customer.read',keys:['query'],query:true,rows:2,gateway:'read_staff_copilot_relations'},
+ 'internal.customer_appointment':{permission:'work.service.perform',keys:['customerId','direction'],uuid:'customerId',rows:1,gateway:'read_staff_copilot_relations'},
+ 'internal.customer_tickets':{permission:'work.complaint.handle',keys:['customerId','page'],uuid:'customerId',gateway:'read_staff_copilot_relations'},
+ 'internal.customer_pets':{permission:'work.pet.read',keys:['customerId','page'],uuid:'customerId',gateway:'read_staff_copilot_relations'},
+ 'internal.customer_latest_order':{permission:'work.sales.create',keys:['customerId'],uuid:'customerId',rows:1,gateway:'read_staff_copilot_relations'},
+ 'catalog.service_price':{permission:'work.booking.create',keys:['query','category','weight','distance','page'],query:true,gateway:'read_staff_copilot_booking'},
+ 'catalog.price_rows':{permission:'work.booking.create',keys:['query','category','weight','distance','page'],query:true,gateway:'read_staff_copilot_booking'},
+ 'hotel.availability':{permission:'work.booking.create',keys:['query','start_at','end_at','page'],date:true,gateway:'read_staff_copilot_booking'}
+};
+for(const tool of Object.values(staffDefinitions)){Object.freeze(tool.keys);Object.freeze(tool);}Object.freeze(staffDefinitions);
+function prepareStaff(intent,filters={},principal){
+ const tool=Object.hasOwn(staffDefinitions,intent)?staffDefinitions[intent]:null;
+ if(!tool||principal?.system_role!=='STAFF'||!Array.isArray(principal.permissions)||!principal.permissions.includes('work.copilot.use')||!principal.permissions.includes(tool.permission))throw fail('staff_read_tool_forbidden','42501');
+ if(tool.gateway==='read_staff_copilot_relations'&&!principal.permissions.includes('work.customer.read'))throw fail('staff_read_tool_forbidden','42501');
+ if(!filters||Object.getPrototypeOf(filters)!==Object.prototype||Object.keys(filters).some(key=>!tool.keys.includes(key)))throw fail('staff_read_scope_filter_forbidden','42501');
+ for(const value of Object.values(filters))if(typeof value!=='string'||value.length>120||/[\u0000-\u001f]/.test(value))throw fail('invalid_staff_read_filter');
+ if(tool.query&&(!filters.query||filters.query.trim().length<3))throw fail('staff_read_query_required');
+ if(tool.uuid&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(filters[tool.uuid]||''))throw fail('invalid_staff_read_identity');
+ if(Object.hasOwn(filters,'page')&&(!/^[1-9]\d{0,3}$/.test(filters.page)||Number(filters.page)>1000))throw fail('invalid_staff_read_page');
+ if(Object.hasOwn(filters,'start_at')!==Object.hasOwn(filters,'end_at')||tool.date&&!Object.hasOwn(filters,'start_at'))throw fail('invalid_staff_read_period');
+ if(Object.hasOwn(filters,'start_at')){const a=Date.parse(filters.start_at),b=Date.parse(filters.end_at);if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a||b-a>31*86400000)throw fail('invalid_staff_read_period');}
+ if(filters.category&&!['grooming_spa','pet_hotel','pet_taxi'].includes(filters.category)||filters.day_part&&!['morning','afternoon','evening'].includes(filters.day_part))throw fail('invalid_staff_read_category');
+ if(Object.hasOwn(filters,'status')&&!(intent==='conversation.list'?['bot_handling','waiting_agent','agent_handling','resolved','closed','completed','blocked']:['pending','confirmed','checked_in','in_progress','completed','cancelled','no_show']).includes(filters.status))throw fail('invalid_staff_read_status');
+ if(intent==='internal.customer_appointment'&&!['upcoming','recent'].includes(filters.direction))throw fail('invalid_case_direction');
+ for(const key of ['weight','distance'])if(Object.hasOwn(filters,key)&&(!/^\d{1,5}(?:\.\d{1,3})?$/.test(filters[key])||Number(filters[key])>(key==='weight'?1000:10000)))throw fail('invalid_staff_price_condition');
+ const gateway=tool.gateway||'read_staff_copilot',frozenFilters=Object.freeze({...filters}),prepared=Object.freeze({intent,staffScoped:true,gateway,rpc:gateway,filters:frozenFilters,
+  args:Object.freeze({p_tool:intent,p_filters:frozenFilters,p_max_bytes:32768}),arrayResult:false,permissions:Object.freeze([...new Set(['work.copilot.use',tool.permission,...(tool.gateway==='read_staff_copilot_relations'?['work.customer.read']:[])])]),rowLimit:tool.rows||10,sourceByteLimit:32768,target:tool.target});
+ preparedReads.add(prepared);return prepared;
+}
 function prepare(intent,filters={},permissions=[],audience='staff'){
  if(audience!=='staff')throw fail('read_audience_forbidden','42501');
  const tool=Object.hasOwn(definitions,intent)?definitions[intent]:null;if(!tool)throw fail('unsupported_read_tool');
@@ -82,15 +133,16 @@ function prepare(intent,filters={},permissions=[],audience='staff'){
 function createReadBudget({maxCalls=3,maxConcurrent=2,maxBytes=65536,deadlineMs=8000,lease=null}={}){
  if(lease!==null&&!/^[0-9a-f-]{36}$/i.test(lease))throw fail('invalid_read_lease');
  if(![maxCalls,maxConcurrent,maxBytes,deadlineMs].every(Number.isSafeInteger)||maxCalls<1||maxCalls>3||maxConcurrent<1||maxConcurrent>2||maxBytes<1||maxBytes>65536||deadlineMs<1||deadlineMs>8000)throw fail('invalid_read_budget');
- let calls=0,active=0,bytes=0,reserved=0;const deadline=Date.now()+deadlineMs;
- return {snapshot:()=>({calls,active,bytes}),async run(caller,prepared){
+ let calls=0,active=0,bytes=0,reserved=0,staffUsed=false;const deadline=Date.now()+deadlineMs,staffRefs=new Map();
+ const refKinds={'customer.lookup':'customer','points.lookup':'customer','pet.lookup':'pet','order.lookup':'order','payment.order':'order','catalog.product':'product','inventory.low_stock':'product','catalog.service':'service','appointment.list':'appointment','appointment.search':'appointment','ticket.open':'ticket','ticket.lookup':'ticket','conversation.list':'conversation','conversation.context':'conversation','staff.lookup':'staff','staff.schedule':'schedule','hotel.stays':'hotel','taxi.trips':'taxi','knowledge.search':'knowledge','offer.list':'offer'};
+ return {snapshot:()=>({calls,active,bytes,...(staffUsed?{staff_scope_refs:Object.freeze([...staffRefs.values()].map(ref=>Object.freeze({...ref})))}:{})}),async run(caller,prepared){
   if(!preparedReads.has(prepared))throw fail('unprepared_read_tool');
-  if((prepared.gateway!=='run_admin_chat_read'||prepared.filters.page)&&!lease)throw fail('stage3_lease_required','42501');
+  if(!prepared.staffScoped&&(prepared.gateway!=='run_admin_chat_read'||prepared.filters.page)&&!lease)throw fail('stage3_lease_required','42501');
   if(calls>=maxCalls||active>=maxConcurrent||Date.now()>=deadline)throw fail('read_budget_exhausted','54000');
   const allocation=Math.min(prepared.sourceByteLimit,maxBytes-bytes-reserved);
-  if(allocation<1)throw fail('read_payload_exceeded','54000');
+  if(allocation<(prepared.staffScoped?512:1))throw fail('read_payload_exceeded','54000');
   calls++;active++;reserved+=allocation;try{
-   let query=lease?caller.rpc(prepared.gateway,{p_lease:lease,p_tool:prepared.intent,p_filters:prepared.filters,p_max_bytes:allocation}):caller.rpc(prepared.rpc,prepared.args);
+   let query=prepared.staffScoped?caller.rpc(prepared.gateway,{p_tool:prepared.intent,p_filters:prepared.filters,p_max_bytes:allocation}):lease?caller.rpc(prepared.gateway,{p_lease:lease,p_tool:prepared.intent,p_filters:prepared.filters,p_max_bytes:allocation}):caller.rpc(prepared.rpc,prepared.args);
    const controller=new AbortController();let timer;
    // Supabase builders support abortSignal. Custom transports without cancellation
    // are awaited; do not claim Promise.race cancels an underlying SQL transaction.
@@ -101,8 +153,34 @@ function createReadBudget({maxCalls=3,maxConcurrent=2,maxBytes=65536,deadlineMs=
    if(size>allocation||bytes>maxBytes)throw fail('read_payload_exceeded','54000');
    if(prepared.arrayResult){if(!Array.isArray(data)||data.length>prepared.rowLimit)throw fail('invalid_read_result','XX000');}
    else if(!data||data.intent!==prepared.intent||!Array.isArray(data.items)||data.items.length>prepared.rowLimit)throw fail('invalid_read_result','XX000');
+   if(prepared.staffScoped&&(data.audience!=='staff'||data.total_is_page!==true||data.page_size!==10||data.total!==data.items.length))throw fail('invalid_staff_read_result','XX000');
+   if(prepared.staffScoped){
+    const permission=staffDefinitions[prepared.intent].permission,relationKinds={'internal.customer_resolve':'customer','internal.customer_appointment':'appointment','internal.customer_tickets':'ticket','internal.customer_pets':'pet','internal.customer_latest_order':'order'},refs=prepared.permissions.filter(p=>p!=='work.copilot.use'||permission===p).map(permission=>({kind:'permission',permission})),kind=prepared.intent==='conversation.list'&&prepared.filters.status==='waiting_agent'?'queue':refKinds[prepared.intent]||relationKinds[prepared.intent];
+    if(prepared.filters.customerId){refs.push({kind:'customer',id:prepared.filters.customerId,permission:'work.customer.read'});if(data.scope?.customerId!==prepared.filters.customerId||data.items.some(row=>row.customer_id!==prepared.filters.customerId))throw fail('invalid_staff_customer_relation','XX000');}
+    const uuid=id=>typeof id==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if(prepared.gateway==='read_staff_copilot_booking'){
+     const rooms=prepared.intent==='hotel.availability';
+     if(rooms){
+      if(data.available_is_page!==true||!Number.isSafeInteger(data.available)||!Number.isSafeInteger(data.unavailable)||data.available<0||data.unavailable<0||data.available+data.unavailable!==data.items.length||data.available!==data.items.filter(row=>row.available===true).length)throw fail('invalid_staff_room_result','XX000');
+     }else{
+      if(!Number.isSafeInteger(data.match_count)||data.match_count<0||data.match_count>2||data.ambiguous!==(data.match_count>1)||data.match_limit!==2||data.match_count===1&&!uuid(data.service_id)||data.match_count!==1&&(data.service_id!==null||data.items.length))throw fail('invalid_staff_price_identity','XX000');
+      if(data.service_id)refs.push({kind:'service',id:data.service_id,permission});
+     }
+     for(const row of data.items){
+      if(!uuid(row.id)||!(rooms?['room']:['service_price','taxi_price','room_type']).includes(row.source_kind)||!rooms&&row.service_id!==data.service_id)throw fail('invalid_staff_source_reference','XX000');
+      if(rooms&&(typeof row.reserved!=='boolean'||typeof row.occupied!=='boolean'||typeof row.available!=='boolean'||row.available!==(!row.reserved&&!row.occupied)))throw fail('invalid_staff_room_result','XX000');
+      refs.push({kind:row.source_kind,id:row.id,permission});
+     }
+    }else{
+     const ids=prepared.intent==='conversation.context'?[prepared.filters.conversationId]:data.items.map(row=>row.id);
+     for(const id of ids){if(!uuid(id))throw fail('invalid_staff_source_reference','XX000');refs.push({kind,id,permission});}
+    }
+    const next=new Map(staffRefs);for(const ref of refs)next.set(JSON.stringify(ref),ref);
+    if(next.size>64)throw fail('staff_reference_budget_exceeded','54000');
+    staffUsed=true;for(const[key,ref]of next)staffRefs.set(key,ref);
+   }
    return data;
   }finally{active--;reserved-=allocation;}
  }};
 }
-module.exports={definitions,prepare,createReadBudget};
+module.exports={definitions,staffDefinitions,prepare,prepareStaff,createReadBudget};

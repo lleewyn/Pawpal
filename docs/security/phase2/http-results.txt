@@ -1,0 +1,73 @@
+{
+  "capturedAt": "2026-11-04T16:07:08.112Z",
+  "migrationSha256": "5decd95608ab0e5caa0f5ada1062adb9cfdd7c291970fa97a3be679db7ffbe11",
+  "scope": "Real local PostgREST verifies task-signed JWTs; no Auth sign-in, browser, model or Cloud writes",
+  "checks": [
+    {
+      "name": "Valid signed STAFF JWT reaches only its own profile projection",
+      "status": "PASS"
+    },
+    {
+      "name": "ADMIN JWT retains its administrative context",
+      "status": "PASS"
+    },
+    {
+      "name": "Raw table HTTP reads do not expose staff, money, cost or audit data",
+      "status": "PASS"
+    },
+    {
+      "name": "Direct RPC cannot promote STAFF to ADMIN",
+      "status": "PASS"
+    },
+    {
+      "name": "Legacy chatbot revenue RPC is inaccessible to STAFF",
+      "status": "PASS"
+    },
+    {
+      "name": "Blocked database account is denied even with a valid unexpired JWT",
+      "status": "PASS"
+    },
+    {
+      "name": "Invalid pagination returns a validation error",
+      "status": "PASS"
+    },
+    {
+      "name": "Forged signature is rejected by PostgREST before RPC execution",
+      "status": "PASS"
+    },
+    {
+      "name": "Anonymous HTTP requests cannot read raw staff schedules",
+      "status": "PASS"
+    },
+    {
+      "name": "JWT reads and cross-assignee transcript requests enforce actual database scope",
+      "status": "PASS"
+    },
+    {
+      "name": "Scoped service cashier remains usable through the real RPC gateway",
+      "status": "PASS"
+    },
+    {
+      "name": "Direct HTTP refund attempt is rejected before financial mutation",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer own-row access survives while staff workspace remains forbidden",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer availability RPC stays callable without exposing raw schedules",
+      "status": "PASS"
+    },
+    {
+      "name": "Public service catalog still works after the staff boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent manager demotions retain exactly one active ADMIN",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS",
+  "disposableDatabaseRemoved": true
+}

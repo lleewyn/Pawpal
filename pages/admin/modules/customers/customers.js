@@ -1,3 +1,309 @@
+// Role-specific operations live in this domain; management initialization requires verified ADMIN.
+(function () {
+    'use strict';
+    let customerModal, customerEditModal, addressModal;
+    const node = (tag, text, className) => { const element = document.createElement(tag); if (text != null) element.textContent = text; if (className) element.className = className; return element; };
+    function customerDialog() {
+        if (customerModal) return customerModal;
+        const id = 'staffCustomerCreateModal', overlay = node('div', null, 'admin-modal-overlay staff-workspace-modal'); overlay.id = id; overlay.setAttribute('aria-hidden', 'true');
+        const card = node('div', null, 'admin-modal-card'); card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'staffCustomerCreateTitle');
+        const form = node('form'); form.noValidate = true; form.setAttribute('onsubmit', 'return false;');
+        const header = node('div', null, 'workspace-modal-header'), title = node('h2', 'Thêm khách'); title.id = 'staffCustomerCreateTitle';
+        const close = node('button', 'Đóng', 'btn-modal-close'); close.type = 'button'; close.dataset.closeModal = id; header.append(title, close); form.append(header);
+        const fields = {};
+        for (const [key, labelText, type, placeholder, maximum] of [['name', 'Họ và tên', 'text', 'Nguyễn Văn An', 200], ['phone', 'Số điện thoại', 'tel', '10 chữ số bắt đầu bằng 0', 20]]) {
+            const group = node('div', null, 'workspace-form-field'), label = node('label', labelText + ' '), star = node('span', '*', 'workspace-required'), input = node('input', null, 'admin-input');
+            input.id = 'staffCustomer' + key; input.type = type; input.required = true; input.maxLength = maximum; input.placeholder = placeholder; input.autocomplete = key === 'name' ? 'name' : 'tel'; if (type === 'tel') input.inputMode = 'tel';
+            label.htmlFor = input.id; label.append(star); group.append(label, input); form.append(group); fields[key] = input;
+        }
+        const errorText = node('p', '', 'workspace-error'); errorText.setAttribute('role', 'alert');
+        const footer = node('div', null, 'workspace-modal-footer'), cancel = node('button', 'Hủy', 'admin-btn admin-btn-secondary'), save = node('button', 'Lưu khách', 'admin-btn admin-btn-primary');
+        cancel.type = save.type = 'button'; cancel.dataset.closeModal = id; footer.append(cancel, save); form.append(errorText, footer); card.append(form); overlay.append(card); document.body.append(overlay);
+        const state = { overlay, form, fields, errorText, save, saving: false, returnFocus: null, onCreated: null };
+        function closeDialog() { overlay.classList.remove('active'); overlay.setAttribute('aria-hidden', 'true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
+        overlay.addEventListener('click', event => { if (event.target === overlay || event.target.closest('[data-close-modal="' + id + '"]')) closeDialog(); });
+        overlay.addEventListener('keydown', event => {
+            if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDialog(); return; }
+            if (event.key !== 'Tab') return;
+            const controls = [...overlay.querySelectorAll('button:not([disabled]),input:not([disabled])')].filter(input => input.offsetParent !== null);
+            const first = controls[0], last = controls.at(-1);
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        });
+        async function submit() {
+            if (state.saving) return;
+            errorText.textContent = ''; Object.values(fields).forEach(input => input.removeAttribute('aria-invalid'));
+            const name = fields.name.value.trim().replace(/\s+/g, ' '), phone = fields.phone.value.replace(/[\s.()-]/g, '').replace(/^\+84(?=\d{9}$)/, '0');
+            const invalid = (input, message) => { input.setAttribute('aria-invalid', 'true'); errorText.textContent = message; input.focus(); };
+            if (name.length < 2 || name.length > 200) { invalid(fields.name, 'Nhập họ và tên từ 2 đến 200 ký tự.'); return; }
+            if (!/^0\d{9}$/.test(phone)) { invalid(fields.phone, 'Nhập số điện thoại gồm 10 chữ số, bắt đầu bằng 0.'); return; }
+            if (!window.PawpalAdminAccess?.state.user?.permissions.includes('work.customer.write')) { errorText.textContent = 'Bạn không có quyền thêm khách.'; return; }
+            state.saving = true; save.disabled = true; save.textContent = 'Đang lưu';
+            try {
+                const { data, error } = await window.getSupabaseClient().rpc('create_customer_quick', { p_full_name: name, p_phone: phone, p_address: null, p_province: null, p_pet_name: null, p_breed_id: null, p_weight: null });
+                if (error) throw error;
+                if (typeof data !== 'string' || !/^[0-9a-f-]{36}$/i.test(data)) throw Error('invalid_customer_result');
+                const visible = overlay.classList.contains('active'); form.reset(); errorText.textContent = ''; closeDialog();
+                if (visible && window.PawpalAdminAccess?.isStaff()) state.onCreated?.(data);
+            } catch (error) {
+                if (error.code === '23505') invalid(fields.phone, 'Số điện thoại đã được sử dụng. Hãy tra cứu hồ sơ có sẵn.');
+                else errorText.textContent = error.code === '42501' ? 'Bạn không có quyền thêm khách.' : 'Chưa xác nhận lưu thành công. Giữ nguyên thông tin để kiểm tra hoặc thử lại.';
+            } finally { state.saving = false; save.disabled = false; save.textContent = 'Lưu khách'; }
+        }
+        save.onclick = submit; form.addEventListener('submit', event => { event.preventDefault(); });
+        state.close = closeDialog; customerModal = state; return state;
+    }
+    function openCustomer({ onCreated } = {}) {
+        if (!window.PawpalAdminAccess?.state.user?.permissions.includes('work.customer.write')) return;
+        const state = customerDialog(); state.returnFocus = document.activeElement; state.onCreated = onCreated;
+        if (!state.saving) { state.form.reset(); state.errorText.textContent = ''; Object.values(state.fields).forEach(field => field.removeAttribute('aria-invalid')); }
+        state.overlay.classList.add('active'); state.overlay.setAttribute('aria-hidden', 'false'); state.fields.name.focus();
+    }
+    async function lookup(kind, query = '', id = null, page = 1) {
+        const { data, error } = await window.getSupabaseClient().rpc('get_staff_workspace', { p_kind: kind, p_query: query, p_id: id, p_page: page });
+        if (error) throw error;
+        return data.items || [];
+    }
+    function customerEditDialog() {
+        if (customerEditModal) return customerEditModal;
+        const id = 'staffCustomerEditModal', overlay = node('div', null, 'admin-modal-overlay staff-workspace-modal'); overlay.id = id; overlay.setAttribute('aria-hidden', 'true');
+        const card = node('div', null, 'admin-modal-card'); card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'staffCustomerEditTitle');
+        const form = node('form'); form.noValidate = true; form.setAttribute('onsubmit', 'return false;');
+        const header = node('div', null, 'workspace-modal-header'), title = node('h2', 'Sửa thông tin khách'); title.id = 'staffCustomerEditTitle';
+        const close = node('button', 'Đóng', 'btn-modal-close'); close.type = 'button'; close.dataset.closeModal = id; header.append(title, close); form.append(header);
+        const fields = {};
+        for (const [key, text, type, required, maximum] of [['name', 'Họ và tên', 'text', true, 200], ['phone', 'Số điện thoại', 'tel', true, 20], ['email', 'Email liên hệ', 'email', false, 254], ['gender', 'Giới tính', 'select', false], ['dob', 'Ngày sinh', 'date', false]]) {
+            const group = node('div', null, 'workspace-form-field'), label = node('label', text + (required ? ' ' : '')), input = node(type === 'select' ? 'select' : 'input', null, 'admin-input');
+            input.id = 'staffCustomerEdit' + key; if (type !== 'select') input.type = type; input.required = required; if (maximum) input.maxLength = maximum;
+            if (type === 'tel') { input.inputMode = 'tel'; input.autocomplete = 'tel'; }
+            if (key === 'name' || key === 'email') input.autocomplete = key;
+            if (type === 'select') for (const [value, name] of [['', 'Chưa cập nhật'], ['MALE', 'Nam'], ['FEMALE', 'Nữ'], ['OTHER', 'Khác']]) { const option = node('option', name); option.value = value; input.append(option); }
+            label.htmlFor = input.id; if (required) label.append(node('span', '*', 'workspace-required')); group.append(label, input); form.append(group); fields[key] = input;
+        }
+        const errorText = node('p', '', 'workspace-error'); errorText.setAttribute('role', 'alert');
+        Object.values(fields).forEach(input => input.addEventListener('input', () => { if (input.getAttribute('aria-invalid') === 'true') { input.removeAttribute('aria-invalid'); errorText.textContent = ''; } }));
+        const footer = node('div', null, 'workspace-modal-footer'), cancel = node('button', 'Hủy', 'admin-btn admin-btn-secondary'), save = node('button', 'Lưu thay đổi', 'admin-btn admin-btn-primary');
+        cancel.type = save.type = 'button'; cancel.dataset.closeModal = id; footer.append(cancel, save); form.append(errorText, footer); card.append(form); overlay.append(card); document.body.append(overlay);
+        const state = { overlay, fields, form, errorText, save, row: null, saving: false, loading: false, generation: 0, returnFocus: null, onSaved: null };
+        function closeDialog() { state.generation++; overlay.classList.remove('active'); overlay.setAttribute('aria-hidden', 'true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
+        overlay.addEventListener('click', event => { if (event.target === overlay || event.target.closest('[data-close-modal="' + id + '"]')) closeDialog(); });
+        overlay.addEventListener('keydown', event => {
+            if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDialog(); return; }
+            if (event.key !== 'Tab') return;
+            const controls = [...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])')].filter(element => element.offsetParent !== null), first = controls[0], last = controls.at(-1);
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        });
+        form.addEventListener('submit', event => event.preventDefault());
+        save.onclick = async () => {
+            if (state.saving || state.loading || !state.row) return;
+            errorText.textContent = ''; Object.values(fields).forEach(input => input.removeAttribute('aria-invalid'));
+            const name = fields.name.value.trim().replace(/\s+/g, ' '), phone = fields.phone.value.replace(/[\s.()-]/g, '').replace(/^\+84(?=\d{9}$)/, '0'), email = fields.email.value.trim(), birth = fields.dob.value;
+            const invalid = (input, message) => { input.setAttribute('aria-invalid', 'true'); errorText.textContent = message; input.focus(); };
+            if (name.length < 2 || name.length > 200) return invalid(fields.name, 'Nhập họ và tên từ 2 đến 200 ký tự.');
+            if (!/^0\d{9}$/.test(phone)) return invalid(fields.phone, 'Nhập số điện thoại gồm 10 chữ số, bắt đầu bằng 0.');
+            if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) return invalid(fields.email, 'Nhập email liên hệ hợp lệ hoặc để trống.');
+            const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+            if (birth && birth > today) return invalid(fields.dob, 'Ngày sinh không được ở tương lai.');
+            if (!window.PawpalAdminAccess?.state.user?.permissions.includes('work.customer.write')) { errorText.textContent = 'Bạn không có quyền sửa thông tin khách.'; return; }
+            state.saving = true; save.disabled = true; save.textContent = 'Đang lưu'; const turn = state.generation;
+            try {
+                const { data, error } = await window.getSupabaseClient().rpc('update_customer_profile', { p_customer_id: state.row.id, p_expected_updated_at: state.row.updated_at,
+                    p_full_name: name, p_phone: phone, p_email: email || null, p_gender: fields.gender.value || null, p_date_of_birth: birth || null,
+                    p_tier_id: state.row.membership_tier_id || null, p_addresses: null });
+                if (error) throw error;
+                if (data !== state.row.id) throw Error('invalid_customer_result');
+                if (turn === state.generation && overlay.classList.contains('active')) { const callback = state.onSaved; closeDialog(); form.reset(); if (window.PawpalAdminAccess?.isStaff()) callback?.(data); }
+            } catch (error) {
+                if (turn !== state.generation) return;
+                if (error.code === '23505') invalid(fields.phone, 'Số điện thoại đã được sử dụng. Hãy kiểm tra hồ sơ có sẵn.');
+                else errorText.textContent = error.code === 'PT409' ? 'Thông tin khách đã thay đổi. Đóng form và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.' : error.code === '42501' ? 'Bạn không có quyền lưu thay đổi này. Hãy tải lại hồ sơ hoặc liên hệ Quản lý.' : 'Chưa xác nhận lưu thành công. Giữ nguyên thông tin để kiểm tra hoặc thử lại.';
+            } finally { state.saving = false; save.disabled = false; save.textContent = 'Lưu thay đổi'; }
+        };
+        state.close = closeDialog; customerEditModal = state; return state;
+    }
+    async function editCustomer({ customerId, onSaved } = {}) {
+        if (!window.PawpalAdminAccess?.state.user?.permissions.includes('work.customer.write')) return;
+        const state = customerEditDialog(); if (state.saving) return;
+        state.form.reset(); state.row = null; state.loading = true; state.returnFocus = document.activeElement; state.onSaved = onSaved; state.errorText.textContent = '';
+        Object.values(state.fields).forEach(input => { input.disabled = true; input.removeAttribute('aria-invalid'); });
+        state.save.disabled = true; state.save.textContent = 'Đang tải'; const turn = ++state.generation;
+        state.overlay.classList.add('active'); state.overlay.setAttribute('aria-hidden', 'false'); state.overlay.querySelector('.btn-modal-close').focus();
+        try {
+            const rows = await lookup('customers', '', customerId), row = rows.find(item => item.id === customerId);
+            if (turn !== state.generation) return;
+            if (!row?.updated_at) throw Error('customer_missing'); state.row = row;
+            const values = { name: row.full_name, phone: row.phone_number, email: row.contact_email, gender: row.gender, dob: row.date_of_birth };
+            Object.entries(values).forEach(([key, value]) => state.fields[key].value = value ?? '');
+            Object.values(state.fields).forEach(input => input.disabled = false); state.loading = false; state.save.disabled = false; state.save.textContent = 'Lưu thay đổi'; state.fields.name.focus();
+        } catch { if (turn === state.generation) { state.errorText.textContent = 'Không tải được thông tin khách. Đóng form và tải lại hồ sơ.'; state.save.textContent = 'Lưu thay đổi'; } }
+    }
+    function addressDialog() {
+        if (addressModal) return addressModal;
+        const id = 'staffAddressModal', overlay = node('div', null, 'admin-modal-overlay staff-workspace-modal'); overlay.id = id; overlay.setAttribute('aria-hidden', 'true');
+        const card = node('div', null, 'admin-modal-card workspace-pet-card'); card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'staffAddressTitle');
+        const form = node('form'); form.noValidate = true; form.setAttribute('onsubmit', 'return false;');
+        const header = node('div', null, 'workspace-modal-header'), title = node('h2', 'Sổ địa chỉ'); title.id = 'staffAddressTitle';
+        const close = node('button', 'Đóng', 'btn-modal-close'); close.type = 'button'; close.dataset.closeModal = id; header.append(title, close);
+        const list = node('div', null, 'workspace-address-list'), add = node('button', 'Thêm địa chỉ', 'workspace-address-add'); add.type = 'button';
+        const errorText = node('p', '', 'workspace-error'); errorText.setAttribute('role', 'alert');
+        const footer = node('div', null, 'workspace-modal-footer'), cancel = node('button', 'Hủy', 'admin-btn admin-btn-secondary'), save = node('button', 'Lưu địa chỉ', 'admin-btn admin-btn-primary');
+        cancel.type = save.type = 'button'; cancel.dataset.closeModal = id; footer.append(cancel, save); form.append(header, list, add, errorText, footer); card.append(form); overlay.append(card); document.body.append(overlay);
+        const state = { overlay, form, list, add, save, errorText, row: null, entries: [], controls: [], saving: false, loading: true, generation: 0, returnFocus: null, onSaved: null };
+        function render() {
+            list.replaceChildren(); state.controls = [];
+            if (!state.entries.length) list.append(node('p', 'Chưa có địa chỉ.'));
+            state.entries.forEach((entry, index) => {
+                const section = node('section', null, 'workspace-address-entry' + (entry.is_default ? ' is-default' : '')), top = node('div', null, 'workspace-address-heading'), choice = node('label', null, 'workspace-address-choice'), radio = node('input');
+                radio.type = 'radio'; radio.name = 'staffAddressDefault'; radio.checked = entry.is_default; radio.disabled = state.saving; radio.setAttribute('aria-label', 'Chọn địa chỉ ' + (index + 1) + ' làm mặc định');
+                radio.onchange = () => { state.entries.forEach(item => item.is_default = item === entry); render(); list.querySelectorAll('input[type=radio]')[index].focus(); };
+                choice.append(radio, node('span', entry.is_default ? 'Địa chỉ mặc định' : 'Địa chỉ ' + (index + 1)));
+                const remove = node('button', 'Xóa', 'workspace-address-add'); remove.type = 'button'; remove.disabled = state.saving; remove.setAttribute('aria-label', 'Xóa địa chỉ ' + (index + 1));
+                remove.onclick = () => { state.entries.splice(index, 1); if (entry.is_default && state.entries.length) state.entries[0].is_default = true; errorText.textContent = ''; render(); add.focus(); };
+                top.append(choice, remove); section.append(top);
+                const grid = node('div', null, 'workspace-pet-grid'), controls = {};
+                for (const [key, text, type, maximum, required] of [['receiver_name', 'Người nhận', 'text', 200, true], ['receiver_phone', 'Số điện thoại', 'tel', 20, true], ['province', 'Tỉnh hoặc thành phố', 'text', 200, true], ['street_address', 'Địa chỉ nhận hàng', 'text', 1000, true], ['postal_code', 'Mã bưu chính', 'text', 20, false]]) {
+                    const group = node('div', null, 'workspace-form-field'), label = node('label', text + (required ? ' ' : '')), input = node('input', null, 'admin-input'); input.id = 'staffAddress' + index + key; input.type = type; input.required = required; input.maxLength = maximum; input.value = entry[key] || ''; input.disabled = state.saving; if (type === 'tel') input.inputMode = 'tel';
+                    label.htmlFor = input.id; if (required) label.append(node('span', '*', 'workspace-required'));
+                    input.oninput = () => { entry[key] = input.value; if (input.getAttribute('aria-invalid') === 'true') { input.removeAttribute('aria-invalid'); errorText.textContent = ''; } };
+                    group.append(label, input); grid.append(group); controls[key] = input;
+                }
+                section.append(grid); list.append(section); state.controls.push(controls);
+            });
+            add.disabled = state.saving || state.loading || state.entries.length >= 50;
+        }
+        add.onclick = () => {
+            if (state.saving || state.loading || state.entries.length >= 50) return;
+            state.entries.push({ id: null, receiver_name: state.row.full_name || '', receiver_phone: state.row.phone_number || '', province: '', street_address: '', postal_code: '', is_default: !state.entries.length });
+            errorText.textContent = ''; render(); state.controls.at(-1).province.focus();
+        };
+        function closeDialog() { state.generation++; overlay.classList.remove('active'); overlay.setAttribute('aria-hidden', 'true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
+        overlay.addEventListener('click', event => { if (event.target === overlay || event.target.closest('[data-close-modal="' + id + '"]')) closeDialog(); });
+        overlay.addEventListener('keydown', event => {
+            if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDialog(); return; }
+            if (event.key !== 'Tab') return;
+            const controls = [...overlay.querySelectorAll('button:not([disabled]),input:not([disabled])')].filter(element => element.offsetParent !== null), first = controls[0], last = controls.at(-1);
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        });
+        form.addEventListener('submit', event => event.preventDefault());
+        save.onclick = async () => {
+            if (state.saving || state.loading || !state.row) return;
+            errorText.textContent = ''; state.controls.forEach(fields => Object.values(fields).forEach(input => input.removeAttribute('aria-invalid')));
+            if (state.entries.length && state.entries.filter(item => item.is_default).length !== 1) { errorText.textContent = 'Chọn đúng một địa chỉ mặc định.'; return; }
+            const addresses = [];
+            for (const [index, entry] of state.entries.entries()) {
+                const clean = Object.fromEntries(['receiver_name', 'receiver_phone', 'province', 'street_address', 'postal_code'].map(key => [key, String(entry[key] || '').trim()]));
+                clean.receiver_phone = clean.receiver_phone.replace(/[\s.()-]/g, '').replace(/^\+84(?=\d{9}$)/, '0');
+                const invalid = (key, message) => { state.controls[index][key].setAttribute('aria-invalid', 'true'); errorText.textContent = message; state.controls[index][key].focus(); };
+                for (const key of ['receiver_name', 'receiver_phone', 'province', 'street_address']) if (!clean[key]) return invalid(key, 'Điền đủ người nhận, số điện thoại, tỉnh hoặc thành phố và địa chỉ nhận hàng.');
+                if (!/^0\d{9}$/.test(clean.receiver_phone)) return invalid('receiver_phone', 'Nhập số điện thoại gồm 10 chữ số, bắt đầu bằng 0.');
+                addresses.push({ ...clean, id: entry.id || null, postal_code: clean.postal_code || null, is_default: entry.is_default });
+            }
+            if (!window.PawpalAdminAccess?.state.user?.permissions.includes('work.customer.write')) { errorText.textContent = 'Bạn không có quyền sửa địa chỉ.'; return; }
+            state.saving = true; save.disabled = true; save.textContent = 'Đang lưu'; render(); const turn = state.generation;
+            try {
+                const row = state.row, { data, error } = await window.getSupabaseClient().rpc('update_customer_profile', { p_customer_id: row.id, p_expected_updated_at: row.updated_at,
+                    p_full_name: row.full_name, p_phone: row.phone_number, p_email: row.contact_email, p_gender: row.gender, p_date_of_birth: row.date_of_birth,
+                    p_tier_id: row.membership_tier_id || null, p_addresses: addresses });
+                if (error) throw error; if (data !== row.id) throw Error('invalid_customer_result');
+                if (turn === state.generation && overlay.classList.contains('active')) { const callback = state.onSaved; closeDialog(); state.entries = []; state.row = null; render(); if (window.PawpalAdminAccess?.isStaff()) callback?.(data); }
+            } catch (error) {
+                if (turn === state.generation) errorText.textContent = error.code === 'PT409' ? 'Hồ sơ khách đã thay đổi. Đóng sổ địa chỉ và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.' : error.code === '42501' ? 'Bạn không có quyền lưu thay đổi này. Hãy tải lại hồ sơ hoặc liên hệ Quản lý.' : 'Chưa xác nhận lưu thành công. Giữ nguyên địa chỉ để kiểm tra hoặc thử lại.';
+            } finally { state.saving = false; save.disabled = state.loading; save.textContent = 'Lưu địa chỉ'; render(); }
+        };
+        state.close = closeDialog; state.render = render; addressModal = state; return state;
+    }
+    async function editAddresses({ customerId, onSaved } = {}) {
+        if (!window.PawpalAdminAccess?.state.user?.permissions.includes('work.customer.write')) return;
+        const state = addressDialog(); if (state.saving) return;
+        state.row = null; state.entries = []; state.loading = true; state.returnFocus = document.activeElement; state.onSaved = onSaved; state.errorText.textContent = '';
+        state.save.disabled = true; state.save.textContent = 'Đang tải'; state.list.textContent = 'Đang tải...'; state.add.disabled = true; const turn = ++state.generation;
+        state.overlay.classList.add('active'); state.overlay.setAttribute('aria-hidden', 'false'); state.overlay.querySelector('.btn-modal-close').focus();
+        try {
+            const rows = await lookup('customers', '', customerId), row = rows.find(item => item.id === customerId);
+            if (!row?.updated_at) throw Error('customer_missing'); const addresses = [];
+            for (let page = 1; page <= 6 && turn === state.generation; page++) { const batch = await lookup('addresses', '', customerId, page); addresses.push(...batch); if (batch.length < 10) break; }
+            if (turn !== state.generation) return;
+            if (addresses.length > 50) throw Error('address_limit');
+            state.row = row; state.entries = addresses.map(item => ({ ...item })); state.loading = false; state.save.disabled = false; state.save.textContent = 'Lưu địa chỉ'; state.render(); state.add.focus();
+        } catch { if (turn === state.generation) { state.list.replaceChildren(); state.errorText.textContent = 'Không tải đủ sổ địa chỉ. Đóng form và tải lại hồ sơ hoặc liên hệ Quản lý.'; state.save.textContent = 'Lưu địa chỉ'; } }
+    }
+    function closeAll() { window.PawpalStaffBooking?.closeAll(); if (customerModal) { customerModal.close(); customerModal.form.reset(); customerModal.onCreated = null; } if (customerEditModal) { customerEditModal.close(); customerEditModal.form.reset(); customerEditModal.row = null; customerEditModal.onSaved = null; } if (addressModal) { addressModal.close(); addressModal.entries = []; addressModal.row = null; addressModal.onSaved = null; addressModal.list.replaceChildren(); } window.PawpalPetsStaff?.closeAll(); }
+    window.addEventListener('hashchange', () => { customerModal?.close(); customerEditModal?.close(); addressModal?.close(); });
+    window.PawpalStaffForms = Object.freeze({ openCustomer, editCustomer, editAddresses, openPet:options=>window.PawpalPetsStaff.openPet(options), editPet:options=>window.PawpalPetsStaff.editPet(options), closeAll });
+})();
+
+;
+(function () {
+    'use strict';
+    const allowed=()=>window.PawpalAdminAccess?.isStaff()&&PawpalAdminAccess.state.user.permissions.includes('work.customer.write');
+    const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!=null)node.textContent=text;if(cls)node.className=cls;return node;};
+    let dialog;
+    function build(){
+        if(dialog)return dialog;
+        const overlay=el('div',null,'admin-modal-overlay staff-workspace-modal');overlay.id='staffCustomerNoteModal';overlay.setAttribute('aria-hidden','true');
+        const card=el('div',null,'admin-modal-card');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-labelledby','staffCustomerNoteTitle');
+        const form=el('form');form.noValidate=true;form.setAttribute('onsubmit','return false;');
+        const header=el('div',null,'workspace-modal-header'),title=el('h2','Ghi chú khách hàng'),close=el('button','Đóng','btn-modal-close');title.id='staffCustomerNoteTitle';close.type='button';close.dataset.closeModal=overlay.id;header.append(title,close);
+        const summary=el('p','','workspace-care-log-summary'),group=el('div',null,'workspace-form-field'),label=el('label','Ghi chú nội bộ'),note=el('textarea',null,'admin-input');note.id='staffCustomerNoteContent';note.rows=5;note.maxLength=10000;label.htmlFor=note.id;group.append(label,note);
+        const message=el('p','','workspace-error');message.setAttribute('role','alert');const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Lưu ghi chú','admin-btn admin-btn-primary');save.id='staffCustomerNoteSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);form.append(header,summary,group,message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
+        const state={row:null,loading:true,saving:false,blocked:false,generation:0,onSaved:null,returnFocus:null};
+        function controls(){note.disabled=save.disabled=state.loading||state.saving||state.blocked;save.textContent=state.saving?'Đang lưu':'Lưu ghi chú';}
+        function closeDialog(){state.generation++;overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');summary.textContent=note.value=message.textContent='';state.row=null;if(state.returnFocus?.isConnected)state.returnFocus.focus();}
+        overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
+        overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}if(event.key!=='Tab')return;const nodes=[...overlay.querySelectorAll('button:not([disabled]),textarea:not([disabled])')].filter(node=>node.offsetParent!==null),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});
+        form.addEventListener('submit',event=>event.preventDefault());note.addEventListener('input',()=>message.textContent='');
+        save.onclick=async()=>{
+            if(!allowed()||state.loading||state.saving||state.blocked)return;
+            if(note.value.length>10000){message.textContent='Ghi chú không được quá 10000 ký tự.';return;}
+            const generation=state.generation,row=state.row,content=note.value;state.saving=true;controls();message.textContent='';
+            try{const{data,error}=await getSupabaseClient().rpc('save_customer_note',{p_customer_id:row.id,p_expected_updated_at:row.updated_at,p_note:content});if(error)throw error;if(data!==row.id)throw Error('invalid_note_result');if(generation!==state.generation)return;const callback=state.onSaved;closeDialog();if(allowed())callback?.();}
+            catch(error){if(generation!==state.generation)return;state.blocked=true;message.textContent=error.code==='PT409'?'Hồ sơ đã thay đổi. Nội dung đang nhập được giữ lại; đóng form và mở lại để kiểm tra ghi chú mới.':error.code==='42501'?'Bạn không còn quyền sửa ghi chú. Đóng form và tải lại.':'Chưa xác nhận lưu ghi chú thành công. Nội dung đang nhập được giữ lại; đóng form và mở lại hồ sơ để kiểm tra trước khi lưu tiếp.';}
+            finally{state.saving=false;if(generation===state.generation)controls();}
+        };
+        async function open({customerId,onSaved}={}){
+            if(!allowed()||state.saving)return;state.row=null;state.loading=true;state.blocked=false;state.onSaved=onSaved;state.returnFocus=document.activeElement;summary.textContent=note.value=message.textContent='';controls();const generation=++state.generation;overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();
+            try{const{data,error}=await getSupabaseClient().rpc('get_staff_customer_context',{p_customer_id:customerId});if(generation!==state.generation)return;if(error||data?.id!==customerId||!data.updated_at)throw Error('customer_context_missing');state.row=data;summary.textContent=data.full_name+' · '+data.customer_code;note.value=data.note||'';state.loading=false;controls();note.focus();}
+            catch{if(generation===state.generation){state.blocked=true;message.textContent='Không tải được ghi chú khách hàng. Đóng form và tải lại hồ sơ.';controls();}}
+        }
+        dialog={open,close:closeDialog};return dialog;
+    }
+    window.addEventListener('hashchange',()=>dialog?.close());
+    window.PawpalStaffCustomerNote=Object.freeze({open:options=>{if(allowed())return build().open(options);},closeAll:()=>dialog?.close()});
+})();
+
+;
+
+// Role-scoped screens belong to this domain.
+(function registerRoleViews(){
+ const views=window.PawpalAdminViews;if(!views)return;const {date,money,status}=views.helpers;
+ views.register("Khách hàng",{columns:{customers:[['Mã KH', 'customer_code'], ['Họ tên', 'full_name'], ['Số điện thoại', 'phone_number'], ['Email liên hệ', 'contact_email']]},
+targets:{"customers":"tab-profile"},
+profiles:{"customer-profile":{read:"customers",render:async(ctx)=>{const {el,date,money,status,read,table,card,facts,go,root,kind,id,row,target,turn}=ctx;
+            const {data:context,error:contextError}=await getSupabaseClient().rpc('get_staff_customer_context',{p_customer_id:id});if(!ctx.isCurrent())return;
+            if(contextError||context?.id!==id||context.points==null||!Number.isFinite(Number(context.points)))throw Error('Không tải được hạng, Pawpoint và ghi chú khách hàng. Vui lòng thử lại.');
+            const details = facts(root, row.full_name, [['Mã KH', row.customer_code], ['Số điện thoại', row.phone_number], ['Email liên hệ', row.contact_email], ['Hạng thành viên',context.tier_name||'Chưa có hạng'], ['Pawpoint',new Intl.NumberFormat('vi-VN').format(Number(context.points))], ['Ghi chú nội bộ',context.note||'Chưa có ghi chú']]);
+            if (window.PawpalAdminAccess.state.user.permissions.includes('work.customer.write')) {
+                const note=el('button','Sửa ghi chú','admin-btn admin-btn-secondary');note.type='button';note.onclick=()=>window.PawpalStaffCustomerNote.open({customerId:id,onSaved:()=>ctx.refresh()});details.append(note);
+                const edit = el('button', 'Sửa thông tin', 'admin-btn admin-btn-secondary'); edit.type = 'button';
+                edit.onclick = () => window.PawpalStaffForms.editCustomer({ customerId: id, onSaved: () => ctx.refresh() }); details.append(edit);
+                const addresses = el('button', 'Sổ địa chỉ', 'admin-btn admin-btn-secondary'); addresses.type = 'button';
+                addresses.onclick = () => window.PawpalStaffForms.editAddresses({ customerId: id, onSaved: () => ctx.refresh() }); details.append(addresses);
+            }
+            if (window.PawpalAdminAccess.state.user.permissions.includes('work.pet.write')) {
+                const create = el('button', 'Thêm bé cưng', 'admin-btn admin-btn-primary'); create.type = 'button';
+                create.onclick = () => window.PawpalStaffForms.openPet({ customerId: id, onCreated: petId => go('tab-pet-profile', petId) }); details.append(create);
+            }
+            const pets = await read('pets', { id }); if (ctx.isCurrent()) table('pets', pets, card(root, 'Thú cưng'));
+}}},
+toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
+                const create = el('button', 'Thêm khách', 'admin-btn admin-btn-primary'); create.type = 'button';
+                create.onclick = () => window.PawpalStaffForms.openCustomer({ onCreated: customerId => go('tab-profile', customerId) }); tools.append(create);}}});
+})();
+
+(function initializeManagementDomain(){
+    if (!window.PawpalAdminAccess?.isAdmin()) return;
 // customers.js - Phân hệ Quản lý Khách hàng Pawpal-er (Core Orchestrator)
 (function() {
     'use strict';
@@ -1174,4 +1480,6 @@
   if(closing&&busy(modal)){event.preventDefault();event.stopImmediatePropagation();return;}
   if(event.target===modal)close(modal);
  },true);
+})();
+
 })();

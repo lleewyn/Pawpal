@@ -1,0 +1,64 @@
+{
+  "capturedAt": "2026-11-05T13:32:19.532Z",
+  "status": "PASS",
+  "sourceSha256": "ddc3734c5d87b65a62d529d480ce24916107bca10f716c1ee59b04b0835cd138",
+  "cssSha256": "7fb2959c2ca991bea57d759a84df43102e9a7b0ea418b10eb1db8efa5fb13f0b",
+  "domains": [
+    {
+      "target": "pages/admin/modules/customers/customers.js",
+      "registrationSha256": "f28f5b78ea61c92c7cd05338d2f9e8da14c79b85e92b9897801af8af1ff12684",
+      "finalSourceSha256": "740b891ba4c3e6e96399e709e63243c777aceb7d60f02f851bc7961241be411e"
+    },
+    {
+      "target": "pages/admin/modules/pets/pets.js",
+      "registrationSha256": "2410a132e526561aa206f1bb94879883fcc2203006a9b0e5dc6533770089a62b",
+      "finalSourceSha256": "afc5bf8eb3fcbf56b66ffdcc97c86c46808500b142a26e580d1535f13ca83042"
+    },
+    {
+      "target": "pages/admin/modules/services/services.js",
+      "registrationSha256": "be235a03660d3bfdfff2a7beb92c666a558d6f986d9a4af4867fa4031bd23616",
+      "finalSourceSha256": "de8d2c0a369c69d483473f2295934bec69b1152eda4363c68dc72a2443f58147"
+    },
+    {
+      "target": "pages/admin/modules/orders/orders.js",
+      "registrationSha256": "10df48611f4e4f0399c53125a824ddcc45c4f4df96f8d0e82a6636cb76053160",
+      "finalSourceSha256": "3be8cab27e516ccbf4459fab2cc665625906a4b8ad3ef1135644ed77fdecdc1e"
+    },
+    {
+      "target": "pages/admin/modules/complaints/complaints.js",
+      "registrationSha256": "564a8d116a4a7104b0ade1213ea91606aac244f77194727a8011204c0e581cd4",
+      "finalSourceSha256": "c0cfa422ddd0167a50ed6f3ace072ed096fa40b52260c051135f06c44b467611"
+    },
+    {
+      "target": "pages/admin/modules/chatbot/chatbot.js",
+      "registrationSha256": "cf6b70c2e6a167df37a17ba5626996a8bc72e581bf07287bce1a58b78fe92b1e",
+      "finalSourceSha256": "678c26890d48aa60b41f318096e95c649084290107698d62bc6e3589e2c83e57"
+    },
+    {
+      "target": "pages/admin/modules/staff/staff.js",
+      "registrationSha256": "2d5986d82da0c4adb79dd27fc986f70281b44da30ebf5797b11d0fbd6fb09263",
+      "finalSourceSha256": "e55b6a1e3642473e758b10da20b0b24af9481be098ac16371963ef7163212522"
+    }
+  ],
+  "scope": "Domain screens, profile renderers, columns, toolbar and row actions registered by existing domain cores; shared navigation/table/paging in admin.js; shared styles in admin-components.css",
+  "regression": [
+    {
+      "report": "ui-results.txt",
+      "status": "PASS",
+      "checks": 255,
+      "capturedAt": "2026-11-05T13:39:57.829Z",
+      "disposableDatabaseRemoved": true
+    },
+    {
+      "report": "password-ui-results.txt",
+      "status": "PASS",
+      "checks": 10,
+      "capturedAt": "2026-11-05T13:43:09.178Z",
+      "disposableDatabaseRemoved": true
+    }
+  ],
+  "sharedStyleValuesPreserved": true,
+  "styleComparison": "Normalized line endings; reverted only overlay selector specificity for comparison",
+  "finalSharedSourceSha256": "d38c9ae2843a29ccf7c815b145e8cfbbad27849cb785926a610dbec449f991ea",
+  "verifiedAt": "2026-11-05T13:45:43.896Z"
+}

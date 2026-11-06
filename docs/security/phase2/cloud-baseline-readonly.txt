@@ -1,0 +1,13 @@
+{
+  "capturedAt": "2026-11-04T15:56:25.751Z",
+  "scope": "Cloud READ ONLY metadata; no migration or business writes",
+  "functionsChecked": 31,
+  "mismatches": [],
+  "roles": [
+    {
+      "code": "ADMIN",
+      "role_name": "Quản trị viên"
+    }
+  ],
+  "status": "PASS"
+}

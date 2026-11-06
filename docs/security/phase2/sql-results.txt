@@ -1,0 +1,84 @@
+{
+  "capturedAt": "2026-11-04T16:05:03.047Z",
+  "migrationSha256": "5decd95608ab0e5caa0f5ada1062adb9cfdd7c291970fa97a3be679db7ffbe11",
+  "scope": "Owned local clone of current Cloud schema; PostgreSQL authenticated/anon roles and claims; no Cloud writes or HTTP Auth JWT tests",
+  "checks": [
+    {
+      "name": "Rollback restores the original helper and leaves Auth locks intact",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration and fixed-role account state",
+      "status": "PASS"
+    },
+    {
+      "name": "Worker cannot read raw staff, schedules, money, audit or costs",
+      "status": "PASS"
+    },
+    {
+      "name": "Worker profile projection and page validation",
+      "status": "PASS"
+    },
+    {
+      "name": "Fixed-role RPC rejects multiple roles and per-person grants",
+      "status": "PASS"
+    },
+    {
+      "name": "Last ADMIN, blocked identities, direct writes and revenue are protected",
+      "status": "PASS"
+    },
+    {
+      "name": "Worker creates real customer through the reviewed transaction and cannot mass-list",
+      "status": "PASS"
+    },
+    {
+      "name": "Assigned appointments and chat transcripts stay within actor scope",
+      "status": "PASS"
+    },
+    {
+      "name": "Worker updates customer contact without changing membership and updates pet without archiving",
+      "status": "PASS"
+    },
+    {
+      "name": "Service progress requires assignment and disallows reassign/cancel/delete",
+      "status": "PASS"
+    },
+    {
+      "name": "Worker can create booking using database price; unrelated appointment stays protected",
+      "status": "PASS"
+    },
+    {
+      "name": "Worker updates only own service item and cannot forge an unassigned item",
+      "status": "PASS"
+    },
+    {
+      "name": "Shared appointment permits own line without completing a colleague line",
+      "status": "PASS"
+    },
+    {
+      "name": "Stock projection omits costs and legacy stock/points writers stay denied",
+      "status": "PASS"
+    },
+    {
+      "name": "Worker quotes/creates order at server price and collects without raw money permissions",
+      "status": "PASS"
+    },
+    {
+      "name": "Worker collects own service payment and replay does not duplicate receipt",
+      "status": "PASS"
+    },
+    {
+      "name": "Chat intake is atomic, and another handler or raw transcript remains inaccessible",
+      "status": "PASS"
+    },
+    {
+      "name": "Complaint intake and assigned messaging cannot approve compensation",
+      "status": "PASS"
+    },
+    {
+      "name": "Revoking account access affects the next database call with the same claims",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

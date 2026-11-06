@@ -1,0 +1,91 @@
+{
+  "capturedAt": "2026-11-05T16:44:11.315Z",
+  "scope": "Phase 4 local real Auth, browser identity/role invalidation, storage events and registered-channel teardown; no live Realtime payload test, AI gateway or Cloud writes",
+  "checks": [
+    {
+      "name": "Four real isolated Auth accounts map to existing staff IDs without changing fixed roles or assignment links",
+      "status": "PASS"
+    },
+    {
+      "name": "A normal focus recheck reads current server rights without clearing unchanged-identity drafts, cache or the current realm",
+      "status": "PASS"
+    },
+    {
+      "name": "A real same-identity token refresh in another tab rechecks server rights while preserving the current realm and unsaved context",
+      "status": "PASS"
+    },
+    {
+      "name": "Switching to another STAFF identity in the same tab clears old data and reloads even though the role name is unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "A real sign-in from a second tab invalidates the first tab through Auth storage, with no old copilot context carried to the new STAFF identity",
+      "status": "PASS"
+    },
+    {
+      "name": "Signing out in a second tab removes the first tab workspace, account actions, cached chat context and registered channels",
+      "status": "PASS"
+    },
+    {
+      "name": "A server-side ADMIN-to-STAFF change is rechecked on focus, drops management state and channels, then reloads the restricted renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "The visible focused-tab periodic check detects revoked staff, clears open form data and channels, and the real database denies another workspace request",
+      "status": "PASS"
+    },
+    {
+      "name": "An unavailable role verification fails closed and tears down private cache, workspace and registered channels instead of trusting the stored role",
+      "status": "PASS"
+    },
+    {
+      "name": "A transient verification failure does not forget the last verified privilege boundary: later downgrade still destroys the old management realm",
+      "status": "PASS"
+    },
+    {
+      "name": "A delayed verification for the old identity cannot restore its state after another tab signs in as a different STAFF account",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS",
+  "sourceSha256": {
+    "pages/admin/admin.js": "b91801053484cc4c6ab5a49dae4d4a4cba67d734bf8536fa7ec83316d9558a4d",
+    "pages/admin/admin-access.js": "15babcf9bf0dd688b95846c062c86d684d534cb92b158e15e18ba92701e1af8f",
+    "pages/admin/modules/customers/customers.js": "740b891ba4c3e6e96399e709e63243c777aceb7d60f02f851bc7961241be411e",
+    "pages/admin/modules/services/services.js": "47d9e704664586470b7a11c08d949a8fabbe9b765c034fb3b10209932a7654e3",
+    "scripts/database/v1/169_staff_hotel_checkout_context.sql": "cebf56accddb3bf083082a08af22b9175e9b4aae63b580da0e2cdaa34488c0e8",
+    "scripts/database/v1/168_staff_logistics_transition.sql": "46b1ebd23f23949449f54d36b1a34a4e02cf354f0c9a951df4a75a8b1115a205",
+    "scripts/database/v1/167_staff_care_log_performer.sql": "696bfcdde8a8cb516c83c691ff59da37b542d008e769520a6aa1aefd6ba6a1e0",
+    "scripts/database/v1/166_staff_booking_catalog.sql": "2f078fdab13ac1e041d03db74abc5a3f9e8c7548340e2039193fa4d8c94d6675",
+    "pages/admin/admin-components.css": "ebd33a37f9c317017655f0c13c2344b0c09af6749359ac1e832dff7e1a3899d2",
+    "pages/admin/index.html": "fb80c00d68ed233eacd2a3b369be8e9e1a79a9fa1b23660a7e434e816c5d3208",
+    "pages/admin/login/login.js": "43a95bd924242bbb6344e0683616bc65317b75f188a87dc192c28d0afb45389d",
+    "pages/admin/login/login.html": "4a9df959481d40e02578b4ca7d90bc6575e925bf6318ac0cde3b6a5a3a393ba4",
+    "pages/admin/modules/staff/staff.html": "6d7fd0514db22054abf80279697d5a32cb3ce998ba5ee6de8a2ee52015986554",
+    "pages/admin/modules/staff/staff.css": "9f23e4aa7d6d98242419f4b31caacc18e155422b0c2507829481a4822599c42b",
+    "pages/admin/modules/staff/subtabs/tab-staff-list.js": "10cdfd5dbb2f23b96904afde862fa794e6d440a326513977bd371e674a830ad0",
+    "pages/admin/modules/staff/subtabs/tab-staff-profile.js": "950047c77bb1a0c413cb1963c299ac46b339934b146517b32cfc126138757e4d",
+    "pages/admin/modules/orders/orders.js": "6a58be1d32ab6b7d625c9db07bb674d6eff358e13cf0d959290be6608969aa36",
+    "pages/admin/modules/complaints/complaints.js": "0738257b7140db11d2b63a3d145aa18afcd123a7f16ed87a4c6fb8560c366fb9",
+    "scripts/database/v1/170_staff_complaint_proposal_context.sql": "dfd0e4e99d42177a8d1df2e72fd05949f48167d8687fa2b8dfe0504e6fa46a93",
+    "scripts/database/v1/170_staff_complaint_proposal_context.rollback.sql": "77619b244b01f040d5e12cf374ea7866e5d9f82c5590b88400f8853c53f28577",
+    "scripts/database/v1/171_staff_complaint_sources.sql": "94dc90313c8f50a5f75677557906ff25d17f336a1742d26d81cb75174da74e43",
+    "scripts/database/v1/171_staff_complaint_sources.rollback.sql": "c76010ca582f0cbb8293dad1d8a17452a80b337b34e9c1a46526e7215060ee91",
+    "pages/admin/admin-own-password.js": "e3e5dae19a402df868439022e5f5f93d1af78bc4b83deb17d540ff3fe4834b7f",
+    "pages/admin/modules/chatbot/chatbot.js": "3ac825faabc97ff79c042be3c3a3e3319877ffbf11b17850f29b7db583ca1959",
+    "scripts/database/v1/172_staff_chat_completion.sql": "7f6dc8757d873943e4cb99edee1142bbe144df3fd137a09b9ada1d1f042cf86a",
+    "scripts/database/v1/172_staff_chat_completion.rollback.sql": "64c30b1e7bc1c1baaaf7abf4be1b5eb0602a3c18cf143e65642e726d3763be4c",
+    "scripts/database/v1/173_staff_customer_context.sql": "0266f1c4eedaa373f0495f4a1b02c12c3e7f14f3bfac8ec939cf675df8c1e4d3",
+    "scripts/database/v1/173_staff_customer_context.rollback.sql": "4dd909d3060c230d8820ba8b18eb0a2b5d351081accc955c09e0ea6d3def068c",
+    "scripts/database/v1/174_staff_sales_receipt.sql": "60f4d7459a4b99c09231579bd4e32369098df6d6c6d10c2f98083e58efc0b65c",
+    "scripts/database/v1/174_staff_sales_receipt.rollback.sql": "7d5c5c3c2f5ad32b0b9a25a56651cbbc03d0b7cfee6034bd0dd110b84e126b83",
+    "scripts/database/v1/175_staff_service_receipt.sql": "d63a6ec8af65eacffc23c1e59a7060957583a24db505fd13950f6fb9ec473bb5",
+    "scripts/database/v1/175_staff_service_receipt.rollback.sql": "f8eb932d0752a70466117c2265e8fe4fad07d8188e52d520ac445eb7212fa691",
+    "pages/admin/modules/pets/pets.js": "afc5bf8eb3fcbf56b66ffdcc97c86c46808500b142a26e580d1535f13ca83042",
+    "pages/admin/modules/staff/staff.js": "e55b6a1e3642473e758b10da20b0b24af9481be098ac16371963ef7163212522",
+    "scripts/database/v1/176_chat_complaint_content.sql": "8f4c46ba800d427497052b6cd298322db528b34956cd9947a6a1c3ef1775a905",
+    "scripts/database/v1/176_chat_complaint_content.rollback.sql": "3cdecb18f6ba29a071cf98b6240ae77eb2c85258886417eff3e4e687b9794636"
+  },
+  "realAuthSignIns": 10,
+  "disposableDatabaseRemoved": true
+}

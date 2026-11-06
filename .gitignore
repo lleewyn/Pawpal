@@ -17,3 +17,8 @@ artifacts/
 *.private.*
 *.dump
 .playwright-mcp/
+# Local access-test runtime inventory and transient runner output.
+docs/security/phase2/local-environment.txt
+docs/security/**/*-run.txt
+docs/security/**/*-output.txt
+docs/security/**/*-errors.txt

@@ -1,0 +1,124 @@
+{
+  "capturedAt": "2026-11-05T12:49:56.601Z",
+  "scope": "Relocation only; module bytes unchanged; no business or database changes",
+  "files": [
+    {
+      "from": "pages/admin/admin-staff-workspace.js",
+      "to": "pages/admin/modules/staff-workspace/admin-staff-workspace.js",
+      "sha256": "d38a93d4ab83afa78c931c9aeefc1040946460eae8d93e378e845aaa4896fa20"
+    },
+    {
+      "from": "pages/admin/admin-staff-workspace.css",
+      "to": "pages/admin/modules/staff-workspace/admin-staff-workspace.css",
+      "sha256": "7fb2959c2ca991bea57d759a84df43102e9a7b0ea418b10eb1db8efa5fb13f0b"
+    },
+    {
+      "from": "pages/admin/admin-staff-forms.js",
+      "to": "pages/admin/modules/staff-workspace/customers/admin-staff-forms.js",
+      "sha256": "4f2135fcafe5ca2efb6354b7902f2e2089855d19900cb9e50070e19726c5d05f"
+    },
+    {
+      "from": "pages/admin/admin-staff-customer-note.js",
+      "to": "pages/admin/modules/staff-workspace/customers/admin-staff-customer-note.js",
+      "sha256": "1459e48b2d51f493fa1a5aa64f37bc5312a1a8c9d844f42586a4acb0a60d8a78"
+    },
+    {
+      "from": "pages/admin/admin-staff-booking.js",
+      "to": "pages/admin/modules/staff-workspace/services/admin-staff-booking.js",
+      "sha256": "2f822e60d84c33ab8f035d897b87bc2c4f3c769c532688bc79c6e369f92f7266"
+    },
+    {
+      "from": "pages/admin/admin-staff-care-log.js",
+      "to": "pages/admin/modules/staff-workspace/services/admin-staff-care-log.js",
+      "sha256": "eaaff0067ed0a22f828c16364b24c9ffd4ebc5710de5b8c61d40c83f6958b9a9"
+    },
+    {
+      "from": "pages/admin/admin-staff-handover.js",
+      "to": "pages/admin/modules/staff-workspace/services/admin-staff-handover.js",
+      "sha256": "e7ec3f2f6884bcd5a0e7670d6128aee66edd0b37c1b3a746740b7991ababc333"
+    },
+    {
+      "from": "pages/admin/admin-staff-hotel-checkout.js",
+      "to": "pages/admin/modules/staff-workspace/services/admin-staff-hotel-checkout.js",
+      "sha256": "e6c5cf633193777752975451142fd3f12f542515d1c751f3869d09d5799cdfb9"
+    },
+    {
+      "from": "pages/admin/admin-staff-intake.js",
+      "to": "pages/admin/modules/staff-workspace/services/admin-staff-intake.js",
+      "sha256": "d4047d37c3ebe671757d73db3bc79379876ea4d59233dee4854772585c6e7b78"
+    },
+    {
+      "from": "pages/admin/admin-staff-pickup.js",
+      "to": "pages/admin/modules/staff-workspace/services/admin-staff-pickup.js",
+      "sha256": "630612ebb82cea38a68757bfa7349d37d25f25fae223f8c5d13c364ab26862dc"
+    },
+    {
+      "from": "pages/admin/admin-staff-service-cashier.js",
+      "to": "pages/admin/modules/staff-workspace/services/admin-staff-service-cashier.js",
+      "sha256": "9c597255530fed589f52e3f8c606f3cf7722684043b9000852265101d4d39e2d"
+    },
+    {
+      "from": "pages/admin/admin-staff-service-receipt.js",
+      "to": "pages/admin/modules/staff-workspace/services/admin-staff-service-receipt.js",
+      "sha256": "cd671abd7e140d26ae6d0fed373c0b299fc980c5a0e3311a802b403df67c1d31"
+    },
+    {
+      "from": "pages/admin/admin-staff-sales.js",
+      "to": "pages/admin/modules/staff-workspace/sales/admin-staff-sales.js",
+      "sha256": "7efa2442ad2e91249eacd4bdbd2521c64e61bee425503798be99aab2db2bf930"
+    },
+    {
+      "from": "pages/admin/admin-staff-cashier.js",
+      "to": "pages/admin/modules/staff-workspace/sales/admin-staff-cashier.js",
+      "sha256": "d09f0538c5c290255465eb4c27e5698b0fdf58fece4847643ae8995706f46abf"
+    },
+    {
+      "from": "pages/admin/admin-staff-sales-receipt.js",
+      "to": "pages/admin/modules/staff-workspace/sales/admin-staff-sales-receipt.js",
+      "sha256": "ce665c7e16017f575d78f23450a9c2f23f9a4c7a2dfcf4970eabef872013eefa"
+    },
+    {
+      "from": "pages/admin/admin-staff-chat-resolution.js",
+      "to": "pages/admin/modules/staff-workspace/support/admin-staff-chat-resolution.js",
+      "sha256": "0cf0bebd67f50b1d24f567650dbfe7b13e77d0b22c6e52e2d9ca31c87a515384"
+    },
+    {
+      "from": "pages/admin/admin-staff-complaint-create.js",
+      "to": "pages/admin/modules/staff-workspace/support/admin-staff-complaint-create.js",
+      "sha256": "04f6d226be0f7f3c087aa9d30766f8e23075b9ea8791e548dbcd7621e53c061d"
+    },
+    {
+      "from": "pages/admin/admin-staff-complaint-message.js",
+      "to": "pages/admin/modules/staff-workspace/support/admin-staff-complaint-message.js",
+      "sha256": "32cad3218be1a429a3a674e44a433fe691ceabb53f998f7d06bc186283caf3f8"
+    },
+    {
+      "from": "pages/admin/admin-staff-complaint-proposal.js",
+      "to": "pages/admin/modules/staff-workspace/support/admin-staff-complaint-proposal.js",
+      "sha256": "8a13a00e4946c8c96212a34af214f20a05b17d858ce491273189f04705c85cca"
+    }
+  ],
+  "consumers": [
+    "pages/admin/index.html",
+    "scripts/test/admin_access_phase3_ui.cjs",
+    "scripts/test/admin_own_password_ui.cjs"
+  ],
+  "status": "PASS",
+  "regression": [
+    {
+      "report": "ui-results.txt",
+      "status": "PASS",
+      "checks": 252,
+      "capturedAt": "2026-11-05T12:50:20.052Z",
+      "disposableDatabaseRemoved": true
+    },
+    {
+      "report": "password-ui-results.txt",
+      "status": "PASS",
+      "checks": 10,
+      "capturedAt": "2026-11-05T12:53:07.484Z",
+      "disposableDatabaseRemoved": true
+    }
+  ],
+  "verifiedAt": "2026-11-05T12:54:13.906Z"
+}

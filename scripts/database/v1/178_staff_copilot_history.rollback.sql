@@ -1,0 +1,15 @@
+BEGIN;
+DROP FUNCTION public.delete_staff_copilot_session(uuid);
+DROP FUNCTION public.staff_copilot_recent_context(uuid);
+DROP FUNCTION public.staff_copilot_message_part(uuid,integer,text);
+DROP FUNCTION public.staff_copilot_history_page(uuid,integer,boolean);
+DROP FUNCTION public.staff_copilot_sessions(text,integer);
+DROP FUNCTION public.replay_staff_copilot_exchange(uuid,uuid,text);
+DROP FUNCTION public.save_staff_copilot_exchange(uuid,uuid,uuid,text,text,text,jsonb);
+DROP FUNCTION public.get_staff_copilot_scope();
+DROP FUNCTION pawpal_private.staff_copilot_reply(pawpal_private.staff_copilot_exchange);
+DROP FUNCTION pawpal_private.staff_copilot_refs_allowed(uuid,jsonb,jsonb);
+DROP FUNCTION pawpal_private.staff_copilot_scope(uuid);
+DROP TABLE pawpal_private.staff_copilot_exchange;
+NOTIFY pgrst,'reload schema';
+COMMIT;

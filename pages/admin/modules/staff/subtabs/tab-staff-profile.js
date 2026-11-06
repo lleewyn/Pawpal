@@ -79,7 +79,7 @@
             viewStaffDob: staff?.dob,
             viewStaffJoinDate: staff?.join_date,
             viewStaffAddress: staff?.address,
-            viewStaffRole: staff.roles?.map(role=>role.code==='ADMIN'?'Quản trị viên':role.name||role.code).join(', ')||'Chưa phân vai trò',
+            viewStaffRole: staff.roles?.map(role=>role.code==='ADMIN'?'Quản lý':role.code==='STAFF'?'Nhân viên':role.name||role.code).join(', ')||'Chưa phân vai trò',
             viewStaffStatusBadge: status,
             viewStaffWorkStatus: status,
             viewStaffCurrentShift: nearest?formatTime(nearest.start_at)+' – '+formatTime(nearest.end_at):'Chưa có ca làm việc còn hiệu lực',
@@ -89,20 +89,17 @@
             viewStaffCompletedServices: staff?.completedServices!=null ? `${staff.completedServices} ca` : 'Chưa có dữ liệu',
             viewStaffPunctuality: staff?.punctuality ? `${staff.punctuality}%` : 'Chưa có dữ liệu',
             viewStaffBaseSalary: (() => {
-                const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
-                const canView = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'HR' || userRole === 'ACCOUNTANT';
+                const canView = window.PawpalAdminAccess?.isAdmin() === true;
                 return canView ? (staff?.base_salary ? `${Number(staff.base_salary).toLocaleString('vi-VN')} đ` : 'Chưa cấu hình') : '••• (Bảo mật)';
             })(),
             viewStaffServiceCommission: (() => {
-                const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
-                const canView = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'HR' || userRole === 'ACCOUNTANT';
+                const canView = window.PawpalAdminAccess?.isAdmin() === true;
                 return canView ? (staff?.commission ? `${Number(staff.commission).toLocaleString('vi-VN')} đ` : 'Chưa có dữ liệu') : '••• (Bảo mật)';
             })(),
             viewStaffRequestedBonus: staff?.requestedBonus!=null ? `${Number(staff.requestedBonus).toLocaleString('vi-VN')} đ` : 'Chưa có dữ liệu',
             viewStaffSafetyBonus: staff?.safetyBonus!=null ? `${Number(staff.safetyBonus).toLocaleString('vi-VN')} đ` : 'Chưa có dữ liệu',
             viewStaffTotalIncome: (() => {
-                const userRole = (sessionStorage.getItem('pawpal_admin_system_role') || sessionStorage.getItem('pawpal_user_role') || 'ADMIN').toUpperCase();
-                const canView = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'HR' || userRole === 'ACCOUNTANT';
+                const canView = window.PawpalAdminAccess?.isAdmin() === true;
                 return canView ? (staff?.totalIncome ? `${Number(staff.totalIncome).toLocaleString('vi-VN')} đ` : 'Chưa tổng hợp') : '••• (Bảo mật)';
             })(),
             viewStaffCsatScore: staff?.rating ? `${staff.rating}/5.0` : 'Chưa có đánh giá',

@@ -1,3 +1,104 @@
+// Role-specific operations live in this domain; management initialization requires verified ADMIN.
+(function(){
+    'use strict';
+    const allowed=()=>window.PawpalAdminAccess?.isStaff()&&PawpalAdminAccess.state.user.permissions.includes('work.chat.handle');
+    const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!=null)node.textContent=text;if(cls)node.className=cls;return node;};
+    async function rpc(name,args){const{data,error}=await getSupabaseClient().rpc(name,args);if(error)throw error;return data;}
+    const pending=new Map();let dialog;
+    function build(){
+        if(dialog)return dialog;
+        const overlay=el('div',null,'admin-modal-overlay staff-workspace-modal');overlay.id='staffChatResolutionModal';overlay.setAttribute('aria-hidden','true');const card=el('div',null,'admin-modal-card');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-labelledby','staffChatResolutionTitle');const form=el('form');form.noValidate=true;form.setAttribute('onsubmit','return false;');
+        const header=el('div',null,'workspace-modal-header'),title=el('h2','Kết thúc hội thoại'),close=el('button','Đóng','btn-modal-close');title.id='staffChatResolutionTitle';close.type='button';close.dataset.closeModal=overlay.id;header.append(title,close);const summary=el('p','','workspace-care-log-summary');summary.id='staffChatResolutionSummary';
+        const reasonGroup=el('div',null,'workspace-form-field'),reasonLabel=el('label','Kết quả hỗ trợ '),reason=el('select',null,'admin-input');reason.id='staffChatResolutionReason';reason.required=true;reasonLabel.htmlFor=reason.id;reasonLabel.append(el('span','*','workspace-required'));for(const[value,text]of [['','Chọn kết quả'],['resolved_complete','Đã giải quyết'],['service_consulted','Đã tư vấn dịch vụ'],['order_tracked','Đã hỗ trợ đơn hàng'],['ticket_created','Đã tiếp nhận khiếu nại'],['customer_left','Khách đã rời hội thoại']])reason.append(new Option(text,value));reasonGroup.append(reasonLabel,reason);
+        const noteGroup=el('div',null,'workspace-form-field'),noteLabel=el('label','Ghi chú nội bộ'),note=el('textarea',null,'admin-input');note.id='staffChatResolutionNote';noteLabel.htmlFor=note.id;note.rows=3;note.maxLength=8000;noteGroup.append(noteLabel,note);
+        const surveyLabel=el('label',null,'workspace-intake-confirmation'),survey=el('input');survey.id='staffChatResolutionSurvey';survey.type='checkbox';surveyLabel.append(survey,el('span','Gửi lời mời đánh giá trong hội thoại'));
+        const confirmLabel=el('label',null,'workspace-intake-confirmation'),confirm=el('input');confirm.id='staffChatResolutionConfirmed';confirm.type='checkbox';confirm.required=true;confirmLabel.append(confirm,el('span','Đã hoàn tất hỗ trợ và sẵn sàng kết thúc '),el('span','*','workspace-required'));
+        const message=el('p','','workspace-error');message.setAttribute('role','alert');const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Kết thúc hội thoại','admin-btn admin-btn-primary');save.id='staffChatResolutionSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);form.append(header,summary,reasonGroup,noteGroup,surveyLabel,confirmLabel,message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
+        const state={id:null,row:null,generation:0,loading:true,blocked:false,saving:false,unresolved:null,onSaved:null,returnFocus:null};const key=()=>PawpalAdminAccess.state.user.id+':'+state.id;
+        for(const input of [reason,note,survey])input.addEventListener('input',()=>{confirm.checked=false;});
+        function controls(){reason.disabled=note.disabled=survey.disabled=state.loading||state.blocked||state.saving||!!state.unresolved;confirm.disabled=save.disabled=state.loading||state.blocked||state.saving;save.textContent=state.saving?'Đang kết thúc':state.unresolved?'Đối chiếu kết quả':'Kết thúc hội thoại';}
+        function closeDialog(){state.generation++;overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');if(state.returnFocus?.isConnected)state.returnFocus.focus();}
+        overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}if(event.key!=='Tab')return;const nodes=[...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])')].filter(node=>node.offsetParent!==null),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});form.addEventListener('submit',event=>event.preventDefault());
+        async function receipt(attempt){const result=await rpc('get_staff_chat_receipt',{p_request_id:attempt.p_request_id});return result?.request_id===attempt.p_request_id&&result.conversation_id===attempt.p_conversation_id&&result.operation==='resolve';}
+        save.onclick=async()=>{
+            if(!allowed()||state.loading||state.blocked||state.saving)return;
+            if(!state.unresolved&&!reason.value){message.textContent='Chọn kết quả hỗ trợ.';reason.focus();return;}if(!confirm.checked){message.textContent='Xác nhận đã hoàn tất hỗ trợ trước khi kết thúc.';confirm.focus();return;}
+            const attempt=state.unresolved||{p_request_id:crypto.randomUUID(),p_conversation_id:state.id,p_expected_updated_at:state.row.updated_at,p_reason:reason.value,p_notes:note.value.trim(),p_send_survey:survey.checked},attemptKey=key(),generation=state.generation;pending.set(attemptKey,attempt);state.saving=true;controls();message.textContent='';
+            const finish=()=>{pending.delete(attemptKey);if(generation!==state.generation)return;const callback=state.onSaved;closeDialog();if(allowed())callback?.();};
+            try{if(state.unresolved&&await receipt(attempt)){finish();return;}const result=await rpc('resolve_admin_chat',attempt);if(result!==attempt.p_request_id)throw Error('invalid_resolution_result');finish();}
+            catch(error){try{if(await receipt(attempt)){finish();return;}}catch{}if(generation!==state.generation)return;const definitive=['42501','22023','PT409'].includes(error.code);if(definitive)pending.delete(attemptKey);state.unresolved=definitive?null:attempt;state.blocked=definitive;confirm.checked=false;message.textContent=error.code==='42501'?'Hội thoại không còn do bạn xử lý. Đóng và tải lại.':error.code==='PT409'?'Hội thoại đã thay đổi. Đóng và mở lại để kiểm tra.':'Chưa xác nhận kết thúc thành công. Đối chiếu lại trước khi thử tiếp.';}
+            finally{state.saving=false;if(generation===state.generation)controls();}
+        };
+        async function open({conversationId,onSaved}={}){
+            if(state.saving||!allowed())return;state.id=conversationId;state.row=null;state.loading=true;state.blocked=false;state.unresolved=pending.get(key())||null;state.onSaved=onSaved;state.returnFocus=document.activeElement;const generation=++state.generation;form.reset();summary.textContent='';message.textContent='';controls();overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();
+            try{if(state.unresolved&&await receipt(state.unresolved)){if(generation!==state.generation)return;pending.delete(key());state.blocked=true;state.loading=false;message.textContent='Hội thoại đã kết thúc thành công. Đóng và tải lại danh sách.';controls();state.onSaved?.();return;}
+                const data=await rpc('get_staff_workspace',{p_kind:'conversations',p_query:'',p_id:conversationId,p_page:1});if(generation!==state.generation)return;const row=data.items.find(item=>item.id===conversationId&&item.status==='agent_handling');if(!row){state.blocked=true;message.textContent='Không tìm thấy hội thoại đang do bạn xử lý.';}else{state.row=row;summary.textContent=row.ai_summary||'Hội thoại đang do bạn hỗ trợ.';if(state.unresolved){reason.value=state.unresolved.p_reason;note.value=state.unresolved.p_notes;survey.checked=state.unresolved.p_send_survey;message.textContent='Lần kết thúc trước chưa rõ kết quả. Đối chiếu cùng yêu cầu trước khi thao tác mới.';}}state.loading=false;controls();
+            }catch{if(generation===state.generation){state.blocked=true;message.textContent='Không tải đủ dữ liệu hội thoại. Đóng và mở lại để kiểm tra.';controls();}}
+        }
+        dialog={open,clear:()=>{closeDialog();pending.clear();state.row=state.unresolved=state.onSaved=null;form.reset();summary.textContent=message.textContent='';}};return dialog;
+    }
+    window.addEventListener('hashchange',()=>dialog?.clear());
+    window.PawpalStaffChatResolution=Object.freeze({open:options=>{if(allowed())return build().open(options);},closeAll:()=>dialog?.clear()});
+})();
+
+;
+
+// Role-scoped screens belong to this domain.
+(function registerRoleViews(){
+ const views=window.PawpalAdminViews;if(!views)return;const {date,money,status}=views.helpers;
+ views.register("Chatbot",{columns:{conversations:[['Trạng thái', r => status(r.status)], ['Tóm tắt', 'ai_summary'], ['Cập nhật', r => date(r.updated_at)]],messages:[['Thời gian', r => date(r.created_at)], ['Người gửi', r => ({ staff: 'Nhân viên', customer: 'Khách hàng', bot: 'Trợ lý' })[r.sender_type] || 'Hệ thống'], ['Nội dung', 'content']],chat_queue:[['Thời gian', r => date(r.created_at)], ['Trạng thái', r => status(r.status)]]},
+targets:{"conversations":"tab-live-support"},
+render:async(ctx)=>{if(ctx.kind!=='conversations'||!ctx.id)return false;const {el,date,money,status,read,table,card,facts,go,root,kind,id,row,target,turn}=ctx;
+                const conversations = await read('conversations', { id });
+                if (!ctx.isCurrent()) return true;
+                if (!conversations.length) { card(root).append(el('p', 'Không tìm thấy hội thoại được giao.')); return true; }
+                const transcript=card(root,'Hội thoại được giao'),transcriptContent=el('div'),transcriptPager=el('nav',null,'workspace-pager');transcript.append(transcriptContent);transcriptPager.setAttribute('aria-label','Trang tin nhắn hội thoại');root.append(transcriptPager);let transcriptTurn=0;
+                async function loadTranscript(page=1){const current=++transcriptTurn;transcriptContent.textContent='Đang tải';transcriptPager.replaceChildren();try{const rows=await read('messages',{id,page});if(!ctx.isCurrent()||current!==transcriptTurn)return true;transcriptContent.replaceChildren();table('messages',rows,transcriptContent);for(const[label,next]of [['<',page-1],[String(page),page],['>',page+1]]){const button=el('button',label,next===page?'active':'');button.type='button';button.disabled=next<1||next>page&&rows.length<10;button.onclick=()=>loadTranscript(next);transcriptPager.append(button);}}catch(error){if(ctx.isCurrent()&&current===transcriptTurn){transcriptContent.replaceChildren(el('p',error.message,'workspace-error'));transcriptPager.replaceChildren();}}}
+                await loadTranscript();if(!ctx.isCurrent())return true;
+                if (conversations[0].status === 'agent_handling') {
+                    const composer = card(root), form = el('form', null, 'workspace-chat-composer'); form.setAttribute('onsubmit', 'return false;');
+                    const label = el('label', 'Tin nhắn trả lời'), input = el('textarea', null, 'admin-input'), send = el('button', 'Gửi tin nhắn', 'admin-btn admin-btn-primary');
+                    input.id = 'staffChatReply'; input.maxLength = 8000; input.rows = 3; input.required = true; label.htmlFor = input.id; send.type = 'button';
+                    const star = el('span', ' *'); star.style.color = '#DC2626'; label.append(star);
+                    const message = el('p', '', 'workspace-error'); message.setAttribute('role', 'alert');
+                    const mode=el('select',null,'admin-input');mode.id='staffChatMode';mode.setAttribute('aria-label','Hình thức trao đổi');mode.append(new Option('Trả lời khách','send'),new Option('Ghi chú nội bộ','note'));const drafts={send:'',note:conversations[0].internal_note||''};let previousMode='send';
+                    mode.onchange=()=>{drafts[previousMode]=input.value;previousMode=mode.value;input.value=drafts[mode.value];label.replaceChildren(el('span',mode.value==='note'?'Ghi chú nội bộ':'Tin nhắn trả lời'));if(mode.value==='send')label.append(star);input.required=mode.value==='send';send.textContent=mode.value==='note'?'Lưu ghi chú':'Gửi tin nhắn';message.textContent='';};
+                    let pendingSend = null;
+                    const submit = async () => {
+                        if (send.disabled) return true;
+                        const text = input.value.trim(); if (mode.value==='send'&&!text || text.length > 8000) { message.textContent = mode.value==='send'?'Nhập tin nhắn từ 1 đến 8000 ký tự.':'Ghi chú tối đa 8000 ký tự.'; input.focus(); return true; }
+                        if (!pendingSend || pendingSend.p_content !== text || pendingSend.p_action!==mode.value) pendingSend = { p_request_id: crypto.randomUUID(), p_conversation_id: id,
+                            p_expected_updated_at: conversations[0].updated_at, p_action: mode.value, p_content: text };
+                        send.disabled = true;mode.disabled=input.disabled=true;message.textContent = '';
+                        try {
+                            const { error } = await window.getSupabaseClient().rpc('act_admin_chat', pendingSend);
+                            if (error) throw error;
+                            input.value = ''; pendingSend = null;
+                            if (ctx.isCurrent()) await ctx.refresh();
+                        } catch (error) {
+                            try{const{data}=await getSupabaseClient().rpc('get_staff_chat_receipt',{p_request_id:pendingSend.p_request_id});if(data?.conversation_id===id&&data.operation===pendingSend.p_action){if(ctx.isCurrent())await ctx.refresh();return true;}}catch{}
+                            message.textContent = error.code === '42501' ? 'Bạn không có quyền xử lý hội thoại này.' : error.code === 'PT409' ? 'Hội thoại đã thay đổi. Vui lòng tải lại.' : 'Chưa xác nhận gửi thành công. Giữ nguyên nội dung và thử lại.';
+                            if(!['42501','PT409','22023'].includes(error.code)){mode.disabled=input.disabled=true;send.textContent='Thử lại nội dung';return true;}
+                        } finally { send.disabled = false;if(mode.disabled&&!pendingSend){mode.disabled=input.disabled=false;} }
+                    };
+                    send.onclick = submit; form.addEventListener('submit', event => { event.preventDefault(); submit(); });
+                    form.append(mode,label, input, message, send); composer.append(form);
+                    const resolve=el('button','Kết thúc hội thoại','admin-btn admin-btn-secondary');resolve.type='button';resolve.onclick=()=>window.PawpalStaffChatResolution.open({conversationId:id,onSaved:()=>go('tab-support-queue')});composer.append(resolve);
+                    if(PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle')){const complaint=el('button','Tạo khiếu nại','admin-btn admin-btn-secondary');complaint.type='button';complaint.onclick=()=>PawpalStaffComplaintCreate.open({conversationId:id});composer.append(complaint);}
+                }
+                return true;return true;},
+rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.includes('work.chat.handle'),render:(ctx)=>{const {el,go,read,kind,row,options}=ctx;
+                const cell=el('td'),menu=el('details',null,'workspace-item-menu'),toggle=el('summary','•••'),take=el('button','Tiếp nhận','workspace-item-action'),message=el('p','','workspace-error');toggle.setAttribute('aria-label','Tác vụ tiếp nhận hội thoại');take.type='button';message.setAttribute('role','alert');
+                take.onclick=async()=>{if(take.disabled)return;menu.open=false;take.disabled=true;message.textContent='';const requestId=crypto.randomUUID();
+                    const finish=()=>go('tab-live-support',row.id);
+                    try{const{data,error}=await getSupabaseClient().rpc('act_admin_chat',{p_request_id:requestId,p_conversation_id:row.id,p_expected_updated_at:row.updated_at,p_action:'take',p_content:''});if(error)throw error;if(data!==requestId)throw Error('invalid_chat_take');finish();}
+                    catch(error){try{const{data}=await getSupabaseClient().rpc('get_staff_chat_receipt',{p_request_id:requestId});if(data?.request_id===requestId&&data.conversation_id===row.id&&data.operation==='take'){finish();return;}}catch{}message.textContent=['42501','PT409'].includes(error.code)?'Hội thoại đã thay đổi hoặc có người tiếp nhận. Tải lại hàng chờ.':'Chưa xác nhận tiếp nhận thành công. Tải lại danh sách để kiểm tra.';}
+                    finally{take.disabled=false;}
+                };menu.append(toggle,take);cell.append(menu,message);return cell;}}}});
+})();
+
+(function initializeManagementDomain(){
+    if (!window.PawpalAdminAccess?.isAdmin()) return;
 /**
  * MODULE CHATBOT VÀ TRỰC CHAT CSKH (PAWPAL ADMIN) - CORE ORCHESTRATOR
  * Tuân thủ nghiêm ngặt 100% AGENTS.md:
@@ -790,4 +891,6 @@
             switchSubtab(e.detail.tabId);
         }
     });
+})();
+
 })();

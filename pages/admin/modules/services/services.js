@@ -1,3 +1,764 @@
+// Role-specific operations live in this domain; management initialization requires verified ADMIN.
+(function () {
+    'use strict';
+    // Both role-specific screens share this write boundary; scoped reads stay with their callers.
+    async function persist(args, client = window.getSupabaseClient()) {
+        const { data, error } = await client.rpc('save_admin_service_care_log', args);
+        if (error) throw error;
+        if (data !== args.p_id) throw Error('Không xác minh được nhật ký đã lưu.');
+        return data;
+    }
+    const allowed=()=>window.PawpalAdminAccess?.isStaff()&&window.PawpalAdminAccess.state.user.permissions.includes('work.service.perform');
+    const el=(tag,text,className)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(className)n.className=className;return n;};
+    async function read(kind,id,page=1){const {data,error}=await getSupabaseClient().rpc('get_staff_workspace',{p_kind:kind,p_query:'',p_id:id,p_page:page});if(error)throw error;return data.items;}
+    async function findLog(appointmentId,logId){for(let page=1;page<=100;page++){const rows=await read('care_logs',appointmentId,page),row=rows.find(item=>item.id===logId);if(row)return row;if(rows.length<10)return null;}throw Error('care_log_limit');}
+    function localMinute(value){const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(value)).map(p=>[p.type,p.value]));return parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute;}
+    let dialog;
+    function build(){
+        if(dialog)return dialog;
+        const overlay=el('div',null,'admin-modal-overlay staff-workspace-modal');overlay.id='staffCareLogModal';overlay.setAttribute('aria-hidden','true');
+        const card=el('div',null,'admin-modal-card');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-labelledby','staffCareLogTitle');
+        const form=el('form');form.noValidate=true;form.setAttribute('onsubmit','return false;');
+        const header=el('div',null,'workspace-modal-header'),title=el('h2','Ghi nhật ký chăm sóc'),close=el('button','Đóng','btn-modal-close');title.id='staffCareLogTitle';close.type='button';close.dataset.closeModal=overlay.id;header.append(title,close);
+        const summary=el('p','','workspace-care-log-summary');form.append(header,summary);const fields={};
+        for(const[key,text,type,required]of[['title','Công việc','text',true],['at','Thời điểm','datetime-local',true],['staff','Người ghi nhận','text',false],['note','Ghi nhận','textarea',false]]){
+            const group=el('div',null,'workspace-form-field'),label=el('label',text+(required?' ':'')),input=el(type==='textarea'?'textarea':'input',null,'admin-input');input.id='staffCareLog'+key;
+            if(type!=='textarea')input.type=type;else{input.rows=4;input.maxLength=4000;}if(key==='title')input.maxLength=200;if(key==='staff')input.readOnly=true;input.required=required;label.htmlFor=input.id;if(required)label.append(el('span','*','workspace-required'));group.append(label,input);form.append(group);fields[key]=input;
+        }
+        const message=el('p','','workspace-error');message.setAttribute('role','alert');
+        const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Lưu nhật ký','admin-btn admin-btn-primary');save.id='staffCareLogSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);form.append(message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
+        const state={overlay,row:null,log:null,pending:null,loading:true,saving:false,generation:0,returnFocus:null,onSaved:null};
+        Object.values(fields).forEach(input=>input.addEventListener('input',()=>{if(input.getAttribute('aria-invalid')==='true'){input.removeAttribute('aria-invalid');message.textContent='';}}));
+        function closeDialog(){state.generation++;overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');if(state.returnFocus?.isConnected)state.returnFocus.focus();}
+        overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
+        overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}if(event.key!=='Tab')return;const nodes=[...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled])')].filter(n=>n.offsetParent!==null),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});
+        form.addEventListener('submit',event=>event.preventDefault());
+        save.onclick=async()=>{
+            if(state.loading||state.saving||!state.row)return;message.textContent='';Object.values(fields).forEach(input=>input.removeAttribute('aria-invalid'));
+            const invalid=(key,text)=>{fields[key].setAttribute('aria-invalid','true');message.textContent=text;fields[key].focus();},name=fields.title.value.trim(),at=state.log&&fields.at.value===localMinute(state.log.recorded_at)?new Date(state.log.recorded_at):new Date(fields.at.value+':00+07:00');
+            if(!name||name.length>200)return invalid('title','Nhập tên công việc từ 1 đến 200 ký tự.');
+            if(!Number.isFinite(+at)||+at>Date.now())return invalid('at','Chọn thời điểm đã thực hiện, không ở tương lai.');
+            if(fields.note.value.trim().length>4000)return invalid('note','Ghi nhận không được quá 4000 ký tự.');
+            if(!allowed()){message.textContent='Bạn không có quyền ghi nhật ký ca dịch vụ.';return;}
+            const recordedAt=state.log&&fields.at.value===localMinute(state.log.recorded_at)?state.log.recorded_at:at.toISOString();
+            const details={title:name,note:fields.note.value.trim(),recorded_at:recordedAt,staff_id:PawpalAdminAccess.state.user.id},signature=JSON.stringify(details);
+            if(!state.pending||state.pending.signature!==signature)state.pending={signature,id:state.log?.id||crypto.randomUUID()};
+            const args={p_id:state.pending.id,p_appointment_id:state.row.id,p_expected_updated_at:state.row.updated_at,p_expected_log_updated_at:state.log?.updated_at||null,p_action:'save',p_details:details},generation=state.generation;
+            state.saving=true;save.disabled=true;save.textContent='Đang lưu';Object.values(fields).forEach(input=>input.disabled=true);
+            const finish=()=>{if(generation!==state.generation)return;const callback=state.onSaved;closeDialog();form.reset();state.row=state.log=state.pending=null;if(allowed())callback?.(args.p_appointment_id);};
+            try{await persist(args);finish();}
+            catch(error){
+                if(generation!==state.generation)return;
+                // An edit has no server idempotency shortcut: verify its actual persisted contents after a lost response.
+                if(state.log&&(!error.code||error.code==='PT409'||/^5/.test(String(error.status||'')))){
+                    try{const current=await findLog(args.p_appointment_id,args.p_id);if(current?.recorded_by===details.staff_id&&current.action_name_snapshot===details.title&&(current.description||'')===details.note&&Date.parse(current.recorded_at)===+at){finish();return;}}catch{}
+                }
+                if(generation!==state.generation)return;
+                const messages={work_assignment_required:'Ca không còn được giao cho bạn. Đóng form và tải lại.',work_log_owner_required:'Chỉ được sửa nhật ký do chính bạn ghi.',work_log_performer_mismatch:'Người ghi nhật ký phải là nhân viên đang đăng nhập.',work_driver_assignment_required:'Ca xe chưa được giao cho bạn làm tài xế. Liên hệ Quản lý.',care_log_requires_active_service:'Chỉ ghi nhật ký khi ca đang thực hiện.',invalid_service_log:'Kiểm tra tên công việc và thời điểm thực hiện; thời điểm phải từ lúc tiếp nhận ca trở đi.'};
+                message.textContent=messages[error.message]||(error.code==='PT409'?'Ca hoặc nhật ký đã thay đổi. Đóng form và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.':error.code==='42501'?'Bạn không có quyền lưu nhật ký này.':'Chưa xác nhận lưu nhật ký thành công. Giữ nguyên thông tin và thử lại.');
+            }finally{state.saving=false;save.disabled=state.loading;save.textContent=state.log?'Lưu thay đổi':'Lưu nhật ký';Object.values(fields).forEach(input=>input.disabled=false);}
+        };
+        state.open=async({appointmentId,logId=null,onSaved}={})=>{
+            if(state.saving||!allowed())return;state.loading=true;state.row=state.log=state.pending=null;state.onSaved=onSaved;state.returnFocus=document.activeElement;form.reset();summary.textContent=message.textContent='';title.textContent=logId?'Sửa nhật ký chăm sóc':'Ghi nhật ký chăm sóc';Object.values(fields).forEach(input=>{input.disabled=true;input.removeAttribute('aria-invalid');});save.disabled=true;save.textContent='Đang tải';const generation=++state.generation;overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();
+            try{
+                const rows=await read('appointments',appointmentId),row=rows.find(item=>item.id===appointmentId);if(generation!==state.generation)return;
+                if(!row||row.appointment_status!=='in_progress'){message.textContent='Không tìm thấy ca đang thực hiện trong phạm vi được giao.';save.textContent='Lưu nhật ký';return;}
+                const log=logId?await findLog(appointmentId,logId):null;if(generation!==state.generation)return;
+                if(logId&&(!log||log.recorded_by!==PawpalAdminAccess.state.user.id)){message.textContent='Chỉ được sửa nhật ký do chính bạn ghi.';save.textContent='Lưu thay đổi';return;}
+                const pets=await read('pets',row.pet_id);if(generation!==state.generation)return;const pet=pets.find(item=>item.id===row.pet_id);if(!pet)throw Error('missing_pet');
+                state.row=row;state.log=log;summary.textContent=row.appointment_code+' · '+pet.pet_name;fields.title.value=log?.action_name_snapshot||'';fields.note.value=log?.description||'';fields.at.value=localMinute(log?.recorded_at||new Date());fields.staff.value=PawpalAdminAccess.state.user.name;
+                state.loading=false;Object.values(fields).forEach(input=>input.disabled=false);save.disabled=false;save.textContent=log?'Lưu thay đổi':'Lưu nhật ký';fields.title.focus();
+            }catch{if(generation===state.generation){message.textContent='Không tải đủ dữ liệu ca hoặc nhật ký. Đóng form và tải lại hồ sơ.';save.textContent='Lưu nhật ký';}}
+        };
+        state.close=closeDialog;state.clear=()=>{closeDialog();form.reset();summary.textContent=message.textContent='';state.row=state.log=state.pending=state.onSaved=null;};dialog=state;return state;
+    }
+    window.addEventListener('hashchange',()=>dialog?.close());
+    window.PawpalCareLog=Object.freeze({save:persist,openForStaff:options=>{if(allowed())return build().open(options);},closeStaff:()=>dialog?.clear()});
+})();
+
+;
+(function () {
+    'use strict';
+    const el = (tag, text, className) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (className) n.className = className; return n; };
+    const money = n => new Intl.NumberFormat('vi-VN').format(n) + ' đ';
+    const instant = value => value ? new Date(value + ':00+07:00').getTime() : NaN;
+    let dialog;
+    async function rpc(name, args) { const { data, error } = await getSupabaseClient().rpc(name, args); if (error) throw error; return data; }
+    async function workspace(kind, query = '', id = null, page = 1) { return (await rpc('get_staff_workspace', { p_kind: kind, p_query: query, p_id: id, p_page: page })).items; }
+    async function catalog(kind, id = null, query = '', page = 1) { return (await rpc('get_staff_booking_catalog', { p_kind: kind, p_service_id: id, p_query: query, p_page: page })).items; }
+    async function all(fetchPage) { const rows = []; for (let page = 1; page <= 100; page++) { const batch = await fetchPage(page); rows.push(...batch); if (batch.length < 10) return rows; } throw Error('catalog_too_large'); }
+    function build() {
+        if (dialog) return dialog;
+        const id = 'staffBookingModal', overlay = el('div', null, 'admin-modal-overlay staff-workspace-modal'); overlay.id = id; overlay.setAttribute('aria-hidden', 'true');
+        const card = el('div', null, 'admin-modal-card workspace-pet-card'); card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'staffBookingTitle');
+        const form = el('form'); form.noValidate = true; form.setAttribute('onsubmit', 'return false;');
+        const header = el('div', null, 'workspace-modal-header'), title = el('h2', 'Tạo lịch hẹn'), close = el('button', 'Đóng', 'btn-modal-close'); title.id = 'staffBookingTitle'; close.type = 'button'; close.dataset.closeModal = id; header.append(title, close);
+        const grid = el('div', null, 'workspace-pet-grid'), fields = {}, groups = {};
+        function field(key, text, type = 'text', required = false, parent = grid, wide = false) {
+            const group = el('div', null, 'workspace-form-field' + (wide ? ' workspace-field-wide' : '')), label = el('label', text + (required ? ' ' : ''));
+            const input = el(type === 'textarea' ? 'textarea' : type === 'select' ? 'select' : 'input', null, 'admin-input'); input.id = 'staffBooking' + key;
+            if (input.tagName === 'INPUT') input.type = type; input.required = required; if (type === 'text') input.maxLength = 1000; if (type === 'textarea') { input.rows = 2; input.maxLength = 2000; }
+            label.htmlFor = input.id; if (required) label.append(el('span', '*', 'workspace-required')); group.append(label, input); parent.append(group); fields[key] = input; groups[key] = group; return input;
+        }
+        field('customer', 'Khách hàng', 'text', true); field('phone', 'Số điện thoại', 'text').readOnly = true;
+        field('pet', 'Bé cưng', 'text', true); field('weight', 'Cân nặng đã lưu (kg)', 'text', true).readOnly = true;
+        field('service', 'Gói dịch vụ', 'text', true, grid, true); field('start', 'Ngày và giờ hẹn', 'datetime-local', true);
+        field('health', 'Lưu ý sức khỏe', 'textarea'); field('style', 'Yêu cầu tạo kiểu', 'textarea', false, grid, true);
+        const hotel = el('div', null, 'workspace-pet-grid workspace-field-wide workspace-booking-conditional'); grid.append(hotel); hotel.hidden = true;
+        field('checkout', 'Ngày và giờ trả phòng', 'datetime-local', true, hotel); field('room', 'Phòng', 'text', true, hotel);
+        field('diet', 'Chế độ ăn', 'textarea', false, hotel); field('care', 'Lưu ý chăm sóc', 'textarea', false, hotel);
+        const taxi = el('div', null, 'workspace-pet-grid workspace-field-wide workspace-booking-conditional'); grid.append(taxi); taxi.hidden = true;
+        field('pickup', 'Địa chỉ đón', 'text', true, taxi); field('dropoff', 'Địa chỉ trả', 'text', true, taxi);
+        const distance = field('distance', 'Cự ly mỗi lượt (km)', 'number', true, taxi); distance.min = '.01'; distance.step = '.01';
+        const trip = field('trip', 'Hành trình', 'select', true, taxi); for (const [value, text] of [['one_way', 'Một chiều'], ['round_trip', 'Khứ hồi']]) { const option = el('option', text); option.value = value; trip.append(option); }
+        field('return', 'Ngày và giờ lượt về', 'datetime-local', true, taxi); field('note', 'Ghi chú', 'textarea', false, grid, true);
+        const quoteText = el('p', '', 'workspace-booking-quote'), message = el('p', '', 'workspace-error'); message.setAttribute('role', 'alert');
+        const success = el('p', '', 'workspace-booking-success'); success.setAttribute('role', 'status');
+        const footer = el('div', null, 'workspace-modal-footer'), cancel = el('button', 'Hủy', 'admin-btn admin-btn-secondary'), save = el('button', 'Tạo lịch hẹn', 'admin-btn admin-btn-primary'); cancel.type = save.type = 'button'; cancel.dataset.closeModal = id; footer.append(cancel, save);
+        form.append(header, grid, quoteText, message, success, footer); card.append(form); overlay.append(card); document.body.append(overlay);
+        const state = { overlay, form, fields, generation: 0, customer: null, pet: null, service: null, room: null, prices: [], rooms: [], loading: false, saving: false, done: false, pending: null, returnFocus: null };
+        const pickers = [];
+        function picker(key, fetchRows, titleOf, subtitleOf, select) {
+            const input = fields[key], group = groups[key], menu = el('div', null, 'autocomplete-dropdown workspace-autocomplete-menu'), summary = el('div', null, 'workspace-selected-entity');
+            group.classList.add('workspace-autocomplete'); menu.id = input.id + 'Options'; menu.hidden = summary.hidden = true; menu.setAttribute('role', 'listbox'); group.append(menu, summary);
+            input.autocomplete = 'off'; input.setAttribute('role', 'combobox'); input.setAttribute('aria-controls', menu.id); input.setAttribute('aria-expanded', 'false'); input.setAttribute('aria-autocomplete', 'list');
+            let version = 0, timer, buttons = [], active = -1;
+            const hide = () => { version++; clearTimeout(timer); menu.hidden = true; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); active = -1; };
+            function reset(notify = true) { hide(); state[key] = null; input.readOnly = false; input.value = ''; summary.replaceChildren(); summary.hidden = true; if (notify) select?.(null); }
+            function choose(row) {
+                hide(); state[key] = row; input.readOnly = true; input.value = titleOf(row); input.removeAttribute('aria-invalid'); summary.replaceChildren(el('span', titleOf(row)));
+                const clear = el('button', '✕ Bỏ chọn', 'workspace-text-button'); clear.type = 'button'; clear.onclick = () => { if (state.saving || state.done) return; reset(); input.focus(); }; summary.append(clear); summary.hidden = false; select?.(row);
+            }
+            async function search() {
+                if (input.readOnly || state.saving || state.done) return;
+                hide(); const turn = version; menu.hidden = false; input.setAttribute('aria-expanded', 'true'); menu.replaceChildren(el('p', 'Đang tìm...')); buttons = [];
+                try {
+                    const rows = await fetchRows(input.value.trim()); if (turn !== version || !overlay.classList.contains('active')) return;
+                    menu.replaceChildren();
+                    rows.filter(row => { const text = String(titleOf(row) || '').trim(); return text && !/^\d+$/.test(text) && !/^(unknown|null|undefined|chưa rõ|chưa cập nhật)$/i.test(text); }).slice(0,10).forEach((row, index) => {
+                        const button = el('button', null, 'workspace-autocomplete-option'); button.type = 'button'; button.id = menu.id + index; button.setAttribute('role', 'option'); button.setAttribute('aria-selected', 'false'); button.append(el('strong', titleOf(row)), el('small', subtitleOf(row))); button.onclick = () => { choose(row); input.focus(); }; buttons.push(button); menu.append(button);
+                    });
+                    if (!buttons.length) menu.append(el('p', 'Chưa có kết quả. Nhập tên, mã hoặc số điện thoại để tìm.'));
+                } catch { if (turn === version) menu.replaceChildren(el('p', 'Không tải được gợi ý. Bấm lại ô để thử.')); }
+            }
+            input.addEventListener('input', () => { hide(); timer = setTimeout(search, 250); }); input.addEventListener('focus', search); input.addEventListener('click', () => { if (menu.hidden) search(); });
+            input.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !menu.hidden) { event.preventDefault(); event.stopPropagation(); hide(); return; }
+                if (event.key === 'ArrowDown' && menu.hidden) { event.preventDefault(); search(); return; }
+                if (['ArrowDown','ArrowUp'].includes(event.key) && buttons.length && !menu.hidden) { event.preventDefault(); active = (active + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length; buttons.forEach((button,index) => button.setAttribute('aria-selected', String(index === active))); input.setAttribute('aria-activedescendant', buttons[active].id); buttons[active].scrollIntoView({block:'nearest'}); }
+                if (event.key === 'Enter') { event.preventDefault(); if (active >= 0 && !menu.hidden) buttons[active].click(); }
+            });
+            group.addEventListener('focusout', () => setTimeout(() => { if (!group.contains(document.activeElement)) hide(); }, 0));
+            const result = { choose, reset, hide, group }; pickers.push(result); return result;
+        }
+        let customerPicker, petPicker, servicePicker, roomPicker;
+        let petLoadVersion = 0, customerLoadVersion = 0, serviceLoadVersion = 0;
+        customerPicker = picker('customer', query => query.length < 3 ? [] : workspace('customers', query), row => row.full_name, row => row.phone_number || row.customer_code, row => {
+            petLoadVersion++; petPicker.reset(false); fields.phone.value = row?.phone_number || ''; fields.weight.value = fields.health.value = ''; state.pets = []; updateQuote();
+            if (!row) return;
+            const turn = ++customerLoadVersion, generation = state.generation;
+            all(page => workspace('pets', '', row.id, page)).then(rows => { if (turn !== customerLoadVersion || generation !== state.generation || state.customer?.id !== row.id) return; state.pets = rows; if (rows.length && !state.pet) petPicker.choose(rows[0]); }).catch(() => { if (generation === state.generation && state.customer?.id === row.id) message.textContent = 'Không tải được thú cưng của khách. Bỏ chọn khách rồi chọn lại.'; });
+        });
+        petPicker = picker('pet', query => state.customer ? (state.pets || []).filter(row => (row.pet_name + ' ' + row.pet_code).toLowerCase().includes(query.toLowerCase())) : query.length < 3 ? [] : workspace('pets', query), row => row.pet_name, row => row.pet_code, async row => {
+            const turn = ++petLoadVersion, generation = state.generation; fields.weight.value = row?.current_weight ?? ''; fields.health.value = row ? [row.safety_note,row.allergy,row.routine].filter(Boolean).join('\n') : ''; updateQuote();
+            if (row && !state.customer) {
+                try { const owners = await workspace('customers', '', row.customer_id); if (turn !== petLoadVersion || generation !== state.generation) return; if (!owners[0]) throw Error('owner_missing'); customerPicker.choose(owners[0]); petPicker.choose(row); }
+                catch { if (generation === state.generation) { petPicker.reset(false); fields.weight.value = fields.health.value = ''; message.textContent = 'Không tải được chủ nuôi. Chọn khách rồi chọn lại bé cưng.'; } }
+            }
+        });
+        roomPicker = picker('room', async query => state.rooms.filter(row => (row.room_number + ' ' + row.room_type).toLowerCase().includes(query.toLowerCase())), row => row.room_number + ' · ' + row.room_type, row => money(row.daily_price) + ' / ' + row.billing_minutes + ' phút', updateQuote);
+        servicePicker = picker('service', query => catalog('services', null, query), row => row.service_name, row => row.estimated_duration + ' phút' + (row.description ? ' · ' + row.description : ''), async row => {
+            const turn = ++serviceLoadVersion, generation = state.generation; state.prices = []; state.rooms = []; roomPicker.reset(false);
+            for (const key of ['style','checkout','diet','care','pickup','dropoff','distance','return']) fields[key].value = '';
+            trip.value = row?.trip_type || 'one_way'; trip.disabled = Boolean(row?.trip_type); [...trip.options].forEach(option => option.hidden = Boolean(row?.trip_type && option.value !== row.trip_type));
+            hotel.hidden = row?.category_code !== 'pet_hotel'; taxi.hidden = row?.category_code !== 'pet_taxi'; groups.style.hidden = !(row?.category_code === 'grooming_spa' && /grooming|cắt\s*tỉa|tạo\s*kiểu|style/i.test(row.service_name)); groups.return.hidden = trip.value !== 'round_trip';
+            state.loading = Boolean(row); save.disabled = state.loading; updateQuote(); if (!row) return;
+            try { const kind = row.category_code === 'pet_hotel' ? 'rooms' : row.category_code === 'pet_taxi' ? 'taxi_prices' : 'prices'; const rows = await all(page => catalog(kind, row.id, '', page)); if (turn !== serviceLoadVersion || generation !== state.generation) return; if (kind === 'rooms') state.rooms = rows; else state.prices = rows; state.loading = false; save.disabled = false; updateQuote(); }
+            catch { if (turn === serviceLoadVersion && generation === state.generation) { quoteText.textContent = ''; message.textContent = 'Không tải đủ bảng giá. Bỏ chọn dịch vụ rồi chọn lại.'; } }
+        });
+        function inRange(value, from, to, inclusive) { return value >= Number(from) && (to == null || value < Number(to) || inclusive && value === Number(to)); }
+        function effective(row, at) { return Date.parse(row.effective_from) <= at && (row.effective_to == null || Date.parse(row.effective_to) > at); }
+        function amount() {
+            const svc = state.service, at = instant(fields.start.value), weight = Number(fields.weight.value); if (!svc || !Number.isFinite(at) || !(weight > 0) || state.loading) return null;
+            if (svc.category_code === 'pet_taxi' && !(Number(fields.distance.value) > 0)) return null;
+            if (svc.category_code === 'pet_hotel') {
+                const room = state.room, end = instant(fields.checkout.value); if (!room || !(end > at) || !effective(room,at) || !inRange(weight,room.weight_from,room.weight_to,room.weight_to_inclusive)) return null;
+                return Math.ceil((end-at)/(Number(room.billing_minutes)*60000))*Number(room.daily_price);
+            }
+            const matches = state.prices.filter(row => effective(row,at) && inRange(weight,row.weight_from,row.weight_to,row.weight_to_inclusive) && (svc.category_code !== 'pet_taxi' || inRange(Number(fields.distance.value),row.distance_from,row.distance_to,row.distance_to_inclusive)));
+            if (matches.length !== 1) return null; const row = matches[0]; if (svc.category_code !== 'pet_taxi') return Number(row.unit_price);
+            let total = Number(row.base_price)+Number(row.surcharge); if (trip.value === 'round_trip' && !svc.trip_type) { const back = instant(fields.return.value), rows = state.prices.filter(row => effective(row,back) && inRange(weight,row.weight_from,row.weight_to,row.weight_to_inclusive) && inRange(Number(fields.distance.value),row.distance_from,row.distance_to,row.distance_to_inclusive)); if (rows.length !== 1) return null; total += Number(rows[0].base_price)+Number(rows[0].surcharge); } return total;
+        }
+        function updateQuote() { const value = amount(); quoteText.textContent = state.loading ? 'Đang tải bảng giá...' : state.service ? value == null ? 'Chọn đủ thời gian, cân nặng và thông tin dịch vụ để xác định giá.' : 'Tạm tính ' + money(value) : ''; }
+        ['start','checkout','distance','return'].forEach(key => fields[key].addEventListener('input', updateQuote));
+        trip.addEventListener('change', () => { groups.return.hidden = trip.value !== 'round_trip'; if (groups.return.hidden) fields.return.value = ''; updateQuote(); });
+        Object.values(fields).forEach(input => input.addEventListener('input', () => { if (input.getAttribute('aria-invalid') === 'true') { input.removeAttribute('aria-invalid'); message.textContent = ''; } }));
+        function closeDialog() { state.generation++; petLoadVersion++; serviceLoadVersion++; pickers.forEach(p=>p.hide()); overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
+        overlay.addEventListener('click', event => { pickers.forEach(p => { if (!p.group.contains(event.target)) p.hide(); }); if (event.target === overlay || event.target.closest('[data-close-modal="'+id+'"]')) closeDialog(); });
+        overlay.addEventListener('keydown', event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDialog(); return; } if (event.key !== 'Tab') return; const nodes = [...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])')].filter(n=>n.offsetParent!==null), first=nodes[0],last=nodes.at(-1); if (event.shiftKey && document.activeElement===first) {event.preventDefault();last.focus();} else if (!event.shiftKey && document.activeElement===last) {event.preventDefault();first.focus();} });
+        form.addEventListener('submit',event=>event.preventDefault());
+        save.onclick = async () => {
+            if (state.saving || state.loading || state.done) return; message.textContent=''; Object.values(fields).forEach(n=>n.removeAttribute('aria-invalid'));
+            const invalid = (key,text)=>{fields[key].setAttribute('aria-invalid','true');message.textContent=text;fields[key].focus();};
+            if (!state.customer) return invalid('customer','Chọn khách hàng từ danh sách gợi ý.'); if (!state.pet || state.pet.customer_id !== state.customer.id) return invalid('pet','Chọn bé cưng của đúng khách hàng.');
+            if (!(Number(fields.weight.value)>0)) return invalid('weight','Cần ghi nhận cân nặng trong hồ sơ bé cưng trước khi đặt lịch.'); if (!state.service) return invalid('service','Chọn gói dịch vụ từ danh sách gợi ý.');
+            const at=instant(fields.start.value); if (!(at>Date.now())) return invalid('start','Thời gian hẹn phải ở tương lai.');
+            const svc=state.service, details={customer_id:state.customer.id,pet_id:state.pet.id,service_id:svc.id,staff_id:null,scheduled_start_at:new Date(at).toISOString(),note:[fields.note.value.trim(),fields.health.value.trim(),!groups.style.hidden&&fields.style.value.trim()?'Yêu cầu tạo kiểu: '+fields.style.value.trim():''].filter(Boolean).join('\n')};
+            if(details.note.length>4000)return invalid('note','Tổng ghi chú và lưu ý không được quá 4000 ký tự.');
+            if(svc.category_code==='pet_hotel'){const end=instant(fields.checkout.value);if(!(end>at))return invalid('checkout','Giờ trả phòng phải sau giờ nhận phòng.');if(!state.room)return invalid('room','Chọn phòng trong danh sách gợi ý.');Object.assign(details,{room_id:state.room.id,check_out_at:new Date(end).toISOString(),diet_notes:fields.diet.value.trim(),care_notes:fields.care.value.trim()});}
+            if(svc.category_code==='pet_taxi'){if(!fields.pickup.value.trim())return invalid('pickup','Nhập địa chỉ đón.');if(!fields.dropoff.value.trim())return invalid('dropoff','Nhập địa chỉ trả.');const km=Number(fields.distance.value);if(!Number.isFinite(km)||km<=0)return invalid('distance','Nhập cự ly mỗi lượt lớn hơn 0.');const back=instant(fields.return.value);if(trip.value==='round_trip'&&!(back>=at+Number(svc.estimated_duration)*60000))return invalid('return','Lượt về phải sau khi hoàn thành lượt đi.');Object.assign(details,{pickup_address:fields.pickup.value.trim(),dropoff_address:fields.dropoff.value.trim(),distance_km:km,trip_type:trip.value,return_at:trip.value==='round_trip'?new Date(back).toISOString():null});}
+            if(amount()==null)return invalid('service','Chưa có đúng một mức giá phù hợp. Kiểm tra ngày hẹn, cân nặng và thông tin dịch vụ.');
+            if(!window.PawpalAdminAccess?.state.user?.permissions.includes('work.booking.create')){message.textContent='Bạn không có quyền tạo lịch hẹn.';return;}
+            const name=['pet_hotel','pet_taxi'].includes(svc.category_code)?'create_admin_logistics_booking':'create_admin_service_booking',signature=JSON.stringify({name,details});if(!state.pending||state.pending.signature!==signature)state.pending={signature,id:crypto.randomUUID()};const requestId=state.pending.id,generation=state.generation;
+            state.saving=true;save.disabled=true;save.textContent='Đang tạo';const controls=[...grid.querySelectorAll('input,select,textarea,button')],disabled=controls.map(n=>n.disabled);controls.forEach(n=>n.disabled=true);
+            try {const data=await rpc(name,{p_id:requestId,p_details:details});if(data!==requestId)throw Error('invalid_booking_result');if(generation===state.generation){state.done=true;success.textContent='Đã tạo lịch BKG-'+data.replaceAll('-','').toUpperCase()+'. Chờ Quản lý phân công.';save.textContent='Đã tạo lịch';state.pending=null;}}
+            catch(error){if(generation===state.generation){const messages={pet_owner_mismatch:'Bé cưng không thuộc khách hàng đã chọn. Chọn lại hồ sơ.',service_species_not_supported:'Dịch vụ không hỗ trợ loài thú cưng này.',hotel_room_conflict:'Phòng đã có lịch trong khoảng thời gian này. Chọn phòng hoặc thời gian khác.',hotel_room_unavailable:'Phòng không phù hợp cân nặng hoặc không còn nhận đặt. Chọn phòng khác.',ambiguous_service_price:'Bảng giá đã thay đổi hoặc chưa có đúng một mức giá. Chọn lại dịch vụ.',ambiguous_taxi_price:'Chưa có đúng một giá xe phù hợp. Chọn lại dịch vụ và cự ly.',ambiguous_taxi_return_price:'Chưa có giá phù hợp cho lượt về.',taxi_service_trip_mismatch:'Hành trình không phù hợp gói xe đã chọn.',active_customer_required:'Khách hàng không còn hoạt động. Kiểm tra lại hồ sơ.',pet_weight_required:'Cần ghi nhận cân nặng trong hồ sơ bé cưng.',future_booking_required:'Thời gian hẹn phải ở tương lai.'};message.textContent=messages[error.message]||(error.code==='42501'?'Bạn không có quyền tạo lịch hẹn.':'Chưa xác nhận tạo lịch thành công. Giữ nguyên thông tin và thử lại.');save.textContent='Tạo lịch hẹn';}}
+            finally{state.saving=false;if(!state.done){controls.forEach((n,i)=>n.disabled=disabled[i]);save.disabled=false;}}
+        };
+        state.open=()=>{if(state.saving)return;state.generation++;state.done=false;state.pending=null;state.service=null;state.customer=null;state.pet=null;state.room=null;state.pets=[];state.prices=[];state.rooms=[];state.loading=false;form.reset();grid.querySelectorAll('input,select,textarea,button').forEach(n=>n.disabled=false);pickers.forEach(p=>p.reset(false));fields.phone.value=fields.weight.value=fields.health.value='';hotel.hidden=taxi.hidden=groups.style.hidden=groups.return.hidden=true;state.returnFocus=document.activeElement;message.textContent=success.textContent=quoteText.textContent='';save.disabled=false;save.textContent='Tạo lịch hẹn';overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');fields.customer.focus();};
+        state.close=closeDialog;state.clear=()=>{closeDialog();form.reset();state.customer=state.pet=state.service=state.room=null;state.pending=null;pickers.forEach(p=>p.reset(false));};dialog=state;return state;
+    }
+    window.addEventListener('hashchange',()=>dialog?.close());
+    window.PawpalStaffBooking=Object.freeze({open:()=>{if(window.PawpalAdminAccess?.isStaff()&&window.PawpalAdminAccess.state.user.permissions.includes('work.booking.create'))build().open();},closeAll:()=>dialog?.clear()});
+})();
+
+;
+(function () {
+    'use strict';
+    let dialog;
+    const allowed = () => window.PawpalAdminAccess?.isStaff() && window.PawpalAdminAccess.state.user.permissions.includes('work.service.perform');
+    const el = (tag, text, className) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (className) n.className = className; return n; };
+    async function read(kind, id) {
+        const { data, error } = await getSupabaseClient().rpc('get_staff_workspace', { p_kind: kind, p_query: '', p_id: id, p_page: 1 });
+        if (error) throw error; return data.items;
+    }
+    function build() {
+        if (dialog) return dialog;
+        const overlay = el('div', null, 'admin-modal-overlay staff-workspace-modal'); overlay.id = 'staffIntakeModal'; overlay.setAttribute('aria-hidden', 'true');
+        const card = el('div', null, 'admin-modal-card workspace-pet-card'); card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'staffIntakeTitle');
+        const form = el('form'); form.noValidate = true; form.setAttribute('onsubmit', 'return false;');
+        const header = el('div', null, 'workspace-modal-header'), title = el('h2', 'Biên bản tiếp nhận'), close = el('button', 'Đóng', 'btn-modal-close'); title.id = 'staffIntakeTitle'; close.type = 'button'; close.dataset.closeModal = overlay.id; header.append(title, close);
+        const summary = el('dl', null, 'workspace-intake-summary'), grid = el('div', null, 'workspace-pet-grid'), fields = {};
+        for (const [key, text, type, required] of [['weight','Cân nặng thực tế (kg)','number',true],['staff','Nhân viên tiếp nhận','text',false],['skin','Da và lông','textarea',true],['eyes','Mắt và tai','textarea',true],['wounds','Vết thương','textarea',true],['temperament','Tập tính','textarea',true],['belongings','Tư trang nhận kèm','textarea',false],['note','Ghi chú tư trang','textarea',false]]) {
+            const group = el('div', null, 'workspace-form-field'), label = el('label', text + (required ? ' ' : '')), input = el(type === 'textarea' ? 'textarea' : 'input', null, 'admin-input'); input.id = 'staffIntake' + key;
+            if (type !== 'textarea') input.type = type; else { input.rows = 2; input.maxLength = 1200; }
+            if (type === 'number') { input.min = '.01'; input.max = '1000'; input.step = '.01'; }
+            if (key === 'staff') input.readOnly = true; input.required = required; label.htmlFor = input.id; if (required) label.append(el('span', '*', 'workspace-required')); group.append(label, input); grid.append(group); fields[key] = input;
+        }
+        const confirmation = el('label', null, 'workspace-intake-confirmation'), checkbox = el('input'); checkbox.type = 'checkbox'; checkbox.id = 'staffIntakeConfirmed'; confirmation.htmlFor = checkbox.id; confirmation.append(checkbox, el('span','Khách đã xác nhận thông tin tiếp nhận'));
+        const prior = el('p', '', 'workspace-intake-prior'), errorText = el('p', '', 'workspace-error'); errorText.setAttribute('role','alert');
+        const footer = el('div', null, 'workspace-modal-footer'), cancel = el('button','Hủy','admin-btn admin-btn-secondary'), save = el('button','Lưu và bắt đầu ca','admin-btn admin-btn-primary'); save.id = 'staffIntakeSave'; cancel.type = save.type = 'button'; cancel.dataset.closeModal = overlay.id; footer.append(cancel,save);
+        form.append(header,summary,grid,confirmation,prior,errorText,footer); card.append(form); overlay.append(card); document.body.append(overlay);
+        const state = { overlay, form, fields, save, row: null, loading: true, saving: false, pending: null, generation: 0, onSaved: null, returnFocus: null };
+        Object.values(fields).forEach(input => input.addEventListener('input', () => { if(input.getAttribute('aria-invalid') === 'true') { input.removeAttribute('aria-invalid'); errorText.textContent=''; } }));
+        function closeDialog() { state.generation++; overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); if(state.returnFocus?.isConnected)state.returnFocus.focus(); }
+        overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
+        overlay.addEventListener('keydown',event=>{
+            if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}
+            if(event.key!=='Tab')return;
+            const nodes=[...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled])')].filter(n=>n.offsetParent!==null),first=nodes[0],last=nodes.at(-1);
+            if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+        });
+        form.addEventListener('submit',event=>event.preventDefault());
+        save.onclick=async()=>{
+            if(state.loading||state.saving||!state.row)return;
+            errorText.textContent='';Object.values(fields).forEach(input=>input.removeAttribute('aria-invalid'));
+            const invalid=(key,text)=>{fields[key].setAttribute('aria-invalid','true');errorText.textContent=text;fields[key].focus();};
+            const weight=Number(fields.weight.value);
+            if(!Number.isFinite(weight)||weight<=0||weight>1000||fields.weight.validity.badInput)return invalid('weight','Nhập cân nặng lớn hơn 0 và không quá 1000 kg.');
+            for(const key of ['skin','eyes','wounds','temperament'])if(!fields[key].value.trim())return invalid(key,'Ghi đầy đủ tình trạng da và lông, mắt và tai, vết thương và tập tính.');
+            if(!allowed()){errorText.textContent='Bạn không có quyền tiếp nhận ca dịch vụ.';return;}
+            const details={actualWeight:weight,staffId:PawpalAdminAccess.state.user.id,customerConfirmed:checkbox.checked,skinCoat:fields.skin.value.trim(),eyesEars:fields.eyes.value.trim(),wounds:fields.wounds.value.trim(),temperament:fields.temperament.value.trim(),belongings:fields.belongings.value.trim(),belongingsNote:fields.note.value.trim()};
+            if(JSON.stringify(details).length>10000){errorText.textContent='Nội dung tiếp nhận quá dài. Rút gọn các ghi nhận trước khi lưu.';return;}
+            const signature=JSON.stringify(details);if(!state.pending||state.pending.signature!==signature)state.pending={signature,id:crypto.randomUUID()};
+            const args={p_id:state.pending.id,p_appointment_id:state.row.id,p_expected_updated_at:state.row.updated_at,p_type:'intake',p_details:details},generation=state.generation;
+            state.saving=true;save.disabled=true;save.textContent='Đang lưu';Object.values(fields).forEach(input=>input.disabled=true);checkbox.disabled=true;
+            try{
+                const {data,error}=await getSupabaseClient().rpc('save_admin_service_record',args);if(error)throw error;if(data!==args.p_id)throw Error('invalid_intake_result');
+                if(generation===state.generation){const callback=state.onSaved;closeDialog();state.pending=null;form.reset();state.row=null;if(allowed())callback?.(args.p_appointment_id);}
+            }catch(error){
+                if(generation===state.generation){const messages={work_assignment_required:'Ca không còn được giao cho bạn. Đóng form và tải lại.',work_performer_mismatch:'Chỉ được tiếp nhận bằng tài khoản nhân viên đang đăng nhập.',work_shared_appointment_requires_lead:'Ca có hạng mục chính do nhân viên khác phụ trách. Liên hệ Quản lý.',work_driver_assignment_required:'Ca xe chưa được giao cho bạn làm tài xế. Liên hệ Quản lý.',staff_level_required:'Cấp độ chuyên môn chưa phù hợp với ca này. Liên hệ Quản lý.',staff_schedule_conflict:'Bạn có ca khác trùng thời gian. Liên hệ Quản lý.',intake_observations_required:'Ca không còn ở trạng thái có thể tiếp nhận hoặc thiếu ghi nhận. Kiểm tra lại hồ sơ.'};
+                    Object.assign(messages,{hotel_checkin_time_or_room_invalid:'Chưa đến giờ nhận phòng, đã quá giờ trả hoặc phòng chưa sẵn sàng. Kiểm tra lịch lưu trú.',hotel_room_occupied:'Phòng đang có bé khác lưu trú. Liên hệ Quản lý.',taxi_trip_not_due:'Chưa đến giờ bắt đầu chuyến xe. Kiểm tra lịch trước khi tiếp nhận.'});
+                    errorText.textContent=messages[error.message]||(error.code==='PT409'?'Ca đã thay đổi. Đóng form và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.':error.code==='42501'?'Bạn không có quyền tiếp nhận ca dịch vụ này.':'Chưa xác nhận lưu tiếp nhận thành công. Giữ nguyên thông tin và thử lại.');}
+            }finally{state.saving=false;save.disabled=state.loading;save.textContent=state.row?.appointment_status==='in_progress'?'Lưu tiếp nhận':'Lưu và bắt đầu ca';Object.values(fields).forEach(input=>input.disabled=false);checkbox.disabled=false;}
+        };
+        state.open=async({appointmentId,onSaved}={})=>{
+            if(state.saving||!allowed())return;state.row=null;state.pending=null;state.loading=true;state.onSaved=onSaved;state.returnFocus=document.activeElement;form.reset();summary.replaceChildren();prior.textContent=errorText.textContent='';Object.values(fields).forEach(input=>{input.disabled=true;input.removeAttribute('aria-invalid');});checkbox.disabled=true;save.disabled=true;save.textContent='Đang tải';const generation=++state.generation;
+            overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();
+            try{
+                const rows=await read('appointments',appointmentId),row=rows.find(item=>item.id===appointmentId);if(generation!==state.generation)return;
+                if(!row||!['confirmed','checked_in','in_progress'].includes(row.appointment_status)){errorText.textContent='Không tìm thấy ca được giao ở trạng thái có thể tiếp nhận.';save.textContent='Lưu tiếp nhận';return;}
+                const [pets,customers,records]=await Promise.all([read('pets',row.pet_id),read('customers',row.customer_id),read('service_records',row.id)]);if(generation!==state.generation)return;
+                const pet=pets.find(item=>item.id===row.pet_id),customer=customers.find(item=>item.id===row.customer_id);if(!pet||!customer||pet.customer_id!==customer.id)throw Error('intake_context_missing');
+                for(const [name,value]of [['Mã lịch',row.appointment_code],['Khách hàng',customer.full_name],['Bé cưng',pet.pet_name],['Cảnh báo an toàn',pet.safety_note||'—'],['Dị ứng',pet.allergy||'—']])summary.append(el('dt',name),el('dd',value));
+                fields.weight.value=pet.current_weight??'';fields.staff.value=PawpalAdminAccess.state.user.name;
+                const previous=records.find(item=>item.record_type==='intake');if(previous)prior.textContent='Biên bản trước: '+previous.condition_note;
+                state.row=row;state.loading=false;save.disabled=false;save.textContent=row.appointment_status==='in_progress'?'Lưu tiếp nhận':'Lưu và bắt đầu ca';Object.values(fields).forEach(input=>input.disabled=false);checkbox.disabled=false;fields.weight.focus();
+            }catch{if(generation===state.generation){errorText.textContent='Không tải đủ dữ liệu ca dịch vụ. Đóng form và tải lại hồ sơ.';save.textContent='Lưu tiếp nhận';}}
+        };
+        state.close=closeDialog;state.clear=()=>{closeDialog();form.reset();state.row=null;state.pending=null;state.onSaved=null;summary.replaceChildren();prior.textContent=errorText.textContent='';};dialog=state;return state;
+    }
+    window.addEventListener('hashchange',()=>dialog?.close());
+    window.PawpalStaffIntake=Object.freeze({open:options=>{if(allowed())return build().open(options);},closeAll:()=>dialog?.clear()});
+})();
+
+;
+(function () {
+    'use strict';
+    const allowed = () => window.PawpalAdminAccess?.isStaff() && PawpalAdminAccess.state.user.permissions.includes('work.service.perform');
+    const el = (tag, text, className) => { const node = document.createElement(tag); if (text != null) node.textContent = text; if (className) node.className = className; return node; };
+    async function read(kind, id, page = 1) {
+        const { data, error } = await getSupabaseClient().rpc('get_staff_workspace', { p_kind: kind, p_query: '', p_id: id, p_page: page });
+        if (error) throw error; return data.items;
+    }
+    async function latestIntake(appointmentId) {
+        let latest;
+        for (let page = 1; page <= 100; page++) {
+            const rows = await read('service_records', appointmentId, page);
+            for (const row of rows) if (row.record_type === 'intake' && (!latest || row.revision_no > latest.revision_no)) latest = row;
+            if (rows.length < 10) return latest;
+        }
+        throw Error('service_record_limit');
+    }
+    let dialog;
+    function build() {
+        if (dialog) return dialog;
+        const overlay = el('div', null, 'admin-modal-overlay staff-workspace-modal'); overlay.id = 'staffHandoverModal'; overlay.setAttribute('aria-hidden', 'true');
+        const card = el('div', null, 'admin-modal-card'); card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'staffHandoverTitle');
+        const form = el('form'); form.noValidate = true; form.setAttribute('onsubmit', 'return false;');
+        const header = el('div', null, 'workspace-modal-header'), title = el('h2', 'Biên bản bàn giao'), close = el('button', 'Đóng', 'btn-modal-close');
+        title.id = 'staffHandoverTitle'; close.type = 'button'; close.dataset.closeModal = overlay.id; header.append(title, close);
+        const summary = el('dl', null, 'workspace-intake-summary'), prior = el('p', '', 'workspace-intake-prior');
+        const checks = {}, checkGroup = el('div', null, 'workspace-handover-checks');
+        for (const [key, text] of [['qualityAccepted', 'Đã kiểm tra chất lượng dịch vụ'], ['belongingsReturned', 'Đã trả đủ tư trang'], ['customerConfirmed', 'Khách đã xác nhận bàn giao']]) {
+            const label = el('label', null, 'workspace-intake-confirmation'), input = el('input'); input.type = 'checkbox'; input.required = true; input.id = 'staffHandover' + key;
+            label.htmlFor = input.id; const caption = el('span', text + ' '); caption.append(el('span', '*', 'workspace-required')); label.append(input, caption); checkGroup.append(label); checks[key] = input;
+        }
+        const noteGroup = el('div', null, 'workspace-form-field'), label = el('label', 'Ghi chú bàn giao'), note = el('textarea', null, 'admin-input');
+        note.id = 'staffHandoverNote'; note.rows = 3; note.maxLength = 2000; label.htmlFor = note.id; noteGroup.append(label, note);
+        const errorText = el('p', '', 'workspace-error'); errorText.setAttribute('role', 'alert');
+        const footer = el('div', null, 'workspace-modal-footer'), cancel = el('button', 'Hủy', 'admin-btn admin-btn-secondary'), save = el('button', 'Xác nhận bàn giao', 'admin-btn admin-btn-primary');
+        save.id = 'staffHandoverSave'; cancel.type = save.type = 'button'; cancel.dataset.closeModal = overlay.id; footer.append(cancel, save);
+        form.append(header, summary, prior, checkGroup, noteGroup, errorText, footer); card.append(form); overlay.append(card); document.body.append(overlay);
+        const state = { row: null, pending: null, loading: true, saving: false, generation: 0, returnFocus: null, onSaved: null };
+        function closeDialog() { state.generation++; overlay.classList.remove('active'); overlay.setAttribute('aria-hidden', 'true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
+        overlay.addEventListener('click', event => { if (event.target === overlay || event.target.closest('[data-close-modal="' + overlay.id + '"]')) closeDialog(); });
+        overlay.addEventListener('keydown', event => {
+            if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDialog(); return; }
+            if (event.key !== 'Tab') return;
+            const nodes = [...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled])')].filter(node => node.offsetParent !== null), first = nodes[0], last = nodes.at(-1);
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        });
+        form.addEventListener('submit', event => event.preventDefault());
+        Object.values(checks).forEach(input => input.addEventListener('change', () => { input.removeAttribute('aria-invalid'); errorText.textContent = ''; }));
+        save.onclick = async () => {
+            if (state.loading || state.saving || !state.row) return;
+            errorText.textContent = '';
+            for (const input of Object.values(checks)) {
+                input.removeAttribute('aria-invalid');
+                if (!input.checked) { input.setAttribute('aria-invalid', 'true'); errorText.textContent = 'Cần xác nhận chất lượng, trả đủ tư trang và khách xác nhận trước khi bàn giao.'; input.focus(); return; }
+            }
+            if (!allowed()) { errorText.textContent = 'Bạn không có quyền bàn giao ca dịch vụ.'; return; }
+            const details = { qualityAccepted: true, belongingsReturned: true, customerConfirmed: true, belongingsNote: note.value.trim() }, signature = JSON.stringify(details);
+            if (!state.pending || state.pending.signature !== signature) state.pending = { signature, id: crypto.randomUUID() };
+            const args = { p_id: state.pending.id, p_appointment_id: state.row.id, p_expected_updated_at: state.row.updated_at, p_type: 'handover', p_details: details }, generation = state.generation;
+            state.saving = true; save.disabled = true; save.textContent = 'Đang lưu'; Object.values(checks).forEach(input => input.disabled = true); note.disabled = true;
+            try {
+                const { data, error } = await getSupabaseClient().rpc('save_admin_service_record', args); if (error) throw error; if (data !== args.p_id) throw Error('invalid_handover_result');
+                if (generation === state.generation) { const callback = state.onSaved; closeDialog(); form.reset(); state.row = state.pending = null; if (allowed()) callback?.(args.p_appointment_id); }
+            } catch (error) {
+                if (generation === state.generation) {
+                    const messages = {
+                        confirmed_intake_required: 'Biên bản tiếp nhận mới nhất chưa được khách xác nhận. Kiểm tra lại trước khi bàn giao.',
+                        pending_service_adjustments: 'Ca còn điều chỉnh chờ duyệt hoặc chưa có xác nhận của khách. Liên hệ Quản lý.',
+                        hotel_checkout_required: 'Ca lưu trú chưa hoàn tất trả phòng. Hoàn tất trả phòng trước khi bàn giao.',
+                        work_shared_appointment_requires_lead: 'Ca còn hạng mục do đồng nghiệp phụ trách đang xử lý. Liên hệ Quản lý.',
+                        work_assignment_required: 'Ca không còn được giao cho bạn. Đóng form và tải lại.',
+                        work_driver_assignment_required: 'Ca xe chưa được giao cho bạn làm tài xế. Liên hệ Quản lý.',
+                        handover_confirmation_required: 'Ca không còn đang thực hiện hoặc chưa đủ xác nhận bàn giao. Kiểm tra lại hồ sơ.',
+                        taxi_return_not_due: 'Chưa đến thời điểm lượt về của chuyến xe. Kiểm tra lịch trước khi bàn giao.'
+                    };
+                    errorText.textContent = messages[error.message] || (error.code === 'PT409' ? 'Ca đã thay đổi. Đóng form và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.' : error.code === '42501' ? 'Bạn không có quyền bàn giao ca dịch vụ này.' : 'Chưa xác nhận lưu bàn giao thành công. Giữ nguyên thông tin và thử lại.');
+                }
+            } finally { state.saving = false; save.disabled = state.loading; save.textContent = 'Xác nhận bàn giao'; Object.values(checks).forEach(input => input.disabled = false); note.disabled = false; }
+        };
+        async function open({ appointmentId, onSaved } = {}) {
+            if (state.saving || !allowed()) return;
+            state.row = state.pending = null; state.loading = true; state.onSaved = onSaved; state.returnFocus = document.activeElement; form.reset(); summary.replaceChildren(); prior.textContent = errorText.textContent = '';
+            Object.values(checks).forEach(input => { input.disabled = true; input.removeAttribute('aria-invalid'); }); note.disabled = true; save.disabled = true; save.textContent = 'Đang tải';
+            const generation = ++state.generation; overlay.classList.add('active'); overlay.setAttribute('aria-hidden', 'false'); close.focus();
+            try {
+                const rows = await read('appointments', appointmentId), row = rows.find(item => item.id === appointmentId); if (generation !== state.generation) return;
+                if (!row || row.appointment_status !== 'in_progress') { errorText.textContent = 'Không tìm thấy ca đang thực hiện trong phạm vi được giao.'; save.textContent = 'Xác nhận bàn giao'; return; }
+                const [pets, customers, intake] = await Promise.all([read('pets', row.pet_id), read('customers', row.customer_id), latestIntake(row.id)]); if (generation !== state.generation) return;
+                const pet = pets.find(item => item.id === row.pet_id), customer = customers.find(item => item.id === row.customer_id); if (!pet || !customer || pet.customer_id !== customer.id) throw Error('handover_context_missing');
+                for (const [name, value] of [['Mã lịch', row.appointment_code], ['Khách hàng', customer.full_name], ['Bé cưng', pet.pet_name], ['Nhân viên bàn giao', PawpalAdminAccess.state.user.name]]) summary.append(el('dt', name), el('dd', value));
+                if (intake) prior.textContent = 'Tiếp nhận đã ghi: ' + intake.condition_note + (intake.note ? '\nGhi chú tư trang: ' + intake.note : '');
+                if (!intake || intake.customer_confirmation_status !== 'confirmed') { errorText.textContent = 'Biên bản tiếp nhận mới nhất chưa được khách xác nhận. Kiểm tra lại trước khi bàn giao.'; save.textContent = 'Xác nhận bàn giao'; return; }
+                state.row = row; state.loading = false; Object.values(checks).forEach(input => input.disabled = false); note.disabled = false; save.disabled = false; save.textContent = 'Xác nhận bàn giao'; checks.qualityAccepted.focus();
+            } catch { if (generation === state.generation) { errorText.textContent = 'Không tải đủ dữ liệu bàn giao. Đóng form và tải lại hồ sơ.'; save.textContent = 'Xác nhận bàn giao'; } }
+        }
+        dialog = { open, close: closeDialog, clear: () => { closeDialog(); form.reset(); summary.replaceChildren(); prior.textContent = errorText.textContent = ''; state.row = state.pending = state.onSaved = null; } }; return dialog;
+    }
+    window.addEventListener('hashchange', () => dialog?.close());
+    window.PawpalStaffHandover = Object.freeze({ open: options => { if (allowed()) return build().open(options); }, closeAll: () => dialog?.clear() });
+})();
+
+;
+(function () {
+    'use strict';
+    const allowed = () => window.PawpalAdminAccess?.isStaff() && PawpalAdminAccess.state.user.permissions.includes('work.service.perform');
+    const el = (tag, text, className) => { const node = document.createElement(tag); if (text != null) node.textContent = text; if (className) node.className = className; return node; };
+    const date = value => new Date(value).toLocaleString('vi-VN', { timeZone:'Asia/Bangkok', dateStyle:'short', timeStyle:'short' });
+    async function read(kind, id) { const { data, error } = await getSupabaseClient().rpc('get_staff_workspace', { p_kind:kind, p_query:'', p_id:id, p_page:1 }); if (error) throw error; return data.items; }
+    let dialog;
+    function build() {
+        if (dialog) return dialog;
+        const overlay = el('div', null, 'admin-modal-overlay staff-workspace-modal'); overlay.id = 'staffHotelCheckoutModal'; overlay.setAttribute('aria-hidden','true');
+        const card = el('div', null, 'admin-modal-card'); card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-labelledby','staffHotelCheckoutTitle');
+        const form = el('form'); form.setAttribute('onsubmit','return false;');
+        const header = el('div', null, 'workspace-modal-header'), title = el('h2','Trả phòng'), close = el('button','Đóng','btn-modal-close'); title.id = 'staffHotelCheckoutTitle'; close.type = 'button'; close.dataset.closeModal = overlay.id; header.append(title,close);
+        const summary = el('dl',null,'workspace-intake-summary'), explanation = el('p','Trả phòng sẽ giải phóng phòng và giữ nguyên đơn giá đã chốt. Sau đó thực hiện bàn giao.','workspace-checkout-explanation');
+        const message = el('p','','workspace-error'); message.setAttribute('role','alert');
+        const footer = el('div',null,'workspace-modal-footer'), cancel = el('button','Hủy','admin-btn admin-btn-secondary'), save = el('button','Xác nhận trả phòng','admin-btn admin-btn-primary'); save.id = 'staffHotelCheckoutSave'; cancel.type = save.type = 'button'; cancel.dataset.closeModal = overlay.id; footer.append(cancel,save);
+        form.append(header,summary,explanation,message,footer); card.append(form); overlay.append(card); document.body.append(overlay);
+        const state = { row:null, stay:null, loading:true, saving:false, generation:0, onSaved:null, returnFocus:null };
+        function closeDialog() { state.generation++; overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
+        overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
+        overlay.addEventListener('keydown',event=>{
+            if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}
+            if(event.key!=='Tab')return;
+            const nodes=[...overlay.querySelectorAll('button:not([disabled])')].filter(node=>node.offsetParent!==null),first=nodes[0],last=nodes.at(-1);
+            if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+        });
+        form.addEventListener('submit',event=>event.preventDefault());
+        save.onclick=async()=>{
+            if(state.loading||state.saving||!state.row||!state.stay)return;
+            if(!allowed()){message.textContent='Bạn không có quyền trả phòng cho ca này.';return;}
+            state.saving=true;save.disabled=true;save.textContent='Đang trả phòng';message.textContent='';
+            const generation=state.generation,appointmentId=state.row.id,stayId=state.stay.id,roomId=state.stay.room_id;
+            const finish=()=>{if(generation!==state.generation)return;const callback=state.onSaved;closeDialog();summary.replaceChildren();state.row=state.stay=null;if(allowed())callback?.(appointmentId);};
+            try {
+                const {data,error}=await getSupabaseClient().rpc('close_admin_hotel_stay',{p_appointment_id:appointmentId,p_expected_updated_at:state.row.updated_at});
+                if(error)throw error;if(data!==stayId)throw Error('invalid_checkout_result');finish();
+            }catch(error){
+                if(generation!==state.generation)return;
+                // Checkout has no request UUID. Resolve a lost response by reading the actual scoped stay state.
+                if(error.code!=='42501'){
+                    try{const stays=await read('hotel_stays',appointmentId),current=stays.find(stay=>stay.id===stayId);if(current?.status==='closed'&&current.room_id===roomId&&current.lead_staff_id===PawpalAdminAccess.state.user.id){finish();return;}}catch{}
+                }
+                if(generation!==state.generation)return;
+                message.textContent=error.code==='42501'?'Ca không còn do bạn phụ trách. Đóng form và tải lại.':error.code==='PT409'?'Ca đã thay đổi. Đóng form và mở lại để kiểm tra phòng trước khi trả.':error.message==='hotel_not_checked_in'?'Ca hoặc phòng không còn ở trạng thái đang lưu trú. Tải lại hồ sơ.':'Chưa xác nhận trả phòng thành công. Giữ form và thử lại hoặc tải lại hồ sơ để kiểm tra.';
+            }finally{state.saving=false;save.disabled=state.loading;save.textContent='Xác nhận trả phòng';}
+        };
+        async function open({appointmentId,onSaved}={}){
+            if(state.saving||!allowed())return;state.row=state.stay=null;state.loading=true;state.onSaved=onSaved;state.returnFocus=document.activeElement;summary.replaceChildren();message.textContent='';save.disabled=true;save.textContent='Đang tải';const generation=++state.generation;
+            overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();
+            try{
+                const rows=await read('appointments',appointmentId),row=rows.find(item=>item.id===appointmentId);if(generation!==state.generation)return;
+                if(!row||row.appointment_status!=='in_progress'){message.textContent='Không tìm thấy ca đang lưu trú trong phạm vi được giao.';save.textContent='Xác nhận trả phòng';return;}
+                const [stays,pets,customers]=await Promise.all([read('hotel_stays',row.id),read('pets',row.pet_id),read('customers',row.customer_id)]);if(generation!==state.generation)return;
+                if(stays.length!==1){message.textContent='Không tìm thấy đúng một lượt lưu trú cho ca này. Liên hệ Quản lý.';save.textContent='Xác nhận trả phòng';return;}
+                const stay=stays[0],pet=pets.find(item=>item.id===row.pet_id),customer=customers.find(item=>item.id===row.customer_id);
+                if(!pet||!customer||pet.customer_id!==customer.id||!stay.room_number||stay.daily_price==null||!Number.isFinite(Number(stay.daily_price)))throw Error('checkout_context_missing');
+                for(const[name,value]of [['Mã lưu trú',stay.booking_code],['Khách hàng',customer.full_name],['Bé cưng',pet.pet_name],['Phòng',stay.room_number+(stay.room_type?' · '+stay.room_type:'')],['Nhận phòng theo lịch',date(stay.check_in_at)],['Trả phòng theo lịch',date(stay.check_out_at)],['Đơn giá đã chốt',new Intl.NumberFormat('vi-VN').format(Number(stay.daily_price))+' đ']])summary.append(el('dt',name),el('dd',value));
+                if(stay.status==='closed'){message.textContent='Phòng đã được trả. Thực hiện bàn giao khi đủ điều kiện.';save.textContent='Đã trả phòng';return;}
+                if(stay.status!=='checked_in'){message.textContent='Phòng chưa ở trạng thái đang lưu trú. Kiểm tra lại hồ sơ.';save.textContent='Xác nhận trả phòng';return;}
+                if(stay.lead_staff_id!==PawpalAdminAccess.state.user.id){message.textContent='Chỉ nhân viên phụ trách ca được trả phòng. Liên hệ Quản lý.';save.textContent='Xác nhận trả phòng';return;}
+                state.row=row;state.stay=stay;state.loading=false;save.disabled=false;save.textContent='Xác nhận trả phòng';
+            }catch{if(generation===state.generation){message.textContent='Không tải đủ dữ liệu lưu trú. Đóng form và tải lại hồ sơ.';save.textContent='Xác nhận trả phòng';}}
+        }
+        dialog={open,close:closeDialog,clear:()=>{closeDialog();summary.replaceChildren();message.textContent='';state.row=state.stay=state.onSaved=null;}};return dialog;
+    }
+    window.addEventListener('hashchange',()=>dialog?.close());
+    window.PawpalStaffHotelCheckout=Object.freeze({open:options=>{if(allowed())return build().open(options);},closeAll:()=>dialog?.clear()});
+})();
+
+;
+(function () {
+    'use strict';
+    const allowed = () => window.PawpalAdminAccess?.isStaff() && PawpalAdminAccess.state.user.permissions.includes('work.service.perform');
+    const el = (tag, text, cls) => { const node = document.createElement(tag); if (text != null) node.textContent = text; if (cls) node.className = cls; return node; };
+    async function read(kind, id) { const { data, error } = await getSupabaseClient().rpc('get_staff_workspace', { p_kind:kind, p_query:'', p_id:id, p_page:1 }); if (error) throw error; return data.items; }
+    const pending = new Map(); let dialog;
+    function build() {
+        if (dialog) return dialog;
+        const overlay = el('div', null, 'admin-modal-overlay staff-workspace-modal'); overlay.id = 'staffPickupModal'; overlay.setAttribute('aria-hidden','true');
+        const card = el('div', null, 'admin-modal-card'); card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-labelledby','staffPickupTitle');
+        const form = el('form'); form.noValidate = true; form.setAttribute('onsubmit','return false;');
+        const header = el('div',null,'workspace-modal-header'), title = el('h2','Mời đón bé'), close = el('button','Đóng','btn-modal-close'); title.id = 'staffPickupTitle'; close.type = 'button'; close.dataset.closeModal = overlay.id; header.append(title,close);
+        const summary = el('dl',null,'workspace-intake-summary');
+        const group = el('div',null,'workspace-form-field'), label = el('label','Nội dung thông báo '), content = el('textarea',null,'admin-input'); content.id = 'staffPickupContent'; content.rows = 4; content.required = true; content.maxLength = 4000; label.htmlFor = content.id; label.append(el('span','*','workspace-required')); group.append(label,content);
+        const channel = el('p','Thông báo được gửi vào tài khoản PawPal của khách.','workspace-checkout-explanation');
+        const confirmLabel = el('label',null,'workspace-intake-confirmation'), confirm = el('input'); confirm.id = 'staffPickupReady'; confirm.type = 'checkbox'; confirm.required = true; confirmLabel.append(confirm,el('span','Bé đã sẵn sàng để đón '),el('span','*','workspace-required'));
+        const message = el('p','','workspace-error'); message.setAttribute('role','alert');
+        const footer = el('div',null,'workspace-modal-footer'), cancel = el('button','Hủy','admin-btn admin-btn-secondary'), save = el('button','Gửi thông báo','admin-btn admin-btn-primary'); save.id = 'staffPickupSave'; cancel.type = save.type = 'button'; cancel.dataset.closeModal = overlay.id; footer.append(cancel,save);
+        form.append(header,summary,group,channel,confirmLabel,message,footer); card.append(form); overlay.append(card); document.body.append(overlay);
+        const state = { row:null, id:null, loading:true, saving:false, blocked:false, unresolved:null, generation:0, returnFocus:null, onSaved:null };
+        function controls() { content.disabled = state.loading || state.saving || state.blocked || !!state.unresolved; confirm.disabled = save.disabled = state.loading || state.saving || state.blocked; save.textContent = state.saving ? 'Đang gửi' : state.unresolved ? 'Xác nhận gửi lại' : 'Gửi thông báo'; }
+        content.addEventListener('input',()=>{ confirm.checked = false; message.textContent = ''; });
+        function closeDialog() { state.generation++; overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); summary.replaceChildren(); content.value = ''; confirm.checked = false; message.textContent = ''; state.row = null; if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
+        overlay.addEventListener('click',event=>{ if(event.target===overlay || event.target.closest('[data-close-modal="'+overlay.id+'"]')) closeDialog(); });
+        overlay.addEventListener('keydown',event=>{ if(event.key==='Escape'){ event.preventDefault(); event.stopPropagation(); closeDialog(); return; } if(event.key!=='Tab')return; const nodes=[...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled])')].filter(node=>node.offsetParent!==null),first=nodes[0],last=nodes.at(-1); if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();} });
+        form.addEventListener('submit',event=>event.preventDefault());
+        save.onclick = async () => {
+            if (!allowed() || state.loading || state.saving || state.blocked) return;
+            if (!content.value.trim() || content.value.trim().length > 4000) { message.textContent = 'Nhập nội dung thông báo từ 1 đến 4000 ký tự.'; content.focus(); return; }
+            if (!confirm.checked) { message.textContent = 'Xác nhận bé đã sẵn sàng để đón trước khi gửi.'; confirm.focus(); return; }
+            const attempt = state.unresolved || { p_id:crypto.randomUUID(), p_appointment_id:state.id, p_expected_updated_at:state.row.updated_at, p_content:content.value.trim(), p_ready:true }, key = PawpalAdminAccess.state.user.id+':'+state.id, generation = state.generation;
+            pending.set(key,attempt); state.saving = true; controls(); message.textContent = '';
+            try {
+                const { data,error } = await getSupabaseClient().rpc('save_admin_pickup_notification',attempt); if(error)throw error; if(data!==attempt.p_id)throw Error('invalid_pickup_result'); pending.delete(key);
+                if(generation!==state.generation)return; const callback=state.onSaved; closeDialog(); if(allowed())callback?.();
+            } catch(error) {
+                const definitive = ['42501','22023','PT409','P0002'].includes(error.code); if(definitive)pending.delete(key);
+                if(generation!==state.generation)return; state.unresolved = definitive ? null : attempt; state.blocked = definitive; confirm.checked = false;
+                message.textContent = error.code==='42501' ? 'Ca không còn được giao cho bạn. Đóng form và tải lại.' : error.code==='PT409' ? 'Ca đã thay đổi. Đóng form và mở lại để kiểm tra trước khi gửi.' : error.message==='confirmed_intake_required' ? 'Cần biên bản tiếp nhận được khách xác nhận trước khi mời đón bé.' : error.message==='pending_service_adjustments' ? 'Cần hoàn tất duyệt và xác nhận điều chỉnh dịch vụ trước khi mời đón bé.' : error.message==='pickup_notification_not_ready' ? 'Ca chưa ở trạng thái cho phép mời đón bé. Đóng form và tải lại.' : definitive ? 'Không thể gửi thông báo cho ca này. Đóng form và tải lại.' : 'Chưa xác nhận gửi thành công. Nội dung được giữ nguyên; xác nhận rồi thử lại cùng thông báo để tránh gửi trùng.';
+            } finally { state.saving = false; if(generation===state.generation)controls(); }
+        };
+        async function open({appointmentId,onSaved}={}) {
+            if(!allowed()||state.saving)return; state.id=appointmentId;state.row=null;state.onSaved=onSaved;state.loading=true;state.blocked=false;state.unresolved=null;state.returnFocus=document.activeElement;summary.replaceChildren();content.value='';confirm.checked=false;message.textContent='';controls();const generation=++state.generation;overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();
+            try {
+                const rows=await read('appointments',appointmentId),row=rows.find(item=>item.id===appointmentId);if(generation!==state.generation)return;
+                if(!row||!['in_progress','completed'].includes(row.appointment_status))throw Error('pickup_context_missing');
+                const [pets,customers]=await Promise.all([read('pets',row.pet_id),read('customers',row.customer_id)]);if(generation!==state.generation)return;const pet=pets.find(item=>item.id===row.pet_id),customer=customers.find(item=>item.id===row.customer_id);if(!pet||!customer||pet.customer_id!==customer.id)throw Error('pickup_context_missing');
+                for(const[name,value]of [['Mã lịch',row.appointment_code],['Khách hàng',customer.full_name],['Bé cưng',pet.pet_name]])summary.append(el('dt',name),el('dd',value));
+                state.row=row;state.unresolved=pending.get(PawpalAdminAccess.state.user.id+':'+appointmentId)||null;content.value=state.unresolved?.p_content||'Bé '+pet.pet_name+' đã sẵn sàng để đón. PawPal mời bạn đến đón bé. Vui lòng liên hệ cửa hàng nếu cần hỗ trợ.';
+                if(state.unresolved)message.textContent='Lần gửi trước chưa được xác nhận. Kiểm tra nội dung và xác nhận để thử lại cùng thông báo.';
+                state.loading=false;controls();
+            }catch{if(generation===state.generation){state.blocked=true;message.textContent='Không tải đủ thông tin ca trong phạm vi được giao. Đóng form và tải lại.';controls();}}
+        }
+        dialog={open,close:closeDialog};return dialog;
+    }
+    window.addEventListener('hashchange',()=>dialog?.close());
+    window.PawpalStaffPickup=Object.freeze({open:options=>{if(allowed())return build().open(options);},closeAll:()=>dialog?.close()});
+})();
+
+;
+(function () {
+    'use strict';
+    const allowed=()=>window.PawpalAdminAccess?.isStaff()&&PawpalAdminAccess.state.user.permissions.includes('work.cashier.collect');
+    const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!=null)node.textContent=text;if(cls)node.className=cls;return node;};
+    const money=value=>new Intl.NumberFormat('vi-VN').format(Number(value))+' đ';
+    async function rpc(name,args){const{data,error}=await getSupabaseClient().rpc(name,args);if(error)throw error;return data;}
+    const pending=new Map();let dialog;
+    function build(){
+        if(dialog)return dialog;
+        const overlay=el('div',null,'admin-modal-overlay staff-workspace-modal');overlay.id='staffServiceCashierModal';overlay.setAttribute('aria-hidden','true');
+        const card=el('div',null,'admin-modal-card workspace-cashier-card');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-labelledby','staffServiceCashierTitle');
+        const form=el('form');form.noValidate=true;form.setAttribute('onsubmit','return false;');
+        const header=el('div',null,'workspace-modal-header'),title=el('h2','Thu tiền ca dịch vụ'),close=el('button','Đóng','btn-modal-close');title.id='staffServiceCashierTitle';close.type='button';close.dataset.closeModal=overlay.id;header.append(title,close);
+        const summary=el('dl',null,'workspace-intake-summary');summary.id='staffServiceCashierSummary';
+        const grid=el('div',null,'workspace-pet-grid'),fields={},groups={};
+        function field(key,label,type='text',required=false,wide=false){const group=el('div',null,'workspace-form-field'+(wide?' workspace-field-wide':'')),caption=el('label',label+(required?' ':'')),input=el(type==='textarea'?'textarea':'input',null,'admin-input');input.id='staffServiceCashier'+key;caption.htmlFor=input.id;if(required)caption.append(el('span','*','workspace-required'));input.required=required;if(type==='textarea'){input.rows=2;input.maxLength=2000;}else input.type=type;group.append(caption,input);grid.append(group);fields[key]=input;groups[key]=group;return input;}
+        field('method','Phương thức thanh toán','text',true);const amount=field('amount','Số tiền ghi nhận','number',true);amount.min=1;amount.max=100000000000;amount.step=1;
+        field('reference','Mã giao dịch đã đối soát','text',true,true).maxLength=200;field('reason','Nội dung thu tiền','textarea',true,true);
+        const confirmation=el('label',null,'workspace-intake-confirmation'),confirmed=el('input');confirmed.id='staffServiceCashierConfirmed';confirmed.type='checkbox';confirmed.required=true;confirmation.htmlFor=confirmed.id;confirmation.append(confirmed,el('span','Đã nhận từ khách đúng số tiền ghi ở trên '),el('span','*','workspace-required'));
+        const history=el('div',null,'workspace-cashier-history');history.id='staffServiceCashierHistory';
+        const message=el('p','','workspace-error');message.setAttribute('role','alert');
+        const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Ghi nhận thu tiền','admin-btn admin-btn-primary');save.id='staffServiceCashierSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);
+        form.append(header,summary,grid,confirmation,history,message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
+        const menu=el('div',null,'autocomplete-dropdown workspace-autocomplete-menu'),selected=el('div',null,'workspace-selected-entity');menu.id='staffServiceCashierMethodOptions';menu.setAttribute('role','listbox');menu.hidden=selected.hidden=true;groups.method.classList.add('workspace-autocomplete');groups.method.append(menu,selected);fields.method.autocomplete='off';fields.method.setAttribute('role','combobox');fields.method.setAttribute('aria-controls',menu.id);fields.method.setAttribute('aria-expanded','false');
+        const state={context:null,method:null,appointmentId:null,generation:0,saving:false,loading:true,blocked:false,unresolved:null,onSaved:null,returnFocus:null};
+        const key=()=>PawpalAdminAccess.state.user.id+':'+state.appointmentId;
+        function hideMenu(){menu.hidden=true;fields.method.setAttribute('aria-expanded','false');fields.method.removeAttribute('aria-activedescendant');}
+        function setMethod(method){state.method=method;fields.method.value=method?.name||'';fields.method.readOnly=!!method;selected.replaceChildren();selected.hidden=!method;groups.reference.hidden=!method?.requires_reference;fields.reference.required=!!method?.requires_reference;confirmed.checked=false;hideMenu();if(method){selected.append(el('span',method.name));const clear=el('button','✕ Bỏ chọn','workspace-text-button');clear.type='button';clear.onclick=event=>{event.stopPropagation();if(state.saving||state.unresolved)return;setMethod(null);fields.reference.value='';fields.method.focus();};selected.append(clear);}}
+        let active=-1,options=[];
+        function showMenu(){if(state.loading||state.blocked||state.saving||state.unresolved||fields.method.readOnly)return;menu.replaceChildren();active=-1;options=[];for(const method of state.context?.methods||[]){if(!method.name.toLocaleLowerCase('vi').includes(fields.method.value.trim().toLocaleLowerCase('vi')))continue;const button=el('button',method.name,'workspace-autocomplete-option');button.type='button';button.id=menu.id+options.length;button.setAttribute('role','option');button.setAttribute('aria-selected','false');button.onclick=()=>{setMethod(method);fields.amount.focus();};menu.append(button);options.push(button);}if(!options.length)menu.append(el('p','Không có phương thức phù hợp.'));menu.hidden=false;fields.method.setAttribute('aria-expanded','true');}
+        fields.method.addEventListener('focus',showMenu);fields.method.addEventListener('click',showMenu);fields.method.addEventListener('input',()=>{state.method=null;confirmed.checked=false;showMenu();});
+        fields.method.addEventListener('keydown',event=>{if(event.key==='Escape'&&!menu.hidden){event.preventDefault();event.stopPropagation();hideMenu();}else if(['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();if(menu.hidden){showMenu();return;}if(!options.length)return;active=(active+(event.key==='ArrowDown'?1:-1)+options.length)%options.length;options.forEach((button,index)=>button.setAttribute('aria-selected',String(index===active)));fields.method.setAttribute('aria-activedescendant',options[active].id);}else if(event.key==='Enter'){event.preventDefault();options[active]?.click();}});
+        for(const name of ['amount','reference','reason'])fields[name].addEventListener('input',()=>{confirmed.checked=false;message.textContent='';});
+        function controls(){for(const input of Object.values(fields))input.disabled=state.loading||state.blocked||state.saving||!!state.unresolved;selected.querySelectorAll('button').forEach(button=>button.disabled=state.saving||!!state.unresolved);confirmed.disabled=state.loading||state.blocked||state.saving;save.disabled=state.loading||state.blocked||state.saving;save.textContent=state.saving?'Đang ghi nhận':state.unresolved?'Thử lại khoản thu':'Ghi nhận thu tiền';}
+        function paint(context){
+            summary.replaceChildren();for(const[label,value]of [['Mã ca',context.appointment_code],['Tổng tiền',money(context.total)],['Đã thu sau hoàn',money(context.collected)],['Còn phải thu',money(context.remaining)]])summary.append(el('dt',label),el('dd',value));
+            const statuses={succeeded:'Thành công',pending:'Chờ xử lý',failed:'Thất bại',cancelled:'Đã hủy'};
+            function historyPage(page){
+                history.replaceChildren(el('h3','Lịch sử thanh toán'));if(!context.payments.length)history.append(el('p','Chưa có khoản thu.'));
+                for(const payment of context.payments.slice(page*10,page*10+10)){const entry=el('div',null,'workspace-cashier-entry');entry.append(el('strong',money(payment.amount)+' · '+(statuses[payment.transaction_status]||'Cần đối soát')),el('p',[payment.method_name,payment.payment_code,payment.succeeded_at?new Date(payment.succeeded_at).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok'}):null].filter(Boolean).join(' · ')));for(const refund of payment.refunds||[])entry.append(el('p','Hoàn '+money(refund.refunded_amount)+' · '+(statuses[refund.refund_status]||'Cần đối soát')));history.append(entry);}
+                if(context.payments.length>10){const pager=el('nav',null,'workspace-pager');pager.setAttribute('aria-label','Trang lịch sử thanh toán');for(const[label,next]of [['<',page-1],[String(page+1),page],['>',page+1]]){const button=el('button',label,next===page?'active':'');button.type='button';button.disabled=next<0||next*10>=context.payments.length;button.onclick=()=>historyPage(next);pager.append(button);}history.append(pager);}
+            }
+            historyPage(0);
+        }
+        const matches=(context,attempt)=>context.payments.some(payment=>payment.id===attempt.args.p_request_id&&payment.appointment_id===attempt.args.p_appointment_id&&payment.transaction_status==='succeeded'&&Number(payment.amount)===attempt.args.p_details.amount&&payment.payment_method_config_id===attempt.args.p_details.method_id);
+        function closeDialog(){state.generation++;hideMenu();overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');if(state.returnFocus?.isConnected)state.returnFocus.focus();}
+        overlay.addEventListener('click',event=>{if(!groups.method.contains(event.target))hideMenu();if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
+        overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}if(event.key!=='Tab')return;const nodes=[...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled])')].filter(node=>node.offsetParent!==null),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});
+        form.addEventListener('submit',event=>event.preventDefault());
+        const errorText=error=>({service_cashier_changed:'Số dư hoặc ca dịch vụ đã thay đổi. Đóng và mở lại để đối chiếu.',pending_service_adjustments:'Ca còn điều chỉnh chờ duyệt hoặc chưa có xác nhận của khách. Liên hệ Quản lý.',service_money_exceeds_balance:'Số tiền vượt số còn phải thu. Đóng và mở lại để kiểm tra.',service_money_method_invalid:'Phương thức không còn được phép. Đóng và mở lại để chọn lại.',service_money_reference_duplicate:'Mã giao dịch này đã được ghi nhận. Đối chiếu trước khi thu thêm.',service_money_booking_closed:'Ca đã hủy hoặc khách vắng mặt, không thể thu thêm.',service_money_reference_required:'Nhập mã giao dịch ngân hàng đã đối soát.',service_request_conflict:'Yêu cầu đã được ghi với nội dung khác. Đóng và mở lại để đối chiếu.'}[error.message]||(error.code==='42501'?'Ca không còn được giao cho bạn hoặc bạn không còn quyền thu tiền. Đóng và tải lại.':'Chưa xác nhận ghi nhận thành công. Thử lại cùng khoản thu để đối chiếu.'));
+        save.onclick=async()=>{
+            if(!allowed()||state.loading||state.blocked||state.saving||!state.context)return;
+            const value=Number(fields.amount.value),reason=fields.reason.value.trim(),reference=fields.reference.value.trim();
+            if(!state.unresolved){if(!state.method){message.textContent='Chọn phương thức từ danh sách.';fields.method.focus();return;}if(!Number.isInteger(value)||value<=0||value>Number(state.context.remaining)||value>100000000000){message.textContent='Nhập số tiền nguyên dương không vượt số còn phải thu.';fields.amount.focus();return;}if(reason.length<2||reason.length>2000){message.textContent='Nhập nội dung thu tiền từ 2 đến 2000 ký tự.';fields.reason.focus();return;}if(state.method.requires_reference&&!reference){message.textContent='Nhập mã giao dịch ngân hàng đã đối soát.';fields.reference.focus();return;}}
+            if(!confirmed.checked){message.textContent='Xác nhận đã nhận đúng số tiền từ khách trước khi ghi nhận.';confirmed.focus();return;}
+            const attempt=state.unresolved||{args:{p_request_id:crypto.randomUUID(),p_appointment_id:state.appointmentId,p_expected_state:state.context.version,p_action:'collect',p_details:{method_id:state.method.id,amount:value,reason,reference:state.method.requires_reference?reference:'',confirmed:true}}};
+            const generation=state.generation,attemptKey=key();pending.set(attemptKey,attempt);state.saving=true;controls();hideMenu();message.textContent='';
+            const finish=()=>{pending.delete(attemptKey);if(generation!==state.generation)return;const callback=state.onSaved;closeDialog();if(allowed())callback?.(attempt.args.p_appointment_id);};
+            try{const result=await rpc('post_admin_service_money',attempt.args);if(result!==attempt.args.p_request_id)throw Error('invalid_collection_result');finish();}
+            catch(error){
+                // SQL validation errors prove this attempt rolled back. An uncertain transport result keeps its UUID and immutable payload.
+                const definitive=['42501','22023','23514','PT409','P0002'].includes(error.code);
+                if(definitive)pending.delete(attemptKey);
+                if(!definitive){try{const latest=await rpc('get_admin_service_cashier',{p_appointment_id:attempt.args.p_appointment_id});if(matches(latest,attempt)){finish();return;}}catch{}}
+                if(generation!==state.generation)return;
+                state.unresolved=definitive?null:attempt;state.blocked=definitive;confirmed.checked=false;message.textContent=errorText(error);
+            }finally{state.saving=false;if(generation===state.generation)controls();}
+        };
+        async function open({appointmentId,onSaved}={}){
+            if(state.saving||!allowed())return;state.appointmentId=appointmentId;state.context=state.method=state.unresolved=null;state.loading=true;state.blocked=false;state.onSaved=onSaved;state.returnFocus=document.activeElement;const generation=++state.generation;
+            form.reset();summary.replaceChildren();history.replaceChildren();selected.hidden=true;groups.reference.hidden=true;message.textContent='';controls();overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();
+            try{const context=await rpc('get_admin_service_cashier',{p_appointment_id:appointmentId});if(generation!==state.generation)return;
+                if(context?.appointment_id!==appointmentId||!context.version||!Array.isArray(context.methods)||!Array.isArray(context.payments)||!['total','collected','remaining'].every(name=>Number.isFinite(Number(context[name]))))throw Error('invalid_cashier_context');
+                state.context=context;paint(context);const previous=pending.get(key());if(previous&&matches(context,previous)){pending.delete(key());message.textContent='Khoản thu trước đã được ghi nhận. Kiểm tra lịch sử bên dưới.';}
+                if(['cancelled','no_show'].includes(context.status)){state.blocked=true;message.textContent='Ca đã hủy hoặc khách vắng mặt, không thể thu thêm.';}else if(Number(context.remaining)<=0){state.blocked=true;message.textContent='Ca đã thu đủ, không có số tiền cần thu thêm.';}else if(!context.methods.length){state.blocked=true;message.textContent='Chưa có phương thức thu tiền được phép. Liên hệ Quản lý.';}
+                const unresolved=pending.get(key());if(unresolved&&!state.blocked){state.unresolved=unresolved;const details=unresolved.args.p_details;setMethod(context.methods.find(method=>method.id===details.method_id)||{id:details.method_id,name:'Phương thức của khoản thu đang đối chiếu',requires_reference:!!details.reference});fields.amount.value=details.amount;fields.reason.value=details.reason;fields.reference.value=details.reference;message.textContent='Khoản thu trước chưa được xác nhận. Thử lại đúng khoản thu này trước khi tạo khoản mới.';}else{setMethod(context.methods.find(method=>method.name==='Tiền mặt')||null);fields.amount.value=Number(context.remaining)>0?context.remaining:'';}
+                state.loading=false;controls();
+            }catch{if(generation===state.generation){state.blocked=true;message.textContent='Không tải đủ dữ liệu thu tiền. Đóng và mở lại để kiểm tra.';controls();}}
+        }
+        dialog={open,close:closeDialog,clear:()=>{closeDialog();pending.clear();state.context=state.method=state.unresolved=state.onSaved=null;form.reset();summary.replaceChildren();history.replaceChildren();selected.replaceChildren();message.textContent='';}};return dialog;
+    }
+    window.addEventListener('hashchange',()=>dialog?.close());
+    window.PawpalStaffServiceCashier=Object.freeze({open:options=>{if(allowed())return build().open(options);},closeAll:()=>{pending.clear();dialog?.clear();}});
+})();
+
+;
+(function(){
+    'use strict';
+    const allowed=()=>window.PawpalAdminAccess?.isStaff()&&PawpalAdminAccess.state.user.permissions.includes('work.cashier.collect');
+    const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!=null)node.textContent=text;if(cls)node.className=cls;return node;};
+    const money=value=>new Intl.NumberFormat('vi-VN').format(Number(value))+' đ';
+    const statuses={pending:'Chờ xác nhận',confirmed:'Đã xác nhận',checked_in:'Đã đón bé',in_progress:'Đang thực hiện',completed:'Hoàn thành',cancelled:'Đã hủy',no_show:'Khách không đến'};
+    const frames=new Set();let dialog;
+    async function read(appointmentId){const{data,error}=await getSupabaseClient().rpc('get_staff_service_receipt',{p_appointment_id:appointmentId});if(error)throw error;if(data?.appointment_id!==appointmentId||!data.appointment_code||!Array.isArray(data.lines)||!['subtotal','line_discount','voucher_discount','adjustment','total','collected','refunded','remaining'].every(key=>data[key]!=null&&Number.isFinite(Number(data[key])))||data.lines.some(line=>!line.id||!['quantity','unit_price','discount','total'].every(key=>line[key]!=null&&Number.isFinite(Number(line[key])))))throw Error('invalid_receipt');return data;}
+    function sheet(data,lines){
+        const root=el('section',null,'workspace-receipt-sheet'),heading=el('h3','PawPal · '+data.appointment_code);root.append(heading);
+        const details=el('dl',null,'workspace-intake-summary');for(const[name,value]of [['Lịch bắt đầu',new Date(data.scheduled_start_at).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok'})],['Khách hàng',data.customer_name||'Chưa có thông tin'],['Số điện thoại',data.phone||'—'],['Bé cưng',data.pet_name||'Chưa có thông tin'],['Trạng thái',statuses[data.status]||'Cần kiểm tra']])details.append(el('dt',name),el('dd',value));root.append(details);
+        const wrapper=el('div',null,'workspace-receipt-table-wrap');wrapper.tabIndex=0;wrapper.setAttribute('role','region');wrapper.setAttribute('aria-label','Hạng mục trên phiếu');const table=el('table',null,'admin-table'),head=el('thead'),tr=el('tr');for(const name of ['Hạng mục','Số lượng','Đơn giá','Giảm giá','Thành tiền'])tr.append(el('th',name));head.append(tr);const body=el('tbody');for(const line of lines){const row=el('tr'),name=el('td');name.append(el('strong',line.name));row.append(name,el('td',new Intl.NumberFormat('vi-VN').format(Number(line.quantity))),el('td',money(line.unit_price)),el('td',money(line.discount)),el('td',money(line.total)));body.append(row);}if(!lines.length){const row=el('tr'),cell=el('td','Chưa có hạng mục.');cell.colSpan=5;row.append(cell);body.append(row);}table.append(head,body);wrapper.append(table);root.append(wrapper);
+        const amounts=el('dl',null,'workspace-intake-summary');for(const[name,value]of [['Tiền dịch vụ',data.subtotal],['Giảm trên hạng mục',data.line_discount],['Điều chỉnh đã xác nhận',data.adjustment],['Giảm theo ưu đãi',data.voucher_discount],['Tổng tiền ca',data.total],['Đã thu sau hoàn',data.collected],['Đã hoàn',data.refunded],['Còn phải thu',data.remaining]])amounts.append(el('dt',name),el('dd',money(value)));root.append(amounts,el('p','Phiếu ca dịch vụ dùng để đối chiếu ca và thu tiền.','workspace-checkout-explanation'));return root;
+    }
+    function clearFrames(){for(const frame of frames)frame.remove();frames.clear();}
+    function build(){
+        if(dialog)return dialog;const overlay=el('div',null,'admin-modal-overlay staff-workspace-modal');overlay.id='staffServiceReceiptModal';overlay.setAttribute('aria-hidden','true');const card=el('div',null,'admin-modal-card workspace-receipt-card');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-labelledby','staffServiceReceiptTitle');
+        const form=el('form');form.setAttribute('onsubmit','return false;');const header=el('div',null,'workspace-modal-header'),title=el('h2','Phiếu ca dịch vụ'),close=el('button','Đóng','btn-modal-close');title.id='staffServiceReceiptTitle';close.type='button';close.dataset.closeModal=overlay.id;header.append(title,close);
+        const content=el('div');content.id='staffServiceReceiptContent';const pager=el('nav',null,'workspace-pager');pager.setAttribute('aria-label','Trang hạng mục trên phiếu');const message=el('p','','workspace-error');message.setAttribute('role','alert');const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),print=el('button','In phiếu','admin-btn admin-btn-primary');print.id='staffServiceReceiptPrint';cancel.type=print.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,print);form.append(header,content,pager,message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
+        const state={id:null,data:null,generation:0,busy:false,returnFocus:null};
+        function closeDialog(){state.generation++;overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');state.data=null;content.replaceChildren();pager.replaceChildren();message.textContent='';print.disabled=true;clearFrames();if(state.returnFocus?.isConnected)state.returnFocus.focus();}
+        function paint(page=0){const data=state.data;content.replaceChildren(sheet(data,data.lines.slice(page*10,page*10+10)));pager.replaceChildren();if(data.lines.length<=10)return;const prev=el('button','<'),active=el('button',String(page+1),'active'),next=el('button','>');for(const button of [prev,active,next])button.type='button';prev.disabled=page===0;next.disabled=(page+1)*10>=data.lines.length;active.setAttribute('aria-current','page');prev.onclick=()=>paint(page-1);next.onclick=()=>paint(page+1);pager.append(prev,active,next);}
+        overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}if(event.key!=='Tab')return;const nodes=[...overlay.querySelectorAll('button:not([disabled]),[tabindex="0"]')].filter(node=>node.offsetParent!==null),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});form.addEventListener('submit',event=>event.preventDefault());
+        print.onclick=async()=>{
+            if(!allowed()||state.busy||!state.data)return;state.busy=true;print.disabled=true;message.textContent='';const generation=state.generation;
+            try{const data=await read(state.id);if(generation!==state.generation||!allowed())return;state.data=data;paint();clearFrames();const frame=el('iframe');frame.title='Bản in phiếu ca dịch vụ';frame.className='workspace-receipt-print-frame workspace-service-receipt-print-frame';frame.tabIndex=-1;frame.setAttribute('aria-hidden','true');document.body.append(frame);frames.add(frame);const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Phiếu ca dịch vụ</title><style>body{font:13px Arial,sans-serif;color:#203A2C;padding:20px}h2,h3,th{color:#236B48}dl{display:grid;grid-template-columns:180px 1fr;gap:8px 16px}dd{margin:0;overflow-wrap:anywhere}table{width:100%;border-collapse:collapse;margin:16px 0;table-layout:fixed}th,td{text-align:left;padding:8px 4px;overflow-wrap:anywhere;vertical-align:top}th:first-child{width:30%}small{display:block;color:#4F7A65}tr{break-inside:avoid}@page{margin:14mm}</style></head><body><h2>Phiếu ca dịch vụ</h2></body></html>');doc.close();doc.body.append(sheet(data,data.lines));const cleanup=()=>{const connected=frame.isConnected;frame.remove();frames.delete(frame);if(connected&&generation===state.generation&&overlay.classList.contains('active')&&allowed())print.focus();};frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});frame.contentWindow.focus();frame.contentWindow.print();setTimeout(cleanup,60000);
+            }catch{if(generation===state.generation){clearFrames();state.data=null;content.replaceChildren();pager.replaceChildren();message.textContent='Không thể xác minh dữ liệu để in. Đóng phiếu và tải lại; chưa gửi lệnh in.';}}
+            finally{state.busy=false;if(generation===state.generation)print.disabled=!state.data;}
+        };
+        async function open({appointmentId}={}){if(!allowed()||state.busy)return;state.id=appointmentId;state.data=null;state.returnFocus=document.activeElement;content.replaceChildren();pager.replaceChildren();message.textContent='';print.disabled=true;const generation=++state.generation;overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();try{const data=await read(appointmentId);if(generation!==state.generation||!allowed())return;state.data=data;paint();print.disabled=false;}catch{if(generation===state.generation)message.textContent='Không tải được phiếu ca dịch vụ trong phạm vi được xem. Đóng phiếu và tải lại.';}}
+        dialog={open,close:closeDialog};return dialog;
+    }
+    window.addEventListener('hashchange',()=>dialog?.close());
+    window.PawpalStaffServiceReceipt=Object.freeze({open:options=>{if(allowed())return build().open(options);},closeAll:()=>{clearFrames();dialog?.close();}});
+})();
+
+;
+
+// Role-scoped screens belong to this domain.
+(function registerRoleViews(){
+ const views=window.PawpalAdminViews;if(!views)return;const {date,money,status}=views.helpers;
+ views.register("Dịch vụ",{columns:{appointments:[['Mã lịch', 'appointment_code'], ['Bắt đầu', r => date(r.scheduled_start_at)], ['Kết thúc', r => date(r.scheduled_end_at)], ['Trạng thái', r => status(r.appointment_status)]],services:[['Mã dịch vụ', 'service_code'], ['Tên dịch vụ', 'service_name'], ['Thời lượng', r => r.estimated_duration + ' phút']],service_records:[['Biên bản', r => r.record_type === 'intake' ? 'Tiếp nhận' : 'Bàn giao'], ['Thời gian', r => date(r.recorded_at)], ['Tình trạng', 'condition_note'], ['Xác nhận', r => r.customer_confirmation_status === 'confirmed' ? 'Khách đã xác nhận' : 'Chờ khách xác nhận']],care_logs:[['Thời gian', r => date(r.recorded_at)], ['Công việc', 'action_name_snapshot'], ['Ghi nhận', 'description'], ['Tình trạng', 'observed_condition']],service_items:[['Hạng mục', 'name_snapshot'], ['Trạng thái', r => status(r.status)]]},
+targets:{"appointments":"tab-service-detail"},
+profiles:{"service-profile":{read:"appointments",render:async(ctx)=>{const {el,date,money,status,read,table,card,facts,go,root,kind,id,row,target,turn}=ctx;
+            const details = facts(root, row.appointment_code, [['Trạng thái', status(row.appointment_status)], ['Bắt đầu', date(row.scheduled_start_at)], ['Kết thúc', date(row.scheduled_end_at)]]);
+            if(PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle')){const complaint=el('button','Tạo khiếu nại','admin-btn admin-btn-secondary');complaint.type='button';complaint.onclick=()=>PawpalStaffComplaintCreate.open({appointmentId:id});details.append(complaint);}
+            if (window.PawpalAdminAccess.state.user.permissions.includes('work.cashier.collect')) {
+                const receipt=el('button','Phiếu ca dịch vụ','admin-btn admin-btn-secondary');receipt.type='button';receipt.onclick=()=>window.PawpalStaffServiceReceipt.open({appointmentId:id});details.append(receipt);
+            }
+            if (['in_progress','completed'].includes(row.appointment_status) && window.PawpalAdminAccess.state.user.permissions.includes('work.service.perform')) {
+                const pickup = el('button', 'Mời đón bé', 'admin-btn admin-btn-secondary'); pickup.type = 'button';
+                pickup.onclick = () => window.PawpalStaffPickup.open({ appointmentId:id, onSaved:()=>ctx.refresh() }); details.append(pickup);
+            }
+            if (!['cancelled','no_show'].includes(row.appointment_status) && window.PawpalAdminAccess.state.user.permissions.includes('work.cashier.collect')) {
+                const collect = el('button', 'Thu tiền', 'admin-btn admin-btn-primary'); collect.type = 'button';
+                collect.onclick = () => window.PawpalStaffServiceCashier.open({ appointmentId: id, onSaved: () => ctx.refresh() }); details.append(collect);
+            }
+            if (['confirmed','checked_in','in_progress'].includes(row.appointment_status) && window.PawpalAdminAccess.state.user.permissions.includes('work.service.perform')) {
+                const intake = el('button', 'Lập biên bản tiếp nhận', 'admin-btn admin-btn-primary'); intake.type = 'button';
+                intake.onclick = () => window.PawpalStaffIntake.open({ appointmentId: id, onSaved: () => ctx.refresh() }); details.append(intake);
+            }
+            if (row.appointment_status === 'in_progress' && window.PawpalAdminAccess.state.user.permissions.includes('work.service.perform')) {
+                const handover = el('button', 'Bàn giao', 'admin-btn admin-btn-primary'); handover.type = 'button';
+                handover.onclick = () => window.PawpalStaffHandover.open({ appointmentId: id, onSaved: () => ctx.refresh() }); details.append(handover);
+            }
+            const stays = await read('hotel_stays', { id }); if (!ctx.isCurrent()) return;
+            for (const stay of stays) {
+                const stayBlock = facts(root, 'Lưu trú', [['Phòng', stay.room_number || 'Chưa tải được tên phòng'], ['Trạng thái', stay.status === 'closed' ? 'Đã trả phòng' : stay.status === 'checked_in' ? 'Đang lưu trú' : status(stay.status)]]);
+                if (row.appointment_status === 'in_progress' && stay.status === 'checked_in' && stay.lead_staff_id === window.PawpalAdminAccess.state.user.id && window.PawpalAdminAccess.state.user.permissions.includes('work.service.perform')) {
+                    const checkout = el('button', 'Trả phòng', 'admin-btn admin-btn-primary'); checkout.type = 'button';
+                    checkout.onclick = () => window.PawpalStaffHotelCheckout.open({ appointmentId:id, onSaved:()=>ctx.refresh() }); stayBlock.append(checkout);
+                }
+            }
+            for (const [dataKind, title] of [['service_items', 'Hạng mục của tôi'], ['service_records', 'Biên bản'], ['care_logs', 'Nhật ký chăm sóc']]) {
+                const block = card(root, title), active = row.appointment_status === 'in_progress', onChange = () => ctx.refresh();
+                block.dataset.workspaceKind = dataKind;
+                if (dataKind === 'care_logs' && active && window.PawpalAdminAccess.state.user.permissions.includes('work.service.perform')) {
+                    const toolbar = el('div',null,'workspace-toolbar'), create = el('button','Ghi nhật ký','admin-btn admin-btn-primary'); create.type = 'button';
+                    create.onclick = () => window.PawpalCareLog.openForStaff({ appointmentId: id, onSaved: onChange }); toolbar.append(block.firstElementChild, create); block.append(toolbar);
+                }
+                const content = el('div'), pager = el('nav', null, 'workspace-pager');
+                pager.setAttribute('aria-label', 'Trang ' + title.toLocaleLowerCase('vi'));
+                block.append(content); root.append(pager); let pageTurn = 0;
+                async function loadPage(page = 1) {
+                    const request = ++pageTurn; content.replaceChildren(el('p', 'Đang tải')); pager.replaceChildren();
+                    try {
+                        const rows = await read(dataKind, { id, page });
+                        if (!ctx.isCurrent() || request !== pageTurn) return;
+                        content.replaceChildren(); table(dataKind, rows, content, { appointmentId: id, active, onChange });
+                        for (const [label, next] of [['<', page - 1], [String(page), page], ['>', page + 1]]) {
+                            const button = el('button', label, next === page ? 'active' : ''); button.type = 'button';
+                            button.disabled = next < 1 || next > page && rows.length < 10;
+                            if (next === page) button.setAttribute('aria-current', 'page');
+                            button.onclick = () => loadPage(next); pager.append(button);
+                        }
+                    } catch (error) {
+                        if (ctx.isCurrent() && request === pageTurn) { content.replaceChildren(el('p', error.message, 'workspace-error')); pager.replaceChildren(); }
+                    }
+                }
+                await loadPage(); if (!ctx.isCurrent()) return;
+            }
+}}},
+toolbars:{"appointments":(ctx)=>{const {el,go,tools}=ctx;
+                const create = el('button', 'Tạo lịch hẹn', 'admin-btn admin-btn-primary'); create.type = 'button'; create.onclick = () => window.PawpalStaffBooking.open(); tools.append(create);}},
+rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{enabled:options=>options.active&&PawpalAdminAccess.state.user.permissions.includes('work.service.perform'),render:(ctx)=>{const {el,go,read,kind,row,options}=ctx;
+                const cell = el('td'), actor = window.PawpalAdminAccess.state.user.id;
+                const targetStatus = kind === 'service_items' ? row.status === 'pending' ? 'in_progress' : row.status === 'in_progress' ? 'completed' : null : null;
+                if (targetStatus || kind === 'care_logs' && row.recorded_by === actor) {
+                    const menu = el('details', null, 'workspace-item-menu'), toggle = el('summary', '•••'), action = el('button', kind === 'care_logs' ? 'Sửa nhật ký' : targetStatus === 'in_progress' ? 'Bắt đầu' : 'Hoàn thành', 'workspace-item-action'), errorText = el('p', '', 'workspace-error');
+                    toggle.setAttribute('aria-label', 'Tác vụ ' + (row.name_snapshot || row.action_name_snapshot)); action.type = 'button'; errorText.setAttribute('role','alert');
+                    action.onclick = async () => {
+                        if (action.disabled) return;
+                        menu.open = false;
+                        if (kind === 'care_logs') { window.PawpalCareLog.openForStaff({ appointmentId: options.appointmentId, logId: row.id, onSaved: options.onChange }); return; }
+                        action.disabled = true; errorText.textContent = '';
+                        try {
+                            const { data, error } = await getSupabaseClient().rpc('perform_staff_service_item', { p_item: row.id, p_expected_updated_at: row.updated_at, p_status: targetStatus, p_note: '' });
+                            if (error) throw error; if (data !== row.id) throw Error('invalid_item_result'); options.onChange?.();
+                        } catch (error) {
+                            // A network failure can follow a committed transition. Read its scoped current state before offering another write.
+                            try {
+                                for (let page = 1; ; page++) {
+                                    const latest = await read('service_items', { id: options.appointmentId, page });
+                                    const item = latest.find(item => item.id === row.id);
+                                    if (item) { if (item.status === targetStatus) { options.onChange?.(); return; } break; }
+                                    if (latest.length < 10) break;
+                                }
+                            } catch {}
+                            errorText.textContent = error.code === '42501' ? 'Hạng mục không còn được giao cho bạn. Tải lại hồ sơ.' : error.code === 'PT409' ? 'Hạng mục đã thay đổi. Tải lại hồ sơ trước khi tiếp tục.' : 'Chưa xác nhận cập nhật thành công. Tải lại hồ sơ để kiểm tra.';
+                        } finally { action.disabled = false; }
+                    };
+                    menu.append(toggle,action); cell.append(menu,errorText);
+                } else cell.append(el('span','—'));
+                return cell;}}]))});
+})();
+
+(function initializeManagementDomain(){
+    if (!window.PawpalAdminAccess?.isAdmin()) return;
 // services.js - Phân hệ Quản lý Dịch vụ Pawpal-er (Core Orchestrator)
 (function() {
     'use strict';
@@ -235,8 +996,7 @@
     PawpalServices.saveCareLog=async function(booking,log,action,details) {
         const key=booking.dbId+':carelog',id=log?.id||requestId(key,details);
         await performBookingWrite(booking,async db=>{
-            const {data,error}=await db.rpc('save_admin_service_care_log',{p_id:id,p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_expected_log_updated_at:log?.updated_at||null,p_action:action,p_details:details});
-            if(error)throw error;if(data!==id)throw Error('Không xác minh được nhật ký đã lưu.');
+            await window.PawpalCareLog.save({p_id:id,p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_expected_log_updated_at:log?.updated_at||null,p_action:action,p_details:details},db);
             requestIds.delete(key);
         });
     };
@@ -1386,4 +2146,6 @@
 
         if (target === modal) closeModal(modal);
     }, true);
+})();
+
 })();

@@ -1,3 +1,231 @@
+// Role-specific operations live in this domain; management initialization requires verified ADMIN.
+(function () {
+    'use strict';
+    const allowed=()=>window.PawpalAdminAccess?.isStaff()&&PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle');
+    const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!=null)node.textContent=text;if(cls)node.className=cls;return node;};
+    async function rpc(name,args){const{data,error}=await getSupabaseClient().rpc(name,args);if(error)throw error;return data;}
+    const finished=status=>['closed','resolved','completed','rejected'].includes(status),pending=new Map();let dialog;
+    function build(){
+        if(dialog)return dialog;
+        const overlay=el('div',null,'admin-modal-overlay staff-workspace-modal');overlay.id='staffComplaintMessageModal';overlay.setAttribute('aria-hidden','true');
+        const card=el('div',null,'admin-modal-card workspace-cashier-card');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-labelledby','staffComplaintMessageTitle');
+        const form=el('form');form.noValidate=true;form.setAttribute('onsubmit','return false;');
+        const header=el('div',null,'workspace-modal-header'),title=el('h2','Trao đổi khiếu nại'),close=el('button','Đóng','btn-modal-close');title.id='staffComplaintMessageTitle';close.type='button';close.dataset.closeModal=overlay.id;header.append(title,close);
+        const summary=el('dl',null,'workspace-intake-summary');summary.id='staffComplaintMessageSummary';
+        const fields={},groups={};
+        function field(key,label,type='text'){const group=el('div',null,'workspace-form-field'),caption=el('label',label+' '),input=el(type==='textarea'?'textarea':'select',null,'admin-input');input.id='staffComplaintMessage'+key;caption.htmlFor=input.id;caption.append(el('span','*','workspace-required'));input.required=true;group.append(caption,input);fields[key]=input;groups[key]=group;return group;}
+        const mode=field('mode','Hình thức','select');for(const[value,text]of [['internal','Ghi chú nội bộ'],['reply','Phản hồi khách'],['request_info','Yêu cầu bổ sung']]){const option=el('option',text);option.value=value;fields.mode.append(option);}
+        const channel=field('channel','Kênh đã liên hệ','select');for(const[value,text]of [['record','Tại quầy'],['call','Điện thoại'],['zalo','Zalo'],['email','Email'],['sms','SMS']]){const option=el('option',text);option.value=value;fields.channel.append(option);}
+        const note=field('note','Nội dung','textarea');fields.note.rows=4;fields.note.minLength=2;fields.note.maxLength=8000;
+        const hint=el('p','','workspace-checkout-explanation'),message=el('p','','workspace-error');hint.id='staffComplaintMessageHint';message.setAttribute('role','alert');
+        const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Lưu trao đổi','admin-btn admin-btn-primary');save.id='staffComplaintMessageSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);
+        form.append(header,summary,mode,channel,note,hint,message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
+        const state={ticket:null,ticketId:null,generation:0,loading:true,blocked:false,saving:false,unresolved:null,onSaved:null,returnFocus:null};
+        const key=()=>PawpalAdminAccess.state.user.id+':'+state.ticketId;
+        function sync(){groups.channel.hidden=fields.mode.value!=='request_info';fields.channel.required=!groups.channel.hidden;hint.textContent=fields.mode.value==='internal'?'Ghi chú chỉ hiển thị trong nội bộ.':fields.mode.value==='reply'?'Nội dung được lưu thành phản hồi cho khách trong khiếu nại.':'Ghi nhận yêu cầu đã trao đổi và chuyển phiếu sang Chờ khách bổ sung. Hệ thống không tự gọi điện hoặc gửi tin qua kênh đã chọn.';}
+        fields.mode.onchange=()=>{message.textContent='';sync();};
+        function controls(){for(const field of Object.values(fields))field.disabled=state.loading||state.blocked||state.saving||!!state.unresolved;save.disabled=state.loading||state.blocked||state.saving;save.textContent=state.saving?'Đang lưu':state.unresolved?'Thử lại nội dung':'Lưu trao đổi';}
+        function closeDialog(){state.generation++;overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');if(state.returnFocus?.isConnected)state.returnFocus.focus();}
+        overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
+        overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}if(event.key!=='Tab')return;const nodes=[...overlay.querySelectorAll('button:not([disabled]),select:not([disabled]),textarea:not([disabled])')].filter(node=>node.offsetParent!==null),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});
+        form.addEventListener('submit',event=>event.preventDefault());
+        save.onclick=async()=>{
+            if(!allowed()||state.loading||state.blocked||state.saving||!state.ticket)return;
+            const value=fields.note.value.trim();if(!state.unresolved&&(value.length<2||value.length>8000)){message.textContent='Nhập nội dung từ 2 đến 8000 ký tự.';fields.note.focus();return;}
+            const attempt=state.unresolved||{mode:fields.mode.value,channel:fields.channel.value,args:{p_request_id:crypto.randomUUID(),p_ticket_id:state.ticketId,p_expected_updated_at:state.ticket.updated_at,p_action:fields.mode.value==='request_info'?'request_info':'message',p_details:fields.mode.value==='request_info'?{note:value,channel:fields.channel.value}:{note:value,internal:fields.mode.value==='internal'}}};
+            const generation=state.generation,attemptKey=key();pending.set(attemptKey,attempt);state.saving=true;controls();message.textContent='';
+            try{const result=await rpc('act_admin_complaint',attempt.args);if(result!==state.ticketId)throw Error('invalid_complaint_result');pending.delete(attemptKey);if(generation!==state.generation)return;const callback=state.onSaved;closeDialog();if(allowed())callback?.(result);}
+            catch(error){const definitive=['42501','22023','23514','PT409','P0002'].includes(error.code);if(definitive)pending.delete(attemptKey);if(generation!==state.generation)return;state.unresolved=definitive?null:attempt;state.blocked=definitive;
+                message.textContent=error.code==='42501'?'Phiếu không còn được giao cho bạn hoặc bạn không có quyền xử lý. Đóng và tải lại.':error.message==='complaint_approval_pending'?'Phiếu đang chờ Quản lý duyệt. Chỉ được ghi chú hoặc phản hồi. Đóng và mở lại.':error.message==='complaint_not_open'?'Phiếu đã kết thúc, không thể thêm trao đổi. Đóng và tải lại.':error.code==='PT409'?'Phiếu đã thay đổi. Đóng và mở lại để đối chiếu.':definitive?'Chưa lưu nội dung. Đóng và mở lại để kiểm tra phiếu.':'Chưa xác nhận lưu thành công. Thử lại đúng nội dung này để tránh ghi trùng.';
+            }finally{state.saving=false;if(generation===state.generation)controls();}
+        };
+        async function open({ticketId,onSaved}={}){
+            if(state.saving||!allowed())return;state.ticketId=ticketId;state.ticket=state.unresolved=null;state.loading=true;state.blocked=false;state.onSaved=onSaved;state.returnFocus=document.activeElement;const generation=++state.generation;form.reset();summary.replaceChildren();message.textContent='';fields.mode.querySelector('[value=request_info]').disabled=false;sync();controls();overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();
+            try{const data=await rpc('get_staff_workspace',{p_kind:'complaints',p_query:'',p_id:ticketId,p_page:1});if(generation!==state.generation)return;const ticket=data.items.find(row=>row.id===ticketId);if(!ticket?.updated_at){state.blocked=true;message.textContent='Không tìm thấy phiếu trong phạm vi được giao.';state.loading=false;controls();return;}
+                state.ticket=ticket;for(const[label,value]of [['Mã phiếu',ticket.ticket_code],['Nội dung phản ánh',ticket.subject],['Tình trạng',finished(ticket.status)?'Đã kết thúc':ticket.status==='waiting_manager_approval'?'Chờ Quản lý duyệt':ticket.status==='waiting_customer'?'Chờ khách bổ sung':'Đang tiếp nhận và xử lý']])summary.append(el('dt',label),el('dd',value));
+                const previous=pending.get(key());if(previous){state.unresolved=previous;fields.mode.value=previous.mode;fields.channel.value=previous.channel;fields.note.value=previous.args.p_details.note;message.textContent='Nội dung trước chưa rõ kết quả. Thử lại đúng nội dung này trước khi thêm trao đổi mới.';}
+                else if(finished(ticket.status)){state.blocked=true;message.textContent='Phiếu đã kết thúc, không thể thêm trao đổi.';}
+                fields.mode.querySelector('[value=request_info]').disabled=ticket.status==='waiting_manager_approval';sync();state.loading=false;controls();
+            }catch{if(generation===state.generation){state.blocked=true;message.textContent='Không tải đủ dữ liệu khiếu nại. Đóng và mở lại để kiểm tra.';controls();}}
+        }
+        dialog={open,close:closeDialog,clear:()=>{closeDialog();pending.clear();state.ticket=state.unresolved=state.onSaved=null;form.reset();summary.replaceChildren();hint.textContent=message.textContent='';}};return dialog;
+    }
+    window.addEventListener('hashchange',()=>dialog?.close());
+    window.PawpalStaffComplaintMessage=Object.freeze({open:options=>{if(allowed())return build().open(options);},closeAll:()=>{pending.clear();dialog?.clear();}});
+})();
+
+;
+(function () {
+    'use strict';
+    const allowed=()=>window.PawpalAdminAccess?.isStaff()&&PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle');
+    const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!=null)node.textContent=text;if(cls)node.className=cls;return node;};
+    const names={refund:'Hoàn tiền',rma_refund:'Nhận hàng trả và hoàn tiền',rma_exchange:'Đổi hàng',redo_service:'Thực hiện lại dịch vụ',change_staff:'Đổi nhân viên'};
+    const finished=status=>['closed','resolved','completed','rejected'].includes(status),hasAmount=option=>['refund','rma_refund'].includes(option);
+    async function rpc(name,args){const{data,error}=await getSupabaseClient().rpc(name,args);if(error)throw error;return data;}
+    const pending=new Map();let dialog;
+    function build(){
+        if(dialog)return dialog;
+        const overlay=el('div',null,'admin-modal-overlay staff-workspace-modal');overlay.id='staffComplaintProposalModal';overlay.setAttribute('aria-hidden','true');
+        const card=el('div',null,'admin-modal-card workspace-cashier-card');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-labelledby','staffComplaintProposalTitle');
+        const form=el('form');form.noValidate=true;form.setAttribute('onsubmit','return false;');
+        const header=el('div',null,'workspace-modal-header'),title=el('h2','Đề xuất phương án xử lý'),close=el('button','Đóng','btn-modal-close');title.id='staffComplaintProposalTitle';close.type='button';close.dataset.closeModal=overlay.id;header.append(title,close);
+        const summary=el('dl',null,'workspace-intake-summary');summary.id='staffComplaintProposalSummary';
+        const fields={},groups={};
+        function field(key,label,type){const group=el('div',null,'workspace-form-field'),caption=el('label',label+' '),input=el(type==='textarea'?'textarea':type==='select'?'select':'input',null,'admin-input');input.id='staffComplaintProposal'+key;caption.htmlFor=input.id;caption.append(el('span','*','workspace-required'));input.required=true;if(type==='number')input.type=type;group.append(caption,input);fields[key]=input;groups[key]=group;return group;}
+        const option=field('option','Phương án','select'),amount=field('amount','Số tiền đề xuất (đ)','number'),note=field('note','Lý do và nội dung đề xuất','textarea');fields.amount.min=1;fields.amount.max=999999999999;fields.amount.step=1;fields.note.rows=4;fields.note.minLength=2;fields.note.maxLength=8000;
+        const hint=el('p','Gửi đề xuất chuyển phiếu sang Chờ Quản lý duyệt. Chưa thực hiện hoàn tiền, đổi hàng hoặc thay đổi ca dịch vụ.','workspace-checkout-explanation'),message=el('p','','workspace-error');message.setAttribute('role','alert');
+        const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Gửi đề xuất','admin-btn admin-btn-primary');save.id='staffComplaintProposalSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);form.append(header,summary,option,amount,note,hint,message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
+        const state={ticket:null,ticketId:null,options:[],generation:0,loading:true,blocked:false,saving:false,unresolved:null,onSaved:null,returnFocus:null};
+        const key=()=>PawpalAdminAccess.state.user.id+':'+state.ticketId;
+        function sync(){groups.amount.hidden=!hasAmount(fields.option.value);fields.amount.required=!groups.amount.hidden;}
+        fields.option.onchange=()=>{fields.amount.value='';message.textContent='';sync();};
+        function controls(){for(const input of Object.values(fields))input.disabled=state.loading||state.blocked||state.saving||!!state.unresolved;save.disabled=state.loading||state.blocked||state.saving;save.textContent=state.saving?'Đang gửi':state.unresolved?'Thử lại đề xuất':'Gửi đề xuất';}
+        function closeDialog(){state.generation++;overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');if(state.returnFocus?.isConnected)state.returnFocus.focus();}
+        overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
+        overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}if(event.key!=='Tab')return;const nodes=[...overlay.querySelectorAll('button:not([disabled]),select:not([disabled]),input:not([disabled]),textarea:not([disabled])')].filter(node=>node.offsetParent!==null),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});
+        form.addEventListener('submit',event=>event.preventDefault());
+        save.onclick=async()=>{
+            if(!allowed()||state.loading||state.blocked||state.saving||!state.ticket)return;
+            const option=fields.option.value,note=fields.note.value.trim(),amount=hasAmount(option)?Number(fields.amount.value):0;
+            if(!state.unresolved){if(!state.options.includes(option)){message.textContent='Chọn phương án phù hợp giao dịch liên quan.';fields.option.focus();return;}if(hasAmount(option)&&(!Number.isInteger(amount)||amount<=0||amount>999999999999)){message.textContent='Nhập số tiền nguyên dương, tối đa 999.999.999.999 đ.';fields.amount.focus();return;}if(note.length<2||note.length>8000){message.textContent='Nhập lý do từ 2 đến 8000 ký tự.';fields.note.focus();return;}}
+            const attempt=state.unresolved||{args:{p_request_id:crypto.randomUUID(),p_ticket_id:state.ticketId,p_expected_updated_at:state.ticket.updated_at,p_action:'propose',p_details:{option,amount,note}}};
+            const generation=state.generation,attemptKey=key();pending.set(attemptKey,attempt);state.saving=true;controls();message.textContent='';
+            try{const result=await rpc('act_admin_complaint',attempt.args);if(result!==state.ticketId)throw Error('invalid_proposal_result');pending.delete(attemptKey);if(generation!==state.generation)return;const callback=state.onSaved;closeDialog();if(allowed())callback?.(result);}
+            catch(error){const definitive=['42501','22023','23514','PT409','P0002'].includes(error.code);if(definitive)pending.delete(attemptKey);if(generation!==state.generation)return;state.unresolved=definitive?null:attempt;state.blocked=definitive;message.textContent=error.code==='42501'?'Phiếu không còn được giao cho bạn hoặc bạn không có quyền đề xuất. Đóng và tải lại.':error.message==='complaint_approval_pending'?'Phiếu đang chờ Quản lý duyệt, không thể gửi thêm đề xuất.':error.message==='complaint_not_open'?'Phiếu đã kết thúc, không thể gửi đề xuất.':error.message==='invalid_complaint_resolution'?'Phương án không phù hợp giao dịch. Đóng và mở lại để kiểm tra.':error.code==='PT409'?'Phiếu đã thay đổi. Đóng và mở lại để đối chiếu.':definitive?'Chưa lưu đề xuất. Đóng và mở lại để kiểm tra phiếu.':'Chưa xác nhận gửi thành công. Thử lại đúng đề xuất này để tránh ghi trùng.';
+            }finally{state.saving=false;if(generation===state.generation)controls();}
+        };
+        async function open({ticketId,onSaved}={}){
+            if(state.saving||!allowed())return;state.ticketId=ticketId;state.ticket=state.unresolved=null;state.options=[];state.loading=true;state.blocked=false;state.onSaved=onSaved;state.returnFocus=document.activeElement;const generation=++state.generation;form.reset();summary.replaceChildren();fields.option.replaceChildren(new Option('Chọn phương án',''));message.textContent='';sync();controls();overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();
+            try{const data=await rpc('get_staff_workspace',{p_kind:'complaints',p_query:'',p_id:ticketId,p_page:1});if(generation!==state.generation)return;const ticket=data.items.find(row=>row.id===ticketId);if(!ticket?.updated_at){state.blocked=true;message.textContent='Không tìm thấy phiếu trong phạm vi được giao.';state.loading=false;controls();return;}
+                if(!Object.hasOwn(ticket,'order_id')||!Object.hasOwn(ticket,'appointment_id'))throw Error('proposal_context_missing');state.ticket=ticket;
+                const order=ticket.order_id&&!ticket.appointment_id&&ticket.linked_order_code,service=ticket.appointment_id&&!ticket.order_id&&ticket.linked_appointment_code;
+                state.options=order?['refund','rma_refund','rma_exchange']:service?['refund','redo_service','change_staff']:[];
+                for(const value of state.options)fields.option.append(new Option(names[value],value));
+                for(const[label,value]of [['Mã phiếu',ticket.ticket_code],['Nội dung phản ánh',ticket.subject],['Giao dịch liên quan',order?ticket.linked_order_code:service?ticket.linked_appointment_code:'Chưa xác minh được liên kết']])summary.append(el('dt',label),el('dd',value));
+                const previous=pending.get(key());if(previous){state.unresolved=previous;const details=previous.args.p_details;if(!state.options.includes(details.option))fields.option.append(new Option(names[details.option],details.option));fields.option.value=details.option;fields.amount.value=details.amount||'';fields.note.value=details.note;message.textContent='Đề xuất trước chưa rõ kết quả. Thử lại đúng đề xuất này trước khi tạo đề xuất mới.';}
+                else if(finished(ticket.status)){state.blocked=true;message.textContent='Phiếu đã kết thúc, không thể gửi đề xuất.';}else if(ticket.status==='waiting_manager_approval'){state.blocked=true;message.textContent='Phiếu đang chờ Quản lý duyệt, không thể gửi thêm đề xuất.';}else if(!state.options.length){state.blocked=true;message.textContent='Phiếu chưa có liên kết giao dịch hợp lệ. Liên hệ Quản lý để kiểm tra.';}
+                sync();state.loading=false;controls();
+            }catch{if(generation===state.generation){state.blocked=true;message.textContent='Không tải đủ dữ liệu đề xuất. Đóng và mở lại để kiểm tra.';controls();}}
+        }
+        dialog={open,close:closeDialog,clear:()=>{closeDialog();pending.clear();state.ticket=state.unresolved=state.onSaved=null;state.options=[];form.reset();summary.replaceChildren();message.textContent='';}};return dialog;
+    }
+    window.addEventListener('hashchange',()=>dialog?.close());
+    window.PawpalStaffComplaintProposal=Object.freeze({open:options=>{if(allowed())return build().open(options);},closeAll:()=>{pending.clear();dialog?.clear();}});
+})();
+
+;
+(function(){
+    'use strict';
+    const allowed=()=>window.PawpalAdminAccess?.isStaff()&&PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle');
+    const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!=null)node.textContent=text;if(cls)node.className=cls;return node;};
+    async function rpc(name,args){const{data,error}=await getSupabaseClient().rpc(name,args);if(error)throw error;return data;}
+    let dialog;
+    function build(){
+        if(dialog)return dialog;
+        const overlay=el('div',null,'admin-modal-overlay staff-workspace-modal');overlay.id='staffComplaintCreateModal';overlay.setAttribute('aria-hidden','true');
+        const card=el('div',null,'admin-modal-card workspace-cashier-card');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-labelledby','staffComplaintCreateTitle');
+        const form=el('form');form.noValidate=true;form.setAttribute('onsubmit','return false;');
+        const header=el('div',null,'workspace-modal-header'),title=el('h2','Tạo khiếu nại'),close=el('button','Đóng','btn-modal-close');title.id='staffComplaintCreateTitle';close.type='button';close.dataset.closeModal=overlay.id;header.append(title,close);
+        const fields={},groups={},grid=el('div',null,'workspace-pet-grid');
+        function field(key,label,type='text',required=false,wide=false){const group=el('div',null,'workspace-form-field'+(wide?' workspace-field-wide':'')),caption=el('label',label+(required?' ':'')),input=el(type==='select'?'select':type==='textarea'?'textarea':'input',null,'admin-input');input.id='staffComplaintCreate'+key;caption.htmlFor=input.id;if(required)caption.append(el('span','*','workspace-required'));input.required=required;if(input.tagName==='INPUT')input.type=type;group.append(caption,input);grid.append(group);fields[key]=input;groups[key]=group;return input;}
+        field('customer','Khách hàng','text',true).maxLength=120;field('phone','Số điện thoại').readOnly=true;
+        field('category','Nhóm khiếu nại','select',true);for(const[value,text]of [['service','Dịch vụ'],['order','Bán hàng']])fields.category.append(new Option(text,value));
+        field('priority','Mức ưu tiên','select',true);for(const[value,text]of [['normal','Thông thường'],['low','Thấp'],['high','Cao'],['urgent','Khẩn cấp']])fields.priority.append(new Option(text,value));
+        field('source','Giao dịch liên quan','text',true,true).maxLength=120;
+        const choice=el('label',null,'workspace-intake-confirmation workspace-field-wide'),unlinked=el('input');unlinked.type='checkbox';unlinked.id='staffComplaintCreateUnlinked';choice.htmlFor=unlinked.id;choice.append(unlinked,el('span','Chưa xác định giao dịch liên quan'));grid.append(choice);
+        field('subject','Tiêu đề phản ánh','text',true,true).maxLength=250;const content=field('content','Nội dung khách phản ánh','textarea',true,true);content.rows=4;content.maxLength=8000;
+        const hint=el('p','Nội dung được lưu trong trao đổi của khách. Phiếu mới chờ Quản lý phân công xử lý.','workspace-checkout-explanation'),message=el('p','','workspace-error'),success=el('p','','workspace-booking-success');message.setAttribute('role','alert');success.setAttribute('role','status');
+        const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Tạo khiếu nại','admin-btn admin-btn-primary');save.id='staffComplaintCreateSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);form.append(header,grid,hint,message,success,footer);card.append(form);overlay.append(card);document.body.append(overlay);
+        const state={customer:null,source:null,origin:null,loading:false,blocked:false,generation:0,saving:false,done:false,unresolved:null,returnFocus:null};
+        const pickers=[];
+        function controls(){const locked=state.loading||state.blocked||state.saving||state.done||!!state.unresolved,chat=state.origin?.kind==='chat';for(const input of [...Object.values(fields),unlinked])input.disabled=locked;for(const button of grid.querySelectorAll('button'))button.disabled=locked;fields.source.disabled=fields.source.disabled||unlinked.checked||!state.customer;choice.hidden=!!state.origin&&!chat;if(state.origin){fields.customer.disabled=true;if(!chat)fields.category.disabled=fields.source.disabled=unlinked.disabled=true;}for(const key of ['customer','source'])for(const button of groups[key].querySelectorAll('button'))button.hidden=!!state.origin&&(key==='customer'||!chat);title.textContent=chat?'Tạo khiếu nại từ hội thoại':'Tạo khiếu nại';save.disabled=state.loading||state.blocked||state.saving||state.done;save.textContent=state.loading?'Đang tải':state.saving?'Đang tạo':state.done?'Đã tạo':state.unresolved?'Thử lại phiếu':'Tạo khiếu nại';cancel.textContent=state.done?'Đóng':'Hủy';}
+        function picker(key,fetchPage,titleOf,subOf,onChoose,minimum=0){
+            const input=fields[key],group=groups[key],menu=el('div',null,'autocomplete-dropdown workspace-autocomplete-menu'),summary=el('div',null,'workspace-selected-entity');menu.id=input.id+'Options';menu.setAttribute('role','listbox');menu.hidden=summary.hidden=true;group.classList.add('workspace-autocomplete');group.append(menu,summary);input.autocomplete='off';input.setAttribute('role','combobox');input.setAttribute('aria-controls',menu.id);input.setAttribute('aria-expanded','false');
+            let version=0,timer,active=-1,buttons=[];
+            function hide(){version++;clearTimeout(timer);menu.hidden=true;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');active=-1;}
+            function reset(notify=true){hide();state[key]=null;input.readOnly=false;input.value='';summary.replaceChildren();summary.hidden=true;if(notify)onChoose(null);}
+            function choose(row){hide();state[key]=row;input.readOnly=true;input.value=titleOf(row);summary.replaceChildren(el('span',titleOf(row)));const clear=el('button','✕ Bỏ chọn','workspace-text-button');clear.type='button';clear.onclick=event=>{event.stopPropagation();if(state.saving||state.done||state.unresolved)return;reset();input.focus();};summary.append(clear);summary.hidden=false;onChoose(row);}
+            async function search(page=1){if(input.disabled||input.readOnly||state.saving||state.done||state.unresolved)return;hide();const turn=version,generation=state.generation,query=input.value.trim();if(query.length<minimum)return;menu.replaceChildren(el('p','Đang tìm'));menu.hidden=false;input.setAttribute('aria-expanded','true');buttons=[];
+                try{const rows=await fetchPage(query,page);if(turn!==version||generation!==state.generation)return;menu.replaceChildren();for(const row of rows){const text=String(titleOf(row)||'').trim();if(!text||/^\d+$/.test(text)||/^(unknown|null|undefined|chưa rõ|chưa cập nhật)$/i.test(text))continue;const button=el('button',null,'workspace-autocomplete-option');button.type='button';button.id=menu.id+buttons.length;button.setAttribute('role','option');button.setAttribute('aria-selected','false');button.append(el('strong',text),el('small',subOf(row)));button.onclick=()=>{choose(row);input.focus();};menu.append(button);buttons.push(button);}if(!buttons.length)menu.append(el('p','Chưa có kết quả phù hợp.'));for(const[label,next]of [['Trang trước',page-1],['Trang sau',page+1]]){if(next<1||next>page&&rows.length<10)continue;const button=el('button',label,'workspace-autocomplete-option');button.type='button';button.onclick=event=>{event.stopPropagation();search(next);input.focus();};menu.append(button);}}
+                catch{if(turn===version&&generation===state.generation)menu.replaceChildren(el('p','Không tải được gợi ý. Bấm lại ô để thử.'));}
+            }
+            input.addEventListener('focus',()=>{if(menu.hidden)search();});input.addEventListener('click',()=>{if(menu.hidden)search();});input.addEventListener('input',()=>{hide();timer=setTimeout(()=>search(),200);});input.addEventListener('keydown',event=>{if(event.key==='Escape'&&!menu.hidden){event.preventDefault();event.stopPropagation();hide();}else if(['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();if(menu.hidden){search();return;}if(!buttons.length)return;active=(active+(event.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length;buttons.forEach((button,index)=>button.setAttribute('aria-selected',String(index===active)));input.setAttribute('aria-activedescendant',buttons[active].id);buttons[active].scrollIntoView({block:'nearest'});}else if(event.key==='Enter'){event.preventDefault();buttons[active]?.click();}});
+            overlay.addEventListener('click',event=>{if(!group.contains(event.target))hide();});const result={reset,hide,choose};pickers.push(result);return result;
+        }
+        let sourcePicker;
+        const customerPicker=picker('customer',async(query,page)=>(await rpc('get_staff_workspace',{p_kind:'customers',p_query:query,p_id:null,p_page:page})).items,row=>row.full_name,row=>[row.phone_number,row.customer_code].filter(Boolean).join(' · '),row=>{fields.phone.value=row?.phone_number||'';sourcePicker.reset(false);controls();},3);
+        sourcePicker=picker('source',async(query,page)=>state.customer?(await rpc('get_staff_complaint_sources',{p_customer_id:state.customer.id,p_kind:fields.category.value,p_query:query,p_page:page})).items:[],row=>row.code,row=>fields.category.value==='service'?'Ca dịch vụ được giao':'Đơn hàng của khách',()=>{});
+        fields.category.onchange=()=>{sourcePicker.reset(false);message.textContent='';};unlinked.onchange=()=>{sourcePicker.reset(false);fields.source.required=!unlinked.checked;groups.source.hidden=unlinked.checked;message.textContent='';controls();};
+        function closeDialog(){state.generation++;pickers.forEach(picker=>picker.hide());overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');if(state.returnFocus?.isConnected)state.returnFocus.focus();}
+        overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}if(event.key!=='Tab')return;const nodes=[...overlay.querySelectorAll('button:not([disabled]),select:not([disabled]),input:not([disabled]),textarea:not([disabled])')].filter(node=>node.offsetParent!==null),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});form.addEventListener('submit',event=>event.preventDefault());
+        save.onclick=async()=>{
+            if(!allowed()||state.loading||state.blocked||state.saving||state.done)return;
+            const subject=fields.subject.value.trim(),content=fields.content.value.trim();
+            if(!state.unresolved){if(!state.customer){message.textContent='Chọn khách từ danh sách gợi ý.';fields.customer.focus();return;}if(!unlinked.checked&&(!state.source||state.source.customer_id!==state.customer.id)){message.textContent='Chọn giao dịch của khách hoặc đánh dấu chưa xác định giao dịch.';fields.source.focus();return;}if(subject.length<2||subject.length>250){message.textContent='Nhập tiêu đề từ 2 đến 250 ký tự.';fields.subject.focus();return;}if(content.length<2||content.length>8000){message.textContent='Nhập nội dung từ 2 đến 8000 ký tự.';fields.content.focus();return;}}
+            const requestId=state.unresolved?.args.p_id||crypto.randomUUID(),chat=state.origin?.kind==='chat';
+            const args=chat?{p_id:requestId,p_conversation_id:state.origin.id,p_expected_updated_at:state.origin.version,p_ref_id:unlinked.checked?null:state.source?.id,p_category:fields.category.value,p_subject:subject,p_content:content,p_priority:fields.priority.value}:{p_id:requestId,p_customer_id:state.customer.id,p_order_id:!unlinked.checked&&fields.category.value==='order'?state.source.id:null,p_appointment_id:!unlinked.checked&&fields.category.value==='service'?state.source.id:null,p_category:fields.category.value,p_subject:subject,p_content:content,p_priority:fields.priority.value};
+            const attempt=state.unresolved||{customer:state.customer,source:state.source,origin:state.origin,unlinked:unlinked.checked,rpc:chat?'create_chat_complaint':'create_admin_complaint',args};
+            state.unresolved=attempt;state.saving=true;controls();pickers.forEach(picker=>picker.hide());message.textContent='';const generation=state.generation;
+            try{const result=await rpc(attempt.rpc||'create_admin_complaint',attempt.args);if(result!==attempt.args.p_id)throw Error('invalid_complaint_create_result');state.unresolved=null;state.done=true;if(generation!==state.generation)return;success.textContent='Đã tạo khiếu nại. Phiếu đang chờ Quản lý phân công xử lý.';}
+            catch(error){if(['42501','22023','23514','PT409','P0002'].includes(error.code))state.unresolved=null;if(generation!==state.generation)return;if(state.origin&&['42501','PT409','P0002'].includes(error.code))state.blocked=true;message.textContent=chat&&error.code==='42501'?'Hội thoại không còn do bạn xử lý hoặc giao dịch ngoài phạm vi được phép. Đóng form và tải lại.':chat&&error.code==='PT409'?'Hội thoại hoặc yêu cầu đã thay đổi. Đóng form và kiểm tra lại trước khi tạo phiếu.':error.code==='42501'?'Ca không còn được giao cho bạn hoặc bạn không có quyền tạo phiếu. Kiểm tra lại giao dịch.':error.message==='complaint_owner_mismatch'?'Giao dịch không còn khớp khách. Bỏ chọn và chọn lại.':error.code==='PT409'?'Yêu cầu đã có nội dung khác. Đóng và kiểm tra lại phiếu.':'Chưa xác nhận tạo phiếu thành công. Giữ nguyên thông tin và thử lại.';}
+            finally{state.saving=false;if(generation===state.generation)controls();}
+        };
+        async function open({appointmentId=null,orderId=null,conversationId=null}={}){
+            if(state.saving)return;const generation=++state.generation;state.returnFocus=document.activeElement;const previous=state.unresolved;state.done=false;state.blocked=false;state.loading=false;state.origin=previous?(previous.origin||null):(appointmentId||orderId||conversationId?{kind:conversationId?'chat':appointmentId?'service':'order',id:conversationId||appointmentId||orderId}:null);form.reset();customerPicker.reset(false);sourcePicker.reset(false);fields.phone.value='';groups.source.hidden=false;fields.source.required=true;message.textContent=success.textContent='';
+            if(previous){customerPicker.choose(previous.customer);fields.category.value=previous.args.p_category;fields.priority.value=previous.args.p_priority;unlinked.checked=previous.unlinked;groups.source.hidden=previous.unlinked;if(previous.source)sourcePicker.choose(previous.source);fields.subject.value=previous.args.p_subject;fields.content.value=previous.args.p_content;message.textContent='Phiếu trước chưa rõ kết quả. Thử lại đúng nội dung này trước khi tạo phiếu mới.';}
+            state.loading=!!state.origin&&!previous;controls();overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();if(!state.loading)return;
+            try{
+                if([appointmentId,orderId,conversationId].filter(Boolean).length>1)throw Error('ambiguous_complaint_origin');const origin=state.origin,chat=origin.kind==='chat',kind=chat?'conversations':origin.kind==='service'?'appointments':'orders';
+                const data=await rpc('get_staff_workspace',{p_kind:kind,p_query:'',p_id:origin.id,p_page:1});if(generation!==state.generation)return;const row=data.items.find(item=>item.id===origin.id);if(!row?.customer_id||chat&&(row.status!=='agent_handling'||!row.updated_at))throw Error('complaint_source_missing');
+                const customers=await rpc('get_staff_workspace',{p_kind:'customers',p_query:'',p_id:row.customer_id,p_page:1});if(generation!==state.generation)return;const customer=customers.items.find(item=>item.id===row.customer_id);if(!customer)throw Error('complaint_customer_missing');
+                customerPicker.choose(customer);if(chat){origin.version=row.updated_at;}else{const code=origin.kind==='service'?row.appointment_code:row.order_code;if(!code)throw Error('complaint_source_missing');fields.category.value=origin.kind;sourcePicker.choose({id:row.id,customer_id:row.customer_id,code});}
+            }catch{if(generation===state.generation){state.blocked=true;customerPicker.reset(false);sourcePicker.reset(false);fields.phone.value='';message.textContent=state.origin?.kind==='chat'?'Không tải được hội thoại đang do bạn xử lý. Đóng form và tải lại.':'Không tải được giao dịch trong phạm vi được phép. Đóng form và tải lại hồ sơ.';}}
+            finally{if(generation===state.generation){state.loading=false;controls();}}
+        }
+        dialog={open,close:closeDialog,clear:()=>{closeDialog();state.customer=state.source=state.origin=state.unresolved=null;state.done=state.loading=state.blocked=false;form.reset();pickers.forEach(picker=>picker.reset(false));fields.phone.value='';message.textContent=success.textContent='';}};return dialog;
+    }
+    window.addEventListener('hashchange',()=>dialog?.close());
+    window.PawpalStaffComplaintCreate=Object.freeze({open:options=>{if(allowed())return build().open(options);},closeAll:()=>dialog?.clear()});
+})();
+
+;
+
+// Role-scoped screens belong to this domain.
+(function registerRoleViews(){
+ const views=window.PawpalAdminViews;if(!views)return;const {date,money,status}=views.helpers;
+ views.register("Khiếu nại",{columns:{complaints:[['Mã phiếu', 'ticket_code'], ['Nội dung', 'subject'], ['Trạng thái', r => status(r.status)], ['Ưu tiên', r => status(r.priority)]],complaint_messages:[['Thời gian', r => date(r.created_at)], ['Phạm vi', r => r.is_internal ? 'Nội bộ' : 'Trao đổi với khách'], ['Nội dung', r => r.sender_type === 'staff' ? r.content.replace(/^\[Yêu cầu bổ sung\] \[Ghi nhận yêu cầu bổ sung qua (record|call|zalo|email|sms)\]/, (_, channel) => '[Yêu cầu bổ sung] [Ghi nhận yêu cầu bổ sung qua ' + ({record:'tại quầy',call:'điện thoại',zalo:'Zalo',email:'email',sms:'SMS'})[channel] + ']') : r.content]]},
+targets:{"complaints":"tab-complaint-detail"},
+profiles:{"complaint-profile":{read:"complaints",render:async(ctx)=>{const {el,date,money,status,read,table,card,facts,go,root,kind,id,row,target,turn}=ctx;
+            const details = facts(root, row.ticket_code, [['Nội dung', row.subject], ['Trạng thái', status(row.status)], ['Mô tả', row.description]]);
+            if (row.resolution_type) {
+                const resolution = ({refund:'Hoàn tiền',rma_refund:'Nhận hàng trả và hoàn tiền',rma_exchange:'Đổi hàng',redo_service:'Thực hiện lại dịch vụ',change_staff:'Đổi nhân viên',explain:'Giải thích',reject:'Từ chối'})[row.resolution_type] || 'Cần Quản lý kiểm tra';
+                facts(root,'Phương án xử lý',[['Phương án',resolution],['Nội dung đề xuất',row.resolution_note],['Số tiền đã duyệt',row.approved_amount==null?'Chưa duyệt':money(row.approved_amount)]]);
+            }
+            if (!['closed','resolved','completed','rejected'].includes(row.status) && window.PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle')) {
+                const message = el('button', 'Trao đổi', 'admin-btn admin-btn-primary'); message.type = 'button';
+                message.onclick = () => window.PawpalStaffComplaintMessage.open({ ticketId: id, onSaved: () => ctx.refresh() }); details.append(message);
+                if (row.status !== 'waiting_manager_approval') {
+                    const propose = el('button','Đề xuất phương án','admin-btn admin-btn-secondary'); propose.type='button';
+                    propose.onclick=()=>window.PawpalStaffComplaintProposal.open({ticketId:id,onSaved:()=>ctx.refresh()}); details.append(propose);
+                }
+            }
+            const block = card(root, 'Trao đổi'), content = el('div'), pager = el('nav', null, 'workspace-pager'); pager.setAttribute('aria-label','Trang trao đổi khiếu nại'); block.append(content); root.append(pager);
+            let messageTurn = 0;
+            async function loadMessages(page = 1) {
+                const requestTurn = ++messageTurn; content.textContent = 'Đang tải'; pager.replaceChildren();
+                try { const rows = await read('complaint_messages', { id, page }); if (!ctx.isCurrent() || requestTurn !== messageTurn) return; content.replaceChildren(); table('complaint_messages', rows, content);
+                    for (const [label, next] of [['<',page-1],[String(page),page],['>',page+1]]) { const button = el('button',label,next===page?'active':''); button.type='button'; button.disabled=next<1||next>page&&rows.length<10; button.onclick=()=>loadMessages(next); pager.append(button); }
+                } catch (error) { if (ctx.isCurrent() && requestTurn === messageTurn) { content.replaceChildren(el('p',error.message,'workspace-error')); pager.replaceChildren(); } }
+            }
+            await loadMessages();}}},
+toolbars:{"complaints":(ctx)=>{const {el,go,tools}=ctx;
+                const create=el('button','Tạo khiếu nại','admin-btn admin-btn-primary');create.type='button';
+                create.onclick=()=>window.PawpalStaffComplaintCreate.open();tools.append(create);}},
+rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
+})();
+
+(function initializeManagementDomain(){
+    if (!window.PawpalAdminAccess?.isAdmin()) return;
 // complaints.js - Phân hệ Quản lý Khiếu nại Pawpal-er (Core Orchestrator)
 (function() {
     'use strict';
@@ -1989,3 +2217,5 @@
     }
 })();
 
+
+})();

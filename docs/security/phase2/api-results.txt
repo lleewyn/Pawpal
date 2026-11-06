@@ -1,0 +1,17 @@
+UTC: 2026-11-04T16:07:18.421Z
+API SHA256: 3cf33066156161585d9328c292ae324b676a092b2c7c2bac5d5700758607fffd
+✔ STAFF context verifies but cannot claim ADMIN from request body (37.3874ms)
+✔ Missing, unknown, duplicate and multiple roles fail closed (7.7722ms)
+✔ Empty or malformed permission contexts cannot access staff APIs (3.1547ms)
+✔ Provisioning rejects invalid roles and personal permissions before Auth mutations (5.4266ms)
+✔ Employees cannot provision, reset or unlock accounts (2.1591ms)
+✔ Unauthenticated callers receive 401 without contacting Auth or the database (0.4285ms)
+✔ Cloud password endpoint rejects incomplete configuration without calling the local bridge (2.1682ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 314.4927

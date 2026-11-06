@@ -2576,3 +2576,19 @@
 .staff-module #assessmentListTable > tbody > tr > td:nth-child(9):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
     text-align: center;
 }
+
+.staff-module .staff-role-options { display: flex; flex-wrap: wrap; gap: 12px 24px; min-height: 38px; align-items: center; }
+.staff-module .staff-role-options label { display: inline-flex; align-items: center; gap: 8px; color: var(--text-main); font-size: 13px; cursor: pointer; }
+.staff-module .staff-role-options input { accent-color: #236B48; }
+.staff-module .staff-role-description { color: var(--text-muted); font-size: 12px; line-height: 1.5; margin: 4px 0 0; }
+.staff-module #staffAccessDetails { display: grid; gap: 16px; margin-top: 16px; border: none; background: transparent; }
+.staff-module #staffAccessDetails .admin-btn { justify-self: start; }
+.staff-module #staffModalForm .form-group-item { min-width: 0; }
+.staff-module #staffModalForm .admin-input, .staff-module #staffModalForm .admin-select { min-width: 0; max-width: 100%; }
+@media (max-width: 600px) {
+    .staff-module #staffModalForm .form-row-2col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .staff-module #staffModalForm .account-toggle-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .staff-module #staffAccountStatusRow { flex-wrap: wrap; gap: 12px; padding: 0 !important; background: transparent !important; }
+    .staff-module #staffAccountStatusRow > div { flex-wrap: wrap; }
+    .staff-module #staffModalForm .staff-role-options { flex-direction: row; gap: 12px 24px; }
+}

@@ -1,0 +1,6 @@
+{
+  "capturedAt": "2026-11-04T15:46:08.503Z",
+  "scope": "Cloud READ ONLY: Storage policies and bucket public flags; no object rows or Logs",
+  "policies": [],
+  "buckets": []
+}

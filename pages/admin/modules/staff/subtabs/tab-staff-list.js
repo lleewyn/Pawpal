@@ -444,11 +444,6 @@
                 roleSelect.value = staff.systemRole;
             }
 
-            // Đồng bộ checkbox phân quyền
-            const staffPerms = Array.isArray(staff.permissions) ? staff.permissions : [];
-            document.querySelectorAll('#staffPermissionsGrid input[type="checkbox"]').forEach(cb => {
-                cb.checked = staffPerms.includes(cb.value);
-            });
         } else {
             modal.removeAttribute('data-editing-id');
             if (nameInput) nameInput.value = '';
@@ -474,8 +469,7 @@
         PawpalStaff.state.profileEditSnapshot=staff?structuredClone(staff.raw):null;PawpalStaff.state.profileSaveRequest=crypto.randomUUID();
         document.getElementById('staffProfileError').textContent='';
         const accountTitle=document.getElementById('staffEnableAccountToggle').closest('.account-toggle-row')?.previousElementSibling;if(accountTitle)accountTitle.style.display=staff?'none':'';
-        document.querySelectorAll('#staffModalOverlay .detail-section-title').forEach(title=>{if(title.textContent.includes('Tài khoản đăng nhập')||title.dataset.accountHeading){title.dataset.accountHeading='true';title.textContent=staff?'Trạng thái công việc':'Tài khoản đăng nhập hệ thống';}});
-        const permissionGrid=document.getElementById('staffPermissionsGrid');permissionGrid.style.display='none';permissionGrid.previousElementSibling.style.display='none';
+        document.querySelectorAll('#staffModalOverlay .detail-section-title').forEach(title=>{if(title.textContent.includes('Tài khoản đăng nhập')||title.dataset.accountHeading){title.dataset.accountHeading='true';title.textContent='Tài khoản đăng nhập';}});
         document.getElementById('staffEmploymentStatus').value=staff?staff.raw.employment_status.toLowerCase():'active';
         document.getElementById('staffServiceLocked').checked=staff?.raw.service_locked||false;
         document.getElementById('staffChangeReason').value='';
@@ -542,44 +536,42 @@
         accessDraft.staff=current;updateAccountStatus(current);renderStaffList();renderStaffAlertBar();
     }
     function updateAccountStatus(staff){
-        const locked=staff?.accountStatus==='da_khoa';document.getElementById('staffAccountStatusBadge').textContent=locked?'Đang khóa đăng nhập':'Auth đang mở';
+        const locked=staff?.accountStatus==='da_khoa';document.getElementById('staffAccountStatusBadge').textContent=locked?'Đang khóa đăng nhập':'Được phép đăng nhập';
         document.getElementById('staffAccountStatusBadge').className='admin-badge '+(locked?'badge-danger':'badge-success');
         document.getElementById('btnStaffToggleLockAccount').textContent=locked?'Mở khóa đăng nhập':'Khóa đăng nhập';
         document.getElementById('staffMustChangePasswordCheckbox').checked=staff?.raw.must_change_password??true;
         document.getElementById('staffAccountEmail').value=staff?.raw.login_email||'';
     }
-    function permissionTitle(code){
-        const [table,action]=code.split('.'),names={customer:'khách hàng',customer_profile:'hồ sơ khách',customer_phone:'điện thoại khách',customer_address:'địa chỉ khách',pet_profile:'thú cưng',pet_weight_log:'cân nặng',appointment:'lịch dịch vụ',appointment_item:'dịch vụ trong lịch',appointment_record:'biên bản dịch vụ',care_log:'nhật ký chăm sóc',service:'danh mục dịch vụ',sales_order:'đơn bán hàng',sales_order_detail:'dòng đơn hàng',product:'sản phẩm',product_variant:'biến thể',inventory:'tồn kho',inventory_transaction:'sổ kho',payment:'khoản thu',refund_transaction:'khoản hoàn',staff:'nhân sự',staff_role:'vai trò nhân viên',staff_permission:'quyền riêng',staff_schedule:'lịch làm việc',staff_shift_request:'yêu cầu nghỉ và đổi ca',staff_assessment:'đánh giá nhân viên',access_role:'danh mục vai trò',role_permission:'quyền của vai trò',permission:'danh mục quyền',review:'đánh giá khách',review_response:'phản hồi đánh giá',support_ticket:'phiếu phản ánh',audit_log:'nhật ký quản trị'};
-        return (action==='write'?'Thay đổi ':'Xem ')+(names[table]||'dữ liệu '+table);
+    function updateAccessSummary(){
+        const role=accessDraft?.role||'';
+        document.getElementById('staffAccountSystemRole').value=role;
+        document.getElementById('staffRoleDescription').textContent=role==='ADMIN'?'Quản lý toàn bộ hệ thống và tài khoản.':role==='STAFF'?'Thực hiện nghiệp vụ và công việc được giao.':'Chọn vai trò để cấp quyền sử dụng.';
     }
     function renderAccessChoices(){
         const draft=accessDraft;if(!draft?.ready)return;
         const roles=document.getElementById('staffAccountRoles');roles.replaceChildren();
-        const inherited=new Set(draft.rolePermissions.filter(r=>draft.roles.has(r.role_code)).map(r=>r.permission_code));
-        for(const role of draft.catalogRoles){const label=document.createElement('label');label.className='perm-checkbox';const input=document.createElement('input');input.type='checkbox';input.value=role.code;input.checked=draft.roles.has(role.code);input.onchange=()=>{if(input.checked)draft.roles.add(role.code);else draft.roles.delete(role.code);renderAccessChoices();};label.append(input,document.createTextNode(role.code==='ADMIN'?'Quản trị viên':role.role_name));roles.append(label);}
-        const grid=document.getElementById('staffPermissionsGrid');grid.replaceChildren();
-        const query=document.getElementById('staffPermissionSearch').value;
-        const list=draft.catalogPermissions.filter(p=>PawpalStaff.matchSearch(permissionTitle(p.code)+' '+p.code,query));
-        for(const permission of list.slice(0,draft.visible)){
-            const label=document.createElement('label');label.className='perm-checkbox';label.style.cssText='display:flex;align-items:flex-start;gap:8px;margin:8px 0';const input=document.createElement('input');input.type='checkbox';input.value=permission.code;input.checked=inherited.has(permission.code)||draft.permissions.has(permission.code);input.disabled=inherited.has(permission.code);input.onchange=()=>{if(input.checked)draft.permissions.add(permission.code);else draft.permissions.delete(permission.code);};
-            const text=document.createElement('span');text.textContent=permissionTitle(permission.code)+(inherited.has(permission.code)?' · Thừa hưởng':'');const code=document.createElement('small');code.textContent=permission.code;code.style.cssText='display:block;color:#4F7A65';text.append(code);label.append(input,text);grid.append(label);
+        for(const [code,name] of [['ADMIN','Quản lý'],['STAFF','Nhân viên']]){
+            const label=document.createElement('label'),input=document.createElement('input');input.type='radio';input.name='staffAccountRole';input.value=code;input.checked=draft.role===code;input.disabled=!draft.catalogRoles.some(role=>role.code===code);
+            input.onchange=()=>{draft.role=code;updateAccessSummary();};label.append(input,document.createTextNode(name));roles.append(label);
         }
-        const more=document.getElementById('staffPermissionMore');more.hidden=list.length<=draft.visible;more.style.display=more.hidden?'none':'';more.onclick=()=>{draft.visible+=20;renderAccessChoices();};
+        updateAccessSummary();
     }
     async function configureStaffAccess(staff){
-        const token=PawpalStaff.state.profileSaveRequest;accessDraft={token,staff,roles:new Set(staff?.roles.map(r=>r.code)||[]),permissions:new Set(staff?.permissions||[]),visible:20,ready:false};
+        const token=PawpalStaff.state.profileSaveRequest;accessDraft={token,staff,role:staff?(staff.roles?.length===1?staff.roles[0].code:''):'STAFF',ready:false};
+        document.getElementById('staffAccountRoles').replaceChildren();document.getElementById('staffRoleDescription').textContent='Đang tải vai trò...';
         const section=document.getElementById('staffAccountConfigSection');section.style.display='block';
         document.getElementById('staffAccountPassword').type='password';document.getElementById('btnShowStaffPassword').textContent='Hiện mật khẩu';
         const passwordRequired=document.querySelector('#staffAccountPasswordLabel span');if(passwordRequired)passwordRequired.hidden=!!staff;
-        document.getElementById('staffAccessDetails').open=false;
         const login=document.getElementById('staffAccountEmail');login.readOnly=!!staff;if(staff)login.value=staff.raw.login_email||'';
-        const allow=document.getElementById('staffEnableAccountToggle');allow.disabled=!!staff;allow.closest('label').style.display='';allow.checked=staff?staff.accountStatus!=='da_khoa':false;
-        document.getElementById('staffAccountStatusRow').style.display=staff?'flex':'none';document.getElementById('staffMustChangePasswordCheckbox').disabled=true;
-        document.getElementById('staffAccountPassword').value='';document.getElementById('staffAccountError').textContent='';document.getElementById('staffAccessReason').value='';document.getElementById('staffPermissionSearch').value='';document.getElementById('staffPermissionsGrid').style.display='block';document.getElementById('staffPermissionsGrid').previousElementSibling.style.display='';document.getElementById('btnSaveStaffAccess').style.display=staff?'':'none';
+        const allow=document.getElementById('staffEnableAccountToggle');allow.disabled=!!staff;allow.closest('label').style.display=staff?'none':'';allow.checked=staff?staff.accountStatus!=='da_khoa':false;
+        document.getElementById('staffAccountStatusRow').style.display=staff?'flex':'none';document.getElementById('staffMustChangePasswordCheckbox').disabled=true;document.getElementById('staffMustChangePasswordCheckbox').checked=staff?staff.raw.must_change_password:true;
+        document.getElementById('staffAccountPassword').value='';document.getElementById('staffAccountError').textContent='';document.getElementById('staffAccessReason').value='';document.getElementById('btnSaveStaffAccess').style.display=staff?'':'none';
         document.getElementById('staffAccessReasonGroup').style.display=staff?'':'none';if(staff)updateAccountStatus(staff);
         try{
-            const [catalogRoles,catalogPermissions,rolePermissions]=await Promise.all([PawpalStaff.readRows(()=>window.getSupabaseClient().from('access_role').select('code,role_name').order('code')),PawpalStaff.readRows(()=>window.getSupabaseClient().from('permission').select('code,description').order('code')),PawpalStaff.readRows(()=>window.getSupabaseClient().from('role_permission').select('role_code,permission_code').order('role_code').order('permission_code'))]);
-            if(accessDraft.token!==token)return;Object.assign(accessDraft,{catalogRoles,catalogPermissions,rolePermissions,ready:true});renderAccessChoices();
+            const catalogRoles=await PawpalStaff.readRows(()=>window.getSupabaseClient().from('access_role').select('code,role_name').in('code',['ADMIN','STAFF']).order('code'));
+            if(accessDraft.token!==token)return;
+            if(!catalogRoles.some(role=>role.code===accessDraft.role))accessDraft.role='';
+            Object.assign(accessDraft,{catalogRoles,ready:true});renderAccessChoices();
         }catch{document.getElementById('staffAccountError').textContent='Không tải được danh mục quyền. Đóng và mở lại trước khi quản lý tài khoản.';}
     }
     PawpalStaff.createStaffAccount=async profile=>{
@@ -591,12 +583,11 @@
         if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)invalid('staffAccountEmail','Nhập email công vụ đăng nhập hợp lệ, kể cả khi chưa cho phép đăng nhập.');
         if(password.length<6||password.length>128)invalid('staffAccountPassword','Nhập mật khẩu tạm thời từ 6 đến 128 ký tự.');
         if(!accessDraft?.ready){const error=Error('Chưa tải được danh mục quyền. Đóng và mở lại để thử lại.');error.staffAccountError=true;throw error;}
-        if(document.getElementById('staffEnableAccountToggle').checked&&!accessDraft.roles.size&&!accessDraft.permissions.size){document.getElementById('staffAccessDetails').open=true;invalid('staffPermissionSearch','Chọn ít nhất một vai trò hoặc quyền khi cho phép nhân viên đăng nhập.');}
-        const result=await callStaffAccount('provision-account',{requestId:PawpalStaff.state.profileSaveRequest,staffId:PawpalStaff.state.profileNewId,profile,email:document.getElementById('staffAccountEmail').value.trim(),password:document.getElementById('staffAccountPassword').value,enableLogin:document.getElementById('staffEnableAccountToggle').checked,roles:[...accessDraft.roles],permissions:[...accessDraft.permissions]});return result.staffId;
+        if(!['ADMIN','STAFF'].includes(accessDraft.role))invalid('staffAccountRoles','Chọn vai trò Quản lý hoặc Nhân viên.');
+        const result=await callStaffAccount('provision-account',{requestId:PawpalStaff.state.profileSaveRequest,staffId:PawpalStaff.state.profileNewId,profile,email:document.getElementById('staffAccountEmail').value.trim(),password:document.getElementById('staffAccountPassword').value,enableLogin:document.getElementById('staffEnableAccountToggle').checked,roles:[accessDraft.role],permissions:[]});return result.staffId;
     };
     function initStaffAccountActions(){
         document.getElementById('btnShowStaffPassword').onclick=e=>{const input=document.getElementById('staffAccountPassword');input.type=input.type==='password'?'text':'password';e.currentTarget.textContent=input.type==='password'?'Hiện mật khẩu':'Ẩn mật khẩu';};
-        document.getElementById('staffPermissionSearch').oninput=()=>{if(accessDraft){accessDraft.visible=20;renderAccessChoices();}};
         const control=async(button,path,action)=>{
             const staff=accessDraft?.staff;if(!staff||button.disabled)return;button.disabled=true;
             try{
@@ -614,11 +605,25 @@
         };
         document.getElementById('btnSaveStaffAccess').onclick=()=>{
             if(!accessDraft?.ready||!accessDraft.staff)return;
-            const draft={staff:structuredClone(accessDraft.staff.raw),roles:[...accessDraft.roles].sort(),permissions:[...accessDraft.permissions].sort(),reason:document.getElementById('staffAccessReason').value.trim()};
-            PawpalStaff.showStaffConfirmModal({title:'Lưu quyền truy cập',message:'Xác nhận thay đổi vai trò và quyền riêng của nhân viên đang xem?',confirmText:'Lưu quyền truy cập',onConfirm:async()=>{
+            if(!['ADMIN','STAFF'].includes(accessDraft.role)){document.getElementById('staffAccountError').textContent='Chọn vai trò Quản lý hoặc Nhân viên.';return;}
+            const draft={staff:structuredClone(accessDraft.staff.raw),roles:[accessDraft.role],permissions:[],reason:document.getElementById('staffAccessReason').value.trim()};
+            if(draft.reason.length<2){document.getElementById('staffAccountError').textContent='Nhập lý do thay đổi vai trò.';document.getElementById('staffAccessReason').focus();return;}
+            PawpalStaff.showStaffConfirmModal({title:'Lưu vai trò',message:'Xác nhận thay đổi vai trò của nhân viên đang xem?',confirmText:'Lưu vai trò',onConfirm:async()=>{
                 const button=document.getElementById('btnSaveStaffAccess');if(button.disabled)return;button.disabled=true;
-                try{const key=JSON.stringify(draft);accessDraft.requests||=new Map();if(!accessDraft.requests.has(key))accessDraft.requests.set(key,crypto.randomUUID());const {error}=await window.getSupabaseClient().rpc('set_admin_staff_access',{p_request_id:accessDraft.requests.get(key),p_staff_id:draft.staff.id,p_expected_updated_at:draft.staff.updated_at,p_roles:draft.roles,p_permissions:draft.permissions,p_reason:draft.reason});if(error)throw error;await reloadStaffAccount();document.getElementById('staffAccountError').textContent='';PawpalStaff.showToast('Đã lưu quyền truy cập.','success');}
-                catch(error){document.getElementById('staffAccountError').textContent=error.message==='staff_last_admin_required'?'Cần giữ ít nhất một Admin đang hoạt động.':'Không thể lưu quyền. Kiểm tra lý do, quyền quản trị và phiên bản hồ sơ.';}
+                try{
+                    const key=JSON.stringify(draft);accessDraft.requests||=new Map();
+                    if(!accessDraft.requests.has(key))accessDraft.requests.set(key,crypto.randomUUID());
+                    const {error}=await window.getSupabaseClient().rpc('set_admin_staff_access',{
+                        p_request_id:accessDraft.requests.get(key),p_staff_id:draft.staff.id,
+                        p_expected_updated_at:draft.staff.updated_at,p_roles:draft.roles,p_permissions:[],p_reason:draft.reason
+                    });
+                    if(error)throw error;
+                    const actor=window.PawpalAdminAccess?.state;
+                    if(actor?.user?.id===draft.staff.id&&actor.role!==draft.roles[0]){window.location.reload();return;}
+                    await reloadStaffAccount();document.getElementById('staffAccountError').textContent='';
+                    PawpalStaff.showToast('Đã lưu vai trò.','success');
+                }
+                catch(error){document.getElementById('staffAccountError').textContent=error.message==='staff_last_admin_required'?'Cần giữ ít nhất một Quản lý đang hoạt động.':'Không thể lưu vai trò. Kiểm tra lý do, quyền quản lý và phiên bản hồ sơ.';}
                 finally{button.disabled=false;}
             }});
         };

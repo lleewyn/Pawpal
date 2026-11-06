@@ -1,3 +1,196 @@
+// Role-specific operations live in this domain; management initialization requires verified ADMIN.
+(function () {
+    'use strict';
+    let petModal;
+    const node = (tag, text, className) => { const element = document.createElement(tag); if (text != null) element.textContent = text; if (className) element.className = className; return element; };
+    async function lookup(kind, query = '', id = null, page = 1) {
+        const { data, error } = await window.getSupabaseClient().rpc('get_staff_workspace', { p_kind: kind, p_query: query, p_id: id, p_page: page });
+        if (error) throw error;
+        return data.items || [];
+    }
+    function petDialog() {
+        if (petModal) return petModal;
+        const id = 'staffPetCreateModal', overlay = node('div', null, 'admin-modal-overlay staff-workspace-modal'); overlay.id = id; overlay.setAttribute('aria-hidden', 'true');
+        const card = node('div', null, 'admin-modal-card workspace-pet-card'); card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'staffPetCreateTitle');
+        const form = node('form'); form.noValidate = true; form.setAttribute('onsubmit', 'return false;');
+        const header = node('div', null, 'workspace-modal-header'), title = node('h2', 'Thêm bé cưng'); title.id = 'staffPetCreateTitle';
+        const close = node('button', 'Đóng', 'btn-modal-close'); close.type = 'button'; close.dataset.closeModal = id; header.append(title, close);
+        const grid = node('div', null, 'workspace-pet-grid'), fields = {};
+        function field(key, text, type = 'text', required = false, wide = false) {
+            const group = node('div', null, 'workspace-form-field' + (wide ? ' workspace-field-wide' : '')), label = node('label', text + (required ? ' ' : ''));
+            const input = node(type === 'textarea' ? 'textarea' : type === 'select' ? 'select' : 'input', null, 'admin-input');
+            input.id = 'staffPet' + key; if (input.tagName === 'INPUT') input.type = type;
+            input.required = required; label.htmlFor = input.id; if (required) label.append(node('span', '*', 'workspace-required'));
+            if (type === 'textarea') { input.rows = 2; input.maxLength = 2000; }
+            else if (type === 'text') input.maxLength = 200;
+            group.append(label, input); grid.append(group); fields[key] = input; return { group, input };
+        }
+        const owner = field('owner', 'Chủ nuôi', 'text', true, true); owner.input.placeholder = 'Tìm tên, mã khách hoặc số điện thoại';
+        field('phone', 'Số điện thoại').input.readOnly = true;
+        field('name', 'Tên bé cưng', 'text', true);
+        const breed = field('breed', 'Giống và loài', 'text', true); breed.input.placeholder = 'Tìm giống trong danh mục';
+        const gender = field('gender', 'Giới tính', 'select');
+        for (const [value, text] of [['unknown', 'Chưa rõ'], ['male', 'Đực'], ['female', 'Cái']]) { const option = node('option', text); option.value = value; gender.input.append(option); }
+        field('dob', 'Ngày sinh', 'date');
+        const weight = field('weight', 'Cân nặng (kg)', 'number'); weight.input.min = '0.01'; weight.input.max = '1000'; weight.input.step = '0.01';
+        field('color', 'Màu lông'); field('safety', 'Cảnh báo an toàn'); field('allergy', 'Tiền sử dị ứng', 'textarea'); field('routine', 'Ghi chú tập tính', 'textarea');
+        fields.safety.maxLength = 2000;
+        const errorText = node('p', '', 'workspace-error'); errorText.setAttribute('role', 'alert');
+        const footer = node('div', null, 'workspace-modal-footer'), cancel = node('button', 'Hủy', 'admin-btn admin-btn-secondary'), save = node('button', 'Lưu bé cưng', 'admin-btn admin-btn-primary');
+        Object.values(fields).forEach(input => {
+            const clearFieldError = () => { if (input.getAttribute('aria-invalid') === 'true') { input.removeAttribute('aria-invalid'); errorText.textContent = ''; } };
+            input.addEventListener('input', clearFieldError); input.addEventListener('change', clearFieldError);
+        });
+        cancel.type = save.type = 'button'; cancel.dataset.closeModal = id; footer.append(cancel, save); form.append(header, grid, errorText, footer); card.append(form); overlay.append(card); document.body.append(overlay);
+        const state = { overlay, form, fields, errorText, save, saving: false, loading: false, expectedUpdatedAt: null, editing: false, owner: null, breed: null, petId: null, onCreated: null, returnFocus: null, generation: 0 };
+        const pickers = [];
+        function autocomplete({ group, input }, key, kind, minimum, titleOf, subtitleOf, selected) {
+            group.classList.add('workspace-autocomplete');
+            const menu = node('div', null, 'autocomplete-dropdown workspace-autocomplete-menu'), summary = node('div', null, 'workspace-selected-entity');
+            menu.id = input.id + 'Options'; menu.hidden = summary.hidden = true; menu.setAttribute('role', 'listbox');
+            input.setAttribute('role', 'combobox'); input.setAttribute('aria-autocomplete', 'list'); input.setAttribute('aria-expanded', 'false'); input.setAttribute('aria-controls', menu.id); input.autocomplete = 'off'; group.append(menu, summary);
+            let timer, version = 0, active = -1, options = [];
+            const hide = () => { menu.hidden = true; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); active = -1; };
+            const invalidate = () => { clearTimeout(timer); version++; hide(); };
+            function choose(row) {
+                invalidate(); state[key] = row; input.value = titleOf(row); input.readOnly = true; input.removeAttribute('aria-invalid');
+                summary.replaceChildren(node('span', titleOf(row) + (subtitleOf(row) ? ' · ' + subtitleOf(row) : '')));
+                const clear = node('button', '✕ Bỏ chọn', 'workspace-text-button'); clear.type = 'button'; clear.hidden = key === 'owner' && state.editing; clear.onclick = () => { if (key === 'owner' && state.editing) return; reset(); input.focus(); }; summary.append(clear); summary.hidden = false; selected?.(row);
+            }
+            function reset() { invalidate(); state[key] = null; input.readOnly = false; input.value = ''; summary.replaceChildren(); summary.hidden = true; selected?.(null); }
+            async function search() {
+                if (input.readOnly || !overlay.classList.contains('active')) return;
+                const turn = ++version, query = input.value.trim(); active = -1; options = []; menu.replaceChildren();
+                menu.hidden = false; input.setAttribute('aria-expanded', 'true'); input.removeAttribute('aria-activedescendant');
+                if (query.length < minimum) { menu.append(node('p', 'Nhập ít nhất ' + minimum + ' ký tự để tìm.')); return; }
+                menu.append(node('p', 'Đang tìm...'));
+                try {
+                    const rows = await lookup(kind, query); if (turn !== version || !overlay.classList.contains('active')) return;
+                    menu.replaceChildren();
+                    const clean = rows.filter(row => { const text = String(titleOf(row) || '').trim(); return text && !/^\d+$/.test(text) && !/^(chưa rõ|chưa cập nhật|unknown|null|undefined)$/i.test(text); });
+                    if (!clean.length) menu.append(node('p', 'Không có kết quả phù hợp.'));
+                    clean.forEach((row, index) => {
+                        const button = node('button', null, 'workspace-autocomplete-option'); button.type = 'button'; button.id = menu.id + index; button.setAttribute('role', 'option'); button.setAttribute('aria-selected', 'false');
+                        button.append(node('strong', titleOf(row)), node('small', subtitleOf(row))); button.onclick = () => { choose(row); input.focus(); }; menu.append(button); options.push(button);
+                    });
+                } catch { if (turn === version) { menu.replaceChildren(node('p', 'Không tải được gợi ý. Nhập lại để thử.')); } }
+            }
+            input.addEventListener('input', () => { invalidate(); timer = setTimeout(search, 250); }); input.addEventListener('focus', search);
+            input.addEventListener('click', () => { if (menu.hidden) search(); });
+            input.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !menu.hidden) { event.preventDefault(); event.stopPropagation(); invalidate(); return; }
+                if (event.key === 'ArrowDown' && menu.hidden && !input.readOnly) { event.preventDefault(); search(); return; }
+                if (['ArrowDown', 'ArrowUp'].includes(event.key) && options.length && !menu.hidden) {
+                    event.preventDefault(); active = (active + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length;
+                    options.forEach((option, index) => option.setAttribute('aria-selected', String(index === active))); input.setAttribute('aria-activedescendant', options[active].id); options[active].scrollIntoView({ block: 'nearest' });
+                } else if (event.key === 'Enter') { event.preventDefault(); if (active >= 0 && !menu.hidden) options[active].click(); }
+            });
+            group.addEventListener('focusout', () => { setTimeout(() => { if (!group.contains(document.activeElement)) invalidate(); }, 0); });
+            const picker = { choose, reset, invalidate, group }; pickers.push(picker); return picker;
+        }
+        const ownerPicker = autocomplete(owner, 'owner', 'customers', 3, row => row.full_name, row => row.phone_number || row.customer_code, row => { fields.phone.value = row?.phone_number || ''; });
+        const breedPicker = autocomplete(breed, 'breed', 'breeds', 0, row => row.breed_name, row => row.species_name);
+        overlay.addEventListener('click', event => { pickers.forEach(picker => { if (!picker.group.contains(event.target)) picker.invalidate(); }); if (event.target === overlay || event.target.closest('[data-close-modal="' + id + '"]')) closeDialog(); });
+        function closeDialog() { state.generation++; pickers.forEach(picker => picker.invalidate()); overlay.classList.remove('active'); overlay.setAttribute('aria-hidden', 'true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
+        overlay.addEventListener('keydown', event => {
+            if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDialog(); return; }
+            if (event.key !== 'Tab') return;
+            const controls = [...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),select,textarea')].filter(element => element.offsetParent !== null), first = controls[0], last = controls.at(-1);
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        });
+        save.onclick = async () => {
+            if (state.saving || state.loading) return;
+            errorText.textContent = ''; Object.values(fields).forEach(input => input.removeAttribute('aria-invalid'));
+            const invalid = (input, text) => { input.setAttribute('aria-invalid', 'true'); errorText.textContent = text; input.focus(); };
+            if (!state.owner) return invalid(fields.owner, 'Chọn chủ nuôi từ danh sách gợi ý.');
+            const name = fields.name.value.trim(); if (!name || name.length > 200) return invalid(fields.name, 'Nhập tên bé cưng từ 1 đến 200 ký tự.');
+            if (!state.breed) return invalid(fields.breed, 'Chọn giống và loài từ danh sách gợi ý.');
+            const birth = fields.dob.value, today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+            if (birth && birth > today) return invalid(fields.dob, 'Ngày sinh không được ở tương lai.');
+            const weightValue = fields.weight.value === '' ? null : Number(fields.weight.value);
+            if (fields.weight.validity.badInput || (weightValue !== null && (!Number.isFinite(weightValue) || weightValue <= 0 || weightValue > 1000))) return invalid(fields.weight, 'Nhập cân nặng lớn hơn 0 và không quá 1000 kg.');
+            if (!window.PawpalAdminAccess?.state.user?.permissions.includes('work.pet.write')) { errorText.textContent = 'Bạn không có quyền lưu hồ sơ bé cưng.'; return; }
+            state.saving = true; save.disabled = true; save.textContent = 'Đang lưu'; const turn = state.generation;
+            try {
+                const { data, error } = await window.getSupabaseClient().rpc('save_admin_pet', { p_pet_id: state.petId, p_expected_updated_at: state.expectedUpdatedAt, p_details: {
+                    customer_id: state.owner.id, pet_name: name, breed_id: state.breed.id, gender: fields.gender.value, date_of_birth: birth || null, color: fields.color.value.trim() || null,
+                    safety_note: fields.safety.value.trim() || null, allergy: fields.allergy.value.trim() || null, routine: fields.routine.value.trim() || null, status: 'active'
+                }, p_weight: weightValue });
+                if (error) throw error;
+                if (data !== state.petId) throw Error('invalid_pet_result');
+                if (turn === state.generation && overlay.classList.contains('active')) { const callback = state.onCreated; closeDialog(); state.reset(); if (window.PawpalAdminAccess?.isStaff()) callback?.(data); }
+            } catch (error) {
+                if (turn === state.generation) errorText.textContent = error.message === 'duplicate_pet_name' ? 'Chủ nuôi đã có bé cưng trùng tên. Hãy kiểm tra hồ sơ có sẵn.' : error.code === 'PT409' ? 'Hồ sơ đã thay đổi. Đóng form và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.' : error.code === '42501' ? 'Bạn không có quyền lưu hồ sơ bé cưng.' : 'Chưa xác nhận lưu thành công. Giữ nguyên thông tin để kiểm tra hoặc thử lại.';
+            } finally { state.saving = false; save.disabled = false; save.textContent = state.editing ? 'Lưu thay đổi' : 'Lưu bé cưng'; }
+        };
+        form.addEventListener('submit', event => event.preventDefault());
+        state.close = closeDialog; state.reset = () => { state.editing = false; state.loading = false; state.expectedUpdatedAt = null; form.reset(); pickers.forEach(picker => picker.reset()); errorText.textContent = ''; Object.values(fields).forEach(input => { input.removeAttribute('aria-invalid'); input.disabled = false; }); state.petId = crypto.randomUUID(); title.textContent = 'Thêm bé cưng'; save.textContent = 'Lưu bé cưng'; save.disabled = state.saving; };
+        state.ownerPicker = ownerPicker; state.breedPicker = breedPicker; state.title = title; petModal = state; return state;
+    }
+    async function editPet({ petId, onCreated } = {}) {
+        if (!window.PawpalAdminAccess?.state.user?.permissions.includes('work.pet.write')) return;
+        const state = petDialog(); if (state.saving) return;
+        state.reset(); state.editing = true; state.loading = true; state.returnFocus = document.activeElement; state.onCreated = onCreated;
+        state.title.textContent = 'Sửa hồ sơ bé cưng'; state.save.textContent = 'Đang tải'; state.save.disabled = true;
+        Object.values(state.fields).forEach(input => input.disabled = true);
+        const turn = ++state.generation; state.overlay.classList.add('active'); state.overlay.setAttribute('aria-hidden', 'false'); state.overlay.querySelector('.btn-modal-close').focus();
+        try {
+            const rows = await lookup('pets', '', petId), pet = rows.find(row => row.id === petId);
+            if (!pet?.updated_at) throw Error('pet_missing');
+            const owners = await lookup('customers', '', pet.customer_id), owner = owners.find(row => row.id === pet.customer_id);
+            let breed;
+            for (let page = 1; page <= 100 && turn === state.generation; page++) {
+                const candidates = await lookup('breeds', '', null, page); breed = candidates.find(row => row.id === pet.breed_id);
+                if (breed || candidates.length < 10) break;
+            }
+            if (turn !== state.generation) return;
+            if (!owner || !breed) throw Error('pet_relations_missing');
+            state.petId = pet.id; state.expectedUpdatedAt = pet.updated_at;
+            state.ownerPicker.choose(owner); state.breedPicker.choose(breed);
+            const values = { name: pet.pet_name, gender: pet.gender, dob: pet.date_of_birth, weight: pet.current_weight, color: pet.color, safety: pet.safety_note, allergy: pet.allergy, routine: pet.routine };
+            Object.entries(values).forEach(([key, value]) => state.fields[key].value = value ?? '');
+            Object.values(state.fields).forEach(input => input.disabled = false); state.loading = false; state.save.disabled = false; state.save.textContent = 'Lưu thay đổi'; state.fields.name.focus();
+        } catch {
+            if (turn === state.generation) { state.errorText.textContent = 'Không tải đủ hồ sơ và danh mục hiện tại. Đóng form, tải lại hồ sơ hoặc liên hệ Quản lý.'; state.save.textContent = 'Lưu thay đổi'; }
+        }
+    }
+    async function openPet({ customerId = null, onCreated } = {}) {
+        if (!window.PawpalAdminAccess?.state.user?.permissions.includes('work.pet.write')) return;
+        const state = petDialog(); if (state.saving) return;
+        state.reset(); state.returnFocus = document.activeElement; state.onCreated = onCreated; const turn = ++state.generation;
+        state.overlay.classList.add('active'); state.overlay.setAttribute('aria-hidden', 'false'); state.fields.owner.focus();
+        if (customerId) {
+            try { const rows = await lookup('customers', '', customerId); if (turn === state.generation && rows[0]) { state.ownerPicker.choose(rows[0]); state.fields.name.focus(); } }
+            catch { if (turn === state.generation) state.errorText.textContent = 'Không tải được chủ nuôi. Hãy tìm và chọn lại.'; }
+        }
+    }
+    window.addEventListener('hashchange',()=>petModal?.close());
+    window.PawpalPetsStaff=Object.freeze({openPet,editPet,closeAll:()=>{if(petModal){petModal.close();petModal.reset();petModal.onCreated=null;}}});
+})();
+
+;
+
+// Role-scoped screens belong to this domain.
+(function registerRoleViews(){
+ const views=window.PawpalAdminViews;if(!views)return;const {date,money,status}=views.helpers;
+ views.register("Thú cưng",{columns:{pets:[['Mã bé', 'pet_code'], ['Tên bé', 'pet_name'], ['Giới tính', r => status(r.gender)], ['Cân nặng', r => r.current_weight == null ? '—' : r.current_weight + ' kg'], ['Lưu ý', 'safety_note']]},
+targets:{"pets":"tab-pet-profile"},
+profiles:{"pet-profile":{read:"pets",render:async(ctx)=>{const {el,date,money,status,read,table,card,facts,go,root,kind,id,row,target,turn}=ctx;
+            const details = facts(root, row.pet_name, [['Mã bé', row.pet_code], ['Cân nặng', row.current_weight == null ? '—' : row.current_weight + ' kg'], ['Cảnh báo an toàn', row.safety_note], ['Dị ứng', row.allergy], ['Tập tính', row.routine]]);
+            if (window.PawpalAdminAccess.state.user.permissions.includes('work.pet.write')) {
+                const edit = el('button', 'Sửa hồ sơ', 'admin-btn admin-btn-primary'); edit.type = 'button';
+                edit.onclick = () => window.PawpalStaffForms.editPet({ petId: id, onCreated: () => ctx.refresh() }); details.append(edit);
+            }
+}}},
+toolbars:{"pets":(ctx)=>{const {el,go,tools}=ctx;
+                const create = el('button', 'Thêm bé cưng', 'admin-btn admin-btn-primary'); create.type = 'button';
+                create.onclick = () => window.PawpalStaffForms.openPet({ onCreated: petId => go('tab-pet-profile', petId) }); tools.append(create);}},
+rowAlerts:{pets:row=>row.safety_note?'note':null}});
+})();
+
+(function initializeManagementDomain(){
+    if (!window.PawpalAdminAccess?.isAdmin()) return;
 // pets.js - Phân hệ Quản lý Thú cưng Pawpal-er (Core Orchestrator)
 (function() {
     'use strict';
@@ -1055,4 +1248,6 @@
   if(closing&&busy(modal)){event.preventDefault();event.stopImmediatePropagation();return;}
   if(event.target===modal)close(modal);
  },true);
+})();
+
 })();

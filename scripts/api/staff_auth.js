@@ -57,8 +57,9 @@ function createStaffAuthHandlers(config){
    const caller=createClient(config.url,config.anonKey,{...options,global:{...(options.global||{}),headers:{Authorization:'Bearer '+token}}});
    const user=await caller.auth.getUser(token);if(user.error||!user.data?.user)return {authorized:false,status:401,message:'Phiên đăng nhập không hợp lệ.'};
    const result=await caller.rpc('get_staff_login_context'),context=result.data,staff=context?.staff;
-   if(result.error||!context?.is_active||!staff||staff.must_change_password||staff.auth_user_id!==user.data.user.id)return {authorized:false,status:403,message:'Tài khoản không có quyền truy cập công vụ hiện tại.'};
-   const roles=staff.access_roles||[],permissions=staff.permission_codes||[],wanted=required?(Array.isArray(required)?required:[required]):[];
+   if(result.error||context?.is_staff!==true||context.is_active!==true||!staff||staff.must_change_password!==false||staff.auth_user_id!==user.data.user.id)return {authorized:false,status:403,message:'Tài khoản không có quyền truy cập công vụ hiện tại.'};
+   const roles=staff.access_roles,permissions=staff.permission_codes,wanted=required?(Array.isArray(required)?required:[required]):[];
+   if(!Array.isArray(roles)||roles.length!==1||!['ADMIN','STAFF'].includes(roles[0])||!Array.isArray(permissions)||permissions.some(code=>typeof code!=='string')||!permissions.length)return {authorized:false,status:403,message:'Tài khoản chưa có vai trò công vụ hợp lệ.'};
    if(wanted.length&&!wanted.some(code=>roles.includes(code)||permissions.includes(code)))return {authorized:false,status:403,message:'Bạn chưa có quyền thực hiện thao tác này.'};
    return {authorized:true,caller,user:user.data.user,staff:{...staff,system_role:roles.includes('ADMIN')?'ADMIN':roles[0]||'',permissions,account_status:'ACTIVE'}};
   }catch{return {authorized:false,status:503,message:'Không thể xác minh phiên công vụ.'};}
@@ -70,7 +71,8 @@ function createStaffAuthHandlers(config){
   const auth=await verify(req,'ADMIN');if(!auth.authorized)return fail(res,auth.status,auth.message);
   let request;try{request=body(req);}catch{return fail(res,400,'Dữ liệu không hợp lệ.');}
   const {requestId,staffId,profile,email,password,enableLogin}=request;
-  const roles=Array.isArray(request.roles)?[...new Set(request.roles)].sort():null,permissions=Array.isArray(request.permissions)?[...new Set(request.permissions)].sort():null;
+  const roles=Array.isArray(request.roles)?request.roles:null,permissions=request.permissions===undefined?[]:request.permissions;
+  if(!roles||roles.length!==1||!['ADMIN','STAFF'].includes(roles[0])||!Array.isArray(permissions)||permissions.length!==0)return fail(res,400,'Chọn một vai trò Quản lý hoặc Nhân viên; không cấp quyền riêng.');
   if(!uuid(requestId)||!uuid(staffId)||!profile||typeof profile!=='object'||Array.isArray(profile)||typeof email!=='string'||email.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
    ||typeof password!=='string'||password.length<6||password.length>128||typeof enableLogin!=='boolean'||!roles||roles.length>30||!permissions||permissions.length>250||(enableLogin&&roles.length+permissions.length===0)||[...roles,...permissions].some(v=>typeof v!=='string'))return fail(res,400,'Nhập hồ sơ, email đăng nhập, mật khẩu từ 6 đến 128 ký tự và chọn quyền nếu cho phép đăng nhập.');
   if(typeof profile.full_name!=='string'||[...profile.full_name.trim().normalize('NFC')].length<2||profile.full_name.length>200||/\p{N}/u.test(profile.full_name))return fail(res,400,'Họ và tên cần từ 2 đến 200 ký tự và không chứa số.');

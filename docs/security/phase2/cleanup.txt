@@ -1,0 +1,9 @@
+{
+  "capturedAt": "2026-11-04T15:50:12.901Z",
+  "removed": [
+    "pawpal_access_1d416ec4a619",
+    "pawpal_access_91c2a756455f"
+  ],
+  "retained": "pawpal_access_98af5afcad30",
+  "scope": "Only exact task-owned local clone names and owner markers matched; source and Cloud untouched"
+}
