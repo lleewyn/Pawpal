@@ -61,6 +61,103 @@ function memberCaller(token){
  return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false},global:{headers:{Authorization:'Bearer '+token}}});
 }
 function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceClient,readAdmission=admission,createMemberCaller=memberCaller}={}){
+ async function staffAnswer(req,res,auth,fail){
+  const {caller,staff,user}=auth;let lease=null;
+  if(!uuid(staff?.id)||!uuid(user?.id)||!staff.permissions?.includes('work.copilot.use'))return fail(403,'Chưa có quyền dùng trợ lý.');
+  let body=req.body||{};try{if(typeof body==='string')body=JSON.parse(body);}catch{return fail(400,'Dữ liệu không hợp lệ.');}
+  if(body?.action)return fail(403,'Nhân viên không được thực hiện thao tác quản trị qua trợ lý.');
+  if(!body||Array.isArray(body)||Object.keys(body).some(k=>!['requestId','sessionId','question','conversationId','readContext','stream'].includes(k))||!uuid(body.requestId)||!uuid(body.sessionId)||typeof body.question!=='string'||body.question.trim().length<1||body.question.length>2000||body.conversationId!=null&&!uuid(body.conversationId)||body.stream!==undefined&&typeof body.stream!=='boolean')return fail(400,'Câu hỏi hoặc phiên chưa hợp lệ.');
+  const question=body.question.trim(),replayArgs={p_request:body.requestId,p_session:body.sessionId,p_question:question};
+  async function cleanup(){if(lease){const active=lease;lease=null;await admission.releaseStaff(caller,active).catch(()=>{});}}
+  async function verifyScope(expected){
+   const fresh=await verify(req,'work.copilot.use');if(!fresh.authorized)throw {code:fresh.status===401?'STAFF_AUTH_401':fresh.status===503?'58000':'42501'};
+   if(fresh.staff?.system_role!=='STAFF'||fresh.staff.id!==staff.id||fresh.user?.id!==user.id)throw {code:'42501'};
+   const scope=await fresh.caller.rpc('get_staff_copilot_scope');if(scope.error)throw scope.error;
+   if(scope.data?.staff_id!==staff.id||scope.data?.scope_version!==1||scope.data?.scope_token!==expected)throw {code:'PT409'};
+   return fresh;
+  }
+  try{
+   // readContext from the browser is only a UI hint; identity is resolved by SQL from the question.
+   const route=copilot.planStaff(question);
+   if(readTools.staffDefinitions[route.intent])readTools.prepareStaff(route.intent,route.filters||{},staff);
+   else if(!['customer.case','capabilities','refuse.write','clarify','history.followup','draft.reply','conversation.summary','workflow.guide'].includes(route.intent))throw {code:'42501'};
+   const initial=await caller.rpc('get_staff_copilot_scope');if(initial.error)throw initial.error;
+   if(initial.data?.staff_id!==staff.id||initial.data?.scope_version!==1||!/^[a-f0-9]{32}$/.test(initial.data?.scope_token||''))throw {code:'42501'};
+   if(!allow('staff-answer:'+user.id,30))return fail(429,'Vui lòng chờ trước khi hỏi tiếp.');
+   const prior=await caller.rpc('replay_staff_copilot_exchange',replayArgs);if(prior.error)throw prior.error;
+   const replayed=Boolean(prior.data);
+   if(!replayed){
+    const admitted=await admission.acquireStaff(caller,{requestId:body.requestId,sessionId:body.sessionId,question});lease=admitted.lease;
+    if(admitted.scope_token!==initial.data.scope_token)throw {code:'PT409'};
+    let history=[];
+    if(copilot.needsContext(question)||route.intent==='history.followup'||['draft.reply','conversation.summary','workflow.guide'].includes(route.intent))history=await admission.readStaffContext(caller,lease);
+    const budget=readTools.createReadBudget({lease});
+    const beforeModel=async()=>{const fresh=await verifyScope(admitted.scope_token);const validated=await fresh.caller.rpc('validate_staff_copilot_request',{p_lease:lease,p_scope_refs:budget.snapshot().staff_scope_refs||[]});if(validated.error)throw validated.error;if(validated.data!==true)throw {code:'42501'};};
+    let timer;const task=copilot.answerStaff({question,caller,staff,budget,history,conversationId:body.conversationId,generateReply,beforeModel});task.catch(()=>{});
+    let answer;try{answer=await Promise.race([task,new Promise((_,reject)=>{timer=setTimeout(()=>reject({code:'57014'}),25000);})]);}finally{clearTimeout(timer);}
+    if(typeof answer.reply!=='string'||!answer.reply.trim()||answer.reply.length>16000)throw {code:'XX000'};
+    await verifyScope(admitted.scope_token);
+    const service=serviceClient||createClient(process.env.PAWPAL_ADMIN_SUPABASE_URL,process.env.PAWPAL_ADMIN_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+    const saved=await service.rpc('complete_staff_copilot_request',{p_actor:user.id,p_lease:lease,p_question:question,p_answer:answer.reply,p_scope_refs:budget.snapshot().staff_scope_refs||[]});if(saved.error)throw saved.error;
+   }
+   await cleanup();
+   const fresh=await verifyScope(initial.data.scope_token);
+   // Revalidate source references after model/save as well as on an idempotent retry.
+   const final=await fresh.caller.rpc('replay_staff_copilot_exchange',replayArgs);if(final.error)throw final.error;if(!final.data||final.data.scope_version!==1||typeof final.data.reply!=='string')throw {code:'PT409'};
+   const payload={ok:true,...final.data,replayed,answer_type:replayed?'history.replay':route.intent};
+   if(Buffer.byteLength(JSON.stringify(payload))>32768)throw {code:'54000'};
+   // STAFF answers are sent only after validation; no unverified model chunks are streamed.
+   return res.json(payload);
+  }catch(error){
+   await cleanup();
+   const status=error.code==='STAFF_AUTH_401'?401:error.code==='42501'?403:error.code==='PT409'?409:error.code==='22023'?400:error.code==='54000'?413:error.code==='PT429'||error.code==='55P03'?429:error.code==='57014'?504:503;
+   if(status===429)res.setHeader('Retry-After','2');
+   return fail(status,status===409?'Quyền, phân công hoặc nguồn dữ liệu đã thay đổi. Vui lòng tải lại.':status===403?'Chưa có quyền đọc dữ liệu hoặc dùng nguồn này.':status===429?'Đang có yêu cầu xử lý hoặc đã đến hạn mức. Vui lòng chờ.':'Chưa thể hoàn tất câu trả lời trong phạm vi hiện tại.');
+  }finally{await cleanup();}
+ }
+ async function staffHistory(req,res,auth,fail){
+  const {caller,staff,user}=auth;
+  if(!uuid(staff?.id)||!uuid(user?.id)||!staff.permissions?.includes('work.copilot.use'))return fail(403,'Chưa có quyền dùng trợ lý.');
+  // Answer generation stays closed until its planner, inherited provenance and admission are integrated.
+  if(req.method==='POST')return fail(403,'Trợ lý Nhân viên chưa được mở để tạo câu trả lời.');
+  if(!allow('staff-history:'+user.id,60))return fail(429,'Vui lòng chờ trước khi đọc tiếp lịch sử.');
+  try{
+   const initial=await caller.rpc('get_staff_copilot_scope');if(initial.error)throw initial.error;
+   if(initial.data?.staff_id!==staff.id||initial.data?.scope_version!==1||!/^[a-f0-9]{32}$/.test(initial.data?.scope_token||''))throw {code:'42501'};
+   let operation,args;
+   if(req.method==='DELETE'){
+    let body=req.body||{};try{if(typeof body==='string')body=JSON.parse(body);}catch{return fail(400,'Dữ liệu không hợp lệ.');}
+    if(!body||Array.isArray(body)||Object.keys(body).some(key=>key!=='sessionId')||!uuid(body.sessionId))return fail(400,'Phiên không hợp lệ.');
+    operation='delete_staff_copilot_session';args={p_session:body.sessionId};
+   }else{
+    const q=req.query||{},view=q.view||'history';let allowed;
+    if(view==='sessions'){
+     allowed=['view','page','query'];const page=Number(q.page||1),query=q.query||'';
+     if(!Number.isSafeInteger(page)||page<1||page>1000||typeof query!=='string'||query.length>2000||/[\u0000-\u001f]/.test(query))return fail(400,'Trang không hợp lệ.');
+     operation='staff_copilot_sessions';args={p_query:query,p_page:page};
+    }else if(view==='message_part'){
+     allowed=['view','messageId','offset','revision'];const offset=Number(q.offset||0);
+     if(!uuid(q.messageId)||!Number.isSafeInteger(offset)||offset<0||offset>16000||typeof q.revision!=='string'||!/^[a-f0-9]{32}$/.test(q.revision))return fail(400,'Mốc đọc tin nhắn chưa hợp lệ.');
+     operation='staff_copilot_message_part';args={p_id:q.messageId,p_offset:offset,p_revision:q.revision};
+    }else if(view==='history'){
+     allowed=['view','sessionId','offset','withTitle'];const offset=Number(q.offset||0);
+     if(!Number.isSafeInteger(offset)||offset<0||offset>1000000||q.sessionId!==undefined&&!uuid(q.sessionId)||q.withTitle!==undefined&&!['0','1'].includes(q.withTitle))return fail(400,'Trang không hợp lệ.');
+     operation='staff_copilot_history_page';args={p_session:q.sessionId||null,p_offset:offset,p_with_title:q.withTitle==='1'};
+    }else return fail(400,'Kiểu đọc lịch sử chưa hợp lệ.');
+    if(Object.keys(q).some(key=>!allowed.includes(key)))return fail(400,'Bộ lọc lịch sử chưa hợp lệ.');
+   }
+   const result=await caller.rpc(operation,args);if(result.error)throw result.error;
+   // Recheck real Auth and live scope after the data read, before returning any saved content.
+   const fresh=await verify(req,'work.copilot.use');
+   if(!fresh.authorized)return fail(fresh.status,fresh.message);
+   if(fresh.staff?.system_role!=='STAFF'||fresh.staff.id!==staff.id||fresh.user?.id!==user.id)return fail(403,'Quyền hoặc tài khoản đã thay đổi.');
+   const finalScope=await fresh.caller.rpc('get_staff_copilot_scope');if(finalScope.error)throw finalScope.error;
+   if(finalScope.data?.staff_id!==staff.id||finalScope.data?.scope_version!==1||finalScope.data?.scope_token!==initial.data.scope_token)return fail(409,'Phạm vi công việc đã thay đổi. Vui lòng tải lại.');
+   const payload=req.method==='DELETE'?{ok:true}:{ok:true,...result.data};
+   if(Buffer.byteLength(JSON.stringify(payload))>32768)return fail(413,'Nội dung quá dài cho một lần đọc.');
+   return res.json(payload);
+  }catch(error){return fail(error.code==='42501'?403:error.code==='PT409'?409:error.code==='22023'?400:error.code==='54000'?413:503,'Chưa thể đọc hoặc cập nhật lịch sử trong quyền hiện tại.');}
+ }
  return async(req,res)=>{
   res.setHeader('Cache-Control','no-store');
   let stream;const fail=(status,error,extra={})=>stream?.started?stream.fail(status,error,extra):res.status(status).json({ok:false,error,...extra});
@@ -186,7 +283,9 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     return res.json({ok:true,persisted:true});
    }catch{return fail(503,'Chưa thể lưu đánh giá. Vui lòng thử lại.');}
   }
-  const auth=await verify(req,'admin_copilot_history.read');if(!auth.authorized)return fail(auth.status,auth.message);
+  const auth=await verify(req,['admin_copilot_history.read','work.copilot.use']);if(!auth.authorized)return fail(auth.status,auth.message);
+  if(auth.staff?.system_role==='STAFF')return req.method==='POST'?staffAnswer(req,res,auth,fail):staffHistory(req,res,auth,fail);
+  if(!auth.staff?.permissions?.includes('admin_copilot_history.read'))return fail(403,'Chưa có quyền đọc lịch sử trợ lý.');
   const {caller,staff,user}=auth;
   let body=req.body||{};try{if(typeof body==='string')body=JSON.parse(body);}catch{return fail(400,'Dữ liệu không hợp lệ.');}
   const adminStream=require('../scripts/api/chat_admin_stream.js').createAdminStream({method:req.method,body},res);

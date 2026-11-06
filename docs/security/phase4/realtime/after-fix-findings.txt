@@ -1,0 +1,58 @@
+{
+  "scope": "Actual isolated Auth/Realtime after migration 183",
+  "after": [
+    {
+      "actor": 1,
+      "rawEventTypes": [],
+      "signalCount": 3,
+      "signalKeys": [
+        [
+          "domain",
+          "revision",
+          "updated_at",
+          "auth_user_id"
+        ],
+        [
+          "domain",
+          "revision",
+          "updated_at",
+          "auth_user_id"
+        ],
+        [
+          "domain",
+          "revision",
+          "updated_at",
+          "auth_user_id"
+        ]
+      ],
+      "ownRows": 1,
+      "writeDenied": true
+    },
+    {
+      "actor": 2,
+      "rawEventTypes": [],
+      "signalCount": 0,
+      "signalKeys": [],
+      "ownRows": 0,
+      "writeDenied": true
+    },
+    {
+      "actor": 3,
+      "rawEventTypes": [
+        "INSERT",
+        "UPDATE"
+      ],
+      "signalCount": 1,
+      "signalKeys": [
+        [
+          "domain",
+          "revision",
+          "updated_at",
+          "auth_user_id"
+        ]
+      ],
+      "ownRows": 1,
+      "writeDenied": true
+    }
+  ]
+}

@@ -1,0 +1,333 @@
+{
+  "capturedAt": "2026-11-06T04:44:35.960Z",
+  "scope": "Real local GoTrue, PostgREST and isolated Supabase Realtime transport; no Cloud Logs or Cloud writes",
+  "checks": [
+    {
+      "name": "Four real isolated Auth accounts map to existing staff IDs without changing fixed roles or assignment links",
+      "status": "PASS"
+    },
+    {
+      "name": "An owned isolated Realtime container is seeded against the disposable database and uses the same local Auth signing secret",
+      "status": "PASS"
+    },
+    {
+      "name": "Two STAFF and one ADMIN real Auth sessions subscribe through the isolated WebSocket and PostgreSQL logical replication pipeline",
+      "status": "PASS"
+    },
+    {
+      "name": "ADMIN positive controls receive committed INSERT, UPDATE and DELETE events from the actual logical-replication stream",
+      "status": "PASS"
+    },
+    {
+      "name": "STAFF raw-table INSERT and UPDATE payloads remain blocked by the fixed-role RLS boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "Before-fix control reproduces forbidden DELETE primary keys for both STAFF identities",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration 183 applies atomically and retains published INSERT/UPDATE while replacing unsafe DELETE/TRUNCATE",
+      "status": "PASS"
+    },
+    {
+      "name": "After-fix real transport suppresses all raw DELETE keys; ADMIN INSERT/UPDATE remain live and opaque DELETE refresh is delivered",
+      "status": "PASS"
+    },
+    {
+      "name": "Unfiltered STAFF/ADMIN signal subscriptions and SELECT enforce own Auth identity; signal writes denied",
+      "status": "PASS"
+    },
+    {
+      "name": "Multiple changes in one transaction coalesce to one own signal; the other unfiltered STAFF subscriber receives nothing",
+      "status": "PASS"
+    },
+    {
+      "name": "Real customer Auth and shared client refetch the authorized snapshot after a wishlist child DELETE through an own signal",
+      "status": "PASS"
+    },
+    {
+      "name": "Removing a customer business channel also removes its signal refetch callback",
+      "status": "PASS"
+    },
+    {
+      "name": "STAFF direct JSON and CSV exports cannot bypass raw money/cost/staff/audit/notification/chat/history RLS",
+      "status": "PASS"
+    },
+    {
+      "name": "Legacy search RPCs remain ADMIN-only; scoped work searches reject foreign assignment and forged self IDs",
+      "status": "PASS"
+    },
+    {
+      "name": "Private notification/audit canaries remain hidden; STAFF cannot forge, edit or delete audit evidence; ADMIN positive read succeeds",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual unfiltered Realtime audit/notification subscriptions deliver no private INSERT/UPDATE payload to either STAFF",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-24: a real management RPC promotes STAFF on two open tabs through actual Realtime, without sign-out or trusting cached roles",
+      "status": "PASS"
+    },
+    {
+      "name": "An attacker-kept ADMIN subscription with its original token stops receiving audit payload after demotion even without client teardown",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-23: demotion on two live tabs destroys the old ADMIN realm/cache and immediately denies aggregate revenue with the existing Auth token",
+      "status": "PASS"
+    },
+    {
+      "name": "Role-change evidence records actor/Auth/target/time and complete before/after roles; replay does not duplicate evidence",
+      "status": "PASS"
+    },
+    {
+      "name": "A real WebSocket disconnect misses reassignment; resubscription rechecks ownership and clears the obsolete conversation and draft",
+      "status": "PASS"
+    },
+    {
+      "name": "The hidden-document branch (headless visibility override, real transport) still clears reassigned work and its draft",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-25: suspension removes every channel and work view in both tabs; a captured pre-suspension token cannot call the work RPC",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-19: real HTTP STAFF requests for store revenue, all staff and refunds disclose no answer and perform no financial mutation",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-20: actual answer API returns own staff facts and denies another employee conversation before provider dispatch",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-21: ADMIN real HTTP assistant reports the exact seeded daily collection and excludes a payment at the next-day boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "PQ-22: populated real payment canaries remain absent from STAFF JSON, exact counts and CSV while ADMIN revenue reads both under date filtering",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback 184 restores the exact access workflow while retaining immutable role-change evidence",
+      "status": "PASS"
+    },
+    {
+      "name": "Auth suspension emits an opaque own signal and the actual Admin access listener invalidates the open STAFF UI without focus or polling",
+      "status": "PASS"
+    },
+    {
+      "name": "STAFF mounts its own assistant view and real empty history without loading the management Copilot DOM",
+      "status": "PASS"
+    },
+    {
+      "name": "Real fact submission persists only native history and renders safely on desktop/mobile without horizontal overflow",
+      "status": "PASS"
+    },
+    {
+      "name": "Reload restores only the own session ID and reloads message contents from the real API instead of storage",
+      "status": "PASS"
+    },
+    {
+      "name": "A forbidden source clears rendered history and preserves the unresolved request for explicit retry or discard",
+      "status": "PASS"
+    },
+    {
+      "name": "A lost real HTTP response can be retried with the identical request UUID and does not create a duplicate exchange",
+      "status": "PASS"
+    },
+    {
+      "name": "The assigned-chat action selects only a verified conversation and renders a labeled draft from the offline provider through the real POST API",
+      "status": "PASS"
+    },
+    {
+      "name": "Long native replies expose revision-bound parts and append a real authorized next part",
+      "status": "PASS"
+    },
+    {
+      "name": "Inline deletion can be cancelled and confirmed through the native own-session API without introducing another modal",
+      "status": "PASS"
+    },
+    {
+      "name": "Reassignment during provider work produces a visible conflict and no stale draft or old history remains rendered",
+      "status": "PASS"
+    },
+    {
+      "name": "Real session search pages thirteen own matches as 10/3 using the native list endpoint",
+      "status": "PASS"
+    },
+    {
+      "name": "Native message pages prepend 10/2 distinct records and stored markup renders as text without executing HTML",
+      "status": "PASS"
+    },
+    {
+      "name": "Leaving and returning to Chatbot tears down the previous assistant view and remounts within the staff module loader",
+      "status": "PASS"
+    },
+    {
+      "name": "Account revocation tears down the assistant DOM, pending view and session storage through the existing access invalidation lifecycle",
+      "status": "PASS"
+    },
+    {
+      "name": "ADMIN still initializes the original management assistant instead of the staff renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "Revoking only the Copilot permission clears the assistant and its tab while the STAFF account and other work modules remain available",
+      "status": "PASS"
+    },
+    {
+      "name": "Rollback restores original publication flags and exact capability function definitions and removes signal schema/triggers",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS",
+  "sourceSha256": {
+    "pages/admin/admin.js": "92397b692a0ce0f996a54c2dd6a67ef904a436713154ed13fa96f388886f9629",
+    "pages/admin/admin-access.js": "bb5e28027d07a3fca81b12c0f3a61aaa7457e377114b8c40340f2ceb69b2d896",
+    "pages/admin/modules/customers/customers.js": "740b891ba4c3e6e96399e709e63243c777aceb7d60f02f851bc7961241be411e",
+    "pages/admin/modules/services/services.js": "47d9e704664586470b7a11c08d949a8fabbe9b765c034fb3b10209932a7654e3",
+    "scripts/database/v1/169_staff_hotel_checkout_context.sql": "cebf56accddb3bf083082a08af22b9175e9b4aae63b580da0e2cdaa34488c0e8",
+    "scripts/database/v1/168_staff_logistics_transition.sql": "46b1ebd23f23949449f54d36b1a34a4e02cf354f0c9a951df4a75a8b1115a205",
+    "scripts/database/v1/167_staff_care_log_performer.sql": "696bfcdde8a8cb516c83c691ff59da37b542d008e769520a6aa1aefd6ba6a1e0",
+    "scripts/database/v1/166_staff_booking_catalog.sql": "2f078fdab13ac1e041d03db74abc5a3f9e8c7548340e2039193fa4d8c94d6675",
+    "pages/admin/admin-components.css": "5a29c57b282c19deaa586d63764703f68d460a1e751890e12d6e47ff01433a26",
+    "pages/admin/index.html": "6d9eece1194e88e752f45031574eafd4d9e3e1d82977e72fbc60fb518a3535fa",
+    "pages/admin/login/login.js": "43a95bd924242bbb6344e0683616bc65317b75f188a87dc192c28d0afb45389d",
+    "pages/admin/login/login.html": "4a9df959481d40e02578b4ca7d90bc6575e925bf6318ac0cde3b6a5a3a393ba4",
+    "pages/admin/modules/staff/staff.html": "6d7fd0514db22054abf80279697d5a32cb3ce998ba5ee6de8a2ee52015986554",
+    "pages/admin/modules/staff/staff.css": "9f23e4aa7d6d98242419f4b31caacc18e155422b0c2507829481a4822599c42b",
+    "pages/admin/modules/staff/subtabs/tab-staff-list.js": "10cdfd5dbb2f23b96904afde862fa794e6d440a326513977bd371e674a830ad0",
+    "pages/admin/modules/staff/subtabs/tab-staff-profile.js": "950047c77bb1a0c413cb1963c299ac46b339934b146517b32cfc126138757e4d",
+    "pages/admin/modules/orders/orders.js": "6a58be1d32ab6b7d625c9db07bb674d6eff358e13cf0d959290be6608969aa36",
+    "pages/admin/modules/complaints/complaints.js": "0738257b7140db11d2b63a3d145aa18afcd123a7f16ed87a4c6fb8560c366fb9",
+    "scripts/database/v1/170_staff_complaint_proposal_context.sql": "dfd0e4e99d42177a8d1df2e72fd05949f48167d8687fa2b8dfe0504e6fa46a93",
+    "scripts/database/v1/170_staff_complaint_proposal_context.rollback.sql": "77619b244b01f040d5e12cf374ea7866e5d9f82c5590b88400f8853c53f28577",
+    "scripts/database/v1/171_staff_complaint_sources.sql": "94dc90313c8f50a5f75677557906ff25d17f336a1742d26d81cb75174da74e43",
+    "scripts/database/v1/171_staff_complaint_sources.rollback.sql": "c76010ca582f0cbb8293dad1d8a17452a80b337b34e9c1a46526e7215060ee91",
+    "pages/admin/admin-own-password.js": "e3e5dae19a402df868439022e5f5f93d1af78bc4b83deb17d540ff3fe4834b7f",
+    "pages/admin/modules/chatbot/chatbot.js": "f4aa17c1cf012d2f4b2d31feae443ae5be8de4e5481cf14691cbc9e8b7978438",
+    "scripts/database/v1/172_staff_chat_completion.sql": "7f6dc8757d873943e4cb99edee1142bbe144df3fd137a09b9ada1d1f042cf86a",
+    "scripts/database/v1/172_staff_chat_completion.rollback.sql": "64c30b1e7bc1c1baaaf7abf4be1b5eb0602a3c18cf143e65642e726d3763be4c",
+    "scripts/database/v1/173_staff_customer_context.sql": "0266f1c4eedaa373f0495f4a1b02c12c3e7f14f3bfac8ec939cf675df8c1e4d3",
+    "scripts/database/v1/173_staff_customer_context.rollback.sql": "4dd909d3060c230d8820ba8b18eb0a2b5d351081accc955c09e0ea6d3def068c",
+    "scripts/database/v1/174_staff_sales_receipt.sql": "60f4d7459a4b99c09231579bd4e32369098df6d6c6d10c2f98083e58efc0b65c",
+    "scripts/database/v1/174_staff_sales_receipt.rollback.sql": "7d5c5c3c2f5ad32b0b9a25a56651cbbc03d0b7cfee6034bd0dd110b84e126b83",
+    "scripts/database/v1/175_staff_service_receipt.sql": "d63a6ec8af65eacffc23c1e59a7060957583a24db505fd13950f6fb9ec473bb5",
+    "scripts/database/v1/175_staff_service_receipt.rollback.sql": "f8eb932d0752a70466117c2265e8fe4fad07d8188e52d520ac445eb7212fa691",
+    "pages/admin/modules/pets/pets.js": "afc5bf8eb3fcbf56b66ffdcc97c86c46808500b142a26e580d1535f13ca83042",
+    "pages/admin/modules/staff/staff.js": "e55b6a1e3642473e758b10da20b0b24af9481be098ac16371963ef7163212522",
+    "scripts/database/v1/176_chat_complaint_content.sql": "8f4c46ba800d427497052b6cd298322db528b34956cd9947a6a1c3ef1775a905",
+    "scripts/database/v1/176_chat_complaint_content.rollback.sql": "3cdecb18f6ba29a071cf98b6240ae77eb2c85258886417eff3e4e687b9794636",
+    "scripts/test/admin_access_phase4_realtime_cases.cjs": "75b619d88558b73a8d5b14799de1fb73b8efebfcb7e5347dd75827bf74f1ad52",
+    "scripts/test/admin_access_phase4_completion_cases.cjs": "cc50ec8cc18850feca0bede7eee2de40ba8132e91517ef053c489b9ea358ddb8",
+    "scripts/test/admin_access_phase4_copilot_ui_cases.cjs": "68c8c36de4bd2909b2ddd9fc056e2b763cc0651965062c704b641ba9352fa7b8",
+    "scripts/api/admin_copilot.js": "a00b72b343cea5c00b9a095903affd9bcfe1886f86223136bd98a05961c0cf18",
+    "api/admin-chat.js": "5f94dd932327c72f41b394cefb14285bb19e15a6a5a0080f1f0b9e6bc2b9cf9e",
+    "scripts/database/v1/184_staff_access_audit.sql": "84d15b3bb5ba0272d9de578b338eda2e30701a292219c6f738353d6b1ae53616",
+    "scripts/database/v1/184_staff_access_audit.rollback.sql": "338edf06588b0e3e8fa330e6e06db04698a7a1faf61bac3d2bcf364508befacf",
+    "scripts/database/v1/183_safe_realtime_signals.sql": "6d2655ecc0ad35635b5683c6477c51f2721f2a2aeee641cca2438e67a6e8ab12",
+    "scripts/database/v1/183_safe_realtime_signals.rollback.sql": "9afa3a6bf24d613e5441760e8bf34ef5c89fa2f5faf9cc9adfc151efc5050ed7",
+    "scripts/api/supabase-client.js": "21097e24e7be9a94bbe81f7a993c7115b1e634493c990402effc5c96d391d42b"
+  },
+  "realtimeSeedProof": [
+    "tenant_secret_matches=true"
+  ],
+  "realtimeInsideHandshake": "exit 7",
+  "realtimeDirectHandshake": [
+    {
+      "host": "realtime-dev.localhost",
+      "error": "ECONNRESET"
+    },
+    {
+      "host": "realtime-dev.supabase-realtime",
+      "error": "ECONNRESET"
+    }
+  ],
+  "realAuthSignIns": 10,
+  "realtimeUpgradePaths": [
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket",
+    "/realtime/v1/websocket"
+  ],
+  "realtimeHandshakeStatus": [
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols",
+    "HTTP/1.1 101 Switching Protocols"
+  ],
+  "realtimeTransportClosed": [
+    "client",
+    "upstream",
+    "client",
+    "upstream",
+    "client",
+    "upstream",
+    "client",
+    "upstream",
+    "upstream",
+    "client",
+    "upstream",
+    "client",
+    "upstream",
+    "upstream",
+    "client",
+    "client",
+    "upstream",
+    "client",
+    "upstream",
+    "client",
+    "upstream",
+    "client",
+    "upstream",
+    "client",
+    "upstream",
+    "client",
+    "upstream",
+    "client",
+    "upstream",
+    "client",
+    "client",
+    "upstream",
+    "upstream",
+    "client",
+    "upstream",
+    "client",
+    "upstream",
+    "client"
+  ],
+  "disposableDatabaseRemoved": true
+}

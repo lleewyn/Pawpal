@@ -9,7 +9,7 @@
         'Bán hàng': [['tab-order-list', 'Đơn hàng', 'orders'], ['tab-order-detail', 'Hồ sơ', 'order-profile'], ['tab-order-products', 'Sản phẩm và kho', 'stock'], ['tab-order-promos', 'Ưu đãi', 'offers']],
         'Nhân sự': [['tab-staff-profile', 'Hồ sơ của tôi', 'self'], ['tab-staff-schedule', 'Lịch của tôi', 'schedule'], ['tab-staff-assessment', 'Kết quả của tôi', 'assessment']],
         'Khiếu nại': [['tab-complaint-services', 'Được giao', 'complaints'], ['tab-complaint-detail', 'Hồ sơ', 'complaint-profile']],
-        Chatbot: [['tab-live-support', 'Hội thoại của tôi', 'conversations'], ['tab-support-queue', 'Chờ tiếp nhận', 'chat_queue']]
+        Chatbot: [['tab-live-support', 'Hội thoại của tôi', 'conversations'], ['tab-support-queue', 'Chờ tiếp nhận', 'chat_queue'], ['tab-ai-copilot', 'Trợ lý', 'staff-copilot']]
     };
     const labels = { active: 'Đang hoạt động', available: 'Có thể nhận việc', pending: 'Chờ xử lý', confirmed: 'Đã xác nhận', checked_in: 'Đã tiếp nhận',
         in_progress: 'Đang thực hiện', completed: 'Hoàn thành', cancelled: 'Đã hủy', no_show: 'Vắng mặt', agent_handling: 'Đang hỗ trợ', waiting_agent: 'Chờ tiếp nhận',
@@ -42,11 +42,25 @@
         if (moduleName === 'Dashboard') return;
         const active = currentTab(moduleName)[0];
         for (const [index, tab] of (modules[moduleName] || []).entries()) {
+            if(tab[2]==='staff-copilot'&&!PawpalAdminAccess.state.user.permissions.includes('work.copilot.use'))continue;
             if (index) group.append(el('span', '|', 'workspace-tab-divider'));
             const button = el('button', tab[1], 'header-subtab-btn' + (active === tab[0] ? ' active' : ''));
             button.type = 'button'; button.dataset.tab = tab[0]; group.append(button);
         }
+        requestAnimationFrame(()=>{if(window.PawpalAdminAccess?.isStaff())group.querySelector('.active')?.scrollIntoView({block:'nearest',inline:'nearest'});});
     }
+    window.addEventListener('resize',()=>{if(window.PawpalAdminAccess?.isStaff())requestAnimationFrame(()=>document.querySelector('#headerSubtabsGroup .active')?.scrollIntoView({block:'nearest',inline:'nearest'}));});
+    window.addEventListener('pawpal:workspace-invalidated',async()=>{
+        if(!window.PawpalAdminAccess?.isStaff())return;
+        if(document.getElementById('staffCopilotWorkspace'))return;
+        const turn=revision,tab=currentTab(currentModule),params=new URLSearchParams(location.hash.split('?')[1]||''),id=params.get('id');
+        const scoped={'service-profile':'appointments','complaint-profile':'complaints',conversations:'conversations'}[tab[2]];
+        if(scoped&&id){try{const rows=await read(scoped,{id});if(turn!==revision)return;if(!rows.length){PawpalAdminAccess.closeWorkForms();await mount(currentModule,document.querySelector('.admin-preview-content'));return;}}catch{if(turn!==revision)return;PawpalAdminAccess.closeWorkForms();document.querySelector('.admin-preview-content')?.replaceChildren(el('p','Không thể xác minh phạm vi công việc. Vui lòng tải lại.','workspace-error'));return;}}
+        if(turn!==revision)return;
+        const editing=[...document.querySelectorAll('.staff-workspace textarea')].some(node=>node.value.trim())||document.querySelector('.admin-modal-overlay.active');
+        if(editing){const label=document.getElementById('headerSyncStatus');if(label)label.textContent='Có cập nhật';return;}
+        await mount(currentModule,document.querySelector('.admin-preview-content'));
+    });
     async function read(kind, { query = '', id = null, page = 1 } = {}) {
         const { data, error } = await window.getSupabaseClient().rpc('get_staff_workspace', { p_kind: kind, p_query: query, p_id: id, p_page: page });
         if (error) throw Error(error.code === '42501' ? 'Bạn không có quyền xem nội dung này.' : 'Không tải được dữ liệu. Vui lòng thử lại.');
@@ -498,6 +512,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const contentArea = document.querySelector('.admin-preview-content');
     const headerSyncStatusEl = document.getElementById('headerSyncStatus');
     const btnHeaderRefreshEl = document.getElementById('btnHeaderRefresh');
+    window.addEventListener('pawpal:workspace-invalidated',()=>{
+        if(!access.isAdmin()||document.hidden||btnHeaderRefreshEl?.disabled)return;
+        if(document.querySelector('.admin-modal-overlay.active')){const label=document.getElementById('headerSyncStatus');if(label)label.textContent='Có cập nhật';return;}
+        btnHeaderRefreshEl?.click();
+    });
 
     function updateHeaderSync(state = 'idle', customText = null) {
         if (!headerSyncStatusEl) return;
@@ -791,7 +810,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261105_service_history_pages';
+    const MODULE_SCRIPT_VERSION = '20261106_realtime_signals';
     let staffDomainScriptsReady;
     async function loadStaffDomainScripts() {
         if (!staffDomainScriptsReady) staffDomainScriptsReady = (async () => {

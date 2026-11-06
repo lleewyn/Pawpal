@@ -1,8 +1,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {createHandler}=require('../../api/admin-chat.js');
-const permissions=['inventory.read','product_variant.read','product.read','admin_copilot_history.write'];
+const permissions=['inventory.read','product_variant.read','product.read','admin_copilot_history.read','admin_copilot_history.write'];
 async function invoke({allow=true,error,oversized=false}={}){let sources=0,saves=0,models=0;
- const handler=createHandler({readAdmission:{acquire:async()=>null,release:async()=>{}},verify:async()=>({authorized:true,staff:{id:'staff',permissions:allow?permissions:['admin_copilot_history.write']},user:{id:'actor'},caller:{rpc:async()=>{sources++;return error?{error}:{data:{intent:'inventory.low_stock',total:0,items:[],scope:{},as_of:'2026-10-28T00:00:00Z',padding:oversized?'x'.repeat(33000):''}};}}}),serviceClient:{from(){const q={select:()=>q,eq:()=>q,maybeSingle:async()=>({data:null})};return q;},rpc:async()=>{saves++;return {data:'saved'};}},generateReply:async()=>{models++;throw Error('no model');}});
+ const handler=createHandler({readAdmission:{acquire:async()=>null,release:async()=>{}},verify:async()=>({authorized:true,staff:{id:'staff',permissions:allow?permissions:['admin_copilot_history.read','admin_copilot_history.write']},user:{id:'actor'},caller:{rpc:async()=>{sources++;return error?{error}:{data:{intent:'inventory.low_stock',total:0,items:[],scope:{},as_of:'2026-10-28T00:00:00Z',padding:oversized?'x'.repeat(33000):''}};}}}),serviceClient:{from(){const q={select:()=>q,eq:()=>q,maybeSingle:async()=>({data:null})};return q;},rpc:async()=>{saves++;return {data:'saved'};}},generateReply:async()=>{models++;throw Error('no model');}});
  const res={statusCode:200,setHeader(){},status(n){this.statusCode=n;return this;},json(body){this.body=body;return this;}};
  await handler({method:'POST',headers:{},body:{requestId:'10000000-0000-4000-8000-000000000001',sessionId:'20000000-0000-4000-8000-000000000002',question:'Có bao nhiêu SKU dưới ngưỡng?'}},res);return {res,sources,saves,models};
 }

@@ -4,11 +4,24 @@
     const staffModules = new Set(['Dashboard', 'Khách hàng', 'Thú cưng', 'Dịch vụ', 'Bán hàng', 'Nhân sự', 'Khiếu nại', 'Chatbot']);
     let state = Object.freeze({ role: null, user: null, error: null });
     let pending, revision = 0, lastVerified;
+    let signalChannel,signalOwner,signalTimer;
+    function stopSignals(){clearTimeout(signalTimer);if(signalChannel){try{window.getSupabaseClient?.()?.removeChannel(signalChannel);}catch{}}signalChannel=null;signalOwner=null;}
+    function startSignals(context,user){
+        if(context.workspace_signals!==true){stopSignals();return;}
+        if(signalChannel&&signalOwner===user.auth_user_id)return;stopSignals();signalOwner=user.auth_user_id;
+        let subscribed=false;const owner=signalOwner;
+        const refresh=()=>{if(signalOwner!==owner||state.user?.auth_user_id!==owner)return;window.PawpalDataStore?.clear();window.dispatchEvent(new CustomEvent('pawpal:workspace-invalidated'));verify().catch(()=>{});};
+        signalChannel=window.getSupabaseClient().channel('workspace-'+owner).on('postgres_changes',{event:'*',schema:'public',table:'workspace_signal',filter:'auth_user_id=eq.'+owner},payload=>{
+            const row=payload.new;if(signalOwner!==owner||state.user?.auth_user_id!==owner||row?.auth_user_id!==owner||typeof row.revision!=='string')return;
+            clearTimeout(signalTimer);signalTimer=setTimeout(()=>{if(signalOwner!==owner)return;window.PawpalDataStore?.clear();window.dispatchEvent(new CustomEvent('pawpal:workspace-invalidated',{detail:{domain:row.domain}}));verify().catch(()=>{});},180);
+        }).subscribe(status=>{if(status==='SUBSCRIBED'){if(subscribed)refresh();subscribed=true;}});
+    }
 
     function clearDisplayIdentity() {
         for (const storage of [localStorage, sessionStorage]) storage.removeItem('pawpal_admin_user');
     }
     function invalidate(error) {
+        stopSignals();
         revision++;
         state = Object.freeze({ role: null, user: null, error });
         delete document.documentElement.dataset.adminRole;
@@ -60,6 +73,8 @@
             lastVerified = { role: state.role, user: { id: user.id, auth_user_id: user.auth_user_id } };
             for (const storage of [localStorage, sessionStorage]) storage.setItem('pawpal_admin_user', JSON.stringify(user));
             document.documentElement.dataset.adminRole = state.role;
+            startSignals(context,user);
+            window.dispatchEvent(new CustomEvent('pawpal:access-verified'));
             return state;
         })().catch(error => {
             if (state.error !== error) invalidate(error);
@@ -79,7 +94,7 @@
             button.setAttribute('aria-hidden', String(!allowed));
         });
     }
-    function showError(error) {
+    function closeWorkForms() {
         window.PawpalStaffForms?.closeAll();
         window.PawpalStaffBooking?.closeAll();
         window.PawpalStaffIntake?.closeAll();
@@ -98,6 +113,9 @@
         window.PawpalStaffCustomerNote?.closeAll();
         window.PawpalStaffSalesReceipt?.closeAll();
         window.PawpalStaffServiceReceipt?.closeAll();
+    }
+    function showError(error) {
+        closeWorkForms();
         const content = document.querySelector('.admin-preview-content');
         if (!content) return;
         const userTag = document.querySelector('.header-user-tag'); if (userTag) userTag.textContent = 'Chưa xác minh';
@@ -112,7 +130,7 @@
         applyNavigation();
     }
     const ready = verify().catch(() => null);
-    window.PawpalAdminAccess = Object.freeze({ get state() { return state; }, ready, verify, canModule, applyNavigation, showError,
+    window.PawpalAdminAccess = Object.freeze({ get state() { return state; }, ready, verify, canModule, applyNavigation, showError, closeWorkForms,
         isAdmin: () => state.role === 'ADMIN', isStaff: () => state.role === 'STAFF' });
     function recheck() {
         if (document.hidden) return;

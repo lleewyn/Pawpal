@@ -232,3 +232,120 @@ async function answer(args){
   ...(result.plan?{plan:{entity,period:filters.start_at?{start:filters.start_at,end:filters.end_at,timeZone:'Asia/Ho_Chi_Minh'}:null,relations:[],...result.plan}}:{})};
 }
 module.exports={plan,contextualPlan,needsContext,formatFacts,answer};
+
+// Work-role DTOs intentionally do not use the management totals/formatters.
+function planStaff(question,now=new Date(),history=[]){
+ const q=normalize(question);
+ if(/^(?:hay |vui long |giup toi |toi muon )?(?:hoan tien|duyet (?:huy|boi hoan|hoan tien)|phan cong|cap quyen|doi vai tro|doi gia|sua gia|khoa tai khoan|xoa tai khoan)\b/.test(q)||/danh sach.*nhan (?:su|vien)|nhan (?:su|vien).*toan (?:he thong|cua hang)/.test(q))throw Object.assign(Error('staff_tool_forbidden'),{code:'42501'});
+ if(/doanh thu|thuc thu|tong thu|revenue|payroll|luong|hoa hong|danh gia|review|cau hinh|settings|api.?key|mat khau|password|secret|token|bai viet|blog/.test(q.split(/[:：]/)[0]))throw Object.assign(Error('staff_tool_forbidden'),{code:'42501'});
+ if(/ho tro.*gi|ban lam duoc gi|chuc nang|tro ly.*tra cuu.*duoc/.test(q))return {intent:'capabilities'};
+ if(/^trang\s+\d+\??$/.test(q.trim())&&!history.length)return {intent:'history.followup'};
+ let route=history.length?contextualPlan(question,history,now,{}):plan(question,now,{});
+ if(route.intent==='customer.pets')route={intent:'customer.case',filters:{query:route.filters.query,kind:'pets_only'}};
+ if(route.intent==='catalog.service_price'&&(!route.filters?.query||route.filters.query.length<3))return {intent:'clarify',answer:'Hãy ghi mã hoặc tên đầy đủ của dịch vụ sau dấu hai chấm để tra đúng giá.'};
+ return route;
+}
+function formatStaffFacts(data){
+ const invalid=()=>{throw Object.assign(Error('invalid_staff_facts'),{code:'XX000'});};
+ if(!data||data.audience!=='staff'||data.total_is_page!==true||data.page_size!==10||!Number.isSafeInteger(data.page)||data.page<1||!Array.isArray(data.items)||data.items.length>10||data.total!==data.items.length||!Number.isFinite(Date.parse(data.as_of)))invalid();
+ const clean=v=>String(v??'').replace(/[\r\n\t<>]/g,' ').replace(/([\\`*_[\]{}|])/g,'\\$1').slice(0,1200);
+ const number=(v,unit='')=>{if((typeof v!=='number'&&typeof v!=='string')||String(v).trim()===''||!Number.isFinite(Number(v))||Number(v)<0)invalid();return Number(v).toLocaleString('vi-VN')+unit;};
+ const time=v=>{if(!Number.isFinite(Date.parse(v)))invalid();return new Date(v).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});};
+ const title={...labels,'internal.customer_resolve':'Khách đã xác định','internal.customer_pets':'Thú cưng của khách','internal.customer_latest_order':'Đơn được tạo mới nhất','internal.customer_appointment':'Ca gần nhất được giao','internal.customer_tickets':'Khiếu nại được giao của khách','conversation.context':'Nội dung hội thoại được giao'}[data.intent]||'Kết quả trong quyền công việc';
+ const lines=[`**${title} — trang ${data.page}**`,`${data.items.length} kết quả trên trang hiện tại. Không phải tổng toàn bộ dữ liệu.`];
+ if(data.ambiguous){lines.push('Chưa xác định duy nhất dịch vụ. Hãy dùng mã dịch vụ chính xác.');if(data.items.length)invalid();}
+ else if(!data.items.length)lines.push('Không có kết quả trong phạm vi và trang vừa đọc.');
+ for(const r of data.items){
+  const name=[r.code||r.sku,r.name||r.subject].filter(Boolean).map(clean).join(' — ');let detail;
+  switch(data.intent){
+  case 'customer.lookup':case 'internal.customer_resolve':detail=[name,r.phone?'SĐT '+clean(r.phone):''].filter(Boolean).join('; ');break;
+  case 'pet.lookup':case 'internal.customer_pets':detail=name;break;
+  case 'points.lookup':detail=`${name}; số dư ${number(r.balance,' điểm')}`;break;
+  case 'order.lookup':case 'internal.customer_latest_order':detail=`${name}; ${clean(status(r.status))}${r.created_at?'; tạo lúc '+time(r.created_at):''}. Chưa suy ra thanh toán từ trạng thái đơn.`;break;
+  case 'payment.order':{
+   const values=['total','collected','refunded','net','remaining'];for(const k of values)number(r[k]);
+   if(Math.abs(Number(r.net)-Number(r.collected)+Number(r.refunded))>0.01||Math.abs(Number(r.remaining)-Math.max(Number(r.total)-Number(r.net),0))>0.01)invalid();
+   detail=`${name}; giá trị đơn ${number(r.total,' đ')}; đã thu ${number(r.collected,' đ')}; đã hoàn ${number(r.refunded,' đ')}; còn phải thu ${number(r.remaining,' đ')}`;break;
+  }
+  case 'catalog.product':detail=`${name}; giá bán ${number(r.price,' đ')}; tồn ${number(r.stock)}`;break;
+  case 'inventory.low_stock':detail=`${name}; tồn ${number(r.stock)}; ngưỡng ${number(r.minimum)}`;break;
+  case 'catalog.service':detail=`${name}; thời lượng ${number(r.duration_minutes,' phút')}`;break;
+  case 'appointment.list':case 'appointment.search':case 'internal.customer_appointment':detail=`${name}; ${clean(status(r.status))}; ${time(r.scheduled_at)}`;break;
+  case 'ticket.open':case 'ticket.lookup':case 'internal.customer_tickets':detail=`${name}; ${clean(status(r.status))}`;break;
+  case 'conversation.list':detail=`${clean(r.id)}; ${clean(status(r.status))}${r.summary?'; '+clean(r.summary):''}`;break;
+  case 'conversation.context':detail=`${r.sender_type==='staff'?'Nhân viên':r.sender_type==='customer'?'Khách':'Hội thoại'}: ${clean(r.content)}${r.truncated?' (nội dung đã rút gọn)':''}`;break;
+  case 'staff.lookup':detail=`${name}; ${clean(r.job_title)}; ${clean(status(r.status))}`;break;
+  case 'staff.schedule':detail=`${time(r.start_at)} đến ${time(r.end_at)}; ${clean(status(r.status))}`;break;
+  case 'hotel.stays':detail=`${name}; phòng ${clean(r.room_number)}; ${time(r.check_in_at)} đến ${time(r.check_out_at)}; ${clean(status(r.status))}`;break;
+  case 'taxi.trips':detail=`${clean(r.id)}; ${time(r.outbound_at)}; ${clean(r.pickup_address)} đến ${clean(r.dropoff_address)}; ${number(r.distance_km,' km')}; ${clean(status(r.status))}`;break;
+  case 'knowledge.search':detail=`${clean(r.question)}: ${clean(r.answer)}${r.truncated?' (hướng dẫn đã rút gọn)':''}`;break;
+  case 'offer.list':detail=`${name}; mức cấu hình ${number(r.discount_value)}; loại ${r.type==='percent'?'phần trăm':r.type==='fixed'?'số tiền cố định':'cần kiểm tra điều kiện'}; đơn tối thiểu ${number(r.minimum_order_amount||0,' đ')}; điểm yêu cầu ${number(r.required_points||0)}; phạm vi ${clean(r.applicable_for)}; ${clean(r.start_date)} đến ${clean(r.end_date)}. Chưa xác nhận ưu đãi áp dụng cho giao dịch cụ thể.`;break;
+  case 'hotel.availability':
+   if(typeof r.reserved!=='boolean'||typeof r.occupied!=='boolean'||r.available!==(!r.reserved&&!r.occupied))invalid();
+   detail=`${name}; sức chứa cấu hình ${number(r.capacity)}; ${r.available?'có thể nhận trọn khoảng':r.occupied?'đang có bé lưu trú':'vướng lịch giữ trong khoảng'}`;break;
+  case 'catalog.service_price':case 'catalog.price_rows':{
+   detail=`${name}; giá cấu hình ${number(r.price,' đ')}`;
+   if(r.weight_from!==undefined)detail+=`; từ ${number(r.weight_from,' kg')} đến ${r.weight_to===null?'không giới hạn':number(r.weight_to,' kg')+(r.weight_to_inclusive?' (gồm cận trên)':' (trước cận trên)')}`;
+   if(r.distance_from!==undefined)detail+=`; từ ${number(r.distance_from,' km')} đến ${r.distance_to===null?'không giới hạn':number(r.distance_to,' km')+(r.distance_to_inclusive?' (gồm cận trên)':' (trước cận trên)')}`;
+   if(r.surcharge!==undefined)detail+=`; phụ phí cấu hình ${number(r.surcharge,' đ')}`;
+   if(r.billing_minutes!==undefined)detail+=`; mỗi kỳ ${number(r.billing_minutes,' phút')}`;
+   if(r.variant_condition)detail+='; điều kiện '+clean(r.variant_condition);break;
+  }
+  default:invalid();
+  }
+  lines.push('- '+detail);
+ }
+ if(data.intent==='hotel.availability'){
+  if(data.available_is_page!==true||data.available+data.unavailable!==data.items.length||data.available!==data.items.filter(r=>r.available).length)invalid();
+  lines.push(`Trên trang này: ${number(data.available)} phòng có thể nhận, ${number(data.unavailable)} phòng vướng lịch hoặc đang ở. Chưa giữ phòng và chưa phải số bé tối đa.`);
+ }
+ if(['catalog.service_price','catalog.price_rows'].includes(data.intent))lines.push('Giá đang hiệu lực tại thời điểm đọc; chưa phải báo giá đã chốt cho lịch hẹn.');
+ if(data.scope?.start_at&&data.scope?.end_at)lines.push(`Khoảng đọc: ${time(data.scope.start_at)} đến trước ${time(data.scope.end_at)}.`);
+ lines.push('Đọc lúc '+time(data.as_of)+'. Chỉ trong quyền và phạm vi công việc hiện tại.');return lines.join('\n\n');
+}
+async function answerStaff({question,caller,staff,budget,history=[],conversationId,generateReply,beforeModel,now=new Date()}){
+ const route=planStaff(question,now,history),read=async(intent,filters={})=>budget.run(caller,readTools.prepareStaff(intent,filters,staff));
+ const reply=value=>({reply:value,answer_type:route.intent,resource_usage:budget.snapshot()});
+ if(route.intent==='capabilities')return reply('Tôi hỗ trợ tra cứu khách và thú cưng, đơn và tiền theo mã đơn, lịch/phiếu/hội thoại được giao, tồn kho, dịch vụ/giá/phòng trống, ưu đãi, lịch cá nhân và hướng dẫn đang bật. Chỉ đọc trong quyền Nhân viên; không tự ghi nghiệp vụ hoặc gửi nội dung cho khách.');
+ if(route.intent==='refuse.write')return reply('Trợ lý chỉ tra cứu và soạn nháp. Hãy thực hiện nghiệp vụ ở phân hệ được cấp quyền.');
+ if(route.intent==='clarify'||route.intent==='history.followup')return reply(route.answer||'Hãy nêu lại đối tượng hoặc điều kiện cần tra cứu.');
+ if(route.intent==='customer.case'){
+  const identity=await read('internal.customer_resolve',{query:route.filters.query});
+  if(identity.items.length!==1)return reply(identity.items.length?'Có nhiều khách trùng thông tin. Hãy cung cấp mã khách hoặc SĐT chính xác.':'Chưa xác định được khách. Hãy cung cấp mã khách, SĐT hoặc họ tên đầy đủ.');
+  const customerId=identity.items[0].id,requests=route.filters.kind==='pets_only'?[['internal.customer_pets',{customerId}]]:route.filters.kind==='pets_orders'?[['internal.customer_pets',{customerId}],['internal.customer_latest_order',{customerId}]]:[['internal.customer_appointment',{customerId,direction:route.filters.direction}],['internal.customer_tickets',{customerId}]];
+  // Native SQL serializes sources on the shared lease row; keep this sequence predictable.
+  const sections=[formatStaffFacts(identity)];for(const[intent,filters]of requests)sections.push(formatStaffFacts(await read(intent,filters)));return reply(sections.join('\n\n'));
+ }
+ if(['draft.reply','conversation.summary','workflow.guide'].includes(route.intent)){
+  const source={mode:route.intent,limitations:['Chỉ soạn nháp để kiểm tra, không gửi cho khách, không hứa ưu đãi/thời gian hoặc xác nhận nghiệp vụ chưa có trong nguồn.']};let hasSource=false;
+  if(route.intent!=='workflow.guide'){
+   if(!conversationId)return reply('Hãy chọn một hội thoại được giao trước khi yêu cầu soạn nháp hoặc tóm tắt.');
+   const messages=await read('conversation.context',{conversationId});formatStaffFacts(messages);
+   source.messages=messages.items.map(m=>({sender:m.sender_type,content:m.content,truncated:m.truncated}));hasSource=source.messages.length>0;
+   source.limitations.push('Chỉ có một trang tối đa 10 tin đã lọc; không phải toàn bộ hội thoại.');
+  }
+  if(route.intent==='draft.reply'){
+   const supporting=draftReadPlan(question,now,{});
+   if(supporting){
+    if(supporting.intent==='clarify')return reply(supporting.answer);
+    const facts=await read(supporting.intent,supporting.filters||{});const formatted=formatStaffFacts(facts);
+    if(!facts.items.length||facts.ambiguous||facts.items.length>1&&['customer.lookup','order.lookup','pet.lookup','payment.order','points.lookup','catalog.product'].includes(supporting.intent))return reply('Chưa xác định nguồn nghiệp vụ duy nhất để soạn nháp. Hãy bổ sung mã chính xác.');
+    source.facts={formatted,as_of:facts.as_of};
+   }
+  }
+  if(route.intent==='workflow.guide'){
+   const query=question.split(/[:：]/).slice(1).join(':').trim()||question.slice(0,120),faq=await read('knowledge.search',{query});formatStaffFacts(faq);source.faq=faq.items.map(r=>({question:r.question,answer:r.answer,truncated:r.truncated}));hasSource=source.faq.length>0;
+  }
+  if(!hasSource)return reply('Chưa có nguồn phù hợp trong quyền hiện tại để soạn nội dung. Hãy kiểm tra hội thoại hoặc hướng dẫn đang bật.');
+  if(typeof beforeModel!=='function')throw Object.assign(Error('staff_model_validation_required'),{code:'42501'});
+  await beforeModel();
+  const sanitize=require('./chat_model_privacy.js').sanitizeModelData;
+  let generated=await generateReply(sanitize(question),sanitize(source),sanitize(history.map(m=>({role:m.role,content:m.content}))),{audience:'staff'});
+  if(typeof generated!=='string'||!generated.trim()||generated.length>14000)throw Object.assign(Error('invalid_staff_draft'),{code:'XX000'});
+  generated=generated.replace(/^(?:\s*(?:\*\*)?Bản nháp AI[^\n]*(?:\n|$))+/giu,'').trim();
+  if(!generated)throw Object.assign(Error('invalid_staff_draft'),{code:'XX000'});
+  return reply('Bản nháp AI — cần kiểm tra trước khi sử dụng.\n\n'+generated+'\n\nPhạm vi: chỉ các nguồn được phép vừa đọc và lịch sử còn quyền truy cập; nội dung có thể đã rút gọn.');
+ }
+ return reply(formatStaffFacts(await read(route.intent,route.filters||{})));
+}
+module.exports.planStaff=planStaff;module.exports.formatStaffFacts=formatStaffFacts;module.exports.answerStaff=answerStaff;

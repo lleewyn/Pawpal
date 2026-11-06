@@ -1,0 +1,11 @@
+BEGIN;
+DROP FUNCTION public.complete_staff_copilot_request(uuid,uuid,text,text,jsonb);
+DROP FUNCTION public.read_staff_copilot_request_context(uuid);
+DROP FUNCTION public.run_staff_copilot_read(uuid,text,jsonb,integer);
+DROP FUNCTION pawpal_private.staff_copilot_request(uuid,uuid);
+DROP FUNCTION public.release_staff_copilot_request(uuid);
+DROP FUNCTION public.acquire_staff_copilot_request(uuid,uuid,text);
+DROP TABLE pawpal_private.staff_copilot_slot;
+DROP TABLE pawpal_private.staff_copilot_rate;
+NOTIFY pgrst,'reload schema';
+COMMIT;

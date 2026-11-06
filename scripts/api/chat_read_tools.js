@@ -142,7 +142,7 @@ function createReadBudget({maxCalls=3,maxConcurrent=2,maxBytes=65536,deadlineMs=
   const allocation=Math.min(prepared.sourceByteLimit,maxBytes-bytes-reserved);
   if(allocation<(prepared.staffScoped?512:1))throw fail('read_payload_exceeded','54000');
   calls++;active++;reserved+=allocation;try{
-   let query=prepared.staffScoped?caller.rpc(prepared.gateway,{p_tool:prepared.intent,p_filters:prepared.filters,p_max_bytes:allocation}):lease?caller.rpc(prepared.gateway,{p_lease:lease,p_tool:prepared.intent,p_filters:prepared.filters,p_max_bytes:allocation}):caller.rpc(prepared.rpc,prepared.args);
+   let query=prepared.staffScoped?caller.rpc(lease?'run_staff_copilot_read':prepared.gateway,{...(lease?{p_lease:lease}:{}),p_tool:prepared.intent,p_filters:prepared.filters,p_max_bytes:allocation}):lease?caller.rpc(prepared.gateway,{p_lease:lease,p_tool:prepared.intent,p_filters:prepared.filters,p_max_bytes:allocation}):caller.rpc(prepared.rpc,prepared.args);
    const controller=new AbortController();let timer;
    // Supabase builders support abortSignal. Custom transports without cancellation
    // are awaited; do not claim Promise.race cancels an underlying SQL transaction.

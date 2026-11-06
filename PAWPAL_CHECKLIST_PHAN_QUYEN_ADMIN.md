@@ -1,7 +1,7 @@
 # Checklist triển khai phân quyền Admin PawPal
 
 Ngày lập: 04/11/2026
-Trạng thái: Hoàn thành giai đoạn 1, 2 và 3 trên môi trường thử nghiệm; đang thực hiện giai đoạn 4; chưa chuyển đổi Cloud
+Trạng thái: Hoàn thành giai đoạn 1, 2, 3 và 4 trên môi trường thử nghiệm; chưa bắt đầu nghiệm thu tổng giai đoạn 5 hoặc chuyển đổi Cloud
 Phạm vi: Giao diện Admin, API, Supabase và chatbot admin.
 
 ## 1. Mô hình đã thống nhất
@@ -78,14 +78,16 @@ Các thay đổi CSDL/API bên dưới đã được triển khai và kiểm tra
 
 ## 6. Chatbot, phiên đăng nhập và nhật ký
 
-- [ ] Chatbot sử dụng cùng bộ quyền và phạm vi dữ liệu với người đang đăng nhập.
-- [ ] Nhân viên không thể dùng chatbot để xem doanh thu tổng hợp, quản lý nhân sự hoặc thực hiện hành động dành riêng cho Quản lý.
-- [ ] Công cụ chatbot kiểm tra quyền lúc tra cứu và thực thi, không dựa vào quyết định của mô hình AI.
-- [ ] Lịch sử chat, bộ nhớ đệm, tìm kiếm, thông báo và xuất file không làm lộ dữ liệu vượt quyền.
-- [ ] Khi đổi vai trò, yêu cầu tiếp theo áp dụng quyền mới dù phiên cũ vẫn mở.
-- [ ] Giao diện cập nhật menu, đóng nội dung không còn được phép và dọn dữ liệu lưu tạm khi đổi vai trò.
-- [ ] Cập nhật hoặc hủy kênh Realtime theo vai trò mới; tài khoản bị khóa không tiếp tục truy cập nghiệp vụ.
-- [ ] Ghi nhật ký người thực hiện, tài khoản bị thay đổi, thời điểm và vai trò trước/sau; nhân viên không sửa hoặc xóa được nhật ký.
+- [x] Chatbot sử dụng cùng bộ quyền và phạm vi dữ liệu với người đang đăng nhập.
+- [x] Nhân viên không thể dùng chatbot để xem doanh thu tổng hợp, quản lý nhân sự hoặc thực hiện hành động dành riêng cho Quản lý.
+- [x] Công cụ chatbot kiểm tra quyền lúc tra cứu và thực thi, không dựa vào quyết định của mô hình AI.
+- [x] Lịch sử chat, bộ nhớ đệm, tìm kiếm, thông báo và xuất file không làm lộ dữ liệu vượt quyền.
+- [x] Khi đổi vai trò, yêu cầu tiếp theo áp dụng quyền mới dù phiên cũ vẫn mở.
+- [x] Giao diện cập nhật menu, đóng nội dung không còn được phép và dọn dữ liệu lưu tạm khi đổi vai trò.
+- [x] Cập nhật hoặc hủy kênh Realtime theo vai trò mới; tài khoản bị khóa không tiếp tục truy cập nghiệp vụ.
+- [x] Ghi nhật ký người thực hiện, tài khoản bị thay đổi, thời điểm và vai trò trước/sau; nhân viên không sửa hoặc xóa được nhật ký.
+
+Mục 6 hoàn thành trên bản sao local; bằng chứng chốt giai đoạn 4 ở bên dưới. Chưa áp dụng các thay đổi này lên Cloud.
 
 ## 7. Kiểm thử nghiệm thu
 
@@ -348,12 +350,12 @@ Ghi nhận kết thúc 05/11/2026: **Hoàn thành giai đoạn 3 trên môi trư
 
 ### Giai đoạn 4 — Phân quyền chatbot và cập nhật phiên
 
-Trạng thái: Đang thực hiện; lớp dọn phiên/bộ nhớ/kênh, 28 nguồn đọc theo quyền và nền tảng lịch sử riêng cho STAFF đã kiểm thử đạt. API/giao diện chatbot AI cho STAFF vẫn chưa được mở; còn nối các nguồn/lịch sử vào API và kiểm tra quyền trước khi trả lời, cùng Realtime.
+Trạng thái: **Hoàn thành ngày 06/11/2026 trên môi trường thử nghiệm**, tới migration 184. Đã chốt chatbot, lịch sử, phiên, Realtime, nhật ký và các bề mặt tìm kiếm/thông báo/số đếm/xuất dữ liệu. 45 nhóm tích hợp Realtime/Auth/UI, 17 nhóm HTTP trả lời và 11 nhóm phiên đạt trên nguồn hiện tại; chưa triển khai Cloud.
 
-- [ ] Thực hiện mục 6: chatbot và công cụ truy xuất dùng cùng quyền với người đăng nhập.
-- [ ] Tách quyền doanh thu tổng hợp khỏi quyền đọc thanh toán phục vụ thu ngân; kiểm tra dữ liệu và hành động theo công việc được giao.
-- [ ] Xử lý đổi vai trò, khóa tài khoản, nhiều tab, bộ nhớ đệm, lịch sử chat, Realtime và nhật ký.
-- [ ] Chạy các trường hợp chatbot PQ-19 đến PQ-21 và các kiểm tra liên quan đến phiên PQ-23 đến PQ-25.
+- [x] Thực hiện mục 6: chatbot và công cụ truy xuất dùng cùng quyền với người đăng nhập.
+- [x] Tách quyền doanh thu tổng hợp khỏi quyền đọc thanh toán phục vụ thu ngân; kiểm tra dữ liệu và hành động theo công việc được giao.
+- [x] Xử lý đổi vai trò, khóa tài khoản, nhiều tab, bộ nhớ đệm, lịch sử chat, Realtime và nhật ký.
+- [x] Chạy PQ-19 đến PQ-25, gồm cả tìm kiếm/thông báo/số đếm/xuất; lưu kết quả và bằng chứng ở mục chốt bên dưới.
 
 #### Phiên, bộ nhớ đệm và kênh đã đăng ký — bước đầu giai đoạn 4
 
@@ -363,7 +365,7 @@ Trạng thái: Đang thực hiện; lớp dọn phiên/bộ nhớ/kênh, 28 ngu�
 - [x] Xác minh lại khi quay về tab/cửa sổ, khi Auth thay đổi qua tab khác và định kỳ 60 giây khi tab đang hiện và có tiêu điểm; trang được phục hồi từ bộ nhớ trình duyệt phải xác minh lại qua tải trang. Mọi request nghiệp vụ vẫn do CSDL/API kiểm tra, không đợi chu kỳ giao diện.
 - [x] 11 nhóm kiểm tra phiên bằng Auth thật đạt trên bản sao: danh tính không đổi không mất nháp, kể cả token được làm mới từ tab khác; đổi người cùng vai trò; đăng nhập/đăng xuất liên tab; hạ Quản lý xuống Nhân viên; khóa nhân viên; lỗi RPC; hạ quyền sau lỗi mạng; phản hồi xác minh cũ đến trễ. Có kiểm tra dọn kênh đã đăng ký, chưa phải kiểm thử payload Realtime đầu cuối.
 - [x] Hoàn tất hồi quy sau bản sửa phiên cuối: 300 nhóm nghiệp vụ Auth thật, 10 nhóm đổi mật khẩu Auth thật và 6 bài API đều đạt. Đối chiếu nguồn khớp; bản sao CSDL/container và cấu hình bí mật tạm đã dọn. Bằng chứng hồi quy tại `docs/security/phase4/regression-results.txt`; đã xem ảnh sau thu hồi phiên, không còn đường dẫn hồ sơ hoặc dữ liệu form cũ.
-- [ ] Hoàn thiện gateway AI, registry, lịch sử/replay và kênh dữ liệu Realtime theo cùng quyền; chưa coi giai đoạn 4 hoàn tất từ các kiểm tra phiên.
+- [x] Hoàn thiện gateway AI, registry, lịch sử/replay và kênh dữ liệu Realtime theo cùng quyền; đã kiểm tra thêm payload và nghiệp vụ đầu cuối trước khi chốt.
 
 Chi tiết: [báo cáo giai đoạn 4](docs/security/PAWPAL_GIAI_DOAN_4_CHATBOT_PHIEN.md).
 
@@ -375,7 +377,7 @@ Chi tiết: [báo cáo giai đoạn 4](docs/security/PAWPAL_GIAI_DOAN_4_CHATBOT_
 - [x] Thêm registry STAFF riêng qua `prepareStaff` trong file máy chủ hiện có; giữ nguyên registry Quản lý. Dùng token đọc bất biến và ngân sách chung tối đa 3 nguồn/2 nguồn đồng thời/64 KB; chưa nối API hoặc giao diện AI.
 - [x] 21 nhóm kiểm tra gateway bằng Auth thật đạt, gồm 20 công cụ, phân trang 13 kết quả, lọc người được giao, chống giả mạo bộ lọc, mất quyền ngay với token cũ, không mở bảng tiền thô, không ghi nghiệp vụ và khôi phục 177. Mã băm nguồn khớp; tài nguyên bản sao đã dọn. Báo cáo: `docs/security/phase4/gateway/ui-results.txt`.
 - [x] 30 bài hồi quy registry/bộ đọc cũ đạt; hai bộ kiểm tra nghiệp vụ Copilot offline cũng đạt. Không gọi Gemini, không đọc Logs Cloud, không triển khai Cloud/CSDL rà soát chính hoặc push.
-- [ ] Nối các nguồn giá/phòng trống/quan hệ khách và lịch sử mới vào API, kiểm tra quyền khi hoàn thành rồi mới mở giao diện. AI cho STAFF hiện vẫn bị chặn; giai đoạn 4 chưa hoàn thành.
+- [x] Đã nối nguồn giá/phòng trống/quan hệ khách và lịch sử vào API POST với kiểm tra quyền cuối; bằng chứng ở mục POST bên dưới. Giao diện STAFF và Realtime còn ở các mục tổng hợp chưa hoàn tất.
 
 #### Lịch sử riêng và phát lại theo quyền hiện tại — migration 178, ngày 06/11/2026
 
@@ -385,7 +387,7 @@ Chi tiết: [báo cáo giai đoạn 4](docs/security/PAWPAL_GIAI_DOAN_4_CHATBOT_
 - [x] Phân trang tối đa 10 phiên hoặc 10 tin nhắn mỗi trang, ngữ cảnh tối đa 6 tin, phản hồi tối đa 32 KB; nội dung dài đọc từng phần có mã phiên bản. Xóa phiên chỉ tác động lịch sử riêng của người đang đăng nhập.
 - [x] 16 nhóm kiểm tra bằng Auth thật đạt: chống ghi giả, truy cập chéo nhân viên, phân công/quyền bị thu hồi, vai trò/khóa/đổi mật khẩu, đổi liên kết Auth không kế thừa lịch sử, canary lịch sử quản trị cũ, phân trang, nội dung tiếng Việt dài, phát lại khi lưu trùng request và rollback. Mã băm nguồn khớp, bản sao đã dọn. Bằng chứng: `docs/security/phase4/history/ui-results.txt`.
 - [x] 4 bài kiểm tra nguồn dữ liệu mới và 30 bài hồi quy bộ đọc cũ đạt; hai bộ nghiệp vụ Copilot offline đạt. Không thêm JS giao diện hoặc modal.
-- [ ] Nối các RPC mới vào API/giao diện STAFF sau khi hoàn thiện các nguồn còn thiếu, hạn mức request và xác minh lại trước trả kết quả; khi dùng lịch sử làm ngữ cảnh phải kế thừa cả nguồn của lịch sử đó. Các bước trên mới là nền tảng, chưa hoàn tất giai đoạn 4.
+- [x] Đã nối các RPC lịch sử vào API, thêm hạn mức request và nguồn kế thừa trong POST; chưa nối giao diện STAFF. Không đánh dấu giai đoạn 4 hoàn tất từ kết quả API.
 
 #### Tra cứu quan hệ khách theo quyền công việc — migration 179, ngày 06/11/2026
 
@@ -395,7 +397,7 @@ Chi tiết: [báo cáo giai đoạn 4](docs/security/PAWPAL_GIAI_DOAN_4_CHATBOT_
 - [x] Kết quả phải khớp UUID khách trong descriptor đã xác minh, kể cả trang rỗng. Danh sách nguồn cho lịch sử giữ cả khách, quyền khách, quyền nghiệp vụ và các hồ sơ thực sự đã đọc; dùng chung ngân sách 3 nguồn/2 nguồn đồng thời/64 KB.
 - [x] 11 nhóm kiểm tra Auth thật đạt, gồm trùng tên, UUID/mã/SĐT chính xác, thú cưng 13 kết quả chia 10/3, ca đồng nghiệp gần hơn vẫn bị loại, khiếu nại đúng khách/người phụ trách, quyền kép, nguồn lịch sử sau chuyển phân công và rollback. Báo cáo: `docs/security/phase4/relations/ui-results.txt`.
 - [x] 37 bài kiểm tra máy chủ và hai bộ nghiệp vụ Copilot offline đạt; đã chạy lại 16 nhóm lịch sử và 21 nhóm gateway với nguồn hiện tại. Mã băm khớp, bản sao và cấu hình bí mật đã dọn; chưa triển khai Cloud.
-- [ ] Nối planner/formatter theo vai trò vào API; nhánh STAFF phải xử lý tổng thuộc trang hiện tại, dừng khi khách chưa rõ/trùng tên và giữ nguyên nguồn khi đưa lịch sử vào ngữ cảnh. Chưa bật AI cho STAFF từ các RPC nền này.
+- [x] Đã nối planner/formatter STAFF vào API: tổng thuộc trang hiện tại, dừng khi khách chưa rõ/trùng tên và giữ nguồn lịch sử kế thừa. Kiểm thử POST được ghi riêng bên dưới.
 
 #### Giá dịch vụ và phòng trống — migration 180, ngày 06/11/2026
 
@@ -406,13 +408,97 @@ Chi tiết: [báo cáo giai đoạn 4](docs/security/PAWPAL_GIAI_DOAN_4_CHATBOT_
 - [x] Nguồn lịch sử mới gồm dịch vụ, dòng giá, loại phòng và phòng; mất quyền đặt lịch hoặc tắt nguồn liên quan thì không đọc/phát lại câu trả lời cũ. Rollback 180 khôi phục đúng bộ kiểm tra nguồn của 178 và giữ các hàm trước.
 - [x] 14 nhóm kiểm tra Auth thật đạt; giá 13 dòng chia 10/3, 14 phòng chia 10/4, cận trên, giá chưa/hết hiệu lực, dịch vụ khác/trùng tên, phòng giao cận thời gian/đang ở/đã hủy, không lộ ca khác, không ghi nghiệp vụ, thu hồi quyền và rollback. Bằng chứng: `docs/security/phase4/booking/ui-results.txt`.
 - [x] 41 bài máy chủ và hai bộ nghiệp vụ Copilot offline đạt; chạy lại các bộ quan hệ khách/lịch sử/gateway với shared reader hiện tại. Không thêm JS giao diện hoặc modal, chưa áp dụng Cloud.
-- [ ] Nối planner/formatter STAFF, API và lịch sử kế thừa nguồn; trình bày rõ tổng trang, thời điểm đọc và điều kiện giá/phòng. Không dùng formatter quản trị cũ khi chưa xử lý các DTO STAFF này. Giai đoạn 4 chưa hoàn tất.
+- [x] Đã nối formatter STAFF riêng, API và lịch sử kế thừa nguồn; trình bày tổng trang, thời điểm đọc, điều kiện giá/phòng và chưa giữ phòng. Không dùng formatter tổng quản trị cho DTO STAFF.
+
+#### API lịch sử Nhân viên — sau mốc push `db27efdb`
+
+- [x] Đã commit/push phần phân quyền và nguồn đọc đến migration 180 lên `origin/main`, commit `db27efdb`. Không đưa cấu hình môi trường cục bộ/đầu ra tạm vào Git; thay đổi số Zalo được giữ riêng. Push mã không áp dụng migration lên Supabase.
+- [x] Nối GET danh sách phiên/lịch sử/từng phần và DELETE phiên của STAFF trong `api/admin-chat.js` qua RPC riêng. Dùng Auth người gọi, không nhận actor/role từ payload và không đọc bảng lịch sử quản trị bằng service client.
+- [x] Xác minh lại Auth, hồ sơ, vai trò và mốc phạm vi sau khi đọc, trước khi trả dữ liệu; đổi vai trò bị từ chối, đổi phân công trả 409 và không gửi nội dung vừa đọc. Quyền lịch sử quản trị cũ vẫn bắt buộc ở nhánh ADMIN.
+- [x] Kiểm tra query/body theo danh sách đóng, giới hạn trang/offset/nội dung; thêm hạn mức lịch sử 60 yêu cầu/phút theo Auth ID trong mỗi tiến trình. Đây chưa phải admission phân tán cho tạo câu trả lời AI.
+- [x] 8 nhóm kiểm tra HTTP API bằng Auth/PostgREST thật đạt: lịch sử riêng, không lẫn canary ADMIN, chặn đồng nghiệp/từng phần/xóa hộ, POST/benchmark còn đóng, thu hồi quyền và đổi vai trò/phân công giữa request, xóa phiên của mình và giữ đường ADMIN. Bằng chứng: `docs/security/phase4/history-api/ui-results.txt`.
+- [x] 344 bài Node API/đọc/planner/stream/quyền đạt và hai bộ nghiệp vụ Copilot offline đạt. Các fixture API quản trị được bổ sung quyền đọc lịch sử vốn có trong xác thực thật; không nới quyền sản phẩm để qua kiểm tra.
+- [x] Đã hoàn thiện API tạo câu trả lời STAFF với planner/formatter, admission, lịch sử kế thừa nguồn và xác minh quyền trước trả lời. Giao diện và Realtime vẫn chưa hoàn tất; phần mới sau mốc push đang local.
+
+#### Hạn mức yêu cầu dùng chung và kế thừa nguồn lịch sử — migration 181
+
+- [x] Thêm 2 vị trí xử lý STAFF dùng chung ở CSDL, tối đa 1 lượt đang hoạt động cho mỗi Auth ID; lượt hết hạn sau 45 giây. Không tạo hàng đợi vô hạn và không dùng hạn mức trong từng tiến trình như bảo đảm cho nhiều máy chủ.
+- [x] Thêm bộ đếm CSDL tối đa 10 lần cấp lượt cho mỗi Auth ID trong cửa sổ 60 giây cố định. Bảng riêng không cấp quyền đọc/ghi trực tiếp; quản lý và anonymous không vào cổng STAFF này.
+- [x] Bộ đọc có lease đi qua `run_staff_copilot_read`: tối đa 3 nguồn nghiệp vụ thành công và 64 KB cho tổng dữ liệu nguồn/ngữ cảnh; mỗi nguồn vẫn tối đa 10 dòng/32 KB và kiểm tra quyền riêng. Node vẫn giới hạn số lần thử, 2 lời đọc đồng thời và thời hạn; CSDL tuần tự hóa các nguồn cùng lease khi cập nhật bộ đếm.
+- [x] Ngữ cảnh chỉ nạp 1 lần từ tối đa 6 tin nhắn lịch sử riêng. CSDL tự giữ danh sách nguồn kế thừa; lúc hoàn thành luôn gộp nguồn này dù máy chủ gửi danh sách nguồn mới rỗng. Tắt hướng dẫn sau lúc nạp vẫn chặn lưu, kể cả mốc phân công không thay đổi.
+- [x] Hoàn thành chỉ qua service RPC, gắn lease với đúng Auth ID, phiên, request, câu hỏi và phạm vi hiện tại. Mất phân công/quyền hoặc hết hạn thì không lưu câu trả lời; lượt đã hoàn thành không đọc thêm nguồn. Chủ lượt vẫn có thể dọn lượt của mình sau khi bị thu hồi quyền.
+- [x] 14 nhóm kiểm tra Auth/PostgREST thật đạt: dùng chung 2 vị trí, chống giải phóng chéo/hết hạn, hạn mức nguồn/byte/cửa sổ thời gian, 3 họ gateway, nguồn lịch sử kế thừa, thay đổi quyền/phân công/hướng dẫn, chống lưu giả và rollback. Bằng chứng: `docs/security/phase4/request/ui-results.txt`.
+- [x] 348 bài Node và hai bộ nghiệp vụ Copilot offline đạt. Tài nguyên thử đã dọn, mã băm nguồn khớp; migration 181 chưa áp dụng vào Cloud hoặc CSDL rà soát chính, chưa push phần mới.
+- [x] Đã nối POST STAFF bắt buộc lease khi tạo câu trả lời, xử lý replay và kiểm tra Auth/phạm vi ngay trước trả lời. Native RPC phục vụ công việc vẫn tồn tại; hạn mức này không áp dụng cho toàn bộ truy vấn trực tiếp. Giai đoạn 4 chưa hoàn tất.
+
+#### POST trả lời Nhân viên và xác minh nguồn trước mô hình — migration 182
+
+- [x] POST phân nhánh theo vai trò đã xác minh; Nhân viên không vào registry/formatter quản trị. Từ chối doanh thu, nhân sự toàn hệ thống, đánh giá, cấu hình, benchmark và payload giả mạo vai trò/actor. Trợ lý không ghi nghiệp vụ hoặc tự gửi tin cho khách.
+- [x] Tra cứu trả lời trực tiếp từ 28 DTO được phép, không gọi mô hình cho số liệu. Bộ trình bày riêng kiểm tra số tiền/trạng thái, chỉ nêu kết quả thuộc trang hiện tại và thời điểm đọc; ca/chat/phiếu vẫn lọc theo phân công trong SQL.
+- [x] Luồng khách xác định duy nhất trước khi đọc quan hệ, dừng khi trùng tên/không rõ; không lấy `readContext.customerId` do trình duyệt gửi làm danh tính đã xác minh. Hỏi tiếp “Trang 2” lấy điều kiện từ câu hỏi trong lịch sử STAFF gốc và kế thừa nguồn cả khi trang tiếp theo rỗng.
+- [x] Mỗi câu trả lời mới có lượt CSDL bắt buộc; replay UUID gắn đúng chủ/phiên/câu hỏi và nguồn hiện tại, không cấp lượt hoặc gọi lại nguồn/mô hình khi trả bản đã lưu hợp lệ. Dọn lượt trước khi kết thúc HTTP, trường hợp lỗi dọn vẫn có TTL.
+- [x] Nháp/tóm tắt chỉ đọc hội thoại được giao; hướng dẫn chỉ dùng FAQ đang bật. Kiểm tra Auth/phạm vi và các nguồn mới/kế thừa trước khi gửi sang mô hình bằng `validate_staff_copilot_request`; làm sạch dữ liệu mô hình, giới hạn nội dung và ghi rõ nháp cần kiểm tra. Không có nguồn thì không gọi mô hình.
+- [x] Kiểm tra Auth/phạm vi sau xử lý, xác minh nguồn khi lưu và kiểm tra lại replay ngay trước trả nội dung. Thay quyền sau khi đã lưu vẫn không gửi câu trả lời; request có thể đã được lưu nên retry dùng cùng UUID để kiểm tra. STAFF trả JSON sau xác minh, không stream đoạn nháp chưa được kiểm tra.
+- [x] 17 nhóm HTTP/Auth/PostgREST thật đạt: ba họ nguồn, quan hệ khách/trùng tên, replay, mất quyền/phân công trước/sau mô hình và sau commit, FAQ bị tắt trước gửi/sau sinh nháp, lỗi provider, ngữ cảnh phân trang, rollback 182 và không ghi tiền. Provider dùng bản thay thế offline để điều khiển thời điểm lỗi/đổi quyền, không gọi Gemini. Báo cáo: `docs/security/phase4/answer/ui-results.txt`.
+- [x] 357 bài Node và hai bộ nghiệp vụ Copilot offline đạt; chạy lại 8 nhóm HTTP lịch sử với API hiện tại. Mã băm nguồn khớp và tài nguyên bản sao đã dọn. Phần mới đang local, chưa push hoặc triển khai Cloud.
+- [x] Đã nối tab trợ lý STAFF và kiểm tra desktop/mobile, lịch sử, lỗi, nháp và mất quyền ở mục giao diện bên dưới. Không tạo modal mới.
+- [x] Kiểm thử Realtime đầu cuối và nhật ký/bề mặt thông báo liên quan; đã chốt trong lượt tích hợp 45 nhóm.
+
+#### Giao diện trợ lý Nhân viên — trong phân hệ Chatbot hiện có
+
+- [x] Thêm tab Trợ lý cho STAFF còn quyền `work.copilot.use`; mã giao diện nằm trong `modules/chatbot/chatbot.js`, dùng bộ nạp STAFF hiện có. ADMIN tiếp tục dùng tab/helper quản trị cũ; không tạo JS/modal nghiệp vụ rời.
+- [x] Nối phiên mới, tìm/phân trang phiên, tải lịch sử, đọc tin trước, đọc phần tiếp, gửi câu hỏi và xóa phiên riêng qua API thật. Xác nhận xóa nằm ngay trong khối thao tác, có Hủy, không thêm modal cần nghiệm thu riêng.
+- [x] Nối nút Soạn nháp với trợ lý từ hội thoại được giao; xác minh lại hội thoại khi mở. Nội dung dùng DOM text an toàn, không thực thi HTML lưu trong lịch sử. Nháp vẫn mang nhãn cần kiểm tra, không tự gửi cho khách.
+- [x] Mất phản hồi sau POST vẫn giữ đúng UUID/câu hỏi để thử lại và không tạo bản trùng. Khóa sửa câu hỏi khi chưa xác nhận kết quả; người dùng có thể bỏ câu hỏi đang chờ rồi tải lại lịch sử để kiểm tra bản có thể đã lưu.
+- [x] Chỉ lưu ID phiên theo cả hồ sơ và Auth ID trong sessionStorage; không lưu nội dung/tên phiên hoặc câu trả lời trong browser storage. Tải lại và quay lại tab đọc lại từ API; khi rời màn hình dọn listener/controller, khi thu hồi phiên dọn toàn bộ giao diện và trạng thái nháp.
+- [x] Chặn phản hồi đến trễ theo danh tính/phiên render; lỗi quyền/phân công dọn nội dung và hủy các lượt tải cũ. Thêm sự kiện xác minh quyền cho giao diện nhận biết mất riêng quyền Copilot dù tài khoản STAFF còn hoạt động; tab và dữ liệu cũ đều được dọn.
+- [x] 16 nhóm kiểm tra trình duyệt/Auth/API/CSDL thật đạt: desktop/mobile không tràn ngang, reload/storage, thử lại sau mất phản hồi thật, hội thoại/nháp được giao, câu dài, xóa/hủy, chuyển phân công, 13 phiên chia 10/3, 12 tin chia 10/2, HTML độc hại chỉ là chữ, rời/quay lại phân hệ, khóa tài khoản, mất riêng quyền trợ lý và hồi quy ADMIN. Provider dùng bản thay thế offline, không nạp JSON/mock nghiệp vụ. Báo cáo: `docs/security/phase4/copilot-ui/ui-results.txt`.
+- [x] Đã xem ảnh máy tính/điện thoại; header mobile giữ tab hiện tại và Menu trong tầm nhìn, nút/trường không bị cắt. 357 bài Node và hai bộ nghiệp vụ Copilot offline đạt; 11 nhóm kiểm tra phiên được chạy lại sau sự kiện xác minh quyền. Mã băm nguồn khớp, tài nguyên thử đã dọn.
+- [x] Hoàn tất Realtime đầu cuối và nhật ký/bề mặt thông báo; kết hợp bằng chứng API, phiên và tích hợp để chốt giai đoạn 4. Phần mới vẫn local, chưa push hoặc chuyển đổi Cloud.
 
 **Đầu ra và điều kiện hoàn thành:** Chatbot không cung cấp dữ liệu vượt quyền; đổi vai trò và khóa tài khoản có hiệu lực với yêu cầu tiếp theo của phiên đang mở, đồng thời giao diện và kênh dữ liệu cập nhật phù hợp.
 
+#### Realtime — tín hiệu làm mới theo chủ sở hữu (06/11/2026)
+
+- [x] Dựng Supabase Realtime riêng cùng GoTrue/PostgREST và CSDL bản sao; dùng WebSocket và logical replication thật, không giả lập payload, không đọc Logs hoặc ghi dữ liệu Cloud.
+- [x] Tái hiện lỗi trước sửa: hai Nhân viên nhận khóa chính DELETE của tin nhắn ngoài quyền, dù INSERT/UPDATE đã bị RLS chặn. Lưu bằng chứng chỉ có cấu trúc payload và mã canary thử nghiệm trong `docs/security/phase4/realtime/payload-findings.txt`.
+- [x] Viết migration/khôi phục `183_safe_realtime_signals`: publication chỉ phát INSERT/UPDATE; thay DELETE/TRUNCATE thô bằng tín hiệu riêng theo Auth ID. Tín hiệu chỉ có định danh người nhận, revision, nhóm dữ liệu và thời điểm; không chứa mã bản ghi nghiệp vụ hoặc nội dung. Client không được tự ghi tín hiệu.
+- [x] Kiểm tra đầu cuối sau sửa: không còn DELETE thô; Quản lý vẫn nhận INSERT/UPDATE và tín hiệu tải lại sau xóa. Đăng ký tín hiệu không có bộ lọc vẫn chỉ nhận đúng chủ sở hữu; Nhân viên khác không nhận tín hiệu riêng. Nhiều thay đổi cùng giao dịch được gộp một tín hiệu cho mỗi người nhận.
+- [x] Nối client chung của khách hàng với các callback đọc lại snapshot có quyền; thử Auth thật với xóa mục yêu thích và gỡ callback khi đóng kênh. Không phát payload DELETE giả để thay thế.
+- [x] Nối Admin xác minh lại quyền và dọn cache khi nhận tín hiệu; thử khóa Auth thật làm mất quyền ngay trên giao diện đang mở, không cần chuyển tab hoặc đợi chu kỳ kiểm tra.
+- [x] Chạy cả bộ hồi quy trợ lý khi Realtime bật: gửi, replay sau mất phản hồi, nháp được giao, lịch sử dài/phân trang, xóa phiên, thay đổi phân công trong lúc xử lý, thu hồi tài khoản/quyền trợ lý và ADMIN. Sửa mất thông báo replay và vùng lịch sử sau xóa khi tín hiệu đến trong lúc request đang chạy. Bộ kiểm tra chờ đúng phản hồi replay, không suy ra POST xong chỉ từ lịch sử đã tự tải lại.
+- [x] Lượt tổng hợp 29 nhóm Realtime/Auth/API/UI đạt; rollback phục hồi đúng publication và các hàm capability. Mã băm nguồn khớp; đã xem ảnh mobile và dọn CSDL/container/cấu hình tạm của lượt thử.
+- [x] Kiểm tra nhật ký/thông báo/tìm kiếm/JSON/CSV/số đếm với dữ liệu thật trên bản sao; chặn kênh ADMIN cố tình giữ lại sau hạ quyền, phục hồi sau ngắt WebSocket và dọn hồ sơ/nháp khi đổi phân công.
+
+Triển khai Cloud thuộc **giai đoạn 6**, chưa thực hiện: client mới phải sẵn sàng trước khi migration 183 ngừng phát DELETE. Đã kiểm kê các consumer hiện có; client có cờ capability để hoạt động với schema cũ. Khôi phục phải bảo đảm không mở lại đường lộ DELETE trong lúc STAFF còn hoạt động.
+
+Báo cáo mới nhất: `docs/security/phase4/realtime/ui-results.txt` — **45 nhóm PASS**; 29 nhóm là mốc trước khi bổ sung các bề mặt và kịch bản chốt.
+
+#### Chốt giai đoạn 4 — nhật ký, bề mặt phụ và hồi quy
+
+- [x] Migration/khôi phục `184_staff_access_audit` bổ sung bản ghi `STAFF_ACCESS_CHANGE` gồm người thực hiện/Auth, đối tượng, thời điểm, lý do và vai trò trước/sau. Giữ bản ghi idempotency cũ; retry không ghi trùng. Rollback khôi phục đúng hàm nhưng giữ bằng chứng đã ghi.
+- [x] Nhân viên không đọc JSON/CSV/số đếm của bảng tiền, giá vốn, nhân sự, lịch sử quản trị và nhật ký; không gọi tìm kiếm quản trị để vượt projection. Với hai khoản thu thật 123.456 và 777.777 đồng trên bản sao, xuất/đếm vẫn không lộ; Quản lý đọc đúng 123.456 đồng trong ngày và loại khoản đúng biên ngày kế tiếp.
+- [x] Thông báo/nhật ký canary không đến hai STAFF qua subscription không filter; giữ nguyên kênh và token ADMIN cũ sau hạ quyền vẫn không nhận audit mới. STAFF không giả mạo, sửa hoặc xóa nhật ký.
+- [x] Nâng/hạ vai trò qua RPC thật cập nhật cả hai tab; hạ quyền dọn Dashboard tài chính, ngữ cảnh chat và realm cũ. Khóa nhân viên gỡ kênh trên hai tab, token cũ bị RPC công việc từ chối.
+- [x] Ngắt WebSocket thật, đổi phân công lúc mất kết nối rồi kết nối lại: xác minh lại và dọn hội thoại/nháp cũ. Nhánh tài liệu ẩn cũng được kiểm tra; do Chrome headless không ẩn tab thật, chỉ thuộc tính visibility được điều khiển trong test, Auth/CSDL/WebSocket vẫn thật.
+- [x] Mất phạm vi hồ sơ đóng/dọn các form liên quan kể cả khi đang có nháp; phản hồi lỗi của view cũ không ghi đè view mới. Chatbot từ chối rõ yêu cầu hoàn tiền/cấp quyền/đổi giá và lấy toàn bộ nhân sự trước khi đọc nguồn hoặc gọi mô hình.
+- [x] Chạy lại **45 nhóm Realtime/Auth/UI + 17 nhóm HTTP trả lời + 11 nhóm phiên**, mã băm nguồn khớp. 357 bài Node cùng hai bộ nghiệp vụ Copilot offline đạt. Đã xem ảnh desktop/mobile; CSDL/container/cấu hình bí mật tạm đã dọn.
+
+| Kịch bản | Bằng chứng trên bản sao |
+|---|---|
+| PQ-19 | API thật từ chối doanh thu toàn tiệm, toàn bộ nhân sự và hoàn tiền; không gọi provider hoặc ghi hoàn tiền |
+| PQ-20 | Trả hồ sơ riêng; hội thoại đồng nghiệp bị chặn trước provider; kiểm tra chuyển phân công trong lúc xử lý |
+| PQ-21 | API Quản lý đọc đúng tiền thu trong ngày từ hai giao dịch thật, loại cận trên ngày kế tiếp |
+| PQ-22 | Tìm kiếm quản trị bị chặn; thông báo/nhật ký/tiền không lộ qua JSON, CSV, số đếm và Realtime |
+| PQ-23 | Hai tab Quản lý bị hạ xuống STAFF; Dashboard/ngữ cảnh cũ được dọn, token/kênh cũ không vượt quyền |
+| PQ-24 | RPC Quản lý nâng STAFF lên ADMIN và hai tab tự cập nhật; kiểm tra quyền mới từ CSDL |
+| PQ-25 | Khóa STAFF trên hai tab, gỡ kênh/dữ liệu; gọi lại bằng token trước khóa bị từ chối |
+
+Báo cáo: `docs/security/phase4/realtime/ui-results.txt`, `docs/security/phase4/answer/ui-results.txt`, `docs/security/phase4/session/ui-results.txt`. Provider AI dùng bản thay thế offline để kiểm soát lỗi/thu hồi quyền; không gọi Gemini hoặc Logs Cloud. Hoàn tất giai đoạn 4 trên môi trường thử nghiệm; mã và bằng chứng đến migration 184 thuộc đợt push ngày 06/11/2026 theo yêu cầu người dùng. Không kèm cấu hình bí mật hoặc thay đổi hotline/Zalo riêng trong `components/fab/fab.html`. Push Git không áp dụng migration lên Supabase; bộ nghiệm thu đủ 30 PQ vẫn thuộc giai đoạn 5, triển khai hệ thống thật thuộc giai đoạn 6.
+
 ### Giai đoạn 5 — Kiểm thử tích hợp và nghiệm thu
 
-Trạng thái: Chưa thực hiện; phụ thuộc giai đoạn 2, 3 và 4.
+Trạng thái: Chưa bắt đầu bộ nghiệm thu tổng; giai đoạn 2, 3 và 4 đã hoàn tất trên môi trường thử nghiệm. PQ-19 đến PQ-25 đã có bằng chứng từ giai đoạn 4; vẫn phải chạy/chốt đủ bộ 30 PQ và các hồi quy công khai ở giai đoạn này.
 
 - [ ] Hoàn tất mục 7 và chạy đủ 30 kịch bản PQ-01 đến PQ-30 ở mục 9 bằng tài khoản kiểm thử phù hợp.
 - [ ] Kiểm tra hồi quy đăng nhập, nghiệp vụ phục vụ khách, đặt lịch công khai và các luồng liên quan sau khi siết quyền.
@@ -425,7 +511,7 @@ Trạng thái: Chưa thực hiện; phụ thuộc giai đoạn 2, 3 và 4.
 Trạng thái: Chưa thực hiện; chỉ tiến hành sau khi giai đoạn 5 đạt.
 
 - [ ] Thực hiện mục 8: lưu cấu hình trước chuyển đổi, xác định tài khoản Quản lý/Nhân viên và kiểm tra phương án khôi phục.
-- [ ] Áp dụng migration và mã nguồn theo thứ tự tương thích đã chốt sau kiểm thử: 165 → 166 → 167 → 168 → 169 → 170 → 171 → 172 → 173 → 174 → 175 → 176 → 177 → 178 → 179 → 180 cùng các bổ sung giai đoạn 4 được nghiệm thu trước mã sử dụng chúng; khôi phục theo thứ tự ngược, không tự kích hoạt toàn bộ tài khoản chưa có vai trò.
+- [ ] Áp dụng migration và mã nguồn theo thứ tự tương thích đã chốt sau kiểm thử: 165 → 166 → 167 → 168 → 169 → 170 → 171 → 172 → 173 → 174 → 175 → 176 → 177 → 178 → 179 → 180 → 181 → 182 → 183 → 184 cùng các bổ sung giai đoạn 4 được nghiệm thu; riêng client tín hiệu phải có trước khi 183 ngừng DELETE. Khôi phục theo thứ tự ngược có kiểm soát, không mở lại đường DELETE cho STAFF hoặc tự kích hoạt tài khoản chưa có vai trò.
 - [ ] Kiểm tra nhanh đăng nhập hai vai trò, nghiệp vụ chính, chatbot, đổi vai trò và khóa tài khoản sau triển khai.
 - [ ] Bàn giao bảng quyền, hướng dẫn vận hành và bằng chứng; chỉ push khi người dùng yêu cầu rõ ràng theo `AGENTS.md`.
 
@@ -520,18 +606,18 @@ Trạng thái: Chưa thực hiện; chỉ tiến hành sau khi giai đoạn 5 đ
 |---|---|---|---|---|
 | [ ] | PQ-17 | Nhân viên | Dùng phiên hợp lệ gọi trực tiếp API, RPC, truy vấn bảng và tệp dành cho Quản lý | Bị từ chối hoặc không trả dữ liệu theo chính sách; không phát sinh thay đổi nghiệp vụ |
 | [ ] | PQ-18 | Khách hàng hoặc chưa đăng nhập | Mở Admin và gọi các API quản trị | Không nhận dữ liệu admin; API yêu cầu xác thực hoặc từ chối đúng quyền |
-| [ ] | PQ-19 | Nhân viên | Hỏi chatbot doanh thu toàn cửa hàng, danh sách nhân sự và yêu cầu hoàn tiền | Chatbot báo không đủ quyền; công cụ không trả dữ liệu hạn chế và không thực hiện hoàn tiền |
-| [ ] | PQ-20 | Nhân viên A | Hỏi chatbot về công việc của A, sau đó yêu cầu thông tin hoặc xử lý công việc ngoài phạm vi của A | Trả lời được thông tin được phép; yêu cầu vượt phạm vi bị chặn tại công cụ truy xuất |
-| [ ] | PQ-21 | Quản lý | Hỏi chatbot về doanh thu trong khoảng ngày có dữ liệu kiểm thử | Trả lời theo dữ liệu thật và đúng khoảng ngày; không bị chặn nhầm bởi vai trò |
-| [ ] | PQ-22 | Nhân viên | Tìm kiếm, xem thông báo, số đếm và thử xuất báo cáo doanh thu | Không lộ doanh thu hoặc dữ liệu ngoài phạm vi qua kết quả, gợi ý, số đếm và tệp xuất |
+| [x] | PQ-19 | Nhân viên | Hỏi chatbot doanh thu toàn cửa hàng, danh sách nhân sự và yêu cầu hoàn tiền | Chatbot báo không đủ quyền; công cụ không trả dữ liệu hạn chế và không thực hiện hoàn tiền |
+| [x] | PQ-20 | Nhân viên A | Hỏi chatbot về công việc của A, sau đó yêu cầu thông tin hoặc xử lý công việc ngoài phạm vi của A | Trả lời được thông tin được phép; yêu cầu vượt phạm vi bị chặn tại công cụ truy xuất |
+| [x] | PQ-21 | Quản lý | Hỏi chatbot về doanh thu trong khoảng ngày có dữ liệu kiểm thử | Trả lời theo dữ liệu thật và đúng khoảng ngày; không bị chặn nhầm bởi vai trò |
+| [x] | PQ-22 | Nhân viên | Tìm kiếm, xem thông báo, số đếm và thử xuất báo cáo doanh thu | Không lộ doanh thu hoặc dữ liệu ngoài phạm vi qua kết quả, gợi ý, số đếm và tệp xuất |
 
 ### Đổi vai trò, khóa tài khoản và đồng thời
 
 | Xong | Mã | Vai trò | Bước thực hiện | Kết quả mong đợi |
 |---|---|---|---|---|
-| [ ] | PQ-23 | Hai Quản lý | Quản lý thứ nhất mở báo cáo và chat trên hai tab; Quản lý thứ hai đổi tài khoản thứ nhất thành Nhân viên | Yêu cầu tiếp theo bị giới hạn theo Nhân viên; giao diện dọn dữ liệu vượt quyền, kể cả ngữ cảnh chat, bộ nhớ đệm và kênh Realtime |
-| [ ] | PQ-24 | Quản lý và Nhân viên | Nhân viên đang đăng nhập; Quản lý đổi tài khoản đó thành Quản lý | Phiên cập nhật vai trò từ nguồn tin cậy và có đầy đủ quyền Quản lý; tải lại hoặc đăng nhập lại vẫn đúng |
-| [ ] | PQ-25 | Quản lý và Nhân viên | Quản lý khóa tài khoản Nhân viên đang mở nhiều tab; dùng lại token cũ để gọi API và RPC | Không tiếp tục truy cập nghiệp vụ; kênh Realtime không tiếp tục nhận dữ liệu và giao diện chuyển về trạng thái phù hợp |
+| [x] | PQ-23 | Hai Quản lý | Quản lý thứ nhất mở báo cáo và chat trên hai tab; Quản lý thứ hai đổi tài khoản thứ nhất thành Nhân viên | Yêu cầu tiếp theo bị giới hạn theo Nhân viên; giao diện dọn dữ liệu vượt quyền, kể cả ngữ cảnh chat, bộ nhớ đệm và kênh Realtime |
+| [x] | PQ-24 | Quản lý và Nhân viên | Nhân viên đang đăng nhập; Quản lý đổi tài khoản đó thành Quản lý | Phiên cập nhật vai trò từ nguồn tin cậy và có đầy đủ quyền Quản lý; tải lại hoặc đăng nhập lại vẫn đúng |
+| [x] | PQ-25 | Quản lý và Nhân viên | Quản lý khóa tài khoản Nhân viên đang mở nhiều tab; dùng lại token cũ để gọi API và RPC | Không tiếp tục truy cập nghiệp vụ; kênh Realtime không tiếp tục nhận dữ liệu và giao diện chuyển về trạng thái phù hợp |
 | [ ] | PQ-26 | Quản lý | Trên môi trường kiểm thử chỉ còn một Quản lý hoạt động, thử khóa hoặc hạ vai trò tài khoản đó | Bị từ chối; luôn còn ít nhất một Quản lý hoạt động |
 | [ ] | PQ-27 | Hai Quản lý | Gửi đồng thời hai yêu cầu khóa hoặc hạ vai trò hai Quản lý đang hoạt động | Không thể làm mất toàn bộ Quản lý; CSDL giữ điều kiện có ít nhất một Quản lý hoạt động |
 | [ ] | PQ-28 | Hai Quản lý | Cùng mở hồ sơ một nhân viên, lần lượt lưu thay đổi vai trò từ hai phiên dùng cùng dữ liệu ban đầu | Phát hiện dữ liệu cũ, yêu cầu tải lại theo cơ chế xử lý đồng thời; không âm thầm ghi đè thay đổi mới |

@@ -1,0 +1,83 @@
+{
+  "scope": "Actual isolated Realtime payloads; synthetic canaries only",
+  "findings": [
+    {
+      "role": "STAFF",
+      "actor": 1,
+      "events": [
+        {
+          "type": "DELETE",
+          "newKeys": [],
+          "oldKeys": [
+            "id"
+          ],
+          "canaryId": true
+        }
+      ]
+    },
+    {
+      "role": "STAFF",
+      "actor": 2,
+      "events": [
+        {
+          "type": "DELETE",
+          "newKeys": [],
+          "oldKeys": [
+            "id"
+          ],
+          "canaryId": true
+        }
+      ]
+    },
+    {
+      "role": "ADMIN",
+      "actor": 3,
+      "events": [
+        {
+          "type": "INSERT",
+          "newKeys": [
+            "id",
+            "content",
+            "is_toxic",
+            "metadata",
+            "created_at",
+            "sender_type",
+            "conversation_id",
+            "sentiment_score",
+            "sender_account_id",
+            "sender_guest_session_id"
+          ],
+          "oldKeys": [],
+          "canaryId": true
+        },
+        {
+          "type": "UPDATE",
+          "newKeys": [
+            "id",
+            "content",
+            "is_toxic",
+            "metadata",
+            "created_at",
+            "sender_type",
+            "conversation_id",
+            "sentiment_score",
+            "sender_account_id",
+            "sender_guest_session_id"
+          ],
+          "oldKeys": [
+            "id"
+          ],
+          "canaryId": true
+        },
+        {
+          "type": "DELETE",
+          "newKeys": [],
+          "oldKeys": [
+            "id"
+          ],
+          "canaryId": true
+        }
+      ]
+    }
+  ]
+}

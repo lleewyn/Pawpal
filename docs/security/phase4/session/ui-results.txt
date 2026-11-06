@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-11-05T16:44:11.315Z",
+  "capturedAt": "2026-11-06T04:43:01.090Z",
   "scope": "Phase 4 local real Auth, browser identity/role invalidation, storage events and registered-channel teardown; no live Realtime payload test, AI gateway or Cloud writes",
   "checks": [
     {
@@ -49,16 +49,16 @@
   ],
   "status": "PASS",
   "sourceSha256": {
-    "pages/admin/admin.js": "b91801053484cc4c6ab5a49dae4d4a4cba67d734bf8536fa7ec83316d9558a4d",
-    "pages/admin/admin-access.js": "15babcf9bf0dd688b95846c062c86d684d534cb92b158e15e18ba92701e1af8f",
+    "pages/admin/admin.js": "92397b692a0ce0f996a54c2dd6a67ef904a436713154ed13fa96f388886f9629",
+    "pages/admin/admin-access.js": "bb5e28027d07a3fca81b12c0f3a61aaa7457e377114b8c40340f2ceb69b2d896",
     "pages/admin/modules/customers/customers.js": "740b891ba4c3e6e96399e709e63243c777aceb7d60f02f851bc7961241be411e",
     "pages/admin/modules/services/services.js": "47d9e704664586470b7a11c08d949a8fabbe9b765c034fb3b10209932a7654e3",
     "scripts/database/v1/169_staff_hotel_checkout_context.sql": "cebf56accddb3bf083082a08af22b9175e9b4aae63b580da0e2cdaa34488c0e8",
     "scripts/database/v1/168_staff_logistics_transition.sql": "46b1ebd23f23949449f54d36b1a34a4e02cf354f0c9a951df4a75a8b1115a205",
     "scripts/database/v1/167_staff_care_log_performer.sql": "696bfcdde8a8cb516c83c691ff59da37b542d008e769520a6aa1aefd6ba6a1e0",
     "scripts/database/v1/166_staff_booking_catalog.sql": "2f078fdab13ac1e041d03db74abc5a3f9e8c7548340e2039193fa4d8c94d6675",
-    "pages/admin/admin-components.css": "ebd33a37f9c317017655f0c13c2344b0c09af6749359ac1e832dff7e1a3899d2",
-    "pages/admin/index.html": "fb80c00d68ed233eacd2a3b369be8e9e1a79a9fa1b23660a7e434e816c5d3208",
+    "pages/admin/admin-components.css": "5a29c57b282c19deaa586d63764703f68d460a1e751890e12d6e47ff01433a26",
+    "pages/admin/index.html": "6d9eece1194e88e752f45031574eafd4d9e3e1d82977e72fbc60fb518a3535fa",
     "pages/admin/login/login.js": "43a95bd924242bbb6344e0683616bc65317b75f188a87dc192c28d0afb45389d",
     "pages/admin/login/login.html": "4a9df959481d40e02578b4ca7d90bc6575e925bf6318ac0cde3b6a5a3a393ba4",
     "pages/admin/modules/staff/staff.html": "6d7fd0514db22054abf80279697d5a32cb3ce998ba5ee6de8a2ee52015986554",
@@ -72,7 +72,7 @@
     "scripts/database/v1/171_staff_complaint_sources.sql": "94dc90313c8f50a5f75677557906ff25d17f336a1742d26d81cb75174da74e43",
     "scripts/database/v1/171_staff_complaint_sources.rollback.sql": "c76010ca582f0cbb8293dad1d8a17452a80b337b34e9c1a46526e7215060ee91",
     "pages/admin/admin-own-password.js": "e3e5dae19a402df868439022e5f5f93d1af78bc4b83deb17d540ff3fe4834b7f",
-    "pages/admin/modules/chatbot/chatbot.js": "3ac825faabc97ff79c042be3c3a3e3319877ffbf11b17850f29b7db583ca1959",
+    "pages/admin/modules/chatbot/chatbot.js": "f4aa17c1cf012d2f4b2d31feae443ae5be8de4e5481cf14691cbc9e8b7978438",
     "scripts/database/v1/172_staff_chat_completion.sql": "7f6dc8757d873943e4cb99edee1142bbe144df3fd137a09b9ada1d1f042cf86a",
     "scripts/database/v1/172_staff_chat_completion.rollback.sql": "64c30b1e7bc1c1baaaf7abf4be1b5eb0602a3c18cf143e65642e726d3763be4c",
     "scripts/database/v1/173_staff_customer_context.sql": "0266f1c4eedaa373f0495f4a1b02c12c3e7f14f3bfac8ec939cf675df8c1e4d3",
