@@ -488,7 +488,7 @@ async function loadBlogs(forceRefresh = false) {
         const db = window.getSupabaseClient?.() || window.SupabaseClient;
         if (!db) throw new Error('Supabase client is not initialized');
 
-        const { data, error } = await db.from('blog_post').select('*, blog_category(category_name)').in('status', ['published', 'PUBLISHED', 'dang_hien_thi']).order('publish_at', { ascending: false });
+        const { data, error } = await db.from('blog_post').select('*, blog_category(category_name)').in('status', ['published', 'PUBLISHED', 'dang_hien_thi', 'da_xuat_ban']).order('publish_at', { ascending: false });
         if (error) throw error;
 
         const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';

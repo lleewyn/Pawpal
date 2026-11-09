@@ -4,6 +4,7 @@ import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 import { parseVietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
 import {createReviewMediaEditor} from '/scripts/shared/review-media.mjs';
 import {createEvidenceGallery} from '/scripts/shared/evidence-gallery.mjs';
+import {staffRequestLabel,renderBookingStaffRequest} from '/scripts/shared/booking-staff-request.mjs';
 import { statusLabels, formatDate, formatPrice, openBookingCancelModal, openBookingMoveModal } from './bookings.js';
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
@@ -74,8 +75,15 @@ function showBookingLoadError(message) {
 let isInitRunning = false;
 let stopDetailRealtime = null;
 let serviceReviewEditors=new Map(),serviceReviewGalleries=[],serviceReviewGeneration=0;
+let executionMediaUrls = [];
+function clearExecutionMedia() {
+    for (const url of executionMediaUrls) {
+        try { URL.revokeObjectURL(url); } catch (_) {}
+    }
+    executionMediaUrls = [];
+}
 function clearServiceReviewMedia(){serviceReviewGeneration++;serviceReviewEditors.forEach(e=>e.close());serviceReviewEditors.clear();serviceReviewGalleries.forEach(g=>g.clear());serviceReviewGalleries=[];}
-export function dispose(){++detailVersion;++detailReadVersion;clearServiceReviewMedia();stopDetailRealtime?.();stopDetailRealtime=null;stopDetailAuth?.();stopDetailAuth=null;clearTimeout(bannerTimeout);currentBooking=null;currentPet=null;currentCareLog=null;}
+export function dispose(){++detailVersion;++detailReadVersion;clearServiceReviewMedia();clearExecutionMedia();stopDetailRealtime?.();stopDetailRealtime=null;stopDetailAuth?.();stopDetailAuth=null;clearTimeout(bannerTimeout);currentBooking=null;currentPet=null;currentCareLog=null;}
 window.addEventListener('hashchange',dispose);
 
 export async function init() {
@@ -214,12 +222,12 @@ function renderBookingDetail(booking) {
     const headerBadge = document.getElementById('headerStatusBadge');
     if (headerBadge) {
         headerBadge.className = `admin-badge badge-${normalizedStatus}`;
-        headerBadge.textContent = statusLabels[normalizedStatus] || normalizedStatus;
+        headerBadge.textContent = staffRequestLabel(booking.staffRequest,statusLabels[normalizedStatus] || normalizedStatus);
     }
 
     const statusInfo = document.getElementById('statusInfo');
     if (statusInfo) {
-        statusInfo.innerHTML = `<span class="admin-badge badge-${normalizedStatus}">${statusLabels[normalizedStatus] || normalizedStatus}</span>`;
+        statusInfo.innerHTML = `<span class="admin-badge badge-${normalizedStatus}">${escapeHtml(staffRequestLabel(booking.staffRequest,statusLabels[normalizedStatus] || normalizedStatus))}</span>`;
     }
 
     const codeEl = document.getElementById('bookingCode');
@@ -263,7 +271,13 @@ function renderBookingDetail(booking) {
     }
 
     const staffEl = document.getElementById('staffInfo');
-    if (staffEl) staffEl.textContent = booking.logistics?.staff_name || 'Chưa phân công';
+    if (staffEl) staffEl.textContent = booking.logistics?.staff_name || booking.staffRequest?.requested_staff_name || 'Chưa phân công';
+    let requestPanel=document.getElementById('bookingStaffRequestPanel');
+    if(!requestPanel){requestPanel=document.createElement('section');requestPanel.id='bookingStaffRequestPanel';document.querySelector('.booking-detail-module-container')?.prepend(requestPanel);}
+    renderBookingStaffRequest(requestPanel,booking.staffRequest,{onRespond:async(accept,revision)=>{
+        const db=window.getSupabaseClient(),{error}=await db.rpc('respond_own_booking_staff_request',{p_id:booking._supabaseId,p_revision:revision,p_accept:accept});
+        if(error)throw error;await loadBookingDetail(booking._supabaseId);
+    }});
     renderBookingLogistics(booking.logistics);
 
     const priceEl = document.getElementById('priceInfo');
@@ -315,17 +329,44 @@ async function loadBookingExecution(db, booking,valid=()=>true) {
     if(section.hidden){section.replaceChildren();return;}
     const money = value => Number(value || 0).toLocaleString('vi-VN') + 'đ';
     try {
+        clearExecutionMedia();
         const result = await db.rpc('own_service_booking_execution', {p_booking:booking._supabaseId});
         if(!valid() || !section.isConnected)return;
         if (result.error) throw result.error;
         const data = result.data || {};
+
+        // Nạp URL ảnh media cho biên bản tiếp nhận/bàn giao và nhật ký chăm sóc
+        const sessionRes = await db.auth.getSession();
+        const token = sessionRes?.data?.session?.access_token || null;
+        const allMedia = [
+            ...(data.records || []).flatMap(r => r.media || []),
+            ...(data.updates || []).flatMap(u => u.media || [])
+        ].filter(m => m.media_asset_id);
+
+        if (token && allMedia.length > 0) {
+            await Promise.all(allMedia.map(async m => {
+                try {
+                    const res = await fetch('/api/media?action=read&id=' + encodeURIComponent(m.media_asset_id), {
+                        headers: { Authorization: 'Bearer ' + token },
+                        cache: 'no-store'
+                    });
+                    if (res.ok) {
+                        const blob = await res.blob();
+                        const blobUrl = URL.createObjectURL(blob);
+                        executionMediaUrls.push(blobUrl);
+                        m.resolved_url = blobUrl;
+                    }
+                } catch (_) {}
+            }));
+        }
+
         if(!data.check_in_at&&!data.check_out_at&&!(data.records||[]).length&&!(data.updates||[]).length){
             section.innerHTML='<h4 class="card-section-title">Tiếp nhận và chăm sóc</h4><p class="booking-execution-empty">Bé chưa được tiếp nhận. Nhật ký sẽ xuất hiện khi nhân viên bắt đầu chăm sóc và ghi cập nhật.</p>';
         } else section.innerHTML = `<h4 class="card-section-title">Tiếp nhận và chăm sóc</h4>
             <div class="booking-execution-times"><p>Tiếp nhận thực tế <strong>${escapeHtml(stamp(data.check_in_at))}</strong></p><p>Bàn giao thực tế <strong>${escapeHtml(stamp(data.check_out_at))}</strong></p></div>
-            ${(data.records || []).map(record=>`<article class="booking-execution-record"><h5>${record.record_type==='intake'?'Biên bản tiếp nhận':'Biên bản bàn giao'}</h5><span class="booking-execution-date">${escapeHtml(stamp(record.recorded_at))}</span><p>${escapeHtml(record.condition_note || 'Chưa có nội dung')}</p>${record.allergy_note_snapshot?`<p>Dị ứng: ${escapeHtml(record.allergy_note_snapshot)}</p>`:''}${record.safety_note_snapshot?`<p>Lưu ý an toàn: ${escapeHtml(record.safety_note_snapshot)}</p>`:''}<small>${record.customer_confirmation_status==='confirmed'?'Đã có xác nhận của chủ nuôi':'Chưa có xác nhận của chủ nuôi'}</small></article>`).join('') || '<p class="booking-execution-empty">Chưa có biên bản tiếp nhận hoặc bàn giao được ghi nhận.</p>'}
+            ${(data.records || []).map(record=>`<article class="booking-execution-record"><h5>${record.record_type==='intake'?'Biên bản tiếp nhận':'Biên bản bàn giao'}</h5><span class="booking-execution-date">${escapeHtml(stamp(record.recorded_at))}</span><p>${escapeHtml(record.condition_note || 'Chưa có nội dung')}</p>${record.allergy_note_snapshot?`<p>Dị ứng: ${escapeHtml(record.allergy_note_snapshot)}</p>`:''}${record.safety_note_snapshot?`<p>Lưu ý an toàn: ${escapeHtml(record.safety_note_snapshot)}</p>`:''}${(record.media || []).length ? `<div class="booking-execution-gallery" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;">${record.media.map(m=>m.resolved_url ? `<a href="${escapeHtml(m.resolved_url)}" target="_blank" rel="noopener" title="${escapeHtml(m.file_name || 'Xem ảnh')}"><img src="${escapeHtml(m.resolved_url)}" alt="${escapeHtml(m.file_name || 'Ảnh minh chứng')}" style="width:68px;height:68px;object-fit:cover;border-radius:9px;border:1px solid #ECF2EE;"></a>` : '').join('')}</div>` : ''}<small>${record.customer_confirmation_status==='confirmed'?'Đã có xác nhận của chủ nuôi':'Chưa có xác nhận của chủ nuôi'}</small></article>`).join('') || '<p class="booking-execution-empty">Chưa có biên bản tiếp nhận hoặc bàn giao được ghi nhận.</p>'}
             <h5 class="booking-execution-heading">Cập nhật chăm sóc gần nhất</h5>
-            ${(data.updates || []).map(log=>`<article class="booking-execution-update"><strong>${escapeHtml(log.action_name_snapshot)}</strong><span class="booking-execution-date">${escapeHtml(stamp(log.recorded_at))}</span><p>${escapeHtml(log.description || '')}</p>${log.observed_condition?`<p>${escapeHtml(log.observed_condition)}</p>`:''}</article>`).join('') || '<p class="booking-execution-empty">Nhân viên chưa ghi nhật ký chăm sóc cho ca này.</p>'}`;
+            ${(data.updates || []).map(log=>`<article class="booking-execution-update"><strong>${escapeHtml(log.action_name_snapshot)}</strong><span class="booking-execution-date">${escapeHtml(stamp(log.recorded_at))}</span><p>${escapeHtml(log.description || '')}</p>${log.observed_condition?`<p>${escapeHtml(log.observed_condition)}</p>`:''}${(log.media || []).length ? `<div class="booking-execution-gallery" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;">${log.media.map(m=>(m.resolved_url || m.media_url) ? `<a href="${escapeHtml(m.resolved_url || m.media_url)}" target="_blank" rel="noopener" title="${escapeHtml(m.file_name || 'Xem ảnh')}"><img src="${escapeHtml(m.resolved_url || m.media_url)}" alt="${escapeHtml(m.file_name || 'Ảnh chăm sóc')}" style="width:68px;height:68px;object-fit:cover;border-radius:9px;border:1px solid #ECF2EE;"></a>` : '').join('')}</div>` : ''}</article>`).join('') || '<p class="booking-execution-empty">Nhân viên chưa ghi nhật ký chăm sóc cho ca này.</p>'}`;
         let costs = document.getElementById('bookingCostBreakdown');
         if (!costs) {
             costs = document.createElement('div'); costs.id = 'bookingCostBreakdown';

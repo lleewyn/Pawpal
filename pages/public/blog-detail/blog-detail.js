@@ -129,7 +129,7 @@
         const client = (typeof window.getSupabaseClient === 'function' && window.getSupabaseClient()) || window.SupabaseClient;
         if (client && (slug || id)) {
             let request = client.from('blog_post').select('*, blog_category(category_name)')
-                .in('status', ['published', 'PUBLISHED', 'dang_hien_thi']);
+                .in('status', ['published', 'PUBLISHED', 'dang_hien_thi', 'da_xuat_ban']);
             request = slug ? request.eq('slug', slug) : request.eq('id', id);
             const { data, error } = await request.maybeSingle();
             if (error) throw error;
