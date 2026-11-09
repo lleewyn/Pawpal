@@ -17,3 +17,14 @@ test('order children subscribe through RLS without a nonexistent customer_id fil
     assert.equal(subscriptions[6].filter.filter,undefined);
     dispose();assert.ok(removed);
 });
+
+test('review media uses ownership RLS and a disposed view never refreshes',async()=>{
+ const handlers=[];let refreshed=0,removed=0;
+ const channel={on(event,filter,callback){handlers.push({filter,callback});return this;},subscribe(){}};
+ const client={channel:()=>channel,removeChannel:()=>removed++};
+ const dispose=watchCustomerTables(client,'owner',['review_media'],()=>refreshed++);
+ assert.equal(handlers[0].filter.filter,undefined);
+ handlers[0].callback();handlers[0].callback();dispose();
+ await new Promise(resolve=>setTimeout(resolve,220));
+ assert.equal(refreshed,0);assert.equal(removed,1);
+});

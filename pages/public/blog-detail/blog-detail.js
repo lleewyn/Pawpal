@@ -143,7 +143,7 @@
                         slug: data.slug,
                         summary: data.summary,
                         content: data.content,
-                        thumbnail: image && !image.startsWith('http') ? root + image.replace(/^\/+/, '') : image,
+                        thumbnail: data.thumbnail_media_asset_id?'/api/media?action=read&id='+encodeURIComponent(data.thumbnail_media_asset_id):image && !image.startsWith('http') ? root + image.replace(/^\/+/, '') : image,
                         author: data.author || 'PawPal',
                         date: data.publish_at || data.created_at,
                         viewCount: data.view_count,

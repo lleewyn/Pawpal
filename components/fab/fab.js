@@ -6,6 +6,18 @@ function initFab(){
  const tokenKey='pawpal_chat_guest_v1';let guest=localStorage.getItem(tokenKey);let issued=Number(localStorage.getItem(tokenKey+'_at'));
  if(!guest||!issued||Date.now()-issued>7*86400000){guest=crypto.randomUUID()+crypto.randomUUID();issued=Date.now();localStorage.setItem(tokenKey,guest);localStorage.setItem(tokenKey+'_at',issued);}
  let identity='guest',epoch=0;const pending=new Set(),partReads=new Map();
+ let mediaDraft=null,mediaGallery=null,mediaReady=null;
+ async function mediaHeaders(){const stamp=epoch,session=(await client?.auth.getSession())?.data?.session;current(stamp);if((session?.user?.id||'guest')!==identity)throw stale();return session?{Authorization:'Bearer '+session.access_token}:{'X-Pawpal-Chat-Session':guest};}
+ function initChatMedia(){
+  if(mediaReady)return mediaReady;
+  mediaReady=import('/scripts/shared/chat-media.mjs').then(module=>{
+   const root=document.createElement('div');root.id='fabChatMediaDraft';input.closest('.fab-chat-input-row').before(root);
+   root.style.padding='6px 14px';
+   mediaDraft=module.createChatMediaDraft({root,headers:mediaHeaders,getContext:async()=>({conversation:await ensure(),message:request.id})});
+   mediaGallery=module.createChatMediaGallery({headers:mediaHeaders});
+   if(recovery?.mediaAssetIds?.length)mediaDraft.restore(recovery.mediaAssetIds);
+  }).catch(error=>{mediaReady=null;throw error;});return mediaReady;
+ }
  let readFailures=0,nextReadAt=0,readBlocked=false;
  function deferReads(error){if(error.stale)return;if(error.retryable===false||[400,401,403,410].includes(error.status)){readBlocked=true;return;}readFailures++;nextReadAt=Date.now()+30000*2**Math.min(readFailures-1,2);}
  function resetReads(){readFailures=0;readBlocked=false;nextReadAt=Date.now()+30000;}
@@ -17,7 +29,7 @@ function initFab(){
    const valid=value&&value.owner===identity&&(identity!=='guest'||value.guestIssued===issued)&&typeof value.conversation==='string'&&/^[0-9a-f-]{36}$/i.test(value.conversation)&&Number.isFinite(value.at)&&Date.now()-value.at>=0&&Date.now()-value.at<1800000&&typeof value.needsOpen==='boolean'&&(value.question===null||typeof value.question==='string'&&value.question.length>0&&value.question.length<=2000&&/^[0-9a-f-]{36}$/i.test(value.requestId||''));
    if(!valid||active&&active!==value.conversation){clearRecovery();return;}
    recovery=value;if(!value.needsOpen){active=value.conversation;remember();}
-   if(value.question){input.value=value.question;request={id:value.requestId,key:JSON.stringify([value.conversation,value.question])};submission={id:value.requestId,question:value.question,at:value.at,phase:'failed'};}
+   if(value.question){input.value=value.question;request={id:value.requestId,key:JSON.stringify([value.conversation,value.question])};submission={id:value.requestId,question:value.question,at:value.at,phase:'failed'};if(value.mediaAssetIds?.length)void initChatMedia().then(()=>{mediaDraft.restore(value.mediaAssetIds);mediaDraft.freeze(true);});}
   }catch{recovery=null;sessionStorage.removeItem(recoveryKey);}
  }
  const stale=()=>Object.assign(Error('Phiên trò chuyện đã thay đổi.'),{stale:true});
@@ -56,6 +68,7 @@ function initFab(){
  function showError(error){if(!error.stale)notify(error.message);}
  function syncControls(){
   const closed=['resolved','closed','completed','blocked'].includes(status);input.disabled=closed;send.disabled=busy||closed;
+  input.readOnly=Boolean(busy&&mediaDraft?.count()||recovery?.mediaAssetIds?.length&&submission?.phase==='failed');
   const button=$('fabHandoverBtn');if(button){button.textContent=status==='waiting_agent'?'Hỏi lại trợ lý':'Gặp chuyên viên';button.disabled=busy||['agent_handling','resolved','closed','completed','blocked'].includes(status);}
  }
  function setMode(){
@@ -65,6 +78,7 @@ function initFab(){
  }
  function remember(){if(active)sessionStorage.setItem('pawpal_chat_active_'+identity,active);}
  function render(){
+  mediaGallery?.clear();const mediaSlots=[];
   messages.replaceChildren();if(!rows.length&&!submission){
    const empty=document.createElement('div');empty.className='fab-chat-welcome';
    empty.innerHTML='<span class="fab-welcome-label">Chào bạn, PawPal đây!</span><h3>Mình có thể giúp gì cho bé?</h3><p>Hỏi về dịch vụ, cách đặt lịch hoặc những điều cần chuẩn bị khi đưa bé đến PawPal.</p><div class="fab-welcome-prompts"></div><small>Trợ lý tự động hỗ trợ thông tin ban đầu. Bạn có thể chọn “Gặp chuyên viên” khi cần tư vấn trực tiếp.</small>';
@@ -101,7 +115,9 @@ function initFab(){
     }
    }
    messages.append(div);
+   for(const item of row.media||[])mediaSlots.push({root:div,asset:item.asset_id});
   }
+  if(mediaSlots.length)void initChatMedia().then(()=>mediaGallery.render(mediaSlots));
   if(submission){
    if(!rows.some(r=>r.id===submission.id)){
     const bubble=document.createElement('div');bubble.className='fab-chat-bubble fab-chat-bubble--user';bubble.dataset.pendingRequest='true';
@@ -132,16 +148,18 @@ function initFab(){
  }
  async function ensure(){const stamp=epoch;if(!active){const value=recovery||{owner:identity,guestIssued:issued,conversation:crypto.randomUUID(),needsOpen:true,question:null,at:Date.now()};persistRecovery(value);await api('public_open',{conversationId:value.conversation});current(stamp);active=value.conversation;remember();if(value.question)persistRecovery({...value,needsOpen:false});else clearRecovery();}return active;}
  async function submit(override){
-  const question=typeof override==='string'?override:input.value.trim();if(busy||input.disabled||!question)return;if(question.length>2000)return notify('Tin nhắn tối đa 2.000 ký tự.');const stamp=epoch;busy=true;syncControls();let sendError=null;
+  const question=typeof override==='string'?override:input.value.trim()||(mediaDraft?.count()?'[Hình ảnh]':'');if(busy||input.disabled||!question)return;if(question.length>2000)return notify('Tin nhắn tối đa 2.000 ký tự.');const stamp=epoch;busy=true;mediaDraft?.freeze(true);syncControls();let sendError=null,sendStarted=false;
   try{
-   const target=active||recovery?.conversation||crypto.randomUUID(),key=JSON.stringify([target,question]);if(request?.key!==key)request={id:crypto.randomUUID(),key};
-   persistRecovery({owner:identity,guestIssued:issued,conversation:target,needsOpen:!active,question,requestId:request.id,at:Date.now()});
+   const target=active||recovery?.conversation||crypto.randomUUID(),key=JSON.stringify([target,question]);if(!request||request.key!==key&&!mediaDraft?.count()&&!recovery?.mediaAssetIds?.length)request={id:crypto.randomUUID(),key};else request.key=key;
+   persistRecovery({owner:identity,guestIssued:issued,conversation:target,needsOpen:!active,question,requestId:request.id,mediaAssetIds:recovery?.mediaAssetIds||[],at:Date.now()});
    submission={id:request.id,question,at:Date.now(),phase:'sending'};if(input.value.trim()===question)input.value='';render();messages.scrollTop=messages.scrollHeight;
    await ensure();current(stamp);
-   await api('public_send',{conversationId:active,question,requestId:request.id});current(stamp);submission.phase='reading';request=null;clearRecovery();await read(true);current(stamp);submission=null;
-  }catch(error){if(stamp===epoch){sendError=error;if(submission){submission.answer='';submission.phase=submission.phase==='reading'?'read_failed':'failed';if(submission.phase==='failed'&&!input.value)input.value=question;}}}finally{if(stamp===epoch){busy=false;render();messages.scrollTop=messages.scrollHeight;if(sendError)showError(sendError);}}
+   const mediaAssetIds=mediaDraft?.count()?await mediaDraft.prepare():(recovery?.mediaAssetIds||[]);current(stamp);
+   persistRecovery({...recovery,mediaAssetIds});mediaDraft?.sent();sendStarted=true;
+   await api('public_send',{conversationId:active,question,requestId:request.id,mediaAssetIds});current(stamp);mediaDraft?.saved();submission.phase='reading';request=null;clearRecovery();await read(true);current(stamp);submission=null;
+  }catch(error){if(stamp===epoch){if(!sendStarted)mediaDraft?.freeze(false);sendError=error;if(submission){submission.answer='';submission.phase=submission.phase==='reading'?'read_failed':'failed';if(submission.phase==='failed'&&!input.value)input.value=question;}}}finally{if(stamp===epoch){busy=false;render();messages.scrollTop=messages.scrollHeight;if(sendError)showError(sendError);}}
  }
- function fresh(){if(busy)return;resetReads();clearRecovery();submission=null;active=null;rows=[];version=null;more=false;newPage=null;request=null;input.value='';sessionStorage.removeItem('pawpal_chat_active_'+identity);$('fabChatHistoryView').style.display='none';$('fabChatMainView').style.display='flex';status='bot_handling';render();}
+ function fresh(){if(busy)return;mediaDraft?.clear();mediaGallery?.clear();resetReads();clearRecovery();submission=null;active=null;rows=[];version=null;more=false;newPage=null;request=null;input.value='';sessionStorage.removeItem('pawpal_chat_active_'+identity);$('fabChatHistoryView').style.display='none';$('fabChatMainView').style.display='flex';status='bot_handling';render();}
  async function history(){
   if(busy)return;const view=$('fabChatHistoryView'),list=$('fabHistoryList');view.style.display='flex';$('fabChatMainView').style.display='none';list.textContent='Đang tải...';
   try{const data=await api('public_list',{offset:historyPage*10});list.replaceChildren();if(!data.conversations.length)list.textContent='Chưa có hội thoại.';
@@ -150,7 +168,7 @@ function initFab(){
     const title=document.createElement('span');title.className='fab-history-card-title';title.textContent=new Date(c.created_at).toLocaleDateString('vi-VN',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit',year:'numeric'});
     const meta=document.createElement('span');meta.className='fab-history-card-meta';meta.textContent='Bắt đầu lúc '+new Date(c.created_at).toLocaleTimeString('vi-VN',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'});
     info.append(title,meta);const action=document.createElement('span');action.className='fab-history-card-open';action.textContent='Xem lại';button.append(info,action);
-    button.onclick=async()=>{if(busy)return;submission=null;active=c.id;rows=[];version=null;more=false;newPage=null;remember();view.style.display='none';$('fabChatMainView').style.display='flex';try{await read(true);}catch(error){showError(error);}};list.append(button);}
+    button.onclick=async()=>{if(busy)return;mediaDraft?.clear();clearRecovery();request=null;submission=null;active=c.id;rows=[];version=null;more=false;newPage=null;remember();view.style.display='none';$('fabChatMainView').style.display='flex';try{await read(true);}catch(error){showError(error);}};list.append(button);}
    if(historyPage>0||data.conversations.length===10){const pagination=document.createElement('nav');pagination.className='fab-history-pagination';pagination.setAttribute('aria-label','Trang lịch sử trò chuyện');
     for(const [label,disabled,delta]of [['<',historyPage===0,-1],['>',data.conversations.length<10,1]]){const b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-label',delta<0?'Trang trước':'Trang sau');b.disabled=disabled;b.onclick=()=>{historyPage+=delta;history();};pagination.append(b);if(delta<0){const page=document.createElement('span');page.textContent=String(historyPage+1);page.setAttribute('aria-current','page');pagination.append(page);}}
     list.append(pagination);
@@ -166,9 +184,9 @@ function initFab(){
  $('fabHandoverBtn')?.addEventListener('click',async()=>{if(busy)return;const stamp=epoch;busy=true;syncControls();try{await ensure();current(stamp);await api('public_mode',{conversationId:active,mode:status==='waiting_agent'?'bot_handling':'waiting_agent'});current(stamp);await read(true);}catch(error){showError(error);}finally{if(stamp===epoch){busy=false;syncControls();}}});
  send.addEventListener('click',submit);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit();}});
  document.querySelectorAll('.fab-chat-suggest').forEach(b=>b.addEventListener('click',()=>{input.value=b.dataset.prompt||b.textContent;input.focus();}));
- if($('fabChatAttachBtn')){$('fabChatAttachBtn').disabled=true;$('fabChatAttachBtn').hidden=true;}
+ if($('fabChatAttachBtn')){$('fabChatAttachBtn').disabled=false;$('fabChatAttachBtn').hidden=false;$('fabChatAttachBtn').textContent='Ảnh';$('fabChatAttachBtn').onclick=()=>initChatMedia().catch(showError);}
  window.addEventListener('scroll',()=>$('fabBookingBtn')?.classList.toggle('visible',scrollY>400),{passive:true});
- function adopt(next){if(next===identity)return;epoch++;for(const controller of pending)controller.abort();resetReads();identity=next;active=sessionStorage.getItem('pawpal_chat_active_'+identity);rows=[];submission=null;version=null;more=false;newPage=null;request=null;historyPage=0;busy=false;polling=false;status='bot_handling';input.value='';send.disabled=false;$('fabHistoryList').replaceChildren();restoreRecovery();render();if(panel.classList.contains('open'))read(true).catch(showError);}
+ function adopt(next){if(next===identity)return;mediaDraft?.clear();mediaGallery?.clear();epoch++;for(const controller of pending)controller.abort();resetReads();identity=next;active=sessionStorage.getItem('pawpal_chat_active_'+identity);rows=[];submission=null;version=null;more=false;newPage=null;request=null;historyPage=0;busy=false;polling=false;status='bot_handling';input.value='';send.disabled=false;$('fabHistoryList').replaceChildren();restoreRecovery();render();if(panel.classList.contains('open'))read(true).catch(showError);}
  client?.auth.onAuthStateChange((_event,session)=>adopt(session?.user?.id||'guest'));
  (async()=>{const stamp=epoch;const session=(await client?.auth.getSession())?.data?.session;if(stamp!==epoch)return;const next=session?.user?.id||'guest';if(next!==identity)adopt(next);else{active=sessionStorage.getItem('pawpal_chat_active_'+identity);restoreRecovery();render();}})();
  const timer=setInterval(async()=>{if(readBlocked||Date.now()<nextReadAt||polling||busy||document.hidden||!panel.isConnected||!panel.classList.contains('open')||!active)return;const stamp=epoch;polling=true;try{await read();}catch(error){showError(error);}finally{if(stamp===epoch)polling=false;}},10000);

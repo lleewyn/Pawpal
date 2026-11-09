@@ -13,6 +13,21 @@
  const statusNames = {new:'Chờ tiếp nhận',processing:'Đang xử lý',waiting_customer:'Chờ khách phản hồi',waiting_manager_approval:'Chờ duyệt phương án',reprocessing:'Đang xử lý lại',resolved:'Đã giải quyết',closed:'Đã đóng',waiting_return:'Chờ nhận hàng',refunding:'Đang hoàn tiền'};
  const optionNames = {explain:'Giải thích và phản hồi',reject:'Từ chối khiếu nại',refund:'Hoàn tiền',rma_refund:'Trả hàng và hoàn tiền',rma_exchange:'Đổi sản phẩm',redo_service:'Làm lại dịch vụ',change_staff:'Đổi kỹ thuật viên'};
  let renderVersion = 0;
+ let replyMedia=null,replyTicket=null,gallery=null,replySaving=false,replyInit=null;
+ async function ensureReplyMedia(t){
+  if(replyTicket!==t.rawId){replyMedia?.close();replyMedia=null;replyInit=null;replyTicket=t.rawId;delete $('btnSubmitReply').dataset.requestId;}
+  if(replyInit)return replyInit;
+  if(!replyMedia){replyInit=(async()=>{
+   const {createEvidenceMediaEditor}=await import('/scripts/shared/evidence-media.mjs');
+   if(current()?.rawId!==t.rawId)return null;
+   $('complaintReplyMedia').replaceChildren();
+   replyMedia=createEvidenceMediaEditor({root:$('complaintReplyMedia'),db:client(),purpose:'ticket_image'});
+   $('btnSubmitReply').dataset.requestId ||=crypto.randomUUID();
+   await replyMedia.reset({target:$('btnSubmitReply').dataset.requestId,context:t.rawId});
+   return replyMedia;
+  })();try{return await replyInit;}finally{if(replyTicket===t.rawId)replyInit=null;}}
+  return replyMedia;
+ }
  async function readAll(build){const rows=[];for(let offset=0;;offset+=500){const {data,error}=await build().range(offset,offset+499);if(error)throw error;rows.push(...data);if(data.length<500)return rows;}}
  function readDetailResource(ticket, resource, fetcher) {
   const store=window.PawpalDataStore;
@@ -36,8 +51,8 @@
     p_expected_updated_at:modal?.dataset.version || t.updated_at,p_action:action,p_details:details
    });
    if(error) throw error;
-   delete owner.dataset.requestId;
    await mod.loadComplaintsModuleData({force:true});
+   delete owner.dataset.requestId;
    modal?.classList.remove('active');
    mod.showToast('Đã lưu thay đổi.','success'); return true;
   } catch(error) {
@@ -47,11 +62,15 @@
  }
  async function renderTicketDetail(id) {
   const version=++renderVersion;
+  gallery?.clear();
   const t=tickets().find(t=>t.id===(id || mod.state.currentTicketId) || t.rawId===(id || mod.state.currentTicketId));
   show('complaintDetailData',Boolean(t && mod.state.isLoaded && !mod.state.loadError));
   show('complaintDetailPlaceholder',!t || !mod.state.isLoaded || Boolean(mod.state.loadError));
   if(!t || mod.state.loadError) {text('complaintDetailPlaceholder',mod.state.loadError || 'Chọn một khiếu nại để xem hồ sơ.');mod.updateBreadcrumb(null);return;}
   mod.state.currentTicketId=t.id; mod.state.currentActiveTicket=t;
+  if(!replySaving)await ensureReplyMedia(t);
+  if(version!==renderVersion)return;
+  $('complaintReplyMedia').inert=finished(t)||replySaving;
   sessionStorage.setItem('pawpal_admin_complaint_selected_id',t.id); mod.updateBreadcrumb(t.id);
   text('viewTicketCode',t.id);text('detailTicketTitle',t.title);text('viewTicketStatusBadge',statusNames[t.status] || t.status);
   text('viewTicketPriorityBadge',({khan_cap:'Khẩn cấp',high:'Cao',medium:'Trung bình',low:'Thấp'})[t.priority]);
@@ -105,16 +124,13 @@
     const author=mod.state.cachedStaff.find(s=>s.auth_user_id===m.sender_account_id)?.full_name || (['staff','cskh','nhan_vien'].includes(m.sender_type)?'Nhân viên':m.sender_type==='system'?'Hệ thống':['user','customer','khach_hang'].includes(m.sender_type)?t.customerName:'Người gửi');
     return `<article class="complaint-history-entry"><strong>${escapeHtml(author)}</strong> <span>${escapeHtml(mod.formatDateTime(m.created_at))} · ${m.is_internal?'Nội bộ':'Trao đổi'}</span><p>${escapeHtml(m.content)}</p></article>`;
    }).join('') || 'Chưa có lịch sử trao đổi.';
-   const attachments=await readDetailResource(t,'attachments',async()=>{
-    const attachments=[];
-   for(let i=0;i<messages.length;i+=100){
-    const {data,error}=await client().from('support_ticket_message_attachment').select('file_url,file_name').in('message_id',messages.slice(i,i+100).map(m=>m.id)).order('id');
-    if(error)throw error;attachments.push(...data);
-   }
-    return attachments;
-   });
+   const {data:attachments,error:attachmentError}=await client().rpc('list_ticket_media',{p_ticket:t.rawId});
+   if(attachmentError)throw attachmentError;
    if(version!==renderVersion)return;
-   $('complaintAttachments').innerHTML=attachments.filter(a=>{try{return new URL(a.file_url).protocol==='https:';}catch{return false;}}).map(a=>`<p><a href="${escapeHtml(a.file_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(a.file_name || 'Tệp đính kèm')}</a></p>`).join('') || 'Chưa có tệp đính kèm.';
+   const {createEvidenceGallery}=await import('/scripts/shared/evidence-gallery.mjs');
+   if(version!==renderVersion)return;
+   gallery=createEvidenceGallery({root:$('complaintAttachments'),db:client()});await gallery.render(attachments||[]);
+   if(version!==renderVersion)return;
    const audit={data:await readDetailResource(t,'audit',()=>readAll(()=>client().from('audit_log').select('id,description,created_at').eq('entity_id',t.rawId).eq('action','COMPLAINT_ACTION').order('created_at',{ascending:false}).order('id',{ascending:false})))};
    if(version!==renderVersion)return;
    const events=(audit.data || []).flatMap(a=>{try{return [JSON.parse(a.description)];}catch{return [];}});
@@ -228,7 +244,21 @@
    try{const {error}=await client().rpc('assign_admin_complaint',{p_request_id:modal.dataset.requestId,p_ticket_id:modal.dataset.ticketId,p_expected_updated_at:modal.dataset.version,p_staff_id:staff,p_note:note});if(error)throw error;await mod.loadComplaintsModuleData({force:true});modal.classList.remove('active');mod.showToast('Đã phân công xử lý.','success');}catch(error){text('assignHandlerError',mod.errorMessage(error));}finally{button.disabled=false;}
   });
   bind('btnSendRequestInfo',()=>act('request_info',{note:$('inputRequestMessage').value.trim(),channel:$('selectRequestChannel').value},$('btnSendRequestInfo'),$('requestMoreInfoModalOverlay')));
-  bind('btnSubmitReply',async()=>{if(await act('message',{note:$('replyContentInput').value.trim(),internal:$('complaintInternalMessage').checked},$('btnSubmitReply')))$('replyContentInput').value='';});
+  bind('btnSubmitReply',async()=>{
+   const t=current(),button=$('btnSubmitReply');if(!t||button.disabled||replySaving)return;
+   const note=$('replyContentInput').value.trim();if(note.length<2){text('complaintActionError','Nhập nội dung trao đổi trước khi lưu.');return;}
+   const internal=$('complaintInternalMessage').checked,editor=await ensureReplyMedia(t);if(!editor||current()?.rawId!==t.rawId)return;
+   replySaving=true;$('complaintReplyMedia').inert=true;$('replyContentInput').disabled=true;$('complaintInternalMessage').disabled=true;
+   try{
+    button.disabled=true;const ids=await editor.prepare();button.disabled=false;
+    if(current()?.rawId!==t.rawId)return;
+    if(await act('message',{note,internal,media_asset_ids:ids},button)){
+     editor.saved();editor.close();replyMedia=null;
+     if(current()?.rawId===t.rawId){$('replyContentInput').value='';await ensureReplyMedia(t);}
+    }
+   }catch(error){text('complaintActionError',error.message);}
+   finally{replySaving=false;button.disabled=finished(current()||t);$('complaintReplyMedia').inert=button.disabled;$('replyContentInput').disabled=false;$('complaintInternalMessage').disabled=false;if(current()&&current().rawId!==t.rawId)await ensureReplyMedia(current());}
+  });
   document.querySelectorAll('#assignHandlerModalOverlay,#requestMoreInfoModalOverlay,#resolveTicketModalOverlay').forEach(modal=>{
    modal.querySelector('form')?.addEventListener('submit',e=>e.preventDefault());
    modal.onclick=e=>{if(e.target===modal)modal.classList.remove('active');};

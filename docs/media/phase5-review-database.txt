@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "checksum": "53f93144dd4b20a5679768e28ad33a716bd3c67006e9bb63e80e7b5da2682abb",
+  "cacheChecksum": "b317b75d240a95756deba039742ca43bc5b1875aaaf7df8b39393b6860d4685c",
+  "cloudApplied": false,
+  "fixturesRolledBack": true,
+  "checks": [
+    "atomic sales and service review/media save",
+    "retry attaches once",
+    "pending private to owner",
+    "wrong owner denied",
+    "publication opens binary and metadata",
+    "hiding revokes binary and metadata",
+    "cannot append upload after submission",
+    "review image uses no public cache",
+    "rollback/reapply"
+  ]
+}

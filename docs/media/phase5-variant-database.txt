@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "checksum": "17ddd4efe13789ef5074b0d9addf6ca1f9678564e00e67d140c73b4e58529133",
+  "cloudWrites": false,
+  "fixtureTransactionRolledBack": true,
+  "checks": [
+    "variant scope and wrong parent rejection",
+    "actual product save RPC",
+    "retain reference",
+    "reject wrong variant or parent gallery",
+    "public variant catalog",
+    "inactive variant privacy",
+    "staff denied",
+    "draft parent/variant atomic attach",
+    "retention",
+    "empty rollback and reapply"
+  ]
+}

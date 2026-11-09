@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "role": "real Admin Auth",
+  "context": "existing conversation assigned to current Admin and agent_handling",
+  "uploadStatus": 201,
+  "privateReadStatus": 200,
+  "sourceBytes": 196843,
+  "downloadHashMatches": true,
+  "anonymousReadStatus": 404,
+  "unrelatedGuestReadStatus": 404,
+  "cacheControl": "private, no-store",
+  "cancelled": true,
+  "conversationUnchanged": true,
+  "messagesSent": 0,
+  "realAdminImagePickerPreviewAndRemove": "PASS",
+  "businessRecordWrites": 0,
+  "productionDeploymentChanged": false,
+  "cleanupReport": "phase5-chat-live-draft-cleanup.txt"
+}

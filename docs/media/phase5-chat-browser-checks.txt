@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "isolatedUi": {
+    "guestUploadRetry": "one upload; same message and assets on retry; private gallery shown",
+    "memberReloadRetry": "restored uploaded asset IDs; no duplicate upload after reload",
+    "uncertainSend": "text locked until same request is retried; editable after success",
+    "staffUploadRetry": "one upload; identical business RPC payload on retry",
+    "adminUploadRetry": "one upload; identical business RPC payload on retry",
+    "mobileOverflow": false,
+    "cloudBusinessWrites": 0
+  },
+  "vercel": {
+    "previewUrl": "https://pawpalgr3-dyy4pwh9p-llwyns-projects.vercel.app",
+    "realAdminAuth": true,
+    "liveChatLoads": true,
+    "loadError": null,
+    "attachmentDisabledWithoutConversation": true,
+    "draftUploadReadCancel": "phase5-chat-live-preview.txt",
+    "cleanup": "phase5-chat-live-draft-cleanup.txt",
+    "remainingReservedBytes": 0,
+    "productionChanged": false,
+    "temporaryBypassRevoked": true
+  },
+  "acceptanceStillRequired": [
+    "real guest/member image message exchanged with assigned STAFF",
+    "reload and assignment revocation using real STAFF/customer browser sessions"
+  ]
+}

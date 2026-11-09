@@ -1,16 +1,21 @@
 {
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "media:preflight": "node scripts/test/media_mongodb_preflight.cjs",
+    "test:media": "node --test scripts/test/media_mongodb.test.cjs scripts/test/media_api.test.cjs scripts/test/media_cleanup.test.cjs scripts/test/media_care_reader.test.cjs scripts/test/media_service_reader.test.cjs scripts/test/media_public_review_reader.test.cjs scripts/test/media_care_edit_realtime.test.cjs scripts/test/media_admin_care.test.cjs scripts/test/media_vercel_probe.test.cjs scripts/test/vercel_admin_config.test.cjs scripts/test/media_review_realtime.test.cjs scripts/test/customer_realtime_filters.test.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.110.1",
     "bootstrap": "^5.3.3",
+    "busboy": "1.6.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "glob": "^13.0.6",
     "jsonwebtoken": "^9.0.3",
-    "qs": "^6.16.0"
+    "mongodb": "6.21.0",
+    "qs": "^6.16.0",
+    "sharp": "0.34.5"
   }
 }

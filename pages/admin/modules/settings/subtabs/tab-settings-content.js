@@ -9,6 +9,21 @@
     let currentArticlePage = 1;
     const ARTICLE_PAGE_SIZE = 10;
     let isContentInitialized = false, editingArticleId=null, draftSlug=null;
+    let articleMedia=null,articleGeneration=0,articleSaving=false,articleSent=false,newArticleId=null,articleTargetId=null,articlePublishAt=null,articleOriginalStatus=null;
+    const articleStatusGroup=value=>['published','da_xuat_ban','da_dang','active'].includes(String(value).toLowerCase())?'published':['hidden','da_an','archived'].includes(String(value).toLowerCase())?'hidden':'draft';
+    const articleOverlay=document.getElementById('articleModalOverlay');
+    if(articleOverlay)new MutationObserver(()=>{if(!articleOverlay.classList.contains('active')){articleGeneration++;if(articleSent)articleMedia?.saved();void articleMedia?.close();}}).observe(articleOverlay,{attributes:true,attributeFilter:['class']});
+    async function setupArticleMedia(record){
+        const generation=++articleGeneration;void articleMedia?.close();articleMedia=null;articleSent=false;
+        if(!record)newArticleId ||=crypto.randomUUID();articleTargetId=record?.id||newArticleId;articlePublishAt=record?.publish_at||new Date().toISOString();articleOriginalStatus=record?.status||null;
+        document.getElementById('articleModalTitle').textContent=record?'Sửa bài viết':'Soạn thảo bài viết mới';
+        const button=document.getElementById('btnSaveArticle');button.textContent=record?'Lưu thay đổi':'Lưu bài viết';button.disabled=true;
+        try{
+            const {createContentMediaEditor}=await import('/scripts/shared/content-media.mjs');if(generation!==articleGeneration)return;
+            const root=document.getElementById('articleMediaEditor');root.replaceChildren();articleMedia=createContentMediaEditor({root,db:getSupabaseClient(),purpose:'blog_thumbnail'});
+            articleMedia.reset({id:articleTargetId,asset:record?.thumbnail_media_asset_id,url:record?.thumbnail_url});button.disabled=false;
+        }catch{showToast('Không tải được bộ chọn ảnh. Vui lòng đóng và mở lại bài viết.','danger');}
+    }
 
     function getSupabaseClient() {
         return PawpalSettings.getSupabaseClient?.() || (window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient);
@@ -238,6 +253,7 @@
 
         // Modal Tạo Bài Viết Mới
         document.getElementById('btnActionEditArticle')?.addEventListener('click',()=>{
+            if(articleSaving)return;
             const id=PawpalSettings.state.currentActiveArticleId,record=PawpalSettings.getRecord('blog_post',id);
             if(!record)return;
             editingArticleId=id;draftSlug=record.slug;populateBlogCategories();
@@ -245,10 +261,12 @@
             document.getElementById('inputArticleSummary').value=record.summary||'';
             document.getElementById('inputArticleContent').value=record.content;
             document.getElementById('inputArticleCategory').value=record.category_id;
-            document.getElementById('inputArticleStatus').value=['published','da_xuat_ban'].includes(record.status)?'published':['hidden','da_an'].includes(record.status)?'hidden':'draft';
+            document.getElementById('inputArticleStatus').value=articleStatusGroup(record.status);
             closeArticleActionMenu();PawpalSettings.openModal('articleModalOverlay');
+            void setupArticleMedia(record);
         });
         document.getElementById('btnOpenCreateArticleModal')?.addEventListener('click', () => {
+            if(articleSaving)return;
             editingArticleId=null;draftSlug=null;
             document.getElementById('inputArticleStatus').value='draft';
             populateBlogCategories();
@@ -259,6 +277,7 @@
             const contentInput = document.getElementById('inputArticleContent');
             if (contentInput) contentInput.value = '';
             PawpalSettings.openModal?.('articleModalOverlay');
+            void setupArticleMedia();
         });
         document.getElementById('btnCancelArticleModal')?.addEventListener('click', () => {
             PawpalSettings.closeModal?.('articleModalOverlay');
@@ -268,6 +287,7 @@
         });
 
         document.getElementById('btnSaveArticle')?.addEventListener('click', async () => {
+            const button=document.getElementById('btnSaveArticle');if(button.disabled||articleSaving||!articleMedia)return;
             const title = document.getElementById('inputArticleTitle')?.value.trim();
             const summary = document.getElementById('inputArticleSummary')?.value.trim() || '';
             const content = document.getElementById('inputArticleContent')?.value.trim() || '';
@@ -290,6 +310,9 @@
                 showToast('Khóa an toàn đang bật. Vui lòng mở khóa trước khi xuất bản hoặc lưu bài viết.', 'warning');
                 return;
             }
+            const generation=articleGeneration,editor=articleMedia,target=articleTargetId,wasEditing=Boolean(editingArticleId),root=document.getElementById('articleMediaEditor');
+            const locked=[...articleOverlay.querySelectorAll('input,select,textarea')].map(el=>[el,el.disabled]);locked.forEach(([el])=>el.disabled=true);
+            articleSaving=true;button.disabled=true;root.inert=true;
 
             try {
                 const client = getSupabaseClient();
@@ -304,17 +327,21 @@
                 let dbStatus = 'da_xuat_ban';
                 if (status === 'draft') dbStatus = 'nhap';
                 else if (status === 'hidden') dbStatus = 'da_an';
+                if(wasEditing&&articleStatusGroup(articleOriginalStatus)===status)dbStatus=articleOriginalStatus;
 
-                await PawpalSettings.saveRecord('blog_post',editingArticleId,{
+                const source=await editor.prepare();if(generation!==articleGeneration)return;articleSent=true;
+                await PawpalSettings.saveRecord('blog_post',target,{
                     title: title,
                     slug: slug,
                     summary: summary,
                     content: content || `<p>${summary}</p>`,
                     category_id: categoryId,
-                    thumbnail_url: editingArticleId?PawpalSettings.getRecord('blog_post',editingArticleId)?.thumbnail_url:null,
+                    thumbnail_url:source.url,thumbnail_media_asset_id:source.asset,
                     status: dbStatus,
-                    publish_at: new Date().toISOString()
+                    publish_at: articlePublishAt
                 });
+                editor.saved();if(!wasEditing)newArticleId=null;
+                if(generation!==articleGeneration)return;
 
                 // CFG-15: Bài viết mới tạo không tự động đánh dấu đã đồng bộ RAG khi pipeline chưa chạy
                 await logSystemAudit('INSERT', 'blog_post', `Tạo bài viết mới: "${title}"`);
@@ -326,6 +353,9 @@
             } catch (e) {
                 console.error('[Settings] Lỗi lưu bài viết:', e);
                 showToast('Lỗi khi lưu bài viết: ' + (e.message || ''), 'danger');
+            } finally {
+                articleSaving=false;articleSent=false;locked.forEach(([el,disabled])=>el.disabled=disabled);root.inert=false;
+                if(generation===articleGeneration)button.disabled=false;
             }
         });
 

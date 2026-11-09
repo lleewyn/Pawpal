@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "checksum": "a44d69683f12bee3d97e1662951cce19b3f250a625a611116b0252e44ba3caa7",
+  "fixturesRolledBack": true,
+  "checks": [
+    "guest/member authorization",
+    "wrong guest and wrong message denied",
+    "message plus image atomic rollback",
+    "idempotent retry and payload conflict",
+    "guest revocation and expiry",
+    "private read",
+    "assigned staff scope and reassignment",
+    "shared quota",
+    "rollback/reapply"
+  ]
+}

@@ -113,8 +113,17 @@ render:async(ctx)=>{if(ctx.kind==='staff-copilot')return renderStaffCopilot(ctx)
                 if (!ctx.isCurrent()) return true;
                 if (!conversations.length) { card(root).append(el('p', 'Không tìm thấy hội thoại được giao.')); return true; }
                 const transcript=card(root,'Hội thoại được giao'),transcriptContent=el('div'),transcriptPager=el('nav',null,'workspace-pager');transcript.append(transcriptContent);transcriptPager.setAttribute('aria-label','Trang tin nhắn hội thoại');root.append(transcriptPager);let transcriptTurn=0;
+                const chatMedia=await import('/scripts/shared/chat-media.mjs');if(!ctx.isCurrent())return true;
+                const chatHeaders=async()=>{const {data,error}=await getSupabaseClient().auth.getSession();if(error||!data.session)throw Error('Vui lòng đăng nhập lại.');return {Authorization:'Bearer '+data.session.access_token};};
+                const chatGallery=chatMedia.createChatMediaGallery({headers:chatHeaders});let chatEditor;
+                const mediaObserver=new MutationObserver(()=>{if(!root.isConnected||!ctx.isCurrent()){chatGallery.clear();chatEditor?.clear();mediaObserver.disconnect();}});mediaObserver.observe(document.body,{childList:true,subtree:true});
+                async function transcriptImages(rows,current){
+                    chatGallery.clear();const {data,error}=await getSupabaseClient().rpc('list_own_chat_media',{p_conversation:id,p_messages:rows.map(r=>r.id)});if(error)throw error;if(!ctx.isCurrent()||current!==transcriptTurn)return;
+                    const cells=[...transcriptContent.querySelectorAll('tbody tr')].map(tr=>tr.lastElementChild),slots=[];
+                    for(const item of data||[]){const index=rows.findIndex(r=>r.id===item.message_id);if(cells[index])slots.push({root:cells[index],asset:item.asset_id});}await chatGallery.render(slots);
+                }
                 if(PawpalAdminAccess.state.user.permissions.includes('work.copilot.use')){const assistant=el('button','Soạn nháp với trợ lý','admin-btn admin-btn-secondary');assistant.type='button';assistant.onclick=()=>go('tab-ai-copilot?conversation='+encodeURIComponent(id));transcript.prepend(assistant);}
-                async function loadTranscript(page=1){const current=++transcriptTurn;transcriptContent.textContent='Đang tải';transcriptPager.replaceChildren();try{const rows=await read('messages',{id,page});if(!ctx.isCurrent()||current!==transcriptTurn)return true;transcriptContent.replaceChildren();table('messages',rows,transcriptContent);for(const[label,next]of [['<',page-1],[String(page),page],['>',page+1]]){const button=el('button',label,next===page?'active':'');button.type='button';button.disabled=next<1||next>page&&rows.length<10;button.onclick=()=>loadTranscript(next);transcriptPager.append(button);}}catch(error){if(ctx.isCurrent()&&current===transcriptTurn){transcriptContent.replaceChildren(el('p',error.message,'workspace-error'));transcriptPager.replaceChildren();}}}
+                async function loadTranscript(page=1){const current=++transcriptTurn;transcriptContent.textContent='Đang tải';transcriptPager.replaceChildren();try{const rows=await read('messages',{id,page});if(!ctx.isCurrent()||current!==transcriptTurn)return true;transcriptContent.replaceChildren();table('messages',rows,transcriptContent);await transcriptImages(rows,current);if(!ctx.isCurrent()||current!==transcriptTurn)return;for(const[label,next]of [['<',page-1],[String(page),page],['>',page+1]]){const button=el('button',label,next===page?'active':'');button.type='button';button.disabled=next<1||next>page&&rows.length<10;button.onclick=()=>loadTranscript(next);transcriptPager.append(button);}}catch(error){if(ctx.isCurrent()&&current===transcriptTurn){transcriptContent.replaceChildren(el('p',error.message,'workspace-error'));transcriptPager.replaceChildren();}}}
                 await loadTranscript();if(!ctx.isCurrent())return true;
                 if (conversations[0].status === 'agent_handling') {
                     const composer = card(root), form = el('form', null, 'workspace-chat-composer'); form.setAttribute('onsubmit', 'return false;');
@@ -122,19 +131,23 @@ render:async(ctx)=>{if(ctx.kind==='staff-copilot')return renderStaffCopilot(ctx)
                     input.id = 'staffChatReply'; input.maxLength = 8000; input.rows = 3; input.required = true; label.htmlFor = input.id; send.type = 'button';
                     const star = el('span', ' *'); star.style.color = '#DC2626'; label.append(star);
                     const message = el('p', '', 'workspace-error'); message.setAttribute('role', 'alert');
+                    const mediaRoot=el('div');let chatMessageId=crypto.randomUUID();
+                    chatEditor=chatMedia.createChatMediaDraft({root:mediaRoot,headers:chatHeaders,getContext:async()=>({conversation:id,message:chatMessageId})});
                     const mode=el('select',null,'admin-input');mode.id='staffChatMode';mode.setAttribute('aria-label','Hình thức trao đổi');mode.append(new Option('Trả lời khách','send'),new Option('Ghi chú nội bộ','note'));const drafts={send:'',note:conversations[0].internal_note||''};let previousMode='send';
-                    mode.onchange=()=>{drafts[previousMode]=input.value;previousMode=mode.value;input.value=drafts[mode.value];label.replaceChildren(el('span',mode.value==='note'?'Ghi chú nội bộ':'Tin nhắn trả lời'));if(mode.value==='send')label.append(star);input.required=mode.value==='send';send.textContent=mode.value==='note'?'Lưu ghi chú':'Gửi tin nhắn';message.textContent='';};
+                    mode.onchange=()=>{drafts[previousMode]=input.value;previousMode=mode.value;input.value=drafts[mode.value];label.replaceChildren(el('span',mode.value==='note'?'Ghi chú nội bộ':'Tin nhắn trả lời'));if(mode.value==='send')label.append(star);input.required=mode.value==='send';mediaRoot.hidden=mode.value!=='send';send.textContent=mode.value==='note'?'Lưu ghi chú':'Gửi tin nhắn';message.textContent='';};
                     let pendingSend = null;
                     const submit = async () => {
                         if (send.disabled) return true;
-                        const text = input.value.trim(); if (mode.value==='send'&&!text || text.length > 8000) { message.textContent = mode.value==='send'?'Nhập tin nhắn từ 1 đến 8000 ký tự.':'Ghi chú tối đa 8000 ký tự.'; input.focus(); return true; }
-                        if (!pendingSend || pendingSend.p_content !== text || pendingSend.p_action!==mode.value) pendingSend = { p_request_id: crypto.randomUUID(), p_conversation_id: id,
+                        const text = input.value.trim()||(mode.value==='send'&&chatEditor.count()?'[Hình ảnh]':''); if (mode.value==='send'&&!text || text.length > 8000) { message.textContent = mode.value==='send'?'Nhập tin nhắn từ 1 đến 8000 ký tự.':'Ghi chú tối đa 8000 ký tự.'; input.focus(); return true; }
+                        if (!pendingSend || pendingSend.p_content !== text || pendingSend.p_action!==mode.value) pendingSend = { p_request_id: mode.value==='send'?chatMessageId:crypto.randomUUID(), p_conversation_id: id,
                             p_expected_updated_at: conversations[0].updated_at, p_action: mode.value, p_content: text };
                         send.disabled = true;mode.disabled=input.disabled=true;message.textContent = '';
+                        chatEditor.freeze(true);
                         try {
-                            const { error } = await window.getSupabaseClient().rpc('act_admin_chat', pendingSend);
+                            if(mode.value==='send'&&chatEditor.count()&&!pendingSend.p_assets){pendingSend.p_assets=await chatEditor.prepare();chatEditor.sent();}
+                            const { error } = await window.getSupabaseClient().rpc(pendingSend.p_assets?'act_admin_chat_media':'act_admin_chat', pendingSend);
                             if (error) throw error;
-                            input.value = ''; pendingSend = null;
+                            chatEditor.saved();chatMessageId=crypto.randomUUID();input.value = ''; pendingSend = null;
                             if (ctx.isCurrent()) await ctx.refresh();
                         } catch (error) {
                             try{const{data}=await getSupabaseClient().rpc('get_staff_chat_receipt',{p_request_id:pendingSend.p_request_id});if(data?.conversation_id===id&&data.operation===pendingSend.p_action){if(ctx.isCurrent())await ctx.refresh();return true;}}catch{}
@@ -143,7 +156,7 @@ render:async(ctx)=>{if(ctx.kind==='staff-copilot')return renderStaffCopilot(ctx)
                         } finally { send.disabled = false;if(mode.disabled&&!pendingSend){mode.disabled=input.disabled=false;} }
                     };
                     send.onclick = submit; form.addEventListener('submit', event => { event.preventDefault(); submit(); });
-                    form.append(mode,label, input, message, send); composer.append(form);
+                    form.append(mode,label, input,mediaRoot, message, send); composer.append(form);
                     const resolve=el('button','Kết thúc hội thoại','admin-btn admin-btn-secondary');resolve.type='button';resolve.onclick=()=>window.PawpalStaffChatResolution.open({conversationId:id,onSaved:()=>go('tab-support-queue')});composer.append(resolve);
                     if(PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle')){const complaint=el('button','Tạo khiếu nại','admin-btn admin-btn-secondary');complaint.type='button';complaint.onclick=()=>PawpalStaffComplaintCreate.open({conversationId:id});composer.append(complaint);}
                 }

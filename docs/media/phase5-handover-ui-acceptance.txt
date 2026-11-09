@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "isolatedBrowser": {
+    "confirmationRequiredBeforePrepare": true,
+    "failedSaveKeepsDraft": true,
+    "sameRecordAndAssetOnRetry": true,
+    "uploadCountAcrossTwoFailedSaves": 1,
+    "attachedEvidenceReadOnly": true,
+    "oldEvidenceNotResubmitted": true,
+    "cancelDuringUploadPreventsCompletion": true,
+    "successfulMockSaveCloses": true,
+    "desktopAndMobileNoOverflow": true
+  },
+  "preview": {
+    "adminAuthenticated": true,
+    "metadataReaderWorks": true,
+    "confirmedAppointmentPrepareRejected": 400,
+    "businessSaveRequested": false,
+    "realUploadAndHandoverSaveNotTested": true
+  }
+}

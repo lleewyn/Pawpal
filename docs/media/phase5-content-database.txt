@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "checksum": "db8c8106fd555f2a8d015d31e017edce34e1e2f9167d733807a9dfdad6f7a046",
+  "draftChecksum": "51bbf8e7b90395f1b0a61694ff8598913fa4268f9bd151a3e2ea1cdcafeb00cd",
+  "cloudApplied": false,
+  "fixturesRolledBack": true,
+  "checks": [
+    "wrong target denied",
+    "banner public only active and within dates",
+    "Admin reads hidden content",
+    "one source per slot",
+    "replacement retains old file",
+    "blog draft and scheduling private",
+    "published article public",
+    "staff upload denied",
+    "rollback/reapply",
+    "own pre-ticket draft read and cancellation",
+    "wrong owner denied pre-ticket draft"
+  ]
+}

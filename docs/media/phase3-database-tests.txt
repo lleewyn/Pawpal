@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "isolatedDatabase": true,
+  "cloudWrites": false,
+  "fixtureTransactionRolledBack": true,
+  "checks": [
+    "SQL role ACL",
+    "disabled gate",
+    "idempotency",
+    "quota reservations",
+    "actor scope",
+    "lease validation",
+    "private drafts",
+    "XOR source",
+    "target guard",
+    "public product scope",
+    "retention",
+    "legal hold",
+    "cleanup quota release",
+    "assigned care staff",
+    "inactive staff revoked",
+    "actual customer ownership",
+    "anonymous private denial",
+    "empty rollback and reapply"
+  ]
+}

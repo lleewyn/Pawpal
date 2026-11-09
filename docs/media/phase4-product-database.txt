@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "checksum": "c9fca865e1420d7ede8af5ba8f50d11c74386d8db36638f1642ddf27382af703",
+  "cloudWrites": false,
+  "rolledBackFixtures": true,
+  "checks": [
+    "actual product business RPC as authenticated",
+    "attach asset",
+    "retain existing reference",
+    "public catalog endpoint",
+    "reject care evidence as product image",
+    "replace asset with legacy URL"
+  ]
+}

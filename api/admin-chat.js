@@ -191,6 +191,8 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      if((payload.beforeAt!=null)!==(payload.beforeId!=null)||payload.beforeAt!=null&&(typeof payload.beforeAt!=='string'||payload.beforeAt.length>64||!uuid(payload.beforeId)||!Number.isFinite(Date.parse(payload.beforeAt))))return fail(400,'Mốc lịch sử không hợp lệ.');
      if(payload.beforeAt==null&&payload.since===c.updated_at)return res.json({ok:true,status:c.status,updatedAt:c.updated_at,notModified:true});
      const result=await service.rpc('read_public_chat_page',{p_conversation:c.id,p_before_at:payload.beforeAt?new Date(payload.beforeAt).toISOString():null,p_before_id:payload.beforeId||null});if(result.error)throw result.error;
+     const media=await service.rpc('list_chat_media',{p_actor:user?.id||null,p_guest_hash:user?null:hash,p_conversation:c.id,p_messages:result.data.messages.map(m=>m.id)});if(media.error)throw media.error;
+     result.data.messages.forEach(m=>{m.media=(media.data||[]).filter(a=>a.message_id===m.id);});
      return res.json({ok:true,status:c.status,updatedAt:c.updated_at,...result.data});
     }
     if(payload.action==='public_read_part'){
@@ -204,9 +206,13 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     }
     if(payload.action!=='public_send')return fail(400,'Thao tác không hợp lệ.');
     const question=typeof payload.question==='string'?payload.question.trim():'';
+    const assets=payload.mediaAssetIds??[];
+    if(!Array.isArray(assets)||assets.length>3||assets.some(id=>!uuid(id))||new Set(assets).size!==assets.length)return fail(400,'Tối đa 3 ảnh trong một tin nhắn.');
     if(!uuid(payload.requestId)||question.length<1||question.length>2000)return fail(400,'Tin nhắn tối đa 2.000 ký tự.');
     const prior=await service.from('chat_message').select('conversation_id,raw_content,sender_account_id,sender_guest_session_id').eq('id',payload.requestId).maybeSingle();if(prior.error)throw prior.error;
-    if(prior.data){if(prior.data.conversation_id!==c.id||prior.data.raw_content!==question||prior.data.sender_account_id!==(user?.id||null)||prior.data.sender_guest_session_id!==(guest?.id||null))return fail(409,'Yêu cầu đã được dùng.');return stream.enabled?stream.done({replayed:true}):res.json({ok:true,replayed:true});}
+    if(prior.data){if(prior.data.conversation_id!==c.id||prior.data.raw_content!==question||prior.data.sender_account_id!==(user?.id||null)||prior.data.sender_guest_session_id!==(guest?.id||null))return fail(409,'Yêu cầu đã được dùng.');
+     const retry=await service.rpc('post_public_chat_message_media',{p_id:payload.requestId,p_conversation:c.id,p_expected_at:c.updated_at,p_auth:user?.id||null,p_guest_hash:user?null:hash,p_raw:question,p_content:question,p_toxic:false,p_level:1,p_reply:null,p_handover:assets.length>0,p_understood:true,p_assets:assets});if(retry.error)throw retry.error;
+     return stream.enabled?stream.done({replayed:true}):res.json({ok:true,replayed:true});}
     if(['resolved','closed','completed','blocked'].includes(c.status))return fail(409,'Hội thoại đã kết thúc. Hãy tạo đoạn chat mới.');
     const now=Date.now(),key='public:'+c.id,window=(limits.get(key)||[]).filter(t=>now-t<60000);if(window.length>=10)return fail(429,'Vui lòng chờ trước khi gửi thêm.');window.push(now);limits.set(key,window);
     const guestHelp=require('../scripts/api/chat_public_guest.js'),memberHelp=require('../scripts/api/chat_member.js'),needsSeed=guestHelp.isFollowup(question)||memberHelp.isFollowup(question);
@@ -219,11 +225,13 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     if(memberHelp.neutralSupport(question)&&!requestedStaff&&!evaluation.isToxic&&evaluation.riskType==='none'){
      evaluation.shouldHandover=false;evaluation.detectedLevel=Math.min(evaluation.detectedLevel,2);
     }
+    if(assets.length)evaluation.shouldHandover=true;
     let reply=null,understood=true;
     if(!['waiting_agent','agent_handling'].includes(c.status)){
      if(evaluation.shouldHandover){
       reply=evaluation.riskType==='billing_dispute'?'PawPal ghi nhận phản ánh về thanh toán của bạn và chuyển hội thoại cho nhân viên kiểm tra. Bạn vui lòng gửi mã đơn hàng và thời điểm giao dịch để đối soát.':evaluation.riskType==='service_complaint'?'PawPal ghi nhận phản ánh của bạn và chuyển hội thoại cho nhân viên xử lý. Bạn vui lòng gửi mã đơn hoặc lịch hẹn cùng mô tả sự cố để nhân viên kiểm tra.':'PawPal ghi nhận yêu cầu của bạn và chuyển hội thoại cho nhân viên hỗ trợ.';
       if(requestedStaff)reply+=' Yêu cầu vừa nhận: '+Array.from(evaluation.maskedText||question).slice(0,300).join('')+'. Nhân viên sẽ xem nội dung hội thoại để tiếp tục hỗ trợ; chưa xác nhận đã có người nhận ca.';
+      if(assets.length)reply='PawPal đã nhận ảnh và chuyển hội thoại sang chờ nhân viên xem. Trợ lý tự động chưa phân tích nội dung ảnh.';
      }else if(understanding.isUnclearInput(question)){
       reply=understanding.clarification;understood=false;
      }else{
@@ -261,7 +269,7 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      reply=reply.replace(/\b(?:public\.)?chatbot_knowledge_faq\b/gi,'kho thông tin PawPal');
      reply=guestHelp.friendly(reply);
     }
-    const result=await service.rpc('post_public_chat_message',{p_id:payload.requestId,p_conversation:c.id,p_expected_at:c.updated_at,p_auth:user?.id||null,p_guest:guest?.id||null,p_raw:question,p_content:evaluation.maskedText||question,p_toxic:evaluation.isToxic,p_level:evaluation.detectedLevel,p_reply:reply,p_handover:evaluation.shouldHandover,p_understood:understood});if(result.error)throw result.error;
+    const result=await service.rpc('post_public_chat_message_media',{p_id:payload.requestId,p_conversation:c.id,p_expected_at:c.updated_at,p_auth:user?.id||null,p_guest_hash:user?null:hash,p_raw:question,p_content:evaluation.maskedText||question,p_toxic:evaluation.isToxic,p_level:evaluation.detectedLevel,p_reply:reply,p_handover:evaluation.shouldHandover,p_understood:understood,p_assets:assets});if(result.error)throw result.error;
     if(stream.enabled){if(!stream.started&&reply)stream.delta(reply);return stream.done();}return res.json({ok:true});
    }catch(error){if(error.code==='PGRST202')return fail(503,'Hệ thống chat chưa sẵn sàng. Nội dung vẫn được giữ; bạn có thể dùng kênh liên hệ trên trang hoặc thử lại sau khi hệ thống được cập nhật.',{retryable:false});return fail(error.code==='42501'?403:error.code==='22023'?400:error.code==='PT429'?429:error.code==='57014'?504:error.code==='54000'?422:error.code==='PT409'?409:503,error.message==='public_chat_part_changed'?'Tin nhắn đã thay đổi. Hãy tải lại hội thoại để đọc tiếp.':'PawPal chưa trả lời được lúc này. Bạn thử gửi lại nhé, hoặc chọn Gặp chuyên viên để được hỗ trợ.');}
   }

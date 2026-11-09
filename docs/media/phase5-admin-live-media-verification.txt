@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "petAvatarRestoredExactly": true,
+  "articleRestoredExactly": true,
+  "quota": {
+    "bytes": "0",
+    "sessions": 0
+  },
+  "publication": [
+    "banner",
+    "blog_post",
+    "chat_conversation",
+    "review",
+    "review_media"
+  ],
+  "realAdminAuth": true,
+  "staffAuthAccepted": false,
+  "customerAuthAccepted": false,
+  "systemLogsRead": false
+}

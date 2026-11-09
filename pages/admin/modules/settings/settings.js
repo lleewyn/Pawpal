@@ -319,6 +319,7 @@
     // -------------------------------------------------------------
     const DEFAULT_SYSTEM_CONFIG = {storeInfo:{},paymentMethods:{},shippingPolicy:{},operatingHours:{weekday:{},weekend:{}},hotelRules:{},bookingPolicy:{},pawpointsPolicy:{},websiteNotices:[]};
 
+    let contentImageReader=null;
     PawpalSettings.state = {
         bannersList: [],
         vouchersList: [],
@@ -462,6 +463,11 @@
             }
 
             const banners = rememberRows('banner',res.banners || []);
+            const previews=banners.map(b=>({id:b.id,images:b.image_media_asset_id?[{media_asset_id:b.image_media_asset_id}]:[]}));
+            if(previews.some(b=>b.images.length)){
+                const {createServiceMediaReader}=await import('/scripts/shared/service-media-reader.mjs');contentImageReader ||=createServiceMediaReader({db:getSupabaseClient()});await contentImageReader.hydrate(previews);
+            }
+            const bannerPreviewUrls=new Map(previews.map(b=>[b.id,b.images[0]?.resolved_url||'']));
             const vouchers = rememberRows('voucher',res.vouchers || []);
             const notifs = res.notifs || [];
 
@@ -478,7 +484,8 @@
                     endDate: eDate || 'Chưa định ngày',
                     status: isActive ? 'active' : 'paused',
                     imageText: b.image_url ? b.image_url.split('/').pop() : 'Banner_Pawpal.jpg',
-                    imageUrl: b.image_url || '',
+                    imageUrl: bannerPreviewUrls.get(b.id)||b.image_url || '',
+                    imageAssetId:b.image_media_asset_id||null,
                     endDateRaw: eDate
                 };
             });

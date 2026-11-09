@@ -1,0 +1,20 @@
+Date: 2026-11-09 (Asia/Bangkok)
+Scope: Vercel Preview, authenticated customer, one technical chat image.
+Preview: https://pawpalgr3-5bph12hep-llwyns-projects.vercel.app
+Authorization: user requested the agent select and attach an image.
+Source: assets/images/publics/dogcute8.jpg (16768 bytes).
+Message explicitly identifies a Preview image test, not care or complaint evidence.
+
+PASS: selected file through the real chat file picker and sent through the UI.
+PASS: image visible inside the sent message.
+PASS: conversation transitioned to waiting for staff; automatic response states no image analysis.
+PASS: reloaded page, reopened chat; sent text and image remained visible.
+PASS: bounded read-only database check found exactly one matching attachment.
+PASS: sender account present, guest sender absent, conversation customer present.
+PASS: upload session and media asset both attached, conversation waiting_agent.
+PASS: stored SHA-256 matches the original source file; stored size 16768 bytes.
+
+The authorized technical message and attached image remain stored. This test does not return quota usage to zero.
+No care record, intake, handover, surcharge, complaint or product review was created or changed.
+Not covered here: anonymous/other-customer denial for this asset, guest send, STAFF receipt/reply or reassignment revocation.
+No Production deployment or project environment change. No Git push. No Supabase Logs accessed.

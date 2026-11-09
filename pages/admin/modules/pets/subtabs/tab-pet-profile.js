@@ -134,6 +134,7 @@
                             <div class="pet-inline-flex-gap-4">
                                 ${c.imgBefore ? `<img class="pet-carelog-thumb" src="${esc(c.imgBefore)}" alt="Trước">` : ''}
                                 ${c.imgAfter ? `<img class="pet-carelog-thumb" src="${esc(c.imgAfter)}" alt="Sau">` : ''}
+                                ${(c.images||[]).map(url=>`<img class="pet-carelog-thumb" src="${esc(url)}" alt="Ảnh nhật ký">`).join('')}
                             </div>
                         </td>
                         <td><span class="admin-badge badge-success">${esc(c.checkText)}</span></td>
@@ -365,6 +366,13 @@
     }
 
     function initProfileTab() {
+        const avatarButton=document.getElementById('btnChangePetAvatar');
+        if(avatarButton)avatarButton.hidden=!!window.PawpalAdminAccess?.isStaff?.();
+        if(avatarButton&&!avatarButton.dataset.mediaBound){avatarButton.dataset.mediaBound='true';avatarButton.addEventListener('click',async()=>{
+            const pet=PawpalPets.getPet(sessionStorage.getItem('pawpal_admin_pet_id'));if(!pet)return;
+            try{const {openPetAvatarDialog}=await import('/scripts/shared/pet-avatar-dialog.mjs');await openPetAvatarDialog({pet:{...pet},db:window.getSupabaseClient(),onSaved:async()=>{await PawpalPets.loadPetsModuleData({force:true,petIds:[pet.rawId]});openPetProfile(pet.code);}});}
+            catch(error){PawpalPets.showToast?.('Không mở được ảnh hồ sơ: '+error.message,'danger');}
+        });}
         document.querySelector('.btn-quick-book-spa')?.addEventListener('click', () => {
             const petId = sessionStorage.getItem('pawpal_admin_pet_id');
             if (!PawpalPets.state.petsData?.[petId]) {
@@ -493,6 +501,7 @@
                 if (messageEl) messageEl.textContent = careItem.service || 'Chưa có ghi chú.';
                 if(beforeImg)beforeImg.hidden=!careItem.imgBefore;
                 if(afterImg)afterImg.hidden=!careItem.imgAfter;
+                const gallery=document.getElementById('petCareMediaGallery');if(gallery){gallery.replaceChildren();for(const url of careItem.images||[]){const image=document.createElement('img');image.src=url;image.alt='Ảnh nhật ký đã lưu';image.style.cssText='max-width:100%;width:180px;border-radius:9px;object-fit:contain';gallery.append(image);}}
 
                 modalViewCareLogDetail.classList.add('open');
             }

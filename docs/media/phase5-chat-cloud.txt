@@ -1,0 +1,6 @@
+{
+  "status": "APPLIED",
+  "checksum": "a44d69683f12bee3d97e1662951cce19b3f250a625a611116b0252e44ba3caa7",
+  "businessFixtureWrites": false,
+  "productionDeploymentChanged": false
+}

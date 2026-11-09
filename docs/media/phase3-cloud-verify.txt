@@ -1,0 +1,10 @@
+{
+  "assets": 0,
+  "sessions": 0,
+  "asset_table": true,
+  "userCanFinalize": false,
+  "databaseUploadEnabled": false,
+  "directAnonymousSelect": false,
+  "existingMediaUnchanged": true,
+  "status": "PASS"
+}

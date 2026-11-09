@@ -263,7 +263,23 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
  const profile=c=>one(c?.customer_profile)||{};
  const phone=c=>window.PawpalCustomerIdentity.contact(c).phone;
  const spec=value=>value&&typeof value==='object'?Object.entries(value).map(([k,v])=>k+': '+String(v)).join('; '):String(value||'');
- const images=list=>[...(list||[])].sort((a,b)=>Number(b.is_thumbnail)-Number(a.is_thumbnail)||a.display_order-b.display_order).map(x=>x.image_url);
+ const images=list=>[...(list||[])].sort((a,b)=>Number(b.is_thumbnail)-Number(a.is_thumbnail)||a.display_order-b.display_order).map(x=>x.resolved_url||x.image_url||(x.media_asset_id?'/api/media?action=read&id='+encodeURIComponent(x.media_asset_id):'')).filter(Boolean);
+ const mediaReaders=new Map();let mediaActor=null;
+ function clearMediaReaders(){for(const item of mediaReaders.values())item.then(value=>value.release()).catch(()=>{});mediaReaders.clear();}
+ window.addEventListener?.('pagehide',clearMediaReaders);
+ async function hydrateProductMedia(products){
+  const assets=products.flatMap(p=>[...(p.media||[]),...(p.variants||[]).flatMap(v=>v.media||[])]).filter(m=>m.media_asset_id);if(!assets.length)return;
+  const {data}=await db().auth.getSession();const actor=data.session?.user.id||null;
+  if(actor!==mediaActor){clearMediaReaders();mediaActor=actor;}
+  const {mediaSource,loadMediaSource}=await import('/scripts/shared/media-source.mjs');
+  const load=async item=>{
+   const id=item.media_asset_id;
+   if(!mediaReaders.has(id))mediaReaders.set(id,loadMediaSource(mediaSource({media_asset_id:id}),data.session?.access_token).catch(error=>{mediaReaders.delete(id);throw error;}));
+   try{item.resolved_url=(await mediaReaders.get(id)).url;}catch{item.resolved_url='';}
+  };
+  for(let index=0;index<assets.length;index+=3)await Promise.all(assets.slice(index,index+3).map(load));
+  while(mediaReaders.size>100){const [key,value]=mediaReaders.entries().next().value;mediaReaders.delete(key);value.then(item=>item.release()).catch(()=>{});}
+ }
  const net=p=>Number(p.amount)-(p.refunds||[]).filter(r=>r.refund_status==='succeeded').reduce((n,r)=>n+Number(r.refunded_amount),0);
  async function history(orderId){
   const {data,error}=await db().rpc('get_admin_sales_order_history',{p_order_id:orderId});
@@ -273,7 +289,8 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
   const categories=await cached('categories',()=>rows(()=>db().from('product_category').select('id,category_name,description').order('id')),{ttlMs:600000});
   if(ids&&!ids.length)return {categories,products:[]};
   const summaryOnly=Boolean(ids&&!detail);
-  const source=await rows(()=>{let query=summaryOnly?db().from('product').select('id,product_name,status,brand_name,updated_at,category:category_id(id,category_name),media:product_media(image_url,is_thumbnail,display_order),variants:product_variant(id,sku_variant,variant_name,catalog_retired,cost_price,sale_price,compare_at_price,status,updated_at,inventory(quantity_in_stock,minimum_stock,last_updated_at))').order('id').order('is_thumbnail',{foreignTable:'media',ascending:false}).limit(1,{foreignTable:'media'}):db().from('product').select('*,category:category_id(id,category_name),media:product_media(*),variants:product_variant(*,inventory(quantity_in_stock,minimum_stock,last_updated_at),size:size_id(id,size_name),color:color_id(id,color_name,hex_code),flavor:flavor_id(id,flavor_name),media:product_variant_media(*))').order('id');return ids?query.in('id',ids):query;});
+  const source=await rows(()=>{let query=summaryOnly?db().from('product').select('id,product_name,status,brand_name,updated_at,category:category_id(id,category_name),media:product_media(image_url,media_asset_id,is_thumbnail,display_order),variants:product_variant(id,sku_variant,variant_name,catalog_retired,cost_price,sale_price,compare_at_price,status,updated_at,inventory(quantity_in_stock,minimum_stock,last_updated_at))').order('id').order('is_thumbnail',{foreignTable:'media',ascending:false}).limit(1,{foreignTable:'media'}):db().from('product').select('*,category:category_id(id,category_name),media:product_media(*),variants:product_variant(*,inventory(quantity_in_stock,minimum_stock,last_updated_at),size:size_id(id,size_name),color:color_id(id,color_name,hex_code),flavor:flavor_id(id,flavor_name),media:product_variant_media(*))').order('id');return ids?query.in('id',ids):query;});
+  if(ids)await hydrateProductMedia(source);
   const variantIds=source.flatMap(p=>p.variants.map(v=>v.id));
   const reservations=ids&&variantIds.length?await rows(()=>db().from('stock_reservation').select('product_variant_id,quantity').in('product_variant_id',variantIds).eq('status','active').gt('expires_at',new Date().toISOString()).order('id')):[];
   return {categories,products:source.map(p=>{
@@ -288,7 +305,7 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
  async function orders({ids,id}={}){
   if(ids && !ids.length)return [];
   const source=await rows(()=>{
-   let query=db().from('sales_order').select('*,customer:customer_id(id,auth_user_id,unverified_contact_phone,customer_profile(full_name),customer_phone(phone_number,is_primary)),provider:shipping_provider_id(provider_name),lines:sales_order_detail(*,variant:product_variant_id(id,sku_variant,product_id,product:product_id(specs),media:product_variant_media(image_url,is_thumbnail,display_order))),payments:payment(id,amount,transaction_status,method:payment_method_config_id(name),refunds:refund_transaction(refund_status,refunded_amount))').order('created_at',{ascending:false}).order('id');
+   let query=db().from('sales_order').select('*,customer:customer_id(id,auth_user_id,unverified_contact_phone,customer_profile(full_name),customer_phone(phone_number,is_primary)),provider:shipping_provider_id(provider_name),lines:sales_order_detail(*,variant:product_variant_id(id,sku_variant,product_id,product:product_id(specs),media:product_variant_media(image_url,media_asset_id,is_thumbnail,display_order))),payments:payment(id,amount,transaction_status,method:payment_method_config_id(name),refunds:refund_transaction(refund_status,refunded_amount))').order('created_at',{ascending:false}).order('id');
    if(ids)query=query.in('id',ids);
    if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'order_code',id);
    return query;
@@ -938,7 +955,7 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
             const triggerOrderSync = table => {
                 const groups = new Set();
                 if (['sales_order','sales_order_detail','payment','refund_transaction','return_request','return_request_detail','shipping_provider','customer_profile','customer_phone'].includes(table)) groups.add('list');
-                if (['product','product_variant','product_media','product_variant_media','product_category','inventory','inventory_transaction','stock_reservation','review','variant_color','variant_size','variant_flavor'].includes(table)) groups.add('products');
+                if (['product','product_variant','product_media','product_variant_media','product_category','inventory','inventory_transaction','stock_reservation','review','review_response','review_media','variant_color','variant_size','variant_flavor'].includes(table)) groups.add('products');
                 if (['voucher','voucher_redemption'].includes(table)) groups.add('vouchers');
                 if (table === 'voucher_redemption') groups.add('list');
                 if (['customer','pet_profile','customer_profile','customer_phone','customer_address','customer_membership','membership_tier','paw_point_transaction'].includes(table)) window.PawpalDataStore?.invalidate('orders:customers*');

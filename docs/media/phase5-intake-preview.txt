@@ -1,0 +1,10 @@
+{
+  "status": "READY",
+  "previewUrl": "https://pawpalgr3-4synmwuea-llwyns-projects.vercel.app",
+  "deploymentId": "dpl_6697TKHFijEGpsPAdPrFp4sxnr8G",
+  "uploadEnabled": true,
+  "productionChanged": false,
+  "projectEnvironmentChanged": false,
+  "unrelatedFabEditExcluded": true,
+  "temporaryBypassRevoked": true
+}

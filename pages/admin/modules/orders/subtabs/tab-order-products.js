@@ -18,6 +18,25 @@
     let globalDbCategories = [];
     let attr1TagValues = [];
     let attr2TagValues = [];
+    const productMediaEditor = import('/scripts/shared/product-media.mjs').then(({createProductMediaEditor}) =>
+        createProductMediaEditor({root:document.getElementById('productMediaEditor'),db:window.getSupabaseClient()}));
+    const variantMediaRegistry=import('/scripts/shared/variant-media.mjs').then(({createVariantMediaRegistry})=>createVariantMediaRegistry({db:window.getSupabaseClient()}));
+    let variantMediaReady=Promise.resolve();
+    function syncVariantMedia(){
+        const id=state.productSaveId,previous=state.productEditSnapshot;
+        const specs=document.getElementById('chkEnableVariants').checked
+            ? [...document.querySelectorAll('#productVariantsTableBody .variant-row-item')].map(row=>({id:row.dataset.variantId,host:row.querySelector('.variant-media-host'),media:previous?.variants.find(v=>v.id===row.dataset.variantId)?.raw.media,legacy:row.dataset.legacyMedia||''}))
+            : [{id:state.singleVariantId,host:document.getElementById('singleVariantMediaRoot'),media:previous?.variants[0]?.raw.media||[]}];
+        variantMediaReady=variantMediaReady.catch(()=>{}).then(()=>variantMediaRegistry).then(registry=>{if(state.productSaveId===id)registry.sync(specs);});
+        variantMediaReady.catch(()=>showToast('Không chuẩn bị được ảnh biến thể. Mở lại sản phẩm để thử lại.','warning'));
+    }
+    function resetProductMedia(product) {
+        const id=state.productSaveId;
+        variantMediaReady=variantMediaRegistry.then(registry=>{if(state.productSaveId===id)registry.reset({id,isExisting:!!product});});
+        void productMediaEditor.then(editor=>{if(state.productSaveId===id)editor.reset({id,isExisting:!!product,media:product?.raw?.media||[]});}).catch(()=>showToast('Đợi thao tác lưu ảnh hoàn tất rồi mở lại sản phẩm.','warning'));
+    }
+    new MutationObserver(()=>{if(!document.getElementById('modalAddProduct').classList.contains('active')){void productMediaEditor.then(editor=>editor.close());void variantMediaRegistry.then(registry=>registry.close());}})
+        .observe(document.getElementById('modalAddProduct'),{attributes:true,attributeFilter:['class']});
 
     // Nhận diện thương hiệu từ tên sản phẩm hoặc thông tin cấu hình
     function updateCategoryFilterDropdown(dbCategories = []) {
@@ -388,7 +407,7 @@
             }
             if (img) {
                 const el = r.querySelector('.variant-img-input');
-                if (el) el.value = img;
+                if (el) {el.value = img;const mode=r.querySelector('[data-media-mode][value="url"]');if(mode){mode.checked=true;mode.dispatchEvent(new Event('change',{bubbles:true}));}el.dispatchEvent(new Event('input',{bubbles:true}));}
             }
         });
         showToast('Đã áp dụng thông số hàng loạt cho tất cả biến thể!', 'success');
@@ -402,6 +421,7 @@
         const multiBox = document.getElementById('multipleProductVariantsBox');
         if (singleBox) singleBox.style.display = isMultiple ? 'none' : 'block';
         if (multiBox) multiBox.style.display = isMultiple ? 'block' : 'none';
+        document.getElementById('singleVariantMediaPanel').hidden=!!isMultiple;
 
         if (isMultiple) {
             renderAttributeTags(1);
@@ -413,6 +433,7 @@
             renderAttributeTags(1);
             renderAttributeTags(2);
         }
+        syncVariantMedia();
     }
 
     function generateVariantMatrix(prefillVariants = null) {
@@ -442,6 +463,7 @@
                 const key = v.attr2 ? `${v.attr1 || ''}|${v.attr2}` : (v.attr1 || v.name || '');
                 existingDataMap[key] = {
                     sku: v.sku,
+                    variantId:v.id,
                     costPrice: v.costPrice,
                     price: v.price,
                     originalPrice: v.originalPrice,
@@ -458,6 +480,7 @@
                 const key = v2 ? `${v1}|${v2}` : v1;
                 existingDataMap[key] = {
                     sku: r.querySelector('.variant-sku-input')?.value.trim() || '',
+                    variantId:r.dataset.variantId,
                     costPrice: r.querySelector('.variant-cost-input')?.value || '',
                     price: r.querySelector('.variant-price-input')?.value || '',
                     originalPrice: r.querySelector('.variant-orig-input')?.value || '',
@@ -506,8 +529,9 @@
             ? prefillVariants.map(v=>({v1:v.attr1||'',v2:v.attr2||''})) : combinations;
         const escapeValue=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         tbody.innerHTML = visibleCombinations.map((c, idx) => {
-            const key = c.v2 ? `${escapeValue(c.v1)}|${escapeValue(c.v2)}` : c.v1;
+            const key = c.v2 ? `${c.v1}|${c.v2}` : c.v1;
             const saved = existingDataMap[key] || {};
+            const variantId=saved.variantId||crypto.randomUUID();
             const autoSku = saved.sku || `${baseSku}-${String(idx + 1).padStart(2, '0')}`;
             const autoCost = saved.costPrice !== undefined ? saved.costPrice : fallbackCost;
             const autoPrice = saved.price !== undefined ? saved.price : fallbackPrice;
@@ -516,7 +540,7 @@
             const autoImg = saved.image || fallbackImg;
 
             return `
-                <tr class="variant-row-item" data-attr-1="${escapeValue(c.v1)}" data-attr-2="${escapeValue(c.v2)}">
+                <tr class="variant-row-item" data-variant-id="${escapeValue(variantId)}" data-legacy-media="${escapeValue(autoImg)}" data-attr-1="${escapeValue(c.v1)}" data-attr-2="${escapeValue(c.v2)}">
                     <td style="font-weight: 600; color: #236B48;"><div class="variant-label-cell"><span>${escapeValue(c.v1 || '--')}</span>${(attr1Name==='M\u00e0u s\u1eafc'||(attr2Vals.length>0&&attr2Name==='M\u00e0u s\u1eafc'))?'<input class="admin-input variant-color-hex" aria-label="Mã màu" placeholder="#RRGGBB" value="'+escapeValue(saved.colorHex||'')+'">':''}</div></td>
                     ${attr2Vals.length > 0 ? `<td style="font-weight: 500;">${escapeValue(c.v2)}</td>` : ''}
                     <td>
@@ -535,14 +559,15 @@
                         <input type="number" class="admin-input variant-stock-input" value="${escapeValue(autoStock)}" placeholder="Tồn *" min="0" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
                     </td>
                     <td>
-                        <input type="text" class="admin-input variant-img-input" value="${escapeValue(autoImg)}" placeholder="Đường dẫn ảnh" style="height: 28px; font-size: 11.5px; padding: 0 6px;">
+                        <details><summary>Ảnh biến thể</summary><div class="variant-media-host"></div></details>
                     </td>
                     <td style="text-align: center;">
-                        <button type="button" class="tag-item-remove" style="color: #DC2626; cursor: pointer; font-size: 14px; background: none; border: none;" title="Xóa dòng" onclick="this.closest('tr').remove()">&times;</button>
+                        <button type="button" class="tag-item-remove" style="color: #DC2626; cursor: pointer; font-size: 14px; background: none; border: none;" title="Xóa dòng" onclick="PawpalOrdersModule.removeVariantRow(this.closest('tr'))">Xóa</button>
                     </td>
                 </tr>
             `;
         }).join('');
+        syncVariantMedia();
     }
 
     function updateProductImagePreview() {
@@ -647,7 +672,7 @@
                     const read = cls => row.querySelector(cls)?.value.trim() ?? '';
                     const sku=read('.variant-sku-input');
                     const old=previous?.variants.find(v => v.sku===sku || (v.attr1===row.getAttribute('data-attr-1') && v.attr2===row.getAttribute('data-attr-2')));
-                    const v={id:old?.id||crypto.randomUUID(),sku,cost_price:read('.variant-cost-input')===''?null:Number(read('.variant-cost-input')),sale_price:read('.variant-price-input')===''?null:Number(read('.variant-price-input')),compare_at_price:read('.variant-orig-input')||null,stock:read('.variant-stock-input')===''?null:Number(read('.variant-stock-input')),minimum_stock:numeric('newProdMinStock'),status:old?.status||'active',color_id:old?.raw.color_id||null,size_id:old?.raw.size_id||null,flavor_id:old?.raw.flavor_id||null};
+                    const v={id:row.dataset.variantId,sku,cost_price:read('.variant-cost-input')===''?null:Number(read('.variant-cost-input')),sale_price:read('.variant-price-input')===''?null:Number(read('.variant-price-input')),compare_at_price:read('.variant-orig-input')||null,stock:read('.variant-stock-input')===''?null:Number(read('.variant-stock-input')),minimum_stock:numeric('newProdMinStock'),status:old?.status||'active',color_id:old?.raw.color_id||null,size_id:old?.raw.size_id||null,flavor_id:old?.raw.flavor_id||null};
                     v.color_hex=read('.variant-color-hex');
                     v.images=old?.images?.length&&read('.variant-img-input')===old.image?[...old.images]:read('.variant-img-input').split(',').map(v=>v.trim()).filter(Boolean);
                     v[key1]=row.getAttribute('data-attr-1');
@@ -665,14 +690,27 @@
             }
             const details={category_id:category?.id||null,product_name:value('newProdName'),unit:value('newProdUnit'),slug:previous?.raw.slug||('product-'+state.productSaveId),brand_name:value('newProdBrand'),target_pet:value('newProdPetType'),origin:value('newProdOrigin'),status:value('newProdStatus')==='T\u1ea1m ng\u01b0ng'?'inactive':'active',description:value('newProdDescription'),ingredients:value('newProdIngredients'),benefits:value('newProdBenefits'),usage_instructions:value('newProdUsage'),badge:value('newProdBadge'),specs,images:value('newProdImages').split(',').map(v=>v.trim()).filter(Boolean)};
             event.currentTarget.disabled=true;
+            const productBody=document.querySelector('#formAddProduct .modal-body-clean');if(productBody)productBody.inert=true;
+            const savingId=state.productSaveId,savingRequest=state.productSaveRequest;
             try {
-                const {error}=await window.getSupabaseClient().rpc('save_admin_sales_product',{p_request_id:state.productSaveRequest,p_product_id:state.productSaveId,p_expected_updated_at:previous?.updatedAt||null,p_details:details,p_variants:variants});
+                const media=await productMediaEditor;
+                await variantMediaReady;
+                const registry=await variantMediaRegistry;
+                if(media.newFileCount()+registry.newFileCount(variants.map(variant=>variant.id))>10)throw Error('Mỗi lần lưu tối đa 10 ảnh mới, tính cả ảnh sản phẩm và ảnh biến thể.');
+                details.media_sources=await media.prepare();
+                delete details.images;
+                const sources=await registry.prepare(variants.map(variant=>variant.id));
+                for(const variant of variants){variant.media_sources=sources.get(variant.id);delete variant.images;}
+                if(state.productSaveId!==savingId||!document.getElementById('modalAddProduct').classList.contains('active'))throw Error('Đã hủy thay đổi sản phẩm.');
+                const {error}=await window.getSupabaseClient().rpc('save_admin_sales_product',{p_request_id:savingRequest,p_product_id:savingId,p_expected_updated_at:previous?.updatedAt||null,p_details:details,p_variants:variants});
                 if (error) throw error;
+                media.saved();
+                registry.saved();
                 document.getElementById('modalAddProduct').classList.remove('active');
                 await window.PawpalOrders.fetchProductsData({force:true});
                 showToast('\u0110\u00e3 l\u01b0u s\u1ea3n ph\u1ea9m.');
             } catch(err) { showToast(err.message,'danger'); }
-            finally { document.getElementById('btnSubmitAddProduct').disabled=false; }
+            finally { document.getElementById('btnSubmitAddProduct').disabled=false;if(productBody)productBody.inert=false; }
         });
 
         // Xác nhận lưu điều chỉnh tồn kho
@@ -829,8 +867,10 @@
     };
 
     window.PawpalOrdersModule.openAddProductModal = function() {
+        if(document.getElementById('btnSubmitAddProduct').disabled)return;
         document.querySelector('#modalAddProduct .admin-modal-card').scrollTop=0;
         state.productEditSnapshot=null;state.productSaveId=crypto.randomUUID();state.productSaveRequest=crypto.randomUUID();state.singleVariantId=crypto.randomUUID();
+        resetProductMedia(null);
         const titleEl = document.getElementById('productModalTitle');
         const submitBtn = document.getElementById('btnSubmitAddProduct');
         const editSkuInput = document.getElementById('editProductOriginalSku');
@@ -887,6 +927,7 @@
     };
 
     window.PawpalOrdersModule.openEditProductModal = async function(sku) {
+        if(document.getElementById('btnSubmitAddProduct').disabled)return;
         let prod;
         try{prod=await PawpalOrders.ensureProduct(sku);}catch(error){showToast('Không thể tải chi tiết sản phẩm. Vui lòng thử lại.','warning');return;}
         if (!prod) return;
@@ -921,6 +962,7 @@
         document.getElementById('newProdInitialStock').value = prod.stock || 0;
         document.getElementById('newProdMinStock').value = prod.minStock ?? 0;
         document.getElementById('newProdImages').value = prod.images ? (Array.isArray(prod.images) ? prod.images.join(', ') : prod.images) : (prod.image || '');
+        resetProductMedia(prod);
         document.getElementById('newProdDescription').value = prod.description || '';
         document.getElementById('newProdIngredients').value = prod.ingredients || '';
         document.getElementById('newProdBenefits').value = prod.benefits || '';
@@ -1214,6 +1256,7 @@
     window.PawpalOrdersModule.handleTagInputKeyDown = handleTagInputKey;
     window.PawpalOrdersModule.renderAttributeTags = renderAttributeTags;
     window.PawpalOrdersModule.generateVariantMatrix = generateVariantMatrix;
+    window.PawpalOrdersModule.removeVariantRow = function(row){void variantMediaRegistry.then(registry=>registry.remove(row.dataset.variantId));row.remove();};
     window.PawpalOrdersModule.applyBulkVariantValues = applyBulkVariantValues;
     window.PawpalOrdersModule.toggleVariantMode = toggleVariantMode;
     window.PawpalOrdersModule.removeProductImageAtIndex = function(idx) {
@@ -1238,9 +1281,12 @@
 (function(){
  'use strict';
  const m=window.PawpalOrders,api=window.PawpalOrdersModule,el=id=>document.getElementById(id);
- let loaded=[],filter='ALL',page=1,session=0,total=0;
+ let loaded=[],filter='ALL',page=1,session=0,total=0,reviewGalleries=[];
+ const clearReviewGalleries=()=>{reviewGalleries.forEach(g=>g.clear());reviewGalleries=[];};
+ new MutationObserver(()=>{if(!el('modalProductReviews').classList.contains('active')){session++;clearReviewGalleries();}}).observe(el('modalProductReviews'),{attributes:true,attributeFilter:['class']});
  const latest=r=>[...(r.responses||[])].sort((a,b)=>b.updated_at.localeCompare(a.updated_at)||a.id.localeCompare(b.id))[0];
  function render(){
+  clearReviewGalleries();
   const filters=el('prodReviewsStarFilterRow');filters.replaceChildren();
   for(const [key,label] of [['ALL','Tất cả'],['5','5 điểm'],['4','4 điểm'],['MEDIA','Có ảnh']]){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.textContent=label;button.style.cssText=filter===key?'background:#DCEEE2;color:#165335;border:none':'background:transparent;color:#4F7A65;border:none';button.onclick=()=>{filter=key;page=1;api.renderProductReviewsModalContent(m.state.activeReviewsSku);};filters.append(button);}
   const list=loaded;
@@ -1252,7 +1298,7 @@
    const title=document.createElement('strong');title.textContent=name+' · '+r.rating+'/5';
    const meta=document.createElement('div');meta.style.cssText='color:#4F7A65;font-size:12px';meta.textContent=new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Bangkok',dateStyle:'short'}).format(new Date(r.created_at))+' · '+r.line.sku_snapshot;
    const content=document.createElement('p');content.style.margin=0;content.textContent=r.review_content||'';block.append(title,meta,content);
-   for(const media of r.media){if(!/^(https?:\/\/|\/?assets\/)/i.test(media.image_url))continue;const image=document.createElement('img');image.src=media.image_url.startsWith('assets/')?'/'+media.image_url:media.image_url;image.loading='lazy';image.decoding='async';image.alt='Ảnh đánh giá';image.style.cssText='width:80px;height:80px;object-fit:cover;border-radius:9px';block.append(image);}
+   if(r.media?.length){const imageRoot=document.createElement('div');block.append(imageRoot);void import('/scripts/shared/evidence-gallery.mjs').then(async({createEvidenceGallery})=>{if(!block.isConnected||!el('modalProductReviews').classList.contains('active'))return;const gallery=createEvidenceGallery({root:imageRoot,db:window.getSupabaseClient()});reviewGalleries.push(gallery);await gallery.render(r.media.map(row=>({...row,media_url:row.image_url})));});}
    const response=latest(r);if(response){const author=document.createElement('div');author.style.cssText='font-size:12px;color:#4F7A65';author.textContent='Phản hồi · '+(response.staff?.full_name||'Chưa ghi nhận người phản hồi');block.append(author);}
    const input=document.createElement('textarea');input.className='admin-input';input.rows=2;input.maxLength=5000;input.style.height='auto';input.value=response?.response_content||'';input.setAttribute('aria-label','Phản hồi đánh giá');
    const save=document.createElement('button');save.type='button';save.className='admin-btn admin-btn-primary';save.textContent='Lưu phản hồi';save.style.alignSelf='flex-start';
@@ -1272,7 +1318,7 @@
     const {data:meta,error}=await db.rpc('get_admin_sales_review_page',{p_product_id:product.id,p_filter:requestedFilter,p_page:requestedPage});
     if(error)throw error;
     if(!meta||!Array.isArray(meta.ids)||meta.ids.length>10)throw Error('invalid_review_page');
-    const rows=meta.ids.length?await window.PawpalOrderV1.rows(()=>db.from('review').select('id,rating,review_content,review_status,created_at,line:sales_order_detail_id!inner(sku_snapshot,product_variant:product_variant_id!inner(product_id),order:order_id(customer:customer_id(customer_profile(full_name)))),responses:review_response(id,response_content,updated_at,staff:staff_id(full_name)),media:review_media(image_url)').in('id',meta.ids).eq('line.product_variant.product_id',product.id).order('created_at',{ascending:false}).order('id')):[];
+    const rows=meta.ids.length?await window.PawpalOrderV1.rows(()=>db.from('review').select('id,rating,review_content,review_status,created_at,line:sales_order_detail_id!inner(sku_snapshot,product_variant:product_variant_id!inner(product_id),order:order_id(customer:customer_id(customer_profile(full_name)))),responses:review_response(id,response_content,updated_at,staff:staff_id(full_name)),media:review_media(image_url,media_asset_id)').in('id',meta.ids).eq('line.product_variant.product_id',product.id).order('created_at',{ascending:false}).order('id')):[];
     return {meta,rows};
    });
    if(current!==session||!el('modalProductReviews').classList.contains('active'))return;

@@ -1,0 +1,2439 @@
+{
+  "capturedAt": "2026-11-07T11:28:01.020Z",
+  "scope": "Cloud READ ONLY: bounded metadata and aggregate counts; no user rows, URLs, secrets or Supabase Logs",
+  "requestedTables": [
+    "product_media",
+    "product_variant_media",
+    "service_image",
+    "care_log_media",
+    "return_request_evidence",
+    "review_media",
+    "support_ticket_message_attachment",
+    "pet_profile",
+    "banner",
+    "blog_post",
+    "support_ticket_message",
+    "appointment_record",
+    "appointment",
+    "appointment_adjustment"
+  ],
+  "missingTables": [],
+  "columns": [
+    {
+      "table_name": "appointment",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "appointment_code",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "customer_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "pet_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "staff_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "check_in_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "check_out_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "note",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "change_count",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "appointment_status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'pending'::text"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "scheduled_start_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment",
+      "column_name": "scheduled_end_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "appointment_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "adjustment_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "duration_delta_minutes",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "amount_delta",
+      "data_type": "numeric",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "reason",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "proposed_by",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "approved_by",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "approval_status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'pending'::text"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "customer_consent_status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'pending'::text"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "approved_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "appointment_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "record_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "schema_version",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "revision_no",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "recorded_by",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "recorded_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "condition_note",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "safety_note_snapshot",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "allergy_note_snapshot",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "customer_confirmation_status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'pending'::text"
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "confirmed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "note",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "appointment_record",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "banner",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "banner",
+      "column_name": "image_url",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "banner",
+      "column_name": "title",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "banner",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "banner",
+      "column_name": "link",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "banner",
+      "column_name": "button_text",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "banner",
+      "column_name": "display_order",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "banner",
+      "column_name": "start_date",
+      "data_type": "date",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "banner",
+      "column_name": "end_date",
+      "data_type": "date",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "banner",
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'pending'::text"
+    },
+    {
+      "table_name": "banner",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "banner",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "category_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "title",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "slug",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "summary",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "content",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "thumbnail_url",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "author_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "publish_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'pending'::text"
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "view_count",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "blog_post",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "care_log_media",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "care_log_media",
+      "column_name": "care_log_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "care_log_media",
+      "column_name": "media_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "care_log_media",
+      "column_name": "media_url",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "care_log_media",
+      "column_name": "file_name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "care_log_media",
+      "column_name": "file_size",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "care_log_media",
+      "column_name": "staff_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "care_log_media",
+      "column_name": "uploaded_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "care_log_media",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "customer_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "pet_code",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "pet_name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "avatar_url",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "gender",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "date_of_birth",
+      "data_type": "date",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "color",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "routine",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "allergy",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'active'::text"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "breed_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "pet_profile",
+      "column_name": "safety_note",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "product_media",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "product_media",
+      "column_name": "product_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "product_media",
+      "column_name": "image_url",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "product_media",
+      "column_name": "display_order",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "product_media",
+      "column_name": "is_thumbnail",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "product_media",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "product_media",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "product_variant_media",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "product_variant_media",
+      "column_name": "product_variant_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "product_variant_media",
+      "column_name": "image_url",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "product_variant_media",
+      "column_name": "display_order",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "product_variant_media",
+      "column_name": "is_thumbnail",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "product_variant_media",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "product_variant_media",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "return_request_evidence",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "return_request_evidence",
+      "column_name": "return_request_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "return_request_evidence",
+      "column_name": "image_url",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "return_request_evidence",
+      "column_name": "display_order",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "return_request_evidence",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "review_media",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "review_media",
+      "column_name": "review_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "review_media",
+      "column_name": "image_url",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "review_media",
+      "column_name": "display_order",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "review_media",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "service_image",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "service_image",
+      "column_name": "service_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "service_image",
+      "column_name": "image_url",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "service_image",
+      "column_name": "display_order",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "service_image",
+      "column_name": "is_thumbnail",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "service_image",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "service_image",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "support_ticket_message",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "support_ticket_message",
+      "column_name": "ticket_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "support_ticket_message",
+      "column_name": "sender_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "support_ticket_message",
+      "column_name": "content",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "support_ticket_message",
+      "column_name": "is_internal",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "support_ticket_message",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "support_ticket_message",
+      "column_name": "sender_account_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "support_ticket_message",
+      "column_name": "sender_guest_session_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "extensions.gen_random_uuid()"
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "column_name": "message_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "column_name": "file_url",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "column_name": "file_name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "column_name": "file_size",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "column_name": "media_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "column_name": "display_order",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    }
+  ],
+  "constraints": [
+    {
+      "table_name": "appointment",
+      "conname": "appointment_appointment_code_check",
+      "definition": "CHECK ((length(btrim(appointment_code)) > 0))"
+    },
+    {
+      "table_name": "appointment",
+      "conname": "appointment_appointment_code_key",
+      "definition": "UNIQUE (appointment_code)"
+    },
+    {
+      "table_name": "appointment",
+      "conname": "appointment_appointment_status_check",
+      "definition": "CHECK ((length(btrim(appointment_status)) > 0))"
+    },
+    {
+      "table_name": "appointment",
+      "conname": "appointment_change_count_check",
+      "definition": "CHECK ((change_count >= 0))"
+    },
+    {
+      "table_name": "appointment",
+      "conname": "appointment_check",
+      "definition": "CHECK ((scheduled_end_at > scheduled_start_at))"
+    },
+    {
+      "table_name": "appointment",
+      "conname": "appointment_check1",
+      "definition": "CHECK (((check_out_time IS NULL) OR (check_out_time >= check_in_time)))"
+    },
+    {
+      "table_name": "appointment",
+      "conname": "appointment_customer_id_fkey",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customer(id) DEFERRABLE"
+    },
+    {
+      "table_name": "appointment",
+      "conname": "appointment_pet_id_fkey",
+      "definition": "FOREIGN KEY (pet_id) REFERENCES pet_profile(id) DEFERRABLE"
+    },
+    {
+      "table_name": "appointment",
+      "conname": "appointment_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "appointment",
+      "conname": "appointment_staff_id_fkey",
+      "definition": "FOREIGN KEY (staff_id) REFERENCES staff(id) DEFERRABLE"
+    },
+    {
+      "table_name": "appointment",
+      "conname": "v1_money_check",
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "conname": "appointment_adjustment_adjustment_type_check",
+      "definition": "CHECK ((length(btrim(adjustment_type)) > 0))"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "conname": "appointment_adjustment_appointment_id_fkey",
+      "definition": "FOREIGN KEY (appointment_id) REFERENCES appointment(id) DEFERRABLE"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "conname": "appointment_adjustment_approval_status_check",
+      "definition": "CHECK ((length(btrim(approval_status)) > 0))"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "conname": "appointment_adjustment_approved_by_fkey",
+      "definition": "FOREIGN KEY (approved_by) REFERENCES staff(id) DEFERRABLE"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "conname": "appointment_adjustment_customer_consent_status_check",
+      "definition": "CHECK ((length(btrim(customer_consent_status)) > 0))"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "conname": "appointment_adjustment_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "conname": "appointment_adjustment_proposed_by_fkey",
+      "definition": "FOREIGN KEY (proposed_by) REFERENCES staff(id) DEFERRABLE"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "conname": "appointment_adjustment_reason_check",
+      "definition": "CHECK ((length(btrim(reason)) > 0))"
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "conname": "v1_money_check",
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_appointment_id_fkey",
+      "definition": "FOREIGN KEY (appointment_id) REFERENCES appointment(id) DEFERRABLE"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_appointment_id_record_type_revision_no_key",
+      "definition": "UNIQUE (appointment_id, record_type, revision_no)"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_check",
+      "definition": "CHECK (((customer_confirmation_status = 'confirmed'::text) = (confirmed_at IS NOT NULL)))"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_condition_note_check",
+      "definition": "CHECK ((length(btrim(condition_note)) > 0))"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_customer_confirmation_status_check",
+      "definition": "CHECK ((length(btrim(customer_confirmation_status)) > 0))"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_customer_confirmation_status_check1",
+      "definition": "CHECK ((customer_confirmation_status = ANY (ARRAY['pending'::text, 'confirmed'::text, 'declined'::text])))"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_record_type_check",
+      "definition": "CHECK ((length(btrim(record_type)) > 0))"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_recorded_by_fkey",
+      "definition": "FOREIGN KEY (recorded_by) REFERENCES staff(id) DEFERRABLE"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_revision_no_check",
+      "definition": "CHECK ((revision_no >= 0))"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_revision_no_check1",
+      "definition": "CHECK ((revision_no > 0))"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_schema_version_check",
+      "definition": "CHECK ((schema_version >= 0))"
+    },
+    {
+      "table_name": "appointment_record",
+      "conname": "appointment_record_schema_version_check1",
+      "definition": "CHECK ((schema_version > 0))"
+    },
+    {
+      "table_name": "banner",
+      "conname": "banner_display_order_check",
+      "definition": "CHECK ((display_order >= 0))"
+    },
+    {
+      "table_name": "banner",
+      "conname": "banner_image_url_check",
+      "definition": "CHECK ((length(btrim(image_url)) > 0))"
+    },
+    {
+      "table_name": "banner",
+      "conname": "banner_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "banner",
+      "conname": "banner_status_check",
+      "definition": "CHECK ((length(btrim(status)) > 0))"
+    },
+    {
+      "table_name": "banner",
+      "conname": "banner_title_check",
+      "definition": "CHECK ((length(btrim(title)) > 0))"
+    },
+    {
+      "table_name": "blog_post",
+      "conname": "blog_post_author_id_fkey",
+      "definition": "FOREIGN KEY (author_id) REFERENCES staff(id) DEFERRABLE"
+    },
+    {
+      "table_name": "blog_post",
+      "conname": "blog_post_category_id_fkey",
+      "definition": "FOREIGN KEY (category_id) REFERENCES blog_category(id) DEFERRABLE"
+    },
+    {
+      "table_name": "blog_post",
+      "conname": "blog_post_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "blog_post",
+      "conname": "blog_post_slug_check",
+      "definition": "CHECK ((length(btrim(slug)) > 0))"
+    },
+    {
+      "table_name": "blog_post",
+      "conname": "blog_post_slug_key",
+      "definition": "UNIQUE (slug)"
+    },
+    {
+      "table_name": "blog_post",
+      "conname": "blog_post_status_check",
+      "definition": "CHECK ((length(btrim(status)) > 0))"
+    },
+    {
+      "table_name": "blog_post",
+      "conname": "blog_post_title_check",
+      "definition": "CHECK ((length(btrim(title)) > 0))"
+    },
+    {
+      "table_name": "blog_post",
+      "conname": "blog_post_view_count_check",
+      "definition": "CHECK ((view_count >= 0))"
+    },
+    {
+      "table_name": "care_log_media",
+      "conname": "care_log_media_care_log_id_fkey",
+      "definition": "FOREIGN KEY (care_log_id) REFERENCES care_log(id) DEFERRABLE"
+    },
+    {
+      "table_name": "care_log_media",
+      "conname": "care_log_media_file_name_check",
+      "definition": "CHECK ((length(btrim(file_name)) > 0))"
+    },
+    {
+      "table_name": "care_log_media",
+      "conname": "care_log_media_file_size_check",
+      "definition": "CHECK ((file_size >= 0))"
+    },
+    {
+      "table_name": "care_log_media",
+      "conname": "care_log_media_media_type_check",
+      "definition": "CHECK ((length(btrim(media_type)) > 0))"
+    },
+    {
+      "table_name": "care_log_media",
+      "conname": "care_log_media_media_url_check",
+      "definition": "CHECK ((length(btrim(media_url)) > 0))"
+    },
+    {
+      "table_name": "care_log_media",
+      "conname": "care_log_media_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "care_log_media",
+      "conname": "care_log_media_staff_id_fkey",
+      "definition": "FOREIGN KEY (staff_id) REFERENCES staff(id) DEFERRABLE"
+    },
+    {
+      "table_name": "pet_profile",
+      "conname": "pet_profile_breed_id_fkey",
+      "definition": "FOREIGN KEY (breed_id) REFERENCES pet_breed(id) DEFERRABLE"
+    },
+    {
+      "table_name": "pet_profile",
+      "conname": "pet_profile_customer_id_fkey",
+      "definition": "FOREIGN KEY (customer_id) REFERENCES customer(id) DEFERRABLE"
+    },
+    {
+      "table_name": "pet_profile",
+      "conname": "pet_profile_date_of_birth_check",
+      "definition": "CHECK ((date_of_birth <= CURRENT_DATE))"
+    },
+    {
+      "table_name": "pet_profile",
+      "conname": "pet_profile_pet_code_check",
+      "definition": "CHECK ((length(btrim(pet_code)) > 0))"
+    },
+    {
+      "table_name": "pet_profile",
+      "conname": "pet_profile_pet_code_key",
+      "definition": "UNIQUE (pet_code)"
+    },
+    {
+      "table_name": "pet_profile",
+      "conname": "pet_profile_pet_name_check",
+      "definition": "CHECK ((length(btrim(pet_name)) > 0))"
+    },
+    {
+      "table_name": "pet_profile",
+      "conname": "pet_profile_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "pet_profile",
+      "conname": "pet_profile_status_check",
+      "definition": "CHECK ((length(btrim(status)) > 0))"
+    },
+    {
+      "table_name": "product_media",
+      "conname": "product_media_display_order_check",
+      "definition": "CHECK ((display_order >= 0))"
+    },
+    {
+      "table_name": "product_media",
+      "conname": "product_media_image_url_check",
+      "definition": "CHECK ((length(btrim(image_url)) > 0))"
+    },
+    {
+      "table_name": "product_media",
+      "conname": "product_media_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "product_media",
+      "conname": "product_media_product_id_fkey",
+      "definition": "FOREIGN KEY (product_id) REFERENCES product(id) DEFERRABLE"
+    },
+    {
+      "table_name": "product_variant_media",
+      "conname": "product_variant_media_display_order_check",
+      "definition": "CHECK ((display_order >= 0))"
+    },
+    {
+      "table_name": "product_variant_media",
+      "conname": "product_variant_media_image_url_check",
+      "definition": "CHECK ((length(btrim(image_url)) > 0))"
+    },
+    {
+      "table_name": "product_variant_media",
+      "conname": "product_variant_media_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "product_variant_media",
+      "conname": "product_variant_media_product_variant_id_fkey",
+      "definition": "FOREIGN KEY (product_variant_id) REFERENCES product_variant(id) DEFERRABLE"
+    },
+    {
+      "table_name": "return_request_evidence",
+      "conname": "return_request_evidence_display_order_check",
+      "definition": "CHECK ((display_order >= 0))"
+    },
+    {
+      "table_name": "return_request_evidence",
+      "conname": "return_request_evidence_image_url_check",
+      "definition": "CHECK ((length(btrim(image_url)) > 0))"
+    },
+    {
+      "table_name": "return_request_evidence",
+      "conname": "return_request_evidence_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "return_request_evidence",
+      "conname": "return_request_evidence_return_request_id_fkey",
+      "definition": "FOREIGN KEY (return_request_id) REFERENCES return_request(id) DEFERRABLE"
+    },
+    {
+      "table_name": "review_media",
+      "conname": "review_media_display_order_check",
+      "definition": "CHECK ((display_order >= 0))"
+    },
+    {
+      "table_name": "review_media",
+      "conname": "review_media_image_url_check",
+      "definition": "CHECK ((length(btrim(image_url)) > 0))"
+    },
+    {
+      "table_name": "review_media",
+      "conname": "review_media_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "review_media",
+      "conname": "review_media_review_id_fkey",
+      "definition": "FOREIGN KEY (review_id) REFERENCES review(id) DEFERRABLE"
+    },
+    {
+      "table_name": "service_image",
+      "conname": "service_image_display_order_check",
+      "definition": "CHECK ((display_order >= 0))"
+    },
+    {
+      "table_name": "service_image",
+      "conname": "service_image_image_url_check",
+      "definition": "CHECK ((length(btrim(image_url)) > 0))"
+    },
+    {
+      "table_name": "service_image",
+      "conname": "service_image_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "service_image",
+      "conname": "service_image_service_id_fkey",
+      "definition": "FOREIGN KEY (service_id) REFERENCES service(id) DEFERRABLE"
+    },
+    {
+      "table_name": "support_ticket_message",
+      "conname": "support_ticket_message_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "support_ticket_message",
+      "conname": "support_ticket_message_sender_account_id_fkey",
+      "definition": "FOREIGN KEY (sender_account_id) REFERENCES auth.users(id) DEFERRABLE"
+    },
+    {
+      "table_name": "support_ticket_message",
+      "conname": "support_ticket_message_sender_guest_session_id_fkey",
+      "definition": "FOREIGN KEY (sender_guest_session_id) REFERENCES guest_session(id) DEFERRABLE"
+    },
+    {
+      "table_name": "support_ticket_message",
+      "conname": "support_ticket_message_sender_type_check",
+      "definition": "CHECK ((length(btrim(sender_type)) > 0))"
+    },
+    {
+      "table_name": "support_ticket_message",
+      "conname": "support_ticket_message_ticket_id_fkey",
+      "definition": "FOREIGN KEY (ticket_id) REFERENCES support_ticket(id) DEFERRABLE"
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "conname": "support_ticket_message_attachment_display_order_check",
+      "definition": "CHECK ((display_order >= 0))"
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "conname": "support_ticket_message_attachment_file_name_check",
+      "definition": "CHECK ((length(btrim(file_name)) > 0))"
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "conname": "support_ticket_message_attachment_file_size_check",
+      "definition": "CHECK ((file_size >= 0))"
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "conname": "support_ticket_message_attachment_file_url_check",
+      "definition": "CHECK ((length(btrim(file_url)) > 0))"
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "conname": "support_ticket_message_attachment_media_type_check",
+      "definition": "CHECK ((length(btrim(media_type)) > 0))"
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "conname": "support_ticket_message_attachment_message_id_fkey",
+      "definition": "FOREIGN KEY (message_id) REFERENCES support_ticket_message(id) DEFERRABLE"
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "conname": "support_ticket_message_attachment_pkey",
+      "definition": "PRIMARY KEY (id)"
+    }
+  ],
+  "policies": [
+    {
+      "tablename": "appointment",
+      "policyname": "own_customer_appointment",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(customer_id)",
+      "with_check": null
+    },
+    {
+      "tablename": "appointment",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "appointment",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('appointment.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "appointment",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('appointment.write'::text)"
+    },
+    {
+      "tablename": "appointment",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('appointment.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "appointment",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('appointment.write'::text)",
+      "with_check": "pawpal_private.has_permission('appointment.write'::text)"
+    },
+    {
+      "tablename": "appointment_adjustment",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "appointment_adjustment",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('appointment_adjustment.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "appointment_adjustment",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('appointment_adjustment.write'::text)"
+    },
+    {
+      "tablename": "appointment_adjustment",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('appointment_adjustment.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "appointment_adjustment",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('appointment_adjustment.write'::text)",
+      "with_check": "pawpal_private.has_permission('appointment_adjustment.write'::text)"
+    },
+    {
+      "tablename": "appointment_record",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "appointment_record",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('appointment_record.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "appointment_record",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('appointment_record.write'::text)"
+    },
+    {
+      "tablename": "appointment_record",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('appointment_record.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "appointment_record",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('appointment_record.write'::text)",
+      "with_check": "pawpal_private.has_permission('appointment_record.write'::text)"
+    },
+    {
+      "tablename": "banner",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "banner",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('banner.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "banner",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('banner.write'::text)"
+    },
+    {
+      "tablename": "banner",
+      "policyname": "v1_public_active",
+      "permissive": "PERMISSIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "SELECT",
+      "qual": "((status = ANY (ARRAY['active'::text, 'ACTIVE'::text, 'dang_hien_thi'::text])) AND ((start_date IS NULL) OR (start_date <= ((now() AT TIME ZONE 'Asia/Ho_Chi_Minh'::text))::date)) AND ((end_date IS NULL) OR (end_date >= ((now() AT TIME ZONE 'Asia/Ho_Chi_Minh'::text))::date)))",
+      "with_check": null
+    },
+    {
+      "tablename": "banner",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('banner.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "banner",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('banner.write'::text)",
+      "with_check": "pawpal_private.has_permission('banner.write'::text)"
+    },
+    {
+      "tablename": "blog_post",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "blog_post",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('blog_post.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "blog_post",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('blog_post.write'::text)"
+    },
+    {
+      "tablename": "blog_post",
+      "policyname": "v1_public_published",
+      "permissive": "PERMISSIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "SELECT",
+      "qual": "((status = ANY (ARRAY['published'::text, 'da_xuat_ban'::text])) AND ((publish_at IS NULL) OR (publish_at <= now())))",
+      "with_check": null
+    },
+    {
+      "tablename": "blog_post",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('blog_post.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "blog_post",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('blog_post.write'::text)",
+      "with_check": "pawpal_private.has_permission('blog_post.write'::text)"
+    },
+    {
+      "tablename": "care_log_media",
+      "policyname": "own_customer_care_media",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM (care_log l\n     JOIN appointment a ON ((a.id = l.appointment_id)))\n  WHERE ((l.id = care_log_media.care_log_id) AND pawpal_private.owns_customer(a.customer_id))))",
+      "with_check": null
+    },
+    {
+      "tablename": "care_log_media",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "care_log_media",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('care_log_media.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "care_log_media",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('care_log_media.write'::text)"
+    },
+    {
+      "tablename": "care_log_media",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('care_log_media.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "care_log_media",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('care_log_media.write'::text)",
+      "with_check": "pawpal_private.has_permission('care_log_media.write'::text)"
+    },
+    {
+      "tablename": "pet_profile",
+      "policyname": "own_customer",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.owns_customer(customer_id)",
+      "with_check": null
+    },
+    {
+      "tablename": "pet_profile",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "pet_profile",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('pet_profile.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "pet_profile",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('pet_profile.write'::text)"
+    },
+    {
+      "tablename": "pet_profile",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('pet_profile.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "pet_profile",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('pet_profile.write'::text)",
+      "with_check": "pawpal_private.has_permission('pet_profile.write'::text)"
+    },
+    {
+      "tablename": "product_media",
+      "policyname": "anon_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{anon}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "tablename": "product_media",
+      "policyname": "public_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "tablename": "product_media",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "product_media",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('product_media.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "product_media",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('product_media.write'::text)"
+    },
+    {
+      "tablename": "product_media",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('product_media.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "product_media",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('product_media.write'::text)",
+      "with_check": "pawpal_private.has_permission('product_media.write'::text)"
+    },
+    {
+      "tablename": "product_variant_media",
+      "policyname": "anon_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{anon}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "tablename": "product_variant_media",
+      "policyname": "public_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "tablename": "product_variant_media",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "product_variant_media",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('product_variant_media.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "product_variant_media",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('product_variant_media.write'::text)"
+    },
+    {
+      "tablename": "product_variant_media",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('product_variant_media.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "product_variant_media",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('product_variant_media.write'::text)",
+      "with_check": "pawpal_private.has_permission('product_variant_media.write'::text)"
+    },
+    {
+      "tablename": "return_request_evidence",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "return_request_evidence",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('return_request_evidence.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "return_request_evidence",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('return_request_evidence.write'::text)"
+    },
+    {
+      "tablename": "return_request_evidence",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('return_request_evidence.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "return_request_evidence",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('return_request_evidence.write'::text)",
+      "with_check": "pawpal_private.has_permission('return_request_evidence.write'::text)"
+    },
+    {
+      "tablename": "review_media",
+      "policyname": "anon_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{anon}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "tablename": "review_media",
+      "policyname": "public_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "tablename": "review_media",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "review_media",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('review_media.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "review_media",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('review_media.write'::text)"
+    },
+    {
+      "tablename": "review_media",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('review_media.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "review_media",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('review_media.write'::text)",
+      "with_check": "pawpal_private.has_permission('review_media.write'::text)"
+    },
+    {
+      "tablename": "service_image",
+      "policyname": "anon_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{anon}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "tablename": "service_image",
+      "policyname": "public_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "tablename": "service_image",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "service_image",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('service_image.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "service_image",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('service_image.write'::text)"
+    },
+    {
+      "tablename": "service_image",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('service_image.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "service_image",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('service_image.write'::text)",
+      "with_check": "pawpal_private.has_permission('service_image.write'::text)"
+    },
+    {
+      "tablename": "support_ticket_message",
+      "policyname": "own_customer_support_message",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((NOT is_internal) AND (sender_type <> 'internal_note'::text) AND pawpal_private.owns_support_ticket(ticket_id))",
+      "with_check": null
+    },
+    {
+      "tablename": "support_ticket_message",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "support_ticket_message",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('support_ticket_message.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "support_ticket_message",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('support_ticket_message.write'::text)"
+    },
+    {
+      "tablename": "support_ticket_message",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('support_ticket_message.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "support_ticket_message",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('support_ticket_message.write'::text)",
+      "with_check": "pawpal_private.has_permission('support_ticket_message.write'::text)"
+    },
+    {
+      "tablename": "support_ticket_message_attachment",
+      "policyname": "v165_staff_boundary",
+      "permissive": "RESTRICTIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "ALL",
+      "qual": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())",
+      "with_check": "((NOT pawpal_private.work_is_staff_identity()) OR pawpal_private.work_is_admin())"
+    },
+    {
+      "tablename": "support_ticket_message_attachment",
+      "policyname": "v1_delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "pawpal_private.has_permission('support_ticket_message_attachment.write'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "support_ticket_message_attachment",
+      "policyname": "v1_insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "pawpal_private.has_permission('support_ticket_message_attachment.write'::text)"
+    },
+    {
+      "tablename": "support_ticket_message_attachment",
+      "policyname": "v1_read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "pawpal_private.has_permission('support_ticket_message_attachment.read'::text)",
+      "with_check": null
+    },
+    {
+      "tablename": "support_ticket_message_attachment",
+      "policyname": "v1_update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "pawpal_private.has_permission('support_ticket_message_attachment.write'::text)",
+      "with_check": "pawpal_private.has_permission('support_ticket_message_attachment.write'::text)"
+    }
+  ],
+  "rls": [
+    {
+      "table_name": "appointment",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "appointment_adjustment",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "appointment_record",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "banner",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "blog_post",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "care_log_media",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "pet_profile",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "product_media",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "product_variant_media",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "return_request_evidence",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "review_media",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "service_image",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "support_ticket_message",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    },
+    {
+      "table_name": "support_ticket_message_attachment",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false
+    }
+  ],
+  "functions": [
+    {
+      "signature": "act_admin_chat(uuid,uuid,timestamp with time zone,text,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.act_admin_chat(p_request_id uuid, p_conversation_id uuid, p_expected_updated_at timestamp with time zone, p_action text, p_content text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE actor uuid; conversation public.chat_conversation; prior public.audit_log; payload text; note text; result_id uuid;\nBEGIN\n PERFORM pawpal_private.work_guard_rpc('act_admin_chat',jsonb_build_object('p_request_id',to_jsonb(p_request_id),'p_conversation_id',to_jsonb(p_conversation_id),'p_expected_updated_at',to_jsonb(p_expected_updated_at),'p_action',to_jsonb(p_action),'p_content',to_jsonb(p_content)));\n IF auth.uid() IS NULL OR NOT pawpal_private.work_rpc_permission('act_admin_chat','chat_conversation.read') OR NOT pawpal_private.work_rpc_permission('act_admin_chat','chat_conversation.write')\n OR NOT pawpal_private.work_rpc_permission('act_admin_chat','chat_message.write') OR NOT pawpal_private.work_rpc_permission('act_admin_chat','audit_log.write') THEN RAISE EXCEPTION 'chat_forbidden' USING ERRCODE='42501'; END IF;\n IF p_request_id IS NULL OR p_conversation_id IS NULL OR p_action IS NULL OR p_action NOT IN ('take','release','send','note')\n OR p_content IS NULL OR length(p_content)>8000 OR (p_action='send' AND length(btrim(p_content))<1) THEN RAISE EXCEPTION 'invalid_chat_operation' USING ERRCODE='22023'; END IF;\n SELECT id INTO actor FROM public.staff WHERE auth_user_id=auth.uid();\n payload:=jsonb_build_object('conversation_id',p_conversation_id,'action',p_action,'content',p_content)::text;\n PERFORM pg_advisory_xact_lock(hashtextextended(p_request_id::text,46));\n SELECT * INTO prior FROM public.audit_log WHERE id=p_request_id;\n IF FOUND THEN\n  IF prior.action<>'CHAT_ADMIN_OPERATION' OR prior.staff_id IS DISTINCT FROM actor OR prior.description<>payload THEN RAISE EXCEPTION 'chat_request_conflict' USING ERRCODE='PT409'; END IF;\n  RETURN p_request_id;\n END IF;\n SELECT * INTO conversation FROM public.chat_conversation WHERE id=p_conversation_id FOR UPDATE;\n IF NOT FOUND OR conversation.updated_at IS DISTINCT FROM p_expected_updated_at THEN RAISE EXCEPTION 'chat_changed' USING ERRCODE='PT409'; END IF;\n IF conversation.status IN ('closed','resolved','completed','blocked') THEN RAISE EXCEPTION 'chat_not_open' USING ERRCODE='PT409'; END IF;\n IF conversation.assigned_staff_id IS NOT NULL AND conversation.assigned_staff_id<>actor THEN RAISE EXCEPTION 'chat_assigned_to_other' USING ERRCODE='42501'; END IF;\n IF p_action IN ('release','send') AND (conversation.assigned_staff_id IS DISTINCT FROM actor OR conversation.status<>'agent_handling') THEN RAISE EXCEPTION 'chat_take_required' USING ERRCODE='22023'; END IF;\n IF p_action='take' THEN\n  UPDATE public.chat_conversation SET assigned_staff_id=actor,status='agent_handling',updated_at=clock_timestamp() WHERE id=conversation.id;\n  note:='Nhân viên đã tiếp nhận hội thoại.';\n ELSIF p_action='release' THEN\n  UPDATE public.chat_conversation SET assigned_staff_id=NULL,status='bot_handling',updated_at=clock_timestamp() WHERE id=conversation.id;\n  note:='Nhân viên đã trả lại quyền hỗ trợ tự động.';\n ELSIF p_action='note' THEN\n  UPDATE public.chat_conversation SET internal_note=p_content,updated_at=clock_timestamp() WHERE id=conversation.id;\n ELSE\n  UPDATE public.chat_conversation SET updated_at=clock_timestamp() WHERE id=conversation.id;\n  INSERT INTO public.chat_message(id,conversation_id,sender_type,sender_account_id,content,is_toxic,sentiment_score)\n  VALUES(p_request_id,conversation.id,'staff',auth.uid(),btrim(p_content),false,0);\n END IF;\n IF note IS NOT NULL THEN\n  INSERT INTO public.chat_message(id,conversation_id,sender_type,content,is_toxic,sentiment_score)\n  VALUES(p_request_id,conversation.id,'system',note,false,0);\n END IF;\n INSERT INTO public.audit_log(id,staff_id,action,entity_name,entity_id,description) VALUES(p_request_id,actor,'CHAT_ADMIN_OPERATION','chat_conversation',conversation.id,payload);\n RETURN p_request_id;\nEND $function$\n"
+    },
+    {
+      "signature": "change_admin_service_charge(uuid,uuid,timestamp with time zone,text,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION public.change_admin_service_charge(p_id uuid, p_appointment_id uuid, p_expected_updated_at timestamp with time zone, p_action text, p_details jsonb)\n RETURNS uuid\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\r\nDECLARE a public.appointment; actor uuid; adjustment public.appointment_adjustment; item public.appointment_item; svc public.service; target_staff uuid;\r\n amount_value numeric:=nullif(p_details->>'amount','')::numeric; reason_value text:=btrim(p_details->>'reason'); weight_value numeric; quoted numeric; matching integer; ends timestamptz;\r\nBEGIN\r\n IF NOT pawpal_private.has_permission('appointment.write') OR NOT pawpal_private.has_permission('appointment_adjustment.write') OR NOT pawpal_private.has_permission('appointment_item.write') OR NOT pawpal_private.has_permission('payment.read') OR NOT pawpal_private.has_permission('audit_log.write') THEN RAISE EXCEPTION 'service_charge_forbidden' USING ERRCODE='42501'; END IF;\r\n IF p_id IS NULL OR p_action IS NULL OR p_action NOT IN ('propose','confirm_consent','approve','cancel_adjustment','add_service','cancel_service') OR p_details IS NULL OR length(p_details::text)>8000 THEN RAISE EXCEPTION 'invalid_service_charge' USING ERRCODE='22023'; END IF;\r\n SELECT staff_id INTO target_staff FROM public.appointment WHERE id=p_appointment_id;\r\n IF p_action='add_service' AND target_staff IS NOT NULL THEN PERFORM 1 FROM public.staff WHERE id=target_staff FOR UPDATE; END IF;\r\n SELECT * INTO a FROM public.appointment WHERE id=p_appointment_id FOR UPDATE;\r\n IF NOT FOUND THEN RAISE EXCEPTION 'booking_not_found' USING ERRCODE='P0002'; END IF;\r\n IF p_action IN ('propose','add_service') AND EXISTS(SELECT 1 FROM public.audit_log WHERE entity_id=p_id AND action='SERVICE_CHARGE_'||upper(p_action)) THEN\r\n  IF NOT EXISTS(SELECT 1 FROM public.audit_log WHERE entity_id=p_id AND action='SERVICE_CHARGE_'||upper(p_action) AND description=jsonb_build_object('appointment_id',a.id,'details',p_details)::text) THEN RAISE EXCEPTION 'service_request_conflict' USING ERRCODE='PT409'; END IF;\r\n  RETURN p_id;\r\n END IF;\r\n IF p_expected_updated_at IS NULL OR a.updated_at<>p_expected_updated_at THEN RAISE EXCEPTION 'booking_changed_reload_required' USING ERRCODE='PT409'; END IF;\r\n IF a.appointment_status NOT IN ('pending','confirmed','checked_in','in_progress') OR EXISTS(SELECT 1 FROM public.payment WHERE appointment_id=a.id AND transaction_status='succeeded') THEN RAISE EXCEPTION 'service_charges_locked' USING ERRCODE='22023'; END IF;\r\n SELECT id INTO actor FROM public.staff WHERE auth_user_id=auth.uid();\r\n IF p_action='propose' THEN\r\n  IF amount_value IS NULL OR amount_value::text IN ('NaN','Infinity','-Infinity') OR amount_value<=0 OR amount_value<>trunc(amount_value) OR coalesce(length(reason_value),0) NOT BETWEEN 1 AND 4000 OR coalesce(length(btrim(p_details->>'name')),0) NOT BETWEEN 1 AND 200 OR coalesce(p_details->>'consent','') NOT IN ('pending','confirmed') THEN RAISE EXCEPTION 'invalid_service_charge' USING ERRCODE='22023'; END IF;\r\n  INSERT INTO public.appointment_adjustment(id,appointment_id,adjustment_type,duration_delta_minutes,amount_delta,reason,proposed_by,approval_status,customer_consent_status)\r\n  VALUES(p_id,a.id,'surcharge',0,amount_value,btrim(p_details->>'name')||E'\\n'||reason_value,actor,'pending',p_details->>'consent');\r\n ELSEIF p_action IN ('approve','confirm_consent','cancel_adjustment') THEN\r\n  SELECT * INTO adjustment FROM public.appointment_adjustment WHERE id=p_id AND appointment_id=a.id FOR UPDATE;\r\n  IF NOT FOUND OR adjustment.approval_status NOT IN ('pending','approved') THEN RAISE EXCEPTION 'service_adjustment_not_active' USING ERRCODE='22023'; END IF;\r\n  IF p_action='confirm_consent' THEN\r\n   IF adjustment.approval_status<>'pending' OR p_details->>'confirmed' IS DISTINCT FROM 'true' THEN RAISE EXCEPTION 'charge_consent_required' USING ERRCODE='22023'; END IF;\r\n   UPDATE public.appointment_adjustment SET customer_consent_status='confirmed' WHERE id=p_id;\r\n  ELSEIF p_action='approve' THEN\r\n   IF adjustment.approval_status<>'pending' OR adjustment.customer_consent_status<>'confirmed' THEN RAISE EXCEPTION 'charge_consent_required' USING ERRCODE='22023'; END IF;\r\n   UPDATE public.appointment_adjustment SET approval_status='approved',approved_by=actor,approved_at=clock_timestamp() WHERE id=p_id;\r\n  ELSE UPDATE public.appointment_adjustment SET approval_status='cancelled' WHERE id=p_id; END IF;\r\n ELSEIF p_action='add_service' THEN\r\n  IF a.staff_id IS DISTINCT FROM target_staff THEN RAISE EXCEPTION 'booking_changed_reload_required' USING ERRCODE='PT409'; END IF;\r\n  IF p_details->>'consent' IS DISTINCT FROM 'confirmed' THEN RAISE EXCEPTION 'charge_consent_required' USING ERRCODE='22023'; END IF;\r\n  SELECT * INTO svc FROM public.service WHERE id=(p_details->>'service_id')::uuid AND status='active' FOR SHARE;\r\n  IF NOT FOUND OR pawpal_private.catalog_duration(svc.id,(SELECT weight FROM public.pet_current_weight WHERE pet_id=a.pet_id),a.scheduled_start_at)<=0 OR NOT EXISTS(SELECT 1 FROM public.service_category WHERE id=svc.category_id AND category_code='grooming_spa') THEN RAISE EXCEPTION 'active_service_required' USING ERRCODE='22023'; END IF;\r\n  IF NOT EXISTS(SELECT 1 FROM public.service_supported_species ss JOIN public.pet_profile pet ON pet.id=a.pet_id JOIN public.pet_breed b ON b.id=pet.breed_id AND b.species_id=ss.species_id WHERE ss.service_id=svc.id) THEN RAISE EXCEPTION 'service_species_not_supported' USING ERRCODE='22023'; END IF;\r\n  IF a.staff_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.staff st WHERE st.id=a.staff_id AND st.employment_status='active' AND NOT st.service_locked AND (svc.staff_level_required_id IS NULL OR EXISTS(SELECT 1 FROM public.staff_level actual JOIN public.staff_level required ON required.id=svc.staff_level_required_id WHERE actual.id=st.staff_level_id AND actual.rank_order>=required.rank_order))) THEN RAISE EXCEPTION 'staff_not_eligible' USING ERRCODE='22023'; END IF;\r\n  SELECT weight INTO weight_value FROM public.pet_current_weight WHERE pet_id=a.pet_id;\r\n  SELECT count(*),min(unit_price) INTO matching,quoted FROM public.service_price_matrix WHERE service_id=svc.id AND status='active' AND weight_value>=weight_from AND (weight_to IS NULL OR weight_value<weight_to OR (weight_to_inclusive AND weight_value=weight_to)) AND effective_from<=a.scheduled_start_at AND (effective_to IS NULL OR effective_to>a.scheduled_start_at);\r\n  IF matching<>1 OR quoted IS NULL OR amount_value IS DISTINCT FROM quoted THEN RAISE EXCEPTION 'service_quote_changed' USING ERRCODE='22023'; END IF;\r\n  ends:=a.scheduled_end_at+make_interval(mins=>pawpal_private.catalog_duration(svc.id,(SELECT weight FROM public.pet_current_weight WHERE pet_id=a.pet_id),a.scheduled_start_at));\r\n  IF a.staff_id IS NOT NULL AND EXISTS(SELECT 1 FROM public.appointment WHERE id<>a.id AND staff_id=a.staff_id AND appointment_status NOT IN ('completed','cancelled','no_show') AND scheduled_start_at<ends AND scheduled_end_at>a.scheduled_start_at) THEN RAISE EXCEPTION 'staff_schedule_conflict' USING ERRCODE='PT409'; END IF;\r\n  INSERT INTO public.appointment_item(id,appointment_id,service_id,is_primary,name_snapshot,quantity,unit_price,discount_amount,duration_minutes,weight_snapshot,staff_id,status)\r\n  VALUES(p_id,a.id,svc.id,false,svc.service_name,1,quoted,0,pawpal_private.catalog_duration(svc.id,(SELECT weight FROM public.pet_current_weight WHERE pet_id=a.pet_id),a.scheduled_start_at),weight_value,a.staff_id,a.appointment_status);\r\n  UPDATE public.appointment SET scheduled_end_at=ends WHERE id=a.id;\r\n ELSE\r\n  SELECT * INTO item FROM public.appointment_item WHERE id=p_id AND appointment_id=a.id AND NOT is_primary AND status<>'cancelled' FOR UPDATE;\r\n  IF NOT FOUND THEN RAISE EXCEPTION 'service_item_not_active' USING ERRCODE='22023'; END IF;\r\n  UPDATE public.appointment_item SET status='cancelled' WHERE id=p_id;\r\n  UPDATE public.appointment SET scheduled_end_at=greatest(scheduled_start_at+interval '1 minute',scheduled_end_at-make_interval(mins=>item.duration_minutes)) WHERE id=a.id;\r\n END IF;\r\n UPDATE public.appointment SET updated_at=clock_timestamp() WHERE id=a.id;\r\n INSERT INTO public.audit_log(staff_id,action,entity_name,entity_id,description) VALUES(actor,'SERVICE_CHARGE_'||upper(p_action),CASE WHEN p_action IN ('add_service','cancel_service') THEN 'appointment_item' ELSE 'appointment_adjustment' END,p_id,jsonb_build_object('appointment_id',a.id,'details',p_details)::text);\r\n RETURN p_id;\r\nEND $function$\n"
+    },
+    {
+      "signature": "get_staff_login_context()",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_staff_login_context()\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE person public.staff; roles text[]; codes text[]; active_account boolean;\nBEGIN\n IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Authentication required' USING ERRCODE='42501'; END IF;\n SELECT * INTO person FROM public.staff WHERE auth_user_id=auth.uid();\n IF NOT FOUND THEN RETURN jsonb_build_object('is_staff',false,'is_active',false,'staff',NULL); END IF;\n SELECT coalesce(array_agg(role_code ORDER BY role_code),'{}'::text[]) INTO roles FROM public.staff_role WHERE staff_id=person.id;\n SELECT person.employment_status='active' AND coalesce(u.banned_until<=now(),true) INTO active_account FROM auth.users u WHERE u.id=auth.uid();\n SELECT coalesce(array_agg(rp.permission_code ORDER BY rp.permission_code),'{}'::text[]) INTO codes\n FROM public.role_permission rp WHERE rp.role_code=ANY(roles);\n IF NOT coalesce(active_account,false) OR person.must_change_password OR cardinality(roles)<>1 OR roles[1] NOT IN ('ADMIN','STAFF') THEN codes:='{}'::text[]; END IF;\n RETURN jsonb_build_object('workspace_signals',true,'is_staff',true,'is_active',coalesce(active_account,false),'staff',\n jsonb_build_object('id',person.id,'auth_user_id',person.auth_user_id,'full_name',person.full_name,'email',person.email,\n 'phone_number',person.phone_number,'job_title',person.job_title,'specialization',person.specialization,\n 'employment_status',person.employment_status,'must_change_password',person.must_change_password,'access_roles',roles,'permission_codes',codes));\nEND $function$\n"
+    },
+    {
+      "signature": "request_own_sales_return(uuid,uuid,timestamp with time zone,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION public.request_own_sales_return(p_request uuid, p_order uuid, p_expected timestamp with time zone, p_details jsonb)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nBEGIN\n RETURN pawpal_private.request_own_return_core(p_request,p_request,p_order,p_expected,'create',p_details);\nEND $function$\n"
+    },
+    {
+      "signature": "save_admin_sales_product(uuid,uuid,timestamp with time zone,jsonb,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION public.save_admin_sales_product(p_request_id uuid, p_product_id uuid, p_expected_updated_at timestamp with time zone, p_details jsonb, p_variants jsonb)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE actor uuid; old public.product; prior public.audit_log; item jsonb; v public.product_variant; vid uuid; seen uuid[]:='{}';\n cost_value numeric; price_value numeric; compare_value numeric; initial_value numeric; minimum_value numeric; image_value text; payload text;\n attr text; label_value text; attr_id uuid;\nBEGIN\n IF auth.uid() IS NULL OR NOT pawpal_private.has_permission('product.write') OR NOT pawpal_private.has_permission('product_variant.write')\n OR NOT pawpal_private.has_permission('product_media.write') OR NOT pawpal_private.has_permission('product_variant_media.write') OR NOT pawpal_private.has_permission('inventory_transaction.write')\n OR NOT pawpal_private.has_permission('audit_log.write') THEN RAISE EXCEPTION 'sales_catalog_forbidden' USING ERRCODE='42501'; END IF;\n IF p_request_id IS NULL OR p_product_id IS NULL OR jsonb_typeof(p_details) IS DISTINCT FROM 'object' OR jsonb_typeof(p_variants) IS DISTINCT FROM 'array'\n OR jsonb_array_length(p_variants) NOT BETWEEN 1 AND 100 OR length(p_details::text)>100000 OR length(p_variants::text)>200000\n OR coalesce(length(btrim(p_details->>'product_name')),0) NOT BETWEEN 1 AND 300\n OR coalesce(length(btrim(p_details->>'unit')),0) NOT BETWEEN 1 AND 100\n OR coalesce(length(btrim(p_details->>'slug')),0) NOT BETWEEN 1 AND 300\n OR coalesce(p_details->>'status','') NOT IN ('active','inactive')\n OR NOT EXISTS(SELECT 1 FROM public.product_category WHERE id=(p_details->>'category_id')::uuid)\n THEN RAISE EXCEPTION 'invalid_sales_product' USING ERRCODE='22023'; END IF;\n SELECT id INTO actor FROM public.staff WHERE auth_user_id=auth.uid();\n payload:=jsonb_build_object('product_id',p_product_id,'details',p_details,'variants',p_variants)::text;\n PERFORM pg_advisory_xact_lock(hashtextextended(p_request_id::text,21));\n SELECT * INTO prior FROM public.audit_log WHERE entity_id=p_request_id AND action='SALES_PRODUCT_SAVE';\n IF FOUND THEN\n  IF prior.staff_id IS DISTINCT FROM actor OR prior.description<>payload THEN RAISE EXCEPTION 'sales_request_conflict' USING ERRCODE='PT409'; END IF;\n  RETURN p_product_id;\n END IF;\n -- Attribute names may be shared across products. Serialize catalogue saves\n -- before product locks so opposite attribute orders cannot deadlock.\n PERFORM pg_advisory_xact_lock(hashtextextended('sales-catalog-attributes',21));\n SELECT * INTO old FROM public.product WHERE id=p_product_id FOR UPDATE;\n IF FOUND THEN\n  IF p_expected_updated_at IS NULL OR old.updated_at<>p_expected_updated_at THEN RAISE EXCEPTION 'sales_product_changed' USING ERRCODE='PT409'; END IF;\n ELSE\n  IF p_expected_updated_at IS NOT NULL THEN RAISE EXCEPTION 'sales_product_not_found' USING ERRCODE='P0002'; END IF;\n  INSERT INTO public.product(id,category_id,product_name,slug,unit) VALUES(p_product_id,(p_details->>'category_id')::uuid,btrim(p_details->>'product_name'),btrim(p_details->>'slug'),btrim(p_details->>'unit'));\n END IF;\n PERFORM 1 FROM public.product_variant WHERE product_id=p_product_id ORDER BY id FOR UPDATE;\n UPDATE public.product SET category_id=(p_details->>'category_id')::uuid,product_name=btrim(p_details->>'product_name'),slug=btrim(p_details->>'slug'),unit=btrim(p_details->>'unit'),\n status=p_details->>'status',brand_name=nullif(btrim(p_details->>'brand_name'),''),origin=nullif(btrim(p_details->>'origin'),''),target_pet=nullif(btrim(p_details->>'target_pet'),''),\n description=p_details->>'description',ingredients=p_details->>'ingredients',benefits=p_details->>'benefits',usage_instructions=p_details->>'usage_instructions',badge=nullif(p_details->>'badge',''),\n specs=p_details->'specs',updated_at=clock_timestamp() WHERE id=p_product_id;\n FOR item IN SELECT value FROM jsonb_array_elements(p_variants) LOOP\n  vid:=(item->>'id')::uuid;\n  FOREACH attr IN ARRAY ARRAY['color','size','flavor'] LOOP\n   IF item ? (attr||'_name') THEN\n    IF NOT pawpal_private.has_permission('variant_'||attr||'.write') THEN RAISE EXCEPTION 'sales_attribute_forbidden' USING ERRCODE='42501'; END IF;\n    label_value:=nullif(btrim(item->>(attr||'_name')),'');\n    attr_id:=NULL;\n    IF label_value IS NOT NULL THEN\n     IF length(label_value)>100 OR label_value ~ '^[0-9]+$' OR lower(label_value) IN ('unknown','null','undefined') THEN RAISE EXCEPTION 'invalid_sales_attribute' USING ERRCODE='22023'; END IF;\n     PERFORM pg_advisory_xact_lock(hashtextextended('sales-attribute:'||attr||':'||lower(label_value),21));\n     EXECUTE format('SELECT id FROM public.%I WHERE lower(%I)=lower($1) AND is_active ORDER BY id LIMIT 1','variant_'||attr,attr||'_name') INTO attr_id USING label_value;\n     IF attr_id IS NULL THEN\n      IF attr='color' THEN\n       IF coalesce(item->>'color_hex','') !~ '^#[0-9A-Fa-f]{6}$' THEN RAISE EXCEPTION 'sales_new_color_requires_hex' USING ERRCODE='22023'; END IF;\n       INSERT INTO public.variant_color(color_name,hex_code) VALUES(label_value,item->>'color_hex') RETURNING id INTO attr_id;\n      ELSE\n       EXECUTE format('INSERT INTO public.%I(%I) VALUES($1) RETURNING id','variant_'||attr,attr||'_name') INTO attr_id USING label_value;\n      END IF;\n     END IF;\n    END IF;\n    item:=item||jsonb_build_object(attr||'_id',attr_id);\n   END IF;\n  END LOOP;\n  cost_value:=(item->>'cost_price')::numeric; price_value:=(item->>'sale_price')::numeric; compare_value:=nullif(item->>'compare_at_price','')::numeric;\n  initial_value:=(item->>'stock')::numeric;minimum_value:=(item->>'minimum_stock')::numeric;\n  IF vid IS NULL OR vid=ANY(seen) OR coalesce(length(btrim(item->>'sku')),0) NOT BETWEEN 1 AND 100\n  OR cost_value IS NULL OR price_value IS NULL OR initial_value IS NULL OR minimum_value IS NULL\n  OR cost_value::text IN ('NaN','Infinity','-Infinity') OR price_value::text IN ('NaN','Infinity','-Infinity')\n  OR cost_value NOT BETWEEN 0 AND 100000000000 OR price_value NOT BETWEEN 0 AND 100000000000\n  OR (compare_value IS NOT NULL AND (compare_value::text IN ('NaN','Infinity','-Infinity') OR compare_value NOT BETWEEN 0 AND 100000000000))\n  OR initial_value::text IN ('NaN','Infinity','-Infinity') OR initial_value NOT BETWEEN 0 AND 100000000 OR round(initial_value)<>initial_value\n  OR minimum_value::text IN ('NaN','Infinity','-Infinity') OR minimum_value NOT BETWEEN 0 AND 100000000 OR round(minimum_value)<>minimum_value\n  THEN RAISE EXCEPTION 'invalid_sales_variant' USING ERRCODE='22023'; END IF;\n  SELECT * INTO v FROM public.product_variant WHERE id=vid;\n  IF FOUND THEN\n   IF v.product_id<>p_product_id THEN RAISE EXCEPTION 'sales_variant_wrong_product' USING ERRCODE='22023'; END IF;\n   IF initial_value<>coalesce((SELECT sum(quantity) FROM public.inventory_transaction WHERE product_variant_id=vid),0) THEN RAISE EXCEPTION 'sales_use_stock_adjustment' USING ERRCODE='PT409'; END IF;\n   UPDATE public.product_variant SET sku_variant=btrim(item->>'sku'),cost_price=cost_value,sale_price=price_value,compare_at_price=compare_value,\n    color_id=nullif(item->>'color_id','')::uuid,size_id=nullif(item->>'size_id','')::uuid,flavor_id=nullif(item->>'flavor_id','')::uuid,\n    status=coalesce(item->>'status','active'),updated_at=clock_timestamp() WHERE id=vid;\n  ELSE\n   INSERT INTO public.product_variant(id,product_id,sku_variant,cost_price,sale_price,compare_at_price,color_id,size_id,flavor_id,variant_name)\n   VALUES(vid,p_product_id,btrim(item->>'sku'),cost_value,price_value,compare_value,nullif(item->>'color_id','')::uuid,nullif(item->>'size_id','')::uuid,nullif(item->>'flavor_id','')::uuid,nullif(btrim(item->>'variant_name'),''));\n   IF initial_value>0 THEN\n    INSERT INTO public.inventory_transaction(product_variant_id,transaction_type,quantity,note,staff_id,idempotency_key)\n    VALUES(vid,'opening',initial_value,'Tồn đầu khi tạo sản phẩm',actor,'sales-product-opening:'||vid);\n   END IF;\n  END IF;\n  INSERT INTO public.inventory(product_variant_id,quantity_in_stock,minimum_stock) VALUES(vid,initial_value,minimum_value)\n  ON CONFLICT(product_variant_id) DO UPDATE SET minimum_stock=excluded.minimum_stock;\n  IF item ? 'variant_name' AND coalesce(length(btrim(item->>'variant_name')),0) NOT BETWEEN 1 AND 200 THEN RAISE EXCEPTION 'invalid_variant_name' USING ERRCODE='22023';END IF;\n  UPDATE public.product_variant SET variant_name=coalesce(nullif(btrim(item->>'variant_name'),''),variant_name),packaging=coalesce(item->>'packaging',packaging),features=coalesce(item->>'features',features),gross_weight_text=coalesce(item->>'gross_weight_text',gross_weight_text),description=coalesce(item->>'description',description),ingredients=coalesce(item->>'ingredients',ingredients) WHERE id=vid;\n  seen:=array_append(seen,vid);\n  IF item ? 'images' THEN\n   DELETE FROM public.product_variant_media WHERE product_variant_id=vid;\n   FOR image_value IN SELECT jsonb_array_elements_text(item->'images') LOOP\n    IF image_value !~ '^(https?://|/?assets/)' OR length(image_value)>2000 OR image_value ~ '[<>\"'']' THEN RAISE EXCEPTION 'invalid_sales_image_url' USING ERRCODE='22023'; END IF;\n    INSERT INTO public.product_variant_media(product_variant_id,image_url,display_order,is_thumbnail) VALUES(vid,image_value,(SELECT count(*) FROM public.product_variant_media WHERE product_variant_id=vid),(SELECT count(*)=0 FROM public.product_variant_media WHERE product_variant_id=vid));\n   END LOOP;\n  END IF;\n END LOOP;\n -- Removed SKUs stay addressable by posted order lines and stock history.\n UPDATE public.product_variant SET status='inactive' WHERE product_id=p_product_id AND NOT(id=ANY(seen));\n DELETE FROM public.product_media WHERE product_id=p_product_id;\n FOR image_value IN SELECT jsonb_array_elements_text(coalesce(p_details->'images','[]')) LOOP\n  IF image_value !~ '^(https?://|/?assets/)' OR length(image_value)>2000 OR image_value ~ '[<>\"'']' THEN RAISE EXCEPTION 'invalid_sales_image_url' USING ERRCODE='22023'; END IF;\n  INSERT INTO public.product_media(product_id,image_url,display_order,is_thumbnail) VALUES(p_product_id,image_value,(SELECT count(*) FROM public.product_media WHERE product_id=p_product_id),(SELECT count(*)=0 FROM public.product_media WHERE product_id=p_product_id));\n END LOOP;\n INSERT INTO public.audit_log(staff_id,action,entity_name,entity_id,description) VALUES(actor,'SALES_PRODUCT_SAVE','product',p_request_id,payload);\n RETURN p_product_id;\nEND $function$\n"
+    },
+    {
+      "signature": "save_admin_service_care_log(uuid,uuid,timestamp with time zone,timestamp with time zone,text,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION public.save_admin_service_care_log(p_id uuid, p_appointment_id uuid, p_expected_updated_at timestamp with time zone, p_expected_log_updated_at timestamp with time zone, p_action text, p_details jsonb)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE a public.appointment; old public.care_log; actor uuid; performer uuid:=nullif(p_details->>'staff_id','')::uuid;\n title_value text:=btrim(p_details->>'title'); at_time timestamptz:=coalesce(nullif(p_details->>'recorded_at','')::timestamptz,clock_timestamp()); action_key uuid;\nBEGIN\n PERFORM pawpal_private.work_guard_rpc('save_admin_service_care_log',jsonb_build_object('p_id',to_jsonb(p_id),'p_appointment_id',to_jsonb(p_appointment_id),'p_expected_updated_at',to_jsonb(p_expected_updated_at),'p_expected_log_updated_at',to_jsonb(p_expected_log_updated_at),'p_action',to_jsonb(p_action),'p_details',to_jsonb(p_details)));\n IF NOT pawpal_private.work_rpc_permission('save_admin_service_care_log','appointment.write') OR NOT pawpal_private.work_rpc_permission('save_admin_service_care_log','care_log.write') OR NOT pawpal_private.work_rpc_permission('save_admin_service_care_log','audit_log.write') THEN RAISE EXCEPTION 'service_log_forbidden' USING ERRCODE='42501'; END IF;\n IF p_id IS NULL OR p_action IS NULL OR p_action NOT IN ('save','delete') THEN RAISE EXCEPTION 'invalid_service_log' USING ERRCODE='22023'; END IF;\n SELECT * INTO a FROM public.appointment WHERE id=p_appointment_id FOR UPDATE;\n IF NOT FOUND THEN RAISE EXCEPTION 'booking_not_found' USING ERRCODE='P0002'; END IF;\n SELECT * INTO old FROM public.care_log WHERE id=p_id;\n IF p_action='save' AND p_expected_log_updated_at IS NULL AND old.id IS NOT NULL THEN\n  IF old.appointment_id<>a.id OR NOT EXISTS(SELECT 1 FROM public.audit_log WHERE entity_id=p_id AND action='SAVE_CARE_LOG' AND description=p_details::text) THEN RAISE EXCEPTION 'service_request_conflict' USING ERRCODE='PT409'; END IF;\n  RETURN p_id;\n END IF;\n IF p_expected_updated_at IS NULL OR a.updated_at<>p_expected_updated_at THEN RAISE EXCEPTION 'booking_changed_reload_required' USING ERRCODE='PT409'; END IF;\n IF a.appointment_status<>'in_progress' THEN RAISE EXCEPTION 'care_log_requires_active_service' USING ERRCODE='22023'; END IF;\n IF old.id IS NOT NULL AND (old.appointment_id<>a.id OR p_expected_log_updated_at IS NULL OR old.updated_at<>p_expected_log_updated_at) THEN RAISE EXCEPTION 'care_log_changed' USING ERRCODE='PT409'; END IF;\n IF old.id IS NULL AND (p_expected_log_updated_at IS NOT NULL OR p_action='delete') THEN RAISE EXCEPTION 'care_log_not_found' USING ERRCODE='P0002'; END IF;\n SELECT id INTO actor FROM public.staff WHERE auth_user_id=auth.uid();\n IF p_action='delete' THEN\n  IF EXISTS(SELECT 1 FROM public.care_log_media WHERE care_log_id=p_id) THEN RAISE EXCEPTION 'care_log_has_media' USING ERRCODE='22023'; END IF;\n  DELETE FROM public.care_log WHERE id=p_id;\n ELSE\n  IF coalesce(length(title_value),0) NOT BETWEEN 1 AND 200 OR length(p_details->>'note')>4000 OR performer IS NULL OR NOT isfinite(at_time) OR at_time>clock_timestamp()+interval '1 minute' OR at_time<date_trunc('minute',coalesce(a.check_in_time,a.created_at))\n   OR NOT EXISTS(SELECT 1 FROM public.staff WHERE id=performer AND employment_status='active' AND NOT service_locked) THEN RAISE EXCEPTION 'invalid_service_log' USING ERRCODE='22023'; END IF;\n  SELECT ca.id INTO action_key FROM public.care_action ca JOIN public.service_care_action sc ON sc.care_action_id=ca.id JOIN public.appointment_item i ON i.service_id=sc.service_id WHERE i.appointment_id=a.id AND i.status<>'cancelled' AND ca.is_active AND lower(btrim(ca.action_name))=lower(title_value) ORDER BY ca.id LIMIT 1;\n  IF old.id IS NULL THEN\n   INSERT INTO public.care_log(id,appointment_id,care_action_id,action_name_snapshot,description,recorded_at,recorded_by) VALUES(p_id,a.id,action_key,title_value,nullif(btrim(p_details->>'note'),''),at_time,performer);\n  ELSE\n   UPDATE public.care_log SET care_action_id=action_key,action_name_snapshot=title_value,description=nullif(btrim(p_details->>'note'),''),recorded_at=at_time,recorded_by=performer WHERE id=p_id;\n  END IF;\n END IF;\n UPDATE public.appointment SET updated_at=clock_timestamp() WHERE id=a.id;\n INSERT INTO public.audit_log(staff_id,action,entity_name,entity_id,description) VALUES(actor,CASE WHEN p_action='delete' THEN 'DELETE_CARE_LOG' ELSE 'SAVE_CARE_LOG' END,'care_log',p_id,CASE WHEN p_action='delete' THEN to_jsonb(old)::text ELSE p_details::text END);\n RETURN p_id;\nEND $function$\n"
+    },
+    {
+      "signature": "save_admin_service_record(uuid,uuid,timestamp with time zone,text,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION public.save_admin_service_record(p_id uuid, p_appointment_id uuid, p_expected_updated_at timestamp with time zone, p_type text, p_details jsonb)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE a public.appointment; pet public.pet_profile; actor uuid; performer uuid:=nullif(p_details->>'staffId','')::uuid;\n prior public.appointment_record; rev integer; at_time timestamptz:=now(); weight_value numeric:=nullif(p_details->>'actualWeight','')::numeric;\n condition_text text; confirmation text:=CASE WHEN p_details->>'customerConfirmed'='true' THEN 'confirmed' ELSE 'pending' END;\nBEGIN\n PERFORM pawpal_private.work_guard_rpc('save_admin_service_record',jsonb_build_object('p_id',to_jsonb(p_id),'p_appointment_id',to_jsonb(p_appointment_id),'p_expected_updated_at',to_jsonb(p_expected_updated_at),'p_type',to_jsonb(p_type),'p_details',to_jsonb(p_details)));\n IF NOT pawpal_private.work_rpc_permission('save_admin_service_record','appointment.write') OR NOT pawpal_private.work_rpc_permission('save_admin_service_record','appointment_item.write') OR NOT pawpal_private.work_rpc_permission('save_admin_service_record','appointment_record.write') OR NOT pawpal_private.work_rpc_permission('save_admin_service_record','audit_log.write') THEN RAISE EXCEPTION 'service_record_forbidden' USING ERRCODE='42501'; END IF;\n IF p_id IS NULL OR p_appointment_id IS NULL OR p_type IS NULL OR p_type NOT IN ('intake','handover') OR p_details IS NULL OR jsonb_typeof(p_details)<>'object' OR length(p_details::text)>12000 THEN RAISE EXCEPTION 'invalid_service_record' USING ERRCODE='22023'; END IF;\n -- Match the staff-before-appointment lock order used by assignment and booking.\n IF p_type='intake' THEN\n  IF performer IS NULL OR NOT pawpal_private.work_rpc_permission('save_admin_service_record','pet_weight_history.write') THEN RAISE EXCEPTION 'service_record_forbidden' USING ERRCODE='42501'; END IF;\n  PERFORM 1 FROM public.staff WHERE id=performer AND employment_status='active' AND NOT service_locked FOR UPDATE;\n  IF NOT FOUND THEN RAISE EXCEPTION 'staff_not_eligible' USING ERRCODE='22023'; END IF;\n END IF;\n SELECT * INTO a FROM public.appointment WHERE id=p_appointment_id FOR UPDATE;\n IF NOT FOUND THEN RAISE EXCEPTION 'booking_not_found' USING ERRCODE='P0002'; END IF;\n SELECT * INTO prior FROM public.appointment_record WHERE id=p_id;\n IF FOUND THEN\n  IF prior.appointment_id<>p_appointment_id OR prior.record_type<>p_type OR NOT EXISTS(SELECT 1 FROM public.audit_log WHERE entity_id=p_id AND action='SAVE_SERVICE_RECORD' AND description=p_details::text) THEN RAISE EXCEPTION 'service_request_conflict' USING ERRCODE='PT409'; END IF;\n  RETURN p_id;\n END IF;\n IF p_expected_updated_at IS NULL OR a.updated_at<>p_expected_updated_at THEN RAISE EXCEPTION 'booking_changed_reload_required' USING ERRCODE='PT409'; END IF;\n SELECT id INTO actor FROM public.staff WHERE auth_user_id=auth.uid();\n SELECT * INTO pet FROM public.pet_profile WHERE id=a.pet_id;\n IF NOT FOUND THEN RAISE EXCEPTION 'pet_not_found' USING ERRCODE='P0002'; END IF;\n IF p_type='intake' THEN\n  IF a.appointment_status NOT IN ('confirmed','checked_in','in_progress') OR weight_value IS NULL OR weight_value::text IN ('NaN','Infinity','-Infinity') OR weight_value<=0 OR weight_value>1000\n   OR coalesce(length(btrim(p_details->>'skinCoat')),0)=0 OR coalesce(length(btrim(p_details->>'eyesEars')),0)=0 OR coalesce(length(btrim(p_details->>'wounds')),0)=0 OR coalesce(length(btrim(p_details->>'temperament')),0)=0 THEN RAISE EXCEPTION 'intake_observations_required' USING ERRCODE='22023'; END IF;\n  IF EXISTS(SELECT 1 FROM public.appointment_item i JOIN public.service s ON s.id=i.service_id JOIN public.staff_level required ON required.id=s.staff_level_required_id WHERE i.appointment_id=a.id AND i.status<>'cancelled' AND NOT EXISTS(SELECT 1 FROM public.staff st JOIN public.staff_level actual ON actual.id=st.staff_level_id WHERE st.id=performer AND actual.rank_order>=required.rank_order)) THEN RAISE EXCEPTION 'staff_level_required' USING ERRCODE='22023'; END IF;\n  IF EXISTS(SELECT 1 FROM public.appointment WHERE id<>a.id AND staff_id=performer AND appointment_status NOT IN ('completed','cancelled','no_show') AND scheduled_start_at<a.scheduled_end_at AND scheduled_end_at>a.scheduled_start_at) THEN RAISE EXCEPTION 'staff_schedule_conflict' USING ERRCODE='PT409'; END IF;\n  condition_text:=concat_ws(E'\\n','Da và lông: '||btrim(p_details->>'skinCoat'),'Mắt và tai: '||btrim(p_details->>'eyesEars'),'Vết thương: '||btrim(p_details->>'wounds'),'Tập tính: '||btrim(p_details->>'temperament'),'Tư trang: '||coalesce(p_details->>'belongings',''));\n  INSERT INTO public.pet_weight_history(pet_id,weight,measured_at,recorded_by,note) VALUES(a.pet_id,weight_value,at_time,actor,'Cân khi lập biên bản tiếp nhận dịch vụ.');\n  UPDATE public.appointment SET appointment_status='in_progress',staff_id=performer,check_in_time=coalesce(check_in_time,at_time) WHERE id=a.id;\n  UPDATE public.appointment_item SET staff_id=performer,status='in_progress' WHERE appointment_id=a.id AND is_primary AND status<>'cancelled';\n ELSE\n  IF a.appointment_status<>'in_progress' OR p_details->>'qualityAccepted' IS DISTINCT FROM 'true' OR p_details->>'belongingsReturned' IS DISTINCT FROM 'true' OR confirmation<>'confirmed' THEN RAISE EXCEPTION 'handover_confirmation_required' USING ERRCODE='22023'; END IF;\n  SELECT * INTO prior FROM public.appointment_record WHERE appointment_id=a.id AND record_type='intake' ORDER BY revision_no DESC LIMIT 1;\n  IF prior.id IS NULL OR prior.customer_confirmation_status<>'confirmed' THEN RAISE EXCEPTION 'confirmed_intake_required' USING ERRCODE='22023'; END IF;\n  IF EXISTS(SELECT 1 FROM public.appointment_adjustment WHERE appointment_id=a.id AND (approval_status='pending' OR (approval_status='approved' AND customer_consent_status<>'confirmed'))) THEN RAISE EXCEPTION 'pending_service_adjustments' USING ERRCODE='22023'; END IF;\n  IF EXISTS(SELECT 1 FROM public.hotel_booking WHERE appointment_id=a.id AND status NOT IN ('completed','cancelled','checked_out','closed')) THEN RAISE EXCEPTION 'hotel_checkout_required' USING ERRCODE='22023'; END IF;\n  condition_text:='Đã kiểm tra chất lượng dịch vụ, trả đủ tư trang và ghi nhận khách xác nhận bàn giao.';\n  UPDATE public.appointment SET appointment_status='completed',check_out_time=at_time WHERE id=a.id;\n  UPDATE public.appointment_item SET status='completed' WHERE appointment_id=a.id AND status<>'cancelled';\n END IF;\n SELECT coalesce(max(revision_no),0)+1 INTO rev FROM public.appointment_record WHERE appointment_id=a.id AND record_type=p_type;\n INSERT INTO public.appointment_record(id,appointment_id,record_type,schema_version,revision_no,recorded_by,recorded_at,condition_note,safety_note_snapshot,allergy_note_snapshot,customer_confirmation_status,confirmed_at,note)\n VALUES(p_id,a.id,p_type,2,rev,actor,at_time,condition_text,pet.safety_note,pet.allergy,confirmation,CASE WHEN confirmation='confirmed' THEN at_time END,nullif(btrim(p_details->>'belongingsNote'),''));\n INSERT INTO public.audit_log(staff_id,action,entity_name,entity_id,description) VALUES(actor,'SAVE_SERVICE_RECORD','appointment_record',p_id,p_details::text);\n RETURN p_id;\nEND $function$\n"
+    },
+    {
+      "signature": "save_own_pet(uuid,timestamp with time zone,jsonb,numeric)",
+      "definition": "CREATE OR REPLACE FUNCTION public.save_own_pet(p_id uuid, p_expected timestamp with time zone, p_values jsonb, p_weight numeric)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE owner_id uuid; existing public.pet_profile; breed uuid; last_weight numeric; born date;\nBEGIN\n SELECT id INTO owner_id FROM public.customer WHERE auth_user_id=auth.uid() AND customer_status='active' AND pawpal_private.owns_customer(id) FOR UPDATE;\n IF owner_id IS NULL OR EXISTS(SELECT 1 FROM public.staff WHERE auth_user_id=auth.uid()) THEN\n  RAISE EXCEPTION 'Phiên khách hàng không hợp lệ' USING ERRCODE='42501'; END IF;\n IF p_id IS NULL OR jsonb_typeof(p_values) IS DISTINCT FROM 'object' THEN RAISE EXCEPTION 'Hồ sơ không hợp lệ'; END IF;\n PERFORM pg_advisory_xact_lock(hashtextextended(p_id::text,59));\n SELECT * INTO existing FROM public.pet_profile WHERE id=p_id FOR UPDATE;\n IF FOUND THEN\n  IF existing.customer_id<>owner_id THEN RAISE EXCEPTION 'Hồ sơ không thuộc chủ nuôi' USING ERRCODE='42501'; END IF;\n  IF existing.updated_at IS DISTINCT FROM p_expected THEN RAISE EXCEPTION 'Hồ sơ đã thay đổi. Vui lòng tải lại trước khi lưu' USING ERRCODE='PT409'; END IF;\n ELSIF p_expected IS NOT NULL THEN RAISE EXCEPTION 'Hồ sơ không còn tồn tại' USING ERRCODE='PT409'; END IF;\n breed:=(p_values->>'breed_id')::uuid; born:=nullif(p_values->>'date_of_birth','')::date;\n IF length(btrim(coalesce(p_values->>'pet_name',''))) NOT BETWEEN 1 AND 200\n OR born>CURRENT_DATE OR coalesce(p_values->>'gender','') NOT IN ('nam','nu')\n OR length(coalesce(p_values->>'color',''))>200\n OR length(coalesce(p_values->>'routine',''))>2000 OR length(coalesce(p_values->>'allergy',''))>2000 OR length(coalesce(p_values->>'safety_note',''))>2000\n OR NOT EXISTS(SELECT 1 FROM public.pet_breed b JOIN public.pet_species s ON s.id=b.species_id WHERE b.id=breed AND b.is_active AND s.is_active)\n OR (p_weight IS NOT NULL AND (p_weight::text IN ('NaN','Infinity','-Infinity') OR p_weight<=0 OR p_weight>1000)) THEN\n  RAISE EXCEPTION 'Thông tin bé cưng hoặc cân nặng không hợp lệ' USING ERRCODE='22023'; END IF;\n IF existing.id IS NULL THEN\n  INSERT INTO public.pet_profile(id,customer_id,pet_code,pet_name,breed_id,gender,date_of_birth,color,routine,allergy,safety_note,status)\n  VALUES(p_id,owner_id,'PET-'||upper(replace(p_id::text,'-','')),btrim(p_values->>'pet_name'),breed,p_values->>'gender',born,\n   nullif(btrim(p_values->>'color'),''),nullif(btrim(p_values->>'routine'),''),nullif(btrim(p_values->>'allergy'),''),nullif(btrim(p_values->>'safety_note'),''),'active');\n ELSE\n  UPDATE public.pet_profile SET pet_name=btrim(p_values->>'pet_name'),breed_id=breed,gender=p_values->>'gender',date_of_birth=born,\n   color=nullif(btrim(p_values->>'color'),''),routine=nullif(btrim(p_values->>'routine'),''),allergy=nullif(btrim(p_values->>'allergy'),''),\n   safety_note=nullif(btrim(p_values->>'safety_note'),''),updated_at=clock_timestamp() WHERE id=p_id;\n END IF;\n SELECT weight INTO last_weight FROM public.pet_weight_history WHERE pet_id=p_id ORDER BY measured_at DESC,created_at DESC,id DESC LIMIT 1;\n IF p_weight IS NOT NULL AND last_weight IS DISTINCT FROM p_weight THEN\n  INSERT INTO public.pet_weight_history(pet_id,weight,measured_at,note) VALUES(p_id,p_weight,now(),'Chủ nuôi cập nhật hồ sơ');\n END IF;\n RETURN p_id;\nEND $function$\n"
+    }
+  ],
+  "counts": [
+    {
+      "table": "banner",
+      "column": "image_url",
+      "total": 4,
+      "empty": 0,
+      "https": 4,
+      "http": 0,
+      "assets": 0,
+      "temporary": 0,
+      "data_uri": 0,
+      "blob_uri": 0,
+      "other": 0
+    },
+    {
+      "table": "blog_post",
+      "column": "thumbnail_url",
+      "total": 18,
+      "empty": 1,
+      "https": 0,
+      "http": 0,
+      "assets": 17,
+      "temporary": 0,
+      "data_uri": 0,
+      "blob_uri": 0,
+      "other": 0
+    },
+    {
+      "table": "care_log_media",
+      "column": "media_url",
+      "total": 5,
+      "empty": 0,
+      "https": 0,
+      "http": 0,
+      "assets": 5,
+      "temporary": 0,
+      "data_uri": 0,
+      "blob_uri": 0,
+      "other": 0
+    },
+    {
+      "table": "pet_profile",
+      "column": "avatar_url",
+      "total": 92,
+      "empty": 74,
+      "https": 3,
+      "http": 0,
+      "assets": 12,
+      "temporary": 3,
+      "data_uri": 3,
+      "blob_uri": 0,
+      "other": 0
+    },
+    {
+      "table": "product_media",
+      "column": "image_url",
+      "total": 83,
+      "empty": 0,
+      "https": 0,
+      "http": 0,
+      "assets": 83,
+      "temporary": 0,
+      "data_uri": 0,
+      "blob_uri": 0,
+      "other": 0
+    },
+    {
+      "table": "product_variant_media",
+      "column": "image_url",
+      "total": 134,
+      "empty": 0,
+      "https": 9,
+      "http": 0,
+      "assets": 125,
+      "temporary": 0,
+      "data_uri": 0,
+      "blob_uri": 0,
+      "other": 0
+    },
+    {
+      "table": "return_request_evidence",
+      "column": "image_url",
+      "total": 0,
+      "empty": 0,
+      "https": 0,
+      "http": 0,
+      "assets": 0,
+      "temporary": 0,
+      "data_uri": 0,
+      "blob_uri": 0,
+      "other": 0
+    },
+    {
+      "table": "review_media",
+      "column": "image_url",
+      "total": 0,
+      "empty": 0,
+      "https": 0,
+      "http": 0,
+      "assets": 0,
+      "temporary": 0,
+      "data_uri": 0,
+      "blob_uri": 0,
+      "other": 0
+    },
+    {
+      "table": "service_image",
+      "column": "image_url",
+      "total": 23,
+      "empty": 0,
+      "https": 0,
+      "http": 0,
+      "assets": 23,
+      "temporary": 0,
+      "data_uri": 0,
+      "blob_uri": 0,
+      "other": 0
+    },
+    {
+      "table": "support_ticket_message_attachment",
+      "column": "file_url",
+      "total": 0,
+      "empty": 0,
+      "https": 0,
+      "http": 0,
+      "assets": 0,
+      "temporary": 0,
+      "data_uri": 0,
+      "blob_uri": 0,
+      "other": 0
+    }
+  ],
+  "buckets": []
+}

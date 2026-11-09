@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "checksum": "b95397341bb3e415236184d064a0230c47e99ae4d96271127f8f9eb01731c0ca",
+  "cloudWrites": false,
+  "fixtureTransactionRolledBack": true,
+  "checks": [
+    "real STAFF role handover RPC",
+    "wrong record and intake assets denied",
+    "invalid assets roll back completion",
+    "confirmation required",
+    "completion without payment",
+    "private owner/staff access",
+    "revoked staff denied",
+    "legal hold",
+    "idempotency",
+    "empty rollback and reapply"
+  ]
+}

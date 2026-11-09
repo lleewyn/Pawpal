@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "checksum": "43bf192cc0407f93357181782789de10a8fc188f843564237bacd1005f498e5f",
+  "cloudWrites": false,
+  "fixtureTransactionRolledBack": true,
+  "checks": [
+    "real STAFF role record RPC",
+    "record and appointment scope",
+    "rollback status and weight on invalid image",
+    "private owner/staff access",
+    "revoked staff denied",
+    "legal hold",
+    "idempotency",
+    "empty rollback and reapply"
+  ]
+}

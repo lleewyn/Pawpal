@@ -6,8 +6,21 @@
     const escapeTripText = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     PawpalServices.subtabs = PawpalServices.subtabs || {};
 
-    let currentEditingCarelogStepIdx = null;
-    let editCarelogStepPhotosTemp = [];
+    let composeAppointment=null,composeEpoch=0,composeReady=Promise.resolve();
+    const composeMedia=import('/scripts/shared/care-media.mjs').then(({createCareMediaEditor})=>
+        createCareMediaEditor({root:document.getElementById('adminCareLogMedia'),db:window.getSupabaseClient()}));
+    function syncComposeMedia(booking) {
+        const id=booking?.status==='in_progress'?booking.dbId:null;
+        if(id===composeAppointment)return;
+        composeAppointment=id;const epoch=++composeEpoch;
+        composeReady=composeMedia.then(async editor=>{
+            editor.close();
+            if(id&&epoch===composeEpoch)await editor.reset({appointment:id});
+        });
+        composeReady.catch(()=>{if(epoch===composeEpoch)composeAppointment=null;PawpalServices.showToast('Đợi thao tác ảnh hoàn tất rồi mở lại ca.','warning');});
+        for(const key of ['newLogStepTitle','newLogStepNote']){const input=document.getElementById(key);if(input)input.value='';}
+    }
+    window.addEventListener('hashchange',()=>{composeAppointment=null;composeEpoch++;void composeMedia.then(editor=>editor.close());});
 
     function openBookingDetail(bookingId) {
         PawpalServices.state.selectedBookingId = bookingId;
@@ -24,6 +37,7 @@
         const card = section?.querySelector('.service-detail-card');
         const state = document.getElementById('serviceDetailState');
         if (!booking) {
+            syncComposeMedia(null);
             if (card) card.style.display = 'none';
             if (state) {
                 state.style.display = 'block';
@@ -68,6 +82,19 @@
             if (booking.handoverRecord?.recordedAt) metaEl.textContent += ` | Bàn giao: ${formatRecordedAt(booking.handoverRecord.recordedAt)}`;
         }
         const belongingsSummary = document.getElementById('detailBelongingsText');
+        const adjustmentSection=document.getElementById('detailAdjustmentEvidence'),adjustmentGrid=document.getElementById('detailAdjustmentProofGrid');
+        if(adjustmentSection&&adjustmentGrid){
+            const photos=booking.adjustmentProofPhotos||[];adjustmentSection.hidden=!photos.length;adjustmentGrid.replaceChildren();
+            for(const [index,url]of photos.entries()){const image=document.createElement('img');image.src=url;image.alt='Ảnh phụ phí '+(index+1);image.style.cssText='width:80px;height:80px;object-fit:cover;border-radius:9px;cursor:pointer;margin-right:8px';image.addEventListener('click',()=>openCarelogPhotoPreview(url,'Ảnh phụ phí '+(index+1)));adjustmentGrid.append(image);}
+        }
+        const handoverSection=document.getElementById('detailHandoverEvidence'),handoverGrid=document.getElementById('detailHandoverProofGrid');
+        if(handoverSection&&handoverGrid){
+            const photos=booking.handoverRecord?.proofPhotos||[];handoverSection.hidden=!photos.length;handoverGrid.replaceChildren();
+            for(const [index,url]of photos.entries()){
+                const image=document.createElement('img');image.src=url;image.alt='Ảnh bàn giao '+(index+1);image.style.cssText='width:80px;height:80px;object-fit:cover;border-radius:9px;cursor:pointer;margin-right:8px';
+                image.addEventListener('click',()=>openCarelogPhotoPreview(url,'Ảnh bàn giao '+(index+1)));handoverGrid.append(image);
+            }
+        }
         if (belongingsSummary) belongingsSummary.textContent = booking.intakeRecord?.belongingsNote || booking.intakeRecord?.belongings?.join(', ') || 'Không có';
 
         // Cảnh báo an toàn Pet Alert
@@ -400,6 +427,7 @@
         }
         const quickLog = document.getElementById('carelogQuickAddBox');
         if (quickLog) quickLog.style.display = booking.status==='in_progress' ? '' : 'none';
+        syncComposeMedia(booking);
         renderDetailCareLogs(booking);
     }
 
@@ -500,7 +528,6 @@
         `).join('');
     }
 
-    let editCarelogPhotosTemp = [];
 
     // Mở Modal 6A: Xem ảnh phóng to (Lightbox)
     function openCarelogPhotoPreview(imgUrl, caption = '') {
@@ -514,79 +541,17 @@
     }
 
     // Mở Modal 6B: Chỉnh sửa bước quy trình chăm sóc
-    function openEditCarelogStepModal(stepIdx) {
-        const bookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
-        const bookingsData = PawpalServices.state?.bookingsData || [];
-        const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
-        if (!booking) return;
-
-        const modal = document.getElementById('modalEditCarelogStep');
-        if (!modal) return;
-
-        const logs = booking.carelogs || booking.careLogs || [];
-        const step = logs[stepIdx];
-        if (!step) return;
-
-        const metaEl = document.getElementById('editCarelogModalMeta');
-        if (metaEl) metaEl.textContent = `Mã ca: ${booking.id} • Bé: ${booking.petName || 'Bé cưng'}`;
-
-        const idxHidden = document.getElementById('editCarelogStepIndexHidden');
-        if (idxHidden) idxHidden.value = stepIdx;
-
-        const titleInp = document.getElementById('editCarelogStepTitle');
-        if (titleInp) titleInp.value = step.step_name || '';
-
-        const staffSelect = document.getElementById('editCarelogStepStaff');
-        if (staffSelect) {
-            const staffList = PawpalServices.state?.liveStaffList || [];
-            if (staffList.length > 0 && staffSelect.options.length <= 1) {
-                staffList.forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s.full_name;
-                    opt.textContent = s.full_name;
-                    staffSelect.appendChild(opt);
-                });
-            }
-            staffSelect.value = step.ktv || booking.staff || '';
-        }
-
-        const timeInp = document.getElementById('editCarelogStepTime');
-        if (timeInp) {
-            timeInp.value = step.recorded_at ? new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'}).format(new Date(step.recorded_at)) : (new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
-        }
-
-        const descInp = document.getElementById('editCarelogStepDesc');
-        if (descInp) descInp.value = step.note || '';
-
-        const doneCheck = document.getElementById('editCarelogStepDone');
-        if (doneCheck) { doneCheck.checked = true; doneCheck.disabled = true; }
-
-        editCarelogPhotosTemp = Array.isArray(step.images) ? [...step.images] : [];
-        renderEditCarelogPhotosPreview();
-
-        modal.setAttribute('data-step-idx', stepIdx);
-        modal.classList.add('active');
-    }
-
-    function renderEditCarelogPhotosPreview() {
-        const previewContainer = document.getElementById('editCarelogPhotosPreviewList');
-        if (!previewContainer) return;
-        previewContainer.innerHTML = '';
-        editCarelogPhotosTemp.forEach((url, i) => {
-            const item = document.createElement('div');
-            item.className = 'intake-proof-item';
-            item.style.position = 'relative';
-            item.innerHTML = `
-                <img src="${url}" alt="Ảnh bước" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); cursor: pointer;">
-                <span class="btn-del-proof" style="position: absolute; top: -5px; right: -5px; background: #DC2626; color: #fff; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">✕</span>
-            `;
-            item.querySelector('img').addEventListener('click', () => openCarelogPhotoPreview(url, 'Ảnh bước chăm sóc'));
-            item.querySelector('.btn-del-proof').addEventListener('click', () => {
-                editCarelogPhotosTemp.splice(i, 1);
-                renderEditCarelogPhotosPreview();
-            });
-            previewContainer.appendChild(item);
-        });
+    const editCarelogController=import('/scripts/shared/edit-care-log.mjs').then(({bindEditCareLog})=>bindEditCareLog({modal:document.getElementById('modalEditCarelogStep'),services:PawpalServices,db:window.getSupabaseClient()}));
+    async function openEditCarelogStepModal(appointmentId,logId) {
+        try{
+            const selected=PawpalServices.state.selectedBookingId;
+            const booking=await PawpalServices.ensureBooking(appointmentId,{force:true});
+            const logs=await PawpalServices.fetchBookingCareLogs(appointmentId,{force:true});
+            const log=logs.find(item=>item.id===logId);
+            if(PawpalServices.state.selectedBookingId!==selected)return;
+            if(!booking||!log)throw Error('Nhật ký đã thay đổi. Tải lại hồ sơ để kiểm tra.');
+            await(await editCarelogController).open(booking,log);
+        }catch(error){PawpalServices.showToast(error.message||'Không tải được nhật ký.','danger');}
     }
 
     function renderDetailCareLogs(booking) {
@@ -636,7 +601,7 @@
                     ${(log.images && log.images.length > 0) ? `
                         <div class="carelog-step-images" style="display: flex; gap: 6px; margin-top: 6px;">
                             ${log.images.map(img => `
-                                <img src="${img}" alt="Ảnh bước" class="carelog-thumb-clickable" data-img-src="${img}" style="width: 48px; height: 48px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); cursor: pointer;">
+                                <img src="${escapeTripText(img)}" alt="Ảnh bước" class="carelog-thumb-clickable" data-img-src="${escapeTripText(img)}" style="width: 48px; height: 48px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); cursor: pointer;">
                             `).join('')}
                         </div>
                     ` : ''}
@@ -658,14 +623,13 @@
             card.addEventListener('click', () => {
                 const stepIdx = parseInt(card.getAttribute('data-step-idx'), 10);
                 if (!isNaN(stepIdx)) {
-                    openEditCarelogStepModal(stepIdx);
+                    openEditCarelogStepModal(booking.dbId,logs[stepIdx]?.id);
                 }
             });
         });
     }
 
     function initDetailSubtab() {
-        document.getElementById('btnTriggerCarelogImageUpload')?.addEventListener('click', () => PawpalServices.showToast('Chưa cấu hình kho ảnh Supabase; chưa thể lưu ảnh nhật ký.','warning'));
         const logButton = document.getElementById('btnSubmitCarelogStep');
         if (logButton) logButton.addEventListener('click', async () => {
             if (logButton.disabled) return;
@@ -677,15 +641,24 @@
             if (!title || !staff) { PawpalServices.showToast('Vui lòng nhập tên bước và chọn nhân viên thực hiện.','warning'); return; }
             if (!booking || booking.status!=='in_progress') { PawpalServices.showToast('Chỉ ghi nhật ký khi ca đang thực hiện.','warning'); return; }
             logButton.disabled=true;
+            const epoch=composeEpoch;
+            const fields=['newLogStepTitle','newLogStepNote','newLogStepStaff'].map(id=>document.getElementById(id));
+            fields.forEach(input=>input.disabled=true);
             try {
-                if (document.getElementById('carelogImageFileInput').files.length) throw new Error('Ảnh nhật ký chưa được tải lên máy chủ; vui lòng bỏ ảnh trước khi lưu.');
-                const db = window.getSupabaseClient();
-                await PawpalServices.saveCareLog(booking,null,'save',{title,note,staff_id:staff.id});
-                document.getElementById('newLogStepTitle').value='';
-                document.getElementById('newLogStepNote').value='';
+                await composeReady;
+                const editor=await composeMedia;
+                const mediaIds=await editor.prepare();
+                if(epoch!==composeEpoch||composeAppointment!==booking.dbId)throw Error('Ca đã thay đổi. Mở lại hồ sơ trước khi lưu.');
+                await PawpalServices.saveCareLog(booking,null,'save',{title,note,staff_id:staff.id,...(mediaIds.length?{media_asset_ids:mediaIds}:{})});
+                if(epoch===composeEpoch){
+                    editor.saved();
+                    await editor.reset({appointment:booking.dbId});
+                    document.getElementById('newLogStepTitle').value='';
+                    document.getElementById('newLogStepNote').value='';
+                }
                 PawpalServices.showToast('Đã lưu nhật ký chăm sóc.');
             } catch(err) { PawpalServices.showToast('Không thể ghi nhật ký: '+PawpalServices.errorMessage(err),'danger'); }
-            finally { logButton.disabled=false; }
+            finally { logButton.disabled=false;fields.forEach(input=>input.disabled=false); }
         });
         const initialBookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
         renderBookingDetail(initialBookingId);
@@ -701,94 +674,6 @@
                     const modal = document.getElementById('modalAddSurcharge');
                     if (modal) modal.classList.add('active');
                 }
-            });
-        }
-
-        // ====================================================================
-        // MODAL 6B: LẮNG NGHE SỰ KIỆN CHỈNH SỬA BƯỚC QUY TRÌNH CHĂM SÓC
-        // ====================================================================
-        const btnSubmitEditCarelog = document.getElementById('btnSubmitEditCarelogStep');
-        if (btnSubmitEditCarelog) {
-            btnSubmitEditCarelog.addEventListener('click', async () => {
-                const modal = document.getElementById('modalEditCarelogStep');
-                const stepIdx = parseInt(document.getElementById('editCarelogStepIndexHidden')?.value, 10);
-                const title = document.getElementById('editCarelogStepTitle')?.value.trim();
-                const staff = document.getElementById('editCarelogStepStaff')?.value;
-                const time = document.getElementById('editCarelogStepTime')?.value.trim();
-                const desc = document.getElementById('editCarelogStepDesc')?.value.trim();
-                const done = document.getElementById('editCarelogStepDone')?.checked;
-
-                if (!title) {
-                    PawpalServices.showToast('Vui lòng nhập tên bước chăm sóc!', 'warning');
-                    document.getElementById('editCarelogStepTitle')?.focus();
-                    return;
-                }
-
-                const bookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
-                const bookingsData = PawpalServices.state?.bookingsData || [];
-                const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
-                if (booking && !isNaN(stepIdx)) {
-                    const logs = booking.carelogs || booking.careLogs || [];
-                    const step = logs[stepIdx];
-                    if (!step?.id || btnSubmitEditCarelog.disabled) return;
-                    btnSubmitEditCarelog.disabled = true;
-                    try {
-                        const db = window.getSupabaseClient();
-                        const performers = (PawpalServices.state.liveStaffList||[]).filter(s=>s.full_name===staff);
-                        if (performers.length!==1 || !time) throw new Error('Vui lòng chọn đúng một nhân viên và giờ ghi nhận.');
-                        if (editCarelogPhotosTemp.some(url=>url.startsWith('blob:'))) throw new Error('Chưa cấu hình kho ảnh; ảnh tạm chưa được lưu.');
-                        if (editCarelogPhotosTemp.length !== (step.images||[]).length) throw new Error('Thay đổi ảnh cần hoàn thiện kho ảnh trước.');
-                        if(!/^\d{2}:\d{2}$/.test(time))throw Error('Giờ ghi nhận cần theo dạng giờ:phút.');
-                        const day = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(step.recorded_at));
-                        const recordedAt = new Date(day+'T'+time+':00+07:00').toISOString();
-                        await PawpalServices.saveCareLog(booking,step,'save',{title,note:desc,staff_id:performers[0].id,recorded_at:recordedAt});
-                        PawpalServices.showToast('Đã lưu thay đổi nhật ký chăm sóc.');
-                    } catch(err) { PawpalServices.showToast('Không thể sửa nhật ký: '+PawpalServices.errorMessage(err),'danger'); return; }
-                    finally { btnSubmitEditCarelog.disabled=false; }
-                    if (modal) modal.classList.remove('active');
-                }
-            });
-        }
-
-        // Nút Xóa bước chăm sóc
-        const btnDeleteCarelog = document.getElementById('btnDeleteCarelogStep');
-        if (btnDeleteCarelog) {
-            btnDeleteCarelog.addEventListener('click', async () => {
-                const modal = document.getElementById('modalEditCarelogStep');
-                const stepIdx = parseInt(document.getElementById('editCarelogStepIndexHidden')?.value, 10);
-                const bookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
-                const bookingsData = PawpalServices.state?.bookingsData || [];
-                const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
-                if (booking && !isNaN(stepIdx)) {
-                    const logs = booking.carelogs || booking.careLogs || [];
-                    const step=logs[stepIdx];
-                    if(!step?.id || btnDeleteCarelog.disabled) return;
-                    if(!window.confirm('Xóa vĩnh viễn nhật ký này? Thao tác không thể hoàn tác.')) return;
-                    btnDeleteCarelog.disabled=true;
-                    try {
-                        const db=window.getSupabaseClient();
-                        if(step.care_log_media?.length) throw new Error('Nhật ký có media; cần xử lý media trước khi xóa.');
-                        await PawpalServices.saveCareLog(booking,step,'delete',{});
-                        PawpalServices.showToast('Đã xóa nhật ký chăm sóc.');
-                    } catch(err) { PawpalServices.showToast('Không thể xóa nhật ký: '+PawpalServices.errorMessage(err),'danger'); return; }
-                    finally { btnDeleteCarelog.disabled=false; }
-                    if (modal) modal.classList.remove('active');
-                }
-            });
-        }
-
-        // Nút thêm ảnh vào bước
-        const btnAddPhoto = document.getElementById('btnEditCarelogAddPhoto');
-        const photoFileInp = document.getElementById('editCarelogFileInput');
-        if (btnAddPhoto && photoFileInp) {
-            btnAddPhoto.addEventListener('click', () => PawpalServices.showToast('Chưa cấu hình kho ảnh Supabase; chưa thể lưu ảnh nhật ký.','warning'));
-            photoFileInp.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files || []);
-                files.forEach(file => {
-                    const url = URL.createObjectURL(file);
-                    editCarelogPhotosTemp.push(url);
-                });
-                renderEditCarelogPhotosPreview();
             });
         }
 

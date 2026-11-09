@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "checksum": "d7af5a1846a3755343953e78ba24f590fe629d23f74c4e359528bfdd369100ee",
+  "cloudWrites": false,
+  "fixtureTransactionRolledBack": true,
+  "checks": [
+    "exact service scope",
+    "actual service save RPC",
+    "retain reference",
+    "public directory",
+    "inactive service privacy",
+    "staff denied",
+    "draft service atomic attach",
+    "retention",
+    "empty rollback and reapply"
+  ]
+}

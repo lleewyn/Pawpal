@@ -39,9 +39,9 @@
     }
 
     let activeDropdownBookingId = null;
-    let intakeProofImagesTemp = [];
-    let surchargeProofImagesTemp = [];
-    let completeProofImagesTemp = [];
+    let intakeMediaEditor=null,intakeMediaReady=Promise.resolve(),intakeMediaGeneration=0,intakeSaving=false;
+    let adjustmentMediaEditor=null,adjustmentMediaReady=Promise.resolve(),adjustmentGeneration=0,adjustmentSaving=false;
+    let handoverMediaEditor=null,handoverMediaReady=Promise.resolve(),handoverGeneration=0,handoverSaving=false;
 
     // Global action dropdown portal (•••)
     let globalBookingActionDropdown = null;
@@ -537,6 +537,21 @@
 
     // Modal tạo lịch hẹn mới, điều phối KTV, tiếp nhận an toàn...
     function initBookingsSubtab() {
+        const surchargeModal=document.getElementById('modalAddSurcharge');
+        if(surchargeModal&&!surchargeModal.dataset.mediaCloseBound){
+            surchargeModal.dataset.mediaCloseBound='true';
+            new MutationObserver(()=>{if(!surchargeModal.classList.contains('active')){adjustmentGeneration++;adjustmentMediaEditor?.close();}}).observe(surchargeModal,{attributes:true,attributeFilter:['class']});
+        }
+        const handoverModal=document.getElementById('modalCompleteBooking');
+        if(handoverModal&&!handoverModal.dataset.mediaCloseBound){
+            handoverModal.dataset.mediaCloseBound='true';
+            new MutationObserver(()=>{if(!handoverModal.classList.contains('active')){handoverGeneration++;handoverMediaEditor?.close();}}).observe(handoverModal,{attributes:true,attributeFilter:['class']});
+        }
+        const intakeModal=document.getElementById('modalEditIntakeInfo');
+        if(intakeModal&&!intakeModal.dataset.mediaCloseBound){
+            intakeModal.dataset.mediaCloseBound='true';
+            new MutationObserver(()=>{if(!intakeModal.classList.contains('active')){intakeMediaGeneration++;intakeMediaEditor?.close();}}).observe(intakeModal,{attributes:true,attributeFilter:['class']});
+        }
         globalBookingActionDropdown = document.getElementById('globalBookingActionDropdown');
         if (!globalBookingActionDropdown) {
             globalBookingActionDropdown = document.createElement('div');
@@ -821,27 +836,8 @@
         }
     }
 
-    function renderIntakeProofPreview() {
-        const previewList = document.getElementById('intakeProofPreviewList');
-        if (!previewList) return;
-        previewList.innerHTML = '';
-        intakeProofImagesTemp.forEach((url, idx) => {
-            const thumb = document.createElement('div');
-            thumb.className = 'intake-proof-item';
-            thumb.style.position = 'relative';
-            thumb.innerHTML = `
-                <img src="${url}" alt="Bằng chứng tiếp nhận" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);">
-                <span class="btn-del-proof" style="position: absolute; top: -5px; right: -5px; background: #DC2626; color: #fff; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">✕</span>
-            `;
-            thumb.querySelector('.btn-del-proof').addEventListener('click', () => {
-                intakeProofImagesTemp.splice(idx, 1);
-                renderIntakeProofPreview();
-            });
-            previewList.appendChild(thumb);
-        });
-    }
-
     function openIntakeModal(bookingId, mode = 'intake') {
+        if(intakeSaving)return;
         const modal = document.getElementById('modalEditIntakeInfo') || document.getElementById('modalIntakeSafety');
         if (!modal) return;
 
@@ -849,6 +845,7 @@
 
         const bookingsData = PawpalServices.state?.bookingsData || [];
         const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
+        if(!booking)return;
         modal.setAttribute('data-booking-id', bookingId);
 
         const modeHidden = document.getElementById('intakeModalMode');
@@ -938,8 +935,17 @@
         });
 
         // Bằng chứng ảnh
-        intakeProofImagesTemp = Array.isArray(intake.proofPhotos) ? [...intake.proofPhotos] : [];
-        renderIntakeProofPreview();
+        const generation=++intakeMediaGeneration;
+        modal.dataset.mediaRecordId=crypto.randomUUID();
+        intakeMediaReady=intakeMediaReady.catch(()=>{}).then(async()=>{
+            intakeMediaEditor?.close();intakeMediaEditor=null;
+            const {createIntakeMediaEditor}=await import('/scripts/shared/intake-media.mjs');
+            if(generation!==intakeMediaGeneration)return;
+            const root=document.getElementById('intakeProofPreviewList');root.replaceChildren();
+            intakeMediaEditor=createIntakeMediaEditor({root,db:window.getSupabaseClient()});
+            await intakeMediaEditor.reset({appointment:booking.dbId,record:modal.dataset.mediaRecordId});
+        });
+        void intakeMediaReady.catch(()=>modalError(modal,'Không tải đủ ảnh tiếp nhận. Đóng và mở lại biên bản trước khi lưu.'));
 
         modal.classList.add('active');
     }
@@ -995,11 +1001,13 @@
     }
 
     function openSurchargeModal(bookingId) {
+        if(adjustmentSaving)return;
         const modal = document.getElementById('modalAddSurcharge');
         if (!modal) return;
 
         const bookingsData = PawpalServices.state?.bookingsData || [];
         const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
+        if(!booking)return;
 
         const metaEl = document.getElementById('surchargeBookingMeta');
         if (metaEl) {
@@ -1021,30 +1029,18 @@
 
         const previewList = document.getElementById('surchargeProofPreviewList');
         if (previewList) previewList.innerHTML = '';
-        surchargeProofImagesTemp = [];
+        const generation=++adjustmentGeneration;modal.dataset.mediaAdjustmentId=crypto.randomUUID();
+        adjustmentMediaReady=adjustmentMediaReady.catch(()=>{}).then(async()=>{
+            adjustmentMediaEditor?.close();adjustmentMediaEditor=null;
+            const {createAdjustmentMediaEditor}=await import('/scripts/shared/adjustment-media.mjs');if(generation!==adjustmentGeneration)return;
+            const root=document.getElementById('surchargeProofPreviewList');root.replaceChildren();
+            adjustmentMediaEditor=createAdjustmentMediaEditor({root,db:window.getSupabaseClient()});
+            await adjustmentMediaEditor.reset({appointment:booking.dbId,record:modal.dataset.mediaAdjustmentId,loadExisting:false});
+        });
+        void adjustmentMediaReady.catch(()=>PawpalServices.showToast('Không mở được phần ảnh phụ phí. Đóng và mở lại biểu mẫu.','danger'));
 
         modal.setAttribute('data-booking-id', bookingId);
         modal.classList.add('active');
-    }
-
-    function renderCompleteProofPreview() {
-        const previewList = document.getElementById('completeProofPreviewList');
-        if (!previewList) return;
-        previewList.innerHTML = '';
-        completeProofImagesTemp.forEach((url, idx) => {
-            const thumb = document.createElement('div');
-            thumb.className = 'intake-proof-item';
-            thumb.style.position = 'relative';
-            thumb.innerHTML = `
-                <img src="${url}" alt="Ảnh thành phẩm" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);">
-                <span class="btn-del-proof" style="position: absolute; top: -5px; right: -5px; background: #DC2626; color: #fff; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">✕</span>
-            `;
-            thumb.querySelector('.btn-del-proof').addEventListener('click', () => {
-                completeProofImagesTemp.splice(idx, 1);
-                renderCompleteProofPreview();
-            });
-            previewList.appendChild(thumb);
-        });
     }
 
     function calculateCompleteTotal(booking) {
@@ -1060,12 +1056,14 @@
     }
 
     function openCompleteBookingModal(bookingId) {
+        if(handoverSaving)return;
         const modal = document.getElementById('modalCompleteBooking');
         const handoverConfirmation=document.getElementById('handoverCustomerConfirmed');if(handoverConfirmation)handoverConfirmation.checked=false;
         if (!modal) return;
 
         const bookingsData = PawpalServices.state?.bookingsData || [];
         const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
+        if(!booking)return;
         modal.setAttribute('data-booking-id', bookingId);
 
         const formatCurrency = PawpalServices.formatCurrency || (num => `${num.toLocaleString('vi-VN')} đ`);
@@ -1136,8 +1134,17 @@
         }
 
         // Reset ảnh thành phẩm
-        completeProofImagesTemp = [];
-        renderCompleteProofPreview();
+        const generation=++handoverGeneration;
+        modal.dataset.mediaRecordId=crypto.randomUUID();
+        handoverMediaReady=handoverMediaReady.catch(()=>{}).then(async()=>{
+            handoverMediaEditor?.close();handoverMediaEditor=null;
+            const {createHandoverMediaEditor}=await import('/scripts/shared/handover-media.mjs');
+            if(generation!==handoverGeneration)return;
+            const root=document.getElementById('completeProofPreviewList');root.replaceChildren();
+            handoverMediaEditor=createHandoverMediaEditor({root,db:window.getSupabaseClient()});
+            await handoverMediaEditor.reset({appointment:booking.dbId,record:modal.dataset.mediaRecordId});
+        });
+        void handoverMediaReady.catch(()=>PawpalServices.showToast('Không tải đủ ảnh bàn giao. Đóng và mở lại biên bản trước khi lưu.','danger'));
 
         modal.classList.add('active');
     }
@@ -1909,20 +1916,6 @@
         // ====================================================================
         // MODAL 8: BIÊN BẢN TIẾP NHẬN BÉ VÀ KIỂM TRA AN TOÀN TẠI QUẦY (ZERO-CLAIM)
         // ====================================================================
-        const btnAddIntakePhoto = document.getElementById('btnAddProofPhotoBtn');
-        const intakePhotoInput = document.getElementById('intakeProofFileInput');
-        if (btnAddIntakePhoto && intakePhotoInput) {
-            btnAddIntakePhoto.addEventListener('click', () => intakePhotoInput.click());
-            intakePhotoInput.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files || []);
-                files.forEach(file => {
-                    const url = URL.createObjectURL(file);
-                    intakeProofImagesTemp.push(url);
-                });
-                renderIntakeProofPreview();
-            });
-        }
-
         const btnConfirmIntake = document.getElementById('intakeModalSubmitBtn') || document.getElementById('btnSubmitIntakeRecord');
         if (btnConfirmIntake) {
             btnConfirmIntake.addEventListener('click', async () => {
@@ -1971,25 +1964,33 @@
                 if(modal.querySelector('[aria-invalid="true"]')){focusModalError(modal);return;}
 
                 if(btnConfirmIntake.disabled) return;
-                btnConfirmIntake.disabled=true;
+                btnConfirmIntake.disabled=true;intakeSaving=true;
+                const mediaGeneration=intakeMediaGeneration;
+                const lockedFields=[];
                 try {
                     if(!['confirmed','checked_in','in_progress'].includes(booking.status)) throw new Error('Chỉ tiếp nhận ca đã xác nhận hoặc cập nhật ca đang thực hiện.');
                     if(!Number.isFinite(actualWeight)||actualWeight<=0) throw new Error('Cân nặng tiếp nhận phải lớn hơn 0.');
                     const staffMatches=(PawpalServices.state.liveStaffList||[]).filter(s=>s.id===staff);
                     if(staffMatches.length!==1) throw new Error('Vui lòng chọn đúng một nhân viên tiếp nhận.');
-                    if(intakeProofImagesTemp.length) throw new Error('Phần ảnh đang được bỏ qua; vui lòng bỏ ảnh tạm trước khi lưu.');
                     if(document.getElementById('checkSkinNormal')?.checked && skinList.length>1) throw new Error('Không chọn đồng thời da sạch và tình trạng bất thường.');
                     if(document.getElementById('checkEyesEarsNormal')?.checked && eyesEarsList.length>1) throw new Error('Không chọn đồng thời mắt tai bình thường và tình trạng bất thường.');
                     if(woundNone && document.getElementById('checkWoundExisting')?.checked) throw new Error('Vui lòng chọn đúng tình trạng vết thương.');
+                    await intakeMediaReady;
+                    if(!intakeMediaEditor||mediaGeneration!==intakeMediaGeneration||!modal.classList.contains('active'))throw Error('Đã đóng biên bản tiếp nhận.');
+                    modal.querySelectorAll('input,select,textarea').forEach(input=>{lockedFields.push([input,input.disabled]);input.disabled=true;});
+                    const assetIds=await intakeMediaEditor.prepare();
+                    if(mediaGeneration!==intakeMediaGeneration||!modal.classList.contains('active'))throw Error('Đã hủy lưu biên bản tiếp nhận.');
                     await PawpalServices.saveBookingRecord(booking,'intake',{
+                        mediaRecordId:modal.dataset.mediaRecordId,media_asset_ids:assetIds,
                         actualWeight,staffId:staffMatches[0].id,staffName:staffMatches[0].full_name,customerConfirmed:!!document.getElementById('intakeCustomerConfirmed')?.checked,
                         skinCoat:skinList.join(', '),eyesEars:eyesEarsList.join(', '),wounds:woundsStr,woundNote,
                         temperament:selectedTemp,belongings:belongings.join(', '),belongingsNote,
                         recordedAt:booking.intakeRecord?.recordedAt||new Date().toISOString(),updatedAt:new Date().toISOString()
                     },{appointment_status:'dang_thuc_hien',staff_id:staffMatches[0].id});
+                    intakeMediaEditor.saved();
                     PawpalServices.showToast('Đã lưu biên bản tiếp nhận và trạng thái ca dịch vụ.');
                 } catch(err) {if(['staff_level_required','staff_not_eligible','staff_not_available'].includes(err.message)){fieldError('intakeStaffSelect',PawpalServices.errorMessage(err));focusModalError(modal);}else modalError(modal,'Không thể tiếp nhận: '+PawpalServices.errorMessage(err));return;}
-                finally {btnConfirmIntake.disabled=false;}
+                finally {btnConfirmIntake.disabled=false;intakeSaving=false;lockedFields.forEach(([input,disabled])=>input.disabled=disabled);}
                 if (modal) modal.classList.remove('active');
             });
         }
@@ -1997,20 +1998,6 @@
         // ====================================================================
         // MODAL 10: NGHIỆM THU CA DỊCH VỤ VÀ BÀN GIAO BÉ (CHECKOUT DESK)
         // ====================================================================
-        const btnAddCompletePhoto = document.getElementById('btnAddCompletePhotoBtn');
-        const completePhotoInput = document.getElementById('completeProofFileInput');
-        if (btnAddCompletePhoto && completePhotoInput) {
-            btnAddCompletePhoto.addEventListener('click', () => completePhotoInput.click());
-            completePhotoInput.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files || []);
-                files.forEach(file => {
-                    const url = URL.createObjectURL(file);
-                    completeProofImagesTemp.push(url);
-                });
-                renderCompleteProofPreview();
-            });
-        }
-
         const btnSubmitComplete = document.getElementById('completeModalSubmitBtn') || document.getElementById('btnSubmitCompleteBooking');
         if (btnSubmitComplete) {
             btnSubmitComplete.addEventListener('click', async () => {
@@ -2032,19 +2019,28 @@
                 }
 
                 if(btnSubmitComplete.disabled) return;
-                btnSubmitComplete.disabled=true;
+                btnSubmitComplete.disabled=true;handoverSaving=true;
+                const generation=handoverGeneration,lockedFields=[];
                 try {
                     PawpalServices.assertHandoverReady(booking);
                     if(document.getElementById('completeCheckPaid')?.checked && booking.paymentStatus!=='Đã thanh toán') throw new Error('Vui lòng ghi thanh toán qua chức năng thu ngân; không đánh dấu đã thu tiền tại bước bàn giao.');
                     if(Number(document.getElementById('completeVoucherSelect')?.value||0)||Number(document.getElementById('completePointsSelect')?.value||0)) throw new Error('Voucher và đổi điểm phải được xử lý trong luồng thu ngân.');
-                    if(completeProofImagesTemp.length) throw new Error('Phần ảnh đang được bỏ qua; vui lòng bỏ ảnh tạm trước khi lưu.');
+                    await handoverMediaReady;
+                    if(!handoverMediaEditor||generation!==handoverGeneration||!modal.classList.contains('active'))throw Error('Đã đóng biên bản bàn giao.');
+                    const customerConfirmed=!!document.getElementById('handoverCustomerConfirmed')?.checked;
+                    if(!customerConfirmed)throw Error('Cần khách hàng xác nhận bàn giao trước khi lưu.');
+                    modal.querySelectorAll('input,select,textarea').forEach(input=>{lockedFields.push([input,input.disabled]);input.disabled=true;});
+                    const assetIds=await handoverMediaEditor.prepare();
+                    if(generation!==handoverGeneration||!modal.classList.contains('active'))throw Error('Đã hủy lưu biên bản bàn giao.');
                     await PawpalServices.saveBookingRecord(booking,'handover',{
-                        qualityAccepted:true,belongingsReturned:true,customerConfirmed:!!document.getElementById('handoverCustomerConfirmed')?.checked,recordedAt:new Date().toISOString(),
+                        mediaRecordId:modal.dataset.mediaRecordId,media_asset_ids:assetIds,
+                        qualityAccepted:true,belongingsReturned:true,customerConfirmed,recordedAt:new Date().toISOString(),
                         intakeRecordedAt:booking.intakeRecord.recordedAt,total:booking.total
                     },{appointment_status:'da_hoan_tat'});
+                    handoverMediaEditor.saved();
                     PawpalServices.showToast('Đã lưu biên bản bàn giao và hoàn tất ca. Trạng thái thanh toán giữ nguyên.');
                 } catch(err) {PawpalServices.showToast('Không thể hoàn tất ca: '+PawpalServices.errorMessage(err),'danger');return;}
-                finally {btnSubmitComplete.disabled=false;}
+                finally {btnSubmitComplete.disabled=false;handoverSaving=false;lockedFields.forEach(([input,disabled])=>input.disabled=disabled);}
                 if (modal) modal.classList.remove('active');
             });
         }
@@ -2188,36 +2184,6 @@
         });
 
         // Nút đính kèm ảnh bằng chứng
-        const btnAddPhoto = document.getElementById('btnAddSurchargePhotoBtn');
-        const photoFileInput = document.getElementById('surchargeProofFileInput');
-        const photoPreviewList = document.getElementById('surchargeProofPreviewList');
-
-        if (btnAddPhoto && photoFileInput) {
-            btnAddPhoto.addEventListener('click', () => photoFileInput.click());
-            photoFileInput.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files || []);
-                files.forEach(file => {
-                    const url = URL.createObjectURL(file);
-                    surchargeProofImagesTemp.push(url);
-                    if (photoPreviewList) {
-                        const thumb = document.createElement('div');
-                        thumb.className = 'intake-proof-item';
-                        thumb.innerHTML = `
-                            <img src="${url}" alt="Bằng chứng phụ phí" style="width: 60px; height: 60px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);">
-                            <span class="btn-del-proof" style="position: absolute; top: -5px; right: -5px; background: #DC2626; color: #fff; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">✕</span>
-                        `;
-                        thumb.style.position = 'relative';
-                        thumb.querySelector('.btn-del-proof').addEventListener('click', () => {
-                            thumb.remove();
-                            surchargeProofImagesTemp = surchargeProofImagesTemp.filter(u => u !== url);
-                        });
-                        photoPreviewList.appendChild(thumb);
-                    }
-                });
-            });
-        }
-
-        // Nút Lưu phụ phí
         const btnSubmitSurcharge = document.getElementById('btnSubmitAddSurcharge');
         if (btnSubmitSurcharge) {
             btnSubmitSurcharge.addEventListener('click', async () => {
@@ -2250,14 +2216,20 @@
                 if (booking) {
                     if (btnSubmitSurcharge.disabled) return;
                     btnSubmitSurcharge.disabled = true;
+                    adjustmentSaving=true;const generation=adjustmentGeneration,lockedFields=[];
                     try {
-                        if (surchargeProofImagesTemp.length) throw new Error('Ảnh phụ phí chưa được lưu lên máy chủ; vui lòng bỏ ảnh trước khi lưu.');
+                        await adjustmentMediaReady;
+                        if(!adjustmentMediaEditor||generation!==adjustmentGeneration||!modal.classList.contains('active'))throw Error('Đã đóng đề xuất phụ phí.');
+                        modal.querySelectorAll('input,select,textarea').forEach(input=>{lockedFields.push([input,input.disabled]);input.disabled=true;});
+                        const assetIds=await adjustmentMediaEditor.prepare();
+                        if(generation!==adjustmentGeneration||!modal.classList.contains('active'))throw Error('Đã hủy đề xuất phụ phí.');
                         await PawpalServices.saveCharges(booking, [...(booking.charges || []), {
-                            id: crypto.randomUUID(), kind: 'surcharge', name, amount,
+                            id: modal.dataset.mediaAdjustmentId,mediaAdjustmentId:modal.dataset.mediaAdjustmentId,media_asset_ids:assetIds, kind: 'surcharge', name, amount,
                             reason: [reason, consent, consentNote].filter(Boolean).join(' — '),consent:consent&&consent!=='Chưa có xác nhận của chủ nuôi'?'confirmed':'pending'
                         }]);
+                        adjustmentMediaEditor.saved();
                     } catch (err) { PawpalServices.showToast('Không thể lưu phụ phí: '+PawpalServices.errorMessage(err),'danger'); return; }
-                    finally { btnSubmitSurcharge.disabled = false; }
+                    finally { btnSubmitSurcharge.disabled = false;adjustmentSaving=false;lockedFields.forEach(([input,disabled])=>input.disabled=disabled); }
                     const formatCur = PawpalServices.formatCurrency || (num => `${num.toLocaleString('vi-VN')} đ`);
                     PawpalServices.showToast(`Đã lưu đề xuất phụ phí ${PawpalServices.escapeHtml(name)} (${formatCur(amount)}) cho ca ${booking.id}!`);
                     if (modal) modal.classList.remove('active');

@@ -569,7 +569,7 @@ async function setupReviews() {
 
     reviewsList = rawReviews.map(r => ({
         customerName:r.name, tier:'', tierName:'', rating:Number(r.rating), createdAt:r.date,
-        variant:'', content:r.text, media:[], hasMedia:false, shopReply:r.sellerReply || null
+        variant:'', content:r.text, media:r.images||[], hasMedia:Boolean(r.images?.length), shopReply:r.sellerReply || null
     }));
 
     // Calculate rating statistics

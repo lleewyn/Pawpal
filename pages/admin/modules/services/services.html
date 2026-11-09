@@ -309,6 +309,14 @@
 </div>
 </div>
 <!-- KHỐI 3: THANH TOÁN VÀ CHI PHÍ -->
+<div class="detail-info-group" id="detailHandoverEvidence" hidden="">
+<div class="detail-section-title">Ảnh bàn giao đã lưu</div>
+<div class="intake-proof-grid" id="detailHandoverProofGrid"></div>
+</div>
+<div class="detail-info-group" id="detailAdjustmentEvidence" hidden="">
+<div class="detail-section-title">Ảnh bằng chứng phụ phí</div>
+<div class="intake-proof-grid" id="detailAdjustmentProofGrid"></div>
+</div>
 <div class="detail-info-group">
 <div class="svc-inline-8e7b6933" style="display: flex;">
 <div class="detail-section-title svc-inline-50435ff2">Bảng kê chi phí và Dịch vụ đi cùng</div>
@@ -365,7 +373,7 @@
 </div>
 <!-- KHU VỰC THÊM BƯỚC NHẬT KÝ THỜI GIAN THỰC (CHỈ MỞ KHI ĐANG THỰC HIỆN) -->
 <div class="carelog-quick-add" id="carelogQuickAddBox">
-<div class="carelog-add-title">Cập nhật bước mới:</div>
+<div class="carelog-add-title">Cập nhật bước mới</div>
 <div class="form-row-2col">
 <input class="admin-input" id="newLogStepTitle" placeholder="Tên bước (VD: Sấy tạo phồng)..." type="text"/>
 <select class="admin-select" id="newLogStepStaff">
@@ -374,14 +382,7 @@
 </div>
 <input class="admin-input" id="newLogStepNote" placeholder="Ghi chú chi tiết cho chủ nuôi..." type="text"/>
 <!-- ĐÍNH KÈM HÌNH ẢNH MINH CHỨNG THỰC TẾ -->
-<div class="carelog-image-upload-wrapper">
-<input accept="image/*" id="carelogImageFileInput" multiple="" style="display: none;" type="file"/>
-<div class="svc-inline-2161d3d0" style="display: flex;">
-<button class="btn-text-action" id="btnTriggerCarelogImageUpload" type="button">Đính kèm ảnh thực tế</button>
-<span class="svc-inline-fbbffe90" id="carelogImageCountText">0 ảnh đã chọn</span>
-</div>
-<div class="carelog-image-preview-strip" id="carelogImagePreviewStrip" style="display: none;"></div>
-</div>
+<div class="carelog-image-upload-wrapper" id="adminCareLogMedia"></div>
 <div class="svc-inline-db1957d4">
 <button class="admin-btn admin-btn-primary" id="btnSubmitCarelogStep" type="button">Ghi nhật ký</button>
 </div>
@@ -795,6 +796,10 @@
 </div>
 <div class="form-group-item" id="serviceVariantEditor" hidden></div>
 <div class="form-group-item">
+<label class="form-label-clean">Ảnh dịch vụ</label>
+<div id="serviceCatalogMedia"></div>
+</div>
+<div class="form-group-item">
 <label class="form-label-clean" for="formServiceBenefits">Lợi ích</label>
 <textarea class="admin-input" id="formServiceBenefits" rows="3"></textarea>
 </div>
@@ -1040,11 +1045,6 @@
 </div>
 <!-- ẢNH BẰNG CHỨNG HIỆN TRẠNG PHÁT SINH -->
 <div class="form-group-item">
-<div class="svc-inline-90859860" style="display: flex;">
-<label class="form-label-clean svc-inline-50435ff2">Ảnh bằng chứng hiện trạng phát sinh</label>
-<button class="btn-text-action" id="btnAddSurchargePhotoBtn" type="button">Đính kèm ảnh bằng chứng</button>
-<input accept="image/*" id="surchargeProofFileInput" multiple="" style="display: none;" type="file"/>
-</div>
 <div class="intake-proof-preview-container" id="surchargeProofPreviewList">
 <!-- Danh sách ảnh preview của phụ phí -->
 </div>
@@ -1080,7 +1080,6 @@
 <div>
 <div class="modal-title-clean">Chỉnh sửa bước quy trình chăm sóc</div>
 <div class="svc-inline-cdb83ce1" id="editCarelogModalMeta">
-                        Mã ca: BKG-1001 • Bé: Miu Con
                     </div>
 </div>
 <button class="modal-btn-close-text" data-close-modal="modalEditCarelogStep" id="btnCloseEditCarelogStep" type="button">Đóng</button>
@@ -1113,16 +1112,7 @@
 <span>Đã ghi nhật ký</span>
 </label>
 </div>
-<div class="form-group-item">
-<div class="svc-inline-3ac737d0" style="display: flex;">
-<label class="form-label-clean svc-inline-50435ff2">Hình ảnh đính kèm của bước này</label>
-<button class="btn-text-action" id="btnEditCarelogAddPhoto" type="button">Thêm ảnh mới</button>
-<input accept="image/*" id="editCarelogFileInput" multiple="" style="display: none;" type="file"/>
-</div>
-<div class="intake-proof-preview-container" id="editCarelogPhotosPreviewList">
-<!-- Nạp động ảnh bước đang sửa -->
-</div>
-</div>
+<div class="form-group-item" id="editCarelogMedia"></div>
 <div class="modal-footer-clean svc-inline-b5fefd07" style="display: flex;">
 <button class="admin-btn admin-btn-danger-outline" id="btnDeleteCarelogStep" type="button">Xóa bước này</button>
 <div class="svc-inline-f17001c3" style="display: flex;">
@@ -1310,11 +1300,6 @@
 </div>
 <!-- KHỐI 4: ẢNH BẰNG CHỨNG NGOẠI QUAN BAN ĐẦU (ZERO-CLAIM PROOF) -->
 <div class="form-group-item">
-<div class="svc-inline-3ac737d0" style="display: flex;">
-<label class="form-label-clean svc-inline-50435ff2">Ảnh chụp hiện trạng tiếp nhận lúc đón bé</label>
-<button class="btn-text-action" id="btnAddProofPhotoBtn" type="button">Tải ảnh bằng chứng</button>
-<input accept="image/*" id="intakeProofFileInput" multiple="" style="display: none;" type="file"/>
-</div>
 <div class="intake-proof-preview-container" id="intakeProofPreviewList">
 <!-- Danh sách ảnh preview trước ca -->
 </div>
@@ -1467,11 +1452,6 @@
 <p class="svc-inline-d59bb54f">Bàn giao không ghi thu tiền hoặc cộng điểm. Kiểm tra các khoản thu và hoàn tại chức năng Thu ngân.</p>
 <!-- KHỐI 5: ẢNH CHỤP THÀNH PHẨM SAU CA (BEFORE / AFTER SHOWCASE) -->
 <div class="form-group-item">
-<div class="svc-inline-90859860" style="display: flex;">
-<label class="form-label-clean svc-inline-50435ff2">Ảnh chụp thành phẩm bé sau khi hoàn thành</label>
-<button class="btn-text-action" id="btnAddCompletePhotoBtn" type="button">Tải ảnh thành phẩm</button>
-<input accept="image/*" id="completeProofFileInput" multiple="" style="display: none;" type="file"/>
-</div>
 <div class="intake-proof-preview-container" id="completeProofPreviewList">
 <!-- Danh sách ảnh thành phẩm preview -->
 </div>

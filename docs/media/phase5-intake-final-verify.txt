@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "appointmentsAndWeightHistoryAndRecordCountsUnchanged": true,
+  "noCloudIntakeRecordCreated": true,
+  "active_assets": "0",
+  "active_sessions": "0",
+  "reserved_bytes": "0",
+  "record_media_rows": "0"
+}

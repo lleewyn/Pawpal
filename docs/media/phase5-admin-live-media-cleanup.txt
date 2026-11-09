@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "exactVerifiedFilesAndChunksRemoved": 2,
+  "invalidUploadWithoutPhysicalFile": 0,
+  "ownReservationsReleased": 2,
+  "quotaReleasedBytes": 59989,
+  "unrelatedFilesDeleted": 0,
+  "businessRecordWrites": 0,
+  "productionDeploymentChanged": false
+}

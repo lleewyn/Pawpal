@@ -1,0 +1,44 @@
+{
+  "capturedAt": "2026-11-07T11:18:06.989Z",
+  "status": "PASS",
+  "scope": "Vercel metadata only; no mutations, deployment or secret values",
+  "project": "pawpal_gr3",
+  "plan": "hobby",
+  "nodeVersion": "24.x",
+  "functions": {
+    "region": [
+      "iad1"
+    ],
+    "fluid": true
+  },
+  "networkMetadataKeys": [],
+  "previewProtectionConfigured": true,
+  "hasExistingAutomationBypass": false,
+  "mediaEnvironment": [
+    {
+      "key": "MONGODB_URI",
+      "targets": [
+        [
+          "preview",
+          "production"
+        ]
+      ]
+    },
+    {
+      "key": "MONGODB_DB",
+      "targets": []
+    },
+    {
+      "key": "MONGODB_MEDIA_BUCKET",
+      "targets": []
+    },
+    {
+      "key": "MEDIA_UPLOAD_ENABLED",
+      "targets": []
+    },
+    {
+      "key": "MEDIA_VIDEO_ENABLED",
+      "targets": []
+    }
+  ]
+}

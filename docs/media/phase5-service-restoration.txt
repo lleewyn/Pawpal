@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "repeatSaveRetainedReferenceIdAndSource": true,
+  "originalImageReferencesAndSpeciesAndStepsRestoredExactly": true,
+  "serviceBusinessColumnsAndPriceRowsUnchanged": true,
+  "auditAndServiceUpdatedAtRetained": true
+}

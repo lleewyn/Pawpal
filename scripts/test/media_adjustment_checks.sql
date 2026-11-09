@@ -1,0 +1,37 @@
+-- Isolated fixture transaction only; no actual surcharge or payment is created on Cloud.
+SELECT set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
+SET LOCAL session_replication_role=replica;
+INSERT INTO public.role_permission(role_code,permission_code)
+ SELECT 'ADMIN',unnest(ARRAY['appointment.read','appointment.write','appointment_adjustment.read','appointment_adjustment.write','appointment_item.read','appointment_item.write','payment.read','audit_log.read','audit_log.write','staff.read']) ON CONFLICT DO NOTHING;
+SET LOCAL session_replication_role=origin;
+UPDATE public.appointment SET appointment_status='in_progress' WHERE id='70000000-0000-0000-0000-000000000001';
+SELECT set_config('adjustment.version',(SELECT updated_at::text FROM public.appointment WHERE id='70000000-0000-0000-0000-000000000001'),true);
+SET LOCAL ROLE authenticated;
+SELECT set_config('adjustment.session',public.prepare_adjustment_media_upload(gen_random_uuid(),'70000000-0000-0000-0000-000000000001','83000000-0000-0000-0000-000000000001',100,'image/png','surcharge.png')->>'session_id',true);
+SELECT set_config('adjustment.lease',public.claim_media_upload(current_setting('adjustment.session')::uuid)->>'lease',true);
+RESET ROLE;
+SET LOCAL ROLE service_role;
+SELECT set_config('adjustment.asset',public.finish_media_upload(current_setting('adjustment.session')::uuid,current_setting('adjustment.lease')::uuid,'10000000-0000-0000-0000-000000000001',repeat('5',64),2,2)::text,true);
+RESET ROLE;
+SELECT set_config('adjustment.details',jsonb_build_object('name','Isolated surcharge','amount',100,'reason','Isolated observed reason','consent','pending','media_asset_ids',jsonb_build_array(current_setting('adjustment.asset')))::text,true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.expect_error($q$SELECT public.change_admin_service_charge('83000000-0000-0000-0000-000000000002','70000000-0000-0000-0000-000000000001',current_setting('adjustment.version')::timestamptz,'propose',current_setting('adjustment.details')::jsonb)$q$,'42501');
+SELECT public.change_admin_service_charge('83000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000001',current_setting('adjustment.version')::timestamptz,'propose',current_setting('adjustment.details')::jsonb);
+SELECT public.change_admin_service_charge('83000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000001',current_setting('adjustment.version')::timestamptz,'propose',current_setting('adjustment.details')::jsonb);
+SELECT pg_temp.assert(jsonb_array_length(public.list_adjustment_media('70000000-0000-0000-0000-000000000001'))=1,'adjustment evidence retry once');
+RESET ROLE;
+SELECT pg_temp.assert(NOT EXISTS(SELECT 1 FROM public.appointment_adjustment WHERE id='83000000-0000-0000-0000-000000000002'),'wrong evidence rolls back surcharge');
+SELECT pg_temp.assert((SELECT approval_status='pending' AND customer_consent_status='pending' FROM public.appointment_adjustment WHERE id='83000000-0000-0000-0000-000000000001'),'media never approves charge or consent');
+SELECT pg_temp.assert((SELECT legal_hold AND status='attached' FROM public.media_asset WHERE id=current_setting('adjustment.asset')::uuid),'surcharge evidence held');
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000002',true);
+SELECT pg_temp.expect_error($q$SELECT public.prepare_adjustment_media_upload(gen_random_uuid(),'70000000-0000-0000-0000-000000000001',gen_random_uuid(),100,'image/png','denied.png')$q$,'42501');
+SELECT set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000003',true);
+SELECT pg_temp.assert(public.resolve_media_asset(current_setting('adjustment.asset')::uuid) IS NOT NULL,'owner reads surcharge evidence');
+SELECT set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000004',true);
+SELECT pg_temp.assert(public.resolve_media_asset(current_setting('adjustment.asset')::uuid) IS NULL,'wrong owner denied surcharge');
+RESET ROLE;
+SET LOCAL ROLE anon;
+SELECT set_config('request.jwt.claim.sub','',true);
+SELECT pg_temp.assert(public.resolve_media_asset(current_setting('adjustment.asset')::uuid) IS NULL,'surcharge evidence never public');
+RESET ROLE;

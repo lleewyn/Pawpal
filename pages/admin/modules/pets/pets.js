@@ -418,6 +418,12 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
     const defaultPetRequest = () => ({query:'',species:'ALL',breed:'ALL',weight:'ALL',hotel:false,alert:false,page:1,size:10});
     PawpalPets.petPageKey = request => JSON.stringify(request);
 
+    let petImageReader;
+    async function hydratePetImages(rows,client){
+        if(!rows.some(row=>row.images?.some(image=>image.media_asset_id)))return;
+        if(!petImageReader){const {createServiceMediaReader}=await import('/scripts/shared/service-media-reader.mjs');petImageReader=createServiceMediaReader({db:client});}
+        await petImageReader.hydrate(rows);
+    }
     PawpalPets.readPetPage = async function(request = {}, {force=false} = {}) {
         const key = 'page:' + JSON.stringify(request);
         const catalog = !catalogLoadedAt || Date.now()-catalogLoadedAt>600000;
@@ -435,6 +441,8 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
             });
             if (error) throw error;
             if(!data || (!Array.isArray(data.pets) && !Array.isArray(data.owners)))throw new Error('invalid_pet_page_response');
+            const images=(data.pets||[]).filter(p=>p.avatar_media_asset_id).map(p=>({pet:p,images:[{media_asset_id:p.avatar_media_asset_id}]}));
+            await hydratePetImages(images,client);for(const row of images)row.pet.resolved_avatar_url=row.images[0].resolved_url;
             return {...data,_fetchedAt:Date.now(),_catalogIncluded:includeCatalog};
         }, {force,ttl:60000});
     };
@@ -620,7 +628,8 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
                     ownerName: ownerName,
                     ownerPhone: ownerObj.phone || '',
                     custId: p.customer_id || '',
-                    avatar: p.avatar_url || (spec === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg'),
+                    avatar: p.resolved_avatar_url || p.avatar_url || (spec === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg'),
+                    avatarAssetId:p.avatar_media_asset_id||null,
                     status: statusStr,
                     vaccinated: vaccinesList.some(v => /dại|rabies/i.test(v.title) && ['Đã tiêm đủ', 'Đã thực hiện', 'Đạt chuẩn'].includes(v.status)),
                     isHotel: p.status === 'HOTEL',
@@ -698,7 +707,7 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
                         .order('measured_at', { ascending: false })
                         .order('id').range((page-1)*size, page*size-1) : Promise.resolve({data:[],count:0}),
                     kinds.includes('carelog') ? client.from('care_log')
-                        .select('id, appointment_id, description, observed_condition, action_name_snapshot, staff:recorded_by(full_name), recorded_at, created_at, media:care_log_media(media_type,media_url), appointment:appointment_id!inner(pet_id)', {count:'exact'})
+                        .select('id, appointment_id, description, observed_condition, action_name_snapshot, staff:recorded_by(full_name), recorded_at, created_at, media:care_log_media(media_type,media_url,media_asset_id), appointment:appointment_id!inner(pet_id)', {count:'exact'})
                         .eq('appointment.pet_id', pet.rawId)
                         .order('recorded_at', { ascending: false })
                         .order('id').range((page-1)*size, page*size-1) : Promise.resolve({data:[],count:0}),
@@ -709,6 +718,7 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
                         .order('id').range((page-1)*size, page*size-1) : Promise.resolve({data:[],count:0})
                 ]);
                 for(const response of [wRes,cRes,aRes])if(response.error)throw response.error;
+                await hydratePetImages((cRes.data||[]).map(log=>({images:log.media||[]})),client);
                 const ids=(aRes.data||[]).map(a=>a.id);
                 const totals=ids.length?await client.from('appointment_totals').select('appointment_id,total_price').in('appointment_id',ids):{data:[]};
                 if(totals.error)throw totals.error;
@@ -744,6 +754,7 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
                 ktv: cl.staff?.full_name || 'Chưa ghi nhận nhân viên',
                 imgBefore: (cl.media||[]).find(m=>/before|trước/i.test(m.media_type))?.media_url || '',
                 imgAfter: (cl.media||[]).find(m=>/after|sau/i.test(m.media_type))?.media_url || '',
+                images:(cl.media||[]).filter(m=>m.media_asset_id).map(m=>m.resolved_url).filter(Boolean),
                 checkText: cl.observed_condition ? `Tình trạng: ${cl.observed_condition}` : 'Chưa ghi nhận',
                 appStatus: 'Đã ghi nhận',
                 careId: cl.id

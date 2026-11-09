@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "previewUrl": "https://pawpalgr3-2uzvub4xz-llwyns-projects.vercel.app",
+  "retainedDeploymentId": "dpl_4P2ZVymKPNaTXe5F2HLKBs3byDsT",
+  "obsoleteOwnPreviewDeploymentsRemoved": 2,
+  "temporaryBypassRevoked": true,
+  "productionDeploymentChanged": false,
+  "projectEnvironmentChanged": false,
+  "uploadEnabledOnlyOnRetainedPreview": true
+}

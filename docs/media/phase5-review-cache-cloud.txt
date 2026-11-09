@@ -1,0 +1,6 @@
+{
+  "status": "APPLIED",
+  "checksum": "b317b75d240a95756deba039742ca43bc5b1875aaaf7df8b39393b6860d4685c",
+  "businessFixtureWrites": false,
+  "reviewPublicCache": false
+}

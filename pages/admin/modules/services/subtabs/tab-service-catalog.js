@@ -13,6 +13,24 @@
     let selectedPetTypes = [];
     let availablePetSpecies = [];
     let editingVariantRows = [];
+    let mediaReady=Promise.resolve(),mediaEditor=null,mediaRevision=0,serviceSaving=false;
+    function resetServiceMedia(service) {
+        const revision=++mediaRevision,modal=document.getElementById('modalServiceForm');
+        const id=service?.dbId||crypto.randomUUID();modal.dataset.mediaDraftId=id;
+        mediaReady=mediaReady.catch(()=>{}).then(async()=>{
+            await mediaEditor?.close();mediaEditor=null;
+            const [{createProductMediaEditor},{buildVariantMediaFields}]=await Promise.all([
+                import('/scripts/shared/product-media.mjs'),import('/scripts/shared/variant-media.mjs')]);
+            if(revision!==mediaRevision)return;
+            const root=document.getElementById('serviceCatalogMedia');root.replaceChildren();
+            buildVariantMediaFields(root,'service-catalog');
+            root.querySelector('[data-media-links]').setAttribute('aria-label','Đường dẫn ảnh dịch vụ');
+            root.querySelector('[data-media-files]').setAttribute('aria-label','Chọn ảnh dịch vụ');
+            mediaEditor=createProductMediaEditor({root,db:window.getSupabaseClient(),purpose:'service_image',imageLabel:'Ảnh dịch vụ'});
+            mediaEditor.reset({id,isExisting:!!service,media:service?.media||[]});
+        });
+        void mediaReady.catch(()=>PawpalServices.showToast('Không thể mở phần ảnh dịch vụ. Vui lòng mở lại biểu mẫu.','danger'));
+    }
     const esc = (s) => (PawpalServices.escapeHtml ? PawpalServices.escapeHtml(s) : String(s || ''));
 
     function renderVariantEditor(service) {
@@ -396,6 +414,7 @@
         availablePetSpecies=(PawpalServices.state.liveSpecies||[]).map(s=>s.species_name);
     }
     function openCreateServiceModal() {
+        if(serviceSaving)return;
         configureCatalogForm();
         const modal = document.getElementById('modalServiceForm');
         if (!modal) return;
@@ -431,6 +450,7 @@
         currentEditingServiceSteps=[];renderServiceSteps();selectedPetTypes=[];
         renderPetTypeTags();
 
+        resetServiceMedia(null);
         modal.classList.add('active');
         modal.style.display = 'flex';
         const card = modal.querySelector('.admin-modal-card');
@@ -438,11 +458,12 @@
     }
 
     function openEditServiceModal(serviceCode) {
+        if(serviceSaving)return;
         configureCatalogForm();
         const servicesData = PawpalServices.state?.servicesData || [];
         const svc = servicesData.find(s => s.code === serviceCode || s.id === serviceCode);
         const modal = document.getElementById('modalServiceForm');
-        if (!modal) return;
+        if (!modal||!svc) return;
 
         const titleEl = document.getElementById('serviceFormModalTitle');
         if (titleEl) titleEl.textContent = 'Chỉnh sửa dịch vụ';
@@ -491,6 +512,7 @@
             renderServiceSteps();
         }
 
+        resetServiceMedia(svc);
         modal.classList.add('active');
         modal.style.display = 'flex';
         const card = modal.querySelector('.admin-modal-card');
@@ -498,7 +520,8 @@
     }
 
     async function handleSaveService() {
-        const btn=document.getElementById('btnSubmitServiceForm');if(btn.disabled)return;btn.disabled=true;
+        const btn=document.getElementById('btnSubmitServiceForm');if(btn.disabled||serviceSaving)return;btn.disabled=true;serviceSaving=true;
+        const modal=document.getElementById('modalServiceForm'),revision=mediaRevision;
         try {
             const input=id=>document.getElementById(id)?.value.trim()||'';
             const code=input('formServiceId'),old=(PawpalServices.state.servicesData||[]).find(s=>s.code===input('editServiceCodeHidden'));
@@ -522,20 +545,31 @@
                 const values=['formPriceUnder5','formPrice5To10','formPrice10To20','formPriceOver20'].map(id=>{const raw=input(id);if(!/^(?:\d+|\d{1,3}(?:\.\d{3})+)$/.test(raw))throw Error('Nhập đủ bốn mức giá bằng số nguyên không âm.');return Number(raw.replace(/\./g,''));});
                 prices=values.map((unit_price,i)=>({weight_from:[0,5,10,20][i],weight_to:[5,10,20,null][i],unit_price}));
             }
-            const modal=document.getElementById('modalServiceForm');
+            await mediaReady;
+            if(!mediaEditor||revision!==mediaRevision||!modal.classList.contains('active'))throw Error('Biểu mẫu ảnh đã đóng.');
+            document.getElementById('formServiceItem').inert=true;
+            details.media_sources=await mediaEditor.prepare();
+            if(revision!==mediaRevision||!modal.classList.contains('active'))throw Error('Đã hủy lưu dịch vụ.');
             const request=JSON.stringify(details)+JSON.stringify(prices);
             if(modal.dataset.requestSignature!==request){modal.dataset.requestSignature=request;modal.dataset.requestId=crypto.randomUUID();}
-            const id=old?.dbId||modal.dataset.requestId;
+            const id=old?.dbId||modal.dataset.mediaDraftId;
             const {data,error}=await window.getSupabaseClient().rpc('save_admin_service_catalog',{p_id:id,p_expected_updated_at:old?.updatedAt||null,p_details:details,p_prices:prices});
             if(error)throw error;if(data!==id)throw Error('Không xác minh được dịch vụ đã lưu.');
-            await PawpalServices.loadCatalogData({force:true});renderCatalogTable();
+            mediaEditor.saved();
             modal.classList.remove('active');modal.style.display='none';delete modal.dataset.requestSignature;delete modal.dataset.requestId;
-            PawpalServices.showToast('Đã lưu dịch vụ và các cấu hình liên quan.');
+            try{await PawpalServices.loadCatalogData({force:true});renderCatalogTable();PawpalServices.showToast('Đã lưu dịch vụ và các cấu hình liên quan.');}
+            catch{PawpalServices.showToast('Dịch vụ đã lưu. Vui lòng tải lại danh mục để xem dữ liệu mới.');}
         }catch(error){PawpalServices.showToast('Không thể lưu dịch vụ: '+PawpalServices.errorMessage(error),'danger');}
-        finally{btn.disabled=false;}
+        finally{btn.disabled=false;serviceSaving=false;document.getElementById('formServiceItem').inert=false;}
     }
 
     function initCatalogSubtab() {
+        const mediaModal=document.getElementById('modalServiceForm');
+        if(mediaModal&&!mediaModal.dataset.mediaCloseBound){
+            mediaModal.dataset.mediaCloseBound='true';
+            new MutationObserver(()=>{if(!mediaModal.classList.contains('active')){mediaRevision++;void mediaEditor?.close();}}).observe(mediaModal,{attributes:true,attributeFilter:['class']});
+            document.getElementById('formServiceItem').addEventListener('submit',event=>event.preventDefault());
+        }
         // Tabs chuyển nhóm dịch vụ
         document.querySelectorAll('.catalog-tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {

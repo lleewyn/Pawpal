@@ -3,6 +3,8 @@
  */
 import '/scripts/shared/support-handler.js';
 import {vietnamDateTimeInput} from '/scripts/shared/booking-time.mjs';
+import {createEvidenceMediaEditor} from '/scripts/shared/evidence-media.mjs';
+import {createEvidenceGallery} from '/scripts/shared/evidence-gallery.mjs';
 let disposeSupportView=()=>{};
 export function dispose(){disposeSupportView();disposeSupportView=()=>{};}
 
@@ -33,6 +35,18 @@ export function initSupportTickets() {
         let viewOwnerId = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id;
         let currentSelectedRating = 5;
         let currentFilter = 'all';
+        let replyMedia=null,replyTarget=null,replyRequest=null,replySaving=false,attachmentGalleries=[];
+        const db=()=>window.getSupabaseClient?.()||window.SupabaseClient;
+        const clearGalleries=()=>{attachmentGalleries.forEach(g=>g.clear());attachmentGalleries=[];};
+        async function ensureReplyMedia(ticketId){
+            if(replyTarget!==ticketId){replyMedia?.close();replyMedia=null;replyTarget=ticketId;}
+            if(!replyMedia){
+                const root=document.getElementById('supportReplyMedia');root.replaceChildren();
+                replyRequest=crypto.randomUUID();replyMedia=createEvidenceMediaEditor({root,db:db(),purpose:'ticket_image'});
+                await replyMedia.reset({target:replyRequest,context:ticketId});
+            }
+            return replyMedia;
+        }
 
         const ticketsTableBody = document.getElementById('ticketsListTableBody');
         const ticketsTableArea = document.getElementById('ticketsTableArea');
@@ -195,6 +209,7 @@ export function initSupportTickets() {
         }
 
         function closeTicketModal() {
+            replyMedia?.close();replyMedia=null;replyTarget=null;clearGalleries();
             ++detailRequestVersion;
             window.PawPalSupport.releaseTicket?.();
             const reply = document.getElementById('replyTextarea');
@@ -315,6 +330,7 @@ export function initSupportTickets() {
         };
 
         function renderTimelineMessages(ticket) {
+            clearGalleries();
             if (!ticketTimelineMessages) return;
             ticketTimelineMessages.innerHTML = '';
             if(window.PawPalSupport.isPaged?.() && ticket.messageTotal>20){
@@ -332,6 +348,7 @@ export function initSupportTickets() {
             } else {
                 messages.forEach(msg => {
                     const item = document.createElement('div');
+                    if(msg.id)item.dataset.messageId=msg.id;
                     const isCskh = msg.sender === 'cskh';
                     item.className = `thread-message ${isCskh ? 'message-cskh' : 'message-user'}`;
 
@@ -374,6 +391,8 @@ export function initSupportTickets() {
                 currentSelectedRating = 5;
             }
             activeTicketId = ticketId;
+            if(!replySaving)await ensureReplyMedia(ticketId);
+            if(detailVersion!==detailRequestVersion||activeTicketId!==ticketId)return;
 
             const displayId = getDisplayTicketId(ticket.id);
             const parsed = parseTicketTitle(ticket.title);
@@ -631,6 +650,21 @@ export function initSupportTickets() {
             ticketTimelineMessages.scrollTop = ticketTimelineMessages.scrollHeight;
 
             // The shared support channel owns invalidation for list and open detail.
+            try{
+                const result=await db().rpc('list_ticket_media',{p_ticket:ticketId});if(result.error)throw result.error;
+                if(detailVersion!==detailRequestVersion||activeTicketId!==ticketId)return;
+                for(const row of result.data||[]){
+                    const message=[...ticketTimelineMessages.querySelectorAll('[data-message-id]')].find(el=>el.dataset.messageId===row.message_id);
+                    if(!message)continue;
+                    let root=message.querySelector('[data-evidence]');if(!root){root=document.createElement('div');root.dataset.evidence='';message.append(root);}
+                }
+                const tasks=[];
+                for(const root of ticketTimelineMessages.querySelectorAll('[data-evidence]')){
+                    const id=root.parentElement.dataset.messageId,gallery=createEvidenceGallery({root,db:db()});attachmentGalleries.push(gallery);
+                    tasks.push(gallery.render((result.data||[]).filter(row=>row.message_id===id)));
+                }
+                await Promise.all(tasks);
+            }catch{if(detailVersion===detailRequestVersion){const warning=document.createElement('p');warning.className='text-danger';warning.textContent='Chưa tải được ảnh bằng chứng. Vui lòng mở lại phiếu.';ticketTimelineMessages.append(warning);}}
         }
 
         // Lắng nghe sự kiện đóng Popup Modal
@@ -662,13 +696,17 @@ export function initSupportTickets() {
                 if (!text) return;
 
                 btnSendReply.disabled = true;
+                replySaving=true;textarea.disabled=true;document.getElementById('supportReplyMedia').inert=true;
                 btnSendReply.textContent = 'Đang gửi...';
 
                 const finalContent = text;
                 const targetTicketId = activeTicketId;
 
                 try {
-                    await window.PawPalSupport.sendTicketReply(targetTicketId, finalContent);
+                    const editor=await ensureReplyMedia(targetTicketId),mediaAssetIds=await editor.prepare(),requestId=replyRequest;
+                    if(activeTicketId!==targetTicketId||!textarea.isConnected)return;
+                    await window.PawPalSupport.sendTicketReply(targetTicketId, finalContent,{requestId,mediaAssetIds});
+                    editor.saved();editor.close();if(replyMedia===editor){replyMedia=null;replyTarget=null;}
                     if (activeTicketId !== targetTicketId || !textarea.isConnected) return;
                     textarea.value = '';
                     showTicketDetail(activeTicketId);
@@ -678,6 +716,7 @@ export function initSupportTickets() {
                     console.error('[Support] Không thể gửi phản hồi:', error);
                     window.alert(error.message || 'Không thể gửi phản hồi. Vui lòng thử lại.');
                 } finally {
+                    replySaving=false;textarea.disabled=false;const mediaRoot=document.getElementById('supportReplyMedia');if(mediaRoot)mediaRoot.inert=false;
                     btnSendReply.disabled = false;
                     btnSendReply.textContent = 'Gửi phản hồi';
                 }

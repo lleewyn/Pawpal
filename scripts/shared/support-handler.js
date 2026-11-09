@@ -104,17 +104,18 @@
         const key=JSON.stringify([adoptOwner(),'create',context.requestId,title,type,content,context.bookingId,context.orderId,context.customerDemand]);
         if (!requestIds.has(key)) requestIds.set(key,context.requestId || crypto.randomUUID());
         const id=requestIds.get(key);
-        const saved=await rpc('create_own_support_ticket',{
+        const withMedia=Array.isArray(context.mediaAssetIds);
+        const saved=await rpc(withMedia?'create_own_support_ticket_media':'create_own_support_ticket',{
             p_id:id,p_category:type,p_subject:title,p_content:content,
             p_appointment:type==='service'?context.bookingId:null,p_order:type==='order'?context.orderId:null,
-            p_resolution:context.customerDemand || null
+            p_resolution:context.customerDemand || null,...(withMedia?{p_assets:context.mediaAssetIds}:{})
         });
         if (saved!==id) throw Error('Chưa xác nhận được kết quả lưu. Vui lòng thử lại.');
         if (requestIds.get(key) === id) requestIds.delete(key);
         // The acknowledgement is authoritative even if a subsequent list refresh fails.
         return {id,rawId:id};
     }
-    async function sbSendTicketReply(ticketId,text) {
+    async function sbSendTicketReply(ticketId,text,context={}) {
         const owner=adoptOwner(),version=epoch;
         const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))),b=>b.toString(16).padStart(2,'0')).join('');
         if(owner!==currentOwner() || version!==epoch)throw Error('Phiên đăng nhập đã thay đổi. Vui lòng tải lại.');
@@ -122,11 +123,13 @@
         const storageKey=`pawpal_support_reply:${owner}:${ticketId}:${digest}`;
         if (!requestIds.has(key)) {
             const stored=sessionStorage.getItem(storageKey);
-            requestIds.set(key,/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(stored||'')?stored:crypto.randomUUID());
+            requestIds.set(key,context.requestId||(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(stored||'')?stored:crypto.randomUUID()));
         }
         sessionStorage.setItem(storageKey,requestIds.get(key));
         if(sessionStorage.getItem(storageKey)!==requestIds.get(key))throw Error('Không thể giữ mã phản hồi để thử lại an toàn.');
-        const id=requestIds.get(key),saved=await rpc('reply_own_support_ticket',{p_id:id,p_ticket:ticketId,p_content:text});
+        const id=requestIds.get(key);
+        if(context.requestId&&context.requestId!==id)throw Error('Mã phản hồi đã thay đổi. Vui lòng mở lại phiếu.');
+        const withMedia=Array.isArray(context.mediaAssetIds),saved=await rpc(withMedia?'reply_own_support_ticket_media':'reply_own_support_ticket',{p_id:id,p_ticket:ticketId,p_content:text,...(withMedia?{p_assets:context.mediaAssetIds}:{})});
         if (saved!==id) throw Error('Chưa xác nhận được phản hồi. Vui lòng thử lại.');
         if (requestIds.get(key) === id) requestIds.delete(key);
         if(sessionStorage.getItem(storageKey)===id)sessionStorage.removeItem(storageKey);

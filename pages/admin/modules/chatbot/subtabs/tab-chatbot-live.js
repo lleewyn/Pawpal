@@ -18,6 +18,31 @@
     let customerTypingHideTimer = null;
     let isSendingLiveMsg = false;
     const pendingConversationOperations = new Set();
+    let chatMediaModule,chatMediaGallery,chatMediaTurn=0;
+    const chatMediaDrafts=new Map();
+    const clearChatMedia=()=>{chatMediaTurn++;chatMediaGallery?.clear();for(const state of chatMediaDrafts.values())state.editor.clear();chatMediaDrafts.clear();};
+    let chatMediaOwner=window.PawpalAdminAccess?.state?.user?.id;
+    window.addEventListener('pawpal:access-verified',()=>{const owner=window.PawpalAdminAccess?.state?.user?.id;if(owner!==chatMediaOwner){clearChatMedia();chatMediaOwner=owner;}});
+    window.addEventListener('beforeunload',clearChatMedia,{once:true});
+    const mediaModuleRoot=document.querySelector('.chatbot-module-wrapper');
+    if(mediaModuleRoot){const observer=new MutationObserver(()=>{if(!mediaModuleRoot.isConnected){clearChatMedia();observer.disconnect();}});observer.observe(document.body,{childList:true,subtree:true});}
+    const chatMediaHeaders=async()=>{const {data,error}=await supabase.auth.getSession();if(error||!data.session)throw Error('Vui lòng đăng nhập lại.');return {Authorization:'Bearer '+data.session.access_token};};
+    async function getChatMediaDraft(conversation){
+        chatMediaModule ||= await import('/scripts/shared/chat-media.mjs');
+        if(!chatMediaDrafts.has(conversation.id)){
+            const root=document.createElement('div'),state={root,id:crypto.randomUUID(),payload:null};
+            state.editor=chatMediaModule.createChatMediaDraft({root,headers:chatMediaHeaders,getContext:async()=>({conversation:conversation.id,message:state.id})});
+            chatMediaDrafts.set(conversation.id,state);
+        }
+        return chatMediaDrafts.get(conversation.id);
+    }
+    async function renderChatImages(conversation,slots,turn){
+        try{chatMediaModule ||= await import('/scripts/shared/chat-media.mjs');if(turn!==chatMediaTurn)return;
+            const {data,error}=await supabase.rpc('list_own_chat_media',{p_conversation:conversation.id,p_messages:slots.map(x=>x.id).slice(-30)});if(error)throw error;if(turn!==chatMediaTurn)return;
+            chatMediaGallery ||= chatMediaModule.createChatMediaGallery({headers:chatMediaHeaders});
+            await chatMediaGallery.render((data||[]).map(item=>({root:slots.find(s=>s.id===item.message_id)?.root,asset:item.asset_id})).filter(x=>x.root));
+        }catch{if(turn===chatMediaTurn)for(const slot of slots)slot.root.textContent='Chưa tải được ảnh đính kèm.';}
+    }
     function ownsConversation(conversation) {
         try {
             const actor = JSON.parse(localStorage.getItem('pawpal_admin_user') || sessionStorage.getItem('pawpal_admin_user') || '{}');
@@ -469,10 +494,11 @@
     }
 
     function renderCurrentChat() {
+        const mediaTurn=++chatMediaTurn;chatMediaGallery?.clear();
         const timeline=document.getElementById('chatMessagesTimeline');
         const selected=PawpalChatbot.state?.currentConversation;
         const unavailable=!selected||['closed','resolved','completed','blocked'].includes(selected.status);
-        for(const id of ['btnRewardPoints','btnConvertToTicket','btnEscalateManager','btnResolveChatAction','btnHeaderResolveChat','btnToggleTakeover','btnSendLiveMessage']){
+        for(const id of ['btnRewardPoints','btnConvertToTicket','btnEscalateManager','btnResolveChatAction','btnHeaderResolveChat','btnToggleTakeover','btnSendLiveMessage','btnAdminChatAttach']){
             const button=document.getElementById(id);if(button)button.disabled=unavailable;
         }
         if(!selected){
@@ -540,7 +566,11 @@
         const operationPending = pendingConversationOperations.has(currentConversation.id);
         const canSend = !conversationClosed && !operationPending && ownsConversation(currentConversation);
         if (messageInput) messageInput.disabled = !canSend;
+        if(messageInput)messageInput.readOnly=Boolean(chatMediaDrafts.get(currentConversation.id)?.payload);
         if (sendButton) sendButton.disabled = !canSend;
+        const attachButton=document.getElementById('btnAdminChatAttach');if(attachButton)attachButton.disabled=!canSend;
+        const mediaHost=document.getElementById('adminChatMediaHost');
+        if(mediaHost){mediaHost.replaceChildren();const draft=chatMediaDrafts.get(currentConversation.id);if(draft){mediaHost.append(draft.root);draft.editor.freeze(!canSend||Boolean(draft.payload));}}
         if (takeoverBtn) {
             takeoverBtn.disabled = conversationClosed || operationPending || Boolean(currentConversation.assignedStaffId && !ownsConversation(currentConversation));
             takeoverBtn.textContent = conversationClosed ? 'Đã kết thúc' : currentConversation.isHandover ? 'Trả lại AI' : 'Tiếp nhận';
@@ -753,9 +783,11 @@
                         <div class="chat-bubble">${bubbleContent}</div>
                     `;
                 }
+                const mediaRoot=document.createElement('div');mediaRoot.dataset.chatMediaMessage=msg.id;wrap.append(mediaRoot);
                 appendMessagePartControl(wrap,msg);
                 timelineEl.appendChild(wrap);
             });
+            void renderChatImages(currentConversation,[...timelineEl.querySelectorAll('[data-chat-media-message]')].map(root=>({root,id:root.dataset.chatMediaMessage})),mediaTurn);
 
             timelineEl.querySelectorAll('.chat-attachment-image-wrap').forEach(w => {
                 w.addEventListener('click', (e) => {
@@ -1023,9 +1055,22 @@
     async function sendLiveMsg() {
         if(isSendingLiveMsg)return;
         const conversation=PawpalChatbot.state?.currentConversation,input=document.getElementById('chatMessageInput'),button=document.getElementById('btnSendLiveMessage');
-        const text=input?.value.trim();if(!conversation || !text || input.disabled || button?.disabled || !ownsConversation(conversation) || pendingConversationOperations.has(conversation.id))return;
+        const draft=chatMediaDrafts.get(conversation?.id);
+        const text=draft?.payload?.p_content||input?.value.trim()||(draft?.editor.count()?'[Hình ảnh]':'');if(!conversation || !text || input.disabled || button?.disabled || !ownsConversation(conversation) || pendingConversationOperations.has(conversation.id))return;
         isSendingLiveMsg=true;
-        try{if(await operateConversation('send',text,button)){
+        try{
+          if(draft?.editor.count()){
+            pendingConversationOperations.add(conversation.id);draft.editor.freeze(true);button.disabled=true;input.readOnly=true;
+            try{
+                if(!draft.payload){const ids=await draft.editor.prepare();draft.payload={p_request_id:draft.id,p_conversation_id:conversation.id,p_expected_updated_at:conversation.updatedAtRaw,p_action:'send',p_content:text,p_assets:ids};}
+                draft.editor.sent();const {error}=await supabase.rpc('act_admin_chat_media',draft.payload);if(error)throw error;
+                draft.editor.saved();draft.payload=null;draft.id=crypto.randomUUID();if(input.value.trim()===text||text==='[Hình ảnh]')input.value='';input.readOnly=false;
+                conversation.messagesLoaded=false;await PawpalChatbot.loadInboxSummary();
+            }catch(error){if(!draft.payload){draft.editor.freeze(false);input.readOnly=false;}PawpalChatbot.showToast?.('Chưa xác nhận gửi ảnh. Giữ nguyên bản nháp và thử lại.','error');}
+            finally{pendingConversationOperations.delete(conversation.id);renderCurrentChat();}
+            return;
+          }
+          if(await operateConversation('send',text,button)){
             if(PawpalChatbot.state.currentConversation?.id===conversation.id && input.value.trim()===text)input.value='';
         }}finally{isSendingLiveMsg=false;}
     }
@@ -1114,56 +1159,11 @@
         msgInput?.addEventListener('input', handleStaffTyping);
 
         // Đính kèm ảnh
-        const btnAdminAttach = document.getElementById('btnAdminChatAttach');
-        if (btnAdminAttach) { btnAdminAttach.disabled=true;btnAdminAttach.title='Chưa triển khai lưu tệp'; }
-        const adminFileInput = document.getElementById('adminChatFileInput');
-        const adminAttachPreview = document.getElementById('adminChatAttachPreview');
-        const adminAttachPreviewImg = document.getElementById('adminChatAttachPreviewImg');
-        const adminAttachPreviewName = document.getElementById('adminChatAttachPreviewName');
-        const adminAttachPreviewSize = document.getElementById('adminChatAttachPreviewSize');
-        const adminAttachPreviewRemove = document.getElementById('adminChatAttachPreviewRemove');
+        const btnAdminAttach=document.getElementById('btnAdminChatAttach');
+        const oldPreview=document.getElementById('adminChatAttachPreview');if(oldPreview)oldPreview.hidden=true;
+        const host=document.createElement('div');host.id='adminChatMediaHost';document.getElementById('chatMessageInput')?.before(host);
+        btnAdminAttach?.addEventListener('click',async()=>{const conversation=PawpalChatbot.state?.currentConversation;if(!ownsConversation(conversation)||pendingConversationOperations.has(conversation.id))return;try{const draft=await getChatMediaDraft(conversation);if(PawpalChatbot.state.currentConversation?.id===conversation.id)host.replaceChildren(draft.root);}catch{PawpalChatbot.showToast?.('Chưa tải được bộ chọn ảnh.','error');}});
 
-        btnAdminAttach?.addEventListener('click', () => adminFileInput?.click());
-        adminFileInput?.addEventListener('change', (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file) return;
-
-            const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
-            if (!allowedMimes.includes(file.type)) {
-                PawpalChatbot.showToast?.('Định dạng tệp không được hỗ trợ. Vui lòng chỉ gửi ảnh JPEG, PNG hoặc WebP.', 'warning');
-                adminFileInput.value = '';
-                return;
-            }
-
-            if (file.size > 5 * 1024 * 1024) {
-                PawpalChatbot.showToast?.('Dung lượng ảnh vượt quá 5MB. Vui lòng chọn ảnh nhẹ hơn.', 'warning');
-                adminFileInput.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const dataUrl = ev.target.result;
-                pendingAdminAttachment = {
-                    file: file,
-                    name: file.name,
-                    size: file.size,
-                    dataUrl: dataUrl
-                };
-                if (adminAttachPreviewImg) adminAttachPreviewImg.src = dataUrl;
-                if (adminAttachPreviewName) adminAttachPreviewName.textContent = file.name;
-                if (adminAttachPreviewSize) {
-                    const kb = Math.round(file.size / 1024);
-                    adminAttachPreviewSize.textContent = kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`;
-                }
-                if (adminAttachPreview) adminAttachPreview.style.display = 'flex';
-                if (msgInput) msgInput.focus();
-            };
-            reader.readAsDataURL(file);
-        });
-        adminAttachPreviewRemove?.addEventListener('click', clearAdminAttachment);
-
-        // Lưu ghi chú nội bộ
         const saveNoteButton = document.getElementById('btnSaveChatInternalNote');
         if (saveNoteButton && saveNoteButton.dataset.noteBound !== 'true') {
             saveNoteButton.dataset.noteBound = 'true';

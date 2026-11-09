@@ -1,10 +1,12 @@
 import { API } from '/scripts/api/api.js';
+import {createEvidenceMediaEditor} from '/scripts/shared/evidence-media.mjs';
 
 let currentRmaOrder = null;
 let returnRequestId = null;
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function openRMADrawer(orderId) {
+    if(document.getElementById('rma-submit-btn')?.disabled)return;
     try {
         let stylesheet = document.getElementById('return-drawer-styles');
         if (!stylesheet) {
@@ -126,16 +128,7 @@ async function openRMADrawer(orderId) {
                     <textarea id="rma-desc" placeholder="Mô tả cụ thể tình trạng sản phẩm khi nhận..." rows="3" style="border: 1px solid var(--color-border); border-radius: var(--card-border-radius); padding: 10px; width: 100%; font-family: var(--font-primary); resize: none;"></textarea>
                 </div>
 
-                <!-- File Upload Minh chứng -->
-                <div class="rma-form-group" hidden>
-                    <span class="rma-form-label">Ảnh hoặc video minh chứng</span>
-                    <div class="rma-upload-zone" id="rma-upload-trigger">
-                        <span class="rma-upload-text">Nhấp vào đây để tải lên hình ảnh hoặc video thực tế</span>
-                        <span class="rma-upload-text" style="display: block; font-size: 0.75rem; opacity: 0.7; margin-top: 4px;">Kích thước tệp tối đa: 5MB</span>
-                        <input type="file" id="rma-file-input" class="rma-upload-input" accept="image/*,video/*">
-                    </div>
-                    <div class="rma-upload-preview" id="rma-preview-container"></div>
-                </div>
+                <div class="rma-form-group" id="rma-evidence-editor"></div>
                 <span id="rma-upload-warning" role="alert" class="rma-alert-error" style="display:none;color:#DC2626"></span>
 
                 <!-- Submit Area -->
@@ -155,23 +148,25 @@ async function openRMADrawer(orderId) {
         drawer.focus({ preventScroll: true });
     }, 50);
 
-    setupDrawerListeners();
+    const mediaRoot=document.getElementById('rma-evidence-editor');
+    const editor=createEvidenceMediaEditor({root:mediaRoot,db:window.getSupabaseClient?.()||window.SupabaseClient,purpose:'return_image'});
+    await editor.reset({target:returnRequestId,context:currentRmaOrder._supabaseId});
+    setupDrawerListeners(editor);
     if(!container.open)container.showModal();
 }
 
 window.openRMADrawer = openRMADrawer;
 
-function setupDrawerListeners() {
+function setupDrawerListeners(editor) {
     const previousFocus = document.activeElement;
     const overlay = document.getElementById('rma-overlay');
     const drawer = document.getElementById('rma-drawer');
     const closeBtn = document.getElementById('rma-close-btn');
-    const fileInput = document.getElementById('rma-file-input');
-    const uploadTrigger = document.getElementById('rma-upload-trigger');
     const submitBtn = document.getElementById('rma-submit-btn');
 
     const closeDrawer = () => {
         if (submitBtn.disabled) return;
+        editor.close();
         document.removeEventListener('keydown', handleEscape);
         overlay.classList.remove('is-open');
         drawer.classList.remove('is-open');
@@ -209,53 +204,10 @@ function setupDrawerListeners() {
         document.getElementById('rma-refund-account-group').style.display = 'block';
     });
 
-    uploadTrigger.addEventListener('click', () => {
-        fileInput.click();
-    });
-
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        const warningEl = document.getElementById('rma-upload-warning');
-        const previewContainer = document.getElementById('rma-preview-container');
-
-        warningEl.style.display = 'none';
-        previewContainer.innerHTML = '';
-
-        if (!file) return;
-
-        if (file.size > 5 * 1024 * 1024) {
-            warningEl.textContent = 'Dung lượng file vượt quá giới hạn 5MB. Vui lòng chọn file nhỏ hơn.';
-            warningEl.style.display = 'block';
-            fileInput.value = ''; // Reset input
-            return;
-        }
-
-        if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                previewContainer.innerHTML = `
-                    <div style="position: relative;">
-                        <img src="${event.target.result}" class="rma-preview-thumb">
-                        <span style="position: absolute; top: -5px; right: -5px; background: rgba(0,0,0,0.6); color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="removeRmaFile()">×</span>
-                    </div>
-                `;
-            };
-            reader.readAsDataURL(file);
-        } else {
-            previewContainer.innerHTML = `
-                <div style="position: relative; font-size: 0.8rem; background: var(--color-primary-light); padding: 6px; border-radius: 6px; border: 1px solid var(--color-border);">
-                     ${file.name}
-                    <span style="cursor: pointer; margin-left: 8px; font-weight: bold; color: var(--color-danger);" onclick="removeRmaFile()">[Xóa]</span>
-                </div>
-            `;
-        }
-    });
-
     submitBtn.addEventListener('click', async () => {
         if (submitBtn.disabled) return;
         const checkedItems = document.querySelectorAll('.rma-product-checkbox:checked');
         const reason = document.getElementById('rma-reason').value;
-        const file = fileInput.files[0];
         const warningEl = document.getElementById('rma-upload-warning');
 
         if (checkedItems.length === 0) {
@@ -286,6 +238,8 @@ function setupDrawerListeners() {
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = 'Đang gửi...';
         submitBtn.disabled = true;
+        const mediaRoot=document.getElementById('rma-evidence-editor');mediaRoot.inert=true;
+        const locked=[...drawer.querySelectorAll('input,select,textarea')].map(el=>[el,el.disabled]);locked.forEach(([el])=>el.disabled=true);
 
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
@@ -299,15 +253,18 @@ function setupDrawerListeners() {
                 if (!product.lineId||!Number.isInteger(product.returnQuantity)||product.returnQuantity<1||product.returnQuantity>product.returnableQuantity) throw new Error('Số lượng đổi trả không hợp lệ.');
                 return { line_id: product.lineId, quantity: product.returnQuantity };
             });
-            const { error } = await db.rpc('request_own_sales_return',{
+            const assetIds=await editor.prepare();
+            const { error } = await db.rpc('request_own_sales_return_media',{
                 p_request:returnRequestId,p_order:orderUuid,p_expected:currentRmaOrder.updatedAt,
-                p_details:{reason,type:returnType,note:returnData.description,lines:details}
+                p_details:{reason,type:returnType,note:returnData.description,lines:details},p_assets:assetIds
             });
             if (error) throw error;
+            editor.saved();
         } catch (error) {
             console.error('[ReturnHandler] Không thể gửi yêu cầu:', error);
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
+            mediaRoot.inert=false;locked.forEach(([el,disabled])=>el.disabled=disabled);
             warningEl.textContent = error.code==='PT409'?'Đơn hàng đã thay đổi. Vui lòng đóng và mở lại yêu cầu.':
                 error.code==='23514'?'Số lượng yêu cầu vượt số lượng còn có thể đổi trả. Vui lòng đóng và mở lại yêu cầu.':
                 error.code==='42501'?'Bạn không có quyền gửi yêu cầu cho đơn hàng này.':
@@ -320,6 +277,7 @@ function setupDrawerListeners() {
 
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
+        mediaRoot.inert=false;locked.forEach(([el,disabled])=>el.disabled=disabled);
 
         closeDrawer();
 
@@ -347,12 +305,3 @@ function createRmaDrawerContainer() {
         document.body.appendChild(container);
         return container;
     }
-
-function removeRmaFile() {
-    const fileInput = document.getElementById('rma-file-input');
-    const previewContainer = document.getElementById('rma-preview-container');
-    if (fileInput) fileInput.value = '';
-    if (previewContainer) previewContainer.innerHTML = '';
-}
-
-window.removeRmaFile = removeRmaFile;

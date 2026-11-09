@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-11-07T12:48:05.022Z",
+  "status": "PASS",
+  "productionChanged": false,
+  "projectEnvironmentChanged": false,
+  "mongoWrites": true,
+  "previewUrl": "https://pawpalgr3-5h3lgu7pc-llwyns-projects.vercel.app",
+  "deploymentId": "dpl_Dp43Ns6hjbsdtFKqBfCNosLxNmm3",
+  "probeCliExitCode": 0,
+  "probeDiagnostics": {
+    "mentionsProtection": true,
+    "mentionsBypass": true,
+    "mentionsUnknownOption": false,
+    "mentionsCurlMissing": false,
+    "mentionsAuthorization": false,
+    "cliNotes": [
+      "> Added a Protection Bypass for Automation secret to project [REDACTED]. It stays on the project until you revoke it."
+    ]
+  },
+  "probeHttpStatus": 200,
+  "atlasPing": true,
+  "ownImageAndChunksRemoved": true,
+  "scope": "multipart_sharp_gridfs_roundtrip_no_business_records",
+  "probeCode": null,
+  "probeDeploymentRemoved": true,
+  "temporaryAutomationBypassRevoked": true
+}

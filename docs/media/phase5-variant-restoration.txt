@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "repeatSaveRetainedReferenceIdsAndSources": true,
+  "onlyRepeatSaveUpdatedAtChanged": true,
+  "originalReferencesRestoredExactly": true,
+  "restoredImages": 11,
+  "productAndVariantBusinessColumnsUnchanged": true
+}

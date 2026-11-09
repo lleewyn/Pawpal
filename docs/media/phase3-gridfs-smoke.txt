@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "provider": "Atlas GridFS",
+  "uploadedBytes": 95,
+  "originalBytesAndHashVerified": true,
+  "ownFileAndChunksRemoved": true,
+  "businessRecordsCreated": 0,
+  "note": "GridFS collections/indexes may remain after the first upload."
+}

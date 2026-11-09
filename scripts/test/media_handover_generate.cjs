@@ -1,0 +1,33 @@
+'use strict';
+const fs=require('node:fs');
+const backup=JSON.parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/media/phase5-handover/before.private.json'));
+const get=name=>{const rows=backup.defs.filter(x=>x.proname===name);if(rows.length!==1)throw Error('FUNCTION_SCOPE');return rows[0].definition;};
+const once=(s,a,b)=>{if(s.split(a).length!==2)throw Error('SOURCE_DRIFT '+a);return s.replace(a,b);};
+const clone=s=>s.replaceAll('intake','handover');
+const manage=once(get('media_manage'),"p_purpose IN ('care_log_image','intake_image')","p_purpose IN ('care_log_image','intake_image','handover_image')");
+const prepare=once(clone(get('prepare_intake_media_upload')),"appointment_status IN ('confirmed','checked_in','in_progress')","appointment_status='in_progress'");
+const attach=clone(get('attach_intake_media')),list=clone(get('list_intake_media'));
+const resolve=once(get('resolve_media_asset'),"s.purpose='intake_image'","s.purpose IN ('intake_image','handover_image')");
+const save=once(get('save_admin_service_record'),"  IF p_type<>'intake' THEN RAISE EXCEPTION 'intake_media_wrong_record_type' USING ERRCODE='22023'; END IF;\n  PERFORM pawpal_private.attach_intake_media(p_id,p_details->'media_asset_ids');",`  IF p_type='intake' THEN PERFORM pawpal_private.attach_intake_media(p_id,p_details->'media_asset_ids');
+  ELSE PERFORM pawpal_private.attach_handover_media(p_id,p_details->'media_asset_ids'); END IF;`);
+const check=backup.constraints.find(c=>c.conname==='media_upload_session_check');
+if(!check)throw Error('CHECK_SCOPE');
+const expanded=once(check.definition,"purpose = 'intake_image'::text","purpose IN ('intake_image'::text,'handover_image'::text)");
+fs.writeFileSync('scripts/database/v1/194_handover_media.sql',`BEGIN;
+SET LOCAL lock_timeout='3s';
+ALTER TABLE public.media_upload_session DROP CONSTRAINT media_upload_session_check,DROP CONSTRAINT media_upload_session_purpose_check;
+ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_purpose_check CHECK(purpose IN ('product_image','care_log_image','product_variant_image','service_image','intake_image','handover_image'));
+ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_check ${expanded};
+`+[manage,prepare,attach,list,resolve,save].map(s=>s+';').join('\n')+`
+REVOKE ALL ON FUNCTION public.prepare_handover_media_upload(uuid,uuid,uuid,bigint,text,text),public.list_handover_media(uuid),pawpal_private.attach_handover_media(uuid,jsonb) FROM PUBLIC,anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION public.prepare_handover_media_upload(uuid,uuid,uuid,bigint,text,text),public.list_handover_media(uuid) TO authenticated;
+COMMIT;\n`);
+fs.writeFileSync('scripts/database/v1/194_handover_media.rollback.sql',`BEGIN;
+SET LOCAL lock_timeout='3s';
+LOCK TABLE public.media_upload_session IN ACCESS EXCLUSIVE MODE;
+DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.media_upload_session WHERE purpose='handover_image') THEN RAISE EXCEPTION 'handover_rollback_requires_no_sessions'; END IF; END $$;
+`+['media_manage','resolve_media_asset','save_admin_service_record'].map(n=>get(n)+';').join('\n')+`
+DROP FUNCTION public.prepare_handover_media_upload(uuid,uuid,uuid,bigint,text,text),public.list_handover_media(uuid),pawpal_private.attach_handover_media(uuid,jsonb);
+ALTER TABLE public.media_upload_session DROP CONSTRAINT media_upload_session_check,DROP CONSTRAINT media_upload_session_purpose_check;
+`+backup.constraints.map(c=>`ALTER TABLE public.media_upload_session ADD CONSTRAINT ${c.conname} ${c.definition};`).join('\n')+'\nCOMMIT;\n');
+console.log('HANDOVER_MIGRATION_GENERATED');

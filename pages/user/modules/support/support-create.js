@@ -1,7 +1,11 @@
 import '/scripts/shared/support-handler.js';
 import { API } from '/scripts/api/api.js';
+import {createEvidenceMediaEditor} from '/scripts/shared/evidence-media.mjs';
+let disposeCreate=()=>{};
+export function dispose(){disposeCreate();disposeCreate=()=>{};}
 
 export async function initSupportCreate() {
+    dispose();
     window.setUserSubBreadcrumb?.('Gửi yêu cầu mới','support');
     const form=document.getElementById('createComplaintForm');if(!form)return;
     const get=id=>form.querySelector('#'+id),type=get('ticketType'),button=get('btnSubmitComplaint'),error=get('supportCreateError');
@@ -11,8 +15,14 @@ export async function initSupportCreate() {
     const native=await db?.auth?.getUser();if(native?.error || !native?.data?.user){error.textContent='Vui lòng đăng nhập để gửi yêu cầu.';button.disabled=true;button.textContent='Gửi yêu cầu';return;}
     const key='pawpal_support_request:'+native.data.user.id;
     let requestId=sessionStorage.getItem(key);if(!/^[0-9a-f-]{36}$/i.test(requestId || '')){requestId=crypto.randomUUID();sessionStorage.setItem(key,requestId);}
+    const mediaRoot=get('supportCreateMedia'),editor=createEvidenceMediaEditor({root:mediaRoot,db,purpose:'ticket_image'});
+    await editor.reset({target:requestId,context:requestId});
+    let closed=false;
+    const onAuth=()=>{dispose();button.disabled=true;error.textContent='Phiên tài khoản đã thay đổi. Vui lòng mở lại yêu cầu.';};
+    document.addEventListener('auth_state_changed',onAuth);
+    disposeCreate=()=>{closed=true;editor.close();document.removeEventListener('auth_state_changed',onAuth);};
     const results=await Promise.allSettled([API.getUserBookings(user),API.getUserOrders(user)]);
-    if(!form.isConnected)return;
+    if(!form.isConnected||closed)return;
     const bookings=results[0].status==='fulfilled'?results[0].value:[],orders=results[1].status==='fulfilled'?results[1].value:[];
     const showType=()=>{get('serviceContextSection').classList.toggle('d-none',type.value!=='service');get('orderContextSection').classList.toggle('d-none',type.value!=='order');error.textContent='';};
     type.addEventListener('change',showType);
@@ -35,16 +45,22 @@ export async function initSupportCreate() {
     const order=orders.find(o=>[o.id,o._supabaseId].includes(params.get('orderId')));if(order)selectOrder(order);
     form.addEventListener('input',()=>{error.textContent='';});
     button.onclick=async()=>{
-        if(button.disabled)return;error.textContent='';
+        if(button.disabled||closed)return;error.textContent='';
         const title=get('ticketTitle').value.trim(),content=get('ticketContent').value.trim();
         if(!type.value || title.length<2 || content.length<2){error.textContent='Vui lòng chọn phân loại và nhập chủ đề, nội dung từ 2 ký tự.';return;}
         if(type.value==='service'&&!get('serviceBookingSelect').value || type.value==='order'&&!get('orderSelect').value){error.textContent='Vui lòng chọn đúng lịch hẹn hoặc đơn hàng liên quan.';return;}
         button.disabled=true;button.textContent='Đang gửi…';
+        mediaRoot.inert=true;
+        const locked=[...form.querySelectorAll('input,select,textarea')].map(el=>[el,el.disabled]);locked.forEach(([el])=>el.disabled=true);
         try{
-            const saved=await window.PawPalSupport.createTicket(title,type.value,content,[],{requestId,bookingId:get('serviceBookingSelect').value,orderId:get('orderSelect').value});
+            const mediaAssetIds=await editor.prepare();
+            const actor=await db.auth.getUser();
+            if(!form.isConnected||closed||actor.error||actor.data?.user?.id!==native.data.user.id)throw Error('Phiên gửi yêu cầu đã thay đổi.');
+            const saved=await window.PawPalSupport.createTicket(title,type.value,content,[],{requestId,bookingId:get('serviceBookingSelect').value,orderId:get('orderSelect').value,mediaAssetIds});
             if(saved?.id!==requestId)throw Error('Chưa xác nhận được kết quả lưu. Vui lòng thử lại.');
-            sessionStorage.removeItem(key);location.hash='support';
+            editor.saved();sessionStorage.removeItem(key);location.hash='support';
         }catch(e){error.textContent=e.message;button.disabled=false;button.textContent='Gửi yêu cầu';}
+        finally{mediaRoot.inert=false;locked.forEach(([el,disabled])=>el.disabled=disabled);}
     };
     button.disabled=false;button.textContent='Gửi yêu cầu';
 }

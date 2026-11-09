@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "legacyMediaCountsAndHashesUnchanged": true,
+  "productBusinessDataUnchanged": true,
+  "technicalCareLogRemaining": 0,
+  "active_assets": 0,
+  "active_sessions": 0,
+  "reserved_bytes": "0",
+  "budget_bytes": "104857600",
+  "scope": "Four acceptance files physically removed; deleted metadata/audit retained. Shared Cloud was used temporarily for marked acceptance operations; Production deployment not changed."
+}

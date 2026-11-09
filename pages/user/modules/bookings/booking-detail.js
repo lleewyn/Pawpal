@@ -2,6 +2,8 @@
 import { API } from '/scripts/api/api.js';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 import { parseVietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
+import {createReviewMediaEditor} from '/scripts/shared/review-media.mjs';
+import {createEvidenceGallery} from '/scripts/shared/evidence-gallery.mjs';
 import { statusLabels, formatDate, formatPrice, openBookingCancelModal, openBookingMoveModal } from './bookings.js';
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
@@ -71,7 +73,9 @@ function showBookingLoadError(message) {
 
 let isInitRunning = false;
 let stopDetailRealtime = null;
-export function dispose(){++detailVersion;++detailReadVersion;stopDetailRealtime?.();stopDetailRealtime=null;stopDetailAuth?.();stopDetailAuth=null;clearTimeout(bannerTimeout);currentBooking=null;currentPet=null;currentCareLog=null;}
+let serviceReviewEditors=new Map(),serviceReviewGalleries=[],serviceReviewGeneration=0;
+function clearServiceReviewMedia(){serviceReviewGeneration++;serviceReviewEditors.forEach(e=>e.close());serviceReviewEditors.clear();serviceReviewGalleries.forEach(g=>g.clear());serviceReviewGalleries=[];}
+export function dispose(){++detailVersion;++detailReadVersion;clearServiceReviewMedia();stopDetailRealtime?.();stopDetailRealtime=null;stopDetailAuth?.();stopDetailAuth=null;clearTimeout(bannerTimeout);currentBooking=null;currentPet=null;currentCareLog=null;}
 window.addEventListener('hashchange',dispose);
 
 export async function init() {
@@ -96,9 +100,9 @@ export async function init() {
         stopDetailRealtime?.();
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (currentBooking && loadingContainer?.isConnected) {
-            stopDetailRealtime = watchCustomerTables(db, currentBooking.userId, ['appointment','appointment_item','payment','review','hotel_booking','taxi_trip','appointment_record','appointment_adjustment','care_log'], async () => {
+            stopDetailRealtime = watchCustomerTables(db, currentBooking.userId, ['appointment','appointment_item','payment','review','review_media','hotel_booking','taxi_trip','appointment_record','appointment_adjustment','care_log'], async () => {
                 if (!loadingContainer.isConnected) { stopDetailRealtime?.(); stopDetailRealtime = null; return; }
-                const dirty = [...loadingContainer.querySelectorAll('#serviceReviewForm textarea')].some(el => el.value.trim());
+                const dirty = [...loadingContainer.querySelectorAll('#serviceReviewForm textarea,#serviceReviewForm select')].some(el => el.value.trim()) || [...serviceReviewEditors.values()].some(editor=>editor.hasDraft()) || Boolean(loadingContainer.querySelector('#btnSubmitServiceReview:disabled'));
                 try { await loadBookingDetail(bookingId, dirty); } catch { if(version===detailVersion && owner===detailOwner())showToast('Không thể cập nhật lịch hẹn. Vui lòng tải lại trang.', 'error'); }
             });
         }
@@ -374,6 +378,7 @@ function renderBookingLogistics(data) {
 }
 
 async function renderServiceReviewSection(booking,valid=()=>true) {
+    clearServiceReviewMedia();const mediaVersion=serviceReviewGeneration;
     const section = document.getElementById('serviceReviewSection');
     if (!section) return;
     section.classList.toggle('d-none', resolveBookingStatus(booking) !== 'completed');
@@ -395,8 +400,8 @@ async function renderServiceReviewSection(booking,valid=()=>true) {
     section.querySelector('.service-review-body').innerHTML = `<form id="serviceReviewForm" onsubmit="return false;">${lines.map((line, index) => {
         const review = prior.get(line.id);
         return `<fieldset style="border:0;padding:12px 0"><legend style="font-size:16px">${esc(line.name)}</legend>${review ?
-            `<p>${review.rating}/5 — ${esc(labels[review.review_status] || 'Đã tiếp nhận')}</p><p>${esc(review.review_content)}</p>${review.shop_reply ? `<p><strong>Phản hồi cửa hàng</strong></p><p>${esc(review.shop_reply)}</p>` : ''}` :
-            `<label for="serviceRating${index}">Mức đánh giá <span style="color:#DC2626">*</span></label><select class="form-select mb-3" id="serviceRating${index}" data-service-rating="${line.id}"><option value="">Chọn mức đánh giá</option>${[1,2,3,4,5].map(n => `<option value="${n}">${n}/5</option>`).join('')}</select><label for="serviceContent${index}">Nhận xét <span style="color:#DC2626">*</span></label><textarea class="form-control" id="serviceContent${index}" data-service-content="${line.id}" maxlength="3000" rows="3"></textarea>`}</fieldset>`;
+            `<p>${review.rating}/5 — ${esc(labels[review.review_status] || 'Đã tiếp nhận')}</p><p>${esc(review.review_content)}</p><div data-service-review-gallery="${review.id}"></div>${review.shop_reply ? `<p><strong>Phản hồi cửa hàng</strong></p><p>${esc(review.shop_reply)}</p>` : ''}` :
+            `<label for="serviceRating${index}">Mức đánh giá <span style="color:#DC2626">*</span></label><select class="form-select mb-3" id="serviceRating${index}" data-service-rating="${line.id}"><option value="">Chọn mức đánh giá</option>${[1,2,3,4,5].map(n => `<option value="${n}">${n}/5</option>`).join('')}</select><label for="serviceContent${index}">Nhận xét <span style="color:#DC2626">*</span></label><textarea class="form-control" id="serviceContent${index}" data-service-content="${line.id}" maxlength="3000" rows="3"></textarea><div data-service-review-media="${line.id}"></div>`}</fieldset>`;
     }).join('')}<p id="serviceReviewError" role="alert" style="color:#DC2626"></p>${pending.length ? '<p>Đánh giá sẽ được kiểm duyệt trước khi công bố.</p><button type="button" class="btn-detail-action btn-action-primary-green" id="btnSubmitServiceReview">Gửi đánh giá</button>' : ''}${!lines.length ? '<p>Chưa có dòng dịch vụ hoàn thành để đánh giá.</p>' : ''}</form>`;
     const form = section.querySelector('form');
     form.addEventListener('submit', e => e.preventDefault());
@@ -409,11 +414,22 @@ async function renderServiceReviewSection(booking,valid=()=>true) {
         if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''))id=crypto.randomUUID();
         return [line.id,id];
     }));
+    for(const line of pending){
+        const root=section.querySelector(`[data-service-review-media="${line.id}"]`),editor=createReviewMediaEditor({root,db,kind:'service'});serviceReviewEditors.set(line.id,editor);await editor.reset({review:ids.get(line.id),line:line.id});
+        if(!valid()||mediaVersion!==serviceReviewGeneration)return;
+    }
+    if(reviews?.length){
+        const media=await db.from('review_media').select('review_id,image_url,media_asset_id').in('review_id',reviews.map(r=>r.id));
+        if(!valid()||mediaVersion!==serviceReviewGeneration)return;
+        if(media.error){section.querySelector('#serviceReviewError').textContent='Chưa tải được ảnh đánh giá. Vui lòng tải lại trang.';}
+        else await Promise.all([...section.querySelectorAll('[data-service-review-gallery]')].map(root=>{const gallery=createEvidenceGallery({root,db});serviceReviewGalleries.push(gallery);return gallery.render((media.data||[]).filter(r=>r.review_id===root.dataset.serviceReviewGallery).map(r=>({...r,media_url:r.image_url})));}));
+    }
     if (button) button.onclick = async () => {
         if(button.disabled || !valid() || !section.isConnected)return;
         const errorEl = section.querySelector('#serviceReviewError');
         errorEl.textContent = '';
         button.disabled = true;
+        let locked=[];
         try {
             const payload = pending.map(line => {
                 const rating = Number(section.querySelector(`[data-service-rating="${line.id}"]`).value);
@@ -422,16 +438,22 @@ async function renderServiceReviewSection(booking,valid=()=>true) {
                 return {id: ids.get(line.id), line_id: line.id, rating, content};
             });
             for(const line of pending){sessionStorage.setItem(reviewKey(line),ids.get(line.id));if(sessionStorage.getItem(reviewKey(line))!==ids.get(line.id))throw Error('Không thể giữ mã đánh giá để thử lại an toàn.');}
+            locked=[...form.querySelectorAll('input,select,textarea')].map(el=>[el,el.disabled]);locked.forEach(([el])=>el.disabled=true);form.querySelectorAll('[data-service-review-media]').forEach(root=>root.inert=true);
+            for(const review of payload)review.media_asset_ids=await serviceReviewEditors.get(review.line_id).prepare();
+            if(!valid()||mediaVersion!==serviceReviewGeneration)return;
             const result = await db.rpc('submit_own_service_reviews', {p_booking: booking._supabaseId, p_reviews: payload});
             if(!valid() || !section.isConnected)return;
             if (result.error) throw Error(result.error.code === 'PT409' ? 'Dịch vụ đã được đánh giá. Vui lòng tải lại để xem kết quả.' : 'Không thể gửi đánh giá. Nội dung đã nhập được giữ lại để bạn thử lại.');
             if (!Array.isArray(result.data) || result.data.length !== payload.length || payload.some(item => !result.data.includes(item.id))) throw Error('Chưa xác nhận được kết quả lưu. Vui lòng thử lại với nội dung hiện tại.');
+            serviceReviewEditors.forEach(editor=>editor.saved());
             for(const line of pending)if(sessionStorage.getItem(reviewKey(line))===ids.get(line.id))sessionStorage.removeItem(reviewKey(line));
             await renderServiceReviewSection(booking,valid);
             window.dispatchEvent(new CustomEvent('pawpal:reviewSubmitted', {detail:{bookingId: booking._supabaseId}}));
         } catch (error) {
             errorEl.textContent = error.message;
             button.disabled = false;
+        } finally {
+            locked.forEach(([el,disabled])=>el.disabled=disabled);if(mediaVersion===serviceReviewGeneration)form.querySelectorAll('[data-service-review-media]').forEach(root=>root.inert=false);
         }
     };
 }

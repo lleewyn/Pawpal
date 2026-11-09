@@ -421,6 +421,7 @@ async function getProductReviews(productId) {
 
         if (error) throw error;
         
+        const reviewImages=await loadPublishedReviewImages(db,(data||[]).map(r=>r.id));
         return data.map(r => ({
             id: r.id,
             rating: r.rating,
@@ -428,8 +429,8 @@ async function getProductReviews(productId) {
             createdAt: r.created_at,
             customerName: 'Khách đã mua hàng',
             variantName: r.variant_name || '',
-            hasMedia: false,
-            media: [],
+            hasMedia: Boolean(reviewImages.get(r.id)?.length),
+            media: reviewImages.get(r.id)||[],
             hasReply: !!r.shop_reply,
             shopReply: r.shop_reply || ''
         }));
@@ -444,10 +445,22 @@ async function getServiceReviews(serviceId) {
     if (!db) throw new Error('Chưa kết nối được đánh giá dịch vụ.');
     const {data, error} = await db.rpc('public_service_reviews', {p_service:serviceId});
     if (error) throw error;
+    const reviewImages=await loadPublishedReviewImages(db,(data||[]).map(r=>r.id));
     return (data || []).map(r => ({
         id:r.id,name:'Khách đã sử dụng dịch vụ',rating:Number(r.rating),date:r.created_at,
-        text:r.review_content || '',images:[],sellerReply:r.shop_reply || '',helpfulCount:0
+        text:r.review_content || '',images:reviewImages.get(r.id)||[],sellerReply:r.shop_reply || '',helpfulCount:0
     }));
+}
+
+async function loadPublishedReviewImages(db,ids){
+    const result=new Map();if(!ids.length)return result;
+    const {mediaSource}=await import('/scripts/shared/media-source.mjs');
+    for(let start=0;start<ids.length;start+=100){
+        const response=await db.from('review_media').select('review_id,image_url,media_asset_id,review:review_id!inner(review_status)').in('review_id',ids.slice(start,start+100)).in('review.review_status',['published','approved','da_duyet']).order('display_order');
+        if(response.error)throw response.error;
+        for(const row of response.data||[]){try{const source=mediaSource({media_asset_id:row.media_asset_id,url:row.image_url});if(source){if(!result.has(row.review_id))result.set(row.review_id,[]);result.get(row.review_id).push(source.url);}}catch{}}
+    }
+    return result;
 }
 
 async function loadBlogCategories() {
@@ -486,7 +499,7 @@ async function loadBlogs(forceRefresh = false) {
                 slug: item.slug,
                 summary: item.summary,
                 content: item.content,
-                thumbnail: item.thumbnail_url ? (item.thumbnail_url.startsWith('http') ? item.thumbnail_url : rootPath + item.thumbnail_url.replace(/^[\/\\]+/, '')) : rootPath + 'assets/images/shop/products/placeholder.webp',
+                thumbnail: item.thumbnail_media_asset_id?'/api/media?action=read&id='+encodeURIComponent(item.thumbnail_media_asset_id):item.thumbnail_url ? (item.thumbnail_url.startsWith('http') ? item.thumbnail_url : rootPath + item.thumbnail_url.replace(/^[\/\\]+/, '')) : rootPath + 'assets/images/shop/products/placeholder.webp',
                 authorId: item.author_id,
                 date: item.publish_at || item.created_at,
                 viewCount: item.view_count || 0,
@@ -513,14 +526,14 @@ async function loadBanners() {
 
         const { data, error } = await db.from('banner')
             .select('*')
-            .or('status.eq.dang_hien_thi,status.eq.ACTIVE')
+            .or('status.eq.active,status.eq.dang_hien_thi,status.eq.ACTIVE')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
 
         const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
         const banners = (data || []).map(b => {
-            let imgUrl = b.image_url || b.image_desktop_url || '';
+            let imgUrl = b.image_media_asset_id?'/api/media?action=read&id='+encodeURIComponent(b.image_media_asset_id):b.image_url || b.image_desktop_url || '';
             if (imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
                 imgUrl = rootPath + imgUrl;
             }

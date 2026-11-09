@@ -1,0 +1,11 @@
+{
+  "previewUploadStatus": 201,
+  "businessSaveBlockedOnPurpose": true,
+  "retryKeptRecordId": true,
+  "retryKeptAsset": true,
+  "retryAdditionalUploads": 0,
+  "anonymousStatus": 404,
+  "adminStatus": 200,
+  "privateNoStore": true,
+  "bytesMatch": true
+}

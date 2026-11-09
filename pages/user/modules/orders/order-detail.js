@@ -112,7 +112,7 @@ async function reorder(){
     }catch(error){notify(error.message||'Không thể thêm sản phẩm vào giỏ hàng.');}
 }
 function showError(message){const element=document.querySelector('.order-detail-module-container');if(element){element.classList.remove('user-order-loading');element.setAttribute('aria-busy','false');element.innerHTML='<p role="alert"></p><a href="#orders">Quay lại danh sách đơn hàng</a>';element.querySelector('p').textContent=message;}}
-export function dispose(){++loadVersion;stopRealtime?.();stopRealtime=null;stopAuth?.();stopAuth=null;currentOrder=null;mountedOwner=null;actionDialog?.close();actionDialog?.remove();actionDialog=null;}
+export function dispose(){++loadVersion;window.ReviewHandler?.dispose();stopRealtime?.();stopRealtime=null;stopAuth?.();stopAuth=null;currentOrder=null;mountedOwner=null;actionDialog?.close();actionDialog?.remove();actionDialog=null;}
 export async function initOrderDetail(){
     dispose();
     mountedOwner=ownerId();const owner=mountedOwner,version=loadVersion+1;
@@ -125,7 +125,7 @@ export async function initOrderDetail(){
     if(version!==loadVersion || owner!==ownerId() || !container?.isConnected)return;
     container?.classList.remove('user-order-loading');container?.setAttribute('aria-busy','false');container?.querySelector('.user-order-skeleton')?.remove();
     const user=JSON.parse(localStorage.getItem('pawpal_current_user')||'null');
-    stopRealtime=watchCustomerTables(client(),user?.id,['sales_order','sales_order_detail','payment','review'],loadOrderDetail);
+    stopRealtime=watchCustomerTables(client(),user?.id,['sales_order','sales_order_detail','payment','review','review_media'],loadOrderDetail);
 }
 export const init=initOrderDetail;
 window.initOrderDetail=initOrderDetail;

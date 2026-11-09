@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "checksum": "71ae16b6e263b8b70c652908afbed975c3a2771b99908093ed58c0f043b6c12e",
+  "cloudWrites": false,
+  "rolledBackFixtures": true,
+  "checks": [
+    "real staff role RPC and assignment guard",
+    "append verified evidence",
+    "retain existing evidence",
+    "legal hold",
+    "idempotent references",
+    "invalid source rollback",
+    "customer owner only",
+    "anonymous denied"
+  ]
+}

@@ -1,7 +1,9 @@
 import { API } from '/scripts/api/api.js';
 import {watchCustomerTables} from '/scripts/shared/customer-realtime.mjs';
+import {createEvidenceGallery} from '/scripts/shared/evidence-gallery.mjs';
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let returnLoadVersion=0;
+let returnEvidenceGallery=null;
 const returnOwner=()=>{try{return JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id || null;}catch{return null;}};
 
 async function loadReturnRequestFromSupabase(orderId) {
@@ -79,6 +81,7 @@ function normalizeReturnRequestRow(row) {
 }
 
 async function initReturnDetail() {
+    returnEvidenceGallery?.clear();
     const version=++returnLoadVersion;
     const owner=returnOwner();
     const root=document.querySelector('.return-detail-module-container');
@@ -152,6 +155,14 @@ async function initReturnDetail() {
 
     document.getElementById('rma-reason-text').textContent = reasonsMap[rmaData.reason] || rmaData.reason;
     document.getElementById('rma-description-text').textContent = rmaData.description || 'Không có mô tả chi tiết.';
+    void (async()=>{
+        const mediaRoot=document.getElementById('returnEvidenceGallery'),db=window.getSupabaseClient?.()||window.SupabaseClient;
+        try{
+            const result=await db.rpc('list_return_media',{p_return:rmaData.rmaId});if(result.error)throw result.error;
+            if(version!==returnLoadVersion||!mediaRoot?.isConnected||owner!==returnOwner())return;
+            returnEvidenceGallery=createEvidenceGallery({root:mediaRoot,db});await returnEvidenceGallery.render(result.data||[]);
+        }catch{if(version===returnLoadVersion&&mediaRoot?.isConnected)mediaRoot.textContent='Chưa tải được ảnh bằng chứng. Vui lòng tải lại trang.';}
+    })();
 
     const refundWrapper = document.getElementById('rma-refund-wrapper');
     const refundAccountEl = document.getElementById('rma-refund-account-display');
@@ -234,7 +245,7 @@ function showReturnLoadError(message) {
 let isInitRunning = false;
 let stopRealtime;
 let stopAuth;
-export function dispose(){++returnLoadVersion;stopRealtime?.();stopRealtime=null;stopAuth?.();stopAuth=null;isInitRunning=false;}
+export function dispose(){++returnLoadVersion;returnEvidenceGallery?.clear();returnEvidenceGallery=null;stopRealtime?.();stopRealtime=null;stopAuth?.();stopAuth=null;isInitRunning=false;}
 
 export async function init() {
     if (isInitRunning) return;

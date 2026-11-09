@@ -569,8 +569,7 @@
                         <input type="text" class="admin-input" id="inputBannerTitle" placeholder="Ví dụ: Ưu đãi Spa Mùa Hè 30%">
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Ảnh banner URL <span class="settings-required-mark">*</span></label>
-                        <input type="text" class="admin-input" id="inputBannerImage" placeholder="Nhập đường dẫn ảnh hoặc tên tệp...">
+                        <input type="hidden" id="inputBannerImage"><div id="bannerMediaEditor"></div>
                     </div>
                     <div class="form-row-2col">
                         <div class="form-group-item">
@@ -825,7 +824,7 @@
                         <textarea class="admin-input" id="inputArticleSummary" rows="2" placeholder="Tóm tắt ngắn 1-2 câu hiển thị ở danh sách bài viết..."></textarea>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Nội dung chi tiết bài viết <span class="settings-required-mark">*</span></label>
+                        <div id="articleMediaEditor"></div><label class="form-label-clean">Nội dung chi tiết bài viết <span class="settings-required-mark">*</span></label>
                         <textarea class="admin-input" id="inputArticleContent" rows="6" placeholder="Nội dung cẩm nang chia sẻ kiến thức chăm sóc thú cưng..."></textarea>
                     </div>
                 </div>

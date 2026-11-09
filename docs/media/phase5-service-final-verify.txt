@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "legacyServiceImages": 23,
+  "allLegacyImagesRestoredExactly": true,
+  "active_assets": "0",
+  "active_sessions": "0",
+  "reserved_bytes": "0",
+  "budget_bytes": "104857600"
+}

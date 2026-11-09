@@ -1,0 +1,15 @@
+Date: 2026-11-07 (Asia/Bangkok)
+Status: PASS
+Source: media:preflight using the private environment file outside the webroot.
+Scope: connection, ping, database statistics and two exact GridFS collection names; read only.
+dataBytes: 0
+indexBytes: 0
+dataAndIndexBytes: 0
+gridfsFilesCollectionExists: false
+gridfsChunksCollectionExists: false
+uploadEnabled: false
+videoEnabled: false
+No file, collection, index or business record was created or modified.
+Database statistics cover only the configured database, not the entire cluster.
+Vercel connectivity and write permissions have not been verified.
+No URI, credentials, hostname or user content is included in this report.

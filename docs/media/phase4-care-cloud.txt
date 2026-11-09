@@ -1,0 +1,8 @@
+{
+  "upload_enabled": false,
+  "assets": 0,
+  "sessions": 0,
+  "anonymous_metadata_reader": false,
+  "care_rpc_preserves_work_guard": true,
+  "status": "PASS"
+}

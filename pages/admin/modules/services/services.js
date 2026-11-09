@@ -25,11 +25,13 @@
             const group=el('div',null,'workspace-form-field'),label=el('label',text+(required?' ':'')),input=el(type==='textarea'?'textarea':'input',null,'admin-input');input.id='staffCareLog'+key;
             if(type!=='textarea')input.type=type;else{input.rows=4;input.maxLength=4000;}if(key==='title')input.maxLength=200;if(key==='staff')input.readOnly=true;input.required=required;label.htmlFor=input.id;if(required)label.append(el('span','*','workspace-required'));group.append(label,input);form.append(group);fields[key]=input;
         }
+        const mediaRoot=el('div',null,'workspace-form-field');mediaRoot.id='staffCareLogMedia';form.append(mediaRoot);
+        const mediaEditor=import('/scripts/shared/care-media.mjs').then(({createCareMediaEditor})=>createCareMediaEditor({root:mediaRoot,db:window.getSupabaseClient()}));
         const message=el('p','','workspace-error');message.setAttribute('role','alert');
         const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Lưu nhật ký','admin-btn admin-btn-primary');save.id='staffCareLogSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);form.append(message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
         const state={overlay,row:null,log:null,pending:null,loading:true,saving:false,generation:0,returnFocus:null,onSaved:null};
         Object.values(fields).forEach(input=>input.addEventListener('input',()=>{if(input.getAttribute('aria-invalid')==='true'){input.removeAttribute('aria-invalid');message.textContent='';}}));
-        function closeDialog(){state.generation++;overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');if(state.returnFocus?.isConnected)state.returnFocus.focus();}
+        function closeDialog(){state.generation++;void mediaEditor.then(editor=>editor.close());overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');if(state.returnFocus?.isConnected)state.returnFocus.focus();}
         overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
         overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}if(event.key!=='Tab')return;const nodes=[...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled])')].filter(n=>n.offsetParent!==null),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});
         form.addEventListener('submit',event=>event.preventDefault());
@@ -46,12 +48,19 @@
             const args={p_id:state.pending.id,p_appointment_id:state.row.id,p_expected_updated_at:state.row.updated_at,p_expected_log_updated_at:state.log?.updated_at||null,p_action:'save',p_details:details},generation=state.generation;
             state.saving=true;save.disabled=true;save.textContent='Đang lưu';Object.values(fields).forEach(input=>input.disabled=true);
             const finish=()=>{if(generation!==state.generation)return;const callback=state.onSaved;closeDialog();form.reset();state.row=state.log=state.pending=null;if(allowed())callback?.(args.p_appointment_id);};
-            try{await persist(args);finish();}
+            let mediaIds=[],persistAttempted=false;
+            try{
+                const editor=await mediaEditor;mediaIds=await editor.prepare();
+                if(generation!==state.generation)return;
+                if(mediaIds.length)details.media_asset_ids=mediaIds;
+                persistAttempted=true;await persist(args);editor.saved();finish();
+            }
             catch(error){
                 if(generation!==state.generation)return;
                 // An edit has no server idempotency shortcut: verify its actual persisted contents after a lost response.
-                if(state.log&&(!error.code||error.code==='PT409'||/^5/.test(String(error.status||'')))){
-                    try{const current=await findLog(args.p_appointment_id,args.p_id);if(current?.recorded_by===details.staff_id&&current.action_name_snapshot===details.title&&(current.description||'')===details.note&&Date.parse(current.recorded_at)===+at){finish();return;}}catch{}
+                if(error.mediaMessage){message.textContent=error.message;return;}
+                if(persistAttempted&&state.log&&(!error.code||error.code==='PT409'||/^5/.test(String(error.status||'')))){
+                    try{const current=await findLog(args.p_appointment_id,args.p_id);if(current?.recorded_by===details.staff_id&&current.action_name_snapshot===details.title&&(current.description||'')===details.note&&Date.parse(current.recorded_at)===+at&&await(await mediaEditor).committed(args.p_id,mediaIds)){(await mediaEditor).saved();finish();return;}}catch{}
                 }
                 if(generation!==state.generation)return;
                 const messages={work_assignment_required:'Ca không còn được giao cho bạn. Đóng form và tải lại.',work_log_owner_required:'Chỉ được sửa nhật ký do chính bạn ghi.',work_log_performer_mismatch:'Người ghi nhật ký phải là nhân viên đang đăng nhập.',work_driver_assignment_required:'Ca xe chưa được giao cho bạn làm tài xế. Liên hệ Quản lý.',care_log_requires_active_service:'Chỉ ghi nhật ký khi ca đang thực hiện.',invalid_service_log:'Kiểm tra tên công việc và thời điểm thực hiện; thời điểm phải từ lúc tiếp nhận ca trở đi.'};
@@ -67,6 +76,7 @@
                 if(logId&&(!log||log.recorded_by!==PawpalAdminAccess.state.user.id)){message.textContent='Chỉ được sửa nhật ký do chính bạn ghi.';save.textContent='Lưu thay đổi';return;}
                 const pets=await read('pets',row.pet_id);if(generation!==state.generation)return;const pet=pets.find(item=>item.id===row.pet_id);if(!pet)throw Error('missing_pet');
                 state.row=row;state.log=log;summary.textContent=row.appointment_code+' · '+pet.pet_name;fields.title.value=log?.action_name_snapshot||'';fields.note.value=log?.description||'';fields.at.value=localMinute(log?.recorded_at||new Date());fields.staff.value=PawpalAdminAccess.state.user.name;
+                await(await mediaEditor).reset({appointment:row.id,logId:log?.id});if(generation!==state.generation)return;
                 state.loading=false;Object.values(fields).forEach(input=>input.disabled=false);save.disabled=false;save.textContent=log?'Lưu thay đổi':'Lưu nhật ký';fields.title.focus();
             }catch{if(generation===state.generation){message.textContent='Không tải đủ dữ liệu ca hoặc nhật ký. Đóng form và tải lại hồ sơ.';save.textContent='Lưu nhật ký';}}
         };
@@ -247,11 +257,12 @@
         }
         const confirmation = el('label', null, 'workspace-intake-confirmation'), checkbox = el('input'); checkbox.type = 'checkbox'; checkbox.id = 'staffIntakeConfirmed'; confirmation.htmlFor = checkbox.id; confirmation.append(checkbox, el('span','Khách đã xác nhận thông tin tiếp nhận'));
         const prior = el('p', '', 'workspace-intake-prior'), errorText = el('p', '', 'workspace-error'); errorText.setAttribute('role','alert');
+        const mediaRoot=el('div');mediaRoot.id='staffIntakeMedia';
         const footer = el('div', null, 'workspace-modal-footer'), cancel = el('button','Hủy','admin-btn admin-btn-secondary'), save = el('button','Lưu và bắt đầu ca','admin-btn admin-btn-primary'); save.id = 'staffIntakeSave'; cancel.type = save.type = 'button'; cancel.dataset.closeModal = overlay.id; footer.append(cancel,save);
-        form.append(header,summary,grid,confirmation,prior,errorText,footer); card.append(form); overlay.append(card); document.body.append(overlay);
-        const state = { overlay, form, fields, save, row: null, loading: true, saving: false, pending: null, generation: 0, onSaved: null, returnFocus: null };
+        form.append(header,summary,grid,mediaRoot,confirmation,prior,errorText,footer); card.append(form); overlay.append(card); document.body.append(overlay);
+        const state = { overlay, form, fields, save, row: null, loading: true, saving: false, pending: null, recordId:null, media:null, generation: 0, onSaved: null, returnFocus: null };
         Object.values(fields).forEach(input => input.addEventListener('input', () => { if(input.getAttribute('aria-invalid') === 'true') { input.removeAttribute('aria-invalid'); errorText.textContent=''; } }));
-        function closeDialog() { state.generation++; overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); if(state.returnFocus?.isConnected)state.returnFocus.focus(); }
+        function closeDialog() { state.generation++;state.media?.close(); overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); if(state.returnFocus?.isConnected)state.returnFocus.focus(); }
         overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
         overlay.addEventListener('keydown',event=>{
             if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}
@@ -270,20 +281,26 @@
             if(!allowed()){errorText.textContent='Bạn không có quyền tiếp nhận ca dịch vụ.';return;}
             const details={actualWeight:weight,staffId:PawpalAdminAccess.state.user.id,customerConfirmed:checkbox.checked,skinCoat:fields.skin.value.trim(),eyesEars:fields.eyes.value.trim(),wounds:fields.wounds.value.trim(),temperament:fields.temperament.value.trim(),belongings:fields.belongings.value.trim(),belongingsNote:fields.note.value.trim()};
             if(JSON.stringify(details).length>10000){errorText.textContent='Nội dung tiếp nhận quá dài. Rút gọn các ghi nhận trước khi lưu.';return;}
-            const signature=JSON.stringify(details);if(!state.pending||state.pending.signature!==signature)state.pending={signature,id:crypto.randomUUID()};
-            const args={p_id:state.pending.id,p_appointment_id:state.row.id,p_expected_updated_at:state.row.updated_at,p_type:'intake',p_details:details},generation=state.generation;
+            const generation=state.generation,appointment=state.row;
             state.saving=true;save.disabled=true;save.textContent='Đang lưu';Object.values(fields).forEach(input=>input.disabled=true);checkbox.disabled=true;
             try{
+                if(!state.media)throw Error('intake_media_not_ready');
+                details.media_asset_ids=await state.media.prepare();
+                if(generation!==state.generation||!overlay.classList.contains('active'))return;
+                if(!allowed())throw Error('work_access_forbidden');
+                state.pending={signature:JSON.stringify(details),id:state.recordId};
+                const args={p_id:state.pending.id,p_appointment_id:appointment.id,p_expected_updated_at:appointment.updated_at,p_type:'intake',p_details:details};
                 const {data,error}=await getSupabaseClient().rpc('save_admin_service_record',args);if(error)throw error;if(data!==args.p_id)throw Error('invalid_intake_result');
+                state.media.saved();
                 if(generation===state.generation){const callback=state.onSaved;closeDialog();state.pending=null;form.reset();state.row=null;if(allowed())callback?.(args.p_appointment_id);}
             }catch(error){
                 if(generation===state.generation){const messages={work_assignment_required:'Ca không còn được giao cho bạn. Đóng form và tải lại.',work_performer_mismatch:'Chỉ được tiếp nhận bằng tài khoản nhân viên đang đăng nhập.',work_shared_appointment_requires_lead:'Ca có hạng mục chính do nhân viên khác phụ trách. Liên hệ Quản lý.',work_driver_assignment_required:'Ca xe chưa được giao cho bạn làm tài xế. Liên hệ Quản lý.',staff_level_required:'Cấp độ chuyên môn chưa phù hợp với ca này. Liên hệ Quản lý.',staff_schedule_conflict:'Bạn có ca khác trùng thời gian. Liên hệ Quản lý.',intake_observations_required:'Ca không còn ở trạng thái có thể tiếp nhận hoặc thiếu ghi nhận. Kiểm tra lại hồ sơ.'};
                     Object.assign(messages,{hotel_checkin_time_or_room_invalid:'Chưa đến giờ nhận phòng, đã quá giờ trả hoặc phòng chưa sẵn sàng. Kiểm tra lịch lưu trú.',hotel_room_occupied:'Phòng đang có bé khác lưu trú. Liên hệ Quản lý.',taxi_trip_not_due:'Chưa đến giờ bắt đầu chuyến xe. Kiểm tra lịch trước khi tiếp nhận.'});
-                    errorText.textContent=messages[error.message]||(error.code==='PT409'?'Ca đã thay đổi. Đóng form và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.':error.code==='42501'?'Bạn không có quyền tiếp nhận ca dịch vụ này.':'Chưa xác nhận lưu tiếp nhận thành công. Giữ nguyên thông tin và thử lại.');}
+                    errorText.textContent=error.mediaMessage?error.message:messages[error.message]||(error.code==='PT409'?'Ca đã thay đổi. Đóng form và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.':error.code==='42501'?'Bạn không có quyền tiếp nhận ca dịch vụ này.':'Chưa xác nhận lưu tiếp nhận thành công. Giữ nguyên thông tin và thử lại.');}
             }finally{state.saving=false;save.disabled=state.loading;save.textContent=state.row?.appointment_status==='in_progress'?'Lưu tiếp nhận':'Lưu và bắt đầu ca';Object.values(fields).forEach(input=>input.disabled=false);checkbox.disabled=false;}
         };
         state.open=async({appointmentId,onSaved}={})=>{
-            if(state.saving||!allowed())return;state.row=null;state.pending=null;state.loading=true;state.onSaved=onSaved;state.returnFocus=document.activeElement;form.reset();summary.replaceChildren();prior.textContent=errorText.textContent='';Object.values(fields).forEach(input=>{input.disabled=true;input.removeAttribute('aria-invalid');});checkbox.disabled=true;save.disabled=true;save.textContent='Đang tải';const generation=++state.generation;
+            if(state.saving||!allowed())return;state.media?.close();state.media=null;mediaRoot.replaceChildren();state.recordId=crypto.randomUUID();state.row=null;state.pending=null;state.loading=true;state.onSaved=onSaved;state.returnFocus=document.activeElement;form.reset();summary.replaceChildren();prior.textContent=errorText.textContent='';Object.values(fields).forEach(input=>{input.disabled=true;input.removeAttribute('aria-invalid');});checkbox.disabled=true;save.disabled=true;save.textContent='Đang tải';const generation=++state.generation;
             overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');close.focus();
             try{
                 const rows=await read('appointments',appointmentId),row=rows.find(item=>item.id===appointmentId);if(generation!==state.generation)return;
@@ -293,6 +310,9 @@
                 for(const [name,value]of [['Mã lịch',row.appointment_code],['Khách hàng',customer.full_name],['Bé cưng',pet.pet_name],['Cảnh báo an toàn',pet.safety_note||'—'],['Dị ứng',pet.allergy||'—']])summary.append(el('dt',name),el('dd',value));
                 fields.weight.value=pet.current_weight??'';fields.staff.value=PawpalAdminAccess.state.user.name;
                 const previous=records.find(item=>item.record_type==='intake');if(previous)prior.textContent='Biên bản trước: '+previous.condition_note;
+                const {createIntakeMediaEditor}=await import('/scripts/shared/intake-media.mjs');if(generation!==state.generation)return;
+                state.media=createIntakeMediaEditor({root:mediaRoot,db:getSupabaseClient()});
+                await state.media.reset({appointment:row.id,record:state.recordId});if(generation!==state.generation)return;
                 state.row=row;state.loading=false;save.disabled=false;save.textContent=row.appointment_status==='in_progress'?'Lưu tiếp nhận':'Lưu và bắt đầu ca';Object.values(fields).forEach(input=>input.disabled=false);checkbox.disabled=false;fields.weight.focus();
             }catch{if(generation===state.generation){errorText.textContent='Không tải đủ dữ liệu ca dịch vụ. Đóng form và tải lại hồ sơ.';save.textContent='Lưu tiếp nhận';}}
         };
@@ -336,12 +356,13 @@
         }
         const noteGroup = el('div', null, 'workspace-form-field'), label = el('label', 'Ghi chú bàn giao'), note = el('textarea', null, 'admin-input');
         note.id = 'staffHandoverNote'; note.rows = 3; note.maxLength = 2000; label.htmlFor = note.id; noteGroup.append(label, note);
+        const mediaRoot=el('div');mediaRoot.id='staffHandoverMedia';
         const errorText = el('p', '', 'workspace-error'); errorText.setAttribute('role', 'alert');
         const footer = el('div', null, 'workspace-modal-footer'), cancel = el('button', 'Hủy', 'admin-btn admin-btn-secondary'), save = el('button', 'Xác nhận bàn giao', 'admin-btn admin-btn-primary');
         save.id = 'staffHandoverSave'; cancel.type = save.type = 'button'; cancel.dataset.closeModal = overlay.id; footer.append(cancel, save);
-        form.append(header, summary, prior, checkGroup, noteGroup, errorText, footer); card.append(form); overlay.append(card); document.body.append(overlay);
-        const state = { row: null, pending: null, loading: true, saving: false, generation: 0, returnFocus: null, onSaved: null };
-        function closeDialog() { state.generation++; overlay.classList.remove('active'); overlay.setAttribute('aria-hidden', 'true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
+        form.append(header, summary, prior, checkGroup, noteGroup, mediaRoot, errorText, footer); card.append(form); overlay.append(card); document.body.append(overlay);
+        const state = { row: null, pending: null, recordId:null, media:null, loading: true, saving: false, generation: 0, returnFocus: null, onSaved: null };
+        function closeDialog() { state.generation++;state.media?.close(); overlay.classList.remove('active'); overlay.setAttribute('aria-hidden', 'true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
         overlay.addEventListener('click', event => { if (event.target === overlay || event.target.closest('[data-close-modal="' + overlay.id + '"]')) closeDialog(); });
         overlay.addEventListener('keydown', event => {
             if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDialog(); return; }
@@ -359,12 +380,18 @@
                 if (!input.checked) { input.setAttribute('aria-invalid', 'true'); errorText.textContent = 'Cần xác nhận chất lượng, trả đủ tư trang và khách xác nhận trước khi bàn giao.'; input.focus(); return; }
             }
             if (!allowed()) { errorText.textContent = 'Bạn không có quyền bàn giao ca dịch vụ.'; return; }
-            const details = { qualityAccepted: true, belongingsReturned: true, customerConfirmed: true, belongingsNote: note.value.trim() }, signature = JSON.stringify(details);
-            if (!state.pending || state.pending.signature !== signature) state.pending = { signature, id: crypto.randomUUID() };
-            const args = { p_id: state.pending.id, p_appointment_id: state.row.id, p_expected_updated_at: state.row.updated_at, p_type: 'handover', p_details: details }, generation = state.generation;
+            const details = { qualityAccepted: true, belongingsReturned: true, customerConfirmed: true, belongingsNote: note.value.trim() };
+            const generation=state.generation,appointment=state.row;
             state.saving = true; save.disabled = true; save.textContent = 'Đang lưu'; Object.values(checks).forEach(input => input.disabled = true); note.disabled = true;
             try {
+                if(!state.media)throw Error('handover_media_not_ready');
+                details.media_asset_ids=await state.media.prepare();
+                if(generation!==state.generation||!overlay.classList.contains('active'))return;
+                if(!allowed())throw Error('work_access_forbidden');
+                state.pending={signature:JSON.stringify(details),id:state.recordId};
+                const args={p_id:state.pending.id,p_appointment_id:appointment.id,p_expected_updated_at:appointment.updated_at,p_type:'handover',p_details:details};
                 const { data, error } = await getSupabaseClient().rpc('save_admin_service_record', args); if (error) throw error; if (data !== args.p_id) throw Error('invalid_handover_result');
+                state.media.saved();
                 if (generation === state.generation) { const callback = state.onSaved; closeDialog(); form.reset(); state.row = state.pending = null; if (allowed()) callback?.(args.p_appointment_id); }
             } catch (error) {
                 if (generation === state.generation) {
@@ -378,12 +405,13 @@
                         handover_confirmation_required: 'Ca không còn đang thực hiện hoặc chưa đủ xác nhận bàn giao. Kiểm tra lại hồ sơ.',
                         taxi_return_not_due: 'Chưa đến thời điểm lượt về của chuyến xe. Kiểm tra lịch trước khi bàn giao.'
                     };
-                    errorText.textContent = messages[error.message] || (error.code === 'PT409' ? 'Ca đã thay đổi. Đóng form và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.' : error.code === '42501' ? 'Bạn không có quyền bàn giao ca dịch vụ này.' : 'Chưa xác nhận lưu bàn giao thành công. Giữ nguyên thông tin và thử lại.');
+                    errorText.textContent = error.mediaMessage?error.message:messages[error.message] || (error.code === 'PT409' ? 'Ca đã thay đổi. Đóng form và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.' : error.code === '42501' ? 'Bạn không có quyền bàn giao ca dịch vụ này.' : 'Chưa xác nhận lưu bàn giao thành công. Giữ nguyên thông tin và thử lại.');
                 }
             } finally { state.saving = false; save.disabled = state.loading; save.textContent = 'Xác nhận bàn giao'; Object.values(checks).forEach(input => input.disabled = false); note.disabled = false; }
         };
         async function open({ appointmentId, onSaved } = {}) {
             if (state.saving || !allowed()) return;
+            state.media?.close();state.media=null;mediaRoot.replaceChildren();state.recordId=crypto.randomUUID();
             state.row = state.pending = null; state.loading = true; state.onSaved = onSaved; state.returnFocus = document.activeElement; form.reset(); summary.replaceChildren(); prior.textContent = errorText.textContent = '';
             Object.values(checks).forEach(input => { input.disabled = true; input.removeAttribute('aria-invalid'); }); note.disabled = true; save.disabled = true; save.textContent = 'Đang tải';
             const generation = ++state.generation; overlay.classList.add('active'); overlay.setAttribute('aria-hidden', 'false'); close.focus();
@@ -395,6 +423,9 @@
                 for (const [name, value] of [['Mã lịch', row.appointment_code], ['Khách hàng', customer.full_name], ['Bé cưng', pet.pet_name], ['Nhân viên bàn giao', PawpalAdminAccess.state.user.name]]) summary.append(el('dt', name), el('dd', value));
                 if (intake) prior.textContent = 'Tiếp nhận đã ghi: ' + intake.condition_note + (intake.note ? '\nGhi chú tư trang: ' + intake.note : '');
                 if (!intake || intake.customer_confirmation_status !== 'confirmed') { errorText.textContent = 'Biên bản tiếp nhận mới nhất chưa được khách xác nhận. Kiểm tra lại trước khi bàn giao.'; save.textContent = 'Xác nhận bàn giao'; return; }
+                const {createHandoverMediaEditor}=await import('/scripts/shared/handover-media.mjs');if(generation!==state.generation)return;
+                state.media=createHandoverMediaEditor({root:mediaRoot,db:getSupabaseClient()});
+                await state.media.reset({appointment:row.id,record:state.recordId});if(generation!==state.generation)return;
                 state.row = row; state.loading = false; Object.values(checks).forEach(input => input.disabled = false); note.disabled = false; save.disabled = false; save.textContent = 'Xác nhận bàn giao'; checks.qualityAccepted.focus();
             } catch { if (generation === state.generation) { errorText.textContent = 'Không tải đủ dữ liệu bàn giao. Đóng form và tải lại hồ sơ.'; save.textContent = 'Xác nhận bàn giao'; } }
         }
@@ -916,7 +947,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         const weight=(PawpalServices.state.weightMeasurements||[]).find(w=>w.pet_id===petId&&w.measured_at===r.recorded_at);
         return {id:r.id,recordedAt:r.recorded_at,staffId:r.recorded_by,recordedByName:r.recorder?.full_name||'',conditionNote:r.condition_note,
             actualWeight:weight?Number(weight.weight):null,skinCoat:lines['Da và lông']||'',eyesEars:lines['Mắt và tai']||'',wounds:lines['Vết thương']||'',temperament:lines['Tập tính']||'',belongings:(lines['Tư trang']||'').split(', ').filter(Boolean),belongingsNote:r.note||'',
-            confirmationStatus:r.customer_confirmation_status,safetyNote:r.safety_note_snapshot,allergy:r.allergy_note_snapshot,note:r.note,proofPhotos:[]};
+            confirmationStatus:r.customer_confirmation_status,safetyNote:r.safety_note_snapshot,allergy:r.allergy_note_snapshot,note:r.note,proofPhotos:r.proofPhotos||[]};
     }
     async function refreshBooking(booking) {
         window.PawpalDataStore?.invalidate('services:bookings*');
@@ -969,8 +1000,8 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         await PawpalServices.loadReviewsData({force:true});requestIds.delete(key);return id;
     };
     PawpalServices.saveBookingRecord=async function(booking,kind,record) {
-        const {recordedAt,updatedAt,staffName,intakeRecordedAt,total,...details}=record;
-        const key=booking.dbId+':'+kind,id=requestId(key,details);
+        const {recordedAt,updatedAt,staffName,intakeRecordedAt,total,mediaRecordId,...details}=record;
+        const key=booking.dbId+':'+kind,id=mediaRecordId||requestId(key,details);
         await performBookingWrite(booking,async db=>{
             const {data,error}=await db.rpc('save_admin_service_record',{p_id:id,p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_type:kind,p_details:details});
             if(error)throw error;if(data!==id)throw Error('Không xác minh được biên bản đã lưu.');
@@ -990,15 +1021,16 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         if(removed.length){const c=removed[0];return PawpalServices.changeCharge(booking,c.id,c.kind==='service'?'cancel_service':'cancel_adjustment');}
         const c=added[0];
         const details={name:c.name,amount:c.amount,reason:c.reason,service_id:c.serviceId||null,consent:c.consent||'pending'};
-        const key=booking.dbId+':charge',id=requestId(key,details);
+        if(c.media_asset_ids)details.media_asset_ids=c.media_asset_ids;
+        const key=booking.dbId+':charge',id=c.mediaAdjustmentId||requestId(key,details);
         await PawpalServices.changeCharge(booking,id,c.kind==='service'?'add_service':'propose',details);requestIds.delete(key);
     };
     PawpalServices.saveCareLog=async function(booking,log,action,details) {
         const key=booking.dbId+':carelog',id=log?.id||requestId(key,details);
         await performBookingWrite(booking,async db=>{
             await window.PawpalCareLog.save({p_id:id,p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_expected_log_updated_at:log?.updated_at||null,p_action:action,p_details:details},db);
-            requestIds.delete(key);
         });
+        requestIds.delete(key);
     };
 
     // Helper: Chuyển chuỗi tiếng Việt không dấu
@@ -1262,6 +1294,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         const store=window.PawpalDataStore,key='services:directory:'+(store?.buildKey?.('booking-directory')||'session');
         return store?store.fetch(key,fetcher,{ttlMs:store.TTL_TIERS.LIST,force,backgroundRevalidate:false}):fetcher();
     }
+    let intakeMediaReader,handoverMediaReader,adjustmentMediaReader;
     async function fetchBookingsRaw({ force = false, forceDirectory = force, ids, id } = {}) {
         const {weights,customers,pets,measurements,rooms}=await fetchBookingDirectoryRaw({force:forceDirectory});
         PawpalServices.state.liveRooms=rooms;
@@ -1279,6 +1312,12 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
             if(ids&&!ids.length)return [];
             const appointments=await allRows(()=>{let query=db.from('appointment').select('*,customer:customer_id('+customerFields+'),pet_profile:pet_id('+petFields+'),staff:staff_id(id,full_name,job_title),items:appointment_item(*,service:service_id(id,service_code,service_name,estimated_duration,category:category_id(category_code))),records:appointment_record(*,recorder:recorded_by(full_name)),adjustments:appointment_adjustment(*),taxi:taxi_trip(*),hotel:hotel_booking(*,room:room_id(room_number,type:room_type_id(room_type)))').order('created_at',{ascending:false}).order('id');if(ids)query=query.in('id',ids);if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'appointment_code',id);return query;});
             if(!appointments.length)return [];
+            if(!intakeMediaReader){const {createIntakeMediaReader}=await import('/scripts/shared/intake-media-reader.mjs');intakeMediaReader=createIntakeMediaReader({db});}
+            await intakeMediaReader.hydrate(appointments);
+            if(!handoverMediaReader){const {createIntakeMediaReader}=await import('/scripts/shared/intake-media-reader.mjs');handoverMediaReader=createIntakeMediaReader({db,recordType:'handover'});}
+            await handoverMediaReader.hydrate(appointments);
+            if(!adjustmentMediaReader){const {createAdjustmentMediaReader}=await import('/scripts/shared/adjustment-media-reader.mjs');adjustmentMediaReader=createAdjustmentMediaReader({db});}
+            await adjustmentMediaReader.hydrate(appointments);
             const selectedIds=appointments.map(a=>a.id),scoped=query=>(ids||id)?query.in('appointment_id',selectedIds):query;
             const [totals,payments]=await Promise.all([
                 allRows(()=>scoped(db.from('appointment_totals').select('appointment_id,total_price').order('appointment_id'))),
@@ -1304,17 +1343,20 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:staff',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.CATALOG,force,backgroundRevalidate:false}) : fetcher();
     }
 
+    let serviceMediaReader;
     async function fetchCatalogRaw({ force = false } = {}) {
         const fetcher=async()=>{
             const db=window.getSupabaseClient();
             const [services,prices,species,levels,hotelPrices,taxiPrices]=await Promise.all([
-                allRows(()=>db.from('service').select('*,images:service_image(image_url,display_order,is_thumbnail),category:category_id(id,category_code,category_name),level:staff_level_required_id(id,level_name),supported:service_supported_species(species:species_id(id,species_name)),actions:service_care_action(display_order,estimated_duration,care_action:care_action_id(id,action_name,is_active))').order('id')),
+                allRows(()=>db.from('service').select('*,images:service_image(image_url,media_asset_id,display_order,is_thumbnail),category:category_id(id,category_code,category_name),level:staff_level_required_id(id,level_name),supported:service_supported_species(species:species_id(id,species_name)),actions:service_care_action(display_order,estimated_duration,care_action:care_action_id(id,action_name,is_active))').order('id')),
                 allRows(()=>db.from('service_price_matrix').select('*').order('id')),
                 readRows(db.from('pet_species').select('id,species_name').eq('is_active',true).order('species_name')),
                 readRows(db.from('staff_level').select('id,level_name').eq('is_active',true).order('rank_order')),
                 allRows(()=>db.from('hotel_room_type').select('*').order('id')),
                 allRows(()=>db.from('taxi_price_rule').select('*').order('id'))
             ]);
+            if(!serviceMediaReader){const {createServiceMediaReader}=await import('/scripts/shared/service-media-reader.mjs');serviceMediaReader=createServiceMediaReader({db});}
+            await serviceMediaReader.hydrate(services);
             PawpalServices.state.liveSpecies=species;PawpalServices.state.liveLevels=levels;
             return {services:services.map(s=>({...s,service_category:categoryCode(s)})),prices:[...prices,...hotelPrices.map(p=>({...p,unit_price:p.daily_price})),...taxiPrices.map(p=>({...p,unit_price:Number(p.base_price)+Number(p.surcharge)}))],priceError:null};
         };
@@ -1334,6 +1376,8 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:reviews',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.LIST,force,backgroundRevalidate:false}) : fetcher();
     }
 
+    const careMediaReaders=new Map();
+    window.addEventListener('pagehide',()=>{for(const reader of careMediaReaders.values())reader.clear();careMediaReaders.clear();});
     async function fetchBookingCareLogs(bookingDbId,{force=false}={}) {
         if (!bookingDbId) return [];
         const fetcher = async () => {
@@ -1341,7 +1385,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
             if (!db) return [];
             const { data, error } = await withServicesQueryTimeout(
                 db.from('care_log')
-                  .select('id,appointment_id,care_action_id,description,observed_condition,recorded_at,created_at,updated_at,action_name_snapshot,recorded_by,staff:recorded_by(id,full_name),care_action:care_action_id(id,action_name),care_log_media(media_url)')
+                  .select('id,appointment_id,care_action_id,description,observed_condition,recorded_at,created_at,updated_at,action_name_snapshot,recorded_by,staff:recorded_by(id,full_name),care_action:care_action_id(id,action_name),care_log_media(id,media_url,media_asset_id)')
                   .eq('appointment_id', bookingDbId)
                   .order('recorded_at', { ascending: true })
             );
@@ -1349,6 +1393,11 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 console.warn('[PawpalServices] Lỗi nạp care_log của ca:', error);
                 return [];
             }
+            const {createCareMediaReader}=await import('/scripts/shared/care-media-reader.mjs');
+            if(!careMediaReaders.has(bookingDbId))careMediaReaders.set(bookingDbId,createCareMediaReader(db));
+            const resolved=await careMediaReaders.get(bookingDbId).read((data||[]).flatMap(log=>log.care_log_media||[]));
+            const byId=new Map(resolved.map(media=>[media.id,media]));
+            while(careMediaReaders.size>5){const [key,reader]=careMediaReaders.entries().next().value;reader.clear();careMediaReaders.delete(key);}
             return (data || []).map(log => {
                 const author = String(log.description || '').match(/\n?Nhân viên: (.*) \(([0-9a-f-]{36})\)$/i);
                 return {
@@ -1356,7 +1405,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                     step_name: log.action_name_snapshot || log.care_action?.action_name || 'Ghi nhận chăm sóc',
                     ktv: log.staff?.full_name || '',
                     note: author ? String(log.description).slice(0, author.index).trim() : (log.description || ''),
-                    images: (log.care_log_media || []).map(media => media.media_url)
+                    images: (log.care_log_media || []).map(media => byId.get(media.id)?.resolved_url||'').filter(Boolean)
                 };
             });
         };
@@ -1436,7 +1485,8 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                     minPrice: minPriceVal,
                     desc: svc.description || '',
                     status: (svc.status === 'active') ? 'Đang phục vụ' : 'Tạm ẩn',
-                    image: [...(svc.images||[])].sort((a,b)=>Number(b.is_thumbnail)-Number(a.is_thumbnail)||a.display_order-b.display_order)[0]?.image_url || '',
+                    media:[...(svc.images||[])].sort((a,b)=>Number(b.is_thumbnail)-Number(a.is_thumbnail)||a.display_order-b.display_order),
+                    image: (()=>{const image=[...(svc.images||[])].sort((a,b)=>Number(b.is_thumbnail)-Number(a.is_thumbnail)||a.display_order-b.display_order)[0];return image?.resolved_url||image?.image_url||'';})(),
                     reviewCount: 0,
                     averageRating: null
                 };
@@ -1634,6 +1684,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                     originalWeight: item.items.find(i=>i.is_primary)?.weight_snapshot != null ? String(item.items.find(i=>i.is_primary).weight_snapshot)+' kg' : 'Chưa ghi nhận',
                     charges,
                     surcharges: charges.filter(c => c.kind === 'surcharge'),
+                    adjustmentProofPhotos:item.adjustments.flatMap(a=>a.proofPhotos||[]),
                     accompanyingServices: charges.filter(c => c.kind === 'service').map(c => ({ ...c, price: c.amount, note: c.reason })),
                     price: Number(item.total_price || 0) - charges.filter(c=>c.effective).reduce((sum, c) => sum + c.amount, 0),
                     total: item.total_price || 0,
@@ -1958,6 +2009,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'taxi_price_rule' }, () => triggerServiceSync('services:catalog*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'service_image' }, () => triggerServiceSync('services:catalog*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'review' }, () => triggerServiceSync('services:reviews*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'review_media' }, () => triggerServiceSync('services:reviews*'))
                 .on('postgres_changes', {event:'*',schema:'public',table:'appointment_item'},()=>{triggerServiceSync('services:bookings*');triggerServiceSync('services:reviews*');})
                 .on('postgres_changes', {event:'*',schema:'public',table:'appointment_record'},()=>triggerServiceSync('services:bookings*'))
                 .on('postgres_changes', {event:'*',schema:'public',table:'appointment_adjustment'},()=>triggerServiceSync('services:bookings*'))

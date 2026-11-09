@@ -5673,3 +5673,13 @@ td):nth-child(n/**/+3) {
         min-width: 0;
     }
 }
+/* Variant media stays inside the product modal; the matrix owns its horizontal scroll. */
+#modalAddProduct .variant-table-wrapper { max-width: 100%; overflow-x: auto; overscroll-behavior: contain; }
+#modalAddProduct .variant-matrix-table { min-width: 1100px; }
+#modalAddProduct .bulk-apply-bar { flex-wrap: wrap; }
+#modalAddProduct .variant-media-host { min-width: 220px; }
+@media (max-width: 600px) {
+    #modalAddProduct .bulk-apply-label { flex-basis: 100%; }
+    #modalAddProduct .bulk-apply-bar .bulk-input { flex: 1 1 110px !important; min-width: 0; width: auto; }
+    #modalAddProduct .variant-attribute-builder .form-row-2col { grid-template-columns: minmax(0, 1fr) !important; }
+}

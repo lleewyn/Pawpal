@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "platform": "Vercel Preview",
+  "authenticatedRole": "ADMIN",
+  "purposes": [
+    {
+      "purpose": "pet_avatar",
+      "authenticatedRead": 200,
+      "hashAndBytesMatched": true,
+      "anonymousRead": 404,
+      "cancelled": true
+    },
+    {
+      "purpose": "ticket_image",
+      "authenticatedRead": 200,
+      "hashAndBytesMatched": true,
+      "anonymousRead": 404,
+      "cancelled": true
+    }
+  ],
+  "mismatchedMimeRejected": true,
+  "businessRecordWrites": 0,
+  "cleanupReport": "phase5-live-draft-cleanup.txt",
+  "staffOrCustomerAuthAcceptance": false
+}

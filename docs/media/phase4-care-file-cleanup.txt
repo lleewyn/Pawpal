@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "exactOwnFilesAndChunksRemoved": 2,
+  "quotaReleasedBytes": 58468,
+  "unrelatedFilesDeleted": 0,
+  "technicalCareLogRemoved": true,
+  "productionChanged": false
+}

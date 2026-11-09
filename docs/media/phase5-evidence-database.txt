@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "checksum": "e7b5f00eeba94ab48312774e6099c4499af8aedc93415505849e2f23c36cc1e6",
+  "cloudApplied": false,
+  "transactionRolledBack": true,
+  "checks": [
+    "customer upload prepare/claim/finalize",
+    "atomic ticket rollback",
+    "idempotent attachment",
+    "owner read",
+    "wrong owner denied",
+    "anonymous denied",
+    "internal evidence and metadata hidden",
+    "legal hold",
+    "return quantities roll back with wrong evidence",
+    "owner-only return evidence",
+    "migration rollback/reapply"
+  ]
+}

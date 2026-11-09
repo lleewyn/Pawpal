@@ -9,6 +9,9 @@
     let bannerPage = 1;
     const SETTINGS_PAGE_SIZE = 10;
     let editingBannerId = null;
+    let bannerMedia=null,bannerGeneration=0,bannerSaving=false,bannerSent=false,newBannerId=null,bannerTargetId=null;
+    const bannerOverlay=document.getElementById('bannerModalOverlay');
+    if(bannerOverlay)new MutationObserver(()=>{if(!bannerOverlay.classList.contains('active')){bannerGeneration++;if(bannerSent)bannerMedia?.saved();void bannerMedia?.close();}}).observe(bannerOverlay,{attributes:true,attributeFilter:['class']});
 
     function getSupabaseClient() {
         return PawpalSettings.getSupabaseClient?.() || (window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient);
@@ -133,10 +136,10 @@
 
     async function mutateBanner(action,payload){
         const row=Array.isArray(payload)?payload[0]:payload;
-        const values=action==='insert'?row:row.data||{};
+        const values=structuredClone(action==='insert'?row:row.data||{});delete values.id;
         if(values.status==='dang_hien_thi')values.status='active';
         if(values.status==='tam_an')values.status='inactive';
-        const data=await PawpalSettings.saveRecord('banner',action==='insert'?null:row.id,values,action==='delete');
+        const data=await PawpalSettings.saveRecord('banner',row.id||null,values,action==='delete');
         return {data:[data]};
     }
 
@@ -554,13 +557,16 @@
     }
 
     // Modal Banner (Thêm / Sửa)
-    function openBannerModal(banner) {
+    async function openBannerModal(banner) {
+        if(bannerSaving)return;const generation=++bannerGeneration;void bannerMedia?.close();bannerMedia=null;bannerSent=false;
+        if(!banner)newBannerId ||=crypto.randomUUID();bannerTargetId=banner?.id||newBannerId;
         editingBannerId = banner?.id || null;
         const titleEl = document.getElementById('bannerModalTitle');
         const saveBtn = document.getElementById('btnSaveBanner');
 
         if (titleEl) titleEl.textContent = editingBannerId ? 'Sửa banner' : 'Thêm banner quảng cáo';
         if (saveBtn) saveBtn.textContent = editingBannerId ? 'Lưu thay đổi' : 'Lưu banner';
+        if(saveBtn)saveBtn.disabled=true;
 
         const values = {
             inputBannerTitle: banner?.title || '',
@@ -576,6 +582,14 @@
         });
 
         if (PawpalSettings.openModal) PawpalSettings.openModal('bannerModalOverlay');
+        try{
+            const {createContentMediaEditor}=await import('/scripts/shared/content-media.mjs');if(generation!==bannerGeneration)return;
+            const root=document.getElementById('bannerMediaEditor');root.replaceChildren();
+            bannerMedia=createContentMediaEditor({root,db:getSupabaseClient(),purpose:'banner_image'});
+            const original=banner&&PawpalSettings.getRecord?.('banner',banner.id);
+            bannerMedia.reset({id:bannerTargetId,asset:original?.image_media_asset_id||banner?.imageAssetId,url:original?.image_url||(!banner?.imageAssetId?banner?.imageUrl:null)});
+            if(saveBtn)saveBtn.disabled=false;
+        }catch{showToast('Không tải được bộ chọn ảnh. Vui lòng đóng và mở lại banner.','danger');}
     }
 
     function resetBannerModal() {
@@ -837,29 +851,35 @@
         document.getElementById('btnCancelBannerModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('bannerModalOverlay'));
         document.getElementById('btnDismissBannerModal')?.addEventListener('click', () => PawpalSettings.closeModal?.('bannerModalOverlay'));
         document.getElementById('btnSaveBanner')?.addEventListener('click', async () => {
+            const button=document.getElementById('btnSaveBanner');if(button.disabled||bannerSaving||!bannerMedia)return;
             const title = document.getElementById('inputBannerTitle')?.value.trim();
-            const imageUrl = document.getElementById('inputBannerImage')?.value.trim();
             const cta = document.getElementById('inputBannerCta')?.value.trim() || 'Xem ngay';
             const url = document.getElementById('inputBannerUrl')?.value.trim() || '/pages/public/';
             const startDate = document.getElementById('inputBannerStartDate')?.value;
             const endDate = document.getElementById('inputBannerEndDate')?.value;
-            if (!title || !imageUrl || !startDate || !endDate) { showToast('Vui lòng nhập đủ tiêu đề, ảnh và thời gian Banner.', 'warning'); return; }
-            const isValidImageUrl = /^(https?:\/\/|\/)[^\s]+$/i.test(imageUrl);
-            if (!isValidImageUrl) { showToast('URL ảnh Banner không hợp lệ. Hãy dùng đường dẫn bắt đầu bằng http://, https:// hoặc /.', 'warning'); return; }
+            if (!title || !startDate || !endDate) { showToast('Vui lòng nhập đủ tiêu đề và thời gian banner.', 'warning'); return; }
             const isValidCtaUrl = /^(https?:\/\/|\/)[^\s]+$/i.test(url) && !/javascript:/i.test(url);
             if (!isValidCtaUrl) { showToast('URL liên kết CTA không hợp lệ. Vui lòng nhập đường dẫn an toàn (bắt đầu bằng / hoặc https://).', 'warning'); return; }
             if (endDate < startDate) { showToast('Ngày kết thúc phải sau ngày bắt đầu.', 'warning'); return; }
+            const generation=bannerGeneration,editor=bannerMedia,target=bannerTargetId,wasEditing=Boolean(editingBannerId),root=document.getElementById('bannerMediaEditor');
+            const locked=[...bannerOverlay.querySelectorAll('input,select,textarea')].map(el=>[el,el.disabled]);locked.forEach(([el])=>el.disabled=true);
+            bannerSaving=true;button.disabled=true;root.inert=true;
             try {
+                const source=await editor.prepare();if(generation!==bannerGeneration)return;
+                if(!source.url&&!source.asset)throw Error('Vui lòng chọn một ảnh banner.');
                 const bannersList = PawpalSettings.state?.bannersList || [];
-                const payload = { title, image_url: imageUrl, link: url, button_text: cta, start_date: startDate, end_date: endDate, updated_at: new Date().toISOString() };
-                const wasEditing = Boolean(editingBannerId);
+                const payload = { title, image_url: source.url,image_media_asset_id:source.asset, link: url, button_text: cta, start_date: startDate, end_date: endDate };
+                bannerSent=true;
                 if (wasEditing) {
-                    await mutateBanner('update', { id: editingBannerId, data: payload });
+                    await mutateBanner('update', { id: target, data: payload });
+                    editor.saved();
                     await logSystemAudit('UPDATE', 'banner', `Cập nhật Banner: "${title}"`);
                 } else {
-                    await mutateBanner('insert', [{ ...payload, display_order: bannersList.length + 1, status: 'dang_hien_thi' }]);
+                    await mutateBanner('insert', [{id:target, ...payload, display_order: bannersList.length + 1, status: 'dang_hien_thi' }]);
+                    editor.saved();newBannerId=null;
                     await logSystemAudit('INSERT', 'banner', `Thêm Banner mới: "${title}"`);
                 }
+                if(generation!==bannerGeneration)return;
                 PawpalSettings.closeModal?.('bannerModalOverlay');
                 await PawpalSettings.loadSettingsModuleData?.();
                 renderBanners();
@@ -869,6 +889,9 @@
             } catch (e) {
                 console.error('[Settings] Lỗi lưu banner:', e);
                 showToast('Không thể lưu Banner: ' + (e.message || ''), 'danger');
+            } finally {
+                bannerSaving=false;bannerSent=false;locked.forEach(([el,disabled])=>el.disabled=disabled);root.inert=false;
+                if(generation===bannerGeneration)button.disabled=false;
             }
         });
 

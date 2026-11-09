@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "exactOwnSessionsReconciled": 2,
+  "uploadedFileAndChunksRemoved": 1,
+  "failedUploadFileAndOrphanChunksAbsent": true,
+  "quotaReleasedBytes": 393686,
+  "unrelatedFilesDeleted": 0,
+  "productionDeploymentChanged": false
+}

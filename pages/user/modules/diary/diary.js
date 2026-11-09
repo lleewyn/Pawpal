@@ -3,6 +3,8 @@
  * Nhật ký chăm sóc chỉ đọc từ Supabase Cloud.
  */
 import { getPets } from '/scripts/api/petService.js?v=20261001-dedup';
+import { createCareMediaReader } from '/scripts/shared/care-media-reader.mjs';
+let diaryMediaReader;
 
 let liveDiaryState = {};
 let currentPetId = null;
@@ -14,6 +16,7 @@ let diaryRefreshTimer;
 
 // user.js nạp lại module mỗi lần vào trang; gỡ listener cũ để không vẽ đè nhật ký của lần trước
 export function dispose() {
+    diaryMediaReader?.clear();
     if (diaryHashHandler) window.removeEventListener('hashchange', diaryHashHandler);
     diaryHashHandler = null;
     clearTimeout(diaryRefreshTimer);
@@ -518,7 +521,7 @@ async function syncPetDiaryFromSupabase(pet) {
                 recorded_at,
                 action_name_snapshot,
                 care_action ( action_name ),
-                care_log_media ( media_url )
+                care_log_media ( id, media_url, media_asset_id )
             `)
             .in('appointment_id', apptIds)
             .order('recorded_at', { ascending: false });
@@ -528,6 +531,11 @@ async function syncPetDiaryFromSupabase(pet) {
         }
 
         if (!data?.length) return {currentSession:null,history:[]};
+
+        diaryMediaReader ||= createCareMediaReader(db);
+        const media = await diaryMediaReader.read(data.flatMap(log => log.care_log_media || []));
+        const mediaById = new Map(media.map(row => [row.id, row]));
+        for (const log of data) log.care_log_media = (log.care_log_media || []).map(row => mediaById.get(row.id) || {...row,resolved_url:''});
 
         const sessionsMap = {};
 
@@ -548,7 +556,7 @@ async function syncPetDiaryFromSupabase(pet) {
                 };
             }
 
-            const mediaUrl = log.care_log_media?.[0]?.media_url || null;
+            const mediaUrl = log.care_log_media?.[0]?.resolved_url || null;
             const staffName = 'Kỹ thuật viên PawPal';
 
             sessionsMap[aptId].timeline.push({
@@ -1050,6 +1058,9 @@ function resolveTimelineImageUrl(item, pet) {
     }
     if (!rawImage) return '';
 
+    if (rawImage && rawImage.startsWith('blob:')) {
+        try { return new URL(rawImage).origin === window.location.origin ? rawImage : ''; } catch { return ''; }
+    }
     if (rawImage && !rawImage.startsWith('http') && !rawImage.startsWith('data:') && !rawImage.startsWith('/')) {
         rawImage = '/' + rawImage;
     }

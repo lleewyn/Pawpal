@@ -16,6 +16,20 @@
     let reviewCurrentPage = 1;
     let reviewExportRows=[];
     const REVIEWS_PAGE_SIZE = 10;
+    let replyImageGallery=null,replyImageVersion=0;
+    async function loadReplyImages(review,modal){
+        replyImageGallery?.clear();const version=++replyImageVersion;
+        let root=modal.querySelector('#serviceReviewImages');if(!root){root=document.createElement('div');root.id='serviceReviewImages';(document.getElementById('reviewModalCustomerComment')||document.getElementById('replyReviewComment'))?.after(root);}
+        if(!root.isConnected)return;
+        root.textContent='Đang tải ảnh đánh giá…';
+        if(!modal.dataset.mediaCloseBound){modal.dataset.mediaCloseBound='true';new MutationObserver(()=>{if(!modal.classList.contains('active')){replyImageVersion++;replyImageGallery?.clear();}}).observe(modal,{attributes:true,attributeFilter:['class']});}
+        try{
+            const db=window.getSupabaseClient?.()||window.SupabaseClient,result=await db.from('review_media').select('image_url,media_asset_id').eq('review_id',review.dbId).order('display_order');if(result.error)throw result.error;
+            const {createEvidenceGallery}=await import('/scripts/shared/evidence-gallery.mjs');
+            if(version!==replyImageVersion||!modal.classList.contains('active')||modal.dataset.reviewId!==review.id)return;
+            replyImageGallery=createEvidenceGallery({root,db});await replyImageGallery.render((result.data||[]).map(r=>({...r,media_url:r.image_url})));
+        }catch{if(version===replyImageVersion)root.textContent='Chưa tải được ảnh đánh giá. Vui lòng mở lại để kiểm tra.';}
+    }
     const esc = (s) => (PawpalServices.escapeHtml ? PawpalServices.escapeHtml(s) : String(s || ''));
 
     // Cập nhật 4 thẻ thống kê KPI Đánh giá dịch vụ
@@ -383,6 +397,7 @@
             };
         }
         modal.classList.add('active');
+        void loadReplyImages(review,modal);
     }
 
     // Đóng modal phản hồi

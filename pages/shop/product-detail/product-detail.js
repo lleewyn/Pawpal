@@ -921,6 +921,12 @@ async function loadPublicProductDetails(product){
         const render=()=>{
             const selected=rows.filter(r=>filter==='all'||Number(r.rating)===Number(filter)),pages=Math.max(1,Math.ceil(selected.length/10));page=Math.min(page,pages-1);
             document.getElementById('reviewsContainer').innerHTML=selected.slice(page*10,page*10+10).map(r=>`<article class="review-item"><p>Khách đã mua hàng · ${Number(r.rating)} / 5 · ${escapeHtml(new Date(r.createdAt).toLocaleDateString('vi-VN'))}</p><p>${escapeHtml(r.content)}</p><p>Phân loại ${escapeHtml(r.variantName || r.variant_name || '—')}</p>${r.shopReply?`<div class="seller-reply"><strong>Phản hồi cửa hàng</strong><p>${escapeHtml(r.shopReply)}</p></div>`:''}</article>`).join('') || '<p>Không có đánh giá phù hợp.</p>';
+            document.querySelectorAll('#reviewsContainer article').forEach((article,index)=>{
+                const media=selected.slice(page*10,page*10+10)[index]?.media||[];if(!media.length)return;
+                const gallery=document.createElement('div');gallery.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+                for(const url of media){const link=document.createElement('a'),image=document.createElement('img');link.href=url;link.target='_blank';link.rel='noopener noreferrer';image.src=url;image.alt='Ảnh đánh giá';image.loading='lazy';image.style.cssText='width:80px;height:80px;object-fit:cover;border-radius:9px';link.append(image);gallery.append(link);}
+                article.querySelectorAll('p')[1]?.after(gallery);
+            });
             const nav=document.getElementById('productReviewPages');nav.innerHTML=`<button type="button" id="productReviewsPrev" ${page===0?'disabled':''}>&lt;</button><span>${page+1} / ${pages}</span><button type="button" id="productReviewsNext" ${page===pages-1?'disabled':''}>&gt;</button>`;nav.querySelector('#productReviewsPrev').onclick=()=>{page--;render();};nav.querySelector('#productReviewsNext').onclick=()=>{page++;render();};
         };
         const changeFilter=value=>{filter=value;page=0;document.getElementById('productReviewFilter').value=value;chips.querySelectorAll('button').forEach(btn=>{const active=btn.dataset.filter===String(value);btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});render();};

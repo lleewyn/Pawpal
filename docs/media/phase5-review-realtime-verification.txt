@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "implementation": {
+    "adminServiceReviewMediaSubscription": true,
+    "adminSalesReviewMediaInvalidatesAndRefreshesProducts": true,
+    "customerReviewMediaUsesRlsWithoutMissingCustomerColumnFilter": true,
+    "serviceReviewDraftPreservesImageOnlyAndRatingChanges": true,
+    "salesReviewDraftPreservesImageOnlyAndBusySubmission": true,
+    "cleanReviewFormReloadsMetadata": true,
+    "disposedSubscriptionDoesNotRefresh": true
+  },
+  "browser": {
+    "imageOnlyDraftRemainsSameFormOnRefresh": true,
+    "photoStillVisibleAfterRefresh": true,
+    "cleanFormReloadsAfterRemovingPhoto": true,
+    "articleEditRetainsPublishDateStatusAndSlug": true,
+    "newAndExistingArticleLabelsDiffer": true
+  },
+  "mediaSuite": { "passed": 43, "failed": 0 },
+  "realStaffAndCustomerAuthAcceptance": "PENDING: user has Admin only",
+  "productionChanged": false
+}

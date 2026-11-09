@@ -1,0 +1,23 @@
+{
+  "capturedAt": "2026-11-07T11:15:51.505Z",
+  "status": "PASS",
+  "productionChanged": false,
+  "projectEnvironmentChanged": false,
+  "mongoWrites": false,
+  "previewUrl": "https://pawpalgr3-pf8gy4k8r-llwyns-projects.vercel.app",
+  "deploymentId": "dpl_CEkeJ93o5ZzDmKTe4UNPPENJ5NZP",
+  "probeCliExitCode": 0,
+  "probeDiagnostics": {
+    "mentionsProtection": true,
+    "mentionsBypass": true,
+    "mentionsUnknownOption": false,
+    "mentionsCurlMissing": false,
+    "mentionsAuthorization": false,
+    "cliNotes": []
+  },
+  "probeHttpStatus": 200,
+  "atlasPing": true,
+  "probeCode": null,
+  "probeDeploymentRemoved": true,
+  "temporaryAutomationBypassRevoked": true
+}

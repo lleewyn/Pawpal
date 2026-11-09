@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "originalImageReferencesRestoredExactly": true,
+  "restoredLegacyImages": 3,
+  "productBusinessDataUnchanged": true,
+  "newAssetDetachedWithRetention": true
+}

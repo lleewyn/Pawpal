@@ -1,0 +1,8 @@
+{
+  "upload_enabled": false,
+  "assets": 0,
+  "sessions": 0,
+  "product_rpc_updated": true,
+  "catalog_updated": true,
+  "status": "PASS"
+}

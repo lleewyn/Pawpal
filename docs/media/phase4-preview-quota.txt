@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "budgetBytes": 104857600,
+  "budgetMiB": 100,
+  "fileLimitBytes": 3145728,
+  "authorization": "User selected 100 MiB, Preview only",
+  "scope": "Shared DB quota gate enabled; API upload flag enabled only for dedicated Preview deployment. Project environment and Production deployment unchanged."
+}

@@ -7,6 +7,9 @@ const vnpayApi = require('./scripts/api/vnpay.js');
 const app = express();
 const port = Number(process.env.PORT) || 3000;
 
+// Media needs its own bounded multipart/JSON reader before the global parser.
+app.all('/api/media', require('./api/media.js'));
+
 // Cho phép parse body JSON
 app.use(express.json());
 

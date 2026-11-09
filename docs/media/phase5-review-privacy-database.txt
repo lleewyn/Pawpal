@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "checksum": "b2b67808d00807f3fc0a2f5e3888ae0753a05689b51399e39326be00f3e59463",
+  "cloudFixtureWrites": false,
+  "checks": [
+    "pending images deny anon and wrong customer",
+    "owner reads own pending metadata",
+    "published public",
+    "hidden revoked"
+  ]
+}

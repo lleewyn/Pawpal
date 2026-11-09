@@ -885,8 +885,17 @@ function showOTPModal(phone, onSuccess, purposeText = 'xác thực quyền truy 
 }
 
 let guestCareLogRequestId = 0;
+let guestCareMediaReader;
+function guestCareImageUrl(media) {
+    const value=media?.resolved_url||media?.media_url||'';
+    if(!value)return '';
+    if(value.startsWith('blob:')){try{return new URL(value).origin===window.location.origin?value:'';}catch{return '';}}
+    const normalized=normalizeImageUrl(value);
+    return /^https?:\/\//i.test(normalized)?normalized:'';
+}
 
 window.handleGuestViewCareLog = async function(bookingId) {
+    guestCareMediaReader?.clear();
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) {
         showToast('Chức năng đang bảo trì, không thể xem nhật ký chăm sóc lúc này.', 'info');
@@ -939,7 +948,7 @@ window.handleGuestViewCareLog = async function(bookingId) {
                 observed_condition,
                 action_name_snapshot,
                 recorded_at,
-                care_log_media ( media_url )
+                care_log_media ( id, media_url, media_asset_id )
             `)
             .eq('appointment_id', bookingId)
             .order('recorded_at', { ascending: false });
@@ -957,11 +966,20 @@ window.handleGuestViewCareLog = async function(bookingId) {
             return;
         }
 
+        if(data.some(log=>(log.care_log_media||[]).some(media=>media.media_asset_id))){
+            const {createCareMediaReader}=await import('/scripts/shared/care-media-reader.mjs');
+            if(timelineWrapper.dataset.requestId!==requestId)return;
+            guestCareMediaReader ||= createCareMediaReader(db);
+            const rows=await guestCareMediaReader.read(data.flatMap(log=>log.care_log_media||[]));
+            if(timelineWrapper.dataset.requestId!==requestId)return;
+            const byId=new Map(rows.map(row=>[row.id,row]));
+            for(const log of data)log.care_log_media=(log.care_log_media||[]).map(row=>byId.get(row.id)||{...row,media_url:'',resolved_url:''});
+        }
         renderTimeline(data.map(log => {
             const recordedAt = new Date(log.recorded_at);
             const time = Number.isNaN(recordedAt.getTime()) ? '' : recordedAt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
             const date = fmtDate(log.recorded_at);
-            const mediaUrl = log.care_log_media?.[0]?.media_url;
+            const mediaUrl = guestCareImageUrl(log.care_log_media?.[0]);
             const staffName = 'Nhân viên PawPal';
             const isUrgent = false;
 
@@ -979,7 +997,7 @@ window.handleGuestViewCareLog = async function(bookingId) {
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                             ${esc(staffName)}
                         </div>
-                        ${mediaUrl && /^https?:\/\//i.test(normalizeImageUrl(mediaUrl)) ? `<img src="${esc(normalizeImageUrl(mediaUrl))}" alt="Ảnh chăm sóc" class="rg-timeline-img">` : ''}
+                        ${mediaUrl ? `<img src="${esc(mediaUrl)}" alt="Ảnh chăm sóc" class="rg-timeline-img">` : ''}
                     </div>
                 </div>
             `;
@@ -999,6 +1017,7 @@ function getOrCreateGuestCareLogModal() {
     if (!el) {
         el = document.createElement('div');
         el.id = 'guestCareLogModal';
+        el.addEventListener('hidden.bs.modal',()=>{guestCareLogRequestId++;guestCareMediaReader?.clear();const timeline=document.getElementById('guestCareLogTimeline');if(timeline){timeline.dataset.requestId='';timeline.replaceChildren();}});
         el.className = 'modal fade';
         el.tabIndex = -1;
         el.innerHTML = `

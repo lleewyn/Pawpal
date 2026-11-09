@@ -1643,13 +1643,20 @@
 
                         <div class="form-group-item" style="margin-top: 14px;">
                             <label class="form-label-clean">Hình ảnh sản phẩm</label>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <input type="text" class="admin-input" id="newProdImages" placeholder="Nhập đường dẫn URL ảnh, phân cách bằng dấu phẩy..." style="flex: 1;" oninput="PawpalOrdersModule.updateProductImagePreview()">
-                                <div class="product-thumb-preview-box" id="productThumbPreviewBox" title="Xem trước ảnh chính">
-                                    <img id="productThumbPreviewImg" src="/assets/images/shop/products/TP-PATE-02.png" alt="Xem trước" onerror="this.src='/assets/images/shop/products/tp-hat-01.png';">
+                            <div id="productMediaEditor">
+                                <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px">
+                                    <label><input type="radio" name="productMediaMode" data-media-mode value="url" checked> Dùng đường dẫn</label>
+                                    <label><input type="radio" name="productMediaMode" data-media-mode value="upload"> Tải ảnh lên</label>
                                 </div>
+                                <input type="text" class="admin-input" id="newProdImages" data-media-links placeholder="Các đường dẫn ảnh, ngăn cách bằng dấu phẩy" aria-label="Đường dẫn ảnh sản phẩm">
+                                <div data-media-upload hidden>
+                                    <button type="button" class="admin-btn admin-btn-secondary" data-media-pick>Chọn ảnh</button>
+                                    <input type="file" data-media-files accept="image/jpeg,image/png,image/webp" multiple hidden aria-label="Chọn ảnh sản phẩm">
+                                    <span style="color:var(--text-muted);font-size:12px">Tối đa 10 ảnh, mỗi ảnh 3 MiB · JPEG, PNG, WebP</span>
+                                </div>
+                                <div data-media-status role="status" style="color:#DC2626;margin-top:6px;font-size:12px"></div>
+                                <div data-media-gallery style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"></div>
                             </div>
-                            <div id="productGalleryThumbnailsRow" style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;"></div>
                         </div>
                     </div>
 
@@ -1693,6 +1700,7 @@
                             </div>
                         </div>
 
+                        <details id="singleVariantMediaPanel"><summary>Ảnh phân loại mặc định</summary><div id="singleVariantMediaRoot"></div></details>
                         <!-- 2B. GIAO DIỆN SẢN PHẨM NHIỀU BIẾN THỂ (2 NHÓM THUỘC TÍNH ĐỘC LẬP) -->
                         <div id="multipleProductVariantsBox" style="display: none;">
                             <!-- KHU VỰC THIẾT LẬP 2 NHÓM PHÂN LOẠI -->

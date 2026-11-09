@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "date": "2026-11-09",
+  "cause": "Media Preview deployment supplied dedicated Admin/media Supabase environment variables but omitted the generic Supabase variables required by customer authentication and guest-cookie initialization.",
+  "fix": "Supply SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY to the Preview runtime through private process environment; no key values in source or CLI arguments.",
+  "previewUrl": "https://pawpalgr3-5bph12hep-llwyns-projects.vercel.app",
+  "customerAuthTests": { "passed": 43, "failed": 0 },
+  "liveLookupStatus": 200,
+  "liveCustomerContinueReachesPasswordStep": true,
+  "configurationErrorVisible": false,
+  "customerPasswordLoginTested": false,
+  "otpRequested": false,
+  "customerAccountCreated": false,
+  "productionChanged": false,
+  "projectEnvironmentChanged": false,
+  "systemLogsRead": false
+}
