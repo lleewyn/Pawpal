@@ -104,12 +104,12 @@ Chi tiết: [Báo cáo chuẩn bị Atlas](docs/media/PAWPAL_GIAI_DOAN_2_CHUAN_B
 - [x] Kết nối Atlas thật từ file riêng ngoài webroot; ping/thống kê database/kiểm tra tên collection đạt, không ghi dữ liệu. Xem [bằng chứng](docs/media/phase2-atlas-readonly.txt).
 - [x] Đọc cấu hình Vercel và thử artifact Preview riêng: Hobby, Node 24.x, `iad1`; ping Atlas HTTP 200. Đã dọn deployment/token thử, không đổi env hoặc Production. Xem [bằng chứng](docs/media/phase2-vercel-preview.txt).
 
-- [ ] Xác nhận có cluster, tier Free hay gói khác, region, database được phép dùng và mức sử dụng hiện tại; không yêu cầu tài khoản quản trị/mật khẩu trong chat.
-- [ ] Chuẩn bị database user riêng chỉ có quyền cần thiết trên database media, không dùng tài khoản đăng nhập Atlas làm credential ứng dụng.
-- [ ] Cấu hình `MONGODB_URI`, `MONGODB_DB`, bucket và cờ upload trong biến môi trường Vercel; không đưa URI vào Git, JS client hoặc log.
-- [ ] Chọn phương án network access phù hợp egress Vercel; không tự mở `0.0.0.0/0` để giải quyết kết nối. Nếu cần mở rộng truy cập phải trình bày cụ thể trước khi áp dụng.
-- [ ] Kiểm tra kết nối/metadata có phạm vi, index và pool; tách namespace thử nghiệm/production mà không nhân bản media toàn bộ.
-- [ ] Thử file nhỏ và đọc private trên Vercel Preview trước khi bật thật.
+- [x] Xác nhận có cluster, tier Free hay gói khác, region, database được phép dùng và mức sử dụng hiện tại; không yêu cầu tài khoản quản trị/mật khẩu trong chat.
+- [x] Chuẩn bị database user riêng chỉ có quyền cần thiết trên database media, không dùng tài khoản đăng nhập Atlas làm credential ứng dụng.
+- [x] Cấu hình `MONGODB_URI`, `MONGODB_DB`, bucket và cờ upload trong biến môi trường Vercel; không đưa URI vào Git, JS client hoặc log.
+- [x] Chọn phương án network access phù hợp egress Vercel; không tự mở `0.0.0.0/0` để giải quyết kết nối. Nếu cần mở rộng truy cập phải trình bày cụ thể trước khi áp dụng.
+- [x] Kiểm tra kết nối/metadata có phạm vi, index và pool; tách namespace thử nghiệm/production mà không nhân bản media toàn bộ.
+- [x] Thử file nhỏ và đọc private trên Vercel Preview trước khi bật thật.
 
 ### Giai đoạn 3 — Bộ media dùng chung
 
@@ -117,13 +117,13 @@ Cập nhật 07/11/2026: [Báo cáo triển khai và bằng chứng](docs/media/
 
 - [x] Migration nền tảng metadata/FK/CHECK/RLS/RPC cho sản phẩm và nhật ký; backup có phạm vi, thử riêng và đối chiếu Cloud sau thay đổi đạt.
 - [x] API tạo session, upload multipart một file, đọc nội dung và hủy nháp.
-- [ ] RPC gắn/gỡ asset trong giao dịch lưu sản phẩm/nhật ký; thử luồng Vercel hoàn chỉnh.
+- [x] RPC gắn/gỡ asset trong giao dịch lưu sản phẩm/nhật ký; thử luồng Vercel hoàn chỉnh.
 - [x] Adapter GridFS, xử lý stream/lỗi, idempotency và worker dọn file/chunks theo lease; thử file nhỏ Atlas thật đạt.
-- [ ] Thiết lập lịch cleanup và thử phục hồi cả hai CSDL.
+- [x] Thiết lập lịch cleanup và thử phục hồi cả hai CSDL.
 - [x] Module đọc legacy/URL/endpoint ảnh; không đưa ObjectId vào `img.src` trực tiếp.
-- [ ] Tích hợp module đọc vào giao diện trước khi bật upload.
+- [x] Tích hợp module đọc vào giao diện trước khi bật upload.
 - [x] Kiểm tra file giả, giới hạn body/quota, quyền sai phạm vi và bù lỗi giữa hai CSDL ở API và database riêng.
-- [ ] Kiểm tra tải đồng thời và timeout trên Vercel Preview với Auth thật.
+- [x] Kiểm tra tải đồng thời và timeout trên Vercel Preview với Auth thật.
 
 ### Giai đoạn 4 — Hai luồng ưu tiên
 
