@@ -116,12 +116,14 @@
                 $('#slideName').textContent='';$('#slideNum').textContent='';$('#slidePager').textContent='';
                 return;
             }
-            const slides = [{src:$('#campaignImg').getAttribute('src'),name:'Pet Taxi — Đồng hành cùng bé',link:'/booking?service=TXI01'}];
+            const fallbackSlide = {src:$('#campaignImg').getAttribute('src'),name:'Pet Taxi — Đồng hành cùng bé',link:'/booking?service=TXI01'};
+            let slides = [fallbackSlide];
             let current = 0;
             try {
-                const {data,error} = await window.getSupabaseClient().from('banner').select('id,title,image_url,image_media_asset_id,link,start_date,end_date,status').eq('status','dang_hien_thi').order('display_order').limit(8);
+                const {data,error} = await window.getSupabaseClient().from('banner').select('id,title,image_url,image_media_asset_id,link,start_date,end_date,status').in('status',['active','dang_hien_thi','ACTIVE']).order('display_order').limit(8);
                 if (error) throw error;
                 const now = Date.now();
+                const loaded = [];
                 for (const b of data || []) {
                     let url,link;
                     const rawImage = b.image_media_asset_id ? ('/api/media?action=read&id=' + encodeURIComponent(b.image_media_asset_id)) : b.image_url;
@@ -129,8 +131,9 @@
                     if (!['https:','http:'].includes(url.protocol) || /(^|\.)example\.(com|org|net)$/.test(url.hostname) || link.origin !== location.origin) continue;
                     if ((b.start_date && Date.parse(b.start_date)>now) || (b.end_date && Date.parse(b.end_date)<now)) continue;
                     const ok = await new Promise(resolve => {const image=new Image();const timer=setTimeout(()=>resolve(false),4000);image.onload=()=>{clearTimeout(timer);resolve(true);};image.onerror=()=>{clearTimeout(timer);resolve(false);};image.src=url.href;});
-                    if (ok) slides.push({src:url.href,name:b.title||'PawPal',link:link.pathname+link.search});
+                    if (ok) loaded.push({src:url.href,name:b.title||'PawPal',link:link.pathname+link.search});
                 }
+                if (loaded.length) slides = loaded;
             } catch (_) { /* Approved brand artwork remains available if the catalogue is unavailable. */ }
             if (!grid.isConnected) return;
             const prev=$('#prevSlide'), next=$('#nextSlide');
