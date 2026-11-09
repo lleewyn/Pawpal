@@ -119,12 +119,13 @@
             const slides = [{src:$('#campaignImg').getAttribute('src'),name:'Pet Taxi — Đồng hành cùng bé',link:'/booking?service=TXI01'}];
             let current = 0;
             try {
-                const {data,error} = await window.getSupabaseClient().from('banner').select('id,title,image_url,link,start_date,end_date,status').eq('status','dang_hien_thi').order('display_order').limit(8);
+                const {data,error} = await window.getSupabaseClient().from('banner').select('id,title,image_url,image_media_asset_id,link,start_date,end_date,status').eq('status','dang_hien_thi').order('display_order').limit(8);
                 if (error) throw error;
                 const now = Date.now();
                 for (const b of data || []) {
                     let url,link;
-                    try {url=new URL(b.image_url, location.origin);link=new URL(b.link || '/services',location.origin);}catch(_){continue;}
+                    const rawImage = b.image_media_asset_id ? ('/api/media?action=read&id=' + encodeURIComponent(b.image_media_asset_id)) : b.image_url;
+                    try {url=new URL(rawImage, location.origin);link=new URL(b.link || '/services',location.origin);}catch(_){continue;}
                     if (!['https:','http:'].includes(url.protocol) || /(^|\.)example\.(com|org|net)$/.test(url.hostname) || link.origin !== location.origin) continue;
                     if ((b.start_date && Date.parse(b.start_date)>now) || (b.end_date && Date.parse(b.end_date)<now)) continue;
                     const ok = await new Promise(resolve => {const image=new Image();const timer=setTimeout(()=>resolve(false),4000);image.onload=()=>{clearTimeout(timer);resolve(true);};image.onerror=()=>{clearTimeout(timer);resolve(false);};image.src=url.href;});

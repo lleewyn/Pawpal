@@ -167,7 +167,7 @@
                 : '';
 
             const esc = PawpalSettings.escapeHtml || (s => s);
-            const isImgUrl = b.imageUrl && /^(https?:\/\/|\/)[^\s]+$/i.test(b.imageUrl);
+            const isImgUrl = b.imageUrl && /^(https?:\/\/|\/|blob:)[^\s]+$/i.test(b.imageUrl);
             const previewHtml = isImgUrl
                 ? `<img src="${esc(b.imageUrl)}" alt="Banner"/>`
                 : `${esc(b.imageText)}`;
