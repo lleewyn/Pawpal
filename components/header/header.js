@@ -266,9 +266,30 @@
         try{const client=window.getSupabaseClient?.() || window.SupabaseClient;if(!client)return user;const result=await client.rpc('customer_profile_snapshot');if(result.error || result.data?.id!==user.id)return user;const updatedUser={...user,name:result.data.name,phone:result.data.phone,email:result.data.email};const current=getCurrentUser();if(current?.id!==user.id)return current;localStorage.setItem('pawpal_current_user',JSON.stringify(updatedUser));return updatedUser;}catch{return user;}
     }
 
-    function updateHeaderAuth() {
+    let authRenderVersion=0;
+    async function updateHeaderAuth() {
+        const version=++authRenderVersion;
+        let verified=null;
+        try{
+            const client=window.getSupabaseClient?.() || window.SupabaseClient;
+            if(client){const {verifyCustomerSession}=await import('/scripts/shared/customer-session.mjs');verified=await verifyCustomerSession(client);}
+        }catch{/* Connection errors do not erase a recoverable session or cached profile. */}
+        if(version!==authRenderVersion)return;
         const isGuestLookupPage = window.location.pathname.includes('return-guest');
-        const user = isGuestLookupPage ? null : getCurrentUser();
+        let cached=getCurrentUser();
+        if(verified&&(!cached||cached.auth_user_id!==verified.id)){
+            try{
+                const client=window.getSupabaseClient?.() || window.SupabaseClient;
+                const profile=await client.rpc('customer_profile_snapshot');
+                if(version!==authRenderVersion)return;
+                if(!profile.error&&profile.data?.id){
+                    cached={...(cached?.id===profile.data.id?cached:{}),...profile.data,auth_user_id:verified.id,role:'customer',is_temporary:false};
+                    localStorage.setItem('pawpal_current_user',JSON.stringify(cached));
+                    sessionStorage.setItem('pawpal_current_user',JSON.stringify(cached));
+                }
+            }catch{}
+        }
+        const user = isGuestLookupPage ? null : cached?.is_temporary?cached:verified&&cached?.auth_user_id===verified.id?cached:null;
         const authActions = document.querySelector('.auth-actions');
         const lookupBtn = document.querySelector('.lookup-btn');
         const lookupDivider = document.querySelector('.lookup-divider');
@@ -935,6 +956,7 @@
     
     // Lắng nghe thay đổi trạng thái đăng nhập, giỏ hàng và cấu hình cập nhật
     document.addEventListener('auth_state_changed', updateHeaderAuth);
+    document.addEventListener('customer_session_verified', updateHeaderAuth);
     document.addEventListener('cart_updated', () => {
         if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
     });

@@ -1,7 +1,7 @@
 import {guestCart,isGuestShopper,normalizeGuestLines} from '/scripts/shared/guest-cart.mjs';
 import {guestCommerce} from '/scripts/shared/guest-commerce-client.mjs';
 import {readGuestCheckoutPreferences,writeGuestCheckoutPreferences,clearGuestCheckoutPreferences} from '/scripts/shared/guest-checkout-preferences.mjs';
-import {showGuestRecoveryCode} from '/scripts/shared/guest-recovery.mjs';
+import {renderTransactionReceipt} from '/scripts/shared/transaction-receipt.mjs';
 import {editGuestContact} from '/scripts/shared/guest-contact-editor.mjs';
 const selectionKey='pawpal_guest_checkout_selection_v1',journalKey='pawpal_guest_order_request_v1';
 const money=n=>Number(n).toLocaleString('vi-VN')+' đ';
@@ -67,11 +67,18 @@ export async function initGuestCheckout(){
   if(journal.mode==='buynow'){sessionStorage.removeItem('pawpal_buynow_cart');sessionStorage.removeItem('pawpal_is_buynow');}
   sessionStorage.removeItem(selectionKey);form.classList.add('d-none');
   clearGuestCheckoutPreferences(sessionStorage,{mode:journal.mode,lines:journal.lines});
-  const result=get('guest-order-result');result.classList.remove('d-none');result.replaceChildren(node('h2','Đã tạo đơn hàng'),node('p','Mã đơn: '+order.code),node('p','Trạng thái: '+({pending:'Chờ xác nhận',confirmed:'Đã xác nhận',completed:'Hoàn tất',cancelled:'Đã hủy',shipping:'Đang giao'}[order.status]||'Đang xử lý')),node('p','Tổng tiền: '+money(order.total)),node('p','Thanh toán: '+({pending:'Chờ thanh toán',partial:'Đã thanh toán một phần',paid:'Đã thanh toán',not_required:'Không cần thanh toán',refunded:'Đã hoàn tiền'}[order.paymentStatus]||'Chờ đối soát')));
-  for(const line of order.lines||[])result.append(node('p',line.name+' × '+line.quantity));
-  showGuestRecoveryCode(result,order.recoveryCode);
-  const lookup=node('a','Tra cứu đơn hàng','btn btn-secondary');lookup.href='/return-guest?'+new URLSearchParams({order:journal.id});result.append(lookup);
-  const next=node('button','Tiếp tục mua sắm','btn btn-secondary');next.type='button';next.onclick=()=>{sessionStorage.removeItem(journalKey);window.location.assign('/shop');};result.append(next);
+  const result=get('guest-order-result');result.classList.remove('d-none');document.body.classList.add('checkout-receipt-page');
+  renderTransactionReceipt(result,{
+   title:order.status==='cancelled'?'Đơn hàng đã được hủy':'PawPal đã nhận đơn hàng của bạn!',
+   status:({pending:'Chờ xác nhận',confirmed:'Đã xác nhận',completed:'Hoàn tất',cancelled:'Đã hủy',shipping:'Đang giao'}[order.status]||'Đang xử lý'),
+   code:order.code,codeLabel:'Mã đơn hàng',
+   details:[['Tổng tiền',money(order.total)],['Thanh toán',({pending:'Chờ thanh toán',partial:'Đã thanh toán một phần',paid:'Đã thanh toán',not_required:'Không cần thanh toán',refunded:'Đã hoàn tiền'}[order.paymentStatus]||'Chờ đối soát')]],
+   lines:order.lines||[],notice:order.status==='cancelled'?'Bạn có thể tiếp tục chọn những món bé yêu thích tại cửa hàng.':'Thông tin đơn hàng đã được lưu. Bạn có thể theo dõi trạng thái xử lý và thanh toán trong phần tra cứu.',
+   lookupHref:'/return-guest?'+new URLSearchParams({order:journal.id}),lookupLabel:'Tra cứu đơn hàng',
+   againLabel:'Tiếp tục mua sắm',onAgain:()=>{sessionStorage.removeItem(journalKey);window.location.assign('/shop');},
+   activationTarget:'/user#orders',recoveryCode:order.recoveryCode
+  });
+  result.querySelector('h1').focus();
   window.updateCartBadge?.();
  }
  function invalidateQuote(){quote=null;submit.disabled=true;get('guest-quote-total').textContent='';}

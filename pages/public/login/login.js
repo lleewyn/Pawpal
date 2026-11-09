@@ -22,7 +22,11 @@
             await resetGuestSession();
             if (result.session) {
                 const client = window.getSupabaseClient?.() || window.SupabaseClient;
-                if (client) await client.auth.setSession(result.session);
+                if (!client) throw new Error('Chưa tải được dịch vụ xác thực. Vui lòng thử lại.');
+                const {error}=await client.auth.setSession(result.session);
+                if(error)throw error;
+            } else if(result.user&&!result.user.is_temporary){
+                throw new Error('Chưa tạo được phiên đăng nhập. Vui lòng thử lại.');
             }
             const user = result.user;
             try {
@@ -38,6 +42,7 @@
     let challenge = null;
     let timer;
     let busy = false;
+    let routeVersion = 0;
     const sections = ['loginForm', 'registerForm', 'otpSection', 'forgotPhoneSection', 'forgotOtpSection', 'forgotNewPasswordSection', 'congratsSection', 'setupPasswordSection', 'setupExpiredSection', 'alreadyLoggedInSection'];
     function notice(message, error = false) {
         const container = byId('toastContainer');
@@ -114,14 +119,21 @@
         const result = await auth().request('otp/complete', { challengeId: challenge.id, code: challenge.code, password: passwordValue, name, ...(challenge.linkGuest ? { linkGuest: true } : {}) });
         await auth().accept(result);
         clearChallenge();
-        for (const id of ['registerPassword', 'registerConfirmPassword', 'forgotNewPassword', 'forgotConfirmNewPassword']) if (byId(id)) byId(id).value = '';
+        for (const id of ['registerPassword', 'registerConfirmPassword', 'forgotNewPassword', 'forgotConfirmNewPassword', 'setupPassword', 'setupConfirmPassword']) if (byId(id)) byId(id).value = '';
         notice('Xác thực và lưu mật khẩu thành công.');
         window.location.href = consumeLoginTarget(sessionStorage, location.origin, new URLSearchParams(location.search).get('redirect'));
     }
-    function checkLoggedIn() {
+    async function checkLoggedIn() {
         try {
             const u = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
             if (u && !u.is_temporary && !u.system_role && u.role !== 'admin' && u.role !== 'staff') {
+                const {verifyCustomerSession}=await import('/scripts/shared/customer-session.mjs');
+                const verified=await verifyCustomerSession(window.getSupabaseClient?.() || window.SupabaseClient);
+                if(!verified)return false;
+                if(u.auth_user_id!==verified.id){
+                    const profile=await (window.getSupabaseClient?.() || window.SupabaseClient).rpc('customer_profile_snapshot');
+                    if(profile.error||profile.data?.id!==u.id)return false;
+                }
                 const params = new URLSearchParams(window.location.search);
                 const targetPhone = params.get('phone');
                 if (targetPhone && targetPhone !== u.phone) {
@@ -148,15 +160,33 @@
         } catch (e) {}
         return false;
     }
-    function route() {
+    async function route() {
+        const version = ++routeVersion;
         clearChallenge();
-        if (checkLoggedIn()) return;
+        if (await checkLoggedIn()) return;
+        if(version!==routeVersion)return;
         const params = new URLSearchParams(window.location.search);
         const action = params.get('action') || window.location.hash.slice(1);
         if (action === 'register') {
             show('registerForm');
             if (params.get('phone')) byId('registerPhone').value = params.get('phone');
         } else if (['setup-password', 'guest-activate', 'guest-verify-otp'].includes(action)) {
+            if (action === 'guest-activate' && !params.get('phone')) {
+                show('loginForm');
+                (async () => {
+                    try {
+                        const {guestCommerce} = await import('/scripts/shared/guest-commerce-client.mjs');
+                        const context = await guestCommerce.request('context');
+                        if (version !== routeVersion) return;
+                        if (!context.initialized || !validPhone(context.contact?.phone)) throw new Error('Phiên đặt lịch đã hết hiệu lực. Vui lòng mở lại trang tra cứu hoặc liên hệ cửa hàng.');
+                        byId('loginPhone').value = context.contact.phone;
+                        byId('loginStepPhone').classList.add('d-none');
+                        byId('loginStepSendOTP').classList.remove('d-none');
+                        byId('loginStepPassword').classList.add('d-none');
+                        byId('loginOtpPhoneDisplay').textContent = context.contact.phone;
+                    } catch (error) { if (version === routeVersion) notice(error.message, true); }
+                })();
+            } else {
             const phone = params.get('phone');
             if (phone && validPhone(phone)) {
                 show('loginForm');
@@ -170,6 +200,7 @@
                 show('forgotPhoneSection');
                 if (phone && byId('forgotPhone')) byId('forgotPhone').value = phone;
                 notice('Vui lòng xác thực số điện thoại bằng mã OTP để thiết lập mật khẩu.');
+            }
             }
         } else {
             show('loginForm');
@@ -231,15 +262,28 @@
         });
         const validateRegister = () => {
             const pass = password('registerPassword');
-            byId('btnRegisterSubmit').disabled = !(value('registerName') && validPhone(value('registerPhone')) && validPassword(pass) && pass === password('registerConfirmPassword'));
+            const confirm = password('registerConfirmPassword');
+            const invalidPass = pass.length > 0 && !validPassword(pass);
+            const mismatch = confirm.length > 0 && pass !== confirm;
+            byId('registerPasswordFeedback').classList.toggle('d-block', invalidPass);
+            byId('registerConfirmFeedback').classList.toggle('d-block', mismatch);
+            for (const [id, invalid] of [['registerPassword', invalidPass], ['registerConfirmPassword', mismatch]]) {
+                byId(id).classList.toggle('is-invalid', invalid);
+                byId(id).setAttribute('aria-invalid', String(invalid));
+            }
+            byId('btnRegisterSubmit').disabled = busy || !(value('registerName') && validPhone(value('registerPhone')) && validPassword(pass) && pass === confirm);
         };
-        for (const id of ['registerName', 'registerPhone', 'registerPassword', 'registerConfirmPassword']) on(id, 'input', validateRegister);
+        for (const id of ['registerName', 'registerPhone', 'registerPassword', 'registerConfirmPassword']) {
+            on(id, 'input', validateRegister);
+            on(id, 'change', validateRegister);
+        }
+        validateRegister();
         on('registerForm', 'submit', event => {
             event.preventDefault();
             run(byId('btnRegisterSubmit'), async () => {
                 if (!value('registerName') || !validPassword(password('registerPassword')) || password('registerPassword') !== password('registerConfirmPassword')) throw new Error('Vui lòng kiểm tra họ tên và mật khẩu.');
                 await sendOtp(value('registerPhone'), 'register');
-            });
+            }).finally(validateRegister);
         });
         for (const selector of ['#otpSection .otp-input', '.forgot-otp-input']) {
             const inputs = [...document.querySelectorAll(selector)];
@@ -255,7 +299,7 @@
                         try { await finish(password('registerPassword'), value('registerName')); }
                         catch (error) { resetInputs('#otpSection .otp-input'); throw error; }
                     });
-                    else show('forgotNewPasswordSection');
+                    else show(challenge.purpose === 'activate' ? 'setupPasswordSection' : 'forgotNewPasswordSection');
                 });
                 input.addEventListener('keydown', event => {
                     if (event.key === 'Backspace' && !input.value && inputs[index - 1]) inputs[index - 1].focus();
@@ -294,6 +338,29 @@
             });
         });
         on('btnRequestNewLink', 'click', () => { clearChallenge(); show('forgotPhoneSection'); });
+        const validateSetup = () => {
+            const pass = password('setupPassword'), confirm = password('setupConfirmPassword');
+            const invalidPass = pass.length > 0 && !validPassword(pass);
+            const mismatch = confirm.length > 0 && pass !== confirm;
+            byId('setupPasswordFeedback').classList.toggle('d-block', invalidPass);
+            byId('setupConfirmFeedback').classList.toggle('d-block', mismatch);
+            for (const [id, invalid] of [['setupPassword', invalidPass], ['setupConfirmPassword', mismatch]]) {
+                byId(id).classList.toggle('is-invalid', invalid);
+                byId(id).setAttribute('aria-invalid', String(invalid));
+            }
+            byId('btnSetupSubmit').disabled = busy || !(validPassword(pass) && pass === confirm && byId('setupTermsCheckbox').checked);
+        };
+        for (const id of ['setupPassword', 'setupConfirmPassword', 'setupTermsCheckbox']) {
+            on(id, 'input', validateSetup);
+            on(id, 'change', validateSetup);
+        }
+        validateSetup();
+        on('setupPasswordForm', 'submit', event => {
+            event.preventDefault();
+            if (!challenge || challenge.purpose !== 'activate') { notice('Vui lòng xác thực số điện thoại trước khi kích hoạt.', true); return; }
+            if (!validPassword(password('setupPassword')) || password('setupPassword') !== password('setupConfirmPassword') || !byId('setupTermsCheckbox').checked) { validateSetup(); return; }
+            run(byId('btnSetupSubmit'), () => finish(password('setupPassword'))).finally(validateSetup);
+        });
         document.querySelectorAll('.btn-toggle-password').forEach(button => button.addEventListener('click', () => {
             const input = button.previousElementSibling;
             if (!input) return;

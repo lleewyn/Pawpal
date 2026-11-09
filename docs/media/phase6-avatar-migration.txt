@@ -1,0 +1,33 @@
+BIÊN BẢN CHUYỂN ĐỔI 3 AVATAR THÚ CƯNG BASE64 SANG MONGODB GRIDFS (GIAI ĐOẠN 6)
+Ngày thực hiện : 2026-11-09T15:02:37.463Z
+Môi trường     : Vercel Preview (https://pawpalgr3-5bph12hep-llwyns-projects.vercel.app) + Supabase Cloud + MongoDB GridFS
+Số lượng       : 3 thú cưng
+
+1. Bé Bông (PP-4643, ID: 2a8816e2-c267-4ccf-85cd-422407266efd)
+   - Dung lượng      : 51.120 bytes (image/jpeg)
+   - Media Asset ID  : f35eb980-5a99-4e68-843a-fe1cb4adfd1a
+   - Storage         : mongodb_gridfs
+   - SHA256          : 95c378c1229dafb738cafdb1e8cd5e9813ea8ab5a3cbfd64e1490e13e442aefd
+   - Trạng thái DB   : avatar_url = NULL, avatar_media_asset_id attached.
+
+2. Bé Meo (PET-1784708052477, ID: 3cd34862-7e1d-4f32-81b4-3c2c562688ae)
+   - Dung lượng      : 1.228.990 bytes (image/png)
+   - Media Asset ID  : ab82dfbd-1624-4483-bd22-0d9491d562c1
+   - Storage         : mongodb_gridfs
+   - SHA256          : 9fbc98dd141ab451d247301d6ee765ea09f193c3f425f6b0a4f82d4fedabb19a
+   - Trạng thái DB   : avatar_url = NULL, avatar_media_asset_id attached.
+
+3. Bé ĐẬU (PET-1791649301877, ID: ce152404-48ac-4c0a-8666-c38814455f5c)
+   - Dung lượng      : 1.584.606 bytes (image/png)
+   - Media Asset ID  : 82d5c339-ad55-460f-ae2e-f8e6a194691e
+   - Storage         : mongodb_gridfs
+   - SHA256          : 64e661b20d64384d664dc6d5965a745f7968184b079287e95189f4a3ee10602d
+   - Trạng thái DB   : avatar_url = NULL, avatar_media_asset_id attached.
+
+Bảo mật và phân quyền:
+- Admin và Chủ nuôi đọc ảnh: HTTP 200 OK.
+- Khách vãng lai (Anonymous): Bị chặn HTTP 404 (bảo toàn tính riêng tư).
+- Không còn bất kỳ chuỗi Base64 nào tồn tại trong pet_profile.avatar_url.
+- Bản sao lưu nguyên vẹn: D:/Aboutme/Pawpal-infra/media/phase6-migration/pet-avatars-backup.private.json
+
+KẾT LUẬN: ĐẠT 100% TIÊU CHÍ CHUYỂN ĐỔI GIAI ĐOẠN 6.

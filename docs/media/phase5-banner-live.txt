@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-11-09T14:24:01.422Z",
+  "status": "PASS",
+  "scope": "Live Admin banner image upload acceptance on Vercel Preview with Cloud Supabase & Atlas GridFS",
+  "previewUrl": "https://pawpalgr3-5bph12hep-llwyns-projects.vercel.app",
+  "banner": {
+    "id": "df11737a-4655-404f-9cba-3f9b6b363561",
+    "title": "Pet Hotel - An tâm khi bạn vắng nhà",
+    "assetId": "fb9fc2ea-43da-4a9a-8515-ee7b1370f273",
+    "sizeBytes": "1951021",
+    "mimeType": "image/png",
+    "provider": "mongodb_gridfs",
+    "sourceFile": "assets/images/banners/hotel_animation.png"
+  },
+  "notes": "Hoàn thành nghiệm thu Admin thay thế ảnh Banner thật bằng tệp hotel_animation.png (<= 3 MiB) lưu trữ vào MongoDB GridFS trên Vercel Preview."
+}

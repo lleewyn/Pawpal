@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-11-07T11:18:06.989Z",
+  "capturedAt": "2026-11-09T15:14:42.752Z",
   "status": "PASS",
   "scope": "Vercel metadata only; no mutations, deployment or secret values",
   "project": "pawpal_gr3",
@@ -13,7 +13,7 @@
   },
   "networkMetadataKeys": [],
   "previewProtectionConfigured": true,
-  "hasExistingAutomationBypass": false,
+  "hasExistingAutomationBypass": true,
   "mediaEnvironment": [
     {
       "key": "MONGODB_URI",

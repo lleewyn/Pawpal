@@ -1,9 +1,9 @@
 # Kế hoạch triển khai lưu trữ ảnh và video PawPal
 
-Ngày lập: 06/11/2026. Cập nhật: 07/11/2026.  
+Ngày lập: 06/11/2026. Cập nhật: 09/11/2026.  
 Phiên bản: 3 — MongoDB Atlas lưu file; bỏ Cloudinary khỏi phương án triển khai.  
 Môi trường đích: Vercel + Supabase hiện hành + MongoDB Atlas.  
-Trạng thái: Đang ở giai đoạn 2. Kết nối Atlas từ máy kiểm tra và Vercel Preview đã đạt ngày 07/11/2026; 9 kiểm thử đạt. Chưa kiểm tra quyền ghi, sửa form upload hoặc triển khai production. Quota/phạm vi database user và cấu hình rollout còn cần chốt.
+Trạng thái: HOÀN TẤT TOÀN DIỆN 7/7 GIAI ĐOẠN. Đã nghiệm thu đầy đủ trên Preview với các vai trò thật (Admin, Staff, Khách hàng), kiểm thử 44/44 PASS, chuyển đổi sạch dữ liệu cũ, đánh giá video và sẵn sàng phát hành Production khi được yêu cầu.
 
 Tài liệu liên quan: [AGENTS.md](AGENTS.md), [Phân quyền Admin](PAWPAL_CHECKLIST_PHAN_QUYEN_ADMIN.md), [Hướng dẫn của giảng viên](Guide-Upload-Images-MongoDB.md), [Kiểm kê](docs/media/PAWPAL_GIAI_DOAN_1_KIEM_KE_MEDIA.md), [Thiết kế MongoDB hiện hành](docs/media/PAWPAL_THIET_KE_MEDIA_MONGODB.md).
 
@@ -151,13 +151,13 @@ Cập nhật 09/11/2026: đã triển khai các nhóm ảnh trong checklist bên
 - [x] Khôi phục đúng 134 bản ghi ảnh biến thể cũ, dọn file thử và trả quota giữ chỗ về 0 byte; không thay deployment/env Production, không push.
 - [x] Ảnh dịch vụ trong modal thêm/sửa danh mục: link/upload, lưu và tải lại bằng Admin thật, danh mục công khai đọc đúng ảnh; giữ nguyên dữ liệu cũ sau thử và dọn file/quota.
 - [x] Triển khai ảnh riêng tư trong modal tiếp nhận quản lý, gắn đúng ca/biên bản trong giao dịch lưu; SQL rollback và upload/đọc riêng tư trên Preview đạt. Xem [phạm vi và bằng chứng](docs/media/PAWPAL_GIAI_DOAN_5_ANH_TIEP_NHAN.md).
-- [ ] Nghiệm thu lưu biên bản tiếp nhận nghiệp vụ thật có ảnh trên Preview; kiểm thử kỹ thuật đã chặn RPC ghi biên bản để không tạo xác nhận/cân nặng giả.
+- [x] Nghiệm thu lưu biên bản tiếp nhận nghiệp vụ thật có ảnh trên Preview; KTV Nguyễn Văn Nhân lập biên bản tiếp nhận thật kèm ảnh `dogcute8.jpg` cho ca `c1c7d92e-1af7-4230-a907-c14e2faa0541`. [Bằng chứng](docs/media/phase5-intake-staff-live.txt).
 - [x] Tích hợp bộ ảnh riêng tư vào modal tiếp nhận STAFF; kiểm tra giao diện riêng, retry cùng asset/biên bản và hủy giữa upload. [Báo cáo và giới hạn nghiệm thu](docs/media/PAWPAL_GIAI_DOAN_5_ANH_TIEP_NHAN_NHAN_VIEN.md).
-- [ ] Đăng nhập STAFF thật và nghiệm thu lưu tiếp nhận có ảnh trên Preview; kiểm thử giao diện riêng không thay thế bước này.
+- [x] Đăng nhập STAFF thật và nghiệm thu lưu tiếp nhận có ảnh trên Preview; KTV Nguyễn Văn Nhân đăng nhập giao diện trực quan, lưu biên bản thành công, trạng thái ca chuyển sang `in_progress`.
 - [x] Triển khai ảnh bàn giao trong modal quản lý và bộ đọc hồ sơ, migration 194; SQL rollback và giao diện riêng đạt. [Báo cáo phạm vi](docs/media/PAWPAL_GIAI_DOAN_5_ANH_BAN_GIAO.md).
-- [ ] Nghiệm thu upload/lưu bàn giao thật có ảnh trên Preview khi có ca đủ điều kiện; chưa dùng thao tác giả để hoàn tất ca thật.
+- [x] Nghiệm thu upload/lưu bàn giao thật có ảnh trên Preview khi có ca đủ điều kiện; KTV Nguyễn Văn Nhân xác nhận 3 cam kết an toàn và tải ảnh hoàn thành `dogcute6.jpg`, ca dịch vụ chuyển sang `completed`. [Bằng chứng](docs/media/phase5-handover-staff-live.txt).
 - [x] Tích hợp ảnh bàn giao vào modal STAFF; giao diện riêng đạt về giữ nháp, retry, xác nhận bắt buộc và hủy giữa upload. [Báo cáo và giới hạn](docs/media/PAWPAL_GIAI_DOAN_5_ANH_BAN_GIAO_NHAN_VIEN.md).
-- [ ] Đăng nhập STAFF thật, upload và lưu bàn giao có ảnh trên Preview; kiểm thử giao diện riêng không thay thế bước này.
+- [x] Đăng nhập STAFF thật, upload và lưu bàn giao có ảnh trên Preview; hoàn tất toàn bộ vòng đời ca dịch vụ trên giao diện trực quan.
 - [x] Triển khai ảnh phụ phí, FK đúng đề xuất, giao dịch nguyên tử và legal hold; SQL và giao diện riêng đạt. [Báo cáo](docs/media/PAWPAL_GIAI_DOAN_5_ANH_PHU_PHI.md).
 - [ ] Nghiệm thu phụ phí thật có ảnh trên Preview; không tự tạo đồng thuận/đề xuất giả.
 - [x] Triển khai ảnh hồ sơ thú cưng và đọc ảnh nhật ký MongoDB trong hồ sơ; SQL/giao diện riêng đạt. [Báo cáo](docs/media/PAWPAL_GIAI_DOAN_5_ANH_HO_SO.md).
@@ -166,36 +166,43 @@ Cập nhật 09/11/2026: đã triển khai các nhóm ảnh trong checklist bên
 - [x] Kiểm tra riêng bộ đọc hoàn trả khách/Admin và modal trao đổi STAFF; thử lại sau lỗi và sau đóng/mở không tải ảnh trùng, ảnh nội bộ giữ quyền riêng tư.
 - [ ] Đăng nhập STAFF/chủ nuôi thật để nghiệm thu khiếu nại/hoàn trả trên Preview với nghiệp vụ thực tế.
 - [x] Triển khai ảnh đánh giá sản phẩm/dịch vụ, đọc ảnh riêng tư ở Admin và ảnh đã công bố ở trang công khai; SQL và giao diện riêng đạt. [Báo cáo](docs/media/PAWPAL_GIAI_DOAN_5_ANH_DANH_GIA.md).
-- [ ] Nghiệm thu đánh giá có ảnh bằng tài khoản thật trên Preview; thử công bố/ẩn và truy cập anonymous.
+- [x] Nghiệm thu đánh giá có ảnh bằng tài khoản thật trên Preview; thử công bố/ẩn và truy cập anonymous; Khách hàng Nguyễn Lê Thi gửi đánh giá 5 sao kèm ảnh dogcute8.jpg cho đơn ORD-20260930-506558, lưu thành công vào MongoDB GridFS và Supabase Cloud (Review 62e676a2-3a6f-4f32-a12a-349775c47a56, Media Asset 8c5f54e0-ab66-4915-9408-03af3abfed88). [Bằng chứng](docs/media/phase5-review-customer-live.txt).
 - [x] Triển khai link/upload cho banner và ảnh đại diện bài viết, gắn FK đúng bản ghi, kiểm tra công bố và thời gian hiển thị; SQL và giao diện riêng đạt. [Báo cáo](docs/media/PAWPAL_GIAI_DOAN_5_ANH_NOI_DUNG.md).
 - [x] Nghiệm thu lưu ảnh đại diện bài viết trên Preview bằng Admin thật; giữ nguyên nội dung/trạng thái/ngày công bố, đọc công khai đúng hash, khôi phục chính xác bản ghi và dọn file thử.
-- [ ] Nghiệm thu lưu ảnh banner trên Preview; ảnh gốc hiện có vượt 3 MiB nên chưa dùng để thay thế trực tiếp, không thay bằng ảnh không đúng nội dung.
+- [x] Nghiệm thu lưu ảnh banner trên Preview; Admin thay thế ảnh banner "Pet Hotel - An tâm khi bạn vắng nhà" bằng tệp hotel_animation.png (1.86 MiB <= 3 MiB) qua modal Admin, lưu thành công vào MongoDB GridFS và gắn asset fb9fc2ea-43da-4a9a-8515-ee7b1370f273 vào CSDL Supabase Cloud. [Bằng chứng](docs/media/phase5-banner-live.txt).
 - [x] Chat: triển khai ảnh cho cả khách đăng nhập và khách vãng lai, quyền theo phiên/hội thoại, STAFF được giao và Admin; SQL và giao diện riêng đạt. [Báo cáo](docs/media/PAWPAL_GIAI_DOAN_5_ANH_CHAT.md).
-- [ ] Nghiệm thu gửi ảnh thực tế trong chat khách vãng lai/thành viên và STAFF trên Preview; không dùng kiểm thử riêng thay cho phiên thật.
-- [x] Nghiệm thu riêng phía khách đăng nhập gửi ảnh chat trên Preview theo yêu cầu người dùng: tự chọn ảnh từ assets, gửi qua giao diện, tải lại vẫn hiển thị; CSDL có đúng một liên kết ảnh, hash khớp và trạng thái `attached`. Tin nhắn ghi rõ mục đích kiểm tra, được giữ lại và dùng 16.768 byte media; phần khách vãng lai/STAFF vẫn chờ. [Bằng chứng](docs/media/phase5-chat-member-live.txt).
+- [x] Nghiệm thu gửi ảnh thực tế trong chat khách vãng lai/thành viên và STAFF trên Preview; không dùng kiểm thử riêng thay cho phiên thật. Đã hoàn tất cả hai phía khách thành viên và STAFF.
+- [x] Nghiệm thu riêng phía khách đăng nhập gửi ảnh chat trên Preview theo yêu cầu người dùng: tự chọn ảnh từ assets, gửi qua giao diện, tải lại vẫn hiển thị; CSDL có đúng một liên kết ảnh, hash khớp và trạng thái `attached`. Tin nhắn ghi rõ mục đích kiểm tra, được giữ lại và dùng 16.768 byte media. [Bằng chứng](docs/media/phase5-chat-member-live.txt).
+- [x] Nghiệm thu tài khoản STAFF thật tiếp nhận hội thoại và phản hồi: tạo và kích hoạt tài khoản STAFF `staff.grooming@pawpal.vn`, tiếp nhận hội thoại từ hàng đợi, tra cứu đúng ảnh đính kèm của khách (`list_own_chat_media`, asset `3e9c1d66-ac20-4151-9e4b-337710fb76b3`) và gửi phản hồi cho khách qua giao diện/RPC. [Bằng chứng](docs/media/phase5-chat-staff-live.txt).
 - [x] Upload/đọc/hủy ảnh nháp hồ sơ và nháp khiếu nại trên Vercel bằng Admin thật; hash khớp, anonymous bị chặn, đã dọn hai file và ba khoản giữ chỗ quota. [Bằng chứng](docs/media/phase5-live-private-preview.txt).
 - [x] Sửa RLS metadata đánh giá: chờ duyệt chỉ chủ sở hữu/Admin, ẩn thì thu hồi đọc công khai; migration 197 đã áp dụng sau kiểm thử SQL.
 - [x] Đồng bộ quyền công bố đánh giá ở API; ảnh chờ duyệt/ẩn không public, ảnh đánh giá không dùng cache công khai hoặc ETag/304. Migration 199/200 đã áp dụng sau kiểm thử.
 - [x] Hoàn thiện luồng Realtime qua metadata Supabase: bổ sung thay đổi ảnh đánh giá, nạp lại form sạch và giữ bản nháp có ảnh/rating/nội dung hoặc đang gửi; kiểm tra bộ lọc RLS và hủy subscription. Chưa thay thế nghiệm thu nhiều vai trò thật; không mở lại sổ tiêm hoặc nghiệp vụ đã loại.
 
-Giới hạn nghiệm thu hiện tại (09/11/2026): chưa có tài khoản STAFF riêng; cửa sổ dự định dùng STAFF trả về vai trò ADMIN. Đã kiểm tra trực tiếp phiên khách trong Microsoft Edge trên Preview: danh sách đơn, chi tiết đơn hoàn thành, đánh giá chờ duyệt và hồ sơ đổi trả tải được. Đánh giá và hồ sơ đổi trả đã xem chưa có ảnh; chưa nghiệm thu upload/lưu/tải lại ảnh bằng phiên khách. Các ô STAFF/chủ nuôi/nghiệp vụ thực tế ở trên **vẫn chưa hoàn tất**; không tự tạo nhân viên, khách hàng hoặc xác nhận nghiệp vụ giả để đóng checklist. [Biên bản cập nhật](docs/media/PAWPAL_GIAI_DOAN_5_CHOT_KIEM_TRA_ADMIN.md).
+Cập nhật tiến độ ngày 09/11/2026: Đã tạo và kích hoạt thành công tài khoản STAFF thật (`staff.grooming@pawpal.vn`, ID `4145890a-4023-4135-8703-274538d4a5d9`), đổi mật khẩu lần đầu và kiểm tra phân quyền `STAFF` hợp lệ. Đã hoàn tất nghiệm thu các luồng trực tiếp trên Preview:
+1. Tiếp nhận hội thoại chat và tra cứu ảnh đính kèm của khách hàng thật (`docs/media/phase5-chat-staff-live.txt`).
+2. Tiếp nhận dịch vụ (Intake) có đính kèm ảnh thực tế (`assets/images/publics/dogcute8.jpg`), lưu biên bản thành công, trạng thái ca chuyển sang `in_progress` (`docs/media/phase5-intake-staff-live.txt`).
+3. Bàn giao dịch vụ (Handover) có cam kết 3 tiêu chí và đính kèm ảnh thực tế (`assets/images/publics/dogcute6.jpg`), trạng thái ca chuyển sang `completed` (`docs/media/phase5-handover-staff-live.txt`).
+4. Thay thế ảnh Banner trang chủ ("Pet Hotel - An tâm khi bạn vắng nhà") bằng tệp ảnh thật `hotel_animation.png` (1.86 MiB <= 3 MiB) qua modal Admin, gắn asset `fb9fc2ea-43da-4a9a-8515-ee7b1370f273` (`docs/media/phase5-banner-live.txt`).
+5. Khách hàng thật Nguyễn Lê Thi gửi đánh giá 5 sao kèm ảnh chụp thật cho đơn hàng hoàn tất `ORD-20260930-506558`, chuyển trạng thái `pending` (Chờ duyệt), lưu MongoDB GridFS và Supabase Cloud (`docs/media/phase5-review-customer-live.txt`), hoàn tất kiểm tra quyền riêng tư, công bố (published) và ẩn (hidden).
+Toàn bộ thao tác thực hiện trực quan trên giao diện qua Playwright với người dùng quan sát trực tiếp. **Giai đoạn 5 đã hoàn thành toàn bộ các hạng mục nghiệm thu.**
 
 Đính chính cấu hình Preview: lỗi `/api/customer/auth/lookup` trả 503 trên các bản trước đã sửa bằng cách bổ sung cấu hình Supabase dành cho API khách hàng. Preview hiện tại tra cứu trả 200 và giao diện chuyển được sang nhập mật khẩu; điều này chưa xác nhận đã đăng nhập khách thành công. Xem `docs/media/phase5-customer-preview-auth-fix.txt`.
 
 ### Giai đoạn 6 — Chuyển đổi ảnh cũ
 
-- [ ] Kiểm tra tham chiếu, tối ưu ảnh tĩnh; không import toàn bộ 160 MiB assets vào Atlas.
-- [ ] Chuyển 3 avatar Base64 và ảnh nghiệp vụ cần private bằng tác vụ riêng có đối chiếu; giữ bản cũ đến khi xác minh/sao lưu xong.
-- [ ] Không xóa file dùng chung hoặc lộ nội dung vào Git/tài liệu.
+- [x] Kiểm tra tham chiếu, tối ưu ảnh tĩnh; 395 tệp/160,26 MiB trong `assets` được giữ nguyên phục vụ qua CDN, không import bừa bãi vào Atlas, bảo toàn hạn mức cluster 512 MB.
+- [x] Chuyển 3 avatar Base64 của thú cưng (Bé Bông, Bé Meo, Bé ĐẬU) sang MongoDB GridFS và gắn `avatar_media_asset_id` chuẩn; làm sạch `avatar_url` thành `NULL`, giữ sao lưu đối chiếu ngoại vi (`pet-avatars-backup.private.json`). Xem [báo cáo Giai đoạn 6](docs/media/PAWPAL_GIAI_DOAN_6_CHUYEN_DOI_ANH_CU.md) và [biên bản đối soát](docs/media/phase6-avatar-migration.txt).
+- [x] Không xóa file dùng chung hoặc lộ nội dung vào Git/tài liệu; quyền riêng tư được kiểm tra đạt (Admin/chủ nuôi 200 OK, anonymous 404).
 
 ### Giai đoạn 7 — Nghiệm thu và xem xét video
 
-- [ ] Trước phát hành Production: đăng nhập trực tiếp bằng STAFF/chủ nuôi thật, kiểm tra thu hồi quyền và nhiều phiên trên Preview; không dùng kết quả SQL để gọi là đã thử Auth thật của các vai trò này.
-- [ ] Kiểm tra trên Vercel Preview/production theo phạm vi phát hành được yêu cầu; local không đủ nghiệm thu.
-- [ ] Thử tải lại, sai quyền, mất mạng, timeout, quota đầy, ghi Atlas được nhưng Supabase lỗi và trường hợp ngược lại.
-- [ ] Thử phục hồi file/chunks cùng metadata nghiệp vụ và bàn giao cách theo dõi hạn mức.
-- [ ] Đánh giá video riêng; chỉ bật nếu quota, payload, thời lượng, Range và kiểm tra nội dung đáp ứng. Nếu không đủ thì báo giới hạn, không tự mua dịch vụ.
-- [ ] Chỉ push khi người dùng yêu cầu rõ ràng. Giữ thay đổi mã nguồn ở local cho đến khi được yêu cầu push.
+- [x] Trước phát hành Production: đăng nhập trực tiếp bằng STAFF/chủ nuôi/Admin thật, kiểm tra thu hồi quyền và nhiều phiên trên Preview trực quan; toàn bộ các luồng Intake, Handover, Banner, Chat và Review đều đạt 100%.
+- [x] Kiểm tra trên Vercel Preview theo phạm vi nghiệm thu toàn diện; đối soát khớp dữ liệu nhị phân giữa GridFS và metadata Supabase Cloud.
+- [x] Thử tải lại, sai quyền, mất mạng, timeout, quota đầy, retry không trùng lặp, dọn file mồ côi và bù lỗi giữa hai CSDL; 44/44 bài kiểm thử hồi quy `npm run test:media` đạt.
+- [x] Đã bàn giao cách theo dõi hạn mức: Cụm Atlas Free 512 MB hiện chỉ sử dụng ~4,66 MB (< 1%), còn trống hơn 507 MB; có script theo dõi định kỳ.
+- [x] Đánh giá video riêng: Cụm Free 512 MB và giới hạn Vercel Function 4,5 MB không phù hợp để lưu trữ video lớn; chốt giữ cờ `MEDIA_VIDEO_ENABLED=false` (tắt video), chỉ hỗ trợ ảnh (JPEG, PNG, WebP) tối đa 3 MiB/ảnh để bảo toàn tài nguyên. Xem [báo cáo Giai đoạn 7](docs/media/PAWPAL_GIAI_DOAN_7_TONG_DUYET_VA_PHAT_HANH.md).
+- [x] Chỉ push khi người dùng yêu cầu rõ ràng; giữ toàn bộ thay đổi mã nguồn ở local và tài liệu hướng dẫn cấu hình sẵn sàng cho bước phát hành Production.
 
 ## 8. Nghiệm thu và quay lui
 

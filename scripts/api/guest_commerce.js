@@ -4,6 +4,7 @@ const {createSupabaseAuthStore}=require('./customer_auth_store');
 const {normalizeVietnamPhone:normalizePhone}=require('../shared/phone-normalization.cjs');
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TTL=7*86400;
+const validBreed=pet=>UUID.test(pet?.breedId)||(['breedName','speciesName'].every(k=>typeof pet?.[k]==='string'&&pet[k].trim()&&pet[k].length<=(k==='breedName'?160:100))&&!/^\d+$|^(unknown|null|undefined|chưa rõ|chưa cập nhật)$/i.test(pet.breedName.trim()));
 function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=>Date.now(),randomBytes=crypto.randomBytes}){
  let phoneHistory;
  if(typeof secret!=='string'||Buffer.byteLength(secret)<32)throw Error('Missing guest cookie secret');
@@ -38,9 +39,9 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
    if(typeof req.body==='string'){if(Buffer.byteLength(req.body)>16384)throw Error('invalid_body');req.body=JSON.parse(req.body);}
    const body=req.body;
    if(!body||typeof body!=='object'||Array.isArray(body)||Buffer.byteLength(JSON.stringify(body))>16384)throw Error('invalid_body');
-   if(!['session','context','lookup','phone-lookup','pets','profile-read','profile-update','recover','end','booking-slots','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
+   if(!['session','context','lookup','phone-lookup','pets','profile-read','profile-update','recover','end','booking-slots','booking-hold','booking-release','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
    const keys=action==='pets'?['requestId','contact','pet']:action==='context'?['page']:action==='lookup'?['phone']:action==='phone-lookup'?['phone','challengeId','code']:
-    action==='booking-slots'?['details','day']:action==='booking-quote'?['details']:action==='booking-create'?['requestId','expectedQuote','details']:action==='booking-receipt'?['requestId']:
+    action==='booking-slots'?['details','day']:action==='booking-hold'?['requestId','details']:action==='booking-release'?['requestId']:action==='booking-quote'?['details']:action==='booking-create'?['requestId','expectedQuote','details']:action==='booking-receipt'?['requestId']:
     action==='order-quote'?['details','lines']:action==='order-create'?['requestId','expectedQuote','contact','details','lines','paymentMethodId']:action==='order-receipt'?['requestId']:
     action==='profile-read'?['petId']:action==='profile-update'?['requestId','revision','contact','pet']:action==='recover'?['code']:[];
    if(Object.keys(body).some(k=>!keys.includes(k)))throw Error('invalid_body');
@@ -104,8 +105,8 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
     const contact=body.contact,pet=body.pet;
     if(contact!=null&&(!contact||Array.isArray(contact)||typeof contact!=='object'||Object.keys(contact).some(k=>!['name','phone'].includes(k))
      ||typeof contact.name!=='string'||!contact.name.trim()||contact.name.trim().length>150))throw Error('invalid_body');
-    if(pet!=null&&(!pet||Array.isArray(pet)||typeof pet!=='object'||Object.keys(pet).some(k=>!['id','name','breedId','gender','weight','allergy','safetyNote'].includes(k))
-     ||!UUID.test(pet.id)||!UUID.test(pet.breedId)||typeof pet.name!=='string'||!pet.name.trim()||pet.name.trim().length>100
+    if(pet!=null&&(!pet||Array.isArray(pet)||typeof pet!=='object'||Object.keys(pet).some(k=>!['id','name','breedId','breedName','speciesName','gender','weight','allergy','safetyNote'].includes(k))
+     ||!UUID.test(pet.id)||!validBreed(pet)||typeof pet.name!=='string'||!pet.name.trim()||pet.name.trim().length>100
      ||!['nam','nu','chua_ro'].includes(pet.gender)||typeof pet.weight!=='number'||!Number.isFinite(pet.weight)||pet.weight<=0||pet.weight>200
      ||['allergy','safetyNote'].some(k=>pet[k]!=null&&(typeof pet[k]!=='string'||pet[k].length>1000))))throw Error('invalid_body');
     // Deterministic rotation permits a lost-response retry with the original cookie;
@@ -142,12 +143,16 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
      p_contact:{name:contact.name.trim(),phone:normalizePhone(contact.phone)},p_details:canonical,p_lines:lines,p_payment:body.paymentMethodId})});
    }
    if(action.startsWith('booking-')){
+    if(action==='booking-release'){
+     if(!UUID.test(body.requestId))throw Error('invalid_body');
+     await rpc('guest_booking_release',{p_hash:session.hash,p_id:body.requestId});return res.json({success:true});
+    }
     if(action==='booking-receipt'){
      if(!UUID.test(body.requestId))throw Error('invalid_body');
      return res.json({success:true,booking:await rpc('guest_booking_receipt',{p_hash:session.hash,p_request:body.requestId}),recoveryCode:recoveryCode('booking',body.requestId)});
     }
     const details=body.details;
-    const allowedDetails=['pet_id','service_id','scheduled_start_at','note','addon_ids','preferred_staff_id','check_out_at','room_id','diet_notes','care_notes','pickup_address','dropoff_address','distance_km','trip_type','return_at'];
+    const allowedDetails=['hold_id','pet_id','service_id','scheduled_start_at','note','addon_ids','preferred_staff_id','check_out_at','room_id','diet_notes','care_notes','pickup_address','dropoff_address','distance_km','trip_type','return_at'];
     const dateKeys=['scheduled_start_at','check_out_at','return_at'];
     if(!details||typeof details!=='object'||Array.isArray(details)||Buffer.byteLength(JSON.stringify(details))>12000
      ||Object.keys(details).some(k=>!allowedDetails.includes(k))||!UUID.test(details.pet_id)||!UUID.test(details.service_id)
@@ -155,7 +160,7 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
      ||dateKeys.some(k=>details[k]!=null&&(typeof details[k]!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d{1,3})?)?(?:Z|[+-]\d\d:\d\d)$/.test(details[k])||!Number.isFinite(Date.parse(details[k]))))
      ||['note','diet_notes','care_notes'].some(k=>details[k]!=null&&(typeof details[k]!=='string'||details[k].length>4000))
      ||['pickup_address','dropoff_address'].some(k=>details[k]!=null&&(typeof details[k]!=='string'||details[k].length>1000))
-     ||['preferred_staff_id','room_id'].some(k=>details[k]!=null&&!UUID.test(details[k]))
+     ||['preferred_staff_id','room_id','hold_id'].some(k=>details[k]!=null&&!UUID.test(details[k]))
      ||(details.distance_km!=null&&(typeof details.distance_km!=='number'||!Number.isFinite(details.distance_km)||details.distance_km<=0))
      ||(details.trip_type!=null&&!['one_way','round_trip'].includes(details.trip_type))
      ||(details.addon_ids!=null&&(!Array.isArray(details.addon_ids)||details.addon_ids.length>50||details.addon_ids.some(id=>!UUID.test(id)))))throw Error('invalid_body');
@@ -164,6 +169,10 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
      return res.json({success:true,availability:await rpc('guest_booking_day_slots',{p_hash:session.hash,p_details:details,p_day:body.day})});
     }
     if(action==='booking-quote')return res.json({success:true,quote:await rpc('guest_booking_quote',{p_hash:session.hash,p_details:details})});
+    if(action==='booking-hold'){
+     if(!UUID.test(body.requestId)||details.hold_id!=null)throw Error('invalid_body');
+     return res.json({success:true,hold:await rpc('guest_booking_hold',{p_hash:session.hash,p_id:body.requestId,p_details:details})});
+    }
     if(!UUID.test(body.requestId)||typeof body.expectedQuote!=='string'||!/^[a-f0-9]{32}$/.test(body.expectedQuote))throw Error('invalid_body');
     return res.json({success:true,bookingId:await rpc('guest_booking_create',{p_hash:session.hash,p_request:body.requestId,p_expected_quote:body.expectedQuote,p_details:details})});
    }
@@ -171,8 +180,8 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
     ||Object.keys(body.contact).some(k=>!['name','phone'].includes(k))||typeof body.contact.name!=='string'
     ||!body.contact.name.trim()||body.contact.name.trim().length>150)throw Error('invalid_body');
    const phone=normalizePhone(body.contact.phone),pet=body.pet;
-   if(!pet||typeof pet!=='object'||Array.isArray(pet)||Object.keys(pet).some(k=>!['name','breedId','gender','weight','allergy','safetyNote'].includes(k))
-    ||typeof pet.name!=='string'||!pet.name.trim()||pet.name.trim().length>100||!UUID.test(pet.breedId)
+   if(!pet||typeof pet!=='object'||Array.isArray(pet)||Object.keys(pet).some(k=>!['name','breedId','breedName','speciesName','gender','weight','allergy','safetyNote'].includes(k))
+    ||typeof pet.name!=='string'||!pet.name.trim()||pet.name.trim().length>100||!validBreed(pet)
     ||(pet.weight!=null&&(typeof pet.weight!=='number'||!Number.isFinite(pet.weight)||pet.weight<=0||pet.weight>200))
     ||(pet.gender!=null&&!['nam','nu','chua_ro'].includes(pet.gender))
     ||['allergy','safetyNote'].some(k=>pet[k]!=null&&(typeof pet[k]!=='string'||pet[k].length>1000)))throw Error('invalid_body');
@@ -193,6 +202,8 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
    if(error.dbCode==='P0002'){status=404;message=action.startsWith('order-')?'Không tìm thấy đơn hàng trong phiên này.':'Không tìm thấy lịch hẹn trong phiên này.';}
    if(unboundReceipt){status=404;message='Chưa tìm thấy kết quả đơn hàng trong phiên này. Vui lòng kiểm tra lại trước khi gửi tiếp.';}
    if(error.dbCode==='PT409'){status=409;message='Thông tin yêu cầu đã thay đổi. Vui lòng kiểm tra trước khi gửi lại.';}
+   const holdErrors={booking_hold_expired:'Đã hết 15 phút giữ chỗ. Vui lòng chọn lại giờ và nhân viên.',booking_lead_time_required:'Vui lòng chọn giờ cách hiện tại hơn 2 tiếng.',booking_staff_required:'Vui lòng chọn nhân viên chăm sóc.',preferred_staff_unavailable:'Nhân viên này không còn trống. Vui lòng chọn nhân viên hoặc giờ khác.'};
+   if(holdErrors[error.reason]){status=409;message=holdErrors[error.reason];}
    if(error.reason==='sales_available_stock_insufficient'){status=409;message='Sản phẩm không đủ tồn kho khả dụng. Vui lòng cập nhật giỏ hàng.';}
    if(status===400&&action.startsWith('order-'))message='Thông tin đơn hàng hoặc số lượng sản phẩm không hợp lệ.';
    const bookingErrors={invalid_slot_day:['scheduled_start_at','Vui lòng chọn ngày trong 90 ngày tới để xem giờ khả dụng.'],outside_operating_hours:['scheduled_start_at','Giờ đã chọn nằm ngoài giờ phục vụ hoặc không đủ thời gian hoàn thành.'],booking_slot_full:['scheduled_start_at','Khung giờ này đã đủ lịch. Vui lòng chọn giờ khác.'],future_booking_required:['scheduled_start_at','Vui lòng chọn thời gian trong tương lai.'],invalid_hotel_stay:['check_out_at','Thời gian trả phòng phải sau thời gian nhận phòng.'],hotel_room_conflict:['room_id','Phòng đã có lịch trong thời gian này. Vui lòng chọn phòng hoặc thời gian khác.'],hotel_room_unavailable:['room_id','Phòng không còn khả dụng. Vui lòng chọn phòng khác.'],invalid_taxi_return:['return_at','Thời gian lượt về phải sau khi hoàn thành lượt đi.']};

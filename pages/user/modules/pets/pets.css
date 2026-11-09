@@ -422,6 +422,7 @@
     font-weight: 600;
     color: #236B48;
 }
+.avatar-circle.has-image .avatar-placeholder-text { display: none; }
 
 .btn-change-avatar {
     height: 32px;
@@ -936,6 +937,19 @@
 }
 
 /* Modal confirm delete overlay */
+#deleteConfirmModal{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:20px;border:0;background:transparent;overscroll-behavior:contain;color:#203a2c}
+#deleteConfirmModal[open]{display:flex;align-items:center;justify-content:center}
+#deleteConfirmModal:not([open]){display:none}
+#deleteConfirmModal::backdrop{background:rgba(24,47,36,.48);backdrop-filter:blur(4px)}
+#deleteConfirmModal .pet-archive-dialog{width:540px;max-width:92vw;max-height:calc(100dvh - 40px);overflow:auto;overscroll-behavior:contain;background:#fff;border:1px solid #ecf2ee;border-radius:9px;padding:26px 30px;font:14px/1.8 Inter,system-ui,sans-serif;box-shadow:0 18px 60px #15362626}
+#deleteConfirmModal h4{font:600 24px/1.4 Lora,serif;color:#236b48;margin:0 0 14px}
+#deleteConfirmModal #petArchiveDescription{color:#637a69;font-size:13px;margin:0 0 22px}
+#deleteConfirmModal .btn-pet-action-delete-confirm{background:#214939;border:1px solid #214939;color:#fff;border-radius:9px;padding:10px 18px;font:600 13px/1.5 Inter,system-ui,sans-serif;cursor:pointer}
+body:has(#deleteConfirmModal[open]){overflow:hidden}
+.pet-archive-clock{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:18px;color:#4f7a65;font:12px/1.7 Inter,system-ui,sans-serif}
+.pet-archive-clock strong{font-weight:600;color:#236b48}
+.pet-archive-restore:disabled{opacity:.45;cursor:not-allowed;background:transparent;box-shadow:none}
+@media(max-width:576px){#deleteConfirmModal .pet-archive-dialog{padding:24px 20px}}
 .modal-overlay {
     display: none;
     position: fixed;
@@ -983,8 +997,11 @@
 .user-portal-body .pets-module-container{font-family:Inter,system-ui,sans-serif;color:#274b39}
 .user-portal-body .pet-filter-bar{background:transparent;border:0;padding:0;box-shadow:none}
 .user-portal-body .pet-filter-tabs{gap:20px}
-.user-portal-body .pet-filter-tab{font-family:Inter,system-ui,sans-serif;font-size:14px;padding:10px 0;color:#637a69;border-radius:0;background:transparent;border:0;border-bottom:2px solid transparent}
-.user-portal-body .pet-filter-tab.active{color:#214939;font-weight:600;border-bottom-color:#d8a437}
+.user-portal-body .pet-filter-tab{position:relative;font-family:Inter,system-ui,sans-serif;font-size:14px;padding:10px 0;color:#637a69;border-radius:0!important;background:transparent;border:0;box-shadow:none;text-decoration:none}
+.user-portal-body .pet-filter-tab::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:transparent}
+.user-portal-body .pet-filter-tab.active{color:#214939;font-weight:600}
+.user-portal-body .pet-filter-tab.active::after{background:#236b48}
+.user-portal-body .pet-filter-tab:focus-visible{outline:2px solid #236b48;outline-offset:4px}
 .user-portal-body .pet-filter-tabs .tab-separator{display:none}
 .user-portal-body .btn-pet-cta-add,.user-portal-body .btn-pet-primary-cta,.user-portal-body .btn-pet-action-save,.user-portal-body .btn-routine-cta{font-family:Inter,system-ui,sans-serif;font-size:13px;background:#214939;color:#fff;border:1px solid #214939;border-radius:9px;padding:11px 18px;box-shadow:none;transform:none}
 .user-portal-body .pet-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}

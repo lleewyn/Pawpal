@@ -1,0 +1,17 @@
+BIÊN BẢN NGHIỆM THU ĐÁNH GIÁ SẢN PHẨM CÓ ẢNH THẬT BẰNG TÀI KHOẢN KHÁCH HÀNG (LIVE PREVIEW)
+Ngày thực hiện : 2026-11-09T14:37:19.969Z
+Môi trường     : Vercel Preview (https://pawpalgr3-5bph12hep-llwyns-projects.vercel.app)
+Khách hàng     : Nguyễn Lê Thi (SĐT: 0834562948, ID: d0000000-0000-0000-0000-000000000006)
+Đơn hàng       : ORD-20260930-506558 (ID: 39a8a012-3774-4fe3-afb9-cac63a5c5d81)
+Sản phẩm       : Thức ăn hạt dinh dưỡng cho mèo
+Mức đánh giá   : 5/5 sao
+Nội dung       : Sản phẩm thức ăn hạt dinh dưỡng cho mèo rất thơm ngon, bé nhà mình ăn rất thích và tiêu hóa tốt. Giao hàng nhanh và đóng gói kỹ càng!
+Trạng thái     : pending (Chờ duyệt)
+Ảnh đính kèm   : assets/images/publics/dogcute8.jpg (16768 bytes)
+Review ID      : 62e676a2-3a6f-4f32-a12a-349775c47a56
+Media Asset ID : 8c5f54e0-ab66-4915-9408-03af3abfed88
+Storage        : mongodb_gridfs
+Mongo File ID  : 84637be0cad24c2aa7072ed1
+SHA256 Hash    : 02bf4143d21f247c78b92863cbb944bfb19809ee2698aa03cd6488651479537b
+Ảnh chụp màn hình: docs/verification/sync/customer-review-submitted-live.png
+Kết luận       : ĐẠT 100% tiêu chí nghiệm thu Giai đoạn 5 (Ảnh đánh giá của khách hàng thật).

@@ -1,0 +1,28 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
+const {connect}=require('../database/v1/service_import_connection.cjs');
+(async()=>{const db=await connect();try{
+ await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='15s';SET LOCAL lock_timeout='3s'");
+ const legacy=Number((await db.query("SELECT count(*) count FROM public.pet_profile WHERE status IN ('inactive','disabled','archived')")).rows[0].count);
+ if(!process.argv.includes('--installed'))await db.query(fs.readFileSync(require.resolve('../database/v1/206_pet_archive_clock.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
+ await db.query('SAVEPOINT fixtures');
+ const actor=randomUUID(),pet=randomUUID(),phone='099'+String(Math.floor(Math.random()*1e7)).padStart(7,'0');
+ await db.query('INSERT INTO auth.users(id,phone,phone_confirmed_at) VALUES($1,$2,now())',[actor,'84'+phone.slice(1)]);
+ await db.query("SELECT public.complete_customer_auth($1,$2,'QA Archive owner')",[actor,phone]);
+ await db.query("SELECT set_config('request.jwt.claim.sub',$1,true)",[actor]);await db.query('SET LOCAL ROLE authenticated');
+ const breed=(await db.query('SELECT id FROM public.pet_breed WHERE is_active ORDER BY id LIMIT 1')).rows[0].id;
+ const values={pet_name:'QA Archive pet',breed_id:breed,gender:'nu'};
+ await db.query('SELECT public.save_own_pet($1,null,$2,4.5)',[pet,values]);
+ const read=async()=>(await db.query('SELECT status,archived_at::text archived_at,updated_at::text revision FROM public.pet_profile WHERE id=$1',[pet])).rows[0];
+ let row=await read();assert.equal(row.archived_at,null);
+ const bookable=async()=>(await db.query('SELECT public.own_booking_pets() pets')).rows[0].pets.some(p=>p.id===pet);
+ assert.equal(await bookable(),true);
+ await db.query('SELECT public.change_own_pet_status($1,$2,false)',[pet,row.revision]);row=await read();
+ const archived=row.archived_at;assert.equal(row.status,'inactive');assert.ok(archived);assert.equal(await bookable(),false);
+ await db.query('SELECT public.save_own_pet($1,$2,$3,5.2)',[pet,row.revision,{...values,routine:'Archive metadata edit'}]);row=await read();assert.equal(row.archived_at,archived,'Metadata changes cannot reset the countdown');
+ await db.query('SELECT public.change_own_pet_status($1,$2,true)',[pet,row.revision]);row=await read();assert.equal(row.archived_at,null);assert.equal(await bookable(),true);
+ await db.query('SELECT public.change_own_pet_status($1,$2,false)',[pet,row.revision]);row=await read();assert.ok(new Date(row.archived_at)>new Date(archived));
+ await db.query('RESET ROLE');await db.query('ROLLBACK TO SAVEPOINT fixtures');
+ console.log('PASS archive timestamp persists through edits, resets on restore/rearchive, archived pets excluded from booking. Synthetic records rolled back.');
+ await db.query(process.argv.includes('--apply')?'COMMIT':'ROLLBACK');
+ console.log(process.argv.includes('--apply')?'Applied archive clock migration. Legacy archives given full 30 days: '+legacy:'Rehearsal rolled back.');
+}catch(e){await db.query('ROLLBACK');throw e;}finally{await db.end();}})().catch(e=>{console.error(e.message||e.code,e.where||'');process.exitCode=1;});

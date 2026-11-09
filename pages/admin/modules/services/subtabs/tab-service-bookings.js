@@ -869,17 +869,13 @@
         // Nạp danh sách KTV vào select
         const staffSelect = document.getElementById('intakeStaffSelect');
         if (staffSelect) {
-            const staffList = PawpalServices.state?.liveStaffList || [];
-            staffSelect.innerHTML = '<option value="">-- Chọn KTV tiếp nhận --</option>';
-            staffList.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s.id;
-                opt.textContent = s.full_name;
-                staffSelect.appendChild(opt);
-            });
-            if (booking && booking.staff) {
-                staffSelect.value = booking.staffId||'';
-            }
+            const generation=crypto.randomUUID();modal.dataset.intakeStaffLoad=generation;
+            modal.intakeStaffCandidates=[];staffSelect.replaceChildren(new Option('Đang tải KTV đủ điều kiện…',''));staffSelect.disabled=true;
+            if(submitBtn)submitBtn.disabled=true;
+            import('/scripts/shared/intake-staff-picker.mjs').then(({loadIntakeStaffPicker})=>{
+                if(modal.dataset.intakeStaffLoad!==generation)return;
+                return loadIntakeStaffPicker({db:window.getSupabaseClient(),bookingId:booking.dbId,modal,select:staffSelect,submit:submitBtn});
+            }).catch(()=>modalError(modal,'Không tải được danh sách KTV. Đóng và mở lại biên bản để thử lại.'));
         }
 
         // Cân nặng ban đầu & Cân nặng thực tế
@@ -1970,7 +1966,7 @@
                 try {
                     if(!['confirmed','checked_in','in_progress'].includes(booking.status)) throw new Error('Chỉ tiếp nhận ca đã xác nhận hoặc cập nhật ca đang thực hiện.');
                     if(!Number.isFinite(actualWeight)||actualWeight<=0) throw new Error('Cân nặng tiếp nhận phải lớn hơn 0.');
-                    const staffMatches=(PawpalServices.state.liveStaffList||[]).filter(s=>s.id===staff);
+                    const staffMatches=(modal.intakeStaffCandidates||[]).filter(s=>s.id===staff);
                     if(staffMatches.length!==1) throw new Error('Vui lòng chọn đúng một nhân viên tiếp nhận.');
                     if(document.getElementById('checkSkinNormal')?.checked && skinList.length>1) throw new Error('Không chọn đồng thời da sạch và tình trạng bất thường.');
                     if(document.getElementById('checkEyesEarsNormal')?.checked && eyesEarsList.length>1) throw new Error('Không chọn đồng thời mắt tai bình thường và tình trạng bất thường.');

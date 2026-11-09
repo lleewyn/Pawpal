@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 function fixture({error=null,rows=[],taxonomy=false}={}){
  const calls=[];let writes=0;
  const db={async rpc(name,args){calls.push([name,args]);return {data:args.p_id,error};},from(table){const q={select(){return q;},order(k,options){calls.push(['order',{k,...options}]);return q;},limit(n,options){calls.push(['limit',{n,...options}]);return q;},eq(k,v){calls.push([k,v]);return q;},update(){writes++;return q;},single(){return q;},then(resolve){const data=taxonomy?(table==='pet_species'?[{id:'species',species_name:'Chó',is_active:true}]:[{id:'breed',species_id:'species',breed_name:'Known breed',is_active:true}]):rows;return Promise.resolve({data,error}).then(resolve);}};return q;}};
- const context={console,crypto:require('node:crypto').webcrypto,localStorage:{getItem(k){return k==='pawpal_current_user'?JSON.stringify({id:'11111111-1111-4111-8111-111111111111',name:'Fixture'}):JSON.stringify([{name:'Cached ghost'}]);},setItem(){throw Error('Unexpected business cache write');}},window:{SupabaseClient:db}};
+ const context={console,crypto:require('node:crypto').webcrypto,petArchiveDeadline:time=>time?new Date(time).getTime()+30*86400000:null,resolveCustomerPetImages:async()=>{},uploadCustomerPetImage:async(db,file,id,kind)=>{calls.push(['image-upload',{id,kind}]);return kind+'-asset';},localStorage:{getItem(k){return k==='pawpal_current_user'?JSON.stringify({id:'11111111-1111-4111-8111-111111111111',name:'Fixture'}):JSON.stringify([{name:'Cached ghost'}]);},setItem(){throw Error('Unexpected business cache write');}},window:{SupabaseClient:db}};
  vm.createContext(context);vm.runInContext(fs.readFileSync('scripts/api/petService.js','utf8').replace(/^import .*$/gm,'').replace(/^export /gm,''),context);
  return {context,calls,get writes(){return writes;}};
 }
@@ -33,9 +33,18 @@ test('pet save delegates profile and weight to one RPC with original revision',a
  await vm.runInContext("savePets([{name:'Fixture',species:'dog',breed:'Known breed',weight:5,_supabaseId:'pet-id',_updatedAt:'original'}])",f.context);
  const call=f.calls.find(([name])=>name==='save_own_pet');assert.equal(call[1].p_expected,'original');assert.equal(call[1].p_weight,5);assert.equal(f.writes,0);
 });
-test('unknown breed is rejected instead of silently choosing another breed',async()=>{
- const f=fixture({taxonomy:true});await assert.rejects(vm.runInContext("savePets([{name:'Fixture',species:'dog',breed:'Unknown breed',weight:5}])",f.context));
- assert.ok(!f.calls.some(([name])=>name==='save_own_pet'));
+test('custom breed is passed with its selected species for transactional validation',async()=>{
+ const f=fixture({taxonomy:true});await vm.runInContext("savePets([{name:'Fixture',species:'dog',breed:'Custom breed',weight:5}])",f.context);
+ const args=f.calls.find(([name])=>name==='save_own_pet')[1];assert.equal(args.p_values.breed_name,'Custom breed');assert.equal(args.p_values.species_name,'Chó');assert.equal(args.p_values.breed_id,undefined);
+});
+test('both selected files are uploaded and their asset IDs are saved with the same pending pet ID',async()=>{
+ const f=fixture({taxonomy:true});await vm.runInContext("savePets([{name:'Fixture',species:'dog',breed:'Custom breed',weight:4.5,_pendingId:'pending-pet',avatarFile:{},vaccineFile:{}}])",f.context);
+ const args=f.calls.find(([name])=>name==='save_own_pet')[1];assert.equal(args.p_id,'pending-pet');assert.equal(args.p_values.avatar_media_asset_id,'avatar-asset');assert.equal(args.p_values.vaccine_media_asset_id,'vaccine-asset');
+ assert.deepEqual(f.calls.filter(([name])=>name==='image-upload').map(([,args])=>args.id),['pending-pet','pending-pet']);
+});
+test('reading a saved pet maps both persisted image references into view/edit fields',async()=>{
+ const f=fixture({rows:[{id:'pet',pet_name:'Miu Miu',avatar_media_asset_id:'avatar',vaccine_media_asset_id:'vaccine',resolved_avatar_url:'blob:avatar',resolved_vaccine_url:'blob:vaccine',vaccination_recorded:true,pet_weight_history:[]}]});
+ const [pet]=await vm.runInContext('getPets()',f.context);assert.equal(pet.avatar,'blob:avatar');assert.equal(pet.vaccineCardPhoto,'blob:vaccine');assert.equal(pet.vaccinated,true);
 });
 
 test('pet list requests only the three newest weight rows per pet',async()=>{

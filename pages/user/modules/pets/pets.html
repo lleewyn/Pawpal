@@ -199,8 +199,8 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="breed" class="form-label-custom">Giống cụ thể</label>
-                                    <input type="text" id="breed" class="form-input-custom" placeholder="Ví dụ: Poodle, Mèo Anh lông ngắn, Corgi...">
+                                    <label for="breed" class="form-label-custom">Giống cụ thể <span class="text-danger">*</span></label>
+                                    <input type="text" id="breed" class="form-input-custom" maxlength="160" placeholder="Nhập giống của bé hoặc chọn từ gợi ý">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label-custom">Giới tính</label>
@@ -298,16 +298,17 @@
     </div>
 
     <!-- MODAL XÁC NHẬN XÓA / LƯU TRỮ -->
-    <div class="modal-overlay" id="deleteConfirmModal">
-        <div class="modal-content modal-content-small" style="border-radius: 9px; border: 1px solid #ECF2EE; padding: 24px;">
-            <h4 style="color: #236B48; font-weight: 700; margin-bottom: 8px;">Chuyển vào kho lưu trữ</h4>
+    <dialog id="deleteConfirmModal" aria-labelledby="petArchiveTitle" aria-describedby="petArchiveDescription">
+        <div class="pet-archive-dialog">
+            <h4 id="petArchiveTitle">Chuyển vào kho lưu trữ</h4>
             <p style="color: #4F7A65; font-size: 14px; margin-bottom: 20px;">
                 Bạn có chắc chắn muốn chuyển hồ sơ bé <strong id="deletePetName" style="color: #203A2C;"></strong> vào kho lưu trữ?
             </p>
+            <p id="petArchiveDescription">Bạn có thể khôi phục hồ sơ trong 30 ngày. Bé sẽ không xuất hiện trong danh sách chọn khi đặt lịch mới.</p>
             <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn-pet-action-cancel" onclick="window.closeDeleteModal()">Không</button>
-                <button type="button" class="btn-pet-action-delete-confirm" id="btnConfirmDelete">Xác nhận chuyển</button>
+                <button type="button" class="btn-pet-action-cancel" onclick="window.closeDeleteModal()" autofocus>Hủy</button>
+                <button type="button" class="btn-pet-action-delete-confirm" id="btnConfirmDelete">Xác nhận</button>
             </div>
         </div>
-    </div>
+    </dialog>
 </div>

@@ -40,6 +40,8 @@
             if (!db) throw new Error('Chưa tải được dịch vụ xác thực.');
             const { error } = await db.auth.setSession(result.session);
             if (error) throw error;
+        } else if(result.user&&!result.user.is_temporary){
+            throw new Error('Chưa tạo được phiên đăng nhập. Vui lòng thử lại.');
         }
         const user = cleanUser(result.user);
         localStorage.setItem('pawpal_current_user', JSON.stringify(user));

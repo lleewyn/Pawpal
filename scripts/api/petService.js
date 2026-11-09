@@ -1,4 +1,5 @@
-
+import {uploadCustomerPetImage,resolveCustomerPetImages} from '/scripts/shared/customer-pet-media.mjs';
+import {petArchiveDeadline} from '/scripts/shared/pet-archive.mjs';
 const DEFAULT_PET_AVATARS = {
     dog: '/assets/images/publics/dogcute3.jpg',
     cat: '/assets/images/publics/catcute5.jpg',
@@ -39,8 +40,8 @@ async function resolveBreedId(db, speciesKey, breedName, otherSpecies) {
     const targetSpeciesName = speciesKey === 'other' ? String(otherSpecies || 'Khác').trim() : speciesMap[speciesKey] || 'Khác';
     const foundSpecies = species.find(s => s.is_active !== false && s.species_name.toLowerCase() === targetSpeciesName.toLowerCase());
     const match = foundSpecies && breeds.find(b => b.is_active !== false && b.species_id === foundSpecies.id && b.breed_name.trim().toLowerCase() === String(breedName || '').trim().toLowerCase());
-    if (!match) throw new Error('Vui lòng chọn đúng giống thuộc loài trong danh mục.');
-    return match.id;
+    if (!foundSpecies) throw new Error('Vui lòng chọn loài thú cưng hợp lệ.');
+    return {id:match?.id || null,speciesName:foundSpecies.species_name};
 }
 
 function mapSupabasePet(row, currentUser) {
@@ -81,10 +82,15 @@ function mapSupabasePet(row, currentUser) {
         notes: row.routine || '',
         safetyNote: row.safety_note || '',
         alert: row.safety_note || (row.allergy ? `Cảnh báo: ${row.allergy}` : ''),
-        vaccinated: !!(row.routine && row.routine.includes('tiêm')),
-        avatar: row.avatar_url || getDefaultPetAvatar(speciesKey),
-        photo: row.avatar_url || '',
+        vaccinated: row.vaccination_recorded || !!row.vaccine_media_asset_id,
+        avatar: row.resolved_avatar_url || row.avatar_url || getDefaultPetAvatar(speciesKey),
+        photo: row.resolved_avatar_url || row.avatar_url || '',
+        avatarAssetId:row.avatar_media_asset_id || null,
+        vaccineAssetId:row.vaccine_media_asset_id || null,
+        vaccineCardPhoto:row.resolved_vaccine_url || '',
         isArchived: ['disabled', 'inactive', 'archived'].includes(String(row.status).toLowerCase()),
+        archivedAt:row.archived_at || null,
+        archiveDeadline:petArchiveDeadline(row.archived_at),
         status: ['disabled', 'inactive', 'archived'].includes(String(row.status).toLowerCase()) ? 'Lưu trữ' : 'Đang nuôi',
         weightHistory: history.map(h => ({
             weight: `${h.weight} kg`,
@@ -113,9 +119,6 @@ function mapToSupabaseRow(pet, customerId, breedId) {
     };
 
     if (breedId) row.breed_id = breedId;
-    if (pet.avatar && !pet.avatar.startsWith('data:') && !pet.avatar.includes('/assets/')) {
-        row.avatar_url = pet.avatar;
-    }
     return row;
 }
 
@@ -163,13 +166,15 @@ export async function getPets(targetUserId) {
     if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== currentUser.id) throw new Error('Phiên đăng nhập đã thay đổi.');
     if (!customerId || (targetUserId && String(targetUserId) !== String(customerId))) throw new Error('Không xác định được chủ nuôi.');
     const { data, error } = await db.from('pet_profile')
-        .select('id, updated_at, pet_code, pet_name, avatar_url, gender, date_of_birth, color, routine, allergy, safety_note, status, customer_id, breed_id, pet_breed(id, breed_name, species_id, pet_species(id, species_name)), pet_weight_history(weight, measured_at)')
+        .select('id, updated_at, archived_at, pet_code, pet_name, avatar_url, avatar_media_asset_id, vaccine_media_asset_id, vaccination_recorded, gender, date_of_birth, color, routine, allergy, safety_note, status, customer_id, breed_id, pet_breed(id, breed_name, species_id, pet_species(id, species_name)), pet_weight_history(weight, measured_at)')
         .eq('customer_id', customerId).order('created_at', { ascending: false })
         .order('measured_at', {referencedTable: 'pet_weight_history', ascending: false})
         .order('created_at', {referencedTable: 'pet_weight_history', ascending: false})
         .order('id', {referencedTable: 'pet_weight_history', ascending: false})
         .limit(3, {referencedTable: 'pet_weight_history'});
     if (error) throw error;
+    if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== currentUser.id) throw new Error('Phiên đăng nhập đã thay đổi.');
+    await resolveCustomerPetImages(db,data || [],currentUser.id);
     if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== currentUser.id) throw new Error('Phiên đăng nhập đã thay đổi.');
     return (data || []).map(row => mapSupabasePet(row, currentUser));
 }
@@ -179,13 +184,19 @@ export async function savePets(pets) {
     const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (!db || !user || pets.length !== 1) throw new Error('Phiên lưu hồ sơ không hợp lệ.');
     const pet = pets[0];
-    const breedId = await resolveBreedId(db, pet.species, pet.breed, pet.otherSpecies);
+    const breed = await resolveBreedId(db, pet.species, pet.breed, pet.otherSpecies);
     if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== user.id) throw new Error('Phiên đăng nhập đã thay đổi.');
-    const values = mapToSupabaseRow(pet, user.id, breedId);
+    const values = mapToSupabaseRow(pet, user.id, breed.id);
+    values.species_name=breed.speciesName;
+    values.breed_name=String(pet.breed || '').trim();
+    values.vaccination_recorded=Boolean(pet.vaccinated);
     const id = pet._supabaseId || (pet._pendingId ||= crypto.randomUUID());
     const rawWeight = pet.weight ?? pet.weightNum;
     const weight = rawWeight === '' || rawWeight == null ? null : Number(rawWeight);
     if (weight !== null && (!Number.isFinite(weight) || weight <= 0)) throw new Error('Cân nặng không hợp lệ.');
+    if(pet.avatarFile)values.avatar_media_asset_id=await uploadCustomerPetImage(db,pet.avatarFile,id,'avatar');
+    if(pet.vaccineFile)values.vaccine_media_asset_id=await uploadCustomerPetImage(db,pet.vaccineFile,id,'vaccine');
+    if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== user.id) throw new Error('Phiên đăng nhập đã thay đổi.');
     const {error} = await db.rpc('save_own_pet', {p_id:id,p_expected:pet._updatedAt || null,p_values:values,p_weight:weight});
     if (error) throw error;
     pet._supabaseId = id;

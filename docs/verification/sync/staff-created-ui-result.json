@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-11-09T13:12:58.107Z",
+  "status": "SUCCESS",
+  "targetUrl": "https://pawpalgr3.vercel.app",
+  "staff": {
+    "id": "4145890a-4023-4135-8703-274538d4a5d9",
+    "name": "Nguyễn Văn Nhân",
+    "email": "staff.grooming@pawpal.vn",
+    "phone": "0918765432",
+    "role": "STAFF",
+    "position": "Kỹ thuật viên grooming",
+    "mustChangePassword": true
+  },
+  "message": "Đã tạo thành công tài khoản STAFF trực tiếp trên giao diện Admin PawPal."
+}

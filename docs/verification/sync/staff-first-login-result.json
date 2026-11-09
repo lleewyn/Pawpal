@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-11-09T13:19:16.772Z",
+  "status": "SUCCESS",
+  "targetUrl": "https://pawpalgr3.vercel.app",
+  "staffEmail": "staff.grooming@pawpal.vn",
+  "newPassword": "Staff@Pawpal2026!",
+  "state": {
+    "role": "STAFF",
+    "isStaff": true,
+    "isAdmin": false,
+    "user": {
+      "id": "4145890a-4023-4135-8703-274538d4a5d9",
+      "name": "Nguyễn Văn Nhân",
+      "role": "STAFF",
+      "permissionsCount": 13
+    },
+    "sidebarMenus": [
+      "Dashboard",
+      "Khách hàng",
+      "Thú cưng",
+      "Dịch vụ",
+      "Bán hàng",
+      "Nhân sự",
+      "Khiếu nại",
+      "Chatbot",
+      "Cấu hình"
+    ]
+  },
+  "message": "Tài khoản STAFF đã đổi mật khẩu lần đầu và đăng nhập vào không gian làm việc STAFF thành công."
+}

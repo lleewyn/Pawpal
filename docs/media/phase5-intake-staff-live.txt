@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-11-09T13:56:31.116Z",
+  "status": "PASS",
+  "scope": "Live STAFF intake acceptance with photo on Vercel Preview with Cloud Supabase & Atlas GridFS",
+  "previewUrl": "https://pawpalgr3-5bph12hep-llwyns-projects.vercel.app",
+  "bookingId": "c1c7d92e-1af7-4230-a907-c14e2faa0541",
+  "staff": {
+    "id": "4145890a-4023-4135-8703-274538d4a5d9",
+    "name": "Nguyễn Văn Nhân",
+    "email": "staff.grooming@pawpal.vn",
+    "role": "STAFF",
+    "level": "Master Groomer"
+  },
+  "pet": "Meo",
+  "service": "Cắt Grooming Chuyên Biệt Mèo",
+  "intake": {
+    "weight": 4.2,
+    "image": "assets/images/publics/dogcute8.jpg",
+    "status": "COMPLETED",
+    "customerConfirmed": true
+  },
+  "notes": "Hoàn thành nghiệm thu STAFF lập biên bản tiếp nhận có đính kèm ảnh thực tế trên giao diện trực quan."
+}

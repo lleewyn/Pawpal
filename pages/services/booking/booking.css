@@ -1939,6 +1939,8 @@ body.booking-page-body{background:#fff;color:#274b39;font-family:Inter,system-ui
 .booking-page-body .booking-availability{display:grid;gap:14px}
 .booking-page-body .booking-day-slots,.booking-page-body .booking-staff-options{display:flex;flex-wrap:wrap;gap:9px}
 .booking-page-body .booking-day-slots button:disabled{background:#f4f5f1;border-color:#e5e9e1;color:#a2aca0;cursor:not-allowed;text-decoration:line-through}
+.booking-live-form [hidden]{display:none!important}
+.booking-live-form [data-booking-hold]{display:block;margin:0 0 20px;padding:12px 16px;border:none;border-radius:9px;background:#EEF5F1;color:#236B48;font-weight:600;font-variant-numeric:tabular-nums}
 .booking-page-body .booking-staff-label{font-size:13px;color:#31553f;font-weight:600;margin:0 0 6px}
 .booking-page-body .booking-staff-options{margin-top:12px}
 @media(max-width:480px){.booking-page-body .booking-pet-cards{grid-template-columns:1fr}}

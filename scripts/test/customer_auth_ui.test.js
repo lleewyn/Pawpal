@@ -7,6 +7,62 @@ const storage = initial => {
     const values = new Map(Object.entries(initial || {}));
     return { getItem: key => values.get(key) || null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
 };
+test('registration explains weak passwords and mismatches, then clears errors when corrected', async () => {
+    const elements = new Map();
+    const element = id => {
+        if (!elements.has(id)) {
+            const classes = new Set();
+            elements.set(id, {
+                value: '', style: {}, attributes: {}, listeners: {}, disabled: false,
+                classList: {
+                    add: name => classes.add(name), remove: name => classes.delete(name),
+                    contains: name => classes.has(name),
+                    toggle(name, enabled) { if (enabled) classes.add(name); else classes.delete(name); }
+                },
+                setAttribute(name, value) { this.attributes[name] = value; },
+                addEventListener(event, callback) { this.listeners[event] = callback; }
+            });
+        }
+        return elements.get(id);
+    };
+    const location = { search: '?action=register', hash: '', origin: 'http://localhost' };
+    const context = {
+        URLSearchParams, location, localStorage: storage(), sessionStorage: storage(), clearInterval() {},
+        window: { location, addEventListener() {} },
+        document: { readyState: 'complete', getElementById: element, querySelectorAll: () => [], addEventListener() {} }
+    };
+    vm.createContext(context);
+    const source = fs.readFileSync('pages/public/login/login.js', 'utf8')
+        .replace("const { consumeLoginTarget } = await import('/scripts/shared/login-redirect.mjs');", "const consumeLoginTarget = () => '/';");
+    await vm.runInContext(source, context);
+    const update = (id, value, event = 'input') => {
+        element(id).value = value;
+        element(id).listeners[event]();
+    };
+    const feedbackVisible = id => element(id).classList.contains('d-block');
+    assert.equal(feedbackVisible('registerPasswordFeedback'), false);
+    assert.equal(element('btnRegisterSubmit').disabled, true);
+    update('registerName', 'Khách kiểm thử');
+    update('registerPhone', '0912345678');
+    for (const pass of ['12345678', 'A112233', '123456789']) {
+        update('registerPassword', pass);
+        update('registerConfirmPassword', pass);
+        assert.equal(feedbackVisible('registerPasswordFeedback'), true);
+        assert.equal(element('registerPassword').attributes['aria-invalid'], 'true');
+        assert.equal(element('btnRegisterSubmit').disabled, true);
+    }
+    update('registerPassword', 'A112233@', 'change');
+    assert.equal(feedbackVisible('registerPasswordFeedback'), false);
+    assert.equal(feedbackVisible('registerConfirmFeedback'), true);
+    assert.equal(element('btnRegisterSubmit').disabled, true);
+    update('registerConfirmPassword', 'A112233@', 'change');
+    assert.equal(feedbackVisible('registerConfirmFeedback'), false);
+    assert.equal(element('registerPassword').attributes['aria-invalid'], 'false');
+    assert.equal(element('btnRegisterSubmit').disabled, false);
+    update('registerPassword', '');
+    assert.equal(feedbackVisible('registerPasswordFeedback'), false);
+    assert.equal(element('btnRegisterSubmit').disabled, true);
+});
 test('old plaintext credentials are removed from both browser stores', () => {
     const context = { localStorage: storage({ pawpal_current_user: JSON.stringify({ id: 'c', password: 'old', password_hash: 'old' }), pawpal_users: JSON.stringify([{ id: 'c', password: 'old' }]), pawpal_temp_tokens: 'legacy' }), sessionStorage: storage({ pawpal_current_user: JSON.stringify({ id: 'c', password: 'old' }) }), window: {} };
     vm.createContext(context); vm.runInContext(fs.readFileSync('scripts/shared/customer-auth.js', 'utf8'), context);

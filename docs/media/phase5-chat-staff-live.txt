@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-11-09T13:26:42.510Z",
+  "status": "PASS",
+  "scope": "Live STAFF chat receipt and text reply on Vercel with Cloud Supabase",
+  "conversationId": "2d4521f3-ac32-446f-8ddf-45c9842c5d65",
+  "staff": {
+    "email": "staff.grooming@pawpal.vn",
+    "role": "STAFF"
+  },
+  "takeover": {
+    "action": "take",
+    "status": "SUCCESS"
+  },
+  "customerAttachmentVerified": {
+    "found": true,
+    "mediaCount": 1,
+    "assets": [
+      {
+        "asset_id": "3e9c1d66-ac20-4151-9e4b-337710fb76b3",
+        "message_id": "1a424c1c-127b-4c58-914a-99a9d26b260d",
+        "sort_order": 0
+      }
+    ]
+  },
+  "staffReply": {
+    "content": "Kỹ thuật viên PawPal đã tiếp nhận và xem hình ảnh của bạn trên hệ thống. Chúng tôi sẽ hỗ trợ bạn ngay!",
+    "status": "SUCCESS"
+  },
+  "notes": "Hoàn thành nghiệm thu STAFF tiếp nhận hội thoại, đọc ảnh đính kèm của khách hàng thật và gửi phản hồi thành công."
+}

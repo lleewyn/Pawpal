@@ -3,6 +3,8 @@
  */
 import { getPets, savePets, deletePet as deletePetService, restorePet as restorePetService } from '/scripts/api/petService.js?v=20261001-dedup';
 import { API } from '/scripts/api/api.js';
+import {validatePetImage} from '/scripts/shared/customer-pet-media.mjs';
+import {petArchiveCountdown,petArchiveCanRestore} from '/scripts/shared/pet-archive.mjs';
 
 const DEFAULT_PET_AVATARS = {
     dog: '/assets/images/publics/dogcute3.jpg',
@@ -77,8 +79,11 @@ let editingPetSnapshot = null;
 let newPetRequestId = null;
 let petChannel;
 let petRefreshTimer;
+let archiveClock;
 export function dispose() {
     clearTimeout(petRefreshTimer);
+    clearInterval(archiveClock);
+    window.closeDeleteModal?.();
     const db = window.getSupabaseClient?.() || window.SupabaseClient;
     if (petChannel) db?.removeChannel(petChannel);
     petChannel = null;
@@ -140,7 +145,7 @@ export async function initPetProfilePage() {
         const db = window.getSupabaseClient?.() || window.SupabaseClient;
         const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (db?.channel && user?.id) {
-            dispose();
+            if(petChannel)db.removeChannel(petChannel);
             petChannel = db.channel('own-pet-list');
             petChannel.on('postgres_changes',{event:'*',schema:'public',table:'pet_profile',filter:`customer_id=eq.${user.id}`},()=>{
                 clearTimeout(petRefreshTimer);
@@ -283,6 +288,10 @@ function populatePetForm(pet) {
         document.querySelectorAll(selector).forEach(r => { if (r.value === value) r.checked = true; });
     };
 
+    // File inputs belong to this editing session, never to a previously opened pet.
+    setValue('avatar-input', '');
+    setValue('vaccine-card-input', '');
+    document.querySelectorAll('#petForm .error-msg').forEach(error=>error.classList.add('d-none'));
     setValue('petName', pet.name || '');
     setChecked('input[name="species"]', pet.species || 'dog');
 
@@ -447,6 +456,13 @@ async function renderPetGrids() {
             archivedPets.forEach(pet => archiveGrid.appendChild(createPetCard(pet, true)));
         }
     }
+    clearInterval(archiveClock);
+    if(archivedPets.length)archiveClock=setInterval(()=>{
+        document.querySelectorAll('[data-archive-deadline]').forEach(node=>{
+            const deadline=Number(node.dataset.archiveDeadline);node.textContent=petArchiveCountdown(deadline);
+            const restore=node.closest('.pet-card')?.querySelector('.pet-archive-restore');if(restore)restore.disabled=!petArchiveCanRestore(deadline);
+        });
+    },60000);
 }
 
 function createPetCard(pet, isArchived = false) {
@@ -501,12 +517,13 @@ function createPetCard(pet, isArchived = false) {
                     : 'Bình thường')}</span>
             </div>
         </div>
+        ${isArchived ? `<div class="pet-archive-clock"><span>Đã lưu trữ</span><strong ${Number.isFinite(pet.archiveDeadline)?`data-archive-deadline="${pet.archiveDeadline}"`:''}>${petArchiveCountdown(pet.archiveDeadline)}</strong></div>` : ''}
         <div class="pet-card-actions">
             ${isArchived ? 
-                `<button type="button" class="btn-pet-card-action" onclick="event.stopPropagation(); window.restorePet('${escapeHtml(petId)}')">Khôi phục</button>` :
+                `<button type="button" class="btn-pet-card-action pet-archive-restore" ${petArchiveCanRestore(pet.archiveDeadline)?'':'disabled'} onclick="event.stopPropagation(); window.restorePet('${escapeHtml(petId)}')">Khôi phục</button>` :
                 `<a class="btn-pet-card-action btn-action-diary" href="#diary?id=${encodeURIComponent(petId)}" onclick="event.stopPropagation()">Nhật ký</a>
                  <button type="button" class="btn-pet-card-action" onclick="event.stopPropagation(); window.switchToPetFormScreen('${escapeHtml(petId)}')">Xem và Sửa</button>
-                 <button type="button" class="btn-pet-card-action btn-action-danger" onclick="event.stopPropagation(); window.deletePet('${escapeHtml(petId)}')">Xóa</button>`
+                 <button type="button" class="btn-pet-card-action" onclick="event.stopPropagation(); window.deletePet('${escapeHtml(petId)}')">Ẩn hồ sơ</button>`
             }
         </div>
     `;
@@ -570,9 +587,9 @@ function setupBreedAutocomplete() {
                 button.addEventListener('click', () => {input.value = row.breed_name;list.hidden = true;input.dispatchEvent(new Event('change'));});
                 list.appendChild(button);
             }
-            if (!options.length) list.textContent = 'Không có giống phù hợp trong danh mục.';
+            if (!options.length) list.textContent = 'Bạn có thể nhập giống của bé và lưu trực tiếp.';
             list.hidden = false;
-        } catch { list.textContent = 'Không thể tải danh mục giống. Vui lòng thử lại.';list.hidden = false; }
+        } catch { list.textContent = 'Bạn có thể tự nhập giống của bé.';list.hidden = false; }
     };
     input.addEventListener('input', render);input.addEventListener('focus', render);
     input.addEventListener('blur', () => {++request;list.hidden = true;});
@@ -628,7 +645,7 @@ function setupForm() {
         }
         if (!breed) {
             errors.push('breed');
-            showToast('Vui lòng chọn giống thú cưng trong danh mục.', 'error');
+            showToast('Vui lòng nhập giống thú cưng.', 'error');
             breedField?.focus();
         }
 
@@ -645,17 +662,9 @@ function setupForm() {
         }
 
         const avatarInput = document.getElementById('avatar-input');
-        if (avatarInput && avatarInput.files && avatarInput.files[0]) {
-            const file = avatarInput.files[0];
-            const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-            if (!validTypes.includes(file.type)) {
-                showToast('Ảnh phải là JPG, PNG hoặc WEBP.', 'error');
-                errors.push('avatar');
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Ảnh không được lớn hơn 5MB.', 'error');
-                errors.push('avatar');
-            }
+        const vaccineInput = document.getElementById('vaccine-card-input');
+        for (const input of [avatarInput,vaccineInput]) {
+            if(input?.files?.[0])try {validatePetImage(input.files[0]);}catch(error){showToast(error.message,'error');errors.push('image');}
         }
 
         if (errors.length > 0) {
@@ -721,6 +730,8 @@ function setupForm() {
                 dobRaw: dob,
                 color,
                 vaccinated: !!vaccinated,
+                avatarFile:avatarInput?.files?.[0] || null,
+                vaccineFile:vaccineInput?.files?.[0] || null,
                 vaccineCardPhoto: vaccineCardPhoto,
                 allergies,
                 allergy: allergies,
@@ -756,8 +767,10 @@ function setupAvatar() {
         input.addEventListener('change', e => {
             const file = e.target.files[0];
             if (file) {
+                try {validatePetImage(file);}catch(error){input.value='';showToast(error.message,'error');return;}
                 const reader = new FileReader();
                 reader.onload = ev => {
+                    if (input.files[0] !== file) return;
                     preview.src = ev.target.result;
                     preview.style.display = 'block';
                     if (circle) circle.classList.add('has-image');
@@ -779,8 +792,10 @@ function setupVaccineCardUploader() {
         input.addEventListener('change', e => {
             const file = e.target.files[0];
             if (file) {
+                try {validatePetImage(file);}catch(error){input.value='';showToast(error.message,'error');return;}
                 const reader = new FileReader();
                 reader.onload = ev => {
+                    if (input.files[0] !== file) return;
                     preview.src = ev.target.result;
                     preview.style.display = 'block';
                     if (triggerBtn) triggerBtn.textContent = 'Đổi ảnh sổ tiêm';
@@ -798,6 +813,8 @@ function setupSpeciesToggle() {
 
     document.querySelectorAll('input[name="species"]').forEach(radio => {
         radio.addEventListener('change', () => {
+            if (!radio.checked) return;
+            radio.closest('.form-group')?.querySelectorAll('.error-msg').forEach(error=>error.classList.add('d-none'));
             if (otherWrap) {
                 otherWrap.classList.toggle('d-none', radio.value !== 'other');
             }
@@ -852,27 +869,30 @@ window.deletePet = async function(id) {
     if (nameEl) nameEl.textContent = pet.name;
     
     const modal = document.getElementById('deleteConfirmModal');
-    if (modal) { modal.classList.add('active'); modal.tabIndex=-1; modal.focus(); }
+    if (modal && !modal.open) { modal.showModal(); }
 };
 
 window.closeDeleteModal = function() {
     const modal = document.getElementById('deleteConfirmModal');
-    if (modal) modal.classList.remove('active');
+    if (modal?.open) modal.close();
     petToDeleteId = null;
 };
 
 async function confirmDelete() {
-    if (!petToDeleteId) return;
+    const button=document.getElementById('btnConfirmDelete');
+    if (!petToDeleteId || button?.disabled) return;
+    const target=petToDeleteId;
+    if(button)button.disabled=true;
     try {
-    if (await deletePetService(petToDeleteId)) {
+    if (await deletePetService(target)) {
         showToast('Đã chuyển hồ sơ vào kho lưu trữ', 'info');
         await renderPetGrids();
     }
     
-    window.closeDeleteModal();
+    if(petToDeleteId===target)window.closeDeleteModal();
     } catch (error) {
         showToast(error.message || 'Không thể lưu trữ hồ sơ. Vui lòng thử lại.', 'error');
-    }
+    } finally {if(button)button.disabled=false;}
 }
 
 function setupDeleteModal() {
@@ -885,8 +905,9 @@ function setupDeleteModal() {
     if (modalOverlay) {
         modalOverlay.tabIndex = -1;
         modalOverlay.addEventListener('keydown',event=>{
-            if(event.key==='Escape') window.closeDeleteModal();
+            if(event.key==='Escape') {event.preventDefault();window.closeDeleteModal();}
         });
+        modalOverlay.addEventListener('cancel',event=>{event.preventDefault();window.closeDeleteModal();});
         modalOverlay.addEventListener('click', (e) => {
             if (e.target === modalOverlay) {
                 window.closeDeleteModal();

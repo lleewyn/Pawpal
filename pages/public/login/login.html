@@ -325,12 +325,13 @@
                             <div class="form-group mb-3">
                                 <label for="registerPassword" class="form-label">Mật khẩu <span class="required-star">*</span></label>
                                 <div class="password-input-wrapper">
-                                    <input type="password" id="registerPassword" class="form-control" placeholder="Tối thiểu 8 ký tự, 1 chữ số, 1 ký tự đặc biệt" autocomplete="new-password">
+                                    <input type="password" id="registerPassword" class="form-control" placeholder="Tối thiểu 8 ký tự, 1 chữ số, 1 ký tự đặc biệt" autocomplete="new-password" maxlength="128" aria-describedby="registerPasswordHint registerPasswordFeedback">
                                     <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
                                         <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                     </button>
                                 </div>
-                                <div class="invalid-feedback" id="registerPasswordFeedback">Mật khẩu phải ít nhất 8 ký tự, bao gồm một chữ số và một ký tự đặc biệt</div>
+                                <p class="password-rule-hint" id="registerPasswordHint">Mật khẩu cần 8–128 ký tự, có ít nhất một chữ số và một ký tự đặc biệt như !, @, #.</p>
+                                <div class="invalid-feedback" id="registerPasswordFeedback" aria-live="polite">Mật khẩu chưa đạt yêu cầu. Vui lòng dùng 8–128 ký tự, có ít nhất một chữ số và một ký tự đặc biệt như !, @, #.</div>
                                 <div id="registerPasswordStrength" class="password-strength d-none ui-spacing-4" aria-live="polite">
                                     <div class="strength-bar ui-bg-box-5">
                                         <div id="registerPasswordStrengthFill" class="ui-bg-box-6"></div>
@@ -342,12 +343,12 @@
                             <div class="form-group mb-3">
                                 <label for="registerConfirmPassword" class="form-label">Nhập lại mật khẩu <span class="required-star">*</span></label>
                                 <div class="password-input-wrapper">
-                                    <input type="password" id="registerConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu" autocomplete="new-password">
+                                    <input type="password" id="registerConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu" autocomplete="new-password" maxlength="128" aria-describedby="registerConfirmFeedback">
                                     <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
                                         <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                     </button>
                                 </div>
-                                <div class="invalid-feedback" id="registerConfirmFeedback">Mật khẩu chưa khớp</div>
+                                <div class="invalid-feedback" id="registerConfirmFeedback" aria-live="polite">Mật khẩu xác nhận không khớp</div>
                             </div>
 
                             <button type="submit" class="btn-cta w-100" id="btnRegisterSubmit" disabled>
@@ -411,29 +412,29 @@
                                 <div class="form-group mb-3">
                                     <label for="setupPassword" class="form-label">Mật khẩu mới <span class="required-star">*</span></label>
                                     <div class="password-input-wrapper">
-                                        <input type="password" id="setupPassword" class="form-control" placeholder="Tối thiểu 8 ký tự, 1 chữ số, 1 ký tự đặc biệt" autocomplete="new-password">
+                                        <input type="password" id="setupPassword" class="form-control" placeholder="Tối thiểu 8 ký tự, 1 chữ số, 1 ký tự đặc biệt" autocomplete="new-password" maxlength="128" aria-describedby="setupPasswordFeedback">
                                         <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
                                             <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                         </button>
                                     </div>
-                                    <div class="invalid-feedback" id="setupPasswordFeedback">Mật khẩu phải ít nhất 8 ký tự, bao gồm một chữ số và một ký tự đặc biệt</div>
+                                    <div class="invalid-feedback" id="setupPasswordFeedback" aria-live="polite">Mật khẩu cần 8–128 ký tự, có ít nhất một chữ số và một ký tự đặc biệt như !, @, #.</div>
                                 </div>
 
                                 <div class="form-group mb-3">
                                     <label for="setupConfirmPassword" class="form-label">Xác nhận mật khẩu mới <span class="required-star">*</span></label>
                                     <div class="password-input-wrapper">
-                                        <input type="password" id="setupConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
+                                        <input type="password" id="setupConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" maxlength="128" aria-describedby="setupConfirmFeedback">
                                         <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
                                             <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                         </button>
                                     </div>
-                                    <div class="invalid-feedback" id="setupConfirmFeedback">Mật khẩu chưa khớp</div>
+                                    <div class="invalid-feedback" id="setupConfirmFeedback" aria-live="polite">Mật khẩu xác nhận không khớp</div>
                                 </div>
 
                                 <div class="form-check setup-terms-check mb-4">
                                     <input class="form-check-input" type="checkbox" id="setupTermsCheckbox">
                                     <label class="form-check-label" for="setupTermsCheckbox">
-                                        Tôi đồng ý với <a href="#" class="terms-link" onclick="return false;">Chính sách + Điều khoản</a> vận hành của cửa hàng
+                                        Tôi đồng ý với <a href="#" class="terms-link" onclick="return false;">Chính sách và điều khoản</a> vận hành của cửa hàng
                                     </label>
                                 </div>
 
@@ -537,7 +538,7 @@
                                             <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                         </button>
                                     </div>
-                                    <div class="invalid-feedback" id="forgotConfirmFeedback" aria-live="polite">Mật khẩu nhập lại chưa khớp.</div>
+                                    <div class="invalid-feedback" id="forgotConfirmFeedback" aria-live="polite">Mật khẩu xác nhận không khớp</div>
                                 </div>
 
                                 <button type="submit" class="btn-cta w-100" id="btnForgotNewPasswordSubmit" disabled>
