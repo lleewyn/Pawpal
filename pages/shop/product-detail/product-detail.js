@@ -207,6 +207,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             let max = parseInt(quantityInput.getAttribute('max')) || 99;
             if (val < max) {
                 quantityInput.value = val + 1;
+            } else {
+                if (typeof showToast === 'function') {
+                    showToast(`Số lượng trong kho chỉ còn ${max} sản phẩm`, 'warning');
+                }
+            }
+        });
+    }
+
+    if (quantityInput) {
+        quantityInput.addEventListener('change', () => {
+            let val = parseInt(quantityInput.value) || 1;
+            let max = parseInt(quantityInput.getAttribute('max')) || 99;
+            if (val > max) {
+                quantityInput.value = max;
+                if (typeof showToast === 'function') {
+                    showToast(`Số lượng trong kho chỉ còn ${max} sản phẩm`, 'warning');
+                }
+            } else if (val < 1) {
+                quantityInput.value = 1;
             }
         });
     }

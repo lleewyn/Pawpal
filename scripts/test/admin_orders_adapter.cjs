@@ -1,4 +1,4 @@
-﻿const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
 (async()=>{
  const calls=[];const order={id:'id-a',order_code:'ORD-A',customer_id:'customer-a',created_at:'2026-10-24',updated_at:'v1',order_status:'confirmed',shipping_fee_snapshot:0,customer:{customer_profile:{full_name:'Customer'},customer_phone:[]},lines:[{id:'line-a',product_variant_id:'variant-a',sku_snapshot:'SKU-A',product_name_snapshot:'Product',unit_price:100,quantity:1,discount_amount:0}],payments:[{id:'payment-a',amount:50,transaction_status:'succeeded',method:{name:'Cash'},refunds:[{refund_status:'succeeded',refunded_amount:10}]}]};
  const data={sales_order:[order],sales_order_totals:[{order_id:'id-a',total_amount:100}],return_request:[],voucher_redemption:[]};

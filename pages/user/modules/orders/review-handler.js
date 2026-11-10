@@ -48,12 +48,23 @@
     const errorElement=section.querySelector('#sales-review-error');
     let locked=[];
     try{
-     const reviews=pending.map(p=>{
-      const rating=Number(section.querySelector(`[data-review-rating="${p.lineId}"]`).value);
-      const content=section.querySelector(`[data-review-content="${p.lineId}"]`).value.trim();
-      if(!Number.isInteger(rating)||rating<1||rating>5||!content)throw Error('Vui lòng chọn mức đánh giá và nhập nhận xét cho từng sản phẩm.');
-      return {id:ids.get(p.lineId),line_id:p.lineId,rating,content};
-     });
+     const reviews=[];
+     for(const p of pending){
+      const ratingSelect=section.querySelector(`[data-review-rating="${p.lineId}"]`);
+      const contentTextarea=section.querySelector(`[data-review-content="${p.lineId}"]`);
+      const rawRating=ratingSelect?ratingSelect.value.trim():'';
+      const rating=Number(rawRating);
+      const content=contentTextarea?contentTextarea.value.trim():'';
+      if(!rawRating||!Number.isInteger(rating)||rating<1||rating>5){
+       if(ratingSelect)ratingSelect.focus();
+       throw Error(!rawRating?'Vui lòng chọn mức đánh giá từ 1 đến 5 sao.':'Mức đánh giá không hợp lệ (chỉ chấp nhận từ 1 đến 5 sao).');
+      }
+      if(!content){
+       if(contentTextarea)contentTextarea.focus();
+       throw Error('Vui lòng nhập nội dung nhận xét cho sản phẩm.');
+      }
+      reviews.push({id:ids.get(p.lineId),line_id:p.lineId,rating,content});
+     }
      errorElement.textContent='';button.disabled=true;button.textContent='Đang gửi…';
      locked=[...section.querySelectorAll('input,select,textarea')].map(el=>[el,el.disabled]);locked.forEach(([el])=>el.disabled=true);section.querySelectorAll('[data-review-media]').forEach(root=>root.inert=true);
      for(const review of reviews)review.media_asset_ids=await editors.get(review.line_id).prepare();

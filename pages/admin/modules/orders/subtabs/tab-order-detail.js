@@ -231,6 +231,74 @@
                 </div>
             `).join('');
         }
+
+        // Hiển thị đánh giá từ khách hàng nếu có
+        renderOrderReviews(order);
+    }
+
+    // Hiển thị đánh giá của khách hàng cho các sản phẩm trong đơn
+    async function renderOrderReviews(order) {
+        const block = document.getElementById("detailOrderReviewsBlock");
+        const container = document.getElementById("detailOrderReviewsContainer");
+        if (!block || !container) return;
+
+        const lineIds = (order.products || []).map(p => p.lineId || p.id).filter(Boolean);
+        if (!lineIds.length) {
+            block.style.display = "none";
+            return;
+        }
+
+        try {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) {
+                block.style.display = "none";
+                return;
+            }
+
+            const { data: reviews, error } = await client
+                .from("review")
+                .select("id, sales_order_detail_id, rating, review_content, review_status, created_at")
+                .in("sales_order_detail_id", lineIds);
+
+            if (error || !reviews || !reviews.length) {
+                block.style.display = "none";
+                return;
+            }
+
+            const statusMap = {
+                pending: { label: "Chờ duyệt", cls: "badge-warning" },
+                approved: { label: "Đã duyệt", cls: "badge-paid" },
+                published: { label: "Đã công bố", cls: "badge-paid" },
+                hidden: { label: "Đã ẩn", cls: "badge-cancelled" },
+                rejected: { label: "Không duyệt", cls: "badge-cancelled" }
+            };
+
+            block.style.display = "block";
+            container.innerHTML = reviews.map(r => {
+                const prod = (order.products || []).find(p => (p.lineId || p.id) === r.sales_order_detail_id);
+                const prodName = prod ? prod.name : "Sản phẩm";
+                const stars = "⭐".repeat(Math.max(1, Math.min(5, Number(r.rating) || 5)));
+                const st = statusMap[r.review_status] || { label: r.review_status || "Đã gửi", cls: "badge-neutral" };
+                const timeStr = r.created_at ? formatDateTime(new Date(r.created_at)) : "";
+
+                return `
+                    <div style="background: rgba(248, 250, 249, 0.85); border: 1px solid var(--border-neutral, #ECF2EE); border-radius: var(--admin-radius, 9px); padding: 14px 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-weight: 600; color: var(--text-heading, #236B48);">${escapeText(prodName)}</span>
+                            <span class="admin-badge ${st.cls}">${escapeText(st.label)}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <span style="font-size: 13px;">${stars} (${r.rating}/5)</span>
+                            ${timeStr ? `<span style="font-size: 12px; color: var(--text-muted, #4F7A65);">${escapeText(timeStr)}</span>` : ""}
+                        </div>
+                        <div style="font-size: 13.5px; color: #203A2C; line-height: 1.5; white-space: pre-wrap;">${escapeText(r.review_content || "(Không có nhận xét chi tiết)")}</div>
+                    </div>
+                `;
+            }).join("");
+        } catch (e) {
+            console.warn("[Orders Detail] Lỗi tải đánh giá đơn:", e);
+            block.style.display = "none";
+        }
     }
 
     // Đăng ký controller với Core

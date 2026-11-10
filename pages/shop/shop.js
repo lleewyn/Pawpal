@@ -105,8 +105,11 @@ function ensureBuyNowModal() {
     const qtyInput = modal.querySelector('#buyNowModalQty');
     qtyInput.addEventListener('input', () => {
         const max = Number(buyNowModalState.product?.stock) || 99;
-        let nextValue = Number(qtyInput.value) || 1;
-        nextValue = Math.max(1, Math.min(max, nextValue));
+        const rawValue = Number(qtyInput.value) || 1;
+        if (rawValue > max) {
+            showToast(`Số lượng trong kho chỉ còn ${max} sản phẩm`, 'warning');
+        }
+        let nextValue = Math.max(1, Math.min(max, rawValue));
         buyNowModalState.quantity = nextValue;
         qtyInput.value = String(nextValue);
     });
@@ -245,7 +248,13 @@ function updateBuyNowModalQuantity(action) {
     let next = current;
 
     if (action === 'decrease') next = Math.max(1, current - 1);
-    if (action === 'increase') next = Math.min(max, current + 1);
+    if (action === 'increase') {
+        if (current >= max) {
+            showToast(`Số lượng trong kho chỉ còn ${max} sản phẩm`, 'warning');
+            return;
+        }
+        next = Math.min(max, current + 1);
+    }
 
     buyNowModalState.quantity = next;
     qtyInput.value = String(next);
