@@ -478,7 +478,6 @@ function esc(s) {
 }
 
 function canCancelOrder(o) {
-    if(o._receiptOnly)return false;
     const status = normalizeOrderStatus(o.status);
     if (status !== 'pending') return false;
     if (o.paymentStatus === 'pending_refund' || o.paymentStatus === 'refunded') return false;
@@ -511,7 +510,6 @@ function getBookingScheduledAt(booking) {
 }
 
 function canModifyBooking(b) {
-    if(b._receiptOnly)return false;
     const status = resolveBookingStatus(b);
     // 3.1.5: Chỉ kích hoạt đổi lịch khi ca hẹn ở trạng thái "Đã xác nhận" (confirmed)
     if (status !== 'confirmed') return false;
@@ -520,7 +518,6 @@ function canModifyBooking(b) {
 }
 
 function canCancelBooking(b) {
-    if(b._receiptOnly)return false;
     const status = resolveBookingStatus(b);
     // Hủy lịch: Chỉ cho phép khi pending hoặc confirmed. Khóa khi in-progress, accepted, completed, cancelled.
     if (!['pending', 'confirmed'].includes(status)) return false;
@@ -584,7 +581,7 @@ function buildBookingCard(b) {
                 <div class="rg-summary-value">${esc(visibleNote)}</div>
             </div>` : ''}
         </div>
-        ${!b._receiptOnly && (canModifyBooking(b) || canCancelBooking(b) || ['in-progress', 'completed'].includes(resolvedStatus)) ? `
+        ${(canModifyBooking(b) || canCancelBooking(b) || ['in-progress', 'completed'].includes(resolvedStatus)) ? `
         <div class="rg-actions" class="rg-actions-flex">
             ${canCancelBooking(b) ? `
             <button class="btn-track-order text-danger border-danger" onclick="handleGuestBookingAction('${esc(b.id)}', 'cancel')">
@@ -667,7 +664,7 @@ function buildOrderCard(o) {
                 <div class="rg-summary-value fw-medium ${paymentColor}">${paymentLabel}</div>
             </div>
         </div>
-        ${!o._receiptOnly ? `<div class="rg-actions rg-actions-center">
+        ${(canCancelOrder(o) || canConfirmOrder(o) || canReturnOrder(o) || o.status === 'return_pending' || (!o._receiptOnly && o.returnGrant)) ? `<div class="rg-actions rg-actions-center">
             ${(o.status === 'return_pending') ? `
             <div class="flex-grow-1 text-start">
                 <span class="rg-return-alert">
@@ -883,8 +880,8 @@ function showActionConfirm(title, descHtml, onConfirm) {
                     <p class="mb-0">${descHtml}</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Huỷ bỏ</button>
-                    <button type="button" class="btn-cta" id="rg-action-confirm-btn">Đồng ý</button>
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn-cta" id="rg-action-confirm-btn">${title.includes('Hủy') ? 'Xác nhận hủy' : 'Đồng ý'}</button>
                 </div>
             </div>
         </div>`;
@@ -1256,7 +1253,7 @@ async function confirmCancelOrder(orderId, isPaidOnline = false) {
         return;
     }
 
-    const saved = await updateGuestOrderStatus(order, { order_status: 'CANCELLED' });
+    const saved = await updateGuestOrderStatus(order, { order_status: 'cancelled' });
     if (!saved) {
         showToast('Chưa hủy được đơn hàng. Vui lòng thử lại sau.', 'error');
         return;
