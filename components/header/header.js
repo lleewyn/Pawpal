@@ -40,12 +40,11 @@
     }
 
     function sanitizeHref(url) {
-        if (!url || typeof url !== 'string') return '#';
-        const trimmed = url.trim();
-        if (/^(javascript|data):/i.test(trimmed)) {
-            return '#';
-        }
-        return trimmed;
+        if (typeof url !== 'string' || !url.trim() || url.trim() === '#') return '#';
+        try {
+            const target = new URL(url, window.location.href);
+            return ['http:', 'https:'].includes(target.protocol) ? target.href : '#';
+        } catch { return '#'; }
     }
 
     const noticeState={owner:null,rows:[],cutoff:null,loaded:false,pending:null,channel:null,error:null,page:1,total:0,unread:0,onlyUnread:false};
@@ -72,10 +71,13 @@
     function getSharedNotifications(){return noticeState.rows;}
     function renderNotifications(){return '<p>Đang tải thông báo.</p>';}
     function noticeLink(row){
+        const configured = sanitizeHref(row.link);
+        if (configured !== '#') return configured;
+        if(row.sales_order_id && row.return_request_id)return '/user#return-detail?orderId='+encodeURIComponent(row.sales_order_id)+'&returnId='+encodeURIComponent(row.return_request_id);
         if(row.sales_order_id)return '/user#order-detail?id='+encodeURIComponent(row.sales_order_id);
         if(row.appointment_id)return '/user#booking-detail?id='+encodeURIComponent(row.appointment_id);
         if(row.support_ticket_id)return '/user#support?id='+encodeURIComponent(row.support_ticket_id);
-        return '/user';
+        return '';
     }
     function noticeError(message){const target=document.getElementById('noticeCloudError') || document.getElementById('headerNotificationList');if(target){if(target.id==='noticeCloudError'){target.textContent=message;return;}const text=document.createElement('p');text.setAttribute('role','alert');text.style.color='#DC2626';text.textContent=message;target.prepend(text);}}
     function paintNotices(){
@@ -575,6 +577,11 @@
     // POPUP MODAL TRUNG TÂM THÔNG BÁO (MODAL THEO CHUẨN AGENTS.MD)
     // -------------------------------------------------------------
     let selectedNotice=null,noticeFilter='all';
+    function focusNoticeDetail(modal){
+        const detail=modal.querySelector('#noticeCloudDetail');
+        detail.focus({preventScroll:true});
+        detail.scrollIntoView({block:'nearest'});
+    }
     function renderNoticeModal(){
         const modal=document.getElementById('notificationsCloudModal');if(!modal)return;
         if(noticeState.owner!==getCurrentUser()?.id){modal.querySelector('[data-close-modal]')?.click();return;}
@@ -588,26 +595,33 @@
         navigation.querySelector('[data-page-back]')?.addEventListener('click',()=>move(-1));navigation.querySelector('[data-page-next]')?.addEventListener('click',()=>move(1));
         const rows=noticeState.rows.filter(n=>noticeFilter!=='unread'||!n.read_at);
         modal.querySelector('#noticeCloudRows').innerHTML=rows.map(n=>`<button type="button" style="width:100%;text-align:left;background:transparent;border:0;padding:12px;display:grid;gap:4px;border-radius:9px" class="notification-item-dropdown ${n.read_at?'':'unread'}" data-notice="${escapeHtml(n.id)}"><strong>${escapeHtml(n.title)}</strong><span>${escapeHtml(new Date(n.sent_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}))}</span></button>`).join('') || '<p>Chưa có thông báo phù hợp.</p>';
-        modal.querySelectorAll('[data-notice]').forEach(button=>button.onclick=async()=>{selectedNotice=button.dataset.notice;try{await markNoticeRead(selectedNotice);}catch(error){noticeError(error.message);}renderNoticeModal();});
-        const row=noticeState.rows.find(n=>n.id===selectedNotice),detail=modal.querySelector('#noticeCloudDetail');
-        detail.innerHTML=row?`<h4>${escapeHtml(row.title)}</h4><p style="white-space:pre-wrap">${escapeHtml(row.content)}</p><a href="${noticeLink(row)}">Mở nội dung liên quan</a>`:'<p>Chọn thông báo để xem nội dung.</p>';
+        modal.querySelectorAll('[data-notice]').forEach(button=>button.onclick=()=>{
+            selectedNotice=rows.find(n=>n.id===button.dataset.notice);
+            if(!selectedNotice)return;
+            renderNoticeModal();focusNoticeDetail(modal);
+            if(!selectedNotice.read_at)markNoticeRead(selectedNotice.id).catch(error=>noticeError(error.message));
+        });
+        const row=noticeState.rows.find(n=>n.id===selectedNotice?.id) || selectedNotice,detail=modal.querySelector('#noticeCloudDetail');
+        const href=row?noticeLink(row):'';
+        detail.innerHTML=row?`<h4>${escapeHtml(row.title)}</h4><p style="white-space:pre-wrap">${escapeHtml(row.content)}</p>${href?`<a href="${escapeHtml(href)}">Mở nội dung liên quan</a>`:''}`:'<p>Chọn thông báo để xem nội dung.</p>';
     }
     async function openAllNotificationsModal(initialNoti=null){
+        const owner=getCurrentUser()?.id;
+        const initial=noticeState.owner===owner ? noticeState.rows.find(row=>row.id===initialNoti?.id) : null;
         if(noticeState.pending)await noticeState.pending;
         noticeState.page=1;noticeState.onlyUnread=false;
-        const owner=getCurrentUser()?.id;
         await refreshNotices();
         if(!owner || owner!==getCurrentUser()?.id)return;
         document.getElementById('notificationsCloudModal')?.querySelector('[data-close-modal]')?.click();
         const modal=document.createElement('div');modal.id='notificationsCloudModal';modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,30,.4);display:flex;align-items:center;justify-content:center;z-index:10000;padding:16px;';
-        modal.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="noticeCloudTitle" style="background:white;border-radius:9px;width:760px;max-width:95vw;max-height:90vh;overflow:auto;padding:26px 30px"><div style="display:flex;justify-content:space-between"><h3 id="noticeCloudTitle">Thông báo</h3><button type="button" data-close-modal="notificationsCloudModal">Đóng</button></div><p id="noticeCloudError" role="alert" style="color:#DC2626"></p><div style="display:flex;gap:12px;flex-wrap:wrap"><button type="button" data-notice-filter="all">Tất cả</button><button type="button" data-notice-filter="unread">Chưa đọc</button><button type="button" id="noticeCloudMarkAll">Đọc tất cả</button></div><div id="noticeCloudRows"></div><div id="noticeCloudDetail"></div><button type="button" data-close-modal="notificationsCloudModal">Để sau</button></section>';
+        modal.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="noticeCloudTitle" style="background:white;border-radius:9px;width:760px;max-width:95vw;max-height:90vh;overflow:auto;padding:26px 30px"><div style="display:flex;justify-content:space-between"><h3 id="noticeCloudTitle">Thông báo</h3><button type="button" data-close-modal="notificationsCloudModal">Đóng</button></div><p id="noticeCloudError" role="alert" style="color:#DC2626"></p><div id="noticeCloudDetail" tabindex="-1" style="overflow-wrap:anywhere"></div><div style="display:flex;gap:12px;flex-wrap:wrap"><button type="button" data-notice-filter="all">Tất cả</button><button type="button" data-notice-filter="unread">Chưa đọc</button><button type="button" id="noticeCloudMarkAll">Đọc tất cả</button></div><div id="noticeCloudRows"></div><button type="button" data-close-modal="notificationsCloudModal">Để sau</button></section>';
         const previous=document.activeElement,overflow=document.body.style.overflow,close=()=>{modal.remove();document.body.style.overflow=overflow;document.removeEventListener('keydown',key);if(previous?.isConnected)previous.focus();},key=event=>{if(event.key==='Escape')close();};
         modal.onclick=event=>{if(event.target===modal || event.target.closest('[data-close-modal]') || event.target.closest('#noticeCloudDetail a'))close();};document.addEventListener('keydown',key);document.body.append(modal);document.body.style.overflow='hidden';modal.querySelectorAll('button').forEach(button=>{button.classList.add('btn','btn-sm','btn-outline-success');button.style.borderRadius='9px';});modal.querySelector('button').focus();
-        selectedNotice=initialNoti?.id || null;noticeFilter='all';
+        selectedNotice=noticeState.rows.find(row=>row.id===initialNoti?.id) || initial || null;noticeFilter='all';
         modal.querySelectorAll('[data-notice-filter]').forEach(button=>button.onclick=async()=>{if(noticeState.pending)return;noticeFilter=button.dataset.noticeFilter;noticeState.onlyUnread=noticeFilter==='unread';noticeState.page=1;selectedNotice=null;await refreshNotices();});
         modal.querySelector('#noticeCloudMarkAll').onclick=async event=>{const button=event.target;button.disabled=true;try{await markNoticeRead(null);}catch(error){noticeError(error.message);}finally{button.disabled=false;}};
         if(!modal.isConnected)return;renderNoticeModal();
-        if(selectedNotice)try{await markNoticeRead(selectedNotice);}catch(error){noticeError(error.message);}
+        if(selectedNotice){focusNoticeDetail(modal);if(!selectedNotice.read_at)try{await markNoticeRead(selectedNotice.id);}catch(error){noticeError(error.message);}}
     }
     window.openAllNotificationsModal=openAllNotificationsModal;
 
@@ -634,6 +648,74 @@
     // TÍCH HỢP DẢI THÔNG BÁO TOP-BAR TỪ PHÂN HỆ CẤU HÌNH ADMIN (GIAI ĐOẠN 2)
     // -------------------------------------------------------------
     let noticeLoading=false,noticeAttempts=0;
+    const dismissedSiteNotices = new Set();
+    let popupNotices = [];
+    function isSiteNoticeDismissed(key) {
+        try { return dismissedSiteNotices.has(key) || Boolean(sessionStorage.getItem(key)); }
+        catch { return dismissedSiteNotices.has(key); }
+    }
+    function dismissSiteNotice(key) {
+        dismissedSiteNotices.add(key);
+        try { sessionStorage.setItem(key, '1'); } catch {}
+    }
+    function showNextSitePopup(previousFocus = document.activeElement) {
+        if(document.getElementById('pawpal-site-popup'))return;
+        const notice = popupNotices.find(row=>!isSiteNoticeDismissed('pawpal_notice_dismissed_'+row.id));
+        if(!notice){if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});return;}
+        const overlay=document.createElement('div');overlay.id='pawpal-site-popup';
+        overlay.style.cssText='position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.3);display:grid;place-items:center;padding:20px';
+        const card=document.createElement('div');
+        card.style.cssText='background:white;border-radius:9px;padding:26px 30px;max-width:540px;width:100%;max-height:90vh;overflow:auto;overscroll-behavior:contain;color:#203A2C';
+        card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Thông báo');
+        const text=document.createElement('p');text.textContent=notice.content;
+        card.append(text);
+        const href=sanitizeHref(notice.link);
+        const actions=document.createElement('div');
+        actions.style.cssText='display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:12px';
+        if(href!=='#'){
+            const link=document.createElement('a');link.href=href;link.textContent='Mở nội dung liên quan';
+            actions.append(link);
+        }
+        const close=document.createElement('button');close.type='button';close.textContent='Đóng';
+        const dismiss=()=>{
+            dismissSiteNotice('pawpal_notice_dismissed_'+notice.id);
+            overlay.remove();document.removeEventListener('keydown',key);
+            showNextSitePopup(previousFocus);
+        };
+        const key=event=>{if(event.key==='Escape')dismiss();};
+        close.onclick=dismiss;
+        overlay.onclick=event=>{if(event.target===overlay)dismiss();};
+        document.addEventListener('keydown',key);
+        actions.append(close);card.append(actions);overlay.append(card);document.body.append(overlay);close.focus();
+    }
+    function renderTopBarNotices(notices) {
+        const active=notices.filter(row=>!isSiteNoticeDismissed('pawpal_topbar_dismissed_'+row.id));
+        let topBar=document.getElementById('pawpal-public-topbar-notice');
+        if(!active.length){topBar?.remove();return;}
+        if(!topBar){
+            topBar=document.createElement('div');topBar.id='pawpal-public-topbar-notice';
+        }
+        const header=document.getElementById('mainHeader') || document.querySelector('.main-header') || document.getElementById('site-header');
+        if(header?.parentNode){
+            if(topBar.nextElementSibling!==header)header.parentNode.insertBefore(topBar,header);
+        }else if(!topBar.isConnected){
+            document.body.insertBefore(topBar,document.body.firstChild);
+        }
+        topBar.innerHTML=active.map((row,index)=>{
+            const content=escapeHtml(row.content || '');
+            const href=sanitizeHref(row.link);
+            const body=href==='#'?content:`<a href="${escapeHtml(href)}" style="color:inherit;text-decoration:underline;font-weight:600">${content}</a>`;
+            return `<div data-topbar-row style="background:#236B48;color:#fff;font-size:13px;font-weight:500;text-align:center;padding:8px 16px;display:flex;align-items:center;justify-content:center;gap:12px;overflow-wrap:anywhere"><span>${body}</span><button type="button" data-close-topbar="${index}" style="flex:none;background:none;border:0;color:inherit;cursor:pointer;padding:0 4px" aria-label="Đóng thông báo">✕</button></div>`;
+        }).join('');
+        topBar.onclick=event=>{
+            const button=event.target.closest('[data-close-topbar]');
+            if(!button || !topBar.contains(button))return;
+            const notice=active[Number(button.dataset.closeTopbar)];
+            dismissSiteNotice('pawpal_topbar_dismissed_'+notice.id);
+            button.closest('[data-topbar-row]').remove();
+            if(!topBar.firstElementChild)topBar.remove();
+        };
+    }
     async function renderDynamicTopBarNotice() {
         if(noticeLoading)return;
         noticeLoading=true;
@@ -644,69 +726,14 @@
             const {data:notices,error}=await client.rpc('get_public_site_notices');
             if(error)throw error;
             if(!Array.isArray(notices))throw new Error('Invalid public notice response');
-            const activePopup=notices.find(n=>String(n.type).toLowerCase()==='popup');
-            if(activePopup&&!sessionStorage.getItem('pawpal_notice_dismissed_'+activePopup.id)&&!document.getElementById('pawpal-site-popup')){
-                const overlay=document.createElement('div');overlay.id='pawpal-site-popup';overlay.style.cssText='position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.3);display:grid;place-items:center;padding:20px';
-                const card=document.createElement('div');card.style.cssText='background:white;border-radius:9px;padding:26px 30px;max-width:540px;width:100%;color:#203A2C';card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Thông báo');
-                const text=document.createElement('p');text.textContent=activePopup.content;
-                const close=document.createElement('button');close.type='button';close.textContent='Đóng';
-                const dismiss=()=>{sessionStorage.setItem('pawpal_notice_dismissed_'+activePopup.id,'1');overlay.remove();document.removeEventListener('keydown',key);};
-                const key=event=>{if(event.key==='Escape')dismiss();};close.onclick=dismiss;overlay.onclick=event=>{if(event.target===overlay)dismiss();};document.addEventListener('keydown',key);
-                card.append(text,close);overlay.append(card);document.body.append(overlay);close.focus();
-            }
-            const activeTopNotice = notices.find(n => String(n.type).toLowerCase().replace('-','')==='topbar');
-            
-            // Tìm hoặc tạo container Topbar
-            let topBarEl = document.getElementById('pawpal-public-topbar-notice');
-            if (!activeTopNotice) {
-                if (topBarEl) topBarEl.remove();
-                return;
-            }
-
-            if (!topBarEl) {
-                topBarEl = document.createElement('div');
-                topBarEl.id = 'pawpal-public-topbar-notice';
-                topBarEl.style.cssText = `
-                    background-color: #236B48;
-                    color: #FFFFFF;
-                    font-size: 13px;
-                    font-weight: 500;
-                    text-align: center;
-                    padding: 8px 16px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 12px;
-                    z-index: 1050;
-                    position: relative;
-                    letter-spacing: 0.1px;
-                `;
-                const siteHeader = document.getElementById('mainHeader') || document.querySelector('.main-header') || document.getElementById('site-header') || document.body;
-                if (siteHeader === document.body) {
-                    document.body.insertBefore(topBarEl, document.body.firstChild);
-                } else {
-                    siteHeader.parentNode.insertBefore(topBarEl, siteHeader);
-                }
-            }
-
-            const safeContent = escapeHtml(activeTopNotice.content || '');
-            const rawNoticeLink = activeTopNotice.link;
-            const safeNoticeLink = rawNoticeLink && rawNoticeLink !== '#' ? sanitizeHref(rawNoticeLink) : '';
-            const noticeBodyHtml = safeNoticeLink && safeNoticeLink !== '#'
-                ? `<a href="${safeNoticeLink}" style="color: #FFFFFF; text-decoration: underline; font-weight: 600;">${safeContent}</a>`
-                : `<span>${safeContent}</span>`;
-
-            topBarEl.innerHTML = `
-                ${noticeBodyHtml}
-                <button type="button" id="btnCloseTopBarNotice" style="background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1;" title="Đóng">✕</button>
-            `;
-
-            document.getElementById('btnCloseTopBarNotice')?.addEventListener('click', () => {
-                topBarEl.style.display = 'none';
-            });
+            const type=row=>String(row.type).toLowerCase().replace('-','');
+            renderTopBarNotices(notices.filter(row=>type(row)==='topbar'));
+            popupNotices=notices.filter(row=>type(row)==='popup');
+            if(popupNotices.length)showNextSitePopup();
         } catch (e) {
             document.getElementById('pawpal-public-topbar-notice')?.remove();
-            console.warn('Lỗi hiển thị topbar notice:', e);
+            popupNotices=[];
+            console.warn('Lỗi hiển thị thông báo website:', e);
         } finally {
             noticeLoading=false;
         }

@@ -5,7 +5,7 @@ const {normalizeVietnamPhone:normalizePhone}=require('../shared/phone-normalizat
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TTL=7*86400;
 const validBreed=pet=>UUID.test(pet?.breedId)||(['breedName','speciesName'].every(k=>typeof pet?.[k]==='string'&&pet[k].trim()&&pet[k].length<=(k==='breedName'?160:100))&&!/^\d+$|^(unknown|null|undefined|chưa rõ|chưa cập nhật)$/i.test(pet.breedName.trim()));
-function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=>Date.now(),randomBytes=crypto.randomBytes}){
+function createGuestCommerce({admin,secret,origins,production=true,otpPreviewOrigin=null,otpTestPhones=[],limit,now=()=>Date.now(),randomBytes=crypto.randomBytes}){
  let phoneHistory;
  if(typeof secret!=='string'||Buffer.byteLength(secret)<32)throw Error('Missing guest cookie secret');
  const allowed=new Set(origins),cookieName=production?'__Host-pawpal_guest':'pawpal_guest_dev';
@@ -39,20 +39,34 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
    if(typeof req.body==='string'){if(Buffer.byteLength(req.body)>16384)throw Error('invalid_body');req.body=JSON.parse(req.body);}
    const body=req.body;
    if(!body||typeof body!=='object'||Array.isArray(body)||Buffer.byteLength(JSON.stringify(body))>16384)throw Error('invalid_body');
-   if(!['session','context','lookup','phone-lookup','pets','profile-read','profile-update','recover','end','booking-staff-response','booking-slots','booking-hold','booking-release','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
-   const keys=action==='pets'?['requestId','contact','pet']:action==='context'?['page']:action==='lookup'?['phone']:action==='phone-lookup'?['phone','challengeId','code']:
+   if(!['session','context','lookup','phone-lookup','pets','profile-read','profile-update','recover','end','contact-ticket','booking-staff-response','booking-slots','booking-hold','booking-release','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
+   const keys=action==='contact-ticket'?['requestId','proof','fullName','phoneNumber','subject','serviceInterest','message']:action==='pets'?['requestId','contact','pet']:action==='context'?['page']:action==='lookup'?['phone']:action==='phone-lookup'?['phone','challengeId','code','returnRequest']:
     action==='booking-staff-response'?['requestId','bookingId','revision','accept']:action==='booking-slots'?['details','day']:action==='booking-hold'?['requestId','details']:action==='booking-release'?['requestId']:action==='booking-quote'?['details']:action==='booking-create'?['requestId','expectedQuote','details']:action==='booking-receipt'?['requestId']:
     action==='order-quote'?['details','lines']:action==='order-create'?['requestId','expectedQuote','contact','details','lines','paymentMethodId']:action==='order-receipt'?['requestId']:
     action==='profile-read'?['petId']:action==='profile-update'?['requestId','revision','contact','pet']:action==='recover'?['code']:[];
    if(Object.keys(body).some(k=>!keys.includes(k)))throw Error('invalid_body');
    const forwarded=process.env.VERCEL?req.headers['x-vercel-forwarded-for']:null;
    const ip=String(forwarded||req.socket?.remoteAddress||'unknown').split(',')[0].trim();
-   try{await limiter('guest-commerce:'+action+':'+ip,['pets','profile-update','booking-create','order-create'].includes(action)?20:60,60000);}catch(error){
+   try{await limiter('guest-commerce:'+action+':'+ip,action==='contact-ticket'?5:['pets','profile-update','booking-create','order-create'].includes(action)?20:60,60000);}catch(error){
     if(!String(error.message).includes('thao tác quá')&&error.code!=='RATE_LIMIT')throw error;
     return res.status(429).json({success:false,message:'Bạn thao tác quá nhiều lần. Vui lòng thử lại sau.'});
    }
+   if(action==='contact-ticket'){
+    const {requestId,proof,fullName,phoneNumber,subject,serviceInterest,message}=body;
+    const validText=(value,max)=>typeof value==='string'&&value.trim().length>=2&&value.trim().length<=max;
+    const phone=typeof phoneNumber==='string'?normalizePhone(phoneNumber):null;
+    if(typeof requestId!=='string'||!UUID.test(requestId)||typeof proof!=='string'||!UUID.test(proof)||!validText(fullName,120)||!/^0[35789]\d{8}$/.test(phone||'')||!validText(subject,250)||
+      !validText(message,4000)||!['','spa','hotel','taxi','other'].includes(serviceInterest)){
+     return res.status(400).json({success:false,message:'Kiểm tra họ tên, số điện thoại, tiêu đề và nội dung liên hệ.'});
+    }
+    const ticketCode=await rpc('create_claimable_guest_contact_ticket',{p_id:requestId,p_proof:proof,p_name:fullName,p_phone:phone,p_subject:subject,p_interest:serviceInterest,p_message:message});
+    return res.json({success:true,ticketCode});
+   }
    if(action==='phone-lookup'){
-    if(!phoneHistory)phoneHistory=require('./guest_phone_history').createGuestPhoneHistory({admin,secret,production,now,demo:!process.env.PAWPAL_SMS_MODE||process.env.PAWPAL_SMS_MODE==='demo'});
+    if(!phoneHistory)phoneHistory=require('./guest_phone_history').createGuestPhoneHistory({
+     admin,secret,production,now,otpPreviewOrigin,otpTestPhones,
+     demo:!process.env.PAWPAL_SMS_MODE||['demo','preview'].includes(process.env.PAWPAL_SMS_MODE)
+    });
     return phoneHistory(req,res);
    }
    if(action==='recover'){
@@ -230,7 +244,9 @@ function cookieConfiguration(env=process.env){
  const secret=env.PAWPAL_GUEST_COOKIE_SECRET||crypto.createHmac('sha256',env.SUPABASE_SERVICE_ROLE_KEY).update('pawpal-guest-commerce-cookie-key-v1').digest('hex');
  const origins=['https://pawpalgr3.vercel.app',env.PAWPAL_PUBLIC_ORIGIN,env.VERCEL_URL?'https://'+env.VERCEL_URL:null];
  if(!production)origins.push('http://localhost:4000','http://127.0.0.1:4000',`http://localhost:${env.PORT||3000}`,`http://127.0.0.1:${env.PORT||3000}`);
- return {secret,origins:origins.filter(Boolean),production};
+ const otpPreviewOrigin=env.VERCEL_ENV==='preview'&&env.PAWPAL_SMS_MODE==='preview'&&env.VERCEL_URL?'https://'+env.VERCEL_URL:null;
+ const otpTestPhones=String(env.PAWPAL_GUEST_OTP_TEST_PHONES||'').split(',').map(value=>value.trim()).filter(value=>/^0\d{9}$/.test(value));
+ return {secret,origins:origins.filter(Boolean),production,otpPreviewOrigin,otpTestPhones};
 }
 let handler;
 module.exports={createGuestCommerce,cookieConfiguration,normalizePhone,handle:async(req,res,action)=>{

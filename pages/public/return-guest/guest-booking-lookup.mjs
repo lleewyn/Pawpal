@@ -36,7 +36,14 @@ export function mountGuestBookingLookup(form){
             for(const [label,value]of entries){const row=node('div');row.append(node('dt',label),node('dd',value));details.append(row);}
             feedback.textContent='';
             renderBookingStaffRequest(staffRequest,booking.staff_request,{onRespond:async(accept,revision)=>{await guestCommerce.request('booking-staff-response',{requestId:crypto.randomUUID(),bookingId:requestId,revision,accept});await refresh();}});
-        }catch(error){if(active()&&!invalidated)feedback.textContent=error.status===401||error.status===403?'Phiên hiện tại không có quyền xem lịch hẹn này. Vui lòng liên hệ PawPal để được hỗ trợ.':error.message||'Chưa tải được lịch hẹn. Vui lòng thử lại.';}
+        }catch(error){
+            try{sessionStorage.removeItem('pawpal_guest_booking_request_v1');}catch(_){}
+            if(!new URLSearchParams(location.search).has('booking')){
+                panel.remove();
+                return;
+            }
+            if(active()&&!invalidated)feedback.textContent=error.status===401||error.status===403?'Phiên hiện tại không có quyền xem lịch hẹn này. Vui lòng liên hệ PawPal để được hỗ trợ.':error.message||'Chưa tải được lịch hẹn. Vui lòng thử lại.';
+        }
         finally{busy=false;if(active()&&!invalidated)button.disabled=false;}
     }
     button.onclick=refresh;refresh();

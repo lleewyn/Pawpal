@@ -114,7 +114,8 @@ export const API = {
                 .from('appointment')
                 .select(`
                     id, appointment_code, scheduled_start_at, scheduled_end_at, check_in_time, check_out_time,
-                    appointment_status, note, change_count, updated_at,
+                    appointment_status, note, change_count, updated_at, staff_id,
+                    staff:staff_id ( id, full_name ),
                     appointment_item (
                         id, service_id, name_snapshot, quantity, unit_price, discount_amount, duration_minutes, is_primary, status,
                         service ( service_name, category_id, estimated_duration )
@@ -186,6 +187,8 @@ export const API = {
                     bookingStatus:   b.appointment_status,
                     staffRequest:    summary.staff_request || null,
                     contactPhone:    summary.contact_phone || null,
+                    staff:           b.staff?.full_name || summary.staff_request?.requested_staff_name || summary.logistics?.staff_name || '',
+                    staffId:         b.staff_id || summary.staff_request?.requested_staff_id || null,
                     paymentStatus:   paymentStatus,
                     service:         primaryItem?.name_snapshot || primaryItem?.service?.service_name || 'Dịch vụ PawPal',
                     serviceName:     primaryItem?.name_snapshot || primaryItem?.service?.service_name || 'Dịch vụ PawPal',
@@ -362,20 +365,16 @@ export const API = {
             const customerId = await resolveCustomerId(db, userOrId);
             if (!customerId) return [];
 
-            const { data, error } = await db.from('customer_voucher')
-                .select(`
-                    id, 
-                    voucher_status, 
-                    expired_at,
-                    voucher ( id, voucher_code, discount_value, type, minimum_order_amount, start_date, end_date, description, required_points, is_active, applicable_for, max_usage )
-                `)
-                .eq('customer_id', customerId);
-            if (error) { 
-                console.error('[API] Supabase getUserVouchers error:', error.message); 
-                return []; 
+            const rows = [];
+            for (let page = 1; ; page++) {
+                const {data,error} = await db.rpc('own_loyalty_snapshot', {p_history_page:1,p_wallet_page:page,p_catalog_page:1});
+                if (error) throw error;
+                if (data?.customer_id !== customerId || data.wallet_page !== page || !Array.isArray(data.wallet)) return [];
+                rows.push(...data.wallet);
+                if (rows.length >= Number(data.wallet_total) || !data.wallet.length) break;
             }
-            
-            return (data || []).map(row => {
+
+            return rows.map(row => {
                 const v = row.voucher || {};
                 return {
                     id: row.id,
@@ -394,9 +393,9 @@ export const API = {
                     usageCount: Number(v.usage_count || 0),
                     maxUsage: v.max_usage,
                     applicableFor: v.applicable_for || ['all'],
-                    active: row.voucher_status==='available'&&v.is_active===true&&(!row.expired_at||new Date(row.expired_at)>new Date()),
+                    active: row.status==='available'&&v.is_active===true&&(!row.expired_at||new Date(row.expired_at)>new Date()),
                     description: v.description,
-                    isUsed: row.voucher_status === 'USED' || row.voucher_status === 'used',
+                    isUsed: row.status === 'used',
                     usedAt: null
                 };
             });

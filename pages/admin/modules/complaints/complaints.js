@@ -70,8 +70,8 @@
     'use strict';
     const allowed=()=>window.PawpalAdminAccess?.isStaff()&&PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle');
     const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!=null)node.textContent=text;if(cls)node.className=cls;return node;};
-    const names={refund:'Hoàn tiền',rma_refund:'Nhận hàng trả và hoàn tiền',rma_exchange:'Đổi hàng',redo_service:'Thực hiện lại dịch vụ',change_staff:'Đổi nhân viên'};
-    const finished=status=>['closed','resolved','completed','rejected'].includes(status),hasAmount=option=>['refund','rma_refund'].includes(option);
+    const names={points:'Cộng Paw Points',voucher:'Tặng voucher',refund:'Hoàn tiền',rma_refund:'Nhận hàng trả và hoàn tiền',rma_exchange:'Đổi hàng',redo_service:'Thực hiện lại dịch vụ',change_staff:'Đổi nhân viên',reject:'Từ chối khiếu nại'};
+    const finished=status=>['closed','resolved','completed','rejected'].includes(status),hasAmount=option=>['refund','rma_refund','points'].includes(option);
     async function rpc(name,args){const{data,error}=await getSupabaseClient().rpc(name,args);if(error)throw error;return data;}
     const pending=new Map();let dialog;
     function build(){
@@ -83,14 +83,14 @@
         const summary=el('dl',null,'workspace-intake-summary');summary.id='staffComplaintProposalSummary';
         const fields={},groups={};
         function field(key,label,type){const group=el('div',null,'workspace-form-field'),caption=el('label',label+' '),input=el(type==='textarea'?'textarea':type==='select'?'select':'input',null,'admin-input');input.id='staffComplaintProposal'+key;caption.htmlFor=input.id;caption.append(el('span','*','workspace-required'));input.required=true;if(type==='number')input.type=type;group.append(caption,input);fields[key]=input;groups[key]=group;return group;}
-        const option=field('option','Phương án','select'),amount=field('amount','Số tiền đề xuất (đ)','number'),note=field('note','Lý do và nội dung đề xuất','textarea');fields.amount.min=1;fields.amount.max=999999999999;fields.amount.step=1;fields.note.rows=4;fields.note.minLength=2;fields.note.maxLength=8000;
+        const option=field('option','Phương án','select'),amount=field('amount','Giá trị đề xuất','number'),voucher=field('voucherCode','Mã voucher','input'),note=field('note','Lý do và nội dung đề xuất','textarea');fields.amount.min=1;fields.amount.max=999999999999;fields.amount.step=1;fields.note.rows=4;fields.note.minLength=2;fields.note.maxLength=8000;
         const hint=el('p','Gửi đề xuất chuyển phiếu sang Chờ Quản lý duyệt. Chưa thực hiện hoàn tiền, đổi hàng hoặc thay đổi ca dịch vụ.','workspace-checkout-explanation'),message=el('p','','workspace-error');message.setAttribute('role','alert');
-        const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Gửi đề xuất','admin-btn admin-btn-primary');save.id='staffComplaintProposalSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);form.append(header,summary,option,amount,note,hint,message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
+        const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Gửi đề xuất','admin-btn admin-btn-primary');save.id='staffComplaintProposalSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);form.append(header,summary,option,amount,voucher,note,hint,message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
         const state={ticket:null,ticketId:null,options:[],generation:0,loading:true,blocked:false,saving:false,unresolved:null,onSaved:null,returnFocus:null};
         const key=()=>PawpalAdminAccess.state.user.id+':'+state.ticketId;
-        function sync(){groups.amount.hidden=!hasAmount(fields.option.value);fields.amount.required=!groups.amount.hidden;}
-        fields.option.onchange=()=>{fields.amount.value='';message.textContent='';sync();};
-        function controls(){for(const input of Object.values(fields))input.disabled=state.loading||state.blocked||state.saving||!!state.unresolved;save.disabled=state.loading||state.blocked||state.saving;save.textContent=state.saving?'Đang gửi':state.unresolved?'Thử lại đề xuất':'Gửi đề xuất';}
+        function sync(){const reject=fields.option.value==='reject';groups.amount.hidden=!hasAmount(fields.option.value);fields.amount.required=!groups.amount.hidden;amount.querySelector('label').firstChild.textContent=(fields.option.value==='points'?'Số Paw Points đề xuất':'Số tiền đề xuất')+' ';voucher.hidden=fields.option.value!=='voucher';fields.voucherCode.required=!voucher.hidden;hint.textContent=reject?'Nhập lý do từ chối để khách có thể xem trong phiếu.':'Gửi phương án để quản lý duyệt trước khi thực hiện.';}
+        fields.option.onchange=()=>{fields.amount.value='';fields.voucherCode.value='';message.textContent='';sync();controls();};
+        function controls(){for(const input of Object.values(fields))input.disabled=state.loading||state.blocked||state.saving||!!state.unresolved;save.disabled=state.loading||state.blocked||state.saving;save.textContent=state.saving?'Đang lưu':state.unresolved?'Thử lại':fields.option.value==='reject'?'Lưu từ chối':'Gửi đề xuất';}
         function closeDialog(){state.generation++;overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');if(state.returnFocus?.isConnected)state.returnFocus.focus();}
         overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
         overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}if(event.key!=='Tab')return;const nodes=[...overlay.querySelectorAll('button:not([disabled]),select:not([disabled]),input:not([disabled]),textarea:not([disabled])')].filter(node=>node.offsetParent!==null),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});
@@ -99,7 +99,7 @@
             if(!allowed()||state.loading||state.blocked||state.saving||!state.ticket)return;
             const option=fields.option.value,note=fields.note.value.trim(),amount=hasAmount(option)?Number(fields.amount.value):0;
             if(!state.unresolved){if(!state.options.includes(option)){message.textContent='Chọn phương án phù hợp giao dịch liên quan.';fields.option.focus();return;}if(hasAmount(option)&&(!Number.isInteger(amount)||amount<=0||amount>999999999999)){message.textContent='Nhập số tiền nguyên dương, tối đa 999.999.999.999 đ.';fields.amount.focus();return;}if(note.length<2||note.length>8000){message.textContent='Nhập lý do từ 2 đến 8000 ký tự.';fields.note.focus();return;}}
-            const attempt=state.unresolved||{args:{p_request_id:crypto.randomUUID(),p_ticket_id:state.ticketId,p_expected_updated_at:state.ticket.updated_at,p_action:'propose',p_details:{option,amount,note}}};
+            const attempt=state.unresolved||{args:{p_request_id:crypto.randomUUID(),p_ticket_id:state.ticketId,p_expected_updated_at:state.ticket.updated_at,p_action:option==='reject'?'resolve':'propose',p_details:{option,amount,note,...(option==='voucher'?{voucher_code:fields.voucherCode.value.trim()}: {})}}};
             const generation=state.generation,attemptKey=key();pending.set(attemptKey,attempt);state.saving=true;controls();message.textContent='';
             try{const result=await rpc('act_admin_complaint',attempt.args);if(result!==state.ticketId)throw Error('invalid_proposal_result');pending.delete(attemptKey);if(generation!==state.generation)return;const callback=state.onSaved;closeDialog();if(allowed())callback?.(result);}
             catch(error){const definitive=['42501','22023','23514','PT409','P0002'].includes(error.code);if(definitive)pending.delete(attemptKey);if(generation!==state.generation)return;state.unresolved=definitive?null:attempt;state.blocked=definitive;message.textContent=error.code==='42501'?'Phiếu không còn được giao cho bạn hoặc bạn không có quyền đề xuất. Đóng và tải lại.':error.message==='complaint_approval_pending'?'Phiếu đang chờ Quản lý duyệt, không thể gửi thêm đề xuất.':error.message==='complaint_not_open'?'Phiếu đã kết thúc, không thể gửi đề xuất.':error.message==='invalid_complaint_resolution'?'Phương án không phù hợp giao dịch. Đóng và mở lại để kiểm tra.':error.code==='PT409'?'Phiếu đã thay đổi. Đóng và mở lại để đối chiếu.':definitive?'Chưa lưu đề xuất. Đóng và mở lại để kiểm tra phiếu.':'Chưa xác nhận gửi thành công. Thử lại đúng đề xuất này để tránh ghi trùng.';
@@ -110,10 +110,12 @@
             try{const data=await rpc('get_staff_workspace',{p_kind:'complaints',p_query:'',p_id:ticketId,p_page:1});if(generation!==state.generation)return;const ticket=data.items.find(row=>row.id===ticketId);if(!ticket?.updated_at){state.blocked=true;message.textContent='Không tìm thấy phiếu trong phạm vi được giao.';state.loading=false;controls();return;}
                 if(!Object.hasOwn(ticket,'order_id')||!Object.hasOwn(ticket,'appointment_id'))throw Error('proposal_context_missing');state.ticket=ticket;
                 const order=ticket.order_id&&!ticket.appointment_id&&ticket.linked_order_code,service=ticket.appointment_id&&!ticket.order_id&&ticket.linked_appointment_code;
-                state.options=order?['refund','rma_refund','rma_exchange']:service?['refund','redo_service','change_staff']:[];
+                state.options=order?['refund','rma_refund','rma_exchange',...(ticket.approved_amount==null?['reject']:[])]:service?['refund','redo_service','change_staff']:[];
+                if(ticket.customer_id)state.options.push('points','voucher');
+                fields.voucherCode.value='';
                 for(const value of state.options)fields.option.append(new Option(names[value],value));
                 for(const[label,value]of [['Mã phiếu',ticket.ticket_code],['Nội dung phản ánh',ticket.subject],['Giao dịch liên quan',order?ticket.linked_order_code:service?ticket.linked_appointment_code:'Chưa xác minh được liên kết']])summary.append(el('dt',label),el('dd',value));
-                const previous=pending.get(key());if(previous){state.unresolved=previous;const details=previous.args.p_details;if(!state.options.includes(details.option))fields.option.append(new Option(names[details.option],details.option));fields.option.value=details.option;fields.amount.value=details.amount||'';fields.note.value=details.note;message.textContent='Đề xuất trước chưa rõ kết quả. Thử lại đúng đề xuất này trước khi tạo đề xuất mới.';}
+                const previous=pending.get(key());if(previous){state.unresolved=previous;const details=previous.args.p_details;if(!state.options.includes(details.option))fields.option.append(new Option(names[details.option],details.option));fields.option.value=details.option;fields.amount.value=details.amount||'';fields.voucherCode.value=details.voucher_code||'';fields.note.value=details.note;message.textContent='Đề xuất trước chưa rõ kết quả. Thử lại đúng đề xuất này trước khi tạo đề xuất mới.';}
                 else if(finished(ticket.status)){state.blocked=true;message.textContent='Phiếu đã kết thúc, không thể gửi đề xuất.';}else if(ticket.status==='waiting_manager_approval'){state.blocked=true;message.textContent='Phiếu đang chờ Quản lý duyệt, không thể gửi thêm đề xuất.';}else if(!state.options.length){state.blocked=true;message.textContent='Phiếu chưa có liên kết giao dịch hợp lệ. Liên hệ Quản lý để kiểm tra.';}
                 sync();state.loading=false;controls();
             }catch{if(generation===state.generation){state.blocked=true;message.textContent='Không tải đủ dữ liệu đề xuất. Đóng và mở lại để kiểm tra.';controls();}}
@@ -209,8 +211,8 @@ targets:{"complaints":"tab-complaint-detail"},
 profiles:{"complaint-profile":{read:"complaints",render:async(ctx)=>{const {el,date,money,status,read,table,card,facts,go,root,kind,id,row,target,turn}=ctx;
             const details = facts(root, row.ticket_code, [['Nội dung', row.subject], ['Trạng thái', status(row.status)], ['Mô tả', row.description], ...(row.customer_reply_due_at ? [['Hạn khách phản hồi', date(row.customer_reply_due_at)]] : []), ...(row.customer_followup_message_id ? [['Phản hồi', 'Phản hồi mới']] : [])]);
             if (row.resolution_type) {
-                const resolution = ({refund:'Hoàn tiền',rma_refund:'Nhận hàng trả và hoàn tiền',rma_exchange:'Đổi hàng',redo_service:'Thực hiện lại dịch vụ',change_staff:'Đổi nhân viên',explain:'Giải thích',reject:'Từ chối'})[row.resolution_type] || 'Cần Quản lý kiểm tra';
-                facts(root,'Phương án xử lý',[['Phương án',resolution],['Nội dung đề xuất',row.resolution_note],['Số tiền đã duyệt',row.approved_amount==null?'Chưa duyệt':money(row.approved_amount)]]);
+                const resolution = ({points:'Cộng Paw Points',voucher:'Tặng voucher',refund:'Hoàn tiền',rma_refund:'Nhận hàng trả và hoàn tiền',rma_exchange:'Đổi hàng',redo_service:'Thực hiện lại dịch vụ',change_staff:'Đổi nhân viên',explain:'Giải thích',reject:'Từ chối'})[row.resolution_type] || 'Cần Quản lý kiểm tra';
+                facts(root,'Phương án xử lý',[['Phương án',resolution],['Nội dung đề xuất',row.resolution_note],['Số tiền đã duyệt',row.approved_amount==null?'Chưa duyệt':row.resolution_type==='points'?row.approved_amount+' điểm':money(row.approved_amount)]]);
             }
             if (!['closed','resolved','completed','rejected'].includes(row.status) && window.PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle')) {
                 const message = el('button', 'Trao đổi', 'admin-btn admin-btn-primary'); message.type = 'button';
@@ -372,6 +374,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             complaint_request_conflict:'Yêu cầu đã được lưu với nội dung khác. Đóng và mở lại để tạo thao tác mới.',
             complaint_approval_forbidden:'Chỉ tài khoản có vai trò quản trị mới được duyệt phương án.',
             complaint_forbidden:'Bạn không có quyền thực hiện thao tác này.',
+            complaint_voucher_unavailable:'Mã voucher giảm theo số tiền đã hết hiệu lực, hết lượt hoặc đã thay đổi. Kiểm tra và gửi lại đề xuất.',
             complaint_handler_unavailable:'Nhân viên chưa đủ điều kiện nhận xử lý. Chọn nhân viên khác.',
             complaint_note_required:'Vui lòng nhập nội dung từ 2 ký tự.',
             invalid_complaint_resolution:'Kiểm tra phương án, số tiền và giao dịch liên quan.',
@@ -380,6 +383,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             complaint_replacement_order_required:'Chọn đơn đổi mới của khách đã giao thành công.',
             complaint_booking_mismatch:'Chọn lịch làm lại đã hoàn tất, cùng bé cưng và dịch vụ của lịch gốc.',
             complaint_approved_result_required:'Phương án cần được duyệt và có kết quả thực hiện trước khi hoàn tất.',
+            complaint_reopen_expired:'Đã hết hạn mở lại phiếu.',
             complaint_approval_pending:'Phiếu đang chờ duyệt phương án.',
             complaint_not_open:'Phiếu đã kết thúc. Mở lại phiếu trước khi tiếp tục.',
             complaint_owner_mismatch:'Giao dịch không thuộc khách hàng của phiếu.',
@@ -679,7 +683,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             tickets.forEach((record, idx) => {
                 const t = {...record,user_id:record.customer_id || record.user_id,title:record.subject || record.title};
                 const ticketMsgs = msgMap[t.id] || [];
-                const userMsg = ticketMsgs.find(m => ['user','khach_hang'].includes(m.sender_type)) || ticketMsgs[0];
+                const userMsg = ticketMsgs.find(m => ['customer','user','khach_hang'].includes(m.sender_type)) || ticketMsgs[0];
                 const cskhMsgs = ticketMsgs.filter(m => ['cskh','nhan_vien'].includes(m.sender_type));
                 const lastCskhMsg = cskhMsgs.length > 0 ? cskhMsgs[cskhMsgs.length - 1] : null;
 
@@ -687,7 +691,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                 let custId = cData ? cData.id : t.user_id;
                 let pData = custId ? (profMap[custId] || profiles.find(p => p.customer_id === custId)) : null;
 
-                let customerName = (pData && pData.full_name) || (cData && (cData.note || cData.phone_main || cData.email));
+                let customerName = t.guest_contact_name || (pData && pData.full_name) || (cData && (cData.note || cData.phone_main || cData.email));
                 if (!customerName && t.title && t.title.toLowerCase().startsWith('liên hệ từ ')) {
                     customerName = t.title.replace(/^liên hệ từ\s*/i, '').trim();
                 }
@@ -696,7 +700,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                 }
                 if (!customerName) customerName = 'Khách vãng lai';
 
-                let phone = (cData && (cData.phone_main || cData.phone)) || (pData && pData.phone);
+                let phone = t.guest_contact_phone || (cData && (cData.phone_main || cData.phone)) || (pData && pData.phone);
                 if (!phone || phone === '—') {
                     if (userMsg && userMsg.content) {
                         const matchPhone = userMsg.content.match(/(0[35789]\d{8})/);
@@ -708,7 +712,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                 const timeline = [];
                 if (ticketMsgs.length > 0) {
                     ticketMsgs.forEach(m => {
-                        const isUser = ['user','khach_hang'].includes(m.sender_type);
+                        const isUser = ['customer','user','khach_hang'].includes(m.sender_type);
                         const authorName = isUser ? `${customerName} (Khách hàng)` : `${m.agent_name || (lastCskhMsg ? lastCskhMsg.agent_name : 'CSKH PawPal')} (CSKH)`;
                         const dateObj = m.created_at ? new Date(m.created_at) : new Date();
                         const timeStr = `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')} - ${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
@@ -830,13 +834,17 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                         customerId: t.customer_id,
                         updated_at: t.updated_at,
                         customerReplyDueAt: t.customer_reply_due_at,
+                        rating: t.rating,
+                        ratingComment: t.rating_comment,
+                        autoCloseReason: t.auto_close_reason,
+                        closedAtRaw: t.closed_at,
                         customerFollowupMessageId: t.customer_followup_message_id,
                         customerName: customerName,
                         phone: phone,
                         petName: pet ? (pet.pet_name || pet.name) : (isContactOrOther ? '—' : 'Chưa gắn hồ sơ bé cưng'),
                         petBreed: petDisplayBreed,
                         petNotes: petDisplayNotes,
-                        bookingId: appt ? (appt.appointment_code || appt.id) : (isContactOrOther ? '—' : null),
+                        bookingId: appt ? (appt.appointment_code || appt.id) : null,
                         serviceType: sType,
                         serviceName: appt && appt.service ? appt.service.service_name : 'Chưa liên kết dịch vụ',
                         staffExecuted: appt && appt.staff ? `${appt.staff.full_name}` : (isContactOrOther ? 'Bộ phận CSKH' : 'Chưa phân công'),
@@ -932,6 +940,10 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                         customerId: t.customer_id,
                         updated_at: t.updated_at,
                         customerReplyDueAt: t.customer_reply_due_at,
+                        rating: t.rating,
+                        ratingComment: t.rating_comment,
+                        autoCloseReason: t.auto_close_reason,
+                        closedAtRaw: t.closed_at,
                         customerFollowupMessageId: t.customer_followup_message_id,
                         customerName: customerName,
                         phone: phone,

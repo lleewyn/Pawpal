@@ -19,3 +19,22 @@ test('paid booking and stale version failures remain visible',async()=>{
         await assert.rejects(()=>cancelCustomerBooking({rpc:async()=>({error:{message}})},{id:'owner'},booking,'Reason','request-id'));
     }
 });
+test('cancellation rejected when booking is received, in-progress or completed',async()=>{
+    const db={async rpc(){return {data:booking._supabaseId};}};
+    await assert.rejects(
+        ()=>cancelCustomerBooking(db,{id:'owner'},{...booking,status:'accepted'},'Reason','request-id'),
+        /Lịch hẹn đã.*tiếp nhận.*không thể.*hủy/
+    );
+    await assert.rejects(
+        ()=>cancelCustomerBooking(db,{id:'owner'},{...booking,status:'checked_in'},'Reason','request-id'),
+        /Lịch hẹn đã.*tiếp nhận.*không thể.*hủy/
+    );
+    await assert.rejects(
+        ()=>cancelCustomerBooking(db,{id:'owner'},{...booking,status:'in_progress'},'Reason','request-id'),
+        {message:'Lịch hẹn đang thực hiện dịch vụ, không thể hủy.'}
+    );
+    await assert.rejects(
+        ()=>cancelCustomerBooking(db,{id:'owner'},{...booking,status:'completed'},'Reason','request-id'),
+        {message:'Lịch hẹn đã hoàn thành, không thể hủy.'}
+    );
+});

@@ -11,7 +11,9 @@
  const show = (id,value) => { if ($(id)) $(id).style.display = value ? '' : 'none'; };
  const finished = t => ['resolved','closed'].includes(t.status);
  const statusNames = {new:'Chờ tiếp nhận',processing:'Đang xử lý',waiting_customer:'Chờ khách phản hồi',waiting_manager_approval:'Chờ duyệt phương án',reprocessing:'Đang xử lý lại',resolved:'Đã giải quyết',closed:'Đã đóng',waiting_return:'Chờ nhận hàng',refunding:'Đang hoàn tiền'};
- const optionNames = {explain:'Giải thích và phản hồi',reject:'Từ chối khiếu nại',refund:'Hoàn tiền',rma_refund:'Trả hàng và hoàn tiền',rma_exchange:'Đổi sản phẩm',redo_service:'Làm lại dịch vụ',change_staff:'Đổi kỹ thuật viên'};
+ const optionNames = {points:'Cộng Paw Points',voucher:'Tặng voucher',explain:'Giải thích và phản hồi',reject:'Từ chối khiếu nại',refund:'Hoàn tiền',rma_refund:'Trả hàng và hoàn tiền',rma_exchange:'Đổi sản phẩm',redo_service:'Làm lại dịch vụ',change_staff:'Đổi kỹ thuật viên'};
+ const directAward = type => ['points','voucher'].includes(type);
+ const hasAmount = type => ['refund','rma_refund','points'].includes(type);
  let renderVersion = 0;
  let replyMedia=null,replyTicket=null,gallery=null,replySaving=false,replyInit=null;
  async function ensureReplyMedia(t){
@@ -106,10 +108,21 @@
   text('viewTicketDemand',(t.customerDemand || 'Chưa ghi nhận yêu cầu')+(Number(t.requested_amount)>0?' · '+Number(t.requested_amount).toLocaleString('vi-VN')+' đ':''));
   text('viewResolutionNote',t.resolution_note || 'Chưa có phương án');
   text('viewResolutionBadge',optionNames[t.resolution_type] || t.resolution_type || '—');
-  text('viewRefundAmount',t.approved_amount == null ? 'Chưa duyệt' : Number(t.approved_amount).toLocaleString('vi-VN')+' đ');
+  text('viewRefundAmount',t.approved_amount == null ? 'Chưa duyệt' : Number(t.approved_amount).toLocaleString('vi-VN')+(t.resolution_type==='points'?' điểm':' đ'));
+  text('complaintCustomerRating',t.rating == null ? 'Chưa có đánh giá' : t.rating + '/5 sao');
+  text('complaintRatingComment',t.ratingComment || '');
+  show('complaintRating',finished(t)||t.rating!=null);
+  text('complaintLifecycleNote',t.autoCloseReason==='no_customer_reply'?'Đã đóng do khách không bổ sung thông tin.':
+   t.autoCloseReason==='resolved_expired'?'Đã đóng sau 3 ngày không có phản hồi.':
+   t.status==='waiting_customer'&&!t.customerReplyDueAt?'Phiếu chưa có hạn phản hồi. Gửi lại yêu cầu bổ sung để khách đọc nội dung và bắt đầu thời hạn 72 giờ.':
+   t.status==='reprocessing'&&t.rating<3&&t.rating!=null?'Cần quản lý tiếp nhận. Khách đánh giá dưới 3 sao.':'');
   show('managerApprovalPanel',t.status==='waiting_manager_approval');
-  show('btnReopenTicket',finished(t)); show('btnCloseComplaint',t.status==='resolved');
+  const reopenExpired=t.autoCloseReason==='resolved_expired' ||
+   (t.autoCloseReason==='no_customer_reply' && Date.now()>=Date.parse(t.closedAtRaw)+7*86400000);
+  show('btnReopenTicket',finished(t)&&!reopenExpired); show('btnCloseComplaint',t.status==='resolved');
   ['btnAssignHandler','btnRequestMoreInfo','btnOpenResolveModal','btnSubmitReply'].forEach(id=>{if($(id))$(id).disabled=finished(t);});
+  show('btnRequestMoreInfo',Boolean(t.customerId));
+  text('btnCompleteComplaint',directAward(t.resolution_type)?'Thực hiện bồi hoàn':'Liên kết kết quả thực hiện');
   show('btnCompleteComplaint',t.status==='processing' && Boolean(t.resolved_by) && Boolean(t.resolution_type));
   show('btnLinkComplaintSource',!finished(t) && !t.bookingId && !t.orderId);
   text('complaintAttachments','Đang tải tệp đính kèm…');
@@ -139,8 +152,8 @@
    if(version!==renderVersion)return;
    const events=(audit.data || []).flatMap(a=>{try{return [JSON.parse(a.description)];}catch{return [];}});
    const proposal=events.find(e=>e.action==='propose');
-   text('viewProposedAmount',proposal?Number(proposal.details.amount || 0).toLocaleString('vi-VN')+' đ':'Chưa có đề xuất có thể duyệt');
-   text('complaintLinkedResults',audit.error?'Không tải được kết quả liên kết.':audit.data.flatMap(a=>{try{const d=JSON.parse(a.description);return d.action==='complete'?[`${mod.formatDateTime(a.created_at)} · ${d.details.evidence_id}${d.details.replacement_order_id?' · Đơn đổi mới: '+d.details.replacement_order_id:''}${d.details.return_request_id?' · Hàng trả: '+d.details.return_request_id:''}`]:[];}catch{return [];}}).join('\n') || 'Chưa liên kết kết quả thực hiện.');
+   text('viewProposedAmount',proposal?Number(proposal.voucher_amount ?? proposal.details.amount ?? 0).toLocaleString('vi-VN')+(proposal.details.option==='points'?' điểm':' đ')+(proposal.details.voucher_code?' · '+proposal.details.voucher_code:''):'Chưa có đề xuất có thể duyệt');
+   text('complaintLinkedResults',audit.error?'Không tải được kết quả liên kết.':audit.data.flatMap(a=>{try{const d=JSON.parse(a.description);return d.action==='complete'?[`${mod.formatDateTime(a.created_at)} · ${d.result_id || d.details.evidence_id}${d.details.replacement_order_id?' · Đơn đổi mới: '+d.details.replacement_order_id:''}${d.details.return_request_id?' · Hàng trả: '+d.details.return_request_id:''}`]:[];}catch{return [];}}).join('\n') || 'Chưa liên kết kết quả thực hiện.');
   } catch(error) {if(version===renderVersion)text('viewTicketTimeline','Không tải được lịch sử: '+error.message);}
  }
  async function loadAttachments(t,version) {
@@ -194,57 +207,89 @@
  function openRequestMoreInfoModal(){if(captureModal('requestMoreInfoModalOverlay')){$('inputRequestMessage').value='';$('selectRequestChannel').value='portal';text('requestMoreInfoModalOverlayError','');}}
  function resolutionVisibility(){
   const option=$('selectResolveOption').value;
-  show('complaintAmountGroup',['refund','rma_refund'].includes(option));
-  text('complaintResolutionHint',['explain','reject'].includes(option)?'Lưu kết quả giải quyết kèm lý do.':'Đề xuất cần quản trị duyệt. Thực hiện tại Bán hàng hoặc Dịch vụ rồi liên kết kết quả thực tế.');
+  show('complaintAmountGroup',hasAmount(option));
+  text('complaintAmountLabel',option==='points'?'Số Paw Points đề xuất':'Số tiền đề xuất');
+  $('complaintVoucherGroup').hidden=option!=='voucher';
+  text('complaintResolutionHint',['explain','reject'].includes(option)?'Lưu kết quả giải quyết kèm lý do.':'Quản lý phải duyệt phương án trước khi thực hiện.');
  }
- function bindEvidence(prefix,rows){
+ function bindEvidence(prefix,rows,onSelect){
   const input=$(prefix+'Search'),selected=$(prefix+'Id'),dropdown=$(prefix+'Dropdown');
   input.value='';selected.value='';dropdown.style.display='none';
-  const render=()=>{selected.value='';dropdown.innerHTML=rows.filter(r=>r.label.toLocaleLowerCase().includes(input.value.toLocaleLowerCase())).slice(0,30).map(r=>`<button type="button" class="customer-autocomplete-item" data-id="${r.id}">${escapeHtml(r.label)}</button>`).join('') || 'Chưa có kết quả phù hợp.';dropdown.style.display='block';dropdown.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{selected.value=b.dataset.id;input.value=b.textContent;dropdown.style.display='none';});};
-  input.oninput=render;input.onfocus=render;input.onblur=()=>setTimeout(()=>dropdown.style.display='none',150);
+  const render=()=>{dropdown.innerHTML=rows.filter(r=>r.label.toLocaleLowerCase().includes(input.value.toLocaleLowerCase())).slice(0,30).map(r=>`<button type="button" class="customer-autocomplete-item" data-id="${r.id}">${escapeHtml(r.label)}</button>`).join('') || 'Chưa có kết quả phù hợp.';dropdown.style.display='block';dropdown.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{selected.value=b.dataset.id;input.value=b.textContent;dropdown.style.display='none';onSelect?.(b.dataset.id);});};
+  input.oninput=()=>{selected.value='';onSelect?.(null);render();};input.onfocus=render;input.onblur=()=>setTimeout(()=>dropdown.style.display='none',150);
  }
  async function openResolveModal(mode='resolve'){
   const modal=captureModal('resolveTicketModalOverlay');if(!modal)return;
   const t=current();modal.dataset.mode=mode;
+  $('btnConfirmResolveTicket').disabled=false;
+  $('complaintEvidenceSearch').disabled=false;
+  $('complaintReplacementSearch').readOnly=mode==='complete' && t.resolution_type==='rma_exchange';
   $('inputResolveNote').value='';$('inputResolveAmount').value='';$('selectResolveOption').value='explain';text('resolveTicketModalOverlayError','');
-  show('complaintOptionGroup',mode==='resolve');show('complaintEvidenceGroup',['complete','link_source'].includes(mode));show('complaintReplacementGroup',mode==='complete' && ['rma_exchange','rma_refund'].includes(t.resolution_type));
+  $('complaintVoucherGroup').hidden=true;$('complaintVoucherCode').value='';
+  show('complaintOptionGroup',mode==='resolve');show('complaintEvidenceGroup',mode==='link_source'||(mode==='complete'&&!directAward(t.resolution_type)));show('complaintReplacementGroup',mode==='complete' && ['rma_exchange','rma_refund'].includes(t.resolution_type));
   text('complaintReplacementLabel',t.resolution_type==='rma_refund'?'Yêu cầu trả hàng đã nhận':'Đơn hàng đổi mới đã giao');
   show('complaintAmountGroup',false);
-  text('complaintResolutionTitle',({resolve:'Phương án xử lý',complete:'Liên kết kết quả thực hiện',close:'Đóng phiếu',reopen:'Mở lại phiếu',link_source:'Liên kết giao dịch'})[mode]);
+  text('complaintResolutionTitle',({resolve:'Phương án xử lý',complete:directAward(t.resolution_type)?'Thực hiện bồi hoàn':'Liên kết kết quả thực hiện',close:'Đóng phiếu',reopen:'Mở lại phiếu',link_source:'Liên kết giao dịch'})[mode]);
   text('btnConfirmResolveTicket',mode==='resolve'?'Lưu phương án':'Xác nhận');
-  text('complaintResolutionHint',mode==='complete'?'Chỉ chọn kết quả đã hoàn tất, thuộc đúng khách và giao dịch liên quan.':'Nhập lý do để lưu vào lịch sử xử lý.');
+  text('complaintResolutionHint',mode==='complete'?(directAward(t.resolution_type)?'Xác nhận thực hiện đúng phương án đã được quản lý duyệt.':'Thực hiện phương án tại Bán hàng hoặc Dịch vụ, sau đó chọn kết quả đã hoàn tất ở đây.'):'Nhập lý do để lưu vào lịch sử xử lý.');
   if(mode==='resolve')resolutionVisibility();
   if(mode==='link_source'){
    const isOrder=mod.state.orderComplaints.some(c=>c.rawId===t.rawId);modal.dataset.sourceKind=isOrder?'order':'service';
    bindEvidence('complaintEvidence',(isOrder?mod.state.cachedOrders:mod.state.cachedAppointments).filter(r=>r.customer_id===t.customerId).map(r=>({id:r.id,label:r.order_code || r.appointment_code})));return;
   }
-  if(mode!=='complete')return;
+  if(mode!=='complete'||directAward(t.resolution_type))return;
+  const requestId=modal.dataset.requestId;
+  const isCurrent=()=>modal.dataset.requestId===requestId && modal.classList.contains('active');
+  const confirm=$('btnConfirmResolveTicket');
+  confirm.disabled=true;
   $('complaintEvidenceSearch').disabled=true;
-  $('complaintEvidenceId').value='';$('complaintEvidenceSearch').value='';
-  $('complaintEvidenceDropdown').style.display='none';
+  bindEvidence('complaintEvidence',[]);
+  bindEvidence('complaintReplacement',[]);
   try{
-   let rows=[];
-   const readAll=async(build)=>{const rows=[];for(let i=0;;i+=500){const {data,error}=await build().range(i,i+499);if(error)throw error;rows.push(...data);if(data.length<500)return rows;}};
+   let rows=[],replacementRows=[];
+   const order=mod.state.cachedOrders.find(o=>o.order_code===t.orderId || o.id===t.orderId);
+   const original=mod.state.cachedAppointments.find(a=>a.appointment_code===t.bookingId || a.id===t.bookingId);
    if(['refund','rma_refund'].includes(t.resolution_type)){
-    const data=await readAll(()=>client().from('refund_transaction').select('id,refund_code,refunded_amount,payment:payment_id!inner(customer_id,order_id,appointment_id)').eq('refund_status','succeeded').eq('payment.customer_id',t.customerId).order('id'));
-    rows=data.map(r=>({id:r.id,label:`${r.refund_code} · ${Number(r.refunded_amount).toLocaleString('vi-VN')} đ`}));
+    const source=order || original;
+    if(!source)throw Error('Phiếu chưa có giao dịch đã xác minh.');
+    const data=await readAll(()=>client().from('refund_transaction').select('id,refund_code,refunded_amount,ticket_id,return_request_id,payment:payment_id!inner(customer_id,order_id,appointment_id)').eq('refund_status','succeeded').eq('payment.customer_id',t.customerId).eq(order?'payment.order_id':'payment.appointment_id',source.id).eq('refunded_amount',t.approved_amount || 0).order('id'));
+    rows=data.filter(r=>!r.ticket_id||r.ticket_id===t.rawId).map(r=>({id:r.id,returnId:r.return_request_id,label:`${r.refund_code} · ${Number(r.refunded_amount).toLocaleString('vi-VN')} đ`}));
     if(t.resolution_type==='rma_refund'){
-     const order=mod.state.cachedOrders.find(o=>o.order_code===t.orderId || o.id===t.orderId);
-     const returns=await readAll(()=>client().from('return_request').select('id,reason').eq('sales_order_id',order.id).eq('request_status','received').order('id'));
-     bindEvidence('complaintReplacement',returns.map(r=>({id:r.id,label:r.reason+' · '+r.id})));
+     if(!order)throw Error('Phiếu chưa có đơn hàng đã xác minh.');
+     const returns=await readAll(()=>client().from('return_request').select('id,reason').eq('sales_order_id',order.id).in('request_status',['received','completed']).order('id'));
+     replacementRows=returns.map(r=>({id:r.id,label:r.reason+' · '+r.id}));
+     rows=rows.filter(r=>replacementRows.some(item=>!r.returnId||item.id===r.returnId));
     }
    }else if(t.resolution_type==='rma_exchange'){
-    const order=mod.state.cachedOrders.find(o=>o.order_code===t.orderId || o.id===t.orderId);
-    const data=await readAll(()=>client().from('return_request').select('id,reason').eq('sales_order_id',order.id).eq('request_status','received').order('id'));
-    rows=data.map(r=>({id:r.id,label:r.reason+' · '+r.id}));
-    bindEvidence('complaintReplacement',mod.state.cachedOrders.filter(o=>o.customer_id===t.customerId && o.id!==order.id && ['delivered','completed'].includes(o.order_status)).map(o=>({id:o.id,label:o.order_code})));
+    if(!order)throw Error('Phiếu chưa có đơn hàng đã xác minh.');
+    const data=await readAll(()=>client().from('sales_replacement')
+      .select('order_id,returned:return_request_id!inner(id,reason,sales_order_id,request_status),replacement:order_id!inner(order_code,order_status,customer_id)')
+      .eq('kind','exchange').eq('returned.sales_order_id',order.id).in('returned.request_status',['received','completed'])
+      .eq('replacement.customer_id',t.customerId).in('replacement.order_status',['delivered','completed']).order('order_id'));
+    rows=data.map(r=>({id:r.returned.id,label:r.returned.reason+' · '+r.replacement.order_code, replacement:{id:r.order_id,label:r.replacement.order_code}}));
    }else{
-    const original=mod.state.cachedAppointments.find(a=>a.appointment_code===t.bookingId || a.id===t.bookingId);
-    rows=mod.state.cachedAppointments.filter(a=>a.customer_id===t.customerId && (a.id!==original?.id || t.resolution_type==='change_staff') && a.pet_id===original?.pet_id && a.appointment_status==='completed').map(a=>({id:a.id,label:a.appointment_code+' · '+mod.formatDateTime(a.scheduled_start_at)}));
+    if(!original?.pet_id)throw Error('Phiếu chưa có lịch hẹn và hồ sơ bé cưng đã xác minh.');
+    const originalItems=await readAll(()=>client().from('appointment_item').select('service_id').eq('appointment_id',original.id).order('id'));
+    const services=new Set(originalItems.map(item=>item.service_id).filter(Boolean));
+    const appointments=await readAll(()=>client().from('appointment').select('id,appointment_code,scheduled_start_at,created_at,items:appointment_item(service_id)').eq('customer_id',t.customerId).eq('pet_id',original.pet_id).eq('appointment_status','completed').order('id'));
+    rows=appointments.filter(a=>a.items.some(item=>services.has(item.service_id)) &&
+      (t.resolution_type==='change_staff' || (a.id!==original.id && Date.parse(a.created_at)>=Date.parse(t.createdAtRaw))))
+      .map(a=>({id:a.id,label:a.appointment_code+' · '+mod.formatDateTime(a.scheduled_start_at)}));
    }
-   if(modal.dataset.ticketId!==t.rawId)return;bindEvidence('complaintEvidence',rows);
-  }catch(error){text('resolveTicketModalOverlayError','Không tải được kết quả: '+error.message);}
-  finally{$('complaintEvidenceSearch').disabled=false;}
+   if(!isCurrent())return;
+   bindEvidence('complaintEvidence',rows,id=>{
+    const result=rows.find(row=>row.id===id);
+    if(t.resolution_type==='rma_exchange'){
+     $('complaintReplacementId').value=result?.replacement.id || '';
+     $('complaintReplacementSearch').value=result?.replacement.label || '';
+    }else if(t.resolution_type==='rma_refund'){
+     bindEvidence('complaintReplacement',result?replacementRows.filter(r=>!result.returnId||r.id===result.returnId):[]);
+    }
+   });
+   if(!rows.length)text('resolveTicketModalOverlayError','Chưa có kết quả hoàn tất phù hợp trong Bán hàng hoặc Dịch vụ.');
+   confirm.disabled=!rows.length;
+  }catch(error){if(isCurrent())text('resolveTicketModalOverlayError','Không tải được kết quả: '+error.message);}
+  finally{if(isCurrent())$('complaintEvidenceSearch').disabled=false;}
  }
  function init(){
   const root=$('subtab-tab-complaint-detail');if(!root || root.dataset.v1Bound)return;root.dataset.v1Bound='true';
@@ -263,8 +308,17 @@
   bind('btnConfirmResolveTicket',()=>{
    const modal=$('resolveTicketModalOverlay'),mode=modal.dataset.mode,note=$('inputResolveNote').value.trim(),option=$('selectResolveOption').value;
    const details={note};let action=mode;
-   if(mode==='resolve'){action=['explain','reject'].includes(option)?'resolve':'propose';details.option=option;details.amount=['refund','rma_refund'].includes(option)?Number($('inputResolveAmount').value):0;}
-   if(mode==='complete'){details.evidence_id=$('complaintEvidenceId').value || null;if(current().resolution_type==='rma_exchange')details.replacement_order_id=$('complaintReplacementId').value || null;if(current().resolution_type==='rma_refund')details.return_request_id=$('complaintReplacementId').value || null;}
+   if(mode==='resolve'){action=['explain','reject'].includes(option)?'resolve':'propose';details.option=option;details.amount=hasAmount(option)?Number($('inputResolveAmount').value):0;if(option==='voucher')details.voucher_code=$('complaintVoucherCode').value.trim();}
+   if(mode==='complete'&&!directAward(current().resolution_type)){
+    const type=current().resolution_type;
+    details.evidence_id=$('complaintEvidenceId').value || null;
+    const linked=$('complaintReplacementId').value;
+    if(!details.evidence_id || (['rma_exchange','rma_refund'].includes(type) && !linked)){
+     text('resolveTicketModalOverlayError','Chọn đầy đủ kết quả thực hiện trước khi xác nhận.');return;
+    }
+    if(type==='rma_exchange')details.replacement_order_id=linked;
+    if(type==='rma_refund')details.return_request_id=linked;
+   }
    if(mode==='link_source'){details.evidence_id=$('complaintEvidenceId').value || null;details.source_kind=modal.dataset.sourceKind;}
    return act(action,details,$('btnConfirmResolveTicket'),modal);
   });

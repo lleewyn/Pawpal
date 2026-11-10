@@ -21,7 +21,8 @@ function showFeedback(type, message) {
 
     const toast = document.createElement('div');
     toast.style.cssText = `background:${colors[type] || colors.info};color:#fff;padding:14px 16px;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.18);font-size:14px;line-height:1.45;`;
-    toast.innerHTML = `<strong style="display:block;margin-bottom:4px;">${type === 'success' ? 'Thành công' : type === 'error' ? 'Lỗi' : type === 'warning' ? 'Cảnh báo' : 'Thông báo'}</strong><span>${message}</span>`;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    toast.textContent = message;
     container.appendChild(toast);
 
     setTimeout(() => {
@@ -41,6 +42,7 @@ function buildTicketPayload() {
     return {
         fullName,
         phoneNumber,
+        subject: getValue('contactSubject'),
         serviceInterest,
         message
     };
@@ -48,12 +50,48 @@ function buildTicketPayload() {
 
 function validatePayload(payload) {
     if (!payload.fullName) return 'Vui lòng nhập họ và tên.';
-    if (!payload.phoneNumber) return 'Vui lòng nhập số điện thoại.';
+    const phone = payload.phoneNumber.replace(/[\s().-]/g, '').replace(/^(?:\+84|0084|84)/, '0');
+    if (!/^0[35789]\d{8}$/.test(phone)) return 'Vui lòng nhập số điện thoại di động Việt Nam hợp lệ.';
+    if (payload.subject.length < 2) return 'Vui lòng nhập tiêu đề.';
     if (!payload.message) return 'Vui lòng nhập lời nhắn.';
     return null;
 }
 
+let pendingContact;
+
+async function hasMemberSession(client) {
+    const session = await client?.auth.getSession();
+    if (!session?.data?.session) return false;
+    const {data,error} = await client.auth.getUser();
+    if (error && error.name !== 'AuthSessionMissingError' && ![400,401,403].includes(error.status)) {
+        throw Error('Không kiểm tra được phiên đăng nhập. Vui lòng thử lại.');
+    }
+    return Boolean(!error && data?.user);
+}
+
 async function saveContactTicket(payload) {
+    const client = window.getSupabaseClient?.() || window.SupabaseClient;
+    if (!await hasMemberSession(client)) {
+        const key = JSON.stringify(payload);
+        if (pendingContact?.key !== key) pendingContact = {key, id:crypto.randomUUID(), proof:crypto.randomUUID()};
+        const {id,proof} = pendingContact;
+        const response = await fetch('/api/customer/guest/contact-ticket', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({...payload, requestId:id, proof})
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success || !result.ticketCode) {
+            throw Error(result.message || 'Chưa xác nhận được yêu cầu. Vui lòng thử lại.');
+        }
+        pendingContact = null;
+        let trackingUrl = null;
+        try {
+            sessionStorage.setItem('pawpal_guest_support_claim:' + id, proof);
+            trackingUrl = '/user#support?claim=' + encodeURIComponent(id);
+        } catch {}
+        return {ticketCode:result.ticketCode, trackingUrl, guest:true};
+    }
     const serviceMap = {
         spa: 'Spa và Grooming',
         hotel: 'Khách sạn thú cưng',
@@ -61,7 +99,7 @@ async function saveContactTicket(payload) {
         other: 'Khác'
     };
 
-    const title = `Liên hệ từ ${payload.fullName}`;
+    const title = payload.subject;
     const type = 'other';
     const content = `Họ tên: ${payload.fullName}
 Số điện thoại: ${payload.phoneNumber}
@@ -73,7 +111,7 @@ ${payload.message}`;
     if (window.PawPalSupport && window.PawPalSupport.createTicket) {
         const result = await window.PawPalSupport.createTicket(title, type, content);
         if (!result?.id) throw Error('Chưa xác nhận được yêu cầu. Vui lòng thử lại.');
-        return result.id;
+        return {ticketCode:result.id.slice(0,8), trackingUrl:'/user#support?id='+encodeURIComponent(result.id), guest:false};
     }
 
     throw Error('Chưa kết nối được hỗ trợ. Vui lòng thử lại.');
@@ -90,26 +128,28 @@ async function handleSubmit(event) {
     }
 
     const submitBtn = document.querySelector('.btn-submit');
+    if (submitBtn?.disabled) return;
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = 'Đang gửi...';
     }
 
     try {
-    const ticketId = await saveContactTicket(payload);
-    const form = document.getElementById('contactForm');
-    if (form) form.reset();
-
-    if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Gửi tin nhắn';
-    }
-
-    const shortId = ticketId.length > 10 ? ticketId.substring(0, 8) : ticketId;
-    showFeedback(
-        'success',
-        `PawPal đã nhận tin nhắn của bạn. Mã hỗ trợ: #${shortId}. Chúng tôi sẽ phản hồi sớm nhất.`
-    );
+        const result = await saveContactTicket(payload);
+        document.getElementById('contactForm')?.reset();
+        const receipt = document.getElementById('contactReceipt');
+        if (receipt) {
+            receipt.hidden = false;
+            document.getElementById('contactReceiptCode').textContent = 'PawPal đã nhận yêu cầu. Mã hỗ trợ ' + result.ticketCode + '.';
+            document.getElementById('contactReceiptHint').textContent = result.guest
+                ? (result.trackingUrl ? 'Đăng nhập hoặc đăng ký bằng số điện thoại đã gửi để theo dõi yêu cầu trong mục Hỗ trợ. Hãy mở liên kết ở tab này.' : 'Hãy lưu mã hỗ trợ để liên hệ PawPal.')
+                : 'Bạn có thể theo dõi phản hồi trong mục Hỗ trợ.';
+            const link = document.getElementById('contactReceiptLink');
+            link.hidden = !result.trackingUrl;
+            if (result.trackingUrl) link.href = result.trackingUrl;
+        } else {
+            showFeedback('success', 'PawPal đã nhận yêu cầu. Mã hỗ trợ ' + result.ticketCode + '.');
+        }
     } catch (error) {
         showFeedback('error', error.message || 'Chưa gửi được tin nhắn. Vui lòng thử lại.');
     } finally {
@@ -119,17 +159,10 @@ async function handleSubmit(event) {
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('contactForm');
-    const submitBtn = document.querySelector('.btn-submit');
-
     if (form) {
         if(form.dataset.contactReady)return;
         form.dataset.contactReady='true';
         form.addEventListener('submit', handleSubmit);
     }
 
-    if (submitBtn && form) {
-        submitBtn.addEventListener('click', () => {
-            if(form.reportValidity())handleSubmit({preventDefault(){}});
-        });
-    }
 });

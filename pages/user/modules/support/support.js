@@ -63,6 +63,7 @@ export function initSupportTickets() {
         const ratingFeedbackArea = document.getElementById('ratingFeedbackArea');
         const btnSendReply = document.getElementById('btnSendReply');
         const btnActionCloseTicket = document.getElementById('btnActionCloseTicket');
+        let ratingCloseTicket = null;
         const btnCloseDetailPanel = document.getElementById('btnCloseDetailPanel');
         const btnSubmitRating = document.getElementById('btnSubmitRating');
         const createTicketForm = document.getElementById('createTicketForm');
@@ -209,6 +210,7 @@ export function initSupportTickets() {
         }
 
         function closeTicketModal() {
+            ratingCloseTicket = null;
             replyMedia?.close();replyMedia=null;replyTarget=null;clearGalleries();
             ++detailRequestVersion;
             window.PawPalSupport.releaseTicket?.();
@@ -385,7 +387,18 @@ export function initSupportTickets() {
             if(!detailTicketTitle.isConnected || detailVersion!==detailRequestVersion || owner!==JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id)return;
             if (!ticket) return;
 
+            const compensation = ticket.compensation;
+            document.getElementById('detailCompensationSummary')?.classList.toggle('d-none', !compensation);
+            const compensationText = document.getElementById('detailCompensationText');
+            if (compensationText) {
+                const labels = {points:'Cộng Paw Points',voucher:'Tặng voucher',refund:'Hoàn tiền',rma_refund:'Trả hàng và hoàn tiền',rma_exchange:'Đổi sản phẩm',redo_service:'Làm lại dịch vụ',change_staff:'Đổi kỹ thuật viên'};
+                const value = Number(compensation?.approved_amount);
+                const amount = value > 0 ? value.toLocaleString('vi-VN') + (compensation.type === 'points' ? ' điểm' : ' đ') : '';
+                compensationText.textContent = compensation ? [labels[compensation.type] || 'Đã thực hiện', amount, formatDisplayTime(compensation.completed_at)].filter(Boolean).join(' · ') : '';
+            }
+
             if (activeTicketId !== ticketId) {
+                ratingCloseTicket = null;
                 const reply = document.getElementById('replyTextarea');
                 if (reply) reply.value = '';
                 currentSelectedRating = 5;
@@ -416,14 +429,20 @@ export function initSupportTickets() {
                 statusClass = 'badge-status-completed';
             }
 
-            // Hiển thị banner nhắc nhở khi chờ phản hồi
+            const canReopen = Boolean(ticket.reopenUntil) && Date.now() < Date.parse(ticket.reopenUntil);
+            const closedForMissingInfo = ticket.autoCloseReason === 'no_customer_reply';
             const waitingAlertEl = document.getElementById('detailWaitingCustomerAlert');
             if (waitingAlertEl) {
                 if (ticket.status === 'waiting_customer') {
                     const due = ticket.replyDueAt && new Date(ticket.replyDueAt);
                     const deadline = due ? (Date.now() >= due.getTime() ? 'Đã hết hạn phản hồi.' : 'Hạn phản hồi ' + due.toLocaleString('vi-VN')) : '';
-                    waitingAlertEl.textContent = [ticket.replyRequest || 'Cửa hàng đang chờ bạn bổ sung thông tin.', deadline].filter(Boolean).join('\n');
+                    waitingAlertEl.textContent = [ticket.replyRequest || 'Phiếu chưa có nội dung bổ sung trong cuộc trao đổi. Bạn có thể nhắn CSKH để hỏi cần gửi thêm gì.', deadline].filter(Boolean).join('\n');
                     waitingAlertEl.style.whiteSpace = 'pre-wrap';
+                    waitingAlertEl.classList.remove('d-none');
+                } else if (canReopen || closedForMissingInfo) {
+                    const reason = closedForMissingInfo ? 'Phiếu đã đóng vì chưa nhận được thông tin bổ sung.' : '';
+                    const next = canReopen ? 'Bạn có thể phản hồi về cùng vấn đề đến ' + new Date(ticket.reopenUntil).toLocaleString('vi-VN') + '.' : 'Đã hết hạn mở lại. Vui lòng tạo yêu cầu mới.';
+                    waitingAlertEl.textContent = [reason, next].filter(Boolean).join(' ');
                     waitingAlertEl.classList.remove('d-none');
                 } else {
                     waitingAlertEl.classList.add('d-none');
@@ -604,8 +623,11 @@ export function initSupportTickets() {
                 }
             }
 
-            if (isCompleted) {
-                replyEditorArea.classList.add('d-none');
+            const canClose = ticket.status === 'resolved' && !ticket.rating;
+            const closing = canClose && ratingCloseTicket === ticket.id;
+            btnActionCloseTicket?.classList.toggle('d-none', !canClose || closing);
+            if ((isCompleted && !closedForMissingInfo && (!canClose || closing)) || ticket.rating) {
+                replyEditorArea.classList.toggle('d-none', closing || (isCompleted && !canReopen));
                 ratingFeedbackArea.classList.remove('d-none');
                 if (btnCancelRating) btnCancelRating.classList.toggle('d-none',Boolean(ticket.rating));
                 if (btnCancelRatingAction) btnCancelRatingAction.classList.toggle('d-none',Boolean(ticket.rating));
@@ -631,12 +653,13 @@ export function initSupportTickets() {
                     }
                     if (btnSubmitRating) {
                         btnSubmitRating.disabled = false;
-                        btnSubmitRating.textContent = 'Gửi đánh giá';
+                        btnSubmitRating.textContent = closing ? 'Xác nhận và gửi đánh giá' : 'Gửi đánh giá';
                         btnSubmitRating.style.opacity = '1';
                     }
                 }
             } else {
-                replyEditorArea.classList.toggle('d-none', ticket.status === 'waiting_customer' && Boolean(ticket.replyDueAt) && Date.now() >= Date.parse(ticket.replyDueAt));
+                replyEditorArea.classList.toggle('d-none', (isCompleted && !canReopen) ||
+                    (ticket.status === 'waiting_customer' && Boolean(ticket.replyDueAt) && Date.now() >= Date.parse(ticket.replyDueAt)));
                 ratingFeedbackArea.classList.add('d-none');
                 if (btnCancelRating) btnCancelRating.classList.remove('d-none');
                 if (btnCancelRatingAction) btnCancelRatingAction.classList.remove('d-none');
@@ -718,7 +741,8 @@ export function initSupportTickets() {
                 } catch (error) {
                     if (activeTicketId !== targetTicketId || !textarea.isConnected) return;
                     console.error('[Support] Không thể gửi phản hồi:', error);
-                    window.alert(error.message === 'support_reply_expired' ? 'Đã hết hạn phản hồi. Vui lòng liên hệ cửa hàng.' : error.message || 'Không thể gửi phản hồi. Vui lòng thử lại.');
+                    const message = {support_reply_expired:'Đã hết hạn bổ sung. Vui lòng tải lại phiếu để kiểm tra thời hạn mở lại.',support_reply_closed:'Đã hết hạn mở lại. Vui lòng tạo yêu cầu mới.'};
+                    window.alert(message[error.reason || error.message] || error.message || 'Không thể gửi phản hồi. Vui lòng thử lại.');
                 } finally {
                     replySaving=false;textarea.disabled=false;const mediaRoot=document.getElementById('supportReplyMedia');if(mediaRoot)mediaRoot.inert=false;
                     btnSendReply.disabled = false;
@@ -732,21 +756,21 @@ export function initSupportTickets() {
             btnActionCloseTicket.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (replyEditorArea) replyEditorArea.classList.add('d-none');
-                if (ratingFeedbackArea) {
-                    ratingFeedbackArea.classList.remove('d-none');
-                    if (btnSubmitRating) {
-                        btnSubmitRating.textContent = 'Xác nhận hoàn tất và Đánh giá';
-                    }
-                    ratingFeedbackArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
+                if (!activeTicketId) return;
+                ratingCloseTicket = activeTicketId;
+                void showTicketDetail(activeTicketId).then(() => ratingFeedbackArea?.scrollIntoView({ block: 'nearest' }));
             });
         }
 
         // Hủy đánh giá / Quay lại khung gửi phản hồi
         const cancelRatingHandler = (e) => {
             if (e) { e.preventDefault(); e.stopPropagation(); }
-            closeTicketModal();
+            if (ratingCloseTicket === activeTicketId && activeTicketId) {
+                ratingCloseTicket = null;
+                void showTicketDetail(activeTicketId);
+            } else {
+                closeTicketModal();
+            }
         };
         const btnCancelRating = document.getElementById('btnCancelRating');
         const btnCancelRatingAction = document.getElementById('btnCancelRatingAction');
@@ -789,7 +813,7 @@ export function initSupportTickets() {
                     if (activeTicketId !== targetTicketId || !btnSubmitRating.isConnected) return;
                     renderTable();showTicketDetail(activeTicketId);
                 } catch(error) { alert(error.message || 'Không thể lưu đánh giá. Vui lòng thử lại.'); }
-                finally {const saved=window.PawPalSupport.getTickets().find(t=>t.id===activeTicketId);btnSubmitRating.disabled=Boolean(saved?.rating);btnSubmitRating.textContent=saved?.rating?'Đã đánh giá':'Gửi đánh giá';}
+                finally {const saved=window.PawPalSupport.getTickets().find(t=>t.id===activeTicketId);btnSubmitRating.disabled=Boolean(saved?.rating);btnSubmitRating.textContent=saved?.rating?'Đã đánh giá':ratingCloseTicket===activeTicketId?'Xác nhận và gửi đánh giá':'Gửi đánh giá';}
             });
         }
 
@@ -823,6 +847,27 @@ export function initSupportTickets() {
 
         // Lắng nghe sự kiện lưu trữ giữa các Tab (Admin và User)
         renderSkeletonRows();
+        const params = new URLSearchParams(location.hash.split('?')[1] || location.search);
+        const claim = params.get('claim');
+        let claimedTicketId = null;
+        try {
+            await window.PawPalSupport.claimGuestContacts?.(claim);
+            if (claim && ticketsTableBody?.isConnected && location.hash.startsWith('#support?')) {
+                claimedTicketId = claim;
+                history.replaceState(history.state, '', '#support?id=' + encodeURIComponent(claim));
+            }
+        } catch (error) {
+            if (claim && ticketsTableArea?.isConnected) {
+                const feedback = document.createElement('p');
+                feedback.setAttribute('role','alert');
+                feedback.textContent = error.reason === 'guest_contact_claim_phone_mismatch'
+                    ? 'Hãy đăng nhập bằng tài khoản có số điện thoại đã xác thực trùng với số trên phiếu Liên hệ.'
+                    : error.reason === 'guest_contact_claim_invalid'
+                    ? 'Hãy mở liên kết theo dõi trong cùng tab đã gửi phiếu Liên hệ.'
+                    : 'Chưa thể đưa phiếu Liên hệ vào mục Hỗ trợ. Vui lòng tải lại để thử lại.';
+                ticketsTableArea.before(feedback);
+            }
+        }
         try { await window.PawPalSupport.loadTickets(); }
         catch(error) {
             ticketsTableBody.replaceChildren();const row=document.createElement('tr'),cell=document.createElement('td');cell.colSpan=5;cell.textContent='Không thể tải phiếu hỗ trợ. Vui lòng tải lại trang.';row.appendChild(cell);ticketsTableBody.appendChild(row);ticketsTableArea?.classList.remove('support-table-loading');ticketsTableArea?.setAttribute('aria-busy','false');return;
@@ -833,7 +878,7 @@ export function initSupportTickets() {
         // Kiểm tra xem có yêu cầu mở trực tiếp mã ticket từ URL / Hash không (?id=...)
         const hashParts = window.location.hash.split('?');
         const urlParams = new URLSearchParams(hashParts[1] || window.location.search);
-        const queryTicketId = urlParams.get('id');
+        const queryTicketId = claimedTicketId || urlParams.get('id');
         if (queryTicketId) {
             setTimeout(() => {
                 showTicketDetail(queryTicketId);

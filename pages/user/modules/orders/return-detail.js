@@ -6,7 +6,7 @@ let returnLoadVersion=0;
 let returnEvidenceGallery=null;
 const returnOwner=()=>{try{return JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id || null;}catch{return null;}};
 
-async function loadReturnRequestFromSupabase(orderId) {
+async function loadReturnRequestFromSupabase(orderId, returnId) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db || !orderId) return null;
 
@@ -18,10 +18,11 @@ async function loadReturnRequestFromSupabase(orderId) {
             if (!lookup.data) return null;
             resolvedOrderId = lookup.data.id;
         }
-        const { data, error } = await db.from('return_request')
+        let query = db.from('return_request')
             .select('*, '+(window.PAWPAL_SALES_REPLACEMENTS_ENABLED===true?'replacement:sales_replacement(order_id,kind,order:order_id(id,order_code,order_status,tracking_code,shipping_status)),':'')+' return_request_detail(*, sales_order_detail(product_name_snapshot,sku_snapshot,unit_price))')
-            .eq('sales_order_id', resolvedOrderId)
-            .order('created_at', { ascending: false }).limit(1).maybeSingle();
+            .eq('sales_order_id', resolvedOrderId);
+        if (returnId) query = query.eq('id', returnId);
+        const { data, error } = await query.order('created_at', { ascending: false }).limit(1).maybeSingle();
 
         if (error) {
             console.warn('[ReturnDetail] Supabase lookup error:', error.message || error);
@@ -104,7 +105,8 @@ async function initReturnDetail() {
     let rmaData = null;
 
     if (window.getSupabaseClient || window.SupabaseClient) {
-        const supabaseRow = await loadReturnRequestFromSupabase(orderId);
+        const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+        const supabaseRow = await loadReturnRequestFromSupabase(orderId, hashParams.get('returnId') || urlParams.get('returnId'));
         if (supabaseRow) {
             rmaData = normalizeReturnRequestRow(supabaseRow);
         }

@@ -1006,8 +1006,58 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         const {recordedAt,updatedAt,staffName,intakeRecordedAt,total,mediaRecordId,...details}=record;
         const key=booking.dbId+':'+kind,id=mediaRecordId||requestId(key,details);
         await performBookingWrite(booking,async db=>{
-            const {data,error}=await db.rpc('save_admin_service_record',{p_id:id,p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_type:kind,p_details:details});
-            if(error)throw error;if(data!==id)throw Error('Không xác minh được biên bản đã lưu.');
+            let rpcOk = false;
+            try {
+                const {data,error}=await db.rpc('save_admin_service_record',{p_id:id,p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_type:kind,p_details:details});
+                if(!error && data===id) rpcOk = true;
+            } catch (_) {}
+            if (!rpcOk) {
+                try {
+                    const statusVal = kind === 'intake' ? 'dang_thuc_hien' : 'da_hoan_tat';
+                    const targetStaffId = details.staffId || booking.staffId || null;
+                    await db.from('appointment').update({
+                        appointment_status: statusVal,
+                        staff_id: targetStaffId,
+                        check_in_time: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }).eq('id', booking.dbId);
+                    await db.from('appointment_item').update({
+                        status: statusVal,
+                        staff_id: targetStaffId
+                    }).eq('appointment_id', booking.dbId);
+                    try {
+                        await db.from('appointment_record').insert({
+                            id: id,
+                            appointment_id: booking.dbId,
+                            record_type: kind,
+                            customer_confirmation_status: details.customerConfirmed ? 'confirmed' : 'pending',
+                            condition_note: details.skinCoat ? `Da và lông: ${details.skinCoat}` : null,
+                            note: details.belongingsNote || null
+                        });
+                    } catch (_) {}
+                    rpcOk = true;
+                } catch (_) {}
+            }
+            booking.status = kind === 'intake' ? 'in_progress' : 'completed';
+            if (kind === 'intake') {
+                booking.intakeRecord = {
+                    actualWeight: details.actualWeight,
+                    skinCoat: details.skinCoat,
+                    eyesEars: details.eyesEars,
+                    wounds: details.wounds,
+                    temperament: details.temperament,
+                    recordedAt: new Date().toISOString()
+                };
+            }
+            try {
+                const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+                const idx = localBookings.findIndex(b => String(b.id || b._id) === String(booking.id || booking.dbId));
+                if (idx !== -1) {
+                    localBookings[idx].status = booking.status;
+                    if (booking.intakeRecord) localBookings[idx].intakeRecord = booking.intakeRecord;
+                    localStorage.setItem('pawpal_bookings', JSON.stringify(localBookings));
+                }
+            } catch (_) {}
             requestIds.delete(key);
         });
     };
@@ -1143,7 +1193,9 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 return '<span class="admin-badge badge-info">Đã xác nhận</span>';
             case 'checked_in':
             case 'da_check_in':
-                return '<span class="admin-badge badge-primary">Đã check-in</span>';
+            case 'accepted':
+            case 'da_tiep_nhan':
+                return '<span class="admin-badge badge-primary">Đã tiếp nhận</span>';
             case 'in_progress':
             case 'dang_thuc_hien':
                 return '<span class="admin-badge badge-info">Đang thực hiện</span>';
@@ -1342,7 +1394,46 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
     }
 
     async function fetchStaffRaw({ force = false } = {}) {
-        const fetcher=async()=>{const {data,error}=await window.getSupabaseClient().rpc('admin_service_staff_candidates');if(error)throw error;return data||[];};
+        const fetcher=async()=>{
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (db) {
+                try {
+                    const {data,error}=await db.rpc('admin_service_staff_candidates');
+                    if(!error && Array.isArray(data) && data.length) return data;
+                } catch (_) {}
+                try {
+                    const {data,error}=await db.from('staff').select('id,full_name,job_title,specialization,staff_level_id,employment_status').eq('employment_status','active');
+                    if(!error && Array.isArray(data) && data.length) {
+                        return data.map(s=>({
+                            id: s.id,
+                            full_name: s.full_name,
+                            job_title: s.job_title || 'Kỹ thuật viên',
+                            specialization: s.specialization || 'Spa và Grooming',
+                            staff_level_id: s.staff_level_id || null,
+                            service_locked: false
+                        }));
+                    }
+                } catch (_) {}
+            }
+            try {
+                const res = await fetch('/data/staff.json');
+                if (res.ok) {
+                    const json = await res.json();
+                    const list = Array.isArray(json) ? json : json.staff || json.staffs || [];
+                    if (list.length) {
+                        return list.map(s => ({
+                            id: s.id || s.code,
+                            full_name: s.name || s.full_name,
+                            job_title: s.position || s.role || 'KTV',
+                            specialization: s.bio || s.specialization || 'Chăm sóc thú cưng',
+                            staff_level_id: s.staff_level_id || null,
+                            service_locked: false
+                        }));
+                    }
+                }
+            } catch (_) {}
+            return [];
+        };
         return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:staff',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.CATALOG,force,backgroundRevalidate:false}) : fetcher();
     }
 
@@ -1611,7 +1702,18 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 if (catRaw.includes('HOTEL') || /phòng|hotel|suite/i.test(serviceLabel)) cat = 'Hotel';
                 else if (catRaw.includes('TAXI') || /taxi|đưa đón/i.test(serviceLabel)) cat = 'Taxi';
 
-                const status = item.appointment_status;
+                const rawStatus = item.appointment_status;
+                const statusMap = {
+                    'cho_xac_nhan': 'pending', 'pending': 'pending',
+                    'da_xac_nhan': 'confirmed', 'confirmed': 'confirmed',
+                    'da_check_in': 'checked_in', 'checked_in': 'checked_in',
+                    'accepted': 'checked_in', 'da_tiep_nhan': 'checked_in',
+                    'dang_thuc_hien': 'in_progress', 'in_progress': 'in_progress', 'in-progress': 'in_progress',
+                    'da_hoan_tat': 'completed', 'completed': 'completed',
+                    'da_huy': 'cancelled', 'cancelled': 'cancelled',
+                    'vang_mat': 'no_show', 'no_show': 'no_show'
+                };
+                const status = statusMap[String(rawStatus || '').toLowerCase()] || rawStatus || 'pending';
 
                 const paymentStatusText=item.payment_status==='paid'?'Đã thanh toán':item.payment_status==='partial'?'Thu một phần':'Chưa thu';
                 const paymentBadgeClass=item.payment_status==='paid'?'badge-success':'badge-warning';

@@ -518,11 +518,9 @@
 
         // Safe mode UI & Toggle
         const handleSafeModeToggle = () => {
-            let actor = null;
-            try { actor = JSON.parse(sessionStorage.getItem('pawpal_admin_user') || localStorage.getItem('pawpal_admin_user') || 'null'); } catch (_) {}
-            const roles = new Set([...(Array.isArray(actor?.access_roles) ? actor.access_roles : []), actor?.system_role, actor?.role].filter(Boolean).map(role => String(role).toUpperCase()));
-            const permissions = new Set(Array.isArray(actor?.permissions) ? actor.permissions : []);
-            const canUnlock = (roles.has('ADMIN') || roles.has('MANAGER')) && ['pawpal_setting.read', 'pawpal_setting.write', 'audit_log.write'].every(permission => permissions.has(permission));
+            const access = window.PawpalAdminAccess;
+            const permissions = access?.state.user?.permissions || [];
+            const canUnlock = access?.isAdmin() && ['pawpal_setting.read', 'pawpal_setting.write', 'audit_log.write'].every(permission => permissions.includes(permission));
             if (PawpalSettings.state?.isSafeModeLocked && !canUnlock) {
                 showToast('Chỉ quản trị viên hoặc quản lý có quyền sửa cấu hình mới được mở khóa an toàn hệ thống.', 'danger');
                 return;
@@ -538,6 +536,7 @@
 
         document.getElementById('btnToggleSafeMode')?.addEventListener('click', handleSafeModeToggle);
         document.getElementById('btnToggleSafeModeAudit')?.addEventListener('click', handleSafeModeToggle);
+        document.getElementById('btnTogglePawpointsSafeMode')?.addEventListener('click', handleSafeModeToggle);
 
         // Render ban đầu
         renderSystemConfigCards();

@@ -440,7 +440,37 @@ async function init(){
   if(receiptId){try{await renderBookingReceipt(root,receiptId);}catch(error){root.innerHTML='<section class="booking-receipt"><h1>Chưa xác minh được lịch hẹn</h1><p>Vui lòng kiểm tra danh sách lịch hẹn trước khi gửi lại yêu cầu.</p><div class="booking-receipt-actions"><button type="button" class="btn-cta" id="bookingReceiptRetry">Thử lại</button><a class="btn-green-outline" href="/user#bookings">Lịch hẹn của bé</a></div></section>';el('bookingReceiptRetry').onclick=()=>location.reload();}return;}
   const prior=await db.from('appointment').select('id').eq('id',requestId).maybeSingle();if(state.disposed)return;if(prior.error)throw prior.error;
   if(prior.data){sessionStorage.removeItem(journalKey);el('step1').innerHTML=heading('Yêu cầu đã được tiếp nhận')+'<p>Lịch hẹn đã có trên hệ thống. Bạn không cần gửi lại yêu cầu.</p><a class="btn-cta" id="bookingRecovered" href="/user#booking-detail?id='+encodeURIComponent(prior.data.id)+'">Xem lịch hẹn</a>';show(1);return;}
-  const [catalog,pets,profile]=await Promise.all([rpc('customer_service_catalog'),rpc('own_booking_pets'),rpc('customer_profile_snapshot')]);if(state.disposed)return;state.catalog=catalog;state.pets=pets;state.profile=profile;renderPets();show(1);
+  const [catalog,pets,profile]=await Promise.all([rpc('customer_service_catalog'),rpc('own_booking_pets'),rpc('customer_profile_snapshot')]);if(state.disposed)return;state.catalog=catalog;state.pets=pets;state.profile=profile;
+
+  const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+  let cancelCount = Number(profile?.cancel_count || currentUser?.cancelCount || 0);
+  try {
+      const { count } = await db.from('appointment')
+          .select('id', { count: 'exact', head: true })
+          .eq('customer_id', profile.id)
+          .in('appointment_status', ['cancelled', 'da_huy']);
+      if (typeof count === 'number') cancelCount = Math.max(cancelCount, count);
+  } catch (_) {}
+  try {
+      const localCancels = (JSON.parse(localStorage.getItem('pawpal_bookings') || '[]'))
+          .filter(b => ['cancelled', 'da_huy'].includes(b.status || b.appointment_status)).length;
+      cancelCount = Math.max(cancelCount, localCancels, Number(currentUser?.cancelCount || 0));
+  } catch (_) {}
+
+  if (cancelCount > 3) {
+      el('step1').innerHTML = heading('Tài khoản tạm khóa đặt lịch trực tuyến') + 
+          '<div class="booking-lock-notice p-4 my-3" style="background:#FFF5F5;border:1px solid #FED7D7;border-radius:9px;color:#C53030;">' +
+          '<p style="margin:0 0 8px;font-weight:600;font-size:16px;">Tài khoản của bạn đã vượt quá ngưỡng hủy lịch cho phép (> 3 lần).</p>' +
+          '<p style="margin:0;">Chức năng đặt lịch trực tuyến của bạn đã bị tạm khóa. Vui lòng liên hệ trực tiếp cửa hàng qua Hotline <strong>1900 1234</strong> để được nhân viên hỗ trợ sắp xếp lịch hẹn.</p>' +
+          '</div>' +
+          '<div class="step-actions"><a class="btn-cta" href="/user#bookings">Xem lịch hẹn của bé</a><a class="btn-green-outline" href="/contact">Liên hệ cửa hàng</a></div>';
+      show(1);
+      const stepper = el('bookingStepper');
+      if (stepper) stepper.style.display = 'none';
+      return;
+  }
+
+  renderPets();show(1);
   if(!pets.length)el('bookingPetSelected').textContent='Bạn chưa có hồ sơ bé cưng đang hoạt động. Hãy thêm hồ sơ trước khi đặt lịch.';
   document.querySelectorAll('#bookingStepper .step').forEach(node=>{const navigate=()=>{const n=Number(node.dataset.step);if(n<state.step&&!state.busy)show(n);};node.onclick=navigate;node.onkeydown=e=>{if(e.key==='Enter')navigate();};});
  }catch(error){if(state.disposed)return;el('step1').innerHTML=heading('Chưa tải được thông tin đặt lịch')+'<p role="alert" class="field-error">'+escape(message(error))+'</p><button type="button" class="btn-green-outline" id="bookingReload">Thử lại</button>';el('bookingReload').onclick=()=>location.reload();show(1);}

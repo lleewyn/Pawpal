@@ -202,6 +202,8 @@ function mapSupabaseOrderRow(row) {
         _supabaseId: row.id,
         userId: null,
         userPhone: row.receiver_phone_snapshot || '',
+        returnGrant: row.return_grant || null,
+        deliveredAt: row.delivered_at || null,
         status: mapOrderStatus(row.order_status),
         paymentStatus: String(payRow.payment_status || (row.order_status === 'da_xac_nhan' ? 'da_thanh_toan' : 'chua_thanh_toan')).toLowerCase(),
         paymentMethod: payRow.payment_method || 'cod',
@@ -680,7 +682,7 @@ function buildOrderCard(o) {
             <button class="btn-track-order" onclick="handleGuestConfirmOrder('${esc(o.id)}')">
                 Xác nhận đơn hàng
             </button>` : ''}
-            ${canReturnOrder(o) ? `
+            ${(o.returnGrant && o.status !== 'return_pending') || canReturnOrder(o) ? `
             <button class="btn-track-order" onclick="handleGuestReturnRequest('${esc(o.id)}')">
                 Yêu cầu trả hàng/hoàn tiền
             </button>` : ''}
@@ -794,12 +796,73 @@ window.handleGuestReturnRequest = function(orderId) {
         return;
     }
 
+    if (order.returnGrant) {
+        if (!['delivered','completed'].includes(normalizeOrderStatus(order.status)) || !order.deliveredAt ||
+            Date.now() >= Date.parse(order.deliveredAt) + 7*86400000) {
+            showToast('Đơn chưa đủ điều kiện trả hàng hoặc đã quá 7 ngày kể từ ngày nhận hàng.', 'error');
+            return;
+        }
+        openVerifiedGuestReturn(order);
+        return;
+    }
     if (typeof openRMADrawer === 'function') {
         openRMADrawer(orderId);
     } else {
         window.location.href = `/pages/user/#orders`;
     }
 };
+
+function openVerifiedGuestReturn(order) {
+    if (document.getElementById('verifiedGuestReturn')) return;
+    const verifiedPhone = rgVerifiedPhone;
+    const dialog = document.createElement('dialog');
+    dialog.id = 'verifiedGuestReturn';
+    dialog.style.cssText = 'width:min(540px,92vw);padding:24px;border:1px solid #dce6db;border-radius:9px;max-height:90vh';
+    dialog.innerHTML = `<form><h3>Yêu cầu trả hàng</h3><p>Đơn ${esc(order.id)} · Số điện thoại ${esc(verifiedPhone)}</p>
+        ${order.products.map((item,index)=>`<label style="display:block;margin:8px 0">${esc(item.name)}
+            <input data-line="${index}" class="form-control" type="number" min="0" max="${Number(item.quantity)}" step="1" value="0">
+        </label>`).join('')}
+        <label for="verifiedGuestReturnReason">Lý do trả hàng</label>
+        <textarea id="verifiedGuestReturnReason" class="form-control" minlength="2" maxlength="2000" required></textarea>
+        <p role="alert"></p><div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn-green-outline">Hủy</button><button type="submit" class="btn-cta">Gửi yêu cầu</button></div></form>`;
+    const form = dialog.querySelector('form'), submit = form.querySelector('[type=submit]');
+    const errorText = form.querySelector('[role=alert]');
+    let pending;
+    form.querySelector('[type=button]').onclick = () => { if (!submit.disabled) dialog.close(); };
+    dialog.addEventListener('cancel', event => { if (submit.disabled) event.preventDefault(); });
+    dialog.addEventListener('close', () => dialog.remove(), {once:true});
+    form.onsubmit = async event => {
+        event.preventDefault();
+        if (submit.disabled) return;
+        if (verifiedPhone !== rgVerifiedPhone || !rgLastSearchState.orders.includes(order)) {
+            errorText.textContent = 'Kết quả tra cứu đã thay đổi. Vui lòng mở lại đơn hàng.';
+            return;
+        }
+        const lines = [...form.querySelectorAll('[data-line]')].filter(field => Number(field.value)>0)
+            .map(field => ({line_id:order.products[Number(field.dataset.line)].id,quantity:Number(field.value)}));
+        if (!lines.length) {errorText.textContent='Nhập số lượng sản phẩm cần trả.';return;}
+        const reason = form.querySelector('textarea').value.trim();
+        const key = JSON.stringify({lines,reason});
+        if (pending?.key !== key) pending = {key,id:crypto.randomUUID()};
+        submit.disabled = true;
+        errorText.textContent = '';
+        try {
+            const {guestCommerce} = await import('/scripts/shared/guest-commerce-client.mjs');
+            const result = await guestCommerce.request('phone-lookup',{phone:verifiedPhone,returnRequest:{
+                id:pending.id,orderId:order._supabaseId,grant:order.returnGrant,lines,reason
+            }});
+            if (result.returnId !== pending.id) throw Error('Chưa xác nhận được kết quả gửi.');
+            order.status = 'return_pending';
+            dialog.close();
+            if (verifiedPhone === rgVerifiedPhone) renderResults(rgLastSearchState.bookings,rgLastSearchState.orders);
+            showToast('PawPal đã nhận yêu cầu trả hàng. Yêu cầu đang chờ xử lý.','success');
+        } catch (error) { errorText.textContent = error.message; }
+        finally { submit.disabled = false; }
+    };
+    document.body.append(dialog);
+    dialog.showModal();
+}
 
 function showActionConfirm(title, descHtml, onConfirm) {
     const existing = document.getElementById('rg-action-confirm-modal');

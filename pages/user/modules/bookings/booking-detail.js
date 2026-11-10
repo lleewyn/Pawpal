@@ -16,7 +16,9 @@ function mapBookingStatus(status) {
         'dang_giu_cho':   'pending',
         'cho_xac_nhan':   'pending',
         'da_xac_nhan':    'confirmed',
-        'da_check_in':    'confirmed',
+        'da_check_in':    'accepted',
+        'checked_in':     'accepted',
+        'da_tiep_nhan':   'accepted',
         'dang_thuc_hien': 'in-progress',
         'da_hoan_tat':    'completed',
         'da_huy':         'cancelled',
@@ -26,7 +28,7 @@ function mapBookingStatus(status) {
         'confirmed':      'confirmed',
         'in_progress':    'in-progress',
         'in-progress':    'in-progress',
-        'accepted':       'confirmed',
+        'accepted':       'accepted',
         'completed':      'completed',
         'cancelled':      'cancelled',
         'no_show':        'cancelled'
@@ -274,7 +276,7 @@ function renderBookingDetail(booking) {
     }
 
     const staffEl = document.getElementById('staffInfo');
-    if (staffEl) staffEl.textContent = booking.logistics?.staff_name || booking.staffRequest?.requested_staff_name || 'Chưa phân công';
+    if (staffEl) staffEl.textContent = booking.staff || booking.logistics?.staff_name || booking.staffRequest?.requested_staff_name || 'Chưa phân công';
     let requestPanel=document.getElementById('bookingStaffRequestPanel');
     if(!requestPanel){requestPanel=document.createElement('section');requestPanel.id='bookingStaffRequestPanel';document.querySelector('.booking-detail-module-container')?.prepend(requestPanel);}
     renderBookingStaffRequest(requestPanel,booking.staffRequest,{onRespond:async(accept,revision)=>{

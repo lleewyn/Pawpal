@@ -5,7 +5,7 @@
     let cachedTickets = [];
     const paged=()=>window.PAWPAL_SUPPORT_PAGING_ENABLED!==false;
     let pageInfo={page:1,total:0,counts:null,filter:'all'},pinnedTicket=null,ticketDetailVersion=0;
-    const mapTicket=t=>({id:t.id,rawId:t.id,ticketCode:t.ticket_code,title:t.subject,description:t.description,type:t.category,status:t.status,priority:['high','urgent'].includes(t.priority)?'Cao':'Trung bình',rating:t.rating,ratingComment:t.rating_comment,createdAt:t.created_at,resolution:t.resolution_note?{note:t.resolution_note}:null,context:{bookingId:t.appointment_id,orderId:t.order_id,serviceName:t.service_name,petName:t.pet_name},messages:t.messages||[],messageTotal:t.message_total??(t.messages||[]).length,messagePage:t.message_page||1,replyDueAt:t.customer_reply_due_at,replyRequest:t.customer_reply_request});
+    const mapTicket=t=>({id:t.id,rawId:t.id,ticketCode:t.ticket_code,title:t.subject,description:t.description,type:t.category,status:t.status,priority:['high','urgent'].includes(t.priority)?'Cao':'Trung bình',rating:t.rating,ratingComment:t.rating_comment,createdAt:t.created_at,resolution:t.resolution_note?{note:t.resolution_note}:null,context:{bookingId:t.appointment_id,orderId:t.order_id,serviceName:t.service_name,petName:t.pet_name},messages:t.messages||[],messageTotal:t.message_total??(t.messages||[]).length,messagePage:t.message_page||1,replyDueAt:t.customer_reply_due_at,replyRequest:t.customer_reply_request,reopenUntil:t.reopen_until,autoCloseReason:t.auto_close_reason,compensation:t.compensation_summary});
     let ticketsChannel = null;
     let activeOwner = null, epoch = 0, ticketLoad = null, refreshTimer = null;
     let dirty = false, waitingForLoad = false;
@@ -62,7 +62,11 @@
         if (!owner || currentOwner() !== owner || version !== epoch) throw Error('Phiên đăng nhập đã thay đổi. Vui lòng tải lại.');
         const result = await db.rpc(name,args);
         if (currentOwner() !== owner || version !== epoch) throw Error('Phiên đăng nhập đã thay đổi. Vui lòng tải lại.');
-        if (result.error) throw Error(result.error.code === 'PT409' ? 'Yêu cầu đã được lưu với thông tin khác. Vui lòng tải lại để đối soát.' : 'Không thể lưu dữ liệu hỗ trợ. Vui lòng thử lại.');
+        if (result.error) {
+            const error = Error(result.error.code === 'PT409' ? 'Yêu cầu đã được lưu với thông tin khác. Vui lòng tải lại để đối soát.' : 'Không thể lưu dữ liệu hỗ trợ. Vui lòng thử lại.');
+            error.reason = result.error.message;
+            throw error;
+        }
         return result.data;
     }
     function loadTickets() {
@@ -141,6 +145,24 @@
         await loadTickets().catch(loadError); return saved;
     }
 
+    async function claimGuestContacts(preferred) {
+        const prefix = 'pawpal_guest_support_claim:';
+        const receipts = Object.keys(sessionStorage).filter(key => key.startsWith(prefix)).map(key => key.slice(prefix.length));
+        const ids = preferred ? [preferred] : receipts;
+        const validId = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i;
+        for (const id of ids) {
+            try {
+                const proof = sessionStorage.getItem(prefix + id);
+                if (!validId.test(id) || !validId.test(proof || '')) throw Object.assign(Error(), {reason:'guest_contact_claim_invalid'});
+                const saved = await rpc('claim_own_guest_contact_ticket', {p_ticket:id,p_proof:proof});
+                if (saved !== id) throw Error('claim_result_invalid');
+                sessionStorage.removeItem(prefix + id);
+            } catch (error) {
+                if (preferred) throw error;
+            }
+        }
+    }
+
     window.PawPalSupport = {
         isPaged:paged,getPageInfo:()=>pageInfo,getPageTickets:()=>cachedTickets,setPage,
         releaseTicket:()=>{pinnedTicket=null;++ticketDetailVersion;},
@@ -152,7 +174,8 @@
         loadTickets: loadTickets,
         createTicket: sbCreateTicket,
         sendTicketReply: sbSendTicketReply,
-        closeAndRateTicket: sbCloseAndRateTicket
+        closeAndRateTicket: sbCloseAndRateTicket,
+        claimGuestContacts
     };
     window.PawPalSupportReady = true;
     document.dispatchEvent(new CustomEvent('support_ready'));

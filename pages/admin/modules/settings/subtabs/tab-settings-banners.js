@@ -1105,7 +1105,7 @@
 
         document.getElementById('btnSavePawpointsPolicy')?.addEventListener('click', () => {
             if (PawpalSettings.state?.isSafeModeLocked) {
-                showToast('Khóa an toàn cấu hình đang BẬT! Vui lòng vào tab "Cấu hình Hệ thống" và bấm "Mở khóa để sửa" trước khi lưu thay đổi điểm thưởng PawPoints.', 'warning');
+                showToast('Khóa an toàn cấu hình đang BẬT! Đóng cửa sổ và bấm "Mở khóa để sửa" trong Chính sách PawPoints trước khi lưu.', 'warning');
                 return;
             }
             const pointVal = document.getElementById('inputCfgPointValue')?.value || 'NaN';

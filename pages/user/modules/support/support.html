@@ -103,6 +103,10 @@
 
                 <!-- Thẻ thông báo phương án giải quyết và bồi hoàn -->
                 <div id="detailTicketResolutionCard" class="d-none"></div>
+                <section id="detailCompensationSummary" class="d-none">
+                    <h6>Kết quả bồi hoàn</h6>
+                    <p id="detailCompensationText"></p>
+                </section>
 
                 <!-- Luồng hội thoại trao đổi (Conversational Thread) -->
                 <div class="ticket-thread-container mb-4">
@@ -115,6 +119,9 @@
                     Cửa hàng đang chờ bạn bổ sung thông tin để tiếp tục xử lý phiếu.
                 </div>
 
+                <div class="d-flex justify-content-end mb-3">
+                    <button type="button" class="btn-close-ticket d-none" id="btnActionCloseTicket">Đóng hỗ trợ</button>
+                </div>
                 <!-- Form gửi phản hồi bổ sung -->
                 <div class="reply-editor-area" id="replyEditorArea">
                     <div class="form-group mb-3">

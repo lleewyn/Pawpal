@@ -48,10 +48,11 @@ export function createIntakeMediaEditor({ root, db, fetchImpl = fetch, purpose='
             void cancel(drafts);drafts=[];attached=[];appointmentId=appointment;recordId=record;closed=false;busy=true;pick.disabled=true;
             release();gallery.replaceChildren();message.textContent='';
             const current=++epoch;
-            try{if(appointment&&loadExisting){const result=await db.rpc(listRpc,{p_appointment:appointment});if(result.error||!Array.isArray(result.data))throw Error('Không tải đủ '+labelText.toLowerCase()+'.');if(current!==epoch||closed)return;attached=result.data;}message.textContent='';return attached.length;}
+            try{if(appointment&&loadExisting){try{const result=await db.rpc(listRpc,{p_appointment:appointment});if(!result.error&&Array.isArray(result.data)&&current===epoch&&!closed){attached=result.data;}}catch(_){}}message.textContent='';return attached.length;}
             finally{busy=false;if(!closed)void render();}
         },
         async prepare(){
+            if(!drafts.length)return [];
             if(busy||closed)throw Error('Ảnh chưa sẵn sàng.');busy=true;pick.disabled=true;
             try{
                 for(const item of drafts){

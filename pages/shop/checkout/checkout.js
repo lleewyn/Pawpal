@@ -287,15 +287,6 @@ function validateCheckoutCart() {
 
     }
 
-    if (checkoutState.appliedVoucher) {
-        const validation = validateVoucher(checkoutState.appliedVoucher.code, false);
-        if (!validation.valid) {
-            checkoutState.totals.voucherDiscount = 0;
-            renderAppliedVoucherUI();
-            updateOrderTotals();
-        }
-    }
-
     updateOrderTotals();
     if (checkoutState.totals.grandTotal < 0) {
         return { valid: false, message: 'Tổng thanh toán không hợp lệ. Vui lòng kiểm tra lại đơn hàng.' };
@@ -304,30 +295,9 @@ function validateCheckoutCart() {
     return { valid: true };
 }
 
-function validateVoucher(code) {
-    const voucher=[...checkoutState.vouchers,...checkoutState.myVouchers].find(v=>v.code===code&&v.active);
-    if(!voucher)return {valid:false,message:'Mã ưu đãi không có sẵn. Vui lòng kiểm tra lại.'};
-    const subtotal=calculateSubtotal();
-    if(subtotal<Number(voucher.minOrderValue||0))return {valid:false,message:'Giá trị đơn chưa đạt mức tối thiểu của mã ưu đãi.'};
-    const discount=voucher.type==='fixed'?Math.min(subtotal,Number(voucher.value)):
-        voucher.type==='percentage'?Math.min(subtotal,Math.floor(subtotal*Number(voucher.value)/100)):
-        voucher.type==='shipping'?Math.min(Number(voucher.value),checkoutState.totals.shippingFee):0;
-    return {valid:true,voucher,discount};
-}
-
 function calculateVoucherDiscount() {
-    if (!checkoutState.appliedVoucher) {
-        return 0;
-    }
-    if(checkoutState.appliedVoucher.verifiedSignature===voucherSignature())return checkoutState.appliedVoucher.verifiedDiscount;
-
-    const validation = validateVoucher(checkoutState.appliedVoucher.code, false);
-    if (!validation.valid) {
-        return 0;
-    }
-
-    checkoutState.appliedVoucher = validation.voucher;
-    return validation.discount || 0;
+    const voucher = checkoutState.appliedVoucher;
+    return voucher?.verifiedSignature === voucherSignature() ? voucher.verifiedDiscount : 0;
 }
 function voucherSignature(){return JSON.stringify([checkoutState.selectedDelivery,checkoutState.totals.shippingFee,checkoutState.cart.map(i=>[i.variantId||i.product_variant_id||i.id,i.quantity,i.price])]);}
 
@@ -1125,39 +1095,71 @@ function updateOrderTotals() {
 // ============================================================================
 // Voucher
 // ============================================================================
+function readCheckoutShipping() {
+    const selectedAddr = checkoutState.selectedAddress;
+
+    return selectedAddr ? {
+        name: selectedAddr.name || checkoutState.user?.name || document.getElementById('fullName')?.value || '',
+        phone: selectedAddr.phone || checkoutState.user?.phone || document.getElementById('phone')?.value || '',
+        address: selectedAddr.street || selectedAddr.address || document.getElementById('address')?.value || '',
+        district: selectedAddr.district || document.getElementById('district')?.value || '',
+        city: selectedAddr.city || document.getElementById('city')?.value || '',
+        note: selectedAddr.note || document.getElementById('note')?.value || '',
+        deliveryMethod: checkoutState.selectedDelivery,
+        deliveryFee: checkoutState.totals.shippingFee
+    } : {
+        name: document.getElementById('fullName')?.value || '',
+        phone: document.getElementById('phone')?.value || '',
+        address: document.getElementById('address')?.value || '',
+        district: document.getElementById('district')?.value || '',
+        city: document.getElementById('city')?.value || '',
+        note: document.getElementById('note')?.value || '',
+        deliveryMethod: checkoutState.selectedDelivery,
+        deliveryFee: checkoutState.totals.shippingFee
+    };
+}
+
 async function applyVoucher() {
     const input = document.getElementById('voucher-input');
-    const code = input.value.trim().toUpperCase();
-    
-    if (!code) {
+    const entered = input.value.trim();
+    if (!entered) {
         showToast('Vui lòng nhập mã giảm giá', 'error');
         return;
     }
-    
-    const result = validateVoucher(code);
-    
-    if (result.valid) {
-        const db=window.getSupabaseClient?.()||window.SupabaseClient;
-        const quoted=await db.rpc('quote_own_sales_order',{p_details:{delivery:true,delivery_option_id:checkoutState.selectedDelivery,discount_mode:'voucher',voucher_code:code},
-            p_lines:checkoutState.cart.map(item=>({variant_id:item.variantId||item.product_variant_id||item.id,quantity:Number(item.quantity)}))});
-        if(quoted.error){showToast('Mã ưu đãi không áp dụng được cho đơn này hoặc đã hết lượt sử dụng.','error');return;}
-        checkoutState.pointsUsed=0;checkoutState.totals.pointsDiscount=0;localStorage.removeItem(PENDING_POINTS_KEY);
-        const pointsCheckbox=document.getElementById('use-points-checkbox');if(pointsCheckbox)pointsCheckbox.checked=false;
-        checkoutState.appliedVoucher = result.voucher;
-        checkoutState.appliedVoucher.verifiedSignature=voucherSignature();
-        checkoutState.appliedVoucher.verifiedDiscount=Number(quoted.data.voucher_discount)||0;
-        checkoutState.totals.voucherDiscount = Number(quoted.data.voucher_discount)||0;
+
+    const codes = [...checkoutState.myVouchers, ...checkoutState.vouchers];
+    const voucher = codes.find(row => row.code === entered) || codes.find(row => row.code?.toUpperCase() === entered.toUpperCase());
+    const code = voucher?.code || entered;
+    const signature = voucherSignature();
+    try {
+        const {quote} = await window.API.prepareOwnOrder({
+            shipping:readCheckoutShipping(), items:checkoutState.cart, voucherCode:code
+        });
+        if (!checkoutActorIsCurrent() || signature !== voucherSignature() || input.value.trim() !== entered) return;
+        checkoutState.pointsUsed = 0;
+        checkoutState.totals.pointsDiscount = 0;
+        localStorage.removeItem(PENDING_POINTS_KEY);
+        const pointsCheckbox = document.getElementById('use-points-checkbox');
+        if (pointsCheckbox) pointsCheckbox.checked = false;
+        const discount = Number(quote.voucher_discount) || 0;
+        checkoutState.appliedVoucher = {code,verifiedSignature:signature,verifiedDiscount:discount};
         localStorage.setItem('pawpal_applied_voucher_code', code);
-        
-        renderAppliedVoucherUI();
-        
         input.value = '';
-        
         updateOrderTotals();
-        
-        showToast(`Áp dụng mã ${code} thành công! Tiết kiệm ${formatCurrency(result.discount)}.`, 'success');
-    } else {
-        showToast(result.message, 'error');
+        renderAppliedVoucherUI();
+        showToast(`Áp dụng mã ${code} thành công. Tiết kiệm ${formatCurrency(discount)}.`, 'success');
+    } catch (error) {
+        const messages = {
+            sales_delivery_required:'Điền đầy đủ địa chỉ giao hàng và chọn phương thức giao trước khi áp dụng mã.',
+            sales_voucher_unknown:'Không tìm thấy mã ưu đãi.',
+            sales_voucher_minimum:'Giá trị đơn chưa đạt mức tối thiểu của mã ưu đãi.',
+            sales_voucher_scope:'Mã ưu đãi không áp dụng cho mua sắm.',
+            sales_voucher_inactive:'Mã ưu đãi đã hết hạn hoặc đang tắt.',
+            sales_voucher_exhausted:'Mã ưu đãi đã hết lượt sử dụng.',
+            sales_owned_voucher_required:'Mã này cần có trong ví ưu đãi khả dụng của bạn.',
+            sales_voucher_not_applicable:'Mã không áp dụng cho đơn này. Kiểm tra hạn dùng, giá trị tối thiểu và phạm vi áp dụng.'
+        };
+        showToast(messages[error.message] || 'Chưa kiểm tra được mã ưu đãi. Vui lòng thử lại.', 'error');
     }
 }
 
@@ -1321,27 +1323,7 @@ async function handleCheckout() {
     }
     
     const isOnlinePayment = ['momo', 'vnpay', 'zalopay', 'vietqr'].includes(checkoutState.selectedPayment);
-    const selectedAddr = checkoutState.selectedAddress;
-
-    const shippingInfo = selectedAddr ? {
-        name: selectedAddr.name || checkoutState.user?.name || document.getElementById('fullName')?.value || '',
-        phone: selectedAddr.phone || checkoutState.user?.phone || document.getElementById('phone')?.value || '',
-        address: selectedAddr.street || selectedAddr.address || document.getElementById('address')?.value || '',
-        district: selectedAddr.district || document.getElementById('district')?.value || '',
-        city: selectedAddr.city || document.getElementById('city')?.value || '',
-        note: selectedAddr.note || document.getElementById('note')?.value || '',
-        deliveryMethod: checkoutState.selectedDelivery,
-        deliveryFee: checkoutState.totals.shippingFee
-    } : {
-        name: document.getElementById('fullName')?.value || '',
-        phone: document.getElementById('phone')?.value || '',
-        address: document.getElementById('address')?.value || '',
-        district: document.getElementById('district')?.value || '',
-        city: document.getElementById('city')?.value || '',
-        note: document.getElementById('note')?.value || '',
-        deliveryMethod: checkoutState.selectedDelivery,
-        deliveryFee: checkoutState.totals.shippingFee
-    };
+    const shippingInfo = readCheckoutShipping();
 
     if(document.getElementById('invoice-checkbox')?.checked){
         const company=document.getElementById('companyName')?.value.trim()||'';

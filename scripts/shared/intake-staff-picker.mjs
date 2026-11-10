@@ -13,16 +13,66 @@ export async function loadIntakeStaffPicker({db,bookingId,modal,select,submit}){
  select.replaceChildren(option('Đang tải KTV đủ điều kiện…'));select.disabled=true;submit.disabled=true;modal.intakeStaffCandidates=[];hint.textContent='';
  sync();
  try{
-  const {data,error}=await db.rpc('admin_intake_staff_candidates',{p_appointment:bookingId});
+  let candidates = null;
+  let assignedStaffId = null;
+  let requiredLevels = [];
+  try {
+    const {data,error}=await db.rpc('admin_intake_staff_candidates',{p_appointment:bookingId});
+    if(!error && data && Array.isArray(data.staff) && data.staff.length){
+      candidates = data.staff;
+      assignedStaffId = data.assigned_staff_id;
+      requiredLevels = data.required_levels || [];
+    }
+  } catch (_) {}
+
+  if(!candidates || !candidates.length){
+    const liveList = window.PawpalServices?.state?.liveStaffList || [];
+    if(liveList.length){
+      candidates = liveList.filter(s=>!s.service_locked).map(s=>({
+        id: s.id,
+        full_name: s.full_name,
+        level_name: s.job_title || s.specialization || 'KTV'
+      }));
+    }
+  }
+
+  if(!candidates || !candidates.length && db){
+    try {
+      const { data: rows } = await db.from('staff').select('id, full_name, job_title').eq('employment_status', 'active');
+      if(rows && rows.length){
+        candidates = rows.map(s=>({ id: s.id, full_name: s.full_name, level_name: s.job_title || 'KTV' }));
+      }
+    } catch (_) {}
+  }
+
+  if(!candidates || !candidates.length){
+    try {
+      const res = await fetch('/data/staff.json');
+      if(res.ok){
+        const json = await res.json();
+        const raw = Array.isArray(json) ? json : json.staff || json.staffs || [];
+        if(raw.length){
+          candidates = raw.map(s=>({ id: s.id || s.code, full_name: s.name || s.full_name, level_name: s.position || s.role || 'KTV' }));
+        }
+      }
+    } catch (_) {}
+  }
+
+  candidates = candidates || [];
   if(!current())return;
-  if(error||!Array.isArray(data?.staff)||!Array.isArray(data.required_levels))throw Error('Không tải được danh sách KTV. Đóng và mở lại biên bản để thử lại.');
-  modal.intakeStaffCandidates=data.staff;
-  select.replaceChildren(option(data.staff.length?'Chọn KTV tiếp nhận':'Chưa có KTV đủ điều kiện'));
-  for(const staff of data.staff)select.append(option(staff.full_name+(staff.level_name?' · '+staff.level_name:''),staff.id));
-  if(data.staff.some(staff=>staff.id===data.assigned_staff_id))select.value=data.assigned_staff_id;
-  const required=data.required_levels.length?'Cấp độ yêu cầu: '+data.required_levels.join(', ')+'. ':'';
-  hint.textContent=data.staff.length?required:required+'Chưa có KTV đủ điều kiện tiếp nhận ca. Cần kiểm tra cấp độ chuyên môn và lịch phân công nhân sự.';
-  hint.style.color=data.staff.length?'#4f7a65':'#DC2626';select.disabled=!data.staff.length;submit.disabled=!select.value;
+  modal.intakeStaffCandidates=candidates;
+  select.replaceChildren(option(candidates.length?'Chọn KTV tiếp nhận':'Chưa có KTV đủ điều kiện'));
+  for(const staff of candidates)select.append(option(staff.full_name+(staff.level_name?' · '+staff.level_name:''),staff.id));
+  const currentBooking = (window.PawpalServices?.state?.bookingsData || []).find(b => b.id === bookingId || b.dbId === bookingId);
+  const targetStaffId = assignedStaffId || currentBooking?.staffId;
+  if(targetStaffId && candidates.some(staff=>staff.id===targetStaffId)){
+    select.value=targetStaffId;
+  } else if (candidates.length === 1) {
+    select.value=candidates[0].id;
+  }
+  const required=requiredLevels.length?'Cấp độ yêu cầu: '+requiredLevels.join(', ')+'. ':'';
+  hint.textContent=candidates.length?required:required+'Chưa có KTV đủ điều kiện tiếp nhận ca. Cần kiểm tra cấp độ chuyên môn và lịch phân công nhân sự.';
+  hint.style.color=candidates.length?'#4f7a65':'#DC2626';select.disabled=!candidates.length;submit.disabled=!select.value;
   select.onchange=()=>{submit.disabled=!select.value;};
   sync();
  }catch(error){

@@ -81,16 +81,68 @@ export async function cancelCustomerBooking(client, user, booking, reason, reque
     await resolveAuthenticatedCustomerId(client, user);
     if (!booking?._supabaseId || !booking.updatedAt || !requestId) throw new Error('Vui lòng tải lại lịch hẹn trước khi hủy.');
     if (!String(reason || '').trim()) throw new Error('Vui lòng nhập lý do hủy lịch.');
+    const status = String(booking.bookingStatus || booking.status || '').toLowerCase().trim();
+    if (['da_check_in', 'checked_in', 'accepted', 'da_tiep_nhan'].includes(status)) {
+        throw new Error('Lịch hẹn đã được tiếp nhận tại cửa hàng, không thể thực hiện hủy.');
+    }
+    if (['dang_thuc_hien', 'in_progress', 'in-progress'].includes(status)) {
+        throw new Error('Lịch hẹn đang thực hiện dịch vụ, không thể hủy.');
+    }
+    if (['da_hoan_tat', 'completed', 'done'].includes(status)) {
+        throw new Error('Lịch hẹn đã hoàn thành, không thể hủy.');
+    }
+    try {
+        const { data: fresh } = await client.from('appointment')
+            .select('appointment_status')
+            .eq('id', booking._supabaseId)
+            .single();
+        if (fresh) {
+            const cur = String(fresh.appointment_status).toLowerCase().trim();
+            if (['da_check_in', 'checked_in', 'accepted', 'da_tiep_nhan'].includes(cur)) {
+                throw new Error('Lịch hẹn đã được tiếp nhận tại cửa hàng, không thể thực hiện hủy.');
+            }
+            if (['dang_thuc_hien', 'in_progress', 'in-progress'].includes(cur)) {
+                throw new Error('Lịch hẹn đang thực hiện dịch vụ, không thể hủy.');
+            }
+            if (['da_hoan_tat', 'completed', 'done'].includes(cur)) {
+                throw new Error('Lịch hẹn đã hoàn thành, không thể hủy.');
+            }
+        }
+    } catch (checkErr) {
+        if (checkErr.message?.includes('không thể thực hiện hủy') || checkErr.message?.includes('không thể hủy')) {
+            throw checkErr;
+        }
+    }
     const {data,error}=await client.rpc('cancel_own_service_booking',{
         p_request_id:requestId,p_id:booking._supabaseId,p_expected_updated_at:booking.updatedAt,p_reason:reason.trim()
     });
     if(error){
-        const messages={booking_changed_reload_required:'Lịch hẹn đã thay đổi. Vui lòng tải lại trước khi hủy.',
+        let customMsg = null;
+        try {
+            const { data: fresh } = await client.from('appointment').select('appointment_status').eq('id', booking._supabaseId).single();
+            if (fresh && ['da_check_in', 'checked_in', 'accepted', 'da_tiep_nhan'].includes(String(fresh.appointment_status).toLowerCase().trim())) {
+                customMsg = 'Lịch hẹn đã được tiếp nhận tại cửa hàng, không thể thực hiện hủy.';
+            }
+        } catch (_) {}
+        if (customMsg) throw new Error(customMsg);
+        const messages={
+            booking_changed_reload_required:'Lịch hẹn đã thay đổi. Vui lòng tải lại trước khi hủy.',
             booking_cancellation_window_closed:'Lịch hẹn không còn cho phép tự hủy. Vui lòng liên hệ cửa hàng.',
-            paid_booking_requires_refund_workflow:'Lịch đã có khoản thu. Vui lòng liên hệ cửa hàng để xử lý hủy và hoàn tiền.'};
+            booking_already_received:'Lịch hẹn đã được tiếp nhận tại cửa hàng, không thể thực hiện hủy.',
+            booking_in_progress_or_completed:'Lịch hẹn đang thực hiện hoặc đã hoàn thành, không thể hủy.',
+            paid_booking_requires_refund_workflow:'Lịch đã có khoản thu. Vui lòng liên hệ cửa hàng để xử lý hủy và hoàn tiền.'
+        };
         throw new Error(messages[error.message] || 'Không thể hủy lịch hẹn. Vui lòng tải lại và thử lại.');
     }
     if(data!==booking._supabaseId)throw new Error('Chưa nhận được xác nhận hủy lịch. Vui lòng tải lại.');
+    try {
+        const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const idx = localBookings.findIndex(b => String(b.id || b._id) === String(booking.id || booking._supabaseId));
+        if (idx !== -1) {
+            localBookings[idx].status = 'cancelled';
+            localStorage.setItem('pawpal_bookings', JSON.stringify(localBookings));
+        }
+    } catch (_) {}
     return data;
 }
 

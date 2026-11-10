@@ -412,6 +412,8 @@
         const btn1 = document.getElementById('btnToggleSafeMode');
         const badge2 = document.getElementById('safeModeBadgeAudit');
         const btn2 = document.getElementById('btnToggleSafeModeAudit');
+        const pointsLock = document.getElementById('btnTogglePawpointsSafeMode');
+        if (pointsLock) pointsLock.textContent = isSafeModeLocked ? 'Mở khóa để sửa' : 'Bật lại khóa an toàn';
         const kpiStatus = document.getElementById('statSafeModeStatus');
 
         if (isSafeModeLocked) {

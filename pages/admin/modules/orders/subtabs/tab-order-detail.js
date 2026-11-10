@@ -266,7 +266,9 @@
                 document.getElementById('modalReturnRefund').classList.remove('active');
                 await PawpalOrders.fetchOrdersData({force:true});await PawpalOrders.fetchProductsData({force:true});
                 showToast('\u0110\u00e3 l\u01b0u y\u00eau c\u1ea7u \u0111\u1ed5i tr\u1ea3. Ho\u00e0n ti\u1ec1n \u0111\u01b0\u1ee3c ghi ri\u00eang t\u1ea1i thu ng\u00e2n.');
-            }catch(error){showToast(error.message,'danger');}
+            }catch(error){showToast(error.message==='Returned quantity exceeds sold quantity'
+                ? 'Số lượng đổi trả vượt mức còn đủ điều kiện của sản phẩm.'
+                : error.message,'danger');}
             finally{document.getElementById('btnSubmitRmaTicket').disabled=false;}
         });
     }

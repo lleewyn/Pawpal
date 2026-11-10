@@ -215,10 +215,14 @@
 <section class="contact-main">
 <div class="container-xl">
 <div class="contact-grid">
-<div class="contact-info"><p class="contact-kicker">PAWPAL / LIÊN HỆ</p><h2>Có điều gì muốn hỏi,<br/>cứ nhắn PawPal nhé.</h2><p>Bạn có thể trao đổi về dịch vụ, lịch hẹn hoặc đơn hàng tại đây.</p><div class="contact-route"><h3>Tra cứu đơn và lịch hẹn</h3><a href="/return-guest">Mở trang tra cứu ↗</a></div><div class="contact-route"><h3>Theo dõi yêu cầu hỗ trợ</h3><a href="/user#support">Xem trong tài khoản của bạn ↗</a></div><p class="contact-auth-note">Vui lòng đăng nhập để gửi và theo dõi phản hồi. Biểu mẫu không gửi Zalo, SMS hoặc email thật.</p></div>
+<div class="contact-info"><p class="contact-kicker">PAWPAL / LIÊN HỆ</p><h2>Có điều gì muốn hỏi,<br/>cứ nhắn PawPal nhé.</h2><p>Bạn có thể trao đổi về dịch vụ, lịch hẹn hoặc đơn hàng tại đây.</p><div class="contact-route"><h3>Tra cứu đơn và lịch hẹn</h3><a href="/return-guest">Mở trang tra cứu ↗</a></div><div class="contact-route"><h3>Theo dõi yêu cầu hỗ trợ</h3><a href="/user#support">Xem trong tài khoản của bạn ↗</a></div><p class="contact-auth-note">Bạn có thể gửi yêu cầu ngay. Đăng nhập để theo dõi và trao đổi trong mục Hỗ trợ.</p></div>
 <div class="contact-form-wrapper">
 <form class="contact-form" id="contactForm" onsubmit="return false;"><h2>PawPal có thể giúp gì cho bạn?</h2>
 <div class="form-row">
+<div class="form-group">
+<label for="contactSubject">Tiêu đề</label>
+<input id="contactSubject" required minlength="2" maxlength="250" type="text"/>
+</div>
 <div class="form-group">
 <label for="fullName">Họ và tên<span class="contact-required"> *</span></label>
 <input id="fullName" placeholder="Nhập tên của bạn" required="" type="text"/>
@@ -242,7 +246,8 @@
 <label for="message">Lời nhắn của bạn<span class="contact-required"> *</span></label>
 <textarea id="message" placeholder="Nhập nội dung cần hỗ trợ..." required="" rows="6"></textarea>
 </div>
-<button class="btn-submit" type="button">Gửi tin nhắn</button>
+<button class="btn-submit" type="submit">Gửi tin nhắn</button>
+<div id="contactReceipt" hidden><p id="contactReceiptCode" role="status"></p><p id="contactReceiptHint"></p><a id="contactReceiptLink" href="/user#support">Theo dõi yêu cầu</a></div>
 </form>
 </div>
 </div>

@@ -1277,11 +1277,15 @@
         sales_refund_ledger_review_required:'Khoản thu đã liên quan đến điểm hoặc xét hạng, cần đối soát sổ điểm trước khi hoàn.',
         sales_money_booking_closed:'Đơn đã hủy hoặc trả hàng không thể thu thêm.',
         sales_refund_source_invalid:'Khoản thu gốc không hợp lệ hoặc không thuộc đơn này.',
+        sales_refund_return_required:'Chọn yêu cầu trả hàng đã nhận để ghi khoản hoàn.',
+        sales_refund_return_not_received:'Cần nhận và kiểm định hàng trả trước khi hoàn tiền.',
+        sales_refund_return_limit:'Số tiền vượt giá trị còn được hoàn của các sản phẩm đã trả.',
+        sales_refund_return_reconcile:'Đơn có khoản hoàn cũ chưa liên kết yêu cầu trả hàng. Cần đối soát trước khi hoàn thêm.',
         invalid_service_money:'Điền đủ số tiền, lý do và xác nhận giao dịch thực tế.',
         sales_request_conflict:'Yêu cầu này đã được ghi với nội dung khác. Tải lại để đối chiếu.'
     })[e?.message]||(e?.code==='42501'?'Bạn chưa có quyền thực hiện thao tác này.':'Không thể ghi giao dịch. Vui lòng tải lại và kiểm tra số tiền.');
     m.enhanceEntitySelects = function() {
-        for(const id of ['salesCashierMethod','salesCashierPayment','grnSupplierSelect','grnProductPicker','createOrderDeliveryOption','createOrderPaymentMethod','shipCarrierSelect','batchCarrierSelect']) {
+        for(const id of ['salesCashierMethod','salesCashierPayment','salesCashierReturn','grnSupplierSelect','grnProductPicker','createOrderDeliveryOption','createOrderPaymentMethod','shipCarrierSelect','batchCarrierSelect']) {
             const select=document.getElementById(id);if(!select)continue;
             if(select._entityInput){select._entityInput.disabled=select.disabled;if(document.activeElement!==select._entityInput)select._entityInput.value=select.value?select.selectedOptions[0]?.textContent||'':'';continue;}
             const standard=Boolean(select.closest('.admin-modal-standard')),wrapper=document.createElement('div');wrapper.className='admin-autocomplete';if(!standard)wrapper.style.cssText='position:relative;width:100%;';
@@ -1318,7 +1322,11 @@
         const refund=el('salesCashierAction').value==='refund';
         row.hidden=!refund;
         const payment=context?.payments.find(p=>p.id===el('salesCashierPayment').value);
-        const plan=refund&&payment?refundPreview?.(payment,el('salesCashierAmount').value):null;
+        const selected=context?.returnRefunds?.find(r=>r.id===el('salesCashierReturn').value);
+        const amount=Number(el('salesCashierAmount').value);
+        const rmaError=refund&&context?.returnRefunds?.length
+            ? (!selected?'Chọn yêu cầu trả hàng đã nhận.':amount>Number(selected.remaining)?'Số tiền vượt giá trị còn được hoàn của các sản phẩm đã trả.':''):'';
+        const plan=rmaError?{error:rmaError}:refund&&payment?refundPreview?.(payment,el('salesCashierAmount').value):null;
         row.textContent=refund?(plan?.error||(plan?'Thu hồi '+plan.points+' điểm thưởng. Chi tiêu xét hạng giảm '+m.formatCurrency(plan.eligible)+'. Điểm còn lại '+plan.balance+'.':'Chọn khoản thu gốc để đối soát điểm.')):'';
         row.style.color=plan?.error?'#DC2626':'#4F7A65';
         el('btnSaveSalesMoney').disabled=busy||!context||(refund&&(!plan||!!plan.error));
@@ -1329,22 +1337,34 @@
     function syncFields(){
         const refund=el('salesCashierAction').value==='refund';
         el('salesCashierPaymentField').style.display=refund?'block':'none';
+        el('salesCashierReturnField').style.display=refund&&context?.returnRefunds?.length?'block':'none';
         const method=context?.methods.find(v=>v.id===el('salesCashierMethod').value);
         el('salesCashierReferenceField').style.display=method?.requires_reference?'block':'none';
         el('salesCashierReference').required=!!method?.requires_reference;
         el('salesCashierConfirmationText').textContent=refund?'Đã hoàn trả đúng số tiền cho khách và đồng ý thu hồi điểm theo đối soát ở trên':'Đã nhận từ khách đúng số tiền ghi ở trên';
         el('salesCashierConfirmed').checked=false;
         const payment=context?.payments.find(p=>p.id===el('salesCashierPayment').value);
-        const maximum=refund?(payment?refundable(payment):0):Number(context?.remaining||0);
+        const selected=context?.returnRefunds?.find(r=>r.id===el('salesCashierReturn').value);
+        const cap=context?.returnRefunds?.length ? Number(selected?.remaining||0) : Infinity;
+        const maximum=refund?(payment?Math.min(refundable(payment),cap):0):Number(context?.remaining||0);
         el('salesCashierAmount').value=maximum>0?String(maximum):'';el('salesCashierAmount').max=String(maximum);
         m.enhanceEntitySelects();
         previewRefund();
     }
     async function load(current){
         ({refundLoyaltyPreview:refundPreview}=await import('/scripts/shared/refund-loyalty.mjs'));
-        const {data,error}=await window.getSupabaseClient().rpc('get_admin_sales_cashier',{p_order_id:booking.rawId});
-        if(error)throw error;if(current!==session)return;
+        const db=window.getSupabaseClient();
+        const [{data,error},returns]=await Promise.all([
+            db.rpc('get_admin_sales_cashier',{p_order_id:booking.rawId}),
+            db.rpc('get_admin_sales_return_refunds',{p_order:booking.rawId})
+        ]);
+        if(error||returns.error)throw error||returns.error;if(current!==session)return;
+        data.returnRefunds=returns.data||[];
         context=data;
+        const refundableReturns=data.returnRefunds.filter(row=>row.request_status==='received'&&Number(row.remaining)>0);
+        el('salesCashierReturn').replaceChildren(new Option('Chọn yêu cầu trả hàng',''),
+            ...refundableReturns.map(row=>new Option(row.reason+' · Còn được hoàn '+m.formatCurrency(row.remaining),row.id)));
+        if(refundableReturns.length===1)el('salesCashierReturn').value=refundableReturns[0].id;
         el('salesCashierTotal').textContent=m.formatCurrency(data.total);el('salesCashierCollected').textContent=m.formatCurrency(data.collected);el('salesCashierRemaining').textContent=m.formatCurrency(data.remaining);
         el('salesCashierMethod').replaceChildren(new Option('Chọn phương thức',''),...data.methods.map(v=>new Option(v.name,v.id)));
         el('salesCashierMethod').value=data.methods.find(v=>v.name==='Tiền mặt')?.id||'';
@@ -1367,7 +1387,7 @@
         finally{if(current===session)previewRefund();}
     };
     el('formSalesCashier').addEventListener('submit',event=>event.preventDefault());
-    for(const id of ['salesCashierAction','salesCashierMethod','salesCashierPayment'])el(id).addEventListener('change',()=>{el('salesCashierError').textContent='';syncFields();});
+    for(const id of ['salesCashierAction','salesCashierMethod','salesCashierPayment','salesCashierReturn'])el(id).addEventListener('change',()=>{el('salesCashierError').textContent='';syncFields();});
     el('salesCashierAmount').addEventListener('input',()=>{el('salesCashierConfirmed').checked=false;previewRefund();});
     el('btnSaveSalesMoney').onclick=async()=>{
         if(busy||!context)return;el('salesCashierError').textContent='';
@@ -1375,7 +1395,8 @@
         if(!Number.isSafeInteger(amount)||amount<=0||reason.length<2||!method||!el('salesCashierConfirmed').checked){el('salesCashierError').textContent='Điền số tiền nguyên dương, phương thức, lý do và xác nhận giao dịch thực tế.';return;}
         const reference=el('salesCashierReference').value.trim();if(method.requires_reference&&!reference){el('salesCashierError').textContent='Nhập mã giao dịch ngân hàng đã đối soát.';el('salesCashierReference').focus();return;}
         const details={amount,reason,method_id:method.id,reference:method.requires_reference?reference:'',confirmed:true};
-        if(action==='refund'){details.payment_id=el('salesCashierPayment').value;if(!details.payment_id){el('salesCashierError').textContent='Chọn khoản thu gốc cần hoàn.';return;}}
+        if(action==='refund'){details.payment_id=el('salesCashierPayment').value;if(!details.payment_id){el('salesCashierError').textContent='Chọn khoản thu gốc cần hoàn.';return;}
+            if(context.returnRefunds.length)details.return_request_id=el('salesCashierReturn').value;}
         if(action==='refund'){const plan=previewRefund();if(!plan||plan.error){el('salesCashierError').textContent=plan?.error||'Chọn khoản thu để đối soát.';return;}details.loyalty_confirmed=true;}
         busy=true;el('btnSaveSalesMoney').disabled=true;const current=session;
         try{

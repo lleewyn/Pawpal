@@ -402,7 +402,7 @@ function createBookingCard(booking) {
                 return;
             }
             const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-            if (currentUser && Number(currentUser.cancelCount || 0) >= 3) {
+            if (currentUser && Number(currentUser.cancelCount || 0) > 3) {
                 showToast('Tài khoản của bạn đã vượt quá ngưỡng hủy lịch cho phép (> 3 lần). Chức năng đặt và quản lý lịch trực tuyến của bạn đã bị tạm khóa. Vui lòng gọi Hotline 1900 1234.', 'danger');
                 return;
             }
@@ -544,6 +544,10 @@ export function openBookingCancelModal(booking, onSaved) {
             const db=window.getSupabaseClient?.() || window.SupabaseClient;
             const user=window.getCurrentUser?.() || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
             await cancelCustomerBooking(db,user,booking,reason.value,requestId);
+            if (user) {
+                user.cancelCount = (Number(user.cancelCount) || 0) + 1;
+                try { localStorage.setItem('pawpal_current_user', JSON.stringify(user)); } catch (_) {}
+            }
             modal.close();showToast('Đã hủy lịch hẹn.','success');await onSaved?.();
         }catch(err){error.textContent=err.message;error.hidden=false;}
         finally{button.disabled=false;}
@@ -560,7 +564,10 @@ export function openBookingMoveModal(booking,onSaved) {
     const isHotel = Boolean(
         booking?.isHotel ||
         booking?.hotel ||
+        booking?.type === 'hotel' ||
+        booking?.hotelStay ||
         booking?.logistics?.hotel ||
+        booking?.logistics?.kind === 'pet_hotel' ||
         String(booking?.serviceCategory || booking?.category || booking?.categoryCode || '').toLowerCase().includes('hotel') ||
         /pet[-_ ]?hotel|khách\s*sạn|lưu\s*trú|suite|condo|villa/i.test(booking?.serviceName || booking?.service || '') ||
         (Array.isArray(booking?.items) && booking.items.some(i => /hotel|suite|condo|villa|lưu\s*trú|khách\s*sạn/i.test(i.name || i.serviceName || '')))
@@ -606,6 +613,12 @@ export function openBookingMoveModal(booking,onSaved) {
     const db=window.getSupabaseClient?.() || window.SupabaseClient;
     const requestId=crypto.randomUUID();let quote=null,version=0;
     const invalidate=()=>{++version;quote=null;save.disabled=true;preview.hidden=true;error.hidden=true;};
+    if(booking?.scheduledStartAt){
+        try{start.value=vietnamDateTimeInput(new Date(booking.scheduledStartAt));}catch(_){}
+    }
+    if(isHotel && endInput && booking?.scheduledEndAt){
+        try{endInput.value=vietnamDateTimeInput(new Date(booking.scheduledEndAt));endInput.min=start.value||'';}catch(_){}
+    }
     start.addEventListener('input',()=>{
         invalidate();
         if(isHotel && endInput && start.value){

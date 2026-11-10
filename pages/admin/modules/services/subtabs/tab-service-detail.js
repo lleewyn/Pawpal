@@ -121,35 +121,65 @@
         const actionButtonsContainer = document.getElementById('detailBookingActionButtons');
         if (actionButtonsContainer) {
             actionButtonsContainer.innerHTML = '';
-            if (booking.status === 'pending') {
+            if (['pending', 'cho_xac_nhan'].includes(booking.status)) {
                 actionButtonsContainer.innerHTML = `
                     <button type="button" class="admin-btn admin-btn-primary btn-action-confirm" data-booking-id="${booking.id}">Xác nhận lịch</button>
                     <button type="button" class="admin-btn admin-btn-danger btn-action-cancel" data-booking-id="${booking.id}">Hủy lịch hẹn</button>
                 `;
-            } else if (booking.status === 'confirmed') {
+            } else if (['confirmed', 'da_xac_nhan'].includes(booking.status)) {
                 actionButtonsContainer.innerHTML = `
-                    <button type="button" class="admin-btn admin-btn-primary btn-action-intake" data-booking-id="${booking.id}">Tiếp nhận bé</button>
+                    <button type="button" class="admin-btn admin-btn-primary btn-action-checkin" data-booking-id="${booking.id}">Tiếp nhận bé</button>
+                    <button type="button" class="admin-btn admin-btn-secondary btn-action-intake" data-booking-id="${booking.id}">Biên bản an toàn</button>
                     <button type="button" class="admin-btn admin-btn-secondary btn-action-change" data-booking-id="${booking.id}">Đổi KTV</button>
                     <button type="button" class="admin-btn admin-btn-danger btn-action-cancel" data-booking-id="${booking.id}">Hủy lịch</button>
                 `;
-            } else if (booking.status === 'in_progress') {
+            } else if (['checked_in', 'da_check_in', 'accepted', 'da_tiep_nhan'].includes(booking.status)) {
+                actionButtonsContainer.innerHTML = `
+                    <button type="button" class="admin-btn admin-btn-primary btn-action-intake" data-booking-id="${booking.id}">Biên bản an toàn và bắt đầu ca</button>
+                    <button type="button" class="admin-btn admin-btn-secondary btn-action-change" data-booking-id="${booking.id}">Đổi KTV</button>
+                `;
+            } else if (['in_progress', 'dang_thuc_hien'].includes(booking.status)) {
                 actionButtonsContainer.innerHTML = `
                     <button type="button" class="admin-btn admin-btn-primary btn-action-complete" data-booking-id="${booking.id}">Hoàn thành dịch vụ</button>
                     <button type="button" class="admin-btn admin-btn-secondary btn-action-change" data-booking-id="${booking.id}">Đổi KTV</button>
                     <button type="button" class="admin-btn admin-btn-secondary btn-action-complaint" data-booking-id="${booking.id}">Tạo khiếu nại</button>
                 `;
-            } else if (booking.status === 'completed') {
+            } else if (['completed', 'da_hoan_tat'].includes(booking.status)) {
                 actionButtonsContainer.innerHTML = `
                     <button type="button" class="admin-btn admin-btn-secondary btn-action-complaint" data-booking-id="${booking.id}">Tạo khiếu nại</button>
                 `;
             }
 
             const btnConfirm = actionButtonsContainer.querySelector('.btn-action-confirm');
+            const btnCheckin = actionButtonsContainer.querySelector('.btn-action-checkin');
             const btnIntake = actionButtonsContainer.querySelector('.btn-action-intake');
             const btnComplete = actionButtonsContainer.querySelector('.btn-action-complete');
             const btnCancel = actionButtonsContainer.querySelector('.btn-action-cancel');
             const btnChange = actionButtonsContainer.querySelector('.btn-action-change');
             const btnComplaint = actionButtonsContainer.querySelector('.btn-action-complaint');
+
+            if (btnCheckin) {
+                btnCheckin.addEventListener('click', () => {
+                    const checkinAction = async () => {
+                        if (PawpalServices.subtabs.bookings?.updateBookingStatus) {
+                            await PawpalServices.subtabs.bookings.updateBookingStatus(booking.id, 'checked_in');
+                        }
+                        booking.status = 'checked_in';
+                        renderBookingDetail(booking.id);
+                    };
+
+                    if (typeof PawpalServices.showConfirmModal === 'function') {
+                        PawpalServices.showConfirmModal({
+                            title: 'Tiếp nhận bé tại quầy',
+                            message: `Xác nhận tiếp nhận bé ${booking.petName || 'cưng'} (Mã ca: ${booking.id}) và chuyển trạng thái sang Đã tiếp nhận?`,
+                            acceptText: 'Tiếp nhận bé',
+                            onAccept: checkinAction
+                        });
+                    } else {
+                        checkinAction();
+                    }
+                });
+            }
 
             if (btnConfirm) {
                 btnConfirm.addEventListener('click', () => {
@@ -210,7 +240,7 @@
         // Gắn nút đổi KTV cạnh dòng thông tin KTV
         const btnQuickChangeStaff = document.getElementById('btnDetailQuickChangeStaff');
         if (btnQuickChangeStaff) {
-            btnQuickChangeStaff.disabled = !['pending', 'confirmed', 'in_progress'].includes(booking.status);
+            btnQuickChangeStaff.disabled = !['pending', 'confirmed', 'checked_in', 'in_progress', 'da_xac_nhan', 'da_check_in', 'dang_thuc_hien'].includes(booking.status);
             btnQuickChangeStaff.onclick = () => {
                 if (PawpalServices.subtabs.bookings?.openChangeStaffModal) {
                     PawpalServices.subtabs.bookings.openChangeStaffModal(booking.id);
