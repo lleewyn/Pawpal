@@ -97,7 +97,8 @@
 <section class="subtab-content" id="subtab-tab-dashboard-operations">
 <section aria-label="Quản trị vận hành" class="dashboard-module dash-page ops-dash" data-ops-root>
 <header class="ops-toolbar">
-<h2 class="ops-title">Quản trị vận hành <span class="ops-period-label" data-ops-period-label></span></h2>
+<div class="ops-toolbar-left">
+<h2 class="ops-title">Quản trị vận hành</h2>
 <div aria-label="Khoảng thời gian" class="ops-range-group" role="group">
 <button aria-pressed="true" class="ops-range active" data-ops-range="today" type="button">Hôm nay</button>
 <button aria-pressed="false" class="ops-range" data-ops-range="7d" type="button">7 ngày</button>
@@ -105,11 +106,13 @@
 <button aria-pressed="false" class="ops-range" data-ops-range="90d" type="button">90 ngày</button>
 <button aria-pressed="false" class="ops-range" data-ops-range="custom" type="button">Tùy chọn</button>
 </div>
+<span class="ops-period-label" data-ops-period-label></span>
 <div class="ops-custom-range" data-ops-custom hidden>
 <label class="ops-sr-only" for="opsRangeFrom">Từ ngày</label><input class="admin-input" data-ops-from id="opsRangeFrom" type="date">
 <span aria-hidden="true">–</span>
 <label class="ops-sr-only" for="opsRangeTo">Đến ngày</label><input class="admin-input" data-ops-to id="opsRangeTo" type="date">
 <button class="admin-btn admin-btn-secondary" data-ops-apply type="button">Áp dụng</button>
+</div>
 </div>
 <div class="ops-sync"><span aria-live="polite" class="ops-sync-status" data-ops-sync-status>Đang tải</span><button class="admin-btn admin-btn-secondary" data-ops-refresh type="button">Làm mới</button></div>
 </header>

@@ -4,8 +4,8 @@ export async function editGuestContact(root){
  return new Promise(resolve=>{
   const prevOverflow=document.body.style.overflow;
   document.body.style.overflow='hidden';
-  root.innerHTML=`<div class="booking-owner-modal" id="guestContactModalOverlay">
-   <div class="booking-owner-dialog" role="dialog" aria-modal="true" aria-labelledby="guestContactTitle" tabindex="-1">
+  root.innerHTML=`<div class="booking-owner-modal" id="guestContactModalOverlay" data-lenis-prevent>
+   <div class="booking-owner-dialog" role="dialog" aria-modal="true" aria-labelledby="guestContactTitle" tabindex="-1" data-lenis-prevent>
     <header>
      <h3 id="guestContactTitle">Sửa thông tin liên hệ</h3>
      <button type="button" class="booking-owner-close" id="guestContactModalClose" aria-label="Đóng">Đóng</button>
@@ -33,6 +33,8 @@ export async function editGuestContact(root){
    </div>
   </div>`;
   const get=id=>root.querySelector('#'+id),name=get('guestEditName'),phone=get('guestEditPhone'),save=get('guestEditSave'),cancel=get('guestEditCancel'),overlay=get('guestContactModalOverlay');
+  const dialog=root.querySelector('.booking-owner-dialog');
+  if(dialog)dialog.addEventListener('wheel',e=>e.stopPropagation(),{passive:true});
   name.value=snapshot.contact.name||'';phone.value=snapshot.contact.phone||'';let busy=false,submitted=null,updated=false;const requestId=crypto.randomUUID();
   root.querySelector('form').onsubmit=event=>event.preventDefault();
   for(const input of [name,phone]){input.setAttribute('aria-invalid','false');input.oninput=()=>{get(input.id+'Error').textContent='';input.setAttribute('aria-invalid','false');};}

@@ -17,10 +17,11 @@ function bindSave(get,save){
   finally{if(button.isConnected){button.disabled=false;get('bookingInlineCancel').disabled=false;}}
  };
 }
-function ownerModal(host,onClose,title='Cập nhật thông tin chủ nuôi',pet=false){
- const previous=document.activeElement,overflow=document.body.style.overflow;
- const overlay=document.createElement('div');overlay.className='booking-owner-modal booking-live-form';
- overlay.innerHTML='<section class="booking-owner-dialog" role="dialog" aria-modal="true" aria-labelledby="bookingOwnerTitle" tabindex="-1"><header><h3 id="bookingOwnerTitle">Cập nhật thông tin chủ nuôi</h3><button type="button" class="booking-owner-close" aria-label="Đóng">Đóng</button></header><div class="booking-owner-content"></div></section>';
+ function ownerModal(host,onClose,title='Cập nhật thông tin chủ nuôi',pet=false){
+  const previous=document.activeElement,overflow=document.body.style.overflow;
+  const overlay=document.createElement('div');overlay.className='booking-owner-modal booking-live-form';overlay.setAttribute('data-lenis-prevent','');
+  overlay.innerHTML='<section class="booking-owner-dialog" role="dialog" aria-modal="true" aria-labelledby="bookingOwnerTitle" tabindex="-1" data-lenis-prevent><header><h3 id="bookingOwnerTitle">Cập nhật thông tin chủ nuôi</h3><button type="button" class="booking-owner-close" aria-label="Đóng">Đóng</button></header><div class="booking-owner-content"></div></section>';
+  overlay.querySelector('.booking-owner-dialog')?.addEventListener('wheel',e=>e.stopPropagation(),{passive:true});
  document.body.append(overlay);document.body.style.overflow='hidden';
  overlay.querySelector('h3').textContent=title;
  overlay.classList.toggle('booking-pet-modal',pet);

@@ -15,7 +15,7 @@ export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNe
  const firstVisit=!pets.length&&!context.contact;
  root.innerHTML=`<div class="step-header"><h2>${firstVisit?'Thông tin đặt lịch':'Chọn bé cưng'}</h2></div><p class="field-note">Bạn có thể đặt lịch mà không cần tài khoản.</p>
  <div id="guestBookingContact" class="booking-owner"></div><div id="guestBookingPets" class="booking-pet-cards" role="group" aria-label="Chọn bé cưng"></div>
- <p id="guestPetFeedback" class="field-note" role="status" aria-live="polite"></p><div class="booking-inline-tools"><button type="button" class="btn-green-outline" id="guestAddPet">Thêm bé cưng</button><button type="button" class="btn-green-outline" id="guestEditPet" disabled>Sửa bé đã chọn</button><button type="button" class="btn-green-outline" id="guestPetMore" hidden>Xem thêm bé</button></div><div id="guestPetEditor"></div>
+ <p id="guestPetFeedback" class="field-note" role="status" aria-live="polite"></p><div class="booking-inline-tools"><button type="button" class="btn-green-outline" id="guestAddPet">Thêm bé cưng</button><button type="button" class="btn-green-outline" id="guestPetMore" hidden>Xem thêm bé</button></div><div id="guestPetEditor"></div>
  <div class="step-actions"><button type="button" class="btn-step-next btn-cta" id="step1Next" disabled>Tiếp theo</button></div>`;
  const get=id=>root.querySelector('#'+id),feedback=get('guestPetFeedback'),editor=get('guestPetEditor');
  function contactView(){
@@ -24,14 +24,43 @@ export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNe
   contactEl.hidden=!context.contact;
   contactEl.innerHTML=context.contact?`<div class="booking-owner-top"><span>Thông tin chủ nuôi</span><button type="button" class="btn-owner-edit" id="guestEditContact">Sửa liên hệ</button></div><strong>${esc(context.contact.name)}</strong><span>${esc(context.contact.phone)}</span>`:'';
  }
- function choose(pet){selected=pet;if(sessionStorage.getItem(pendingKey)===pet.id)sessionStorage.removeItem(pendingKey);onChoose(pet);get('step1Next').disabled=false;get('guestEditPet').disabled=false;draw();}
+ function choose(pet){selected=pet;if(sessionStorage.getItem(pendingKey)===pet.id)sessionStorage.removeItem(pendingKey);onChoose(pet);get('step1Next').disabled=false;draw();}
  function draw(){
   const names=new Map(),codes=new Map(),name=p=>p.name.trim().toLocaleLowerCase('vi');
   for(const pet of pets){names.set(name(pet),(names.get(name(pet))||0)+1);const short=pet.id.slice(-8);codes.set(short,(codes.get(short)||0)+1);}
   const duplicate=p=>names.get(name(p))>1;
   const code=p=>codes.get(p.id.slice(-8))>1?p.id:p.id.slice(-8);
-  get('guestBookingPets').innerHTML=pets.map(p=>`<button type="button" class="booking-pet-card ${selected?.id===p.id?'selected':''}" data-pet="${esc(p.id)}" aria-pressed="${selected?.id===p.id}"><strong>${esc(p.name)}</strong><span>${esc([p.species,p.breed].filter(Boolean).join(' · '))}</span>${duplicate(p)?`<span>Mã bé ${esc(code(p))}</span>`:''}${Number(p.weight)>0?`<span>${p.weight} kg</span>`:''}</button>`).join('');
-  get('guestBookingPets').querySelectorAll('[data-pet]').forEach(button=>button.onclick=()=>{if(!busy)choose(pets.find(p=>p.id===button.dataset.pet));});
+  get('guestBookingPets').innerHTML=pets.map(p=>{
+   const isSelected=selected?.id===p.id||(!selected&&p===pets[0]);
+   return `<div class="booking-pet-card ${selected?.id===p.id?'selected':''}" data-pet="${esc(p.id)}" role="button" tabindex="0" aria-pressed="${selected?.id===p.id}">
+    <div class="booking-pet-card-header">
+     <strong>${esc(p.name)}</strong>
+     <button type="button" class="btn-card-edit" ${isSelected?'id="guestEditPet"':''} data-edit-pet="${esc(p.id)}" aria-label="Sửa thông tin ${esc(p.name)}">Sửa</button>
+    </div>
+    <span>${esc([p.species,p.breed].filter(Boolean).join(' · '))}</span>
+    ${duplicate(p)?`<span>Mã bé ${esc(code(p))}</span>`:''}
+    ${Number(p.weight)>0?`<span>${p.weight} kg</span>`:''}
+   </div>`;
+  }).join('');
+  get('guestBookingPets').querySelectorAll('.booking-pet-card').forEach(card=>{
+   const pet=pets.find(p=>p.id===card.dataset.pet);
+   card.onclick=event=>{
+    if(busy)return;
+    const editBtn=event.target.closest('.btn-card-edit');
+    if(editBtn){
+     event.stopPropagation();
+     openPetEditor(editBtn.dataset.editPet||pet?.id);
+     return;
+    }
+    if(pet)choose(pet);
+   };
+   card.onkeydown=event=>{
+    if((event.key==='Enter'||event.key===' ')&&!event.target.closest('.btn-card-edit')){
+     event.preventDefault();
+     if(!busy&&pet)choose(pet);
+    }
+   };
+  });
   get('guestPetMore').hidden=!hasMore;
   if(!pets.length&&!firstVisit)feedback.textContent='Điền thông tin bé cưng để chọn dịch vụ phù hợp.';
  }
@@ -54,7 +83,6 @@ export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNe
   }catch(error){feedback.textContent=error.message;}
   finally{busy=false;get('step1Next').disabled=!selected;}
  });
- get('guestEditPet').onclick=()=>openPetEditor(selected?.id);
  get('guestAddPet').onclick=()=>openPetEditor();
  async function openPetEditor(petId=null,directEntry=false){
   if(busy||editor.childElementCount)return;
@@ -85,8 +113,8 @@ export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNe
    editor.innerHTML=`<div class="booking-inline-editor guest-booking-entry">${formHtml}</div>`;
    get('guestAddPet').parentElement.hidden=true;get('step1Next').parentElement.hidden=true;
   }else{
-   editor.innerHTML=`<div class="booking-owner-modal booking-pet-modal" id="guestPetModalOverlay">
-    <div class="booking-owner-dialog" role="dialog" aria-modal="true" aria-labelledby="guestModalTitle" tabindex="-1">
+   editor.innerHTML=`<div class="booking-owner-modal booking-pet-modal" id="guestPetModalOverlay" data-lenis-prevent>
+    <div class="booking-owner-dialog" role="dialog" aria-modal="true" aria-labelledby="guestModalTitle" tabindex="-1" data-lenis-prevent>
      <header>
       <h3 id="guestModalTitle">${editing?'Sửa thông tin bé cưng':'Thêm bé cưng'}</h3>
       <button type="button" class="booking-owner-close" id="guestPetModalClose" aria-label="Đóng">Đóng</button>
@@ -96,6 +124,8 @@ export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNe
      </div>
     </div>
    </div>`;
+   const dialog=editor.querySelector('.booking-owner-dialog');
+   if(dialog)dialog.addEventListener('wheel',e=>e.stopPropagation(),{passive:true});
   }
 
   const closeModal=()=>{
