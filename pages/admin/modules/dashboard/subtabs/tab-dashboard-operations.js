@@ -475,8 +475,8 @@
     function rankedBars(items) {
         const max = Math.max(...items.map(item => item.value), 1);
         return `<ul class="ops-rank">${items.map(item => {
-            const width = item.value > 0 ? Math.max(2, Math.round((item.value / max) * 88)) : 0;
-            return `<li class="ops-rank-row"><span class="ops-rank-label" title="${esc(item.label)}">${esc(item.label)}</span><span class="ops-rank-plot" tabindex="0"${tip(item.tip || `${item.label}: ${num(item.value)}`)}><span class="ops-rank-bar${item.tone ? ` is-${item.tone}` : ''}" style="width:${width}%"></span><span class="ops-rank-value">${num(item.value)}</span></span></li>`;
+            const width = item.value > 0 ? Math.max(2, Math.round((item.value / max) * 100)) : 0;
+            return `<li class="ops-rank-row"><span class="ops-rank-label" title="${esc(item.label)}">${esc(item.label)}</span><span class="ops-rank-plot" tabindex="0"${tip(item.tip || `${item.label}: ${num(item.value)}`)}><span class="ops-rank-track"><span class="ops-rank-bar${item.tone ? ` is-${item.tone}` : ''}" style="width:${width}%"></span></span><span class="ops-rank-value">${num(item.value)}</span></span></li>`;
         }).join('')}</ul>`;
     }
 

@@ -1500,7 +1500,7 @@ button[disabled]{cursor:not-allowed}
     white-space: nowrap;
 }
 
-/* Thanh công cụ & Bộ lọc thời gian chuẩn Pawpal */
+/* Thanh công cụ & Bộ lọc thời gian chuẩn Pawpal (Text-Only Tabs & Frosted Glass) */
 .ops-dash .ops-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -1532,37 +1532,41 @@ button[disabled]{cursor:not-allowed}
     font-size: 13px;
     color: var(--ops-muted);
     white-space: nowrap;
+    margin-left: 6px;
 }
 .ops-dash .ops-range-group {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: #EEF5F1;
-    padding: 4px;
-    border-radius: var(--admin-radius, 9px);
+    gap: 20px;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
 }
 .ops-dash .ops-range {
-    height: 32px;
-    padding: 0 14px;
+    height: auto;
+    padding: 4px 0;
     border: none;
-    border-radius: 7px;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
     background: transparent;
     color: var(--ops-muted);
-    font: 500 12.5px/1 var(--admin-ui-font, Inter, sans-serif);
+    font: 500 13px/1.4 var(--admin-ui-font, Inter, sans-serif);
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: color 0.15s ease, border-color 0.15s ease;
     transform: none !important;
+    box-shadow: none !important;
 }
 .ops-dash .ops-range:hover {
     color: var(--ops-heading);
-    background: rgba(255, 255, 255, 0.65);
+    background: transparent;
 }
 .ops-dash .ops-range.active {
-    background: var(--ops-heading);
+    background: transparent;
     border: none;
-    color: #FFFFFF;
-    font-weight: 600;
-    box-shadow: 0 1px 3px rgba(35, 107, 72, 0.18);
+    border-bottom: 2px solid var(--ops-heading);
+    color: var(--ops-heading);
+    font-weight: 700;
+    box-shadow: none;
 }
 .ops-dash .ops-custom-range {
     display: inline-flex;
@@ -1612,21 +1616,21 @@ button[disabled]{cursor:not-allowed}
 .ops-dash .ops-sync-status.is-live::before {
     content: '';
     display: inline-block;
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: var(--ops-heading);
 }
 .ops-dash .ops-sync-status.is-offline {
-    color: #DC2626;
+    color: #B43F37;
 }
 .ops-dash .ops-sync-status.is-offline::before {
     content: '';
     display: inline-block;
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: #DC2626;
+    background: #B43F37;
 }
 .ops-dash .ops-sync .admin-btn {
     height: 32px;
@@ -1656,7 +1660,7 @@ button[disabled]{cursor:not-allowed}
     outline-offset: 2px;
 }
 
-/* Lưới KPI vận hành: Frosted Glass, bo góc 9px, đường phân cách thanh mảnh */
+/* Lưới KPI vận hành: Frosted Glass, bo góc 9px, đường phân cách thanh mảnh, màu xanh thương hiệu */
 .ops-dash .ops-kpis {
     display: grid !important;
     grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
@@ -1705,7 +1709,7 @@ button[disabled]{cursor:not-allowed}
     font-variant-numeric: tabular-nums !important;
 }
 .ops-dash .ops-kpi.is-attention .kpi-val {
-    color: #DC2626 !important;
+    color: #C27803 !important; /* Hổ phách ấm dịu mắt, đồng nhất Tab 1 */
 }
 .ops-dash .ops-kpi.is-error .kpi-val {
     color: var(--ops-muted) !important;
@@ -1743,7 +1747,7 @@ button[disabled]{cursor:not-allowed}
 }
 .ops-dash .ops-panel-head .admin-card-title {
     margin: 0;
-    font-size: 15.5px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--ops-heading);
 }
@@ -1760,7 +1764,7 @@ button[disabled]{cursor:not-allowed}
     flex-wrap: wrap;
     align-items: center;
     gap: 6px 14px;
-    padding: 14px 20px;
+    padding: 12px 18px;
     border: 1px solid var(--ops-line);
     border-radius: var(--admin-radius, 9px);
     background: var(--ops-surface);
@@ -1790,18 +1794,22 @@ button[disabled]{cursor:not-allowed}
 .ops-dash .ops-empty { margin: 6px 0; font-size: 13px; color: var(--ops-muted); }
 .ops-dash .ops-error { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; color: #DC2626; }
 .ops-dash .ops-link-btn {
-    padding: 3px 8px;
-    border: none;
-    background: #EEF5F1;
-    border-radius: 6px;
-    color: var(--ops-heading);
-    font: 600 12px/1.3 var(--admin-ui-font, Inter, sans-serif);
-    cursor: pointer;
-    white-space: nowrap;
-    text-decoration: none;
-    transition: background 0.15s ease;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    color: var(--ops-heading) !important;
+    font: 600 12.5px/1.3 var(--admin-ui-font, Inter, sans-serif) !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important;
+    transition: color 0.15s ease !important;
 }
-.ops-dash .ops-link-btn:hover { background: #DCEEE2; color: #1a5336; }
+.ops-dash .ops-link-btn:hover {
+    background: transparent !important;
+    color: #1a5336 !important;
+}
 .ops-dash .ops-foot {
     display: flex;
     flex-wrap: wrap;
@@ -1815,28 +1823,28 @@ button[disabled]{cursor:not-allowed}
     color: var(--ops-muted);
 }
 .ops-dash .ops-foot .ops-link-btn {
-    background: transparent;
-    padding: 0;
-    color: var(--ops-heading);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    font-weight: 600;
+    background: transparent !important;
+    padding: 0 !important;
+    color: var(--ops-heading) !important;
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important;
+    font-weight: 600 !important;
 }
-.ops-dash .ops-foot .ops-link-btn:hover { background: transparent; color: #1a5336; }
-.ops-dash .ops-foot .is-risk { color: #DC2626; font-weight: 600; }
+.ops-dash .ops-foot .ops-link-btn:hover { background: transparent !important; color: #1a5336 !important; }
+.ops-dash .ops-foot .is-risk { color: #B43F37; font-weight: 600; }
 
 /* Con số lớn của khối */
 .ops-dash .ops-hero { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; }
-.ops-dash .ops-hero strong { font-size: 28px; font-weight: 700; line-height: 1; color: var(--ops-heading); letter-spacing: -0.5px; }
-.ops-dash .ops-hero span { font-size: 13px; color: var(--ops-muted); }
+.ops-dash .ops-hero strong { font-size: 26px; font-weight: 700; line-height: 1; color: var(--ops-heading); letter-spacing: -0.5px; }
+.ops-dash .ops-hero span { font-size: 12.5px; color: var(--ops-muted); font-weight: 500; }
 
 /* Thanh chia đoạn (stacked status bar): thanh mảnh, bo góc thanh lịch */
 .ops-dash .ops-seg {
     display: flex;
     gap: 3px;
-    height: 14px;
+    height: 12px;
     margin: 0 0 12px;
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
 }
 .ops-dash .ops-seg-part {
@@ -1844,7 +1852,7 @@ button[disabled]{cursor:not-allowed}
     align-items: center;
     min-width: 4px;
     padding: 0 6px;
-    border-radius: 3px;
+    border-radius: 2px;
     font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
@@ -1868,28 +1876,133 @@ button[disabled]{cursor:not-allowed}
 .ops-dash .ops-legend li { display: inline-flex; align-items: center; gap: 6px; }
 .ops-dash .ops-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
 
-/* Thanh xếp hạng (Top dịch vụ): thanh mảnh, bo tròn nhẹ */
-.ops-dash .ops-rank { display: flex; flex-direction: column; gap: 11px; margin: 0; padding: 0; list-style: none; }
-.ops-dash .ops-rank-row { display: grid; grid-template-columns: minmax(90px, 34%) minmax(0, 1fr); align-items: center; gap: 12px; font-size: 13px; }
-.ops-dash .ops-rank-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ops-text); font-weight: 500; }
-.ops-dash .ops-rank-plot { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.ops-dash .ops-rank-bar { height: 8px; min-width: 4px; border-radius: 4px; background: var(--ops-ok); }
-.ops-dash .ops-rank-bar.is-bad { background: var(--ops-bad); }
-.ops-dash .ops-rank-bar.is-warn { background: var(--ops-warn); }
-.ops-dash .ops-rank-value { font-weight: 600; color: var(--ops-heading); white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 12.5px; }
+/* Thanh xếp hạng (Cần xử lý ngay / Top dịch vụ): thanh mảnh 5px, bo tròn, có track nền xám nhẹ */
+.ops-dash .ops-rank {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.ops-dash .ops-rank-row {
+    display: grid;
+    grid-template-columns: 78px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    font-size: 12.5px;
+}
+.ops-dash .ops-rank-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ops-text);
+    font-weight: 500;
+}
+.ops-dash .ops-rank-plot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    width: 100%;
+}
+.ops-dash .ops-rank-track {
+    flex: 1;
+    height: 5px;
+    background: #EEF5F1;
+    border-radius: 3px;
+    overflow: hidden;
+    display: flex;
+}
+.ops-dash .ops-rank-bar {
+    height: 5px;
+    min-width: 4px;
+    border-radius: 3px;
+    background: var(--ops-ok);
+}
+.ops-dash .ops-rank-bar.is-bad {
+    background: #B43F37; /* Đỏ mộc thanh lịch */
+}
+.ops-dash .ops-rank-bar.is-warn {
+    background: #C27803; /* Cam hổ phách dịu */
+}
+.ops-dash .ops-rank-value {
+    font-weight: 600;
+    color: var(--ops-heading);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-size: 12.5px;
+    min-width: 24px;
+    text-align: right;
+}
 
-/* Thanh mức (Tồn kho & Mức tải nhân sự) */
-.ops-dash .ops-meters { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
-.ops-dash .ops-meter-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; }
-.ops-dash .ops-meter-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ops-text); font-weight: 500; }
-.ops-dash .ops-meter-value { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--ops-heading); }
-.ops-dash .ops-meter-value.is-bad { color: var(--ops-urgent-text); }
-.ops-dash .ops-meter-value.is-warn { color: var(--ops-warn-text); }
-.ops-dash .ops-meter-track { height: 7px; margin-top: 6px; border-radius: 4px; background: var(--ops-track); overflow: hidden; }
-.ops-dash .ops-meter-fill { height: 100%; border-radius: 4px; background: var(--ops-ok); }
-.ops-dash .ops-meter-fill.is-warn { background: var(--ops-warn); }
-.ops-dash .ops-meter-fill.is-bad { background: var(--ops-bad); }
-.ops-dash .ops-meter-sub { margin-top: 4px; font-size: 11.5px; color: var(--ops-muted); }
+/* Thanh mức (Tồn kho & Mức tải nhân sự): thanh mảnh 5px, bố cục cân đối */
+.ops-dash .ops-meters {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.ops-dash .ops-panel.ops-panel-wide .ops-meters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 28px;
+}
+.ops-dash .ops-meter-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 13px;
+}
+.ops-dash .ops-meter-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ops-text);
+    font-weight: 500;
+    font-size: 12.5px;
+}
+.ops-dash .ops-meter-value {
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-size: 12.5px;
+    color: var(--ops-heading);
+}
+.ops-dash .ops-meter-value.is-bad {
+    color: #B43F37;
+}
+.ops-dash .ops-meter-value.is-warn {
+    color: #C27803;
+}
+.ops-dash .ops-meter-track {
+    height: 5px;
+    margin-top: 6px;
+    border-radius: 3px;
+    background: #EEF5F1;
+    overflow: hidden;
+}
+.ops-dash .ops-meter-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--ops-ok);
+}
+.ops-dash .ops-meter-fill.is-warn {
+    background: #C27803;
+}
+.ops-dash .ops-meter-fill.is-bad {
+    background: #B43F37;
+}
+.ops-dash .ops-meter-sub {
+    margin-top: 4px;
+    font-size: 11.5px;
+    color: var(--ops-muted);
+}
 
 /* Giờ cao điểm (Heatmap) */
 .ops-dash .ops-heatmap-wrap { overflow-x: auto; overscroll-behavior: contain; }
@@ -1905,15 +2018,20 @@ button[disabled]{cursor:not-allowed}
 .ops-dash .ops-caption { margin: 10px 0 0; font-size: 12px; color: var(--ops-muted); }
 .ops-dash .ops-caption strong { color: var(--ops-text); font-weight: 600; }
 
-/* Cần xử lý ngay */
-.ops-dash .ops-alert-layout { display: grid; grid-template-columns: minmax(220px, 32%) minmax(0, 1fr); gap: 24px; align-items: start; }
+/* Cần xử lý ngay: Bố cục 2 cột hài hòa, thanh lịch */
+.ops-dash .ops-alert-layout {
+    display: grid;
+    grid-template-columns: minmax(220px, 32%) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
 .ops-dash .ops-tasks { margin: 0; padding: 0; list-style: none; }
 .ops-dash .ops-task {
     display: grid;
     grid-template-columns: 80px minmax(110px, 0.9fr) minmax(0, 1.6fr) 68px auto;
     align-items: center;
     gap: 12px;
-    padding: 9px 0;
+    padding: 8px 0;
     border-bottom: 1px solid var(--ops-line);
     font-size: 13px;
 }
@@ -1922,8 +2040,8 @@ button[disabled]{cursor:not-allowed}
 .ops-dash .ops-task-reason { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ops-muted); font-size: 12.5px; }
 .ops-dash .ops-task-wait { text-align: right; white-space: nowrap; color: var(--ops-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .ops-dash .ops-dot { white-space: nowrap; font-weight: 600; font-size: 12px; }
-.ops-dash .ops-dot.is-urgent { color: var(--ops-urgent-text); }
-.ops-dash .ops-dot.is-warning { color: var(--ops-warn-text); }
+.ops-dash .ops-dot.is-urgent { color: #B43F37; }
+.ops-dash .ops-dot.is-warning { color: #C27803; }
 
 /* Bảng đầy đủ khi mở "Xem tất cả" */
 .ops-dash .table-responsive-wrapper,
@@ -1951,17 +2069,17 @@ button[disabled]{cursor:not-allowed}
 .ops-dash .admin-table th.num, .ops-dash .admin-table td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ops-dash .admin-table th:first-child { border-left: 3px solid rgba(238, 245, 241, 0.75); }
 .ops-dash .admin-table td:first-child { border-left: 3px solid transparent; }
-.ops-dash .admin-table tr.row-urgent td:first-child { border-left-color: #DC2626; }
-.ops-dash .admin-table tr.row-warning td:first-child { border-left-color: #D97706; }
+.ops-dash .admin-table tr.row-urgent td:first-child { border-left-color: #B43F37; }
+.ops-dash .admin-table tr.row-warning td:first-child { border-left-color: #C27803; }
 
 /* Chất lượng phục vụ */
 .ops-dash .ops-quality { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 36px; }
-.ops-dash .ops-subtitle { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--ops-heading); }
+.ops-dash .ops-subtitle { margin: 0 0 12px; font-size: 13.5px; font-weight: 600; color: var(--ops-heading); }
 .ops-dash .ops-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .ops-dash .ops-stat { display: flex; flex-direction: column; gap: 4px; }
 .ops-dash .ops-stat span { font-size: 12px; color: var(--ops-muted); font-weight: 500; }
 .ops-dash .ops-stat strong { font-size: 24px; font-weight: 700; color: var(--ops-heading); letter-spacing: -0.4px; }
-.ops-dash .ops-stat strong.is-attention { color: #DC2626; }
+.ops-dash .ops-stat strong.is-attention { color: #C27803; }
 
 /* Phân trang ngoài khối, căn giữa, không khung (AGENTS.md Rule 1) */
 .ops-dash .ops-pagination {
@@ -2024,6 +2142,7 @@ button[disabled]{cursor:not-allowed}
     .ops-dash .ops-grid { grid-template-columns: minmax(0, 1fr); }
     .ops-dash .ops-quality { grid-template-columns: minmax(0, 1fr); }
     .ops-dash .ops-sync { margin-left: 0; width: 100%; justify-content: flex-end; }
+    .ops-dash .ops-panel.ops-panel-wide .ops-meters { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 560px) {
     .ops-dash .ops-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
