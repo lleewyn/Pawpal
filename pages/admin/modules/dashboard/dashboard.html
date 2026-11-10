@@ -1,3 +1,5 @@
+<!-- SUBTAB 1: TỔNG QUAN -->
+<section class="subtab-content active" id="subtab-tab-dashboard">
 <section aria-label="Dashboard quản trị" class="dashboard-module dash-page">
 <div aria-label="Chỉ số tổng quan" class="dash-kpis">
 <div class="dash-kpi" data-dashboard-module="Bán hàng"><span>Thực thu ròng hôm nay</span><strong id="dashboardRevenue">—</strong></div>
@@ -89,3 +91,51 @@
 </div>
 </div>
 </div></section>
+</section>
+
+<!-- SUBTAB 2: QUẢN TRỊ VẬN HÀNH -->
+<section class="subtab-content" id="subtab-tab-dashboard-operations">
+<section aria-label="Quản trị vận hành" class="ops-dash admin-ui-standard" data-ops-root>
+<header class="ops-toolbar">
+<h2 class="ops-title">Quản trị vận hành <span class="ops-period-label" data-ops-period-label></span></h2>
+<div aria-label="Khoảng thời gian" class="ops-range-group" role="group">
+<button aria-pressed="true" class="ops-range active" data-ops-range="today" type="button">Hôm nay</button>
+<button aria-pressed="false" class="ops-range" data-ops-range="7d" type="button">7 ngày</button>
+<button aria-pressed="false" class="ops-range" data-ops-range="30d" type="button">30 ngày</button>
+<button aria-pressed="false" class="ops-range" data-ops-range="90d" type="button">90 ngày</button>
+<button aria-pressed="false" class="ops-range" data-ops-range="custom" type="button">Tùy chọn</button>
+</div>
+<div class="ops-custom-range" data-ops-custom hidden>
+<label class="ops-sr-only" for="opsRangeFrom">Từ ngày</label><input class="admin-input" data-ops-from id="opsRangeFrom" type="date">
+<span aria-hidden="true">–</span>
+<label class="ops-sr-only" for="opsRangeTo">Đến ngày</label><input class="admin-input" data-ops-to id="opsRangeTo" type="date">
+<button class="admin-btn admin-btn-secondary" data-ops-apply type="button">Áp dụng</button>
+</div>
+<div class="ops-sync"><span aria-live="polite" class="ops-sync-status" data-ops-sync-status>Đang tải</span><button class="admin-btn admin-btn-secondary" data-ops-refresh type="button">Làm mới</button></div>
+</header>
+<p class="ops-filter-error" data-ops-filter-error hidden role="alert"></p>
+
+<div aria-label="Chỉ số vận hành" class="admin-kpi-grid ops-kpis" data-ops-kpis>
+<div class="kpi-card ops-kpi" data-kpi="todayAppointments" data-ops-link="appointments"><span class="kpi-label">Lịch hẹn hôm nay</span><strong class="kpi-val" data-kpi-value>—</strong></div>
+<div class="kpi-card ops-kpi" data-kpi="pendingAppointments" data-ops-link="appointments"><span class="kpi-label">Lịch cần xử lý</span><strong class="kpi-val" data-kpi-value>—</strong></div>
+<div class="kpi-card ops-kpi" data-kpi="pendingOrders" data-ops-link="orders"><span class="kpi-label">Đơn cần xử lý</span><strong class="kpi-val" data-kpi-value>—</strong></div>
+<div class="kpi-card ops-kpi" data-kpi="staffOnShift" data-ops-link="staff"><span class="kpi-label">Nhân viên có ca</span><strong class="kpi-val" data-kpi-value>—</strong></div>
+<div class="kpi-card ops-kpi" data-kpi="lowStock" data-ops-link="stock"><span class="kpi-label">SKU cần nhập</span><strong class="kpi-val" data-kpi-value>—</strong></div>
+<div class="kpi-card ops-kpi" data-kpi="openTickets" data-ops-link="tickets"><span class="kpi-label">Hỗ trợ chưa xong</span><strong class="kpi-val" data-kpi-value>—</strong></div>
+</div>
+
+<div class="ops-grid">
+<section class="admin-card ops-panel ops-panel-wide" data-ops-panel="alerts"><header class="ops-panel-head"><h3 class="admin-card-title" data-ops-title>Cần xử lý ngay</h3><span class="ops-panel-tag" data-ops-tag></span></header><div class="ops-panel-body" data-ops-body></div></section>
+<nav aria-label="Phân trang công việc" class="ops-pagination ops-panel-wide" data-ops-pagination hidden></nav>
+<div class="ops-empty-period ops-panel-wide" data-ops-empty-period hidden></div>
+<section class="admin-card ops-panel" data-ops-panel="appointmentStatus"><header class="ops-panel-head"><h3 class="admin-card-title" data-ops-title>Lịch hẹn</h3><span class="ops-panel-tag" data-ops-tag></span></header><div class="ops-panel-body" data-ops-body></div></section>
+<section class="admin-card ops-panel" data-ops-panel="orderStatus"><header class="ops-panel-head"><h3 class="admin-card-title" data-ops-title>Đơn hàng</h3><span class="ops-panel-tag" data-ops-tag></span></header><div class="ops-panel-body" data-ops-body></div></section>
+<section class="admin-card ops-panel" data-ops-panel="topServices"><header class="ops-panel-head"><h3 class="admin-card-title" data-ops-title>Dịch vụ được đặt nhiều</h3><span class="ops-panel-tag" data-ops-tag></span></header><div class="ops-panel-body" data-ops-body></div></section>
+<section class="admin-card ops-panel" data-ops-panel="heatmap"><header class="ops-panel-head"><h3 class="admin-card-title" data-ops-title>Giờ cao điểm</h3><span class="ops-panel-tag" data-ops-tag></span></header><div class="ops-panel-body" data-ops-body></div></section>
+<section class="admin-card ops-panel" data-ops-panel="staff"><header class="ops-panel-head"><h3 class="admin-card-title" data-ops-title>Mức tải nhân sự</h3><span class="ops-panel-tag" data-ops-tag></span></header><div class="ops-panel-body" data-ops-body></div></section>
+<section class="admin-card ops-panel" data-ops-panel="stock"><header class="ops-panel-head"><h3 class="admin-card-title" data-ops-title>Tồn kho cần nhập</h3><span class="ops-panel-tag" data-ops-tag></span></header><div class="ops-panel-body" data-ops-body></div></section>
+<section class="admin-card ops-panel ops-panel-wide" data-ops-panel="quality"><header class="ops-panel-head"><h3 class="admin-card-title" data-ops-title>Chất lượng phục vụ</h3><span class="ops-panel-tag" data-ops-tag></span></header><div class="ops-panel-body" data-ops-body></div></section>
+</div>
+<div aria-hidden="true" class="ops-tip" data-ops-tip hidden></div>
+</section>
+</section>

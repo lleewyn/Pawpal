@@ -552,10 +552,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 updateHeaderSync('idle');
                 return;
             }
-            if (activeMod === 'Dashboard' && window.PawpalDashboard?.loadDashboardData) {
-                window.PawpalDataStore?.invalidate('dashboard:*');
-                await window.PawpalDashboard.loadDashboardData({ force: true });
-                window.PawpalDashboard.init?.();
+            if (activeMod === 'Dashboard') {
+                if (window.PawpalDashboard?.loadDashboardData) {
+                    window.PawpalDataStore?.invalidate('dashboard:*');
+                    await window.PawpalDashboard.loadDashboardData({ force: true });
+                    window.PawpalDashboard.init?.();
+                }
+                if (window.PawpalOperationsDashboard?.refresh) {
+                    await window.PawpalOperationsDashboard.refresh();
+                }
             } else if (activeMod === 'Khách hàng' && window.PawpalCustomers?.loadCustomersModuleData) {
                 window.PawpalDataStore?.invalidate('customers:*');
                 await window.PawpalCustomers.loadCustomersModuleData({ force: true });
@@ -639,10 +644,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }));
     });
 
+    window.addEventListener('admin:subtab-change', (e) => {
+        if (e.detail?.module === 'Dashboard' && e.detail.tabId === 'tab-dashboard-operations') {
+            const opsRoot = document.getElementById('subtab-tab-dashboard-operations');
+            if (opsRoot && window.PawpalOperationsDashboard?.mount) {
+                window.PawpalOperationsDashboard.mount(opsRoot);
+            }
+        }
+    });
+
     const MODULE_SUBTABS_MAP = {
         'Dashboard': {
-            title: 'Dashboard',
-            subtabs: []
+            title: '',
+            defaultTab: 'tab-dashboard',
+            storageKey: 'pawpal_admin_dashboard_subtab',
+            subtabs: [
+                { id: 'tab-dashboard', label: 'Tổng quan' },
+                { id: 'tab-dashboard-operations', label: 'Quản trị vận hành' }
+            ]
         },
         'Khách hàng': {
             title: '',
@@ -886,8 +905,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const MODULE_CONFIG = {
         'Dashboard':  {
             html: 'modules/dashboard/dashboard.html',
-            scripts: ['modules/dashboard/dashboard.js'],
-            postLoad: async () => { if (window.PawpalDashboard?.init) await window.PawpalDashboard.init(); }
+            scripts: [
+                'modules/dashboard/dashboard.js',
+                'modules/dashboard-operations/operations-metrics.js',
+                'modules/dashboard-operations/dashboard-operations.js'
+            ],
+            postLoad: async () => {
+                if (window.PawpalDashboard?.init) await window.PawpalDashboard.init();
+                const opsRoot = document.getElementById('subtab-tab-dashboard-operations');
+                if (opsRoot && window.PawpalOperationsDashboard?.mount) {
+                    await window.PawpalOperationsDashboard.mount(opsRoot);
+                }
+            }
         },
         'Khách hàng': {
             html: 'modules/customers/customers.html',
@@ -1051,7 +1080,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (_currentModule === moduleName && _moduleDomCache.has(moduleName)) {
             const activeEl = _moduleDomCache.get(moduleName);
             if (activeEl && activeEl.parentNode === contentArea) {
-                if (moduleName !== 'Dashboard') syncActiveSubtabPane(activeEl, moduleName);
+                syncActiveSubtabPane(activeEl, moduleName);
                 return;
             }
         }
@@ -1075,7 +1104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             _currentModule = moduleName;
             
             // Đồng bộ subtab active theo hash ngay lập tức
-            if (moduleName !== 'Dashboard') syncActiveSubtabPane(cachedEl, moduleName);
+            syncActiveSubtabPane(cachedEl, moduleName);
             if (window.lucide) lucide.createIcons();
             
             if (moduleName === 'Cấu hình' && !window.PawpalSettings) {
@@ -1152,7 +1181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (thisLoadId !== _activeModuleLoadId) return; // Bị hủy bởi thao tác chuyển phân hệ mới hơn
                 if (html) {
                     moduleWrapper.innerHTML = html;
-                    if (moduleName !== 'Dashboard') syncActiveSubtabPane(moduleWrapper, moduleName);
+                    syncActiveSubtabPane(moduleWrapper, moduleName);
                     if (window.lucide) lucide.createIcons();
                     // Lưu DOM module này vào cache ngay lập tức để chuyển tab tức thì 0ms
                     _moduleDomCache.set(moduleName, moduleWrapper);
@@ -1182,7 +1211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         try { await modCfg.postLoad(); } catch (err) { console.warn(`[Admin] postLoad ${moduleName}:`, err); }
                     }
                     if (loadRevision !== moduleLoadRevision) return;
-                    if (moduleName !== 'Dashboard') syncActiveSubtabPane(moduleWrapper, moduleName);
+                    syncActiveSubtabPane(moduleWrapper, moduleName);
                     window.dispatchEvent(new CustomEvent('admin:module-show', { detail: { module: moduleName } }));
                     return;
                 }
@@ -1311,7 +1340,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function getTargetHashForModule(moduleName) {
         if (access.isStaff()) return window.PawpalAdminViews.defaultHash(moduleName);
-        if (moduleName === 'Dashboard') return '#tab-dashboard';
+        if (moduleName === 'Dashboard') {
+            const saved = sessionStorage.getItem('pawpal_admin_dashboard_subtab');
+            return saved ? '#' + saved : '#tab-dashboard';
+        }
         if (moduleName === 'Khách hàng') {
             const saved = sessionStorage.getItem('pawpal_admin_customer_subtab');
             return saved ? '#' + saved : '#tab-list';
