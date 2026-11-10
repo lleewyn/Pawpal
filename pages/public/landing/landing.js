@@ -112,41 +112,55 @@
             } catch (_) { host.textContent = 'Chưa tải được quyền lợi thành viên. Bạn có thể xem lại trong tài khoản.'; }
         }
         async function loadBanners() {
-            if (!$('#campaignImg')) {
-                $('#slideName').textContent='';$('#slideNum').textContent='';$('#slidePager').textContent='';
-                return;
-            }
-            const fallbackSlide = {src:$('#campaignImg').getAttribute('src'),name:'Pet Taxi — Đồng hành cùng bé',link:'/booking?service=TXI01'};
-            let slides = [fallbackSlide];
+            const imgEl = $('#campaignImg');
+            if (!imgEl) return;
+            const campaignEl = imgEl.closest('.campaign');
+            const fallbackSlide = {src:'/assets/images/landing-v218/pet-taxi-clean.webp',name:'Pet Taxi — Đồng hành cùng bé',link:'/booking?service=TXI01'};
+            let slides = [];
             let current = 0;
             try {
                 const {data,error} = await window.getSupabaseClient().from('banner').select('id,title,image_url,image_media_asset_id,link,start_date,end_date,status').in('status',['active','dang_hien_thi','ACTIVE']).order('display_order').limit(8);
                 if (error) throw error;
                 const now = Date.now();
-                const loaded = [];
                 for (const b of data || []) {
                     let url,link;
                     const rawImage = b.image_media_asset_id ? ('/api/media?action=read&id=' + encodeURIComponent(b.image_media_asset_id)) : b.image_url;
+                    if (!rawImage) continue;
                     try {url=new URL(rawImage, location.origin);link=new URL(b.link || '/services',location.origin);}catch(_){continue;}
                     if (!['https:','http:'].includes(url.protocol) || /(^|\.)example\.(com|org|net)$/.test(url.hostname) || link.origin !== location.origin) continue;
                     if ((b.start_date && Date.parse(b.start_date)>now) || (b.end_date && Date.parse(b.end_date)<now)) continue;
-                    const ok = await new Promise(resolve => {const image=new Image();const timer=setTimeout(()=>resolve(false),4000);image.onload=()=>{clearTimeout(timer);resolve(true);};image.onerror=()=>{clearTimeout(timer);resolve(false);};image.src=url.href;});
-                    if (ok) loaded.push({src:url.href,name:b.title||'PawPal',link:link.pathname+link.search});
+                    slides.push({src:url.href,name:b.title||'Ưu đãi PawPal',link:link.pathname+link.search});
                 }
-                if (loaded.length) slides = loaded;
             } catch (_) { /* Approved brand artwork remains available if the catalogue is unavailable. */ }
+
+            if (!slides.length) {
+                slides = [fallbackSlide];
+            }
+
+            if (campaignEl) campaignEl.classList.remove('is-loading');
             if (!grid.isConnected) return;
             const prev=$('#prevSlide'), next=$('#nextSlide');
             function show() {
-                const row=slides[current];$('#campaignImg').src=row.src;$('#campaignImg').alt=row.name;
+                const row=slides[current];imgEl.src=row.src;imgEl.alt=row.name;
                 $('#slideName').textContent=row.name;$('#slideNum').textContent=String(current+1).padStart(2,'0');
                 $('#slidePager').textContent=`${String(current+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}`;
                 $('.book-inline').href=row.link;
                 $('.book-inline').textContent=row.link.startsWith('/booking')?'Đặt lịch ngay ↗':'Khám phá dịch vụ ↗';
             }
             [prev,next].forEach(b=>{b.hidden=false;b.disabled=slides.length<2;});
-            prev.addEventListener('click',()=>{current=(current-1+slides.length)%slides.length;show();});
-            next.addEventListener('click',()=>{current=(current+1)%slides.length;show();});show();
+            prev.onclick = ()=>{current=(current-1+slides.length)%slides.length;show();};
+            next.onclick = ()=>{current=(current+1)%slides.length;show();};
+            show();
+
+            // Tải ngầm các slide tiếp theo để khi chuyển slide không bị trễ
+            if (slides.length > 1) {
+                setTimeout(() => {
+                    for (let i = 1; i < slides.length; i++) {
+                        const pre = new Image();
+                        pre.src = slides[i].src;
+                    }
+                }, 300);
+            }
         }
         const entries = [...root.querySelectorAll('.pj-entry')];
         const photo = $('#pj-active-photo'), original = photo.src;

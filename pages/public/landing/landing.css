@@ -27,8 +27,10 @@ body.landing-v218{margin:0;background:#fff;color:var(--ink);font-family:"Inter",
 .landing-v218 h1 em{font-style:normal;color:var(--forest)}
 .landing-v218 .intro-note{font-size:13px;line-height:1.65;color:#555951;justify-self:end;max-width:295px;letter-spacing:0.01em;margin-bottom:8px}
 .landing-v218 .campaign{padding-top:25px;max-width:1080px;margin:0 auto}
+.landing-v218 .campaign.is-loading .campaign-img{background:#eef5f1;border-color:#d5e2d9;opacity:.88}
+.landing-v218 .campaign.is-loading .campaign-text{color:#4F7A65;opacity:.7}
 .landing-v218 .campaign-meta{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:11px;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--gray);text-transform:uppercase}
-.landing-v218 .campaign-img{width:100%;aspect-ratio:1717 / 916;background:#e8e8e8;display:block;object-fit:contain;border:1px solid #ddd;user-select:none}
+.landing-v218 .campaign-img{width:100%;aspect-ratio:1717 / 916;background:#e8e8e8;display:block;object-fit:contain;border:1px solid #ddd;user-select:none;transition:opacity .25s ease-in-out}
 .landing-v218 .campaign-foot{min-height:76px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;gap:20px}
 .landing-v218 .campaign-title{display:flex;align-items:center;gap:18px}
 .landing-v218 .campaign-num{font-size:13px;color:var(--gray);font-family:"Inter",system-ui,sans-serif;font-style:italic;min-width:35px}
