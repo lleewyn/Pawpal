@@ -1922,6 +1922,9 @@ body.booking-page-body{background:#fff;color:#274b39;font-family:Inter,system-ui
 }
 @media(max-width:991px){.booking-page-body .booking-main{padding-top:28px}.booking-page-body .booking-summary-col{margin-top:0}}
 .booking-page-body .booking-owner{background:#f3f7ee;border:1px solid #dce5d8;border-radius:9px;padding:16px 18px;display:flex;flex-direction:column;gap:7px;margin-bottom:22px;font-size:13px;color:#637a69}
+.booking-page-body .booking-owner-top{display:flex;justify-content:space-between;align-items:center;width:100%}
+.booking-page-body .btn-owner-edit{background:transparent;border:0;color:#236b48;font-weight:600;font-size:13px;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px;font-family:Inter,system-ui,sans-serif}
+.booking-page-body .btn-owner-edit:hover{color:#184c33}
 .booking-page-body .booking-owner strong{font-family:Lora,Inter,serif;color:#214939;font-size:20px;font-weight:600}
 .booking-page-body .booking-owner a{font-size:12px;color:#315d46}
 .booking-page-body .booking-pet-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
@@ -1996,6 +1999,9 @@ body.booking-page-body{background:#fff;color:#274b39;font-family:Inter,system-ui
 .booking-page-body .booking-pet-modal .booking-entity-option{display:block;width:100%;padding:10px 14px;text-align:left;background:transparent;border:0;color:#203a2c;font:inherit;cursor:pointer}
 .booking-page-body .booking-pet-modal .booking-entity-option:hover{background:#eef5f1}
 @media(max-width:576px){.booking-page-body .booking-pet-modal #bookingInlineFields{grid-template-columns:1fr}}
+.booking-page-body .booking-pet-modal #guestPetFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}
+.booking-page-body .booking-pet-modal #guestPetFields .full-width{grid-column:1/-1}
+@media(max-width:576px){.booking-page-body .booking-pet-modal #guestPetFields{grid-template-columns:1fr}}
 .booking-page-body .booking-confirmation{font:14px/1.7 Inter,system-ui,sans-serif;color:#31553f;display:grid;gap:24px}
 .booking-page-body .booking-confirm-intro>span{font-size:12px;color:#718476}
 .booking-page-body .booking-confirm-intro h3{font:600 26px/1.4 Lora,serif;color:#214939;margin:4px 0 6px}

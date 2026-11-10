@@ -15,10 +15,15 @@ export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNe
  const firstVisit=!pets.length&&!context.contact;
  root.innerHTML=`<div class="step-header"><h2>${firstVisit?'Thông tin đặt lịch':'Chọn bé cưng'}</h2></div><p class="field-note">Bạn có thể đặt lịch mà không cần tài khoản.</p>
  <div id="guestBookingContact" class="booking-owner"></div><div id="guestBookingPets" class="booking-pet-cards" role="group" aria-label="Chọn bé cưng"></div>
- <p id="guestPetFeedback" class="field-note" role="status" aria-live="polite"></p><div class="booking-inline-tools"><button type="button" class="btn-green-outline" id="guestPetMore" hidden>Xem thêm bé</button><button type="button" class="btn-green-outline" id="guestAddPet">Thêm bé cưng</button><button type="button" class="btn-green-outline" id="guestEditPet" disabled>Sửa bé đã chọn</button><button type="button" class="btn-green-outline" id="guestEditContact" ${context.contact?'':'hidden'}>Sửa liên hệ</button></div><div id="guestPetEditor"></div>
+ <p id="guestPetFeedback" class="field-note" role="status" aria-live="polite"></p><div class="booking-inline-tools"><button type="button" class="btn-green-outline" id="guestAddPet">Thêm bé cưng</button><button type="button" class="btn-green-outline" id="guestEditPet" disabled>Sửa bé đã chọn</button><button type="button" class="btn-green-outline" id="guestPetMore" hidden>Xem thêm bé</button></div><div id="guestPetEditor"></div>
  <div class="step-actions"><button type="button" class="btn-step-next btn-cta" id="step1Next" disabled>Tiếp theo</button></div>`;
  const get=id=>root.querySelector('#'+id),feedback=get('guestPetFeedback'),editor=get('guestPetEditor');
- function contactView(){get('guestBookingContact').hidden=!context.contact;get('guestBookingContact').innerHTML=context.contact?`<span>Thông tin chủ nuôi</span><strong>${esc(context.contact.name)}</strong><span>${esc(context.contact.phone)}</span>`:'';}
+ function contactView(){
+  const contactEl=get('guestBookingContact');
+  if(!contactEl)return;
+  contactEl.hidden=!context.contact;
+  contactEl.innerHTML=context.contact?`<div class="booking-owner-top"><span>Thông tin chủ nuôi</span><button type="button" class="btn-owner-edit" id="guestEditContact">Sửa liên hệ</button></div><strong>${esc(context.contact.name)}</strong><span>${esc(context.contact.phone)}</span>`:'';
+ }
  function choose(pet){selected=pet;if(sessionStorage.getItem(pendingKey)===pet.id)sessionStorage.removeItem(pendingKey);onChoose(pet);get('step1Next').disabled=false;get('guestEditPet').disabled=false;draw();}
  function draw(){
   const names=new Map(),codes=new Map(),name=p=>p.name.trim().toLocaleLowerCase('vi');
@@ -39,26 +44,79 @@ export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNe
    for(const p of next.pets||[])if(!pets.some(old=>old.id===p.id))pets.push(guestPetFromContext(p,breeds));draw();
   }catch(error){feedback.textContent=error.message;}finally{busy=false;if(get('guestPetMore'))get('guestPetMore').disabled=false;}
  };
- get('guestEditContact').onclick=async()=>{if(busy||editor.childElementCount)return;busy=true;get('step1Next').disabled=true;try{const fresh=await editGuestContact(editor);if(fresh){context=fresh;onContext(fresh);contactView();if(selected)onChoose(selected);feedback.textContent='Đã lưu thông tin liên hệ.';}}catch(error){feedback.textContent=error.message;}finally{busy=false;get('step1Next').disabled=!selected;}};
+ root.addEventListener('click',async event=>{
+  const editBtn=event.target.closest('#guestEditContact');
+  if(!editBtn||busy||editor.childElementCount)return;
+  busy=true;get('step1Next').disabled=true;
+  try{
+   const fresh=await editGuestContact(editor);
+   if(fresh){context=fresh;onContext(fresh);contactView();if(selected)onChoose(selected);feedback.textContent='Đã lưu thông tin liên hệ.';}
+  }catch(error){feedback.textContent=error.message;}
+  finally{busy=false;get('step1Next').disabled=!selected;}
+ });
  get('guestEditPet').onclick=()=>openPetEditor(selected?.id);
  get('guestAddPet').onclick=()=>openPetEditor();
  async function openPetEditor(petId=null,directEntry=false){
   if(busy||editor.childElementCount)return;
   let editing=null;if(petId){busy=true;try{editing=(await guestCommerce.request('profile-read',{petId})).pet;}catch(error){feedback.textContent=error.message;return;}finally{busy=false;}if(!root.isConnected)return;}
   const requestId=editing?crypto.randomUUID():sessionStorage.getItem(pendingKey)||crypto.randomUUID();
-  editor.innerHTML=`<div class="booking-inline-editor ${directEntry?'guest-booking-entry':''}">${directEntry?'':'<h3>Thêm bé cưng</h3>'}<form class="booking-form" id="guestPetForm" onsubmit="return false;"><fieldset class="border-0 p-0" id="guestPetFields">
-   <div class="form-group"><label for="guestOwnerName">Họ và tên chủ nuôi <span class="required">*</span></label><input id="guestOwnerName" autocomplete="name" required maxlength="150" value="${esc(context.contact?.name||'')}" ${context.contact?'readonly':''}></div>
-   <div class="form-group"><label for="guestOwnerPhone">Số điện thoại <span class="required">*</span></label><input id="guestOwnerPhone" type="tel" autocomplete="tel" required maxlength="40" value="${esc(context.contact?.phone||'')}" ${context.contact?'readonly':''}></div>
-   <div class="form-group"><label for="guestPetName">Tên bé cưng <span class="required">*</span></label><input id="guestPetName" required maxlength="100"></div>
+  const prevOverflow=document.body.style.overflow;
+  if(!directEntry)document.body.style.overflow='hidden';
+
+  const formHtml=`<form class="booking-form" id="guestPetForm" onsubmit="return false;"><fieldset class="border-0 p-0" id="guestPetFields">
+   <div class="form-group" ${!directEntry&&context.contact?'style="display:none;"':''}>
+    <label for="guestOwnerName">Họ và tên chủ nuôi <span class="required">*</span></label>
+    <input id="guestOwnerName" autocomplete="name" required maxlength="150" value="${esc(context.contact?.name||'')}" ${context.contact?'readonly':''}>
+   </div>
+   <div class="form-group" ${!directEntry&&context.contact?'style="display:none;"':''}>
+    <label for="guestOwnerPhone">Số điện thoại <span class="required">*</span></label>
+    <input id="guestOwnerPhone" type="tel" autocomplete="tel" required maxlength="40" value="${esc(context.contact?.phone||'')}" ${context.contact?'readonly':''}>
+   </div>
+   <div class="form-group"><label for="guestPetName">Tên bé cưng <span class="required">*</span></label><input id="guestPetName" required maxlength="100" placeholder="Ví dụ: Bông, Lu, Miu..."></div>
    <div class="form-group"><label for="guestPetSpecies">Loài <span class="required">*</span></label><select id="guestPetSpecies" required><option value="">Chọn loài</option>${species.map(s=>`<option value="${esc(s.id)}">${esc(s.species_name)}</option>`).join('')}</select></div>
    <div class="form-group"><label for="guestPetBreed">Giống cụ thể <span class="required">*</span></label><input id="guestPetBreed" required maxlength="160" placeholder="Nhập giống của bé, ví dụ Poodle"></div>
-   <div class="form-group"><label for="guestPetWeight">Cân nặng (kg) <span class="required">*</span></label><input id="guestPetWeight" type="number" min="0.01" max="200" step="0.01" required></div>
+   <div class="form-group"><label for="guestPetWeight">Cân nặng (kg) <span class="required">*</span></label><input id="guestPetWeight" type="number" min="0.01" max="200" step="0.01" required placeholder="0.00"></div>
    <div class="form-group"><label for="guestPetGender">Giới tính</label><select id="guestPetGender"><option value="chua_ro">Chưa rõ</option><option value="nam">Đực</option><option value="nu">Cái</option></select></div>
-   <div class="form-group"><label for="guestPetAllergy">Dị ứng</label><textarea id="guestPetAllergy" rows="2" maxlength="1000"></textarea></div>
-   <div class="form-group"><label for="guestPetSafety">Lưu ý an toàn</label><textarea id="guestPetSafety" rows="2" maxlength="1000"></textarea></div>
-   </fieldset><p id="guestPetSaveError" class="field-error" role="alert"></p><div class="booking-inline-actions"><button type="button" class="btn-green-outline" id="guestPetCancel" ${directEntry?'hidden':''}>Hủy</button><button type="button" class="btn-cta" id="guestPetSave">${directEntry?'Tiếp theo':'Lưu bé cưng'}</button></div></form></div>`;
-  if(directEntry){get('guestAddPet').parentElement.hidden=true;get('step1Next').parentElement.hidden=true;}
-  if(editing){editor.querySelector('h3').textContent='Sửa bé cưng';const mapped=guestPetFromContext(editing,breeds);for(const [id,value]of Object.entries({guestPetName:editing.name,guestPetSpecies:mapped.species_id,guestPetBreed:mapped.breed,guestPetWeight:editing.weight,guestPetGender:editing.gender||'chua_ro',guestPetAllergy:editing.allergy,guestPetSafety:editing.safetyNote}))get(id).value=value??'';}
+   <div class="form-group full-width"><label for="guestPetAllergy">Dị ứng</label><textarea id="guestPetAllergy" rows="2" maxlength="1000" placeholder="Tiền sử dị ứng thức ăn, thuốc lá, sữa tắm..."></textarea></div>
+   <div class="form-group full-width"><label for="guestPetSafety">Lưu ý an toàn</label><textarea id="guestPetSafety" rows="2" maxlength="1000" placeholder="Tính cách nhút nhát, sợ sấy, cắn người lạ..."></textarea></div>
+  </fieldset><p id="guestPetSaveError" class="field-error" role="alert"></p><div class="booking-inline-actions"><button type="button" class="btn-green-outline" id="guestPetCancel" ${directEntry?'hidden':''}>Hủy</button><button type="button" class="btn-cta" id="guestPetSave">${directEntry?'Tiếp theo':(editing?'Lưu thay đổi':'Lưu bé cưng')}</button></div></form>`;
+
+  if(directEntry){
+   editor.innerHTML=`<div class="booking-inline-editor guest-booking-entry">${formHtml}</div>`;
+   get('guestAddPet').parentElement.hidden=true;get('step1Next').parentElement.hidden=true;
+  }else{
+   editor.innerHTML=`<div class="booking-owner-modal booking-pet-modal" id="guestPetModalOverlay">
+    <div class="booking-owner-dialog" role="dialog" aria-modal="true" aria-labelledby="guestModalTitle" tabindex="-1">
+     <header>
+      <h3 id="guestModalTitle">${editing?'Sửa thông tin bé cưng':'Thêm bé cưng'}</h3>
+      <button type="button" class="booking-owner-close" id="guestPetModalClose" aria-label="Đóng">Đóng</button>
+     </header>
+     <div class="booking-owner-content">
+      ${formHtml}
+     </div>
+    </div>
+   </div>`;
+  }
+
+  const closeModal=()=>{
+   if(busy)return;
+   if(!directEntry){
+    document.removeEventListener('keydown',onModalKey);
+    document.body.style.overflow=prevOverflow;
+   }
+   editor.replaceChildren();
+  };
+  const onModalKey=e=>{if(e.key==='Escape')closeModal();};
+  if(!directEntry){
+   document.addEventListener('keydown',onModalKey);
+   const overlay=get('guestPetModalOverlay');
+   if(overlay)overlay.onclick=e=>{if(e.target===overlay||e.target.closest('#guestPetModalClose'))closeModal();};
+  }
+
+  if(editing){
+   const mapped=guestPetFromContext(editing,breeds);
+   for(const [id,value]of Object.entries({guestPetName:editing.name,guestPetSpecies:mapped.species_id,guestPetBreed:mapped.breed,guestPetWeight:editing.weight,guestPetGender:editing.gender||'chua_ro',guestPetAllergy:editing.allergy,guestPetSafety:editing.safetyNote}))get(id).value=value??'';
+  }
   const fieldMessages={guestOwnerName:'Vui lòng nhập họ và tên chủ nuôi.',guestOwnerPhone:'Vui lòng nhập số điện thoại Việt Nam gồm 10 chữ số hoặc dạng +84.',guestPetName:'Vui lòng nhập tên bé cưng.',guestPetSpecies:'Vui lòng chọn loài của bé.',guestPetBreed:'Vui lòng nhập giống cụ thể của bé, tối đa 160 ký tự.',guestPetWeight:'Vui lòng nhập cân nặng từ 0,01 đến 200 kg, tối đa hai chữ số thập phân.',guestPetAllergy:'Thông tin dị ứng không được vượt quá 1.000 ký tự.',guestPetSafety:'Lưu ý an toàn không được vượt quá 1.000 ký tự.'};
   function fieldError(id,message){const field=get(id);field.setAttribute('aria-invalid',String(!!message));get(id+'Error').textContent=message;}
   for(const id of Object.keys(fieldMessages)){
@@ -80,7 +138,7 @@ export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNe
    first?.focus();return !first;
   }
   get('guestPetForm').addEventListener('submit',event=>event.preventDefault());
-  get('guestPetCancel').onclick=()=>{if(!busy)editor.replaceChildren();};
+  get('guestPetCancel').onclick=closeModal;
   get('guestPetSave').onclick=async()=>{
    if(busy||!validateFields())return;
    const contact={name:get('guestOwnerName').value.trim(),phone:get('guestOwnerPhone').value},pet={name:get('guestPetName').value.trim(),speciesName:species.find(s=>s.id===get('guestPetSpecies').value).species_name,breedName:get('guestPetBreed').value.trim(),weight:Number(get('guestPetWeight').value),gender:get('guestPetGender').value,allergy:get('guestPetAllergy').value.trim(),safetyNote:get('guestPetSafety').value.trim()};
@@ -93,14 +151,22 @@ export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNe
     context=fresh;onContext(fresh);contactView();page=1;hasMore=!!fresh.hasMore;
     pets=(fresh.pets||[]).map(p=>guestPetFromContext(p,breeds));
     const saved={...guestPetFromContext(fresh.pets?.find(p=>p.id===savedId)||{id:savedId,name:pet.name,breedName:pet.breedName,speciesName:pet.speciesName,speciesId:species.find(s=>s.species_name===pet.speciesName)?.id,gender:pet.gender},breeds),weight:pet.weight,allergy:pet.allergy,safety_note:pet.safetyNote};
-    pets=pets.filter(p=>p.id!==saved.id);pets.unshift(saved);choose(saved);if(!editing)sessionStorage.removeItem(pendingKey);get('guestEditContact').hidden=false;editor.replaceChildren();feedback.textContent='Đã lưu và chọn '+saved.name+'.';
+    pets=pets.filter(p=>p.id!==saved.id);pets.unshift(saved);choose(saved);if(!editing)sessionStorage.removeItem(pendingKey);
+    if(!directEntry){
+     document.removeEventListener('keydown',onModalKey);
+     document.body.style.overflow=prevOverflow;
+    }
+    editor.replaceChildren();feedback.textContent='Đã lưu và chọn '+saved.name+'.';
     get('guestAddPet').parentElement.hidden=false;get('step1Next').parentElement.hidden=false;
     root.querySelector('.step-header h2').textContent='Chọn bé cưng';
     if(directEntry)onNext();
    }catch(error){if(get('guestPetSaveError'))get('guestPetSaveError').textContent=error.message;}
    finally{busy=false;if(get('guestPetSave')){get('guestPetFields').disabled=false;get('guestPetSave').disabled=false;get('guestPetCancel').disabled=false;}if(get('step1Next'))get('step1Next').disabled=!selected;}
   };
-  if(!directEntry)get('guestOwnerName').focus();
+  if(!directEntry){
+   const focusTarget=(!context.contact)?get('guestOwnerName'):get('guestPetName');
+   focusTarget?.focus();
+  }
  }
  if(!pets.length)openPetEditor(null,firstVisit);
 }
