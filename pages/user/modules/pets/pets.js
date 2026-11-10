@@ -645,8 +645,15 @@ function setupForm() {
         }
         if (!breed) {
             errors.push('breed');
+            const breedError = breedField?.nextElementSibling;
+            if (breedError && breedError.classList.contains('error-msg')) {
+                breedError.classList.remove('d-none');
+            }
+            breedField?.classList.add('is-invalid');
             showToast('Vui lòng nhập giống thú cưng.', 'error');
             breedField?.focus();
+        } else {
+            breedField?.classList.remove('is-invalid');
         }
 
         if (species === 'other' && !otherSpecies) {

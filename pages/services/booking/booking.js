@@ -348,7 +348,13 @@ function renderConfirmation(){
 }
 async function submit(){
  if(state.busy||!state.quote||!el('policyCheck').checked)return;
- if(state.details?.hold_id&&(!state.hold||state.hold.deadline<=Date.now())){el('bookingSubmitError').textContent='Đã hết thời gian giữ chỗ. Vui lòng quay lại chọn giờ và nhân viên.';return;}state.busy=true;el('confirmBookingBtn').disabled=true;el('step4Back').disabled=true;
+ if(state.details?.hold_id&&(!state.hold||state.hold.deadline<=Date.now())){el('bookingSubmitError').textContent='Đã hết thời gian giữ chỗ. Vui lòng quay lại chọn giờ và nhân viên.';return;}
+ state.busy=true;
+ const btn=el('confirmBookingBtn');
+ const originalLabel=btn.textContent;
+ btn.disabled=true;
+ el('step4Back').disabled=true;
+ btn.textContent='Đang đặt lịch...';
  try{
   if(state.guest){
    sessionStorage.setItem(journalKey,requestId);
@@ -359,7 +365,7 @@ async function submit(){
   }
   const id=await rpc('create_own_service_booking',{p_id:requestId,p_expected_quote:state.quote.version,p_details:state.details});if(id!==requestId)throw Error('missing_acknowledgement');sessionStorage.removeItem(journalKey);location.assign(location.pathname+'?bookingSuccess='+encodeURIComponent(id));
  }
- catch(error){if(invalidTimeError(error))rejectInvalidBookingTime();else el('bookingSubmitError').textContent=message(error);el('confirmBookingBtn').disabled=false;el('step4Back').disabled=false;}finally{state.busy=false;}
+ catch(error){if(invalidTimeError(error))rejectInvalidBookingTime();else el('bookingSubmitError').textContent=message(error);btn.disabled=false;el('step4Back').disabled=false;btn.textContent=originalLabel;}finally{state.busy=false;}
 }
 async function renderBookingReceipt(root,id){
  if(!/^[0-9a-f-]{36}$/i.test(id))throw Error('invalid_receipt');

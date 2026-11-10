@@ -9,7 +9,7 @@
 (function initOperationsDashboard() {
     'use strict';
 
-    const HTML_URL = '/pages/admin/modules/dashboard/dashboard-operations.html';
+    const HTML_URL = '/pages/admin/modules/dashboard/dashboard.html';
     const PAGE_SIZE = 500;
     const MAX_ROWS = 5000;
     const ALERTS_PER_PAGE = 10;
@@ -956,4 +956,7 @@
         refresh: () => state.root && reloadAll(),
         getState: () => ({ preset: state.preset, period: state.period, realtime: state.realtime, lastUpdatedAt: state.lastUpdatedAt, errors: { ...state.errors } })
     };
+    window.PawpalDashboard = window.PawpalDashboard || {};
+    window.PawpalDashboard.subtabs = window.PawpalDashboard.subtabs || {};
+    window.PawpalDashboard.subtabs.operations = window.PawpalOperationsDashboard;
 })();

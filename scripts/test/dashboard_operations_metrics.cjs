@@ -2,7 +2,7 @@
 // Dữ liệu dưới đây là fixture kiểm thử trong bộ nhớ, không ghi vào CSDL và không dùng trong giao diện.
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const M = require(path.join(__dirname, '../../pages/admin/modules/dashboard/operations-metrics.js'));
+const M = require(path.join(__dirname, '../../pages/admin/modules/dashboard/subtabs/operations-metrics.js'));
 
 let passed = 0;
 function test(name, fn) {

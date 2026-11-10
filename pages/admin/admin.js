@@ -907,15 +907,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             html: 'modules/dashboard/dashboard.html',
             scripts: [
                 'modules/dashboard/dashboard.js',
-                'modules/dashboard/operations-metrics.js',
-                'modules/dashboard/dashboard-operations.js'
+                'modules/dashboard/subtabs/operations-metrics.js',
+                'modules/dashboard/subtabs/tab-dashboard-overview.js',
+                'modules/dashboard/subtabs/tab-dashboard-operations.js'
             ],
             postLoad: async () => {
                 if (window.PawpalDashboard?.init) await window.PawpalDashboard.init();
-                const opsRoot = document.getElementById('subtab-tab-dashboard-operations');
-                if (opsRoot && window.PawpalOperationsDashboard?.mount) {
-                    await window.PawpalOperationsDashboard.mount(opsRoot);
-                }
             }
         },
         'Khách hàng': {
