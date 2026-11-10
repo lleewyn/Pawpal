@@ -184,7 +184,8 @@
             if (order.paymentMethod === 'vnpay') txt = 'Cổng thanh toán VNPay QR';
             else if (order.paymentMethod === 'momo') txt = 'Ví điện tử MoMo';
             else if (order.paymentMethod === 'bank_transfer') txt = 'Chuyển khoản trực tiếp ngân hàng Vietcombank';
-            payMethodEl.textContent = order.paymentMethodName;
+            else if (order.paymentMethod === 'cash' || order.paymentMethod === 'cod') txt = 'Thanh toán tiền mặt khi nhận hàng (COD)';
+            payMethodEl.textContent = (order.paymentMethodName && order.paymentMethodName !== 'Chưa ghi nhận') ? order.paymentMethodName : txt;
         }
         for(const [id,value] of [['detailPaymentCollected',Number(order.collected||0)+Number(order.refunded||0)],['detailPaymentRefunded',order.refunded],['detailPaymentRemaining',order.remaining]]){
             const field=document.getElementById(id);if(field)field.textContent=formatVND(value??0);

@@ -461,7 +461,9 @@
             const moreCount = (o.products ? o.products.length : 0) - 1;
             const prodSummary = firstProd ? (firstProd.name + (moreCount > 0 ? ` (+${moreCount} món)` : '')) : '--';
 
-            const payMethodLabel = o.paymentMethodName;
+            const payMethodLabel = (o.paymentMethodName && o.paymentMethodName !== 'Chưa ghi nhận')
+                ? o.paymentMethodName
+                : (o.paymentMethod === 'cash' || o.paymentMethod === 'cod' ? 'Tiền mặt khi nhận hàng (COD)' : (o.paymentMethodName || 'Tiền mặt khi nhận hàng (COD)'));
 
             const esc = (text) => window.PawpalOrdersModule?.escapeHtml ? window.PawpalOrdersModule.escapeHtml(text) : String(text || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
             const isChecked = selectedBatchOrderIds.includes(o.id);

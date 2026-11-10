@@ -305,7 +305,7 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
  async function orders({ids,id}={}){
   if(ids && !ids.length)return [];
   const source=await rows(()=>{
-   let query=db().from('sales_order').select('*,customer:customer_id(id,auth_user_id,unverified_contact_phone,customer_profile(full_name),customer_phone(phone_number,is_primary)),provider:shipping_provider_id(provider_name),lines:sales_order_detail(*,variant:product_variant_id(id,sku_variant,product_id,product:product_id(specs),media:product_variant_media(image_url,media_asset_id,is_thumbnail,display_order))),payments:payment(id,amount,transaction_status,method:payment_method_config_id(name),refunds:refund_transaction(refund_status,refunded_amount))').order('created_at',{ascending:false}).order('id');
+   let query=db().from('sales_order').select('*,customer:customer_id(id,auth_user_id,unverified_contact_phone,customer_profile(full_name),customer_phone(phone_number,is_primary)),provider:shipping_provider_id(provider_name),lines:sales_order_detail(*,variant:product_variant_id(id,sku_variant,product_id,product:product_id(specs),media:product_variant_media(image_url,media_asset_id,is_thumbnail,display_order))),payments:payment(id,amount,transaction_status,payment_type,payment_method_config_id,method:payment_method_config_id(name,short_name),refunds:refund_transaction(refund_status,refunded_amount))').order('created_at',{ascending:false}).order('id');
    if(ids)query=query.in('id',ids);
    if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'order_code',id);
    return query;
@@ -321,11 +321,27 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
   const totalMap=new Map(totals.map(t=>[t.order_id,Number(t.total_amount)]));
   return source.map(o=>{
    const amount=totalMap.get(o.id);if(amount===undefined)throw Error('Thiếu tổng đơn hàng V1.');
-   const payments=o.payments.filter(p=>p.transaction_status==='succeeded').sort((a,b)=>a.id.localeCompare(b.id)),gross=payments.reduce((n,p)=>n+Number(p.amount),0),collected=payments.reduce((n,p)=>n+net(p),0),refunds=gross-collected;
+   const allPayments=o.payments||[];
+   const payments=allPayments.filter(p=>p.transaction_status==='succeeded').sort((a,b)=>a.id.localeCompare(b.id)),gross=payments.reduce((n,p)=>n+Number(p.amount),0),collected=payments.reduce((n,p)=>n+net(p),0),refunds=gross-collected;
    const status=({draft:'pending',pending:'pending',packing:'confirmed',confirmed:'confirmed',shipped:'shipping',shipping:'shipping',delivered:'completed',completed:'completed',cancelled:'cancelled',returned:'returned'})[o.order_status]||o.order_status;
    const requests=returns.filter(r=>r.sales_order_id===o.id),r=requests[0],returnsTotal=payments.reduce((n,p)=>n+(p.refunds||[]).filter(v=>v.refund_status==='succeeded').reduce((s,v)=>s+Number(v.refunded_amount),0),0);
    const paymentStatus=collected>=amount&&amount>0?'paid':collected>0?'partial':gross>0&&refunds>=gross?'refunded':'unpaid';
-   const methods=[...new Set(payments.map(p=>one(p.method)?.name).filter(Boolean))],method=methods.join(' và '),paymentMethod=methods.length>1?'mixed':/tiền mặt/i.test(method)?'cash':/chuyển khoản|VietQR/i.test(method)?'bank_transfer':/MoMo/i.test(method)?'momo':/VNPay/i.test(method)?'vnpay':'unknown';
+   const activePayments=payments.length>0?payments:allPayments;
+   let methods=[...new Set(activePayments.map(p=>one(p.method)?.name||one(p.method)?.short_name).filter(Boolean))];
+   let method=methods.join(' và ');
+   if(!method){
+    try{
+     const localOrders=JSON.parse(localStorage.getItem('pawpal_orders')||'[]');
+     const matched=localOrders.find(lo=>lo.id===o.order_code||lo.orderId===o.order_code||lo.id===o.id||lo.orderId===o.id);
+     if(matched?.payment?.method || matched?.paymentMethod){
+      const mCode=String(matched.payment?.method || matched.paymentMethod).toLowerCase();
+      const map={cod:'Tiền mặt khi nhận hàng (COD)',cash:'Tiền mặt khi nhận hàng (COD)',vnpay:'Cổng thanh toán VNPay QR',momo:'Ví điện tử MoMo',bank:'Chuyển khoản trực tiếp ngân hàng Vietcombank',bank_transfer:'Chuyển khoản trực tiếp ngân hàng Vietcombank',vietqr:'Chuyển khoản VietQR'};
+      method=map[mCode]||mCode;
+     }
+    }catch(_){}
+   }
+   const paymentMethod=methods.length>1?'mixed':/tiền mặt|cod/i.test(method)?'cash':/chuyển khoản|VietQR|bank/i.test(method)?'bank_transfer':/MoMo/i.test(method)?'momo':/VNPay/i.test(method)?'vnpay':'cash';
+   if(!method)method='Tiền mặt khi nhận hàng (COD)';
    const items=o.lines.map(d=>({id:d.id,variant_id:d.product_variant_id,sku:d.sku_snapshot,name:d.product_name_snapshot,spec:spec(d.variant?.product?.specs),price:Number(d.unit_price),quantity:Number(d.quantity),discount:Number(d.discount_amount),total:Number(d.unit_price)*Number(d.quantity)-Number(d.discount_amount),image:images(d.variant?.media)[0]||''}));
    const rmaInfo=r?{id:r.id,requestId:r.id,solutionType:r.return_type,solutionTypeName:({refund:'Hoàn tiền',return:'Trả hàng',exchange:'Đổi hàng'})[r.return_type]||'Cần đối soát',reason:r.reason,reasonText:r.reason,restockAction:'',restockText:'Xem sổ kho để đối chiếu',refundMethod:'',refundAmount:returnsTotal,refundText:returnsTotal>0?'Đã ghi nhận hoàn tiền':'Chưa ghi nhận hoàn tiền',items:r.lines.map(v=>({sku:v.line?.sku_snapshot||'',name:v.line?.product_name_snapshot||'',quantity:v.quantity,price:v.line?.unit_price??null,variant_id:v.line?.product_variant_id,sales_order_detail_id:v.sales_order_detail_id})),note:r.description||'',createdAt:r.created_at,status:r.request_status}:null;
    const hasOpenReturn=requests.some(v=>['pending','approved'].includes(v.request_status));
