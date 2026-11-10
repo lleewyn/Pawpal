@@ -2,7 +2,8 @@
 import { API } from '/scripts/api/api.js';
 import { cancelCustomerBooking, quoteCustomerBookingMove, moveCustomerBooking } from '/scripts/shared/customer-booking.mjs';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
-import { parseVietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
+import { parseVietnamDateTimeInput, vietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
+import {staffRequestLabel} from '/scripts/shared/booking-staff-request.mjs';
 
 
 
@@ -354,7 +355,7 @@ function createBookingCard(booking) {
                 ${changeCount > 0 ? `<div class="booking-alert-note ${isChangeLimited ? 'limit-reached' : ''}">Đã đổi lịch: ${changeCount} lần${isChangeLimited ? ' (Đã hết lượt đổi)' : ''}</div>` : ''}
             </div>
             <div class="booking-status-price-col">
-                <span class="booking-badge-status status-${normalizedStatus}">${statusLabels[normalizedStatus] || normalizedStatus}</span>
+                <span class="booking-badge-status status-${normalizedStatus}">${escapeHtml(staffRequestLabel(booking.staffRequest,statusLabels[normalizedStatus] || normalizedStatus))}</span>
                 <span class="booking-price-value">${formatPrice(booking.price || 0)}</span>
             </div>
         </div>
@@ -556,6 +557,20 @@ function openQuickRescheduleModal(booking) {
 
 export function openBookingMoveModal(booking,onSaved) {
     document.getElementById('quickRescheduleBookingModal')?.remove();
+    const isHotel = Boolean(
+        booking?.isHotel ||
+        booking?.hotel ||
+        booking?.logistics?.hotel ||
+        String(booking?.serviceCategory || booking?.category || booking?.categoryCode || '').toLowerCase().includes('hotel') ||
+        /pet[-_ ]?hotel|khách\s*sạn|lưu\s*trú|suite|condo|villa/i.test(booking?.serviceName || booking?.service || '') ||
+        (Array.isArray(booking?.items) && booking.items.some(i => /hotel|suite|condo|villa|lưu\s*trú|khách\s*sạn/i.test(i.name || i.serviceName || '')))
+    );
+
+    const prevDurationMs = (booking?.scheduledStartAt && booking?.scheduledEndAt)
+        ? (new Date(booking.scheduledEndAt).getTime() - new Date(booking.scheduledStartAt).getTime())
+        : (24 * 3600 * 1000);
+    const defaultDurationMs = prevDurationMs > 0 ? prevDurationMs : (24 * 3600 * 1000);
+
     const modal=document.createElement('dialog');modal.id='quickRescheduleBookingModal';
     modal.style.cssText='position:fixed;inset:0;margin:auto;width:600px;max-width:94vw;max-height:92vh;overflow:auto;padding:26px 30px;border:1px solid #ECF2EE;border-radius:9px;color:#203A2C;background:#fff;overscroll-behavior:contain;';
     modal.innerHTML=`<form onsubmit="return false;" style="display:grid;gap:16px;">
@@ -567,6 +582,9 @@ export function openBookingMoveModal(booking,onSaved) {
       <div><label for="bookingMoveStart" class="form-label">Thời gian bắt đầu mới <span style="color:#DC2626;">*</span></label>
         <input type="datetime-local" id="bookingMoveStart" class="form-control" required style="border-radius:9px;">
       </div>
+      ${isHotel ? `<div><label for="bookingMoveEndInput" class="form-label">Thời gian kết thúc mới <span style="color:#DC2626;">*</span></label>
+        <input type="datetime-local" id="bookingMoveEndInput" class="form-control" required style="border-radius:9px;">
+      </div>` : ''}
       <div><label for="bookingMoveReason" class="form-label">Lý do đổi lịch <span style="color:#DC2626;">*</span></label>
         <textarea id="bookingMoveReason" class="form-control" rows="2" maxlength="2000" required style="border-radius:9px;"></textarea>
       </div>
@@ -582,23 +600,43 @@ export function openBookingMoveModal(booking,onSaved) {
       </div>
     </form>`;
     document.body.appendChild(modal);
-    const start=modal.querySelector('#bookingMoveStart'),reason=modal.querySelector('#bookingMoveReason'),error=modal.querySelector('#bookingMoveError');
+    const start=modal.querySelector('#bookingMoveStart'),endInput=modal.querySelector('#bookingMoveEndInput'),reason=modal.querySelector('#bookingMoveReason'),error=modal.querySelector('#bookingMoveError');
     const preview=modal.querySelector('#bookingMovePreview'),quoteButton=modal.querySelector('#bookingMoveQuote'),save=modal.querySelector('#quickConfirmRescheduleBtn');
     const user=window.getCurrentUser?.() || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const db=window.getSupabaseClient?.() || window.SupabaseClient;
     const requestId=crypto.randomUUID();let quote=null,version=0;
     const invalidate=()=>{++version;quote=null;save.disabled=true;preview.hidden=true;error.hidden=true;};
-    start.addEventListener('input',invalidate);
+    start.addEventListener('input',()=>{
+        invalidate();
+        if(isHotel && endInput && start.value){
+            const parsed=parseVietnamDateTimeInput(start.value);
+            if(parsed){
+                endInput.min=start.value;
+                if(!endInput.value || parseVietnamDateTimeInput(endInput.value) <= parsed){
+                    const autoEnd=new Date(parsed.getTime()+defaultDurationMs);
+                    endInput.value=vietnamDateTimeInput(autoEnd);
+                }
+            }
+        }
+    });
+    if(endInput)endInput.addEventListener('input',invalidate);
     reason.addEventListener('input',()=>{error.hidden=true;});
     modal.querySelector('form').addEventListener('submit',e=>e.preventDefault());
     modal.querySelectorAll('[data-close-modal]').forEach(button=>button.addEventListener('click',()=>modal.close()));
     modal.addEventListener('click',e=>{const r=modal.getBoundingClientRect();if(e.target===modal&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))modal.close();});
     modal.addEventListener('close',()=>{++version;modal.remove();},{once:true});
     quoteButton.addEventListener('click',async()=>{
-        const parsed=parseVietnamDateTimeInput(start.value);if(!parsed){error.textContent='Vui lòng chọn thời gian mới theo giờ Việt Nam.';error.hidden=false;start.focus();return;}
+        const parsed=parseVietnamDateTimeInput(start.value);if(!parsed){error.textContent='Vui lòng chọn thời gian bắt đầu mới theo giờ Việt Nam.';error.hidden=false;start.focus();return;}
+        let parsedEnd=null;
+        if(isHotel){
+            if(!endInput?.value){error.textContent='Vui lòng chọn thời gian kết thúc mới.';error.hidden=false;endInput?.focus();return;}
+            parsedEnd=parseVietnamDateTimeInput(endInput.value);
+            if(!parsedEnd){error.textContent='Vui lòng chọn thời gian kết thúc mới theo giờ Việt Nam.';error.hidden=false;endInput?.focus();return;}
+            if(parsedEnd.getTime()<=parsed.getTime()){error.textContent='Thời gian kết thúc mới phải sau thời gian bắt đầu mới.';error.hidden=false;endInput?.focus();return;}
+        }
         invalidate();const current=version;quoteButton.disabled=true;
         try{
-            const result=await quoteCustomerBookingMove(db,user,booking,parsed.toISOString());
+            const result=await quoteCustomerBookingMove(db,user,booking,parsed.toISOString(),parsedEnd?parsedEnd.toISOString():null);
             if(!modal.isConnected || current!==version)return;
             quote=result;preview.hidden=false;
             modal.querySelector('#bookingMoveEnd').textContent='Kết thúc dự kiến: '+new Date(result.end_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -609,12 +647,12 @@ export function openBookingMoveModal(booking,onSaved) {
     save.addEventListener('click',async()=>{
         if(save.disabled || !quote)return;
         error.hidden=true;if(!reason.value.trim()){error.textContent='Vui lòng nhập lý do đổi lịch.';error.hidden=false;reason.focus();return;}
-        save.disabled=true;quoteButton.disabled=true;start.disabled=true;reason.disabled=true;
+        save.disabled=true;quoteButton.disabled=true;start.disabled=true;if(endInput)endInput.disabled=true;reason.disabled=true;
         try{
-            await moveCustomerBooking(db,user,booking,quote,reason.value,requestId);
+            await moveCustomerBooking(db,user,booking,quote,reason.value,requestId,isHotel&&quote.end_at?quote.end_at:null);
             modal.close();showToast('Đã đổi lịch. Lịch đang chờ cửa hàng xác nhận lại.','success');await onSaved?.();
         }catch(err){if(modal.isConnected){invalidate();error.textContent=err.message;error.hidden=false;}}
-        finally{quoteButton.disabled=false;start.disabled=false;reason.disabled=false;}
+        finally{quoteButton.disabled=false;start.disabled=false;if(endInput)endInput.disabled=false;reason.disabled=false;}
     });
     modal.showModal();
 }

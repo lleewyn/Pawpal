@@ -571,22 +571,29 @@
 .orders-module .order-items-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 12px;
+    background-color: transparent;
 }
 
 .orders-module .order-items-table th {
-    padding: 10px 12px;
+    padding: 10px 11px;
     text-align: left;
-    font-weight: 600;
-    color: var(--table-header-text);
-    background-color: var(--table-header-bg);
+    font-size: 11px;
+    font-weight: 650;
+    color: #536a59;
+    background-color: #f1f4f1;
+    border-bottom: 1px solid #dae2db;
+    text-transform: none;
+    white-space: nowrap;
 }
 
 .orders-module .order-items-table td {
-    padding: 12px;
-    border-bottom: 1px solid var(--border-neutral);
-    color: var(--text-main);
+    padding: 10px 11px;
+    border-bottom: 1px solid #e9eee9;
+    color: var(--text-main, #203a2c);
     vertical-align: middle;
+    background-color: transparent;
+    font-size: 12px;
 }
 
 .orders-module .prod-item-row {
@@ -1708,22 +1715,28 @@
 .orders-module .rma-items-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12.5px;
+    font-size: 12px;
+    background-color: transparent;
 }
 
 .orders-module .rma-items-table th {
-    background-color: #EEF5F1;
-    color: #236B48;
-    font-weight: 600;
-    padding: 8px 10px;
+    background-color: #f1f4f1;
+    color: #536a59;
+    font-weight: 650;
+    font-size: 11px;
+    padding: 10px 11px;
     text-align: left;
-    border-bottom: 1px solid #C3DEC7;
+    border-bottom: 1px solid #dae2db;
+    text-transform: none;
+    white-space: nowrap;
 }
 
 .orders-module .rma-items-table td {
-    padding: 8px 10px;
-    border-bottom: 1px solid #ECF2EE;
-    color: var(--text-main);
+    padding: 10px 11px;
+    border-bottom: 1px solid #e9eee9;
+    color: var(--text-main, #203a2c);
+    background-color: transparent;
+    font-size: 12px;
 }
 
 .orders-module .rma-restock-options {

@@ -39,9 +39,9 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
    if(typeof req.body==='string'){if(Buffer.byteLength(req.body)>16384)throw Error('invalid_body');req.body=JSON.parse(req.body);}
    const body=req.body;
    if(!body||typeof body!=='object'||Array.isArray(body)||Buffer.byteLength(JSON.stringify(body))>16384)throw Error('invalid_body');
-   if(!['session','context','lookup','phone-lookup','pets','profile-read','profile-update','recover','end','booking-slots','booking-hold','booking-release','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
+   if(!['session','context','lookup','phone-lookup','pets','profile-read','profile-update','recover','end','booking-staff-response','booking-slots','booking-hold','booking-release','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
    const keys=action==='pets'?['requestId','contact','pet']:action==='context'?['page']:action==='lookup'?['phone']:action==='phone-lookup'?['phone','challengeId','code']:
-    action==='booking-slots'?['details','day']:action==='booking-hold'?['requestId','details']:action==='booking-release'?['requestId']:action==='booking-quote'?['details']:action==='booking-create'?['requestId','expectedQuote','details']:action==='booking-receipt'?['requestId']:
+    action==='booking-staff-response'?['requestId','bookingId','revision','accept']:action==='booking-slots'?['details','day']:action==='booking-hold'?['requestId','details']:action==='booking-release'?['requestId']:action==='booking-quote'?['details']:action==='booking-create'?['requestId','expectedQuote','details']:action==='booking-receipt'?['requestId']:
     action==='order-quote'?['details','lines']:action==='order-create'?['requestId','expectedQuote','contact','details','lines','paymentMethodId']:action==='order-receipt'?['requestId']:
     action==='profile-read'?['petId']:action==='profile-update'?['requestId','revision','contact','pet']:action==='recover'?['code']:[];
    if(Object.keys(body).some(k=>!keys.includes(k)))throw Error('invalid_body');
@@ -143,6 +143,10 @@ function createGuestCommerce({admin,secret,origins,production=true,limit,now=()=
      p_contact:{name:contact.name.trim(),phone:normalizePhone(contact.phone)},p_details:canonical,p_lines:lines,p_payment:body.paymentMethodId})});
    }
    if(action.startsWith('booking-')){
+    if(action==='booking-staff-response'){
+     if(!UUID.test(body.requestId)||!UUID.test(body.bookingId)||typeof body.accept!=='boolean'||typeof body.revision!=='string'||!Number.isFinite(Date.parse(body.revision)))throw Error('invalid_body');
+     return res.json({success:true,bookingId:await rpc('respond_guest_booking_staff_request',{p_hash:session.hash,p_id:body.bookingId,p_revision:body.revision,p_accept:body.accept})});
+    }
     if(action==='booking-release'){
      if(!UUID.test(body.requestId))throw Error('invalid_body');
      await rpc('guest_booking_release',{p_hash:session.hash,p_id:body.requestId});return res.json({success:true});

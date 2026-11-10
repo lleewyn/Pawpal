@@ -388,7 +388,8 @@
                 `;
             }
 
-            const staffDisplay = item.staff
+            const staffDisplay = item.requestedStaffId&&['pending','awaiting_customer'].includes(item.staffConfirmationStatus)
+                ? `<span style="color:var(--text-heading)">${escapeBookingText(item.requestedStaffName)}</span><div style="font-size:11.5px;color:var(--text-muted)">${item.staffConfirmationStatus==='awaiting_customer'?'Chờ khách đồng ý thay đổi':'Chờ xác nhận nhân viên'}</div>` : item.staff
                 ? `<span style="font-weight: 500; color: var(--text-main);">${escapeBookingText(item.staff)}</span>`
                 : `<button type="button" class="btn-table-action-inline btn-assign-staff-inline" data-booking-id="${escapeBookingText(item.id)}" style="color: #B45309; background: none; border: none; font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 12px; padding: 0;">Điều phối</button>`;
 
@@ -429,7 +430,7 @@
                         ${alertBadgeHtml}
                     </td>
                     <td style="width: 70px; min-width: 70px; text-align: center; padding: 8px 10px;">
-                        <button type="button" class="btn-booking-action-more" data-booking-id="${escapeBookingText(item.id)}" title="Tác vụ">•••</button>
+                        <button type="button" class="btn-booking-action-more" data-booking-id="${escapeBookingText(item.id)}" title="Thao tác">•••</button>
                     </td>
                 </tr>
             `;
@@ -1218,7 +1219,7 @@
                     if(shiftFilter!=='ALL'&&!work.length&&!assigned.length)return '';
                     const overlapping=assigned.some((b,i)=>assigned.slice(i+1).some(c=>b.status!=='completed'&&c.status!=='completed'&&Date.parse(b.scheduledStartAt)<Date.parse(c.scheduledEndAt)&&Date.parse(b.scheduledEndAt)>Date.parse(c.scheduledStartAt)));
                     if(overlapping)conflicts++;
-                    return '<section style="background:transparent;border:none;padding:8px 0;"><strong style="color:#236B48;">'+escapeBookingText(person.full_name)+'</strong><div style="color:#4F7A65;font-size:12px;">'+(work.length?work.map(w=>clock(w.start_at)+'–'+clock(w.end_at)+' · '+(w.availability_status==='available'?'Có lịch làm việc':'Không khả dụng')+(w.reason?' · '+escapeBookingText(w.reason):'')).join('<br>'):'Chưa có lịch làm việc được phân')+'</div>'+(overlapping?'<p style="color:#DC2626;">Có lịch hẹn trùng giờ cần điều phối.</p>':'')+(assigned.length?assigned.map(b=>'<div style="margin-top:6px;">'+escapeBookingText(clock(b.scheduledStartAt)+' · '+b.petName+' · '+b.id)+'</div>').join(''):'<p style="color:#4F7A65;">Chưa có lịch hẹn được phân công.</p>')+'</section>';
+                    return '<section style="background:transparent;border:none;padding:8px 0;"><strong style="color:#236B48;">'+escapeBookingText(person.full_name)+'</strong><div style="color:#4F7A65;font-size:12px;">'+(work.length?work.map(w=>clock(w.start_at)+'–'+clock(w.end_at)+' · '+(w.availability_status==='available'?'Có lịch làm việc':'Không khả dụng')+(w.reason?' · '+escapeBookingText(w.reason):'')).join('<br>'):'Chưa có lịch làm việc được phân')+'</div>'+(overlapping?'<p style="color:#DC2626;">Có lịch hẹn trùng giờ cần điều phối.</p>':'')+(assigned.length?assigned.map(b=>'<div style="margin-top:6px;">'+escapeBookingText(clock(b.scheduledStartAt)+'–'+clock(b.scheduledEndAt)+' · Đã có lịch hẹn · '+b.petName+' · '+b.id)+'</div>').join(''):'<p style="color:#4F7A65;">Chưa có lịch hẹn được phân công.</p>')+'</section>';
                 }).filter(Boolean);
                 grid.innerHTML=cards.join('')||'<p>Chưa có nhân viên hoặc lịch làm việc trong khoảng đã chọn.</p>';
                 document.getElementById('summaryTotalStaffCount').textContent=shifts.filter(w=>w.availability_status==='available'&&Date.parse(w.start_at)<to&&Date.parse(w.end_at)>from).map(w=>w.staff_id).filter((id,i,a)=>a.indexOf(id)===i).length;
@@ -1963,6 +1964,8 @@
                 btnConfirmIntake.disabled=true;intakeSaving=true;
                 const mediaGeneration=intakeMediaGeneration;
                 const lockedFields=[];
+                const intakeBookingId=modal.dataset.bookingId;
+                let refreshIntakeStaff=false;
                 try {
                     if(!['confirmed','checked_in','in_progress'].includes(booking.status)) throw new Error('Chỉ tiếp nhận ca đã xác nhận hoặc cập nhật ca đang thực hiện.');
                     if(!Number.isFinite(actualWeight)||actualWeight<=0) throw new Error('Cân nặng tiếp nhận phải lớn hơn 0.');
@@ -1985,8 +1988,19 @@
                     },{appointment_status:'dang_thuc_hien',staff_id:staffMatches[0].id});
                     intakeMediaEditor.saved();
                     PawpalServices.showToast('Đã lưu biên bản tiếp nhận và trạng thái ca dịch vụ.');
-                } catch(err) {if(['staff_level_required','staff_not_eligible','staff_not_available'].includes(err.message)){fieldError('intakeStaffSelect',PawpalServices.errorMessage(err));focusModalError(modal);}else modalError(modal,'Không thể tiếp nhận: '+PawpalServices.errorMessage(err));return;}
-                finally {btnConfirmIntake.disabled=false;intakeSaving=false;lockedFields.forEach(([input,disabled])=>input.disabled=disabled);}
+                } catch(err) {if(['staff_level_required','staff_not_eligible','staff_not_available','staff_schedule_conflict','preferred_staff_unavailable'].includes(err.message)){refreshIntakeStaff=true;fieldError('intakeStaffSelect',PawpalServices.errorMessage(err));focusModalError(modal);}else modalError(modal,'Không thể tiếp nhận: '+PawpalServices.errorMessage(err));return;}
+                finally {
+                    intakeSaving=false;lockedFields.forEach(([input,disabled])=>input.disabled=disabled);
+                    const select=document.getElementById('intakeStaffSelect');
+                    btnConfirmIntake.disabled=!select?.value;
+                    if(refreshIntakeStaff&&modal.classList.contains('active')&&modal.dataset.bookingId===intakeBookingId){
+                        btnConfirmIntake.disabled=true;
+                        try{
+                            const {loadIntakeStaffPicker}=await import('/scripts/shared/intake-staff-picker.mjs');
+                            if(modal.dataset.bookingId===intakeBookingId)await loadIntakeStaffPicker({db:window.getSupabaseClient(),bookingId:booking.dbId,modal,select,submit:btnConfirmIntake});
+                        }catch{modalError(modal,'Không tải được danh sách KTV. Đóng và mở lại biên bản để thử lại.');}
+                    }
+                }
                 if (modal) modal.classList.remove('active');
             });
         }

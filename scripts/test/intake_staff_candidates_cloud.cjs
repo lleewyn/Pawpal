@@ -2,7 +2,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID:id}
 const {connect}=require('../database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  await db.query("BEGIN;SET LOCAL statement_timeout='12s';SET LOCAL lock_timeout='3s'");
- if(!process.argv.includes('--installed'))await db.query(fs.readFileSync(require.resolve('../database/v1/207_intake_staff_candidates.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
+ if(!process.argv.includes('--installed'))await db.query(fs.readFileSync(require.resolve('../database/v1/214_intake_staff_eligibility.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
  await db.query('SAVEPOINT fixtures');
  const actor=id(),auth=id(),qualified=id(),low=id(),missing=id(),level=id(),lower=id(),svc=id(),customer=id(),pet=id(),appointment=id();
  const qualifiedAuth=id(),lowAuth=id(),missingAuth=id();
@@ -19,6 +19,13 @@ const {connect}=require('../database/v1/service_import_connection.cjs');
  await db.query("SELECT set_config('request.jwt.claim.sub',$1,true)",[auth]);await db.query('SET LOCAL ROLE authenticated');
  const candidates=async()=>(await db.query('SELECT public.admin_intake_staff_candidates($1) result',[appointment])).rows[0].result;
  let result=await candidates();assert.ok(result.staff.some(s=>s.id===qualified));assert.ok(!result.staff.some(s=>[low,missing,actor].includes(s.id)));assert.deepEqual(result.required_levels,['QA High']);
+ await db.query('RESET ROLE');
+ const conflict=id();
+ await db.query("INSERT INTO public.appointment(id,appointment_code,customer_id,pet_id,scheduled_start_at,scheduled_end_at,appointment_status) SELECT $1,$2,customer_id,pet_id,scheduled_start_at,scheduled_end_at,'confirmed' FROM public.appointment WHERE id=$3",[conflict,'QA-'+conflict,appointment]);
+ await db.query("INSERT INTO public.appointment_item(appointment_id,service_id,staff_id,is_primary,name_snapshot,quantity,unit_price,discount_amount,duration_minutes,status) VALUES($1,$2,$3,true,'QA overlapping item',1,100000,0,30,'pending')",[conflict,svc,qualified]);
+ await db.query('SET LOCAL ROLE authenticated');result=await candidates();assert.ok(!result.staff.some(s=>s.id===qualified),'employee already assigned to an overlapping item must be excluded');
+ await db.query('RESET ROLE');await db.query("UPDATE public.appointment SET appointment_status='cancelled' WHERE id=$1",[conflict]);await db.query('SET LOCAL ROLE authenticated');
+ result=await candidates();assert.ok(result.staff.some(s=>s.id===qualified),'cancelled appointment must release the employee');
  await db.query('RESET ROLE');await db.query('UPDATE public.staff SET service_locked=true WHERE id=$1',[qualified]);await db.query('SET LOCAL ROLE authenticated');
  result=await candidates();assert.equal(result.staff.length,0);
  await db.query('RESET ROLE');await db.query('UPDATE public.staff SET service_locked=false WHERE id=$1',[qualified]);await db.query('UPDATE public.appointment_item SET status=$2 WHERE appointment_id=$1',[appointment,'cancelled']);await db.query('SET LOCAL ROLE authenticated');

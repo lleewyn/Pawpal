@@ -15,7 +15,7 @@
         const fields={},groups={};
         function field(key,label,type='text'){const group=el('div',null,'workspace-form-field'),caption=el('label',label+' '),input=el(type==='textarea'?'textarea':'select',null,'admin-input');input.id='staffComplaintMessage'+key;caption.htmlFor=input.id;caption.append(el('span','*','workspace-required'));input.required=true;group.append(caption,input);fields[key]=input;groups[key]=group;return group;}
         const mode=field('mode','Hình thức','select');for(const[value,text]of [['internal','Ghi chú nội bộ'],['reply','Phản hồi khách'],['request_info','Yêu cầu bổ sung']]){const option=el('option',text);option.value=value;fields.mode.append(option);}
-        const channel=field('channel','Kênh đã liên hệ','select');for(const[value,text]of [['record','Tại quầy'],['call','Điện thoại'],['zalo','Zalo'],['email','Email'],['sms','SMS']]){const option=el('option',text);option.value=value;fields.channel.append(option);}
+        const channel=field('channel','Kênh đã liên hệ','select');for(const[value,text]of [['portal','Trong phiếu hỗ trợ'],['record','Tại quầy'],['call','Điện thoại'],['zalo','Zalo'],['email','Email'],['sms','SMS']]){const option=el('option',text);option.value=value;fields.channel.append(option);}
         const note=field('note','Nội dung','textarea');fields.note.rows=4;fields.note.minLength=2;fields.note.maxLength=8000;
         const hint=el('p','','workspace-checkout-explanation'),message=el('p','','workspace-error');hint.id='staffComplaintMessageHint';message.setAttribute('role','alert');
         const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Lưu trao đổi','admin-btn admin-btn-primary');save.id='staffComplaintMessageSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);
@@ -23,7 +23,7 @@
         form.append(header,summary,mode,channel,note,mediaRoot,hint,message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
         const state={ticket:null,ticketId:null,generation:0,loading:true,blocked:false,saving:false,unresolved:null,onSaved:null,returnFocus:null,media:null,mediaRequest:null,sent:false,retainedGallery:null};
         const key=()=>PawpalAdminAccess.state.user.id+':'+state.ticketId;
-        function sync(){groups.channel.hidden=fields.mode.value!=='request_info';fields.channel.required=!groups.channel.hidden;hint.textContent=fields.mode.value==='internal'?'Ghi chú chỉ hiển thị trong nội bộ.':fields.mode.value==='reply'?'Nội dung được lưu thành phản hồi cho khách trong khiếu nại.':'Ghi nhận yêu cầu đã trao đổi và chuyển phiếu sang Chờ khách bổ sung. Hệ thống không tự gọi điện hoặc gửi tin qua kênh đã chọn.';}
+        function sync(){groups.channel.hidden=fields.mode.value!=='request_info';fields.channel.required=!groups.channel.hidden;hint.textContent=fields.mode.value==='internal'?'Ghi chú chỉ hiển thị trong nội bộ.':fields.mode.value==='reply'?'Nội dung được lưu thành phản hồi cho khách trong khiếu nại.':'Khách sẽ nhận nội dung trong phiếu hỗ trợ và có 72 giờ để phản hồi.';}
         fields.mode.onchange=()=>{message.textContent='';mediaRoot.hidden=fields.mode.value==='request_info';mediaRoot.style.display=mediaRoot.hidden?'none':'flex';sync();};
         function controls(){mediaRoot.inert=state.loading||state.blocked||state.saving||!!state.unresolved;for(const field of Object.values(fields))field.disabled=state.loading||state.blocked||state.saving||!!state.unresolved;save.disabled=state.loading||state.blocked||state.saving;save.textContent=state.saving?'Đang lưu':state.unresolved?'Thử lại nội dung':'Lưu trao đổi';}
         function closeDialog(){state.generation++;state.retainedGallery?.clear();state.retainedGallery=null;if(state.unresolved||state.sent)state.media?.saved();state.media?.close();state.media=null;overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');if(state.returnFocus?.isConnected)state.returnFocus.focus();}
@@ -203,11 +203,11 @@
 
 // Role-scoped screens belong to this domain.
 (function registerRoleViews(){
- const views=window.PawpalAdminViews;if(!views)return;const {date,money,status}=views.helpers;
- views.register("Khiếu nại",{columns:{complaints:[['Mã phiếu', 'ticket_code'], ['Nội dung', 'subject'], ['Trạng thái', r => status(r.status)], ['Ưu tiên', r => status(r.priority)]],complaint_messages:[['Thời gian', r => date(r.created_at)], ['Phạm vi', r => r.is_internal ? 'Nội bộ' : 'Trao đổi với khách'], ['Nội dung', r => r.sender_type === 'staff' ? r.content.replace(/^\[Yêu cầu bổ sung\] \[Ghi nhận yêu cầu bổ sung qua (record|call|zalo|email|sms)\]/, (_, channel) => '[Yêu cầu bổ sung] [Ghi nhận yêu cầu bổ sung qua ' + ({record:'tại quầy',call:'điện thoại',zalo:'Zalo',email:'email',sms:'SMS'})[channel] + ']') : r.content]]},
+ const views=window.PawpalAdminViews;if(!views)return;const {date,money,status}=views.helpers;let staffGallery;
+ views.register("Khiếu nại",{columns:{complaints:[['Mã phiếu', 'ticket_code'], ['Nội dung', 'subject'], ['Trạng thái', r => status(r.status)], ['Ưu tiên', r => status(r.priority)], ['Phản hồi', r => r.customer_followup_message_id ? 'Phản hồi mới' : '—']],complaint_messages:[['Thời gian', r => date(r.created_at)], ['Phạm vi', r => r.is_internal ? 'Nội bộ' : 'Trao đổi với khách'], ['Nội dung', r => r.sender_type === 'staff' ? r.content.replace(/^\[Yêu cầu bổ sung\] \[Ghi nhận yêu cầu bổ sung qua (record|call|zalo|email|sms)\]/, (_, channel) => '[Yêu cầu bổ sung] [Ghi nhận yêu cầu bổ sung qua ' + ({record:'tại quầy',call:'điện thoại',zalo:'Zalo',email:'email',sms:'SMS'})[channel] + ']') : r.content]]},
 targets:{"complaints":"tab-complaint-detail"},
 profiles:{"complaint-profile":{read:"complaints",render:async(ctx)=>{const {el,date,money,status,read,table,card,facts,go,root,kind,id,row,target,turn}=ctx;
-            const details = facts(root, row.ticket_code, [['Nội dung', row.subject], ['Trạng thái', status(row.status)], ['Mô tả', row.description]]);
+            const details = facts(root, row.ticket_code, [['Nội dung', row.subject], ['Trạng thái', status(row.status)], ['Mô tả', row.description], ...(row.customer_reply_due_at ? [['Hạn khách phản hồi', date(row.customer_reply_due_at)]] : []), ...(row.customer_followup_message_id ? [['Phản hồi', 'Phản hồi mới']] : [])]);
             if (row.resolution_type) {
                 const resolution = ({refund:'Hoàn tiền',rma_refund:'Nhận hàng trả và hoàn tiền',rma_exchange:'Đổi hàng',redo_service:'Thực hiện lại dịch vụ',change_staff:'Đổi nhân viên',explain:'Giải thích',reject:'Từ chối'})[row.resolution_type] || 'Cần Quản lý kiểm tra';
                 facts(root,'Phương án xử lý',[['Phương án',resolution],['Nội dung đề xuất',row.resolution_note],['Số tiền đã duyệt',row.approved_amount==null?'Chưa duyệt':money(row.approved_amount)]]);
@@ -220,6 +220,19 @@ profiles:{"complaint-profile":{read:"complaints",render:async(ctx)=>{const {el,d
                     propose.onclick=()=>window.PawpalStaffComplaintProposal.open({ticketId:id,onSaved:()=>ctx.refresh()}); details.append(propose);
                 }
             }
+            staffGallery?.clear();
+            const attachmentBlock = card(root, 'Tệp đính kèm'), attachmentRoot = el('div','Đang tải tệp đính kèm…');
+            attachmentBlock.append(attachmentRoot);
+            try {
+                const db=getSupabaseClient();
+                const {data,error}=await db.rpc('list_ticket_media',{p_ticket:id});
+                if(error)throw error;
+                const {createEvidenceGallery}=await import('/scripts/shared/evidence-gallery.mjs');
+                if(ctx.isCurrent()){staffGallery=createEvidenceGallery({root:attachmentRoot,db});void staffGallery.render(data||[]);}
+            } catch {
+                if(ctx.isCurrent())attachmentRoot.textContent='Không tải được tệp đính kèm.';
+            }
+            if(!ctx.isCurrent())return;
             const block = card(root, 'Trao đổi'), content = el('div'), pager = el('nav', null, 'workspace-pager'); pager.setAttribute('aria-label','Trang trao đổi khiếu nại'); block.append(content); root.append(pager);
             let messageTurn = 0;
             async function loadMessages(page = 1) {
@@ -816,6 +829,8 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                         rawId: t.id,
                         customerId: t.customer_id,
                         updated_at: t.updated_at,
+                        customerReplyDueAt: t.customer_reply_due_at,
+                        customerFollowupMessageId: t.customer_followup_message_id,
                         customerName: customerName,
                         phone: phone,
                         petName: pet ? (pet.pet_name || pet.name) : (isContactOrOther ? '—' : 'Chưa gắn hồ sơ bé cưng'),
@@ -916,6 +931,8 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                         rawId: t.id,
                         customerId: t.customer_id,
                         updated_at: t.updated_at,
+                        customerReplyDueAt: t.customer_reply_due_at,
+                        customerFollowupMessageId: t.customer_followup_message_id,
                         customerName: customerName,
                         phone: phone,
                         orderId: order ? (order.order_code || order.id) : null,

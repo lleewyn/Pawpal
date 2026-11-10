@@ -24,14 +24,27 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
  async function customer(phone){
   const result=await admin.from('customer_phone').select('customer_id').eq('phone_number',phone).limit(2);
   if(result.error)throw Error('Chưa kiểm tra được số điện thoại. Vui lòng thử lại.');
-  if(result.data?.length!==1)throw Error('Chưa tìm thấy hồ sơ vãng lai duy nhất cho số điện thoại này. Vui lòng liên hệ PawPal.');
-  const row=await admin.from('customer').select('id,auth_user_id,customer_status').eq('id',result.data[0].customer_id).maybeSingle();
+  let customerId=result.data?.[0]?.customer_id;
+  if(!customerId){
+   const byUnverified=await admin.from('customer').select('id').eq('unverified_contact_phone',phone).limit(2);
+   if(byUnverified.data?.length===1)customerId=byUnverified.data[0].id;
+  }
+  if(!customerId){
+   const byAppt=await admin.from('appointment').select('customer_id').eq('booking_contact_phone',phone).limit(2);
+   if(byAppt.data?.length>=1)customerId=byAppt.data[0].customer_id;
+  }
+  if(!customerId){
+   const byOrder=await admin.from('sales_order').select('customer_id').eq('receiver_phone_snapshot',phone).limit(2);
+   if(byOrder.data?.length>=1)customerId=byOrder.data[0].customer_id;
+  }
+  if(!customerId)throw Error('Chưa tìm thấy hồ sơ vãng lai duy nhất cho số điện thoại này. Vui lòng liên hệ PawPal.');
+  const row=await admin.from('customer').select('id,auth_user_id,customer_status').eq('id',customerId).maybeSingle();
   if(row.error)throw Error('Chưa kiểm tra được hồ sơ. Vui lòng thử lại.');
   const c=row.data;
   if(!c||!['active','ACTIVE','dang_hoat_dong'].includes(c.customer_status))throw Error('Hồ sơ không hoạt động. Vui lòng liên hệ PawPal.');
   if(c.auth_user_id)throw Error('Số điện thoại này đã có tài khoản. Vui lòng đăng nhập để xem lịch sử.');
-  const staff=await admin.from('staff').select('id').eq('phone_number',phone).limit(1);
-  if(staff.error||staff.data?.length)throw Error('Số điện thoại này không thuộc luồng tra cứu khách vãng lai.');
+  const staff=await admin.from('staff').select('id,auth_user_id').eq('phone_number',phone).limit(1);
+  if(!staff.error&&staff.data?.length&&staff.data[0].auth_user_id)throw Error('Số điện thoại này không thuộc luồng tra cứu khách vãng lai.');
   return c;
  }
  return async function handle(req,res){

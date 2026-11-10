@@ -420,6 +420,10 @@ export function initSupportTickets() {
             const waitingAlertEl = document.getElementById('detailWaitingCustomerAlert');
             if (waitingAlertEl) {
                 if (ticket.status === 'waiting_customer') {
+                    const due = ticket.replyDueAt && new Date(ticket.replyDueAt);
+                    const deadline = due ? (Date.now() >= due.getTime() ? 'Đã hết hạn phản hồi.' : 'Hạn phản hồi ' + due.toLocaleString('vi-VN')) : '';
+                    waitingAlertEl.textContent = [ticket.replyRequest || 'Cửa hàng đang chờ bạn bổ sung thông tin.', deadline].filter(Boolean).join('\n');
+                    waitingAlertEl.style.whiteSpace = 'pre-wrap';
                     waitingAlertEl.classList.remove('d-none');
                 } else {
                     waitingAlertEl.classList.add('d-none');
@@ -632,7 +636,7 @@ export function initSupportTickets() {
                     }
                 }
             } else {
-                replyEditorArea.classList.remove('d-none');
+                replyEditorArea.classList.toggle('d-none', ticket.status === 'waiting_customer' && Boolean(ticket.replyDueAt) && Date.now() >= Date.parse(ticket.replyDueAt));
                 ratingFeedbackArea.classList.add('d-none');
                 if (btnCancelRating) btnCancelRating.classList.remove('d-none');
                 if (btnCancelRatingAction) btnCancelRatingAction.classList.remove('d-none');
@@ -714,7 +718,7 @@ export function initSupportTickets() {
                 } catch (error) {
                     if (activeTicketId !== targetTicketId || !textarea.isConnected) return;
                     console.error('[Support] Không thể gửi phản hồi:', error);
-                    window.alert(error.message || 'Không thể gửi phản hồi. Vui lòng thử lại.');
+                    window.alert(error.message === 'support_reply_expired' ? 'Đã hết hạn phản hồi. Vui lòng liên hệ cửa hàng.' : error.message || 'Không thể gửi phản hồi. Vui lòng thử lại.');
                 } finally {
                     replySaving=false;textarea.disabled=false;const mediaRoot=document.getElementById('supportReplyMedia');if(mediaRoot)mediaRoot.inert=false;
                     btnSendReply.disabled = false;

@@ -113,7 +113,11 @@
                 return;
             }
             if (!checkAuth()) return;
-            await window.PawpalCustomerAuth.accept(result);
+            if (!verifiedUser.id) throw new Error('Không tìm thấy hồ sơ khách hàng.');
+            // The authenticated /me response refreshes the profile, not the Supabase session.
+            const profile = JSON.stringify(window.PawpalCustomerAuth.cleanUser(verifiedUser));
+            localStorage.setItem('pawpal_current_user', profile);
+            sessionStorage.setItem('pawpal_current_user', profile);
         } catch (err) {
             if(pageLeaving)return;
             console.warn('[UserPortal] Không thể xác nhận phiên khách hàng:', err.message);

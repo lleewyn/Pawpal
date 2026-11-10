@@ -72,7 +72,7 @@
         spec.forEach(([name]) => tr.append(el('th', name)));
 
         const rowAction=rowActions[kind],hasActions=!!rowAction?.enabled(options);
-        if (targets[kind] || hasActions) tr.append(el('th', 'Tác vụ'));
+        if (targets[kind] || hasActions) tr.append(el('th', 'Thao tác'));
         thead.append(tr); table.append(thead);
         const tbody = document.createElement('tbody');
         for (const row of rows) {

@@ -654,22 +654,28 @@
 .pets-module .weight-mini-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12.5px;
+    font-size: 12px;
     text-align: left;
+    background-color: transparent;
 }
 
 .pets-module .weight-mini-table th {
-    background-color: var(--table-header-bg);
-    color: var(--table-header-text);
-    padding: 8px 12px;
-    font-weight: 600;
-    border-bottom: 1px solid var(--border-neutral);
+    background-color: #f1f4f1;
+    color: #536a59;
+    padding: 10px 11px;
+    font-size: 11px;
+    font-weight: 650;
+    border-bottom: 1px solid #dae2db;
+    text-transform: none;
+    white-space: nowrap;
 }
 
 .pets-module .weight-mini-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border-neutral);
-    color: var(--text-main);
+    padding: 10px 11px;
+    border-bottom: 1px solid #e9eee9;
+    color: var(--text-main, #203a2c);
+    background-color: transparent;
+    font-size: 12px;
 }
 
 .pets-module .weight-mini-table tr:last-child td {
@@ -4444,17 +4450,21 @@
 }
 
 .pets-module #subtab-tab-pet-profile .weight-mini-table th {
-    color: #526b5b;
-    background: #f0f4f1;
-    font-size: 12px;
-    font-weight: 600;
+    color: #536a59;
+    background: #f1f4f1;
+    font-size: 11px;
+    font-weight: 650;
+    padding: 10px 11px;
+    border-bottom: 1px solid #dae2db;
 }
 
 .pets-module #subtab-tab-pet-profile .weight-mini-table td {
-    color: #24382f;
+    color: #203a2c;
     background: transparent;
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 12px;
+    padding: 10px 11px;
+    border-bottom: 1px solid #e9eee9;
+    line-height: 1.35;
 }
 
 /* ==========================================================================

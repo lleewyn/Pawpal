@@ -215,7 +215,7 @@
                 </td>
                 <td>${statusBadge}</td>
                 <td style="text-align: center;">
-                    <button class="btn-action-trigger btn-staff-action" data-id="${staff.id}">•••</button>
+                    <button type="button" class="btn-action-trigger btn-staff-action" data-id="${staff.id}" title="Thao tác">•••</button>
                 </td>
             `;
             tbody.appendChild(tr);

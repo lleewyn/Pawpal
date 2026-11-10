@@ -1,5 +1,5 @@
 BEGIN;
-CREATE OR REPLACE FUNCTION pawpal_private.customer_booking_move_quote(p_id uuid,p_start timestamptz)
+CREATE OR REPLACE FUNCTION pawpal_private.customer_booking_move_quote(p_id uuid,p_start timestamptz,p_end timestamptz DEFAULT NULL)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
 DECLARE owner_id uuid; a public.appointment; line public.appointment_item; svc public.service;
  stay public.hotel_booking; trip public.taxi_trip; room public.hotel_room; kind text; primary_kind text;
@@ -20,10 +20,16 @@ BEGIN
   RAISE EXCEPTION 'booking_requires_staff_reconciliation' USING ERRCODE='22023'; END IF;
  IF NOT EXISTS(SELECT 1 FROM public.pet_profile WHERE id=a.pet_id AND customer_id=owner_id AND status='active') THEN RAISE EXCEPTION 'active_pet_required' USING ERRCODE='22023'; END IF;
  IF (SELECT count(*) FROM public.appointment_item WHERE appointment_id=a.id AND is_primary AND status<>'cancelled')<>1 THEN RAISE EXCEPTION 'booking_items_require_staff' USING ERRCODE='22023'; END IF;
- delta:=p_start-a.scheduled_start_at; ends:=a.scheduled_end_at+delta;
+ delta:=p_start-a.scheduled_start_at;
  SELECT weight INTO weight_value FROM public.pet_current_weight WHERE pet_id=a.pet_id;
  SELECT c.category_code INTO primary_kind FROM public.appointment_item i JOIN public.service s ON s.id=i.service_id
   JOIN public.service_category c ON c.id=s.category_id WHERE i.appointment_id=a.id AND i.is_primary AND i.status<>'cancelled';
+ IF primary_kind='pet_hotel' AND p_end IS NOT NULL THEN
+  IF p_end <= p_start THEN RAISE EXCEPTION 'booking_change_window_closed' USING ERRCODE='22023'; END IF;
+  ends:=p_end;
+ ELSE
+  ends:=a.scheduled_end_at+delta;
+ END IF;
  IF primary_kind='pet_hotel' THEN
   SELECT * INTO stay FROM public.hotel_booking WHERE appointment_id=a.id FOR UPDATE;
   IF stay.id IS NULL OR stay.status NOT IN ('pending','reserved','confirmed') OR stay.check_in_at<>a.scheduled_start_at OR stay.check_out_at<>a.scheduled_end_at THEN RAISE EXCEPTION 'hotel_requires_staff' USING ERRCODE='22023'; END IF;
@@ -95,9 +101,9 @@ BEGIN
  result:=jsonb_build_object('id',a.id,'updated_at',a.updated_at,'change_count',a.change_count,'start_at',p_start,'end_at',ends,'total',total,'lines',details,'logistics',logistics);
  RETURN result||jsonb_build_object('version',md5(result::text));
 END $$;
-REVOKE ALL ON FUNCTION pawpal_private.customer_booking_move_quote(uuid,timestamptz) FROM PUBLIC,anon,authenticated;
-CREATE OR REPLACE FUNCTION public.quote_own_booking_move(p_id uuid,p_start timestamptz)
-RETURNS jsonb LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog,public AS $$ SELECT pawpal_private.customer_booking_move_quote(p_id,p_start) $$;
+REVOKE ALL ON FUNCTION pawpal_private.customer_booking_move_quote(uuid,timestamptz,timestamptz) FROM PUBLIC,anon,authenticated;
+CREATE OR REPLACE FUNCTION public.quote_own_booking_move(p_id uuid,p_start timestamptz,p_end timestamptz DEFAULT NULL)
+RETURNS jsonb LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog,public AS $$ SELECT pawpal_private.customer_booking_move_quote(p_id,p_start,p_end) $$;
 
 DO $$ DECLARE body text; anchor text:=$old$ELSIF NEW.entity_name='appointment' AND NEW.action='CUSTOMER_CANCEL_APPOINTMENT'$old$;
 BEGIN
@@ -121,7 +127,7 @@ BEGIN
    AND (NOT pawpal_private.has_permission('audit_log.write')$new$);
  END IF;
 END $$;
-CREATE OR REPLACE FUNCTION public.reschedule_own_service_booking(p_request_id uuid,p_id uuid,p_start timestamptz,p_expected_quote text,p_reason text)
+CREATE OR REPLACE FUNCTION public.reschedule_own_service_booking(p_request_id uuid,p_id uuid,p_start timestamptz,p_expected_quote text,p_reason text,p_end timestamptz DEFAULT NULL)
 RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
 DECLARE owner_id uuid; a public.appointment; previous public.audit_log; quote jsonb; entry jsonb; reason text:=btrim(p_reason);
 BEGIN
@@ -138,7 +144,7 @@ BEGIN
    OR previous.description::jsonb->>'quote_version'<>p_expected_quote THEN RAISE EXCEPTION 'booking_request_conflict' USING ERRCODE='PT409'; END IF;
   RETURN a.id;
  END IF;
- quote:=pawpal_private.customer_booking_move_quote(p_id,p_start);
+ quote:=pawpal_private.customer_booking_move_quote(p_id,p_start,p_end);
  IF quote->>'version'<>p_expected_quote THEN RAISE EXCEPTION 'booking_quote_changed_reload_required' USING ERRCODE='PT409'; END IF;
  FOR entry IN SELECT value FROM jsonb_array_elements(quote->'lines') LOOP
   UPDATE public.appointment_item SET quantity=(entry->>'quantity')::integer,unit_price=(entry->>'unit_price')::numeric,weight_snapshot=(entry->>'weight')::numeric,status='pending' WHERE id=(entry->>'id')::uuid;
@@ -154,7 +160,7 @@ BEGIN
   jsonb_build_object('request_id',p_request_id,'reason',reason,'start_at',p_start,'quote_version',p_expected_quote,'quote',quote)::text);
  RETURN p_id;
 END $$;
-REVOKE ALL ON FUNCTION public.quote_own_booking_move(uuid,timestamptz),public.reschedule_own_service_booking(uuid,uuid,timestamptz,text,text) FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION public.quote_own_booking_move(uuid,timestamptz),public.reschedule_own_service_booking(uuid,uuid,timestamptz,text,text) TO authenticated;
+REVOKE ALL ON FUNCTION public.quote_own_booking_move(uuid,timestamptz,timestamptz),public.reschedule_own_service_booking(uuid,uuid,timestamptz,text,text,timestamptz) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.quote_own_booking_move(uuid,timestamptz,timestamptz),public.reschedule_own_service_booking(uuid,uuid,timestamptz,text,text,timestamptz) TO authenticated;
 COMMIT;
 NOTIFY pgrst,'reload schema';

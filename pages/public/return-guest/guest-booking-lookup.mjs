@@ -1,4 +1,5 @@
 import {guestCommerce} from '../../../scripts/shared/guest-commerce-client.mjs';
+import {renderBookingStaffRequest,staffRequestLabel} from '../../../scripts/shared/booking-staff-request.mjs';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const statuses={pending:'Chờ xác nhận',confirmed:'Đã xác nhận',in_progress:'Đang thực hiện',completed:'Hoàn tất',cancelled:'Đã hủy',no_show:'Không đến'};
 export function bookingLookupRequest(search,storage){
@@ -23,22 +24,23 @@ export function mountGuestBookingLookup(form){
     const title=node('h2','Lịch hẹn của bạn');title.id='guest-booking-lookup-title';
     const feedback=node('p','Đang tải lịch hẹn…');feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');
     const details=node('dl',null,'rg-session-booking-details'),button=node('button','Cập nhật trạng thái','btn-green-outline');button.type='button';
-    panel.append(title,feedback,details,button);form.before(panel);
+    const staffRequest=node('section');panel.append(title,feedback,details,staffRequest,button);form.before(panel);
     let busy=false,invalidated=false;
     const active=()=>panel.isConnected;
     async function refresh(){
-        if(busy||invalidated||!active())return;busy=true;button.disabled=true;details.replaceChildren();feedback.textContent='Đang tải lịch hẹn…';
+        if(busy||invalidated||!active())return;busy=true;button.disabled=true;details.replaceChildren();staffRequest.replaceChildren();feedback.textContent='Đang tải lịch hẹn…';
         try{
             const booking=await loadGuestBookingReceipt(requestId);if(!active()||invalidated)return;
             const format=value=>new Date(value).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',dateStyle:'short',timeStyle:'short'});
-            const entries=[['Mã lịch hẹn',booking.code],['Trạng thái',statuses[booking.status]||'Đang xử lý'],['Thời gian hẹn',format(booking.start_at)],['Kết thúc dự kiến',format(booking.end_at)],['Tổng tiền dự kiến',Number(booking.total).toLocaleString('vi-VN')+' đ']];
+            const entries=[['Mã lịch hẹn',booking.code],['Trạng thái',staffRequestLabel(booking.staff_request,statuses[booking.status]||'Đang xử lý')],['Thời gian hẹn',format(booking.start_at)],['Kết thúc dự kiến',format(booking.end_at)],['Tổng tiền dự kiến',Number(booking.total).toLocaleString('vi-VN')+' đ']];
             for(const [label,value]of entries){const row=node('div');row.append(node('dt',label),node('dd',value));details.append(row);}
             feedback.textContent='';
+            renderBookingStaffRequest(staffRequest,booking.staff_request,{onRespond:async(accept,revision)=>{await guestCommerce.request('booking-staff-response',{requestId:crypto.randomUUID(),bookingId:requestId,revision,accept});await refresh();}});
         }catch(error){if(active()&&!invalidated)feedback.textContent=error.status===401||error.status===403?'Phiên hiện tại không có quyền xem lịch hẹn này. Vui lòng liên hệ PawPal để được hỗ trợ.':error.message||'Chưa tải được lịch hẹn. Vui lòng thử lại.';}
         finally{busy=false;if(active()&&!invalidated)button.disabled=false;}
     }
     button.onclick=refresh;refresh();
-    const clear=()=>{invalidated=true;if(active()){details.replaceChildren();feedback.textContent='Tài khoản đã thay đổi. Vui lòng tải lại trang để kiểm tra.';button.disabled=true;}};
+    const clear=()=>{invalidated=true;if(active()){details.replaceChildren();staffRequest.replaceChildren();feedback.textContent='Tài khoản đã thay đổi. Vui lòng tải lại trang để kiểm tra.';button.disabled=true;}};
     document.addEventListener('auth_state_changed',clear);
     window.addEventListener('storage',event=>{if(event.key==='pawpal_current_user'||event.key===null)clear();});
 }

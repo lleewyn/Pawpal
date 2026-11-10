@@ -292,7 +292,7 @@
                     <td>${alertBadgeHtml}</td>
                     <td>${statusBadgeHtml}</td>
                     <td class="customer-col-actions cell-center">
-                        <button type="button" class="btn-action-more" data-id="${esc(c.id)}" title="Tác vụ">Thao tác</button>
+                        <button type="button" class="btn-action-more" data-id="${esc(c.id)}" title="Thao tác">•••</button>
                     </td>
                 </tr>
             `;

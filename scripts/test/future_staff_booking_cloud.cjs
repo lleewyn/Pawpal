@@ -1,0 +1,88 @@
+const fs=require('node:fs'),{connect}=require('../database/v1/service_import_connection.cjs');
+(async()=>{const db=await connect();try{
+ await db.query("BEGIN;SET LOCAL statement_timeout='25s';SET LOCAL lock_timeout='4s'");
+ await db.query(fs.readFileSync(require.resolve('../database/v1/212_future_staff_booking.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
+ await db.query('SAVEPOINT fixtures');
+ const source=fs.readFileSync(require.resolve('./customer_booking_availability.cjs'),'utf8');
+ const fixture=source.split('const query=`')[1].split(' -- No shifts:')[0].replace(/^BEGIN;/,'')
+ .replace('employment_status,auth_user_id)', 'employment_status,auth_user_id,phone_number)')
+ .replace("level_id,'active',worker_auth)","level_id,'active',worker_auth,'099'||lpad(floor(random()*10000000)::text,7,'0'))");
+ await db.query(fixture+`
+ DECLARE admin_uid uuid;recurring uuid:=gen_random_uuid();held uuid:=gen_random_uuid();h jsonb;choice jsonb;future_id uuid:=gen_random_uuid();revision timestamptz;proposal_revision timestamptz;worker2 uuid:=gen_random_uuid();worker2_auth uuid:=gen_random_uuid();day2 timestamptz:=starts+interval '1 day';guest_token text:=repeat(replace(gen_random_uuid()::text,'-',''),2);guest_pet uuid:=gen_random_uuid();guest_id uuid:=gen_random_uuid();
+ BEGIN
+ SELECT s.auth_user_id INTO admin_uid FROM public.staff s JOIN public.staff_role r ON r.staff_id=s.id WHERE r.role_code='ADMIN' AND s.auth_user_id IS NOT NULL LIMIT 1;
+ IF admin_uid IS NULL THEN RAISE EXCEPTION 'admin_fixture_missing';END IF;
+ PERFORM set_config('request.jwt.claim.sub',admin_uid::text,true);
+ PERFORM public.save_staff_recurring_schedule(recurring,NULL,jsonb_build_object('staff_id',worker,'weekdays',jsonb_build_array(extract(isodow FROM starts AT TIME ZONE 'Asia/Bangkok')::integer),'start_time','08:00','end_time','18:00','valid_from',(starts AT TIME ZONE 'Asia/Bangkok')::date,'is_active',true));
+ PERFORM set_config('request.jwt.claim.sub',uid::text,true);
+ result:=public.own_booking_availability(payload);
+ SELECT v INTO choice FROM jsonb_array_elements(result->'staff') v WHERE v->>'id'=worker::text;
+ IF choice->>'source' IS DISTINCT FROM 'scheduled' THEN RAISE EXCEPTION 'concrete shift precedence failed';END IF;
+ DELETE FROM public.staff_schedule WHERE staff_id=worker;
+ result:=public.own_booking_availability(payload);SELECT v INTO choice FROM jsonb_array_elements(result->'staff') v WHERE v->>'id'=worker::text;
+ IF choice->>'source' IS DISTINCT FROM 'recurring' OR NOT (choice->>'requires_confirmation')::boolean THEN RAISE EXCEPTION 'recurring choice missing';END IF;
+ h:=public.hold_own_service_booking(held,payload);payload:=payload||jsonb_build_object('hold_id',held);q:=public.quote_own_service_booking(payload);
+ PERFORM public.create_own_service_booking(aid,q->>'version',payload);
+ IF NOT EXISTS(SELECT 1 FROM public.appointment WHERE id=aid AND requested_staff_id=worker AND staff_id IS NULL AND staff_confirmation_status='pending' AND appointment_status='pending') THEN RAISE EXCEPTION 'future booking falsely confirmed';END IF;
+ IF NOT EXISTS(SELECT 1 FROM jsonb_array_elements(public.own_service_booking_summary()) s WHERE s->>'id'=aid::text AND s->'staff_request'->>'status'='pending') THEN RAISE EXCEPTION 'customer pending projection missing';END IF;
+ PERFORM set_config('request.jwt.claim.sub',admin_uid::text,true);
+ SELECT updated_at INTO revision FROM public.appointment WHERE id=aid;
+ BEGIN PERFORM public.update_admin_service_booking(aid,revision,'status','confirmed','No concrete shift');RAISE EXCEPTION 'unrostered request confirmed';EXCEPTION WHEN SQLSTATE 'PT409' THEN IF SQLERRM<>'requested_staff_schedule_required' THEN RAISE;END IF;END;
+ BEGIN PERFORM public.save_admin_staff_schedule(gen_random_uuid(),gen_random_uuid(),NULL,jsonb_build_object('staff_id',worker,'start_at',starts,'end_at',starts+interval '2 hours','availability_status','leave','schedule_status','active','reason','QA leave'));RAISE EXCEPTION 'requested booking stranded by leave';
+ EXCEPTION WHEN SQLSTATE 'PT409' THEN IF SQLERRM<>'staff_has_requested_booking' THEN RAISE;END IF;END;
+ PERFORM public.save_admin_staff_schedule(gen_random_uuid(),gen_random_uuid(),NULL,jsonb_build_object('staff_id',worker,'start_at',starts-interval '1 hour','end_at',starts+interval '8 hours','availability_status','available','schedule_status','active'));
+ SELECT updated_at INTO revision FROM public.appointment WHERE id=aid;
+ PERFORM public.update_admin_service_booking(aid,revision,'status','confirmed','Confirm preferred worker');
+ IF NOT EXISTS(SELECT 1 FROM public.appointment WHERE id=aid AND staff_id=worker AND staff_confirmation_status='confirmed') THEN RAISE EXCEPTION 'preferred confirmation failed';END IF;
+ -- No recurring template: retain a named request without advertising confirmed availability.
+ DELETE FROM public.staff_recurring_schedule WHERE id=recurring;
+ INSERT INTO auth.users(id) VALUES(worker2_auth);
+ INSERT INTO public.staff(id,full_name,job_title,staff_level_id,employment_status,auth_user_id,phone_number) VALUES(worker2,'Future alternative worker','Care',level_id,'active',worker2_auth,'098'||lpad(floor(random()*10000000)::text,7,'0'));
+ INSERT INTO public.staff_schedule(staff_id,start_at,end_at) VALUES(worker2,day2-interval '1 hour',day2+interval '8 hours');
+ PERFORM set_config('request.jwt.claim.sub',uid::text,true);
+ payload:=payload-'hold_id';payload:=payload||jsonb_build_object('scheduled_start_at',day2);
+ result:=public.own_booking_availability(payload);SELECT v INTO choice FROM jsonb_array_elements(result->'staff') v WHERE v->>'id'=worker::text;
+ IF choice->>'source' IS DISTINCT FROM 'request' THEN RAISE EXCEPTION 'unscheduled request choice missing';END IF;
+ held:=gen_random_uuid();h:=public.hold_own_service_booking(held,payload);payload:=payload||jsonb_build_object('hold_id',held);q:=public.quote_own_service_booking(payload);
+ PERFORM public.create_own_service_booking(future_id,q->>'version',payload);
+ PERFORM set_config('request.jwt.claim.sub',admin_uid::text,true);
+ BEGIN UPDATE public.appointment SET staff_id=worker2 WHERE id=future_id;RAISE EXCEPTION 'silent reassignment accepted';EXCEPTION WHEN SQLSTATE 'PT409' THEN IF SQLERRM<>'requested_staff_customer_consent_required' THEN RAISE;END IF;END;
+ SELECT updated_at INTO revision FROM public.appointment WHERE id=future_id;
+ result:=public.get_admin_service_booking_page(jsonb_build_object('staff','Availability verification','query','BKG-'||upper(replace(future_id::text,'-',''))),1,false);
+ IF NOT result->'ids' @> jsonb_build_array(future_id) THEN RAISE EXCEPTION 'pending preference missing from Admin staff filter';END IF;
+ PERFORM public.propose_booking_staff(future_id,revision,worker2,day2+interval '1 hour','Alternative worker and time');
+ SELECT proposal_created_at INTO proposal_revision FROM public.appointment WHERE id=future_id;
+ IF NOT EXISTS(SELECT 1 FROM public.appointment WHERE id=future_id AND requested_staff_id=worker AND staff_id IS NULL AND scheduled_start_at=day2 AND staff_confirmation_status='awaiting_customer') THEN RAISE EXCEPTION 'proposal changed booking before consent';END IF;
+ PERFORM set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);
+ BEGIN PERFORM public.respond_own_booking_staff_request(future_id,proposal_revision,true);RAISE EXCEPTION 'foreign response accepted';EXCEPTION WHEN insufficient_privilege THEN NULL;END;
+ PERFORM set_config('request.jwt.claim.sub',uid::text,true);
+ PERFORM public.respond_own_booking_staff_request(future_id,proposal_revision,false);
+ IF NOT EXISTS(SELECT 1 FROM public.appointment WHERE id=future_id AND requested_staff_id=worker AND staff_id IS NULL AND scheduled_start_at=day2 AND staff_confirmation_status='pending') THEN RAISE EXCEPTION 'declined proposal changed original request';END IF;
+ PERFORM set_config('request.jwt.claim.sub',admin_uid::text,true);SELECT updated_at INTO revision FROM public.appointment WHERE id=future_id;
+ PERFORM public.propose_booking_staff(future_id,revision,worker2,day2+interval '1 hour','Second alternative proposal');
+ SELECT proposal_created_at INTO proposal_revision FROM public.appointment WHERE id=future_id;
+ PERFORM set_config('request.jwt.claim.sub',uid::text,true);
+ PERFORM public.respond_own_booking_staff_request(future_id,proposal_revision,true);
+ IF NOT EXISTS(SELECT 1 FROM public.appointment WHERE id=future_id AND requested_staff_id=worker2 AND staff_id=worker2 AND scheduled_start_at=day2+interval '1 hour' AND staff_confirmation_status='confirmed') THEN RAISE EXCEPTION 'customer acceptance failed';END IF;
+ -- The same future-request behavior must work for a cookie-bound guest.
+ PERFORM set_config('request.jwt.claim.role','service_role',true);PERFORM set_config('request.jwt.claim.sub','',true);
+ PERFORM public.guest_commerce_save_pet(guest_token,now()+interval '1 day',guest_pet,'0950000017','Future guest',jsonb_build_object('name','Future guest pet','breedId',breed,'weight',5));
+ payload:=payload-'hold_id';payload:=payload||jsonb_build_object('pet_id',guest_pet,'scheduled_start_at',starts+interval '2 days');held:=gen_random_uuid();
+ h:=public.guest_booking_hold(guest_token,held,payload);payload:=payload||jsonb_build_object('hold_id',held);q:=public.guest_booking_quote(guest_token,payload);
+ PERFORM public.guest_booking_create(guest_token,guest_id,q->>'version',payload);
+ result:=public.guest_booking_receipt(guest_token,guest_id);
+ IF result->'staff_request'->>'status' IS DISTINCT FROM 'pending' THEN RAISE EXCEPTION 'guest pending preference missing';END IF;
+ INSERT INTO public.staff_schedule(staff_id,start_at,end_at) VALUES(worker2,starts+interval '2 days'-interval '1 hour',starts+interval '2 days'+interval '8 hours');
+ PERFORM set_config('request.jwt.claim.role','authenticated',true);PERFORM set_config('request.jwt.claim.sub',admin_uid::text,true);
+ SELECT updated_at INTO revision FROM public.appointment WHERE id=guest_id;
+ PERFORM public.propose_booking_staff(guest_id,revision,worker2,starts+interval '2 days','Guest alternative');
+ SELECT proposal_created_at INTO proposal_revision FROM public.appointment WHERE id=guest_id;
+ PERFORM set_config('request.jwt.claim.role','service_role',true);PERFORM set_config('request.jwt.claim.sub','',true);
+ PERFORM public.respond_guest_booking_staff_request(guest_token,guest_id,proposal_revision,true);
+ IF NOT EXISTS(SELECT 1 FROM public.appointment WHERE id=guest_id AND staff_id=worker2 AND appointment_status='confirmed') THEN RAISE EXCEPTION 'guest acceptance failed';END IF;
+ IF has_function_privilege('anon','public.save_staff_recurring_schedule(uuid,timestamptz,jsonb)','EXECUTE') OR has_function_privilege('authenticated','public.respond_guest_booking_staff_request(text,uuid,timestamptz,boolean)','EXECUTE') THEN RAISE EXCEPTION 'unsafe RPC grants';END IF;
+ END;END $$;`);
+ await db.query('SET CONSTRAINTS ALL IMMEDIATE');await db.query('ROLLBACK TO SAVEPOINT fixtures');
+ await db.query(process.argv.includes('--apply')?'COMMIT':'ROLLBACK');
+ console.log('PASS recurring CRUD, concrete-shift precedence, pending member/guest preference, leave protection, exact preferred confirmation, no silent reassignment, customer reject/accept and foreign-owner denial. Fixtures rolled back. '+(process.argv.includes('--apply')?'Migration applied.':'Migration rolled back.'));
+}catch(error){await db.query('ROLLBACK');throw error;}finally{await db.end();}})().catch(error=>{console.error(error.message,error.where||'');process.exitCode=1;});

@@ -334,10 +334,10 @@
 .admin-table th {
     background-color: var(--table-header-bg);
     color: var(--table-header-text);
-    font-weight: 600;
-    font-size: 13px;
-    padding: 12px 18px;
-    border-bottom: 1px solid var(--border-neutral);
+    font-weight: 650;
+    font-size: 11px;
+    padding: 10px 11px;
+    border-bottom: 1px solid #dae2db;
     white-space: nowrap;
 }
 
@@ -346,12 +346,13 @@
 }
 
 .admin-table td {
-    padding: 13px 18px;
+    padding: 10px 11px;
     border-bottom: 1px solid var(--border-neutral);
     color: var(--text-main);
     vertical-align: middle;
     white-space: nowrap;
     background-color: transparent;
+    font-size: 12px;
 }
 
 .admin-table td:first-child {
@@ -1872,15 +1873,7 @@
 }
 
 .customers-module .customer-table-meta {
-    min-height: 35px;
-    background: rgb(250, 251, 250);
-    padding: 7px 14px;
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    color: rgb(105, 121, 110);
-    font-size: 10.5px;
-    border-top: 1px solid rgb(228, 233, 228);
+    display: none;
 }
 
 .customers-module #subtab-tab-list .table-responsive-wrapper {
@@ -1941,10 +1934,6 @@
     white-space: nowrap;
 }
 
-.customers-module #customerDataTable .btn-action-more {
-    min-width: 0px;
-    border-radius: 0px;
-}
 
 .customers-module #customerDataTable.customer-table-compact .user-sub-cell, .customers-module #customerDataTable.customer-table-compact .customer-pet-sub {
     display: none;
@@ -2167,21 +2156,6 @@
     color: rgb(152, 115, 36) !important;
 }
 
-.customers-module #customerDataTable .btn-action-more {
-    display: inline-block;
-    font: 600 12px / 1.35 Inter, "Segoe UI", Arial, sans-serif;
-    letter-spacing: normal;
-    color: rgb(40, 94, 70);
-    padding: 2px 0px;
-    border: 0px;
-    background: transparent;
-    height: auto;
-    min-height: 0px;
-    width: auto;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    box-shadow: none;
-}
 
 .customers-module #customerDataTable.customer-table-compact td {
     height: auto;

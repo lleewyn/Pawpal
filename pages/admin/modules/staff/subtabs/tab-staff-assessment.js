@@ -141,7 +141,7 @@
                     <td>${safeEvaluator}</td>
                     <td style="max-width: 200px; font-size: 12px; color: var(--text-muted);">${safeNote}</td>
                     <td style="text-align: center;">
-                        <button type="button" class="btn-action-trigger btn-reassess-trigger" data-staff-id="${safeStaffId}" style="border: none; background: none; color: #236B48; cursor: pointer; font-size: 12.5px; font-weight: 600;">Đánh giá</button>
+                        <button type="button" class="btn-reassess-trigger" data-staff-id="${safeStaffId}" style="border: none; background: none; color: #236B48; cursor: pointer; font-size: 12.5px; font-weight: 600;">Đánh giá</button>
                     </td>
                 </tr>
             `;

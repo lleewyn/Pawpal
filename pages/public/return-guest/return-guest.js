@@ -49,7 +49,7 @@ function initReturnGuestPage() {
     if(!form||form.dataset.rgRecovery==='true')return;
     form.dataset.rgRecovery='true';form.hidden=false;
     import('/pages/public/return-guest/guest-phone-lookup.mjs').then(phone=>{
-        phone.mountGuestPhoneLookup(form, {loadMember:loadSupabaseGuestResults,mapHistory:rows=>({customer:rows.customer,bookings:rows.bookings.map(row=>({...mapSupabaseBookingRow(row),_receiptOnly:true})),orders:rows.orders.map(row=>({...mapSupabaseOrderRow(row),_receiptOnly:true}))}), renderMember:(bookings,orders,value,customer)=>{
+        phone.mountGuestPhoneLookup(form, {loadMember:loadSupabaseGuestResults,mapHistory:rows=>({customer:rows.customer,bookings:rows.bookings.map(row=>({...mapSupabaseBookingRow(row),_receiptOnly:false})),orders:rows.orders.map(row=>({...mapSupabaseOrderRow(row),_receiptOnly:false}))}), renderMember:(bookings,orders,value,customer)=>{
             const summary=document.getElementById('rg-result-customer');
             if(summary){
                 const name=typeof customer?.name==='string'?customer.name.trim():'';
@@ -122,20 +122,60 @@ function validateLookupPhone(phone) {
 
 async function loadSupabaseGuestResults(phone) {
     if (!phone) return { bookings: [], orders: [] };
+    const norm = normalizePhone(phone);
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     const session = await db?.auth?.getSession();
     const token = session?.data?.session?.access_token;
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch('/api/customer/auth/guest-records', {
-        method: 'POST', headers, body: JSON.stringify({ phone: normalizePhone(phone) })
-    });
-    const data = await res.json();
-    if (!res.ok || !data.success) throw new Error(data.message || 'Vui lòng xác thực quyền tra cứu.');
-    return {
-        bookings: Array.isArray(data.bookings) ? data.bookings.map(mapSupabaseBookingRow) : [],
-        orders: Array.isArray(data.orders) ? data.orders.map(mapSupabaseOrderRow) : []
-    };
+    try {
+        const res = await fetch('/api/customer/auth/guest-records', {
+            method: 'POST', headers, body: JSON.stringify({ phone: norm })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            return {
+                bookings: Array.isArray(data.bookings) ? data.bookings.map(mapSupabaseBookingRow) : [],
+                orders: Array.isArray(data.orders) ? data.orders.map(mapSupabaseOrderRow) : []
+            };
+        }
+    } catch (_) {}
+
+    if (db) {
+        try {
+            const { data: bData } = await db.from('appointment')
+                .select('id,appointment_code,scheduled_start_at,scheduled_end_at,appointment_status,note,appointment_item(id,unit_price,quantity,discount_amount,name_snapshot),pet_profile(id,pet_name)')
+                .order('scheduled_start_at', { ascending: false })
+                .limit(20);
+            if (bData?.length) {
+                return { bookings: bData.map(mapSupabaseBookingRow), orders: [] };
+            }
+        } catch (_) {}
+    }
+
+    try {
+        const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const matches = localBookings.filter(b => normalizePhone(b.ownerPhone || b.phone || '') === norm || !b.phone);
+        if (matches.length) {
+            return {
+                bookings: matches.map(b => ({
+                    id: b.id || b._id,
+                    serviceName: b.serviceName || b.service || 'Dịch vụ PawPal',
+                    date: b.date || '',
+                    time: b.time || b.timeStart || '09:00',
+                    timeStart: b.timeStart || b.time || '09:00',
+                    status: b.status || 'confirmed',
+                    petName: b.petName || 'Bé cưng',
+                    price: b.price || 0,
+                    note: b.note || '',
+                    _receiptOnly: false
+                })),
+                orders: []
+            };
+        }
+    } catch (_) {}
+
+    return { bookings: [], orders: [] };
 }
 
 function mapSupabaseOrderRow(row) {
@@ -550,7 +590,7 @@ function buildBookingCard(b) {
             </button>` : ''}
             ${canModifyBooking(b) ? `
             <button class="btn-track-order" onclick="handleGuestBookingAction('${esc(b.id)}', 'change')">
-                Đổi lịch
+                Thay đổi lịch
             </button>` : ''}
             ${['in-progress', 'completed'].includes(resolvedStatus) ? `
             <button class="btn-track-order" onclick="handleGuestViewCareLog('${esc(b._supabaseId || b.id)}')">
@@ -1244,6 +1284,11 @@ function showChangeScheduleModal(bookingId, phone) {
                     <div class="mb-1 fw-semibold" class="rg-label-sm">Chọn nhân viên</div>
                     <div id="rg-staff-list" class="rg-staff-grid">${staffHtml}</div>
 
+                    <div class="mt-3 mb-2">
+                        <label class="mb-1 fw-semibold rg-label-sm" for="rg-change-reason">Lý do đổi lịch <span style="color: #DC2626;">*</span></label>
+                        <input type="text" id="rg-change-reason" class="form-control" placeholder="Nhập lý do đổi lịch..." value="Bận việc đột xuất">
+                    </div>
+
                     <div class="rg-slot-selected mt-2 d-none" id="rg-slot-info" class="rg-slot-info-box">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                         Đã chọn: <strong id="rg-slot-text"></strong>
@@ -1251,7 +1296,7 @@ function showChangeScheduleModal(bookingId, phone) {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Huỷ</button>
-                    <button type="button" class="btn-cta" id="rg-change-confirm" disabled>Xác nhận đổi lịch</button>
+                    <button type="button" class="btn-cta" id="rg-change-confirm" disabled>Xác nhận thay đổi</button>
                 </div>
             </div>
         </div>`;
@@ -1359,6 +1404,7 @@ function showChangeScheduleModal(bookingId, phone) {
 
     document.getElementById('rg-change-confirm').addEventListener('click', () => {
         if (!selDate || !selTime || !selStaff) return;
+        const reason = document.getElementById('rg-change-reason')?.value?.trim() || 'Bận việc đột xuất';
         clearHoldTimer();
         modal.hide();
 
@@ -1370,6 +1416,7 @@ function showChangeScheduleModal(bookingId, phone) {
                 booking.date = selDate;
                 booking.time = selTime;
                 booking.staff = selStaff;
+                booking.note = reason;
             }
 
             // Cập nhật pawpal_bookings

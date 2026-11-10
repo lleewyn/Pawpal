@@ -1,0 +1,33 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.setContent(fs.readFileSync('pages/admin/modules/staff/staff.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''));
+ await page.clock.install();
+ for(const file of ['pages/admin/admin.css','pages/admin/modules/staff/staff.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+ await page.evaluate(()=>{
+  const day=new Date(Date.now()+7*3600000+86400000).toISOString().slice(0,10);window.calendarDay=day;
+  window.PawpalStaff={state:{isLoaded:true,staff:[{rawId:'a',name:'Nguyễn Văn A'},{rawId:'b',name:'Nhân viên B'}],schedules:['a','b'].map(id=>({id:'shift-'+id,staff_id:id,start_at:day+'T08:00:00+07:00',end_at:day+'T18:00:00+07:00',schedule_status:'active',availability_status:'available'})),scheduleBookings:[{id:'booking',appointment_code:'BKG-TEST',appointment_status:'confirmed',staff_id:'a',scheduled_start_at:day+'T14:00:00+07:00',scheduled_end_at:day+'T15:30:00+07:00',pet:{pet_name:'Miu Miu'},items:[{name_snapshot:'Tắm spa',is_primary:true,status:'pending'}]}]},subtabs:{}};
+  document.querySelectorAll('.subtab-content').forEach(el=>el.style.display=el.id==='subtab-tab-staff-schedule'?'block':'none');
+  document.getElementById('subtab-tab-staff-schedule').classList.add('active');
+  window.holdUntil=Date.now()+900000;window.holdReads=0;
+  window.getSupabaseClient=()=>({rpc:async()=>{holdReads++;return {data:{server_now:new Date().toISOString(),holds:Date.now()<holdUntil?[{id:'held-slot',staff_id:'b',scheduled_start_at:day+'T16:00:00+07:00',scheduled_end_at:day+'T17:00:00+07:00',expires_at:new Date(holdUntil).toISOString()}]:[]}};}});
+ });
+ await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/staff/subtabs/tab-staff-schedule.js','utf8')});
+ await page.evaluate(()=>{const picker=document.getElementById('scheduleDatePicker');picker.value=calendarDay;picker.dispatchEvent(new Event('change'));});
+ const assigned=page.locator('#scheduleTableBody [data-staff-id="a"] [data-appointment-id="booking"]');
+ assert.equal(await assigned.count(),1);assert.match(await assigned.innerText(),/14:00 – 15:30/);assert.match(await assigned.innerText(),/Đã có lịch hẹn/);assert.match(await assigned.innerText(),/BKG-TEST/);
+ assert.equal(await page.locator('#scheduleTableBody [data-staff-id="b"] [data-appointment-id]').count(),0);
+ await page.waitForSelector('#scheduleTableBody [data-hold-id="held-slot"]');
+ assert.match(await page.locator('#scheduleTableBody [data-hold-id="held-slot"]').innerText(),/Đang giữ chỗ/);
+ await page.clock.fastForward(900001);
+ await page.waitForFunction(()=>!document.querySelector('#scheduleTableBody [data-hold-id="held-slot"]'));
+ assert.ok(await page.evaluate(()=>holdReads>1),'Admin polls holds without F5');
+ await page.locator('#scheduleTableBody').screenshot({path:'docs/verification/sync/admin-preferred-staff-day.png',animations:'disabled'});
+ await page.locator('#btnScheduleViewWeek').click();
+ assert.equal(await page.locator('#scheduleWeekViewWrapper [data-appointment-id="booking"]').count(),1);
+ assert.match(await page.locator('#scheduleWeekViewWrapper [data-appointment-id="booking"]').innerText(),/Nguyễn Văn A/);
+ await page.evaluate(()=>{PawpalStaff.state.scheduleBookings[0].staff_id='b';window.dispatchEvent(new CustomEvent('pawpal:staff-data-loaded'));});
+ assert.match(await page.locator('#scheduleWeekViewWrapper [data-appointment-id="booking"]').innerText(),/Nhân viên B/);
+ assert.deepEqual(errors,[]);console.log('PASS Admin day/week appointment overlay, exact 14:00–15:30 assigned staff and booking code, no assignment on other staff, refreshed reassignment. Isolated UI; no Cloud writes.');
+}finally{await browser.close();}})().catch(error=>{console.error(error.stack);process.exitCode=1;});

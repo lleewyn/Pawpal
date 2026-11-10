@@ -5,7 +5,7 @@
     let cachedTickets = [];
     const paged=()=>window.PAWPAL_SUPPORT_PAGING_ENABLED!==false;
     let pageInfo={page:1,total:0,counts:null,filter:'all'},pinnedTicket=null,ticketDetailVersion=0;
-    const mapTicket=t=>({id:t.id,rawId:t.id,ticketCode:t.ticket_code,title:t.subject,description:t.description,type:t.category,status:t.status,priority:['high','urgent'].includes(t.priority)?'Cao':'Trung bình',rating:t.rating,ratingComment:t.rating_comment,createdAt:t.created_at,resolution:t.resolution_note?{note:t.resolution_note}:null,context:{bookingId:t.appointment_id,orderId:t.order_id,serviceName:t.service_name,petName:t.pet_name},messages:t.messages||[],messageTotal:t.message_total??(t.messages||[]).length,messagePage:t.message_page||1});
+    const mapTicket=t=>({id:t.id,rawId:t.id,ticketCode:t.ticket_code,title:t.subject,description:t.description,type:t.category,status:t.status,priority:['high','urgent'].includes(t.priority)?'Cao':'Trung bình',rating:t.rating,ratingComment:t.rating_comment,createdAt:t.created_at,resolution:t.resolution_note?{note:t.resolution_note}:null,context:{bookingId:t.appointment_id,orderId:t.order_id,serviceName:t.service_name,petName:t.pet_name},messages:t.messages||[],messageTotal:t.message_total??(t.messages||[]).length,messagePage:t.message_page||1,replyDueAt:t.customer_reply_due_at,replyRequest:t.customer_reply_request});
     let ticketsChannel = null;
     let activeOwner = null, epoch = 0, ticketLoad = null, refreshTimer = null;
     let dirty = false, waitingForLoad = false;

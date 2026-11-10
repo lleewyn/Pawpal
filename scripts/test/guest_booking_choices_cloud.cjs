@@ -2,6 +2,7 @@ const fs=require('node:fs'),{connect}=require('../database/v1/service_import_con
 (async()=>{const db=await connect();try{
  await db.query("BEGIN;SET LOCAL statement_timeout='15s';SET LOCAL lock_timeout='3s'");
  await db.query(fs.readFileSync(require.resolve('../database/v1/210_guest_booking_choices.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
+ await db.query(fs.readFileSync(require.resolve('../database/v1/211_guest_activation_demo_date.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
  await db.query('SAVEPOINT fixtures');
  const source=fs.readFileSync(require.resolve('./customer_booking_availability.cjs'),'utf8');
  const fixture=source.split('const query=`')[1].split(' -- No shifts:')[0].replace(/^BEGIN;/,'')
@@ -35,6 +36,7 @@ const fs=require('node:fs'),{connect}=require('../database/v1/service_import_con
  IF NOT EXISTS(SELECT 1 FROM public.appointment WHERE id=aid AND customer_id=guest_owner AND pet_id=guest_pet AND staff_id=worker AND appointment_status='confirmed') THEN RAISE EXCEPTION 'guest assignment incorrect';END IF;
  IF EXISTS(SELECT 1 FROM public.payment WHERE appointment_id=aid) THEN RAISE EXCEPTION 'unexpected deposit';END IF;
  readback:=public.guest_booking_receipt(token,aid);
+ IF readback->>'created_at' IS NULL OR (readback->>'created_at')::timestamptz IS DISTINCT FROM (SELECT created_at FROM public.appointment WHERE id=aid) THEN RAISE EXCEPTION 'demo link creation date mismatch';END IF;
  IF readback->>'status'<>'confirmed' THEN RAISE EXCEPTION 'receipt status wrong';END IF;
  BEGIN PERFORM public.guest_booking_receipt(repeat('d',64),aid);RAISE EXCEPTION 'foreign receipt accepted';EXCEPTION WHEN insufficient_privilege THEN NULL;END;
  END;END $$;`);

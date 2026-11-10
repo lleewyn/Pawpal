@@ -436,7 +436,7 @@
 
             const isMember = Boolean(conv.customerId && conv.customerId !== 'guest');
             const memberBadge = isMember 
-                ? `<span class="conv-member-badge">${escapeHtml(conv.tier || 'Thành viên')}</span>` 
+                ? '<span class="admin-badge conv-member-badge badge-success">Thành viên</span>' 
                 : '';
 
             const handoverTag = `<span class="admin-badge badge-neutral" style="font-size: 10.5px; height: 20px; padding: 0 6px;">${conv.isHandover ? 'Nhân viên' : conv.status === 'waiting_agent' ? 'Chờ nhân viên' : 'Bot'}</span>`;
@@ -932,7 +932,22 @@
         const internalNoteInput = document.getElementById('chatInternalNoteInput');
 
         if (custNameEl) custNameEl.textContent = currentConversation.customerName || 'Khách hàng';
-        if (custTierEl) custTierEl.textContent = currentConversation.tier || '—';
+        if (custTierEl) {
+            const tierVal = currentConversation.tier;
+            if (tierVal && tierVal !== '—' && tierVal !== 'NONE' && tierVal !== 'null' && tierVal !== 'Vãng lai') {
+                custTierEl.style.display = 'inline-flex';
+                custTierEl.textContent = tierVal;
+                const tierCodeMap = { 'Đồng': 'badge-tier-bronze', 'Bạc': 'badge-tier-silver', 'Vàng': 'badge-tier-gold', 'Kim Cương': 'badge-tier-diamond', 'Kim cương': 'badge-tier-diamond' };
+                const tierClass = tierCodeMap[tierVal] || 'badge-neutral';
+                custTierEl.className = `admin-badge ${tierClass}`;
+            } else if (currentConversation.customerId && currentConversation.customerId !== 'guest') {
+                custTierEl.style.display = 'inline-flex';
+                custTierEl.textContent = 'Thành viên';
+                custTierEl.className = 'admin-badge badge-neutral';
+            } else {
+                custTierEl.style.display = 'none';
+            }
+        }
         if (custPhoneEl) custPhoneEl.textContent = currentConversation.phone || '—';
         if (custPointsEl) custPointsEl.textContent = currentConversation.contextError||currentConversation.pawpoints==null?'Chưa tải được điểm':`${currentConversation.pawpoints.toLocaleString('vi-VN')} điểm`;
 

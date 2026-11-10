@@ -10,7 +10,7 @@
 #subtab-tab-live-support .inbox-tab-btn {font:600 12px/1.5 Inter,'Segoe UI',sans-serif;background:none;border-radius:0;border:0;border-bottom:2px solid transparent;padding:7px;color:#778a7d;box-shadow:none}
 #subtab-tab-live-support .inbox-tab-btn.active {color:#276347;border-bottom-color:#276347;background:none}
 #subtab-tab-live-support .tab-badge-pill,
-#subtab-tab-live-support .admin-badge {background:transparent!important;border:0!important;border-radius:0!important;padding:0 2px;height:auto;min-height:0;font-size:11px;line-height:1.5}
+#subtab-tab-live-support .admin-badge:not(.conv-member-badge):not(#infoCustomerTier) {background:transparent!important;border:0!important;border-radius:0!important;padding:0 2px;height:auto;min-height:0;font-size:11px;line-height:1.5}
 #subtab-tab-live-support .conversation-item {border:0!important;border-bottom:1px solid #e6ebe6!important;border-radius:0;margin:0;padding:13px 12px;background:transparent!important;box-shadow:none}
 #subtab-tab-live-support .conversation-item.active {background:#EEF5F1!important}
 #subtab-tab-live-support .chat-header-single-row {min-height:62px;padding:12px 14px;border-bottom:1px solid #e5ece7;gap:10px}

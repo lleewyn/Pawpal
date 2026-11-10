@@ -114,6 +114,10 @@
         notice(result.testMode === true ? 'Mã thử nghiệm đã sẵn sàng, có hiệu lực trong 5 phút.' : 'Đã gửi mã xác thực. Mã có hiệu lực trong 5 phút.');
     }
     async function finish(passwordValue, name) {
+        if(new URLSearchParams(location.search).get('demo_activation')==='1'){
+            const {expiredDemoActivation}=await import('/scripts/shared/guest-activation-demo.mjs');
+            if(expiredDemoActivation(location.search)){clearChallenge();show('setupExpiredSection');throw new Error('Link giả lập đã hết hạn 48 giờ.');}
+        }
         if (!challenge) throw new Error('Vui lòng yêu cầu mã xác thực mới.');
         if (!validPassword(passwordValue)) throw new Error('Mật khẩu cần ít nhất 8 ký tự, một chữ số và một ký tự đặc biệt.');
         const result = await auth().request('otp/complete', { challengeId: challenge.id, code: challenge.code, password: passwordValue, name, ...(challenge.linkGuest ? { linkGuest: true } : {}) });
@@ -123,16 +127,20 @@
         notice('Xác thực và lưu mật khẩu thành công.');
         window.location.href = consumeLoginTarget(sessionStorage, location.origin, new URLSearchParams(location.search).get('redirect'));
     }
-    async function checkLoggedIn() {
+    async function checkLoggedIn(version) {
         try {
-            const u = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-            if (u && !u.is_temporary && !u.system_role && u.role !== 'admin' && u.role !== 'staff') {
+            let u = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            if (!u?.is_temporary && !u?.system_role && (!u?.role || u.role === 'customer')) {
                 const {verifyCustomerSession}=await import('/scripts/shared/customer-session.mjs');
-                const verified=await verifyCustomerSession(window.getSupabaseClient?.() || window.SupabaseClient);
-                if(!verified)return false;
-                if(u.auth_user_id!==verified.id){
-                    const profile=await (window.getSupabaseClient?.() || window.SupabaseClient).rpc('customer_profile_snapshot');
-                    if(profile.error||profile.data?.id!==u.id)return false;
+                const client = window.getSupabaseClient?.() || window.SupabaseClient;
+                const verified=await verifyCustomerSession(client);
+                if(!verified || version!==routeVersion)return false;
+                if(u?.auth_user_id!==verified.id){
+                    const {user}=await auth().request('me', {}, true);
+                    if(version!==routeVersion || user?.auth_user_id!==verified.id || !user.id)return false;
+                    u=user;
+                    localStorage.setItem('pawpal_current_user',JSON.stringify(u));
+                    sessionStorage.setItem('pawpal_current_user',JSON.stringify(u));
                 }
                 const params = new URLSearchParams(window.location.search);
                 const targetPhone = params.get('phone');
@@ -163,10 +171,18 @@
     async function route() {
         const version = ++routeVersion;
         clearChallenge();
-        if (await checkLoggedIn()) return;
+        if (await checkLoggedIn(version)) return;
         if(version!==routeVersion)return;
         const params = new URLSearchParams(window.location.search);
         const action = params.get('action') || window.location.hash.slice(1);
+        if(action==='guest-activate'&&params.get('demo_activation')==='1'){
+            const {expiredDemoActivation}=await import('/scripts/shared/guest-activation-demo.mjs');
+            if(version!==routeVersion)return;
+            if(expiredDemoActivation(window.location.search)){
+                show('setupExpiredSection');return;
+            }
+            notice('Link thiết lập mật khẩu giả lập có hiệu lực 48 giờ. Không gửi SMS thật.');
+        }
         if (action === 'register') {
             show('registerForm');
             if (params.get('phone')) byId('registerPhone').value = params.get('phone');

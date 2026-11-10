@@ -170,9 +170,9 @@
 .admin-modal-standard .admin-form-help { color: var(--text-muted); margin: 6px 0 0; font-size: 12px; }
 .admin-modal-standard .admin-form-notice { margin: 0; border: 0; background: transparent; color: var(--text-muted); }
 .admin-modal-standard .admin-form-notice.is-error { color: #ba4745; }
-.admin-modal-standard .admin-modal__table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.admin-modal-standard .admin-modal__table th { padding: 10px 11px; font-size: 11px; font-weight: 650; color: #536a59; background: #f1f4f1; }
-.admin-modal-standard .admin-modal__table td { padding: 10px 11px; border-bottom: 1px solid #e9eee9; }
+.admin-modal-standard .admin-modal__table { width: 100%; border-collapse: collapse; font-size: 12px; background-color: transparent; }
+.admin-modal-standard .admin-modal__table th { padding: 10px 11px; font-size: 11px; font-weight: 650; color: #536a59; background: #f1f4f1; border-bottom: 1px solid #dae2db; text-transform: none; white-space: nowrap; vertical-align: middle; }
+.admin-modal-standard .admin-modal__table td { padding: 10px 11px; font-size: 12px; line-height: 1.35; color: #203a2c; border-bottom: 1px solid #e9eee9; vertical-align: middle; background-color: transparent; }
 @media(max-width:600px){.admin-modal-standard .admin-modal-card{padding:24px 20px}.admin-modal-standard .form-row-2col{grid-template-columns:1fr}}
 
 .admin-modal-standard .admin-modal__fieldset { border: 0; padding: 0; min-width: 0; }
@@ -336,3 +336,123 @@
 @media(max-width:900px) { .staff-copilot-layout { grid-template-columns:minmax(0,1fr); gap:14px; } .staff-copilot-side .admin-card { max-height:220px; overflow:auto; overscroll-behavior:contain; } .staff-copilot-layout .admin-card { padding:18px; } .staff-copilot-messages { max-height:45vh; } }
 @media(max-width:640px) { html[data-admin-role="STAFF"] .admin-header { flex-wrap:wrap; height:auto; min-height:84px; padding:8px 12px; gap:8px; } html[data-admin-role="STAFF"] .admin-header-left { flex:1 0 100%; overflow:visible; } html[data-admin-role="STAFF"] .btn-mobile-menu-toggle { flex-shrink:0; } html[data-admin-role="STAFF"] .header-subtabs-group { min-width:0; flex-shrink:1; overflow-x:auto; scrollbar-width:none; } html[data-admin-role="STAFF"] .admin-header-right { width:100%; justify-content:flex-end; } }
 @media (max-width: 640px) { .staff-workspace .admin-card { padding: 16px; } .staff-workspace .workspace-toolbar { align-items: stretch; } .staff-workspace .workspace-toolbar .admin-card-title { width: 100%; } .staff-workspace .workspace-facts { grid-template-columns: 1fr; gap: 4px; } .staff-workspace .workspace-facts dd { margin-bottom: 12px; } }
+
+/* Chuẩn hóa nút thao tác 3 chấm trong bảng dữ liệu toàn hệ thống Admin (Rule 2 AGENTS.md) */
+.admin-table .btn-action-trigger,
+.admin-table .btn-action-more,
+.admin-table .btn-booking-action-more,
+.admin-table .btn-dots-action,
+.admin-table .btn-voucher-dots,
+.admin-table .rules-action-menu-btn,
+.customers-module #customerDataTable .btn-action-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    max-width: 32px;
+    max-height: 32px;
+    padding: 0;
+    margin: 0 auto;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--admin-radius, 9px);
+    color: var(--text-muted, #4F7A65);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 1px;
+    text-decoration: none !important;
+    cursor: pointer;
+    outline: none;
+    box-shadow: none;
+    transition: none !important;
+}
+
+.admin-table .btn-action-trigger:hover,
+.admin-table .btn-action-more:hover,
+.admin-table .btn-booking-action-more:hover,
+.admin-table .btn-dots-action:hover,
+.admin-table .btn-voucher-dots:hover,
+.admin-table .rules-action-menu-btn:hover,
+.customers-module #customerDataTable .btn-action-more:hover,
+.admin-table .btn-action-trigger:focus-visible,
+.admin-table .btn-action-more:focus-visible,
+.admin-table .btn-booking-action-more:focus-visible,
+.admin-table .btn-dots-action:focus-visible,
+.admin-table .btn-voucher-dots:focus-visible,
+.admin-table .rules-action-menu-btn:focus-visible,
+.customers-module #customerDataTable .btn-action-more:focus-visible,
+.admin-table .btn-action-trigger.active,
+.admin-table .btn-action-more.active,
+.customers-module #customerDataTable .btn-action-more.active {
+    background-color: #EEF5F1;
+    border-color: var(--border-neutral, #ECF2EE);
+    color: #236B48;
+}
+
+/* ==========================================================================
+   CHUẨN HÓA BẢNG DỮ LIỆU TRONG TẤT CẢ MODAL, DRAWER VÀ MATRIX TOÀN HỆ THỐNG
+   (Rule 1, Rule 4, Rule 8 & Tiêu chuẩn bảng dữ liệu thống nhất AGENTS.md)
+   ========================================================================== */
+:is(.admin-modal-overlay, .modal-overlay, .admin-modal-backdrop, .modal-backdrop, .admin-modal-card, .modal-card, .admin-modal, .admin-modal-standard, .profile-drawer-container, .admin-drawer) :is(table, .admin-table, .admin-modal__table, .price-matrix-table, .weight-mini-table, .variant-matrix-table, .order-items-table, .pos-cart-table, .rma-items-table),
+.price-matrix-table,
+.weight-mini-table,
+.variant-matrix-table,
+.order-items-table,
+.pos-cart-table,
+.rma-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background-color: transparent;
+}
+
+:is(.admin-modal-overlay, .modal-overlay, .admin-modal-backdrop, .modal-backdrop, .admin-modal-card, .modal-card, .admin-modal, .admin-modal-standard, .profile-drawer-container, .admin-drawer) :is(table, .admin-table, .admin-modal__table, .price-matrix-table, .weight-mini-table, .variant-matrix-table, .order-items-table, .pos-cart-table, .rma-items-table) :is(thead th, th),
+.price-matrix-table :is(thead th, th),
+.weight-mini-table :is(thead th, th),
+.variant-matrix-table :is(thead th, th),
+.order-items-table :is(thead th, th),
+.pos-cart-table :is(thead th, th),
+.rma-items-table :is(thead th, th) {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 10px 11px;
+    font-size: 11px !important;
+    font-weight: 650 !important;
+    color: #536a59 !important;
+    background-color: #f1f4f1 !important;
+    border-bottom: 1px solid #dae2db !important;
+    text-transform: none !important;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+:is(.admin-modal-overlay, .modal-overlay, .admin-modal-backdrop, .modal-backdrop, .admin-modal-card, .modal-card, .admin-modal, .admin-modal-standard, .profile-drawer-container, .admin-drawer) :is(table, .admin-table, .admin-modal__table, .price-matrix-table, .weight-mini-table, .variant-matrix-table, .order-items-table, .pos-cart-table, .rma-items-table) :is(tbody td, td),
+.price-matrix-table :is(tbody td, td),
+.weight-mini-table :is(tbody td, td),
+.variant-matrix-table :is(tbody td, td),
+.order-items-table :is(tbody td, td),
+.pos-cart-table :is(tbody td, td),
+.rma-items-table :is(tbody td, td) {
+    padding: 10px 11px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: #203a2c;
+    border-bottom: 1px solid #e9eee9;
+    vertical-align: middle;
+    background-color: transparent;
+}
+
+:is(.admin-modal-overlay, .modal-overlay, .admin-modal-backdrop, .modal-backdrop, .admin-modal-card, .modal-card, .admin-modal, .admin-modal-standard, .profile-drawer-container, .admin-drawer) :is(table, .admin-table, .admin-modal__table, .price-matrix-table, .weight-mini-table, .variant-matrix-table, .order-items-table, .pos-cart-table, .rma-items-table) tbody tr:hover,
+.price-matrix-table tbody tr:hover,
+.weight-mini-table tbody tr:hover,
+.variant-matrix-table tbody tr:hover,
+.order-items-table tbody tr:hover,
+.pos-cart-table tbody tr:hover,
+.rma-items-table tbody tr:hover {
+    background-color: #f8faf8;
+}

@@ -30,3 +30,4 @@ REVOKE ALL ON FUNCTION public.own_service_booking_execution(uuid) FROM PUBLIC,an
 GRANT EXECUTE ON FUNCTION public.own_service_booking_execution(uuid) TO authenticated;
 NOTIFY pgrst,'reload schema';
 COMMIT;
+

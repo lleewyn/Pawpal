@@ -12,7 +12,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
    if(url.pathname==='/')return route.fulfill({contentType:'text/html',body:'<!doctype html><meta charset="utf-8"><div id="receipt"></div>'});
    if(url.pathname==='/login')return route.fulfill({contentType:'text/html; charset=utf-8',body:authHtml});
    if(url.pathname==='/user')return route.fulfill({contentType:'text/html',body:'<h1>Lịch hẹn của bé</h1>'});
-   if(url.pathname==='/scripts/shared/guest-commerce-client.mjs')return route.fulfill({contentType:'text/javascript',body:`export class GuestCommerceError extends Error{};export const guestCommerce={request:async(action)=>action==='context'?{initialized:true,contact:{phone:'0987654321'}}:{booking:{id:'11111111-1111-4111-8111-111111111111',code:'BKG-11111111111141118111111111111111',status:'pending',total:100000,start_at:'2031-01-01T03:00:00Z',end_at:'2031-01-01T04:00:00Z'},recoveryCode:'r1.booking.11111111-1111-4111-8111-111111111111.1800000000.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}};`});
+   if(url.pathname==='/scripts/shared/guest-commerce-client.mjs')return route.fulfill({contentType:'text/javascript',body:`export class GuestCommerceError extends Error{};export const guestCommerce={request:async(action)=>action==='context'?{initialized:true,contact:{phone:'0987654321'}}:{booking:{id:'11111111-1111-4111-8111-111111111111',code:'BKG-11111111111141118111111111111111',status:'pending',created_at:new Date().toISOString(),total:100000,start_at:'2031-01-01T03:00:00Z',end_at:'2031-01-01T04:00:00Z'},recoveryCode:'r1.booking.11111111-1111-4111-8111-111111111111.1800000000.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}};`});
    const file=path.join(process.cwd(),decodeURIComponent(url.pathname));
    if(!fs.existsSync(file)||!fs.statSync(file).isFile())return route.fulfill({status:404,body:''});
    let body=fs.readFileSync(file);
@@ -22,7 +22,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   await page.goto('http://localhost/');
   await page.evaluate(async()=>{const m=await import('/pages/services/booking/booking.js');m.state.guest=true;await m.renderBookingReceipt(document.getElementById('receipt'),'11111111-1111-4111-8111-111111111111');});
   await page.addStyleTag({content:fs.readFileSync('pages/services/booking/booking.css','utf8')+fs.readFileSync('styles/transaction-receipt.css','utf8')+'body{margin:0;padding:36px 18px;background:#fcfdfb}'});
-  const recovery=page.locator('.receipt-recovery');
+  const recovery=page.locator('details.receipt-recovery');
   assert.equal(await recovery.getAttribute('open'),null);
   for(const width of [1280,390]){
    await page.setViewportSize({width,height:1000});
@@ -38,6 +38,9 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   assert.match(await page.locator('.receipt-activate').innerText(),/50 Paw Points/);
   assert.match(await page.locator('.receipt-summary').innerText(),/Đặt cọc\s+0 VNĐ/);
   assert.ok((await link.getAttribute('href')).includes('guest-activate'));
+  assert.ok((await link.getAttribute('href')).includes('demo_activation=1'));
+  assert.match(await page.locator('.receipt-activation-demo').innerText(),/48 giờ/);
+  assert.match(await page.locator('.receipt-activation-demo').innerText(),/Không gửi SMS thật/);
   await link.click();
   await page.addStyleTag({content:fs.readFileSync('node_modules/bootstrap/dist/css/bootstrap.min.css','utf8')});
   // Keep the real auth card while excluding unrelated shared navigation scripts from this isolated harness.
@@ -109,6 +112,11 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   await page.locator('#registerConfirmPassword').fill('Password@123');
   assert.equal(await page.locator('#registerConfirmFeedback').isHidden(),true);
   assert.equal(await page.locator('#btnRegisterSubmit').isEnabled(),true);
+  await page.goto('http://localhost/login?action=guest-activate&demo_activation=1&expires='+String(Date.now()-1000));
+  await page.addStyleTag({content:fs.readFileSync('node_modules/bootstrap/dist/css/bootstrap.min.css','utf8')});
+  await page.addScriptTag({url:'/pages/public/login/login.js'});
+  await page.locator('#setupExpiredSection').waitFor({state:'visible'});
+  assert.equal(await page.locator('#setupPasswordSection').isHidden(),true);
   assert.deepEqual(errors,[]);
   console.log('PASS receipt CTA -> session phone -> activation OTP -> matching password and terms -> cookie-bound completion -> bookings; desktop/mobile fit. Isolated transport, no live SMS.');
  }finally{await browser.close();}

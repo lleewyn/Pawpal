@@ -68,7 +68,7 @@
   show('complaintDetailPlaceholder',!t || !mod.state.isLoaded || Boolean(mod.state.loadError));
   if(!t || mod.state.loadError) {text('complaintDetailPlaceholder',mod.state.loadError || 'Chọn một khiếu nại để xem hồ sơ.');mod.updateBreadcrumb(null);return;}
   mod.state.currentTicketId=t.id; mod.state.currentActiveTicket=t;
-  if(!replySaving)await ensureReplyMedia(t);
+  if(!replySaving&&!finished(t))ensureReplyMedia(t).catch(()=>{if(version===renderVersion)text('complaintReplyMedia','Không mở được công cụ đính kèm ảnh.');});
   if(version!==renderVersion)return;
   $('complaintReplyMedia').inert=finished(t)||replySaving;
   sessionStorage.setItem('pawpal_admin_complaint_selected_id',t.id); mod.updateBreadcrumb(t.id);
@@ -97,9 +97,12 @@
   if (priorityBadgeEl) priorityBadgeEl.className = `admin-badge priority-chip ${priorityBadgeClass[t.priority] || 'priority-medium'}`;
   text('viewTicketCustomerName',t.customerName);text('viewTicketCustomerPhone',t.phone);
   text('viewTicketCustomerContent',t.content);text('detailComplaintCreatedTime',t.createdAt);
-  text('viewTicketRefInfo',t.bookingId || t.orderId || 'Chưa liên kết giao dịch');
+  text('viewTicketRefInfo',t.bookingId || t.orderId || 'Chưa xác minh giao dịch');
+  const waiting=t.status==='waiting_customer' && Boolean(t.customerReplyDueAt);
+  show('complaintReplyDueLabel',waiting);show('complaintReplyDue',waiting);
+  if(waiting)text('complaintReplyDue',mod.formatDateTime(t.customerReplyDueAt)+(Date.now()>=Date.parse(t.customerReplyDueAt)?' · Đã hết hạn':''));
   show('btnOpenComplaintSource',Boolean(t.bookingId || t.orderId));
-  text('viewTicketStaffAssigned',t.staffAssigned);text('viewTicketPetNotes',t.petNotes || '—');
+  text('viewTicketStaffAssigned',t.staffAssigned);text('complaintPerformedBy',t.staffExecuted);show('complaintPerformedBy',Boolean(t.bookingId));show('complaintPerformedByLabel',Boolean(t.bookingId));text('viewTicketPetNotes',[t.petName,t.petNotes].filter(Boolean).join(' · ') || '—');
   text('viewTicketDemand',(t.customerDemand || 'Chưa ghi nhận yêu cầu')+(Number(t.requested_amount)>0?' · '+Number(t.requested_amount).toLocaleString('vi-VN')+' đ':''));
   text('viewResolutionNote',t.resolution_note || 'Chưa có phương án');
   text('viewResolutionBadge',optionNames[t.resolution_type] || t.resolution_type || '—');
@@ -109,6 +112,14 @@
   ['btnAssignHandler','btnRequestMoreInfo','btnOpenResolveModal','btnSubmitReply'].forEach(id=>{if($(id))$(id).disabled=finished(t);});
   show('btnCompleteComplaint',t.status==='processing' && Boolean(t.resolved_by) && Boolean(t.resolution_type));
   show('btnLinkComplaintSource',!finished(t) && !t.bookingId && !t.orderId);
+  text('complaintAttachments','Đang tải tệp đính kèm…');
+  loadAttachments(t,version);
+  renderEvidence(t,version).catch(()=>{
+   if(version!==renderVersion)return;
+   text('viewTicketCheckinHealth','Không tải được biên bản.');
+   text('viewTicketStaffLogNote','Không tải được nhật ký.');
+   text('complaintOrderLines','Không tải được sản phẩm trong đơn.');
+  });
   text('viewTicketTimeline','Đang tải lịch sử…');text('complaintActionError','');
   try {
    const messages=await readDetailResource(t,'messages',async()=>{
@@ -122,8 +133,18 @@
    if(version!==renderVersion)return;
    $('viewTicketTimeline').innerHTML=messages.map(m=>{
     const author=mod.state.cachedStaff.find(s=>s.auth_user_id===m.sender_account_id)?.full_name || (['staff','cskh','nhan_vien'].includes(m.sender_type)?'Nhân viên':m.sender_type==='system'?'Hệ thống':['user','customer','khach_hang'].includes(m.sender_type)?t.customerName:'Người gửi');
-    return `<article class="complaint-history-entry"><strong>${escapeHtml(author)}</strong> <span>${escapeHtml(mod.formatDateTime(m.created_at))} · ${m.is_internal?'Nội bộ':'Trao đổi'}</span><p>${escapeHtml(m.content)}</p></article>`;
+    return `<article class="complaint-history-entry"><strong>${escapeHtml(author)}</strong> <span>${escapeHtml(mod.formatDateTime(m.created_at))} · ${m.is_internal?'Nội bộ':'Trao đổi'}</span>${m.id===t.customerFollowupMessageId?' <strong class="admin-badge badge-info">Phản hồi mới</strong>':''}<p>${escapeHtml(m.content)}</p></article>`;
    }).join('') || 'Chưa có lịch sử trao đổi.';
+   const audit={data:await readDetailResource(t,'audit',()=>readAll(()=>client().from('audit_log').select('id,description,created_at').eq('entity_id',t.rawId).eq('action','COMPLAINT_ACTION').order('created_at',{ascending:false}).order('id',{ascending:false})))};
+   if(version!==renderVersion)return;
+   const events=(audit.data || []).flatMap(a=>{try{return [JSON.parse(a.description)];}catch{return [];}});
+   const proposal=events.find(e=>e.action==='propose');
+   text('viewProposedAmount',proposal?Number(proposal.details.amount || 0).toLocaleString('vi-VN')+' đ':'Chưa có đề xuất có thể duyệt');
+   text('complaintLinkedResults',audit.error?'Không tải được kết quả liên kết.':audit.data.flatMap(a=>{try{const d=JSON.parse(a.description);return d.action==='complete'?[`${mod.formatDateTime(a.created_at)} · ${d.details.evidence_id}${d.details.replacement_order_id?' · Đơn đổi mới: '+d.details.replacement_order_id:''}${d.details.return_request_id?' · Hàng trả: '+d.details.return_request_id:''}`]:[];}catch{return [];}}).join('\n') || 'Chưa liên kết kết quả thực hiện.');
+  } catch(error) {if(version===renderVersion)text('viewTicketTimeline','Không tải được lịch sử: '+error.message);}
+ }
+ async function loadAttachments(t,version) {
+  try {
    const {data:attachments,error:attachmentError}=await client().rpc('list_ticket_media',{p_ticket:t.rawId});
    if(attachmentError)throw attachmentError;
    if(version!==renderVersion)return;
@@ -131,16 +152,25 @@
    if(version!==renderVersion)return;
    gallery=createEvidenceGallery({root:$('complaintAttachments'),db:client()});await gallery.render(attachments||[]);
    if(version!==renderVersion)return;
-   const audit={data:await readDetailResource(t,'audit',()=>readAll(()=>client().from('audit_log').select('id,description,created_at').eq('entity_id',t.rawId).eq('action','COMPLAINT_ACTION').order('created_at',{ascending:false}).order('id',{ascending:false})))};
-   if(version!==renderVersion)return;
-   const events=(audit.data || []).flatMap(a=>{try{return [JSON.parse(a.description)];}catch{return [];}});
-   const proposal=events.find(e=>e.action==='propose');
-   text('viewProposedAmount',proposal?Number(proposal.details.amount || 0).toLocaleString('vi-VN')+' đ':'Chưa có đề xuất có thể duyệt');
-   text('complaintLinkedResults',audit.error?'Không tải được kết quả liên kết.':audit.data.flatMap(a=>{try{const d=JSON.parse(a.description);return d.action==='complete'?[`${mod.formatDateTime(a.created_at)} · ${d.details.evidence_id}${d.details.replacement_order_id?' · Đơn đổi mới: '+d.details.replacement_order_id:''}${d.details.return_request_id?' · Hàng trả: '+d.details.return_request_id:''}`]:[];}catch{return [];}}).join('\n') || 'Chưa liên kết kết quả thực hiện.');
-   await renderEvidence(t,version);
-  } catch(error) {if(version===renderVersion)text('viewTicketTimeline','Không tải được lịch sử: '+error.message);}
+  } catch {
+   if(version===renderVersion)text('complaintAttachments','Không tải được tệp đính kèm. Vui lòng tải lại phiếu.');
+  }
  }
  async function renderEvidence(t,version) {
+  show('complaintOrderEvidence',Boolean(t.orderId));
+  show('complaintServiceEvidence',Boolean(t.bookingId));
+  show('viewTicketPetNotes',Boolean(t.bookingId));
+  if(t.orderId){
+   const order=mod.state.cachedOrders.find(row=>row.order_code===t.orderId || row.id===t.orderId);
+   text('complaintOrderDelivery',[t.deliveryStatus,t.trackingCode].filter(Boolean).join(' · '));
+   text('complaintOrderLines','Đang tải sản phẩm…');
+   if(!order){text('complaintOrderLines','Không tìm thấy đơn hàng.');return;}
+   const lines=await readDetailResource(t,'order-lines',()=>readAll(()=>client().from('sales_order_detail').select('product_name_snapshot,sku_snapshot,quantity').eq('order_id',order.id).order('id')));
+   if(version===renderVersion)text('complaintOrderLines',lines.map(line=>[line.product_name_snapshot,line.sku_snapshot,'Số lượng '+line.quantity].filter(Boolean).join(' · ')).join('\n') || 'Chưa có sản phẩm trong đơn.');
+   return;
+  }
+  text('viewTicketCheckinHealth','Đang tải biên bản…');
+  text('viewTicketStaffLogNote','Đang tải nhật ký…');
   const appt=mod.state.cachedAppointments.find(a=>a.appointment_code===t.bookingId || a.id===t.bookingId);
   if(!appt){text('viewTicketCheckinHealth','Chưa liên kết lịch hẹn.');text('viewTicketStaffLogNote','—');return;}
   const [records,logs]=await readDetailResource(t,'evidence',()=>Promise.all([
@@ -161,7 +191,7 @@
    input.oninput=render;input.onfocus=render;input.onblur=()=>setTimeout(()=>dropdown.style.display='none',150);
   } catch(error){text('assignHandlerError',mod.errorMessage(error));}finally{input.disabled=false;}
  }
- function openRequestMoreInfoModal(){if(captureModal('requestMoreInfoModalOverlay')){$('inputRequestMessage').value='';text('requestMoreInfoModalOverlayError','');}}
+ function openRequestMoreInfoModal(){if(captureModal('requestMoreInfoModalOverlay')){$('inputRequestMessage').value='';$('selectRequestChannel').value='portal';text('requestMoreInfoModalOverlayError','');}}
  function resolutionVisibility(){
   const option=$('selectResolveOption').value;
   show('complaintAmountGroup',['refund','rma_refund'].includes(option));
@@ -243,7 +273,11 @@
    text('assignHandlerError','');if(!staff || note.length<2){text('assignHandlerError','Chọn nhân viên và nhập lý do.');return;}if(button.disabled)return;button.disabled=true;
    try{const {error}=await client().rpc('assign_admin_complaint',{p_request_id:modal.dataset.requestId,p_ticket_id:modal.dataset.ticketId,p_expected_updated_at:modal.dataset.version,p_staff_id:staff,p_note:note});if(error)throw error;await mod.loadComplaintsModuleData({force:true});modal.classList.remove('active');mod.showToast('Đã phân công xử lý.','success');}catch(error){text('assignHandlerError',mod.errorMessage(error));}finally{button.disabled=false;}
   });
-  bind('btnSendRequestInfo',()=>act('request_info',{note:$('inputRequestMessage').value.trim(),channel:$('selectRequestChannel').value},$('btnSendRequestInfo'),$('requestMoreInfoModalOverlay')));
+  bind('btnSendRequestInfo',()=>{
+   const note=$('inputRequestMessage').value.trim();
+   if(note.length<2){text('requestMoreInfoModalOverlayError','Nhập cụ thể thông tin hoặc hình ảnh khách cần bổ sung.');return;}
+   return act('request_info',{note,channel:$('selectRequestChannel').value},$('btnSendRequestInfo'),$('requestMoreInfoModalOverlay'));
+  });
   bind('btnSubmitReply',async()=>{
    const t=current(),button=$('btnSubmitReply');if(!t||button.disabled||replySaving)return;
    const note=$('replyContentInput').value.trim();if(note.length<2){text('complaintActionError','Nhập nội dung trao đổi trước khi lưu.');return;}

@@ -51,6 +51,15 @@
             return;
         }
         if (card) card.style.display = '';
+        let requestPanel=card?.querySelector('#adminStaffRequestPanel');
+        if(!requestPanel&&card){requestPanel=document.createElement('section');requestPanel.id='adminStaffRequestPanel';requestPanel.style.cssText='padding:16px 0;border:none;background:transparent';card.prepend(requestPanel);}
+        if(requestPanel){
+            requestPanel.dataset.bookingId=booking.dbId;
+            import('/pages/admin/modules/services/booking-staff-request.mjs').then(({mountAdminStaffRequest})=>{
+                if(!requestPanel.isConnected||requestPanel.dataset.bookingId!==booking.dbId)return;
+                mountAdminStaffRequest(requestPanel,booking,{client:window.getSupabaseClient(),staff:PawpalServices.state.liveStaffList||[],enhance:()=>PawpalServices.enhanceEntitySelects(),canWrite:window.PawpalAdminAccess?.state.user?.permissions?.includes('appointment.write'),errorMessage:PawpalServices.errorMessage,onSaved:async()=>{await PawpalServices.loadServicesData({force:true,forceDirectory:false,forceStaff:false,prefetch:false});await PawpalServices.ensureBooking(booking.dbId,{force:true});renderBookingDetail(booking.id);}});
+            }).catch(()=>{requestPanel.textContent='Không tải được phần xác nhận nhân viên. Vui lòng thử lại.';});
+        }
         if (state) state.style.display = 'none';
         PawpalServices.updateBreadcrumb?.(booking.id);
 
@@ -219,7 +228,7 @@
         const customerNote = document.getElementById('detailBookingCustomerNote');
 
         if (statusText) statusText.innerHTML = getStatusBadge(booking.status);
-        if (staffText) staffText.textContent = booking.staff || 'Chưa phân công';
+        if (staffText) staffText.textContent = booking.staff || (booking.requestedStaffName?'Yêu cầu: '+booking.requestedStaffName:'Chưa phân công');
         if (serviceText) serviceText.textContent = booking.serviceName;
         if (durationText) durationText.textContent = booking.duration;
         if (categoryText) categoryText.textContent = booking.categoryName;

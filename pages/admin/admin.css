@@ -881,6 +881,11 @@ textarea.admin-input,
     color: #1C4A65;
 }
 
+.badge-tier-bronze {
+    background-color: #E2ECE5;
+    color: #2D483B;
+}
+
 /* Trạng thái trung tính / Mặc định / Bản nháp */
 .badge-neutral {
     background-color: #E2ECE5;

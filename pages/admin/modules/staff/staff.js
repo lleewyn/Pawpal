@@ -293,6 +293,12 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
         return readStaffResource('schedules:range:' + start + ':' + end, () => readRows(() => client().from('staff_schedule')
             .select(scheduleColumns).lt('start_at', end).gt('end_at', start).order('start_at').order('id')), options);
     }
+    function readScheduleBookings(start,end){
+        return readStaffResource('schedules:bookings:'+start+':'+end,()=>readRows(()=>client().from('appointment')
+            .select('id,appointment_code,appointment_status,staff_id,requested_staff_id,staff_confirmation_status,scheduled_start_at,scheduled_end_at,pet:pet_id(pet_name),items:appointment_item(name_snapshot,is_primary,status)')
+            .or('staff_id.not.is.null,requested_staff_id.not.is.null').not('appointment_status','in','(cancelled,no_show,expired,da_huy,vang_mat)')
+            .lt('scheduled_start_at',end).gt('scheduled_end_at',start).order('scheduled_start_at').order('id')));
+    }
     async function fetchSchedulesRaw(options) {
         return readStaffResource('schedules:summary', async () => {
             const { data, error } = await client().rpc('admin_staff_schedule_summary');
@@ -306,13 +312,15 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
         if (previous?.promise) return previous.promise;
         if (previous?.loadedAt && Date.now() - previous.loadedAt < 30000) return;
         const version = staffLoadSequence;
-        const promise = readScheduleRange(start, end).then(rows => {
+        const promise = Promise.all([readScheduleRange(start,end),readScheduleBookings(start,end)]).then(([rows,bookings]) => {
             if (version !== staffLoadSequence) {
                 if (scheduleRangeReads.get(key)?.promise === promise) scheduleRangeReads.delete(key);
                 return;
             }
             const retained = (PawpalStaff.state.schedules || []).filter(row => !(Date.parse(row.start_at) < Date.parse(end) && Date.parse(row.end_at) > Date.parse(start)));
             PawpalStaff.state.schedules = [...new Map([...retained, ...rows].map(row => [row.id, row])).values()];
+            const remaining=(PawpalStaff.state.scheduleBookings||[]).filter(row=>!(Date.parse(row.scheduled_start_at)<Date.parse(end)&&Date.parse(row.scheduled_end_at)>Date.parse(start)));
+            PawpalStaff.state.scheduleBookings=[...new Map([...remaining,...bookings.map(row=>({...row,staff_id:row.staff_id||row.requested_staff_id,awaitingStaff:['pending','awaiting_customer'].includes(row.staff_confirmation_status)}))].map(row=>[row.id,row])).values()];
             scheduleRangeReads.set(key, { loadedAt: Date.now() });
         }).catch(error => { scheduleRangeReads.delete(key); throw error; });
         scheduleRangeReads.set(key, { promise });
@@ -768,6 +776,8 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
             _staffRealtimeChannel = client.channel('admin-staff-live-sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff' }, () => triggerStaffSync('staff:list*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_schedule' }, () => triggerStaffSync('staff:schedules*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, () => triggerStaffSync('staff:schedules*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment_item' }, () => triggerStaffSync('staff:schedules*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_shift_request' }, () => triggerStaffSync('staff:shift_requests*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_assessment' }, () => triggerStaffSync('staff:assessments*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_role' }, () => triggerStaffSync('staff:list*'))

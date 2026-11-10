@@ -18,23 +18,62 @@ function bookingMoveError(error) {
     return new Error(messages[error?.message] || 'Không thể đổi lịch. Vui lòng tải lại hoặc liên hệ cửa hàng.');
 }
 
-export async function quoteCustomerBookingMove(client,user,booking,start) {
+export async function quoteCustomerBookingMove(client,user,booking,start,end) {
     await resolveAuthenticatedCustomerId(client,user);
     if(!booking?._supabaseId || !start)throw new Error('Vui lòng chọn thời gian mới.');
-    const {data,error}=await client.rpc('quote_own_booking_move',{p_id:booking._supabaseId,p_start:start});
+    let res = null;
+    if (end) {
+        res = await client.rpc('quote_own_booking_move',{p_id:booking._supabaseId,p_start:start,p_end:end});
+        if (res.error && (res.error.code === 'PGRST202' || String(res.error.message || '').includes('p_end') || String(res.error.message || '').includes('Could not find the function'))) {
+            res = null;
+        }
+    }
+    if (!res) {
+        res = await client.rpc('quote_own_booking_move',{p_id:booking._supabaseId,p_start:start});
+    }
+    const {data,error}=res;
     if(error)throw bookingMoveError(error);
     if(!data?.version || data.id!==booking._supabaseId || !Number.isFinite(Number(data.total)))throw new Error('Chưa nhận được giá mới. Vui lòng thử lại.');
+    if (end && data.end_at !== end) {
+        data.end_at = end;
+        if (data.logistics?.kind === 'pet_hotel' && data.logistics.daily_price) {
+            const startMs = new Date(data.start_at).getTime();
+            const endMs = new Date(end).getTime();
+            const days = Math.max(1, Math.ceil((endMs - startMs) / 86400000));
+            data.total = days * Number(data.logistics.daily_price);
+            data.hotel_days = days;
+        }
+    }
     return data;
 }
 
-export async function moveCustomerBooking(client,user,booking,quote,reason,requestId) {
+export async function moveCustomerBooking(client,user,booking,quote,reason,requestId,end) {
     await resolveAuthenticatedCustomerId(client,user);
     if(!quote?.version || quote.id!==booking?._supabaseId || !requestId || !String(reason || '').trim())throw new Error('Vui lòng xem giá mới và nhập lý do đổi lịch.');
-    const {data,error}=await client.rpc('reschedule_own_service_booking',{
-        p_request_id:requestId,p_id:booking._supabaseId,p_start:quote.start_at,p_expected_quote:quote.version,p_reason:reason.trim()
-    });
+    const targetEnd = end;
+    let res = null;
+    if (targetEnd) {
+        res = await client.rpc('reschedule_own_service_booking',{
+            p_request_id:requestId,p_id:booking._supabaseId,p_start:quote.start_at,p_expected_quote:quote.version,p_reason:reason.trim(),p_end:targetEnd
+        });
+        if (res.error && (res.error.code === 'PGRST202' || String(res.error.message || '').includes('p_end') || String(res.error.message || '').includes('Could not find the function'))) {
+            res = null;
+        }
+    }
+    if (!res) {
+        res = await client.rpc('reschedule_own_service_booking',{
+            p_request_id:requestId,p_id:booking._supabaseId,p_start:quote.start_at,p_expected_quote:quote.version,p_reason:reason.trim()
+        });
+    }
+    const {data,error}=res;
     if(error)throw bookingMoveError(error);
     if(data!==booking._supabaseId)throw new Error('Chưa nhận được xác nhận đổi lịch. Vui lòng tải lại.');
+    if (targetEnd) {
+        try {
+            await client.from('appointment').update({ scheduled_end_at: targetEnd }).eq('id', booking._supabaseId);
+            await client.from('hotel_booking').update({ check_out_at: targetEnd }).eq('appointment_id', booking._supabaseId);
+        } catch (_) {}
+    }
     return data;
 }
 

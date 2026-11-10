@@ -401,7 +401,7 @@
                         <span class="admin-badge ${statusBadgeClass}">${esc(pet.status)}</span>
                     </td>
                     <td class="pet-col-actions-padded">
-                        <button type="button" class="btn-action-more" data-id="${esc(pet.code)}" title="Tác vụ">•••</button>
+                        <button type="button" class="btn-action-more" data-id="${esc(pet.code)}" title="Thao tác">•••</button>
                     </td>
                 </tr>
             `;

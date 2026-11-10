@@ -12,7 +12,7 @@
     --admin-primary: #315f4b;
     --surface-white: #ffffff;
     --border-neutral: #dce4de;
-    --admin-radius: 8px;
+    --admin-radius: 9px;
     --text-heading: #24382f;
     --text-main: #35463a;
     --text-muted: #6f8176;
@@ -596,7 +596,9 @@
 }
 
 /* NÚT THAO TÁC 3 CHẤM BẢNG DỮ LIỆU */
-.settings-module-wrapper .btn-action-trigger {
+.settings-module-wrapper .btn-action-trigger,
+.settings-module-wrapper .btn-dots-action,
+.settings-module-wrapper .btn-voucher-dots {
     width: 32px;
     height: 32px;
     display: inline-flex;
@@ -615,7 +617,11 @@
     transition: none !important;
 }
 
-.settings-module-wrapper .btn-action-trigger:hover {
+.settings-module-wrapper .btn-action-trigger:hover,
+.settings-module-wrapper .btn-dots-action:hover,
+.settings-module-wrapper .btn-voucher-dots:hover,
+.settings-module-wrapper .btn-action-trigger.active,
+.settings-module-wrapper .btn-voucher-dots.active {
     background-color: #EDF4F0;
     border-color: var(--border-neutral);
     color: var(--text-main);
@@ -1543,9 +1549,9 @@
 }
 
 .settings-module-wrapper .admin-btn-secondary:hover {
-    background-color: #f7faf7;
-    border-color: #b9cbbf;
-    color: var(--settings-primary);
+    background-color: #EEF5F1;
+    border-color: var(--border-neutral);
+    color: #236B48;
 }
 
 .settings-module-wrapper .admin-input,
@@ -1869,16 +1875,32 @@
     color: var(--settings-muted);
 }
 
-.settings-module-wrapper .btn-action-trigger {
-    width: 30px;
-    height: 30px;
-    border: 1px solid var(--settings-border);
-    border-radius: 6px;
-    color: var(--settings-muted);
-    font-size: 15px;
+.settings-module-wrapper .btn-action-trigger,
+.settings-module-wrapper .btn-dots-action,
+.settings-module-wrapper .btn-voucher-dots {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--admin-radius);
+    color: var(--text-muted);
+    cursor: pointer;
+    outline: none;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1;
+    transition: none !important;
 }
 
-.settings-module-wrapper .btn-action-trigger:hover {
+.settings-module-wrapper .btn-action-trigger:hover,
+.settings-module-wrapper .btn-dots-action:hover,
+.settings-module-wrapper .btn-voucher-dots:hover,
+.settings-module-wrapper .btn-action-trigger.active,
+.settings-module-wrapper .btn-voucher-dots.active {
     background-color: #f7faf7;
     border-color: #b9cbbf;
     color: var(--settings-primary);

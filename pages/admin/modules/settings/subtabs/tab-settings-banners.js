@@ -390,7 +390,7 @@
                 <td>${esc(v.validDate)}</td>
                 <td>${statusBadge}</td>
                 <td class="settings-table-actions-cell">
-                    <button type="button" class="btn-dots-action btn-voucher-dots" data-code="${esc(v.code)}" title="Tác vụ">•••</button>
+                    <button type="button" class="btn-action-trigger btn-dots-action btn-voucher-dots" data-code="${esc(v.code)}" title="Thao tác">•••</button>
                 </td>
             `;
             tbody.appendChild(tr);

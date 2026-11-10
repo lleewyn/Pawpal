@@ -823,6 +823,9 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
     PawpalServices.errorMessage = function(error) {
         const messages = {
             service_ticket_forbidden:'Bạn chưa có quyền tạo phiếu phản ánh dịch vụ.',
+            requested_staff_schedule_required:'Cần phân ca cụ thể cho đúng nhân viên khách yêu cầu trước khi xác nhận.',
+            requested_staff_customer_consent_required:'Khách đã chọn nhân viên yêu thích. Mở hồ sơ để gửi đề xuất và chờ khách đồng ý thay đổi.',
+            booking_price_changed_requires_review:'Giá hoặc thời lượng đã thay đổi. Cần đối soát trước khi đề xuất giờ mới.',
             invalid_service_ticket:'Nhập nội dung phản ánh từ 2 đến 4.000 ký tự.',
             service_ticket_review_mismatch:'Đánh giá không thuộc ca dịch vụ đã chọn.',
             service_cashier_forbidden:'Bạn chưa có quyền xem hoặc ghi thu/hoàn tiền dịch vụ.',
@@ -913,7 +916,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
 
     // Keep the native value store for existing event handlers; expose a text-only live popover.
     PawpalServices.enhanceEntitySelects = function() {
-        for(const id of ['intakeStaffSelect','newLogStepStaff','editCarelogStepStaff','accompanyingServiceItemSelect','accompanyingStaffSelect','newBookingHotelRoomType','changeStaffSelect','newBookingStaff','cashierMethod','cashierPayment']) {
+        for(const id of ['futureBookingStaff','intakeStaffSelect','newLogStepStaff','editCarelogStepStaff','accompanyingServiceItemSelect','accompanyingStaffSelect','newBookingHotelRoomType','changeStaffSelect','newBookingStaff','cashierMethod','cashierPayment']) {
             const select=document.getElementById(id);if(!select)continue;
             if(select._entityInput){select._entityInput.disabled=select.disabled;if(document.activeElement!==select._entityInput)select._entityInput.value=select.value?select.selectedOptions[0]?.textContent||'':'';continue;}
             const wrapper=document.createElement('div');wrapper.style.cssText='position:relative;width:100%;';
@@ -924,7 +927,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 popover.replaceChildren();const q=input.value.trim().toLocaleLowerCase('vi');
                 const options=[...select.options].filter(o=>o.value&&!o.disabled&&o.textContent.trim().toLocaleLowerCase('vi').includes(q));
                 for(const option of options){const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';button.style.cssText='display:block;width:100%;text-align:left;padding:9px 12px;border:none;background:transparent;color:#203A2C;font-weight:600;';button.textContent=option.textContent;
-                    button.addEventListener('mousedown',e=>e.preventDefault());button.addEventListener('click',()=>{select.value=option.value;input.value=option.textContent;popover.style.display='none';select.dispatchEvent(new Event('change',{bubbles:true}));});popover.append(button);}
+                    button.addEventListener('mousedown',e=>e.preventDefault());button.addEventListener('click',()=>{if(select.disabled||!select.contains(option)||option.disabled)return;select.value=option.value;input.value=option.textContent;popover.style.display='none';select.dispatchEvent(new Event('change',{bubbles:true}));});popover.append(button);}
                 if(!options.length){const text=document.createElement('div');text.style.padding='10px 12px';text.textContent='Không có lựa chọn phù hợp.';popover.append(text);}
                 popover.style.display='block';
             };
@@ -1310,7 +1313,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         const fetcher=async()=>{
             const db=window.getSupabaseClient();
             if(ids&&!ids.length)return [];
-            const appointments=await allRows(()=>{let query=db.from('appointment').select('*,customer:customer_id('+customerFields+'),pet_profile:pet_id('+petFields+'),staff:staff_id(id,full_name,job_title),items:appointment_item(*,service:service_id(id,service_code,service_name,estimated_duration,category:category_id(category_code))),records:appointment_record(*,recorder:recorded_by(full_name)),adjustments:appointment_adjustment(*),taxi:taxi_trip(*),hotel:hotel_booking(*,room:room_id(room_number,type:room_type_id(room_type)))').order('created_at',{ascending:false}).order('id');if(ids)query=query.in('id',ids);if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'appointment_code',id);return query;});
+            const appointments=await allRows(()=>{let query=db.from('appointment').select('*,customer:customer_id('+customerFields+'),pet_profile:pet_id('+petFields+'),staff:staff_id(id,full_name,job_title),requestedStaff:requested_staff_id(id,full_name),items:appointment_item(*,service:service_id(id,service_code,service_name,estimated_duration,category:category_id(category_code))),records:appointment_record(*,recorder:recorded_by(full_name)),adjustments:appointment_adjustment(*),taxi:taxi_trip(*),hotel:hotel_booking(*,room:room_id(room_number,type:room_type_id(room_type)))').order('created_at',{ascending:false}).order('id');if(ids)query=query.in('id',ids);if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'appointment_code',id);return query;});
             if(!appointments.length)return [];
             if(!intakeMediaReader){const {createIntakeMediaReader}=await import('/scripts/shared/intake-media-reader.mjs');intakeMediaReader=createIntakeMediaReader({db});}
             await intakeMediaReader.hydrate(appointments);
@@ -1614,7 +1617,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 const paymentBadgeClass=item.payment_status==='paid'?'badge-success':'badge-warning';
 
                 const customerName = getCustomerProfileName(item.customer) || getCustomerProfileName(item.pet_profile?.customer) || 'Chưa cập nhật tên khách hàng';
-                const phone = item.customer?.phone_main || item.pet_profile?.customer?.phone_main || '—';
+                const phone = item.booking_contact_phone || item.customer?.phone_main || item.pet_profile?.customer?.phone_main || '—';
                 const petName = item.pet_profile?.pet_name || 'Pet cưng';
                 const petBreed = item.pet_profile?.breed || 'Thú cưng';
                 const serviceName = item.service?.service_name || 'Chưa có thông tin dịch vụ';
@@ -1642,7 +1645,9 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                     primaryItem: item.items.find(i=>i.is_primary),
                     collected: item.collected,
                     allItems: item.items,
-                    staffId: item.staff?.id || null,
+                    staffId: item.staff_id || item.staff?.id || null,
+                    requestedStaffId:item.requested_staff_id,requestedStaffName:one(item.requestedStaff)?.full_name||'',staffConfirmationStatus:item.staff_confirmation_status,
+                    proposalStaffId:item.proposal_staff_id,proposalStartAt:item.proposal_start_at,proposalEndAt:item.proposal_end_at,proposalRevision:item.proposal_created_at,
                     scheduledStartAt:item.scheduled_start_at,scheduledEndAt:item.scheduled_end_at,
                     rawNote: item.note,
                     petDbId: item.pet_id,
@@ -1651,7 +1656,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                     userId: item.customer_id || null,
                     customerName,
                     customerType: window.PawpalCustomerIdentity.classify(item.customer),
-                    phoneUnverified: window.PawpalCustomerIdentity.contact(item.customer).unverified,
+                    phoneUnverified: !item.booking_contact_phone&&window.PawpalCustomerIdentity.contact(item.customer).unverified,
                     phone,
                     hotelStay: one(item.hotel)||null,
                     roomCode: one(item.hotel)?.room?.room_number||'',
@@ -1867,8 +1872,8 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
     PawpalServices.openBookingDetail = openBookingDetail;
 
     PawpalServices.fetchStaffScheduleBookings=async(from,to)=>{
-        const rows=await allRows(()=>window.getSupabaseClient().from('appointment').select('id,appointment_code,appointment_status,staff_id,scheduled_start_at,scheduled_end_at,pet:pet_id(pet_name)').not('appointment_status','in','(cancelled,no_show)').gt('scheduled_end_at',new Date(from).toISOString()).lt('scheduled_start_at',new Date(to).toISOString()).order('id'));
-        return rows.map(a=>({id:a.appointment_code,dbId:a.id,status:a.appointment_status,staffId:a.staff_id,scheduledStartAt:a.scheduled_start_at,scheduledEndAt:a.scheduled_end_at,petName:one(a.pet)?.pet_name||'—'}));
+        const rows=await allRows(()=>window.getSupabaseClient().from('appointment').select('id,appointment_code,appointment_status,staff_id,requested_staff_id,staff_confirmation_status,scheduled_start_at,scheduled_end_at,pet:pet_id(pet_name)').not('appointment_status','in','(cancelled,no_show)').gt('scheduled_end_at',new Date(from).toISOString()).lt('scheduled_start_at',new Date(to).toISOString()).order('id'));
+        return rows.map(a=>({id:a.appointment_code,dbId:a.id,status:a.appointment_status,staffId:a.staff_id||a.requested_staff_id,awaitingStaff:['pending','awaiting_customer'].includes(a.staff_confirmation_status),scheduledStartAt:a.scheduled_start_at,scheduledEndAt:a.scheduled_end_at,petName:one(a.pet)?.pet_name||'—'}));
     };
 
     let _isServicesInit = false;

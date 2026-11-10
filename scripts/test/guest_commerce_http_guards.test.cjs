@@ -30,6 +30,18 @@ function setup(limit=async()=>{}){
  };
  return {send,calls:()=>calls};
 }
+
+test('Guest staffing responses require signed cookie, strict payload and exact proposal revision',async()=>{
+ let received;
+ const handler=createGuestCommerce({admin:{rpc:async(name,args)=>{received={name,args};return {data:args.p_id};}},secret:'test-secret-with-at-least-32-bytes-long',origins:['https://pawpal.test'],production:true,limit:async()=>{}});
+ const send=async(action,body={},cookie)=>{const res={headers:{},statusCode:200,setHeader(k,v){this.headers[k]=v;},status(n){this.statusCode=n;return this;},json(v){this.data=v;return this;}};await handler({method:'POST',body,headers:{origin:'https://pawpal.test','content-type':'application/json',cookie}},res,action);return res;};
+ const body={requestId:'11111111-1111-4111-8111-111111111111',bookingId:'22222222-2222-4222-8222-222222222222',revision:'2030-01-01T10:00:00Z',accept:true};
+ assert.equal((await send('booking-staff-response',body)).statusCode,401);assert.equal(received,undefined);
+ const cookie=(await send('session')).headers['Set-Cookie'].split(';')[0];
+ for(const invalid of [{...body,owner:'forged'},{...body,revision:'invalid'},{...body,accept:'true'}])assert.equal((await send('booking-staff-response',invalid,cookie)).statusCode,400);
+ assert.equal(received,undefined);assert.equal((await send('booking-staff-response',body,cookie)).data.bookingId,body.bookingId);
+ assert.equal(received.name,'respond_guest_booking_staff_request');assert.equal(received.args.p_revision,body.revision);assert.equal(received.args.p_accept,true);assert.match(received.args.p_hash,/^[a-f0-9]{64}$/);
+});
 test('Method, origin and content type denied before privileged RPC',async()=>{
  const {send,calls}=setup();
  assert.equal((await send('session',{}, {},'GET')).statusCode,405);

@@ -1306,20 +1306,27 @@
 .services-module .price-matrix-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 12px;
+    background-color: transparent;
 }
 
 .services-module .price-matrix-table th {
-    padding: 8px 10px;
-    background-color: var(--table-header-bg);
-    color: var(--table-header-text);
-    font-weight: 600;
+    padding: 10px 11px;
+    background-color: #f1f4f1;
+    color: #536a59;
+    font-size: 11px;
+    font-weight: 650;
     text-align: left;
+    border-bottom: 1px solid #dae2db;
+    text-transform: none;
+    white-space: nowrap;
 }
 
 .services-module .price-matrix-table td {
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border-neutral);
+    padding: 10px 11px;
+    font-size: 12px;
+    border-bottom: 1px solid #e9eee9;
+    background-color: transparent;
 }
 
 /* LINK XEM ĐÁNH GIÁ TRONG BẢNG DANH MỤC */
@@ -4762,3 +4769,9 @@
 .services-module .price-matrix-table > tbody > tr > td:nth-child(4):not([colspan]) input:not([type="checkbox"]):not([type="radio"]) {
     text-align: right;
 }
+.services-module .future-staff-request-form { display: grid; gap: 16px; }
+.services-module .future-staff-request-form .staff-recurring-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.services-module .future-staff-request-form label { display: block; color: #236B48; }
+.services-module .future-staff-request-form label input { display: block; margin-top: 6px; }
+.services-module #adminStaffRequestPanel > p { color: #4F7A65; }
+@media(max-width:650px){.services-module .future-staff-request-form .staff-recurring-fields{grid-template-columns:1fr}}

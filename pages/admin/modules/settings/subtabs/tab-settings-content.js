@@ -153,7 +153,7 @@
                 <td>${statusBadge}</td>
                 <td>${esc(a.updatedAt)}</td>
                 <td class="settings-table-actions-cell">
-                    <button type="button" class="btn-action-trigger btn-article-more" data-id="${esc(a.id)}" title="Tác vụ bài viết">•••</button>
+                    <button type="button" class="btn-action-trigger btn-article-more" data-id="${esc(a.id)}" title="Thao tác bài viết">•••</button>
                 </td>
             `;
             tbody.appendChild(tr);

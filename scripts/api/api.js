@@ -184,10 +184,13 @@ export const API = {
                     reviewedItemIds: summary.reviewed_item_ids || [],
                     status:          mapAppointmentStatus(b.appointment_status),
                     bookingStatus:   b.appointment_status,
+                    staffRequest:    summary.staff_request || null,
+                    contactPhone:    summary.contact_phone || null,
                     paymentStatus:   paymentStatus,
                     service:         primaryItem?.name_snapshot || primaryItem?.service?.service_name || 'Dịch vụ PawPal',
                     serviceName:     primaryItem?.name_snapshot || primaryItem?.service?.service_name || 'Dịch vụ PawPal',
                     serviceCategory: primaryItem?.service?.category_id || '',
+                    isHotel:         /pet[-_ ]?hotel|khách\s*sạn|lưu\s*trú|suite|condo|villa/i.test(primaryItem?.name_snapshot || primaryItem?.service?.service_name || ''),
                     items:           items.map(itm => ({
                         id: itm.id,
                         status: itm.status,

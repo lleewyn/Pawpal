@@ -254,6 +254,9 @@ function renderBookingDetail(booking) {
     }
 
     const dateTimeEl = document.getElementById('dateTimeInfo');
+    const contactRow=document.getElementById('bookingContactPhoneRow'),contactValue=document.getElementById('bookingContactPhoneInfo');
+    if(contactRow)contactRow.classList.toggle('d-none',!booking.contactPhone);
+    if(contactValue)contactValue.textContent=booking.contactPhone||'—';
     if (dateTimeEl) dateTimeEl.textContent = dateTimeText;
     if (dateTimeEl && booking.scheduledStartAt && booking.scheduledEndAt) {
         const stamp = value => new Date(value).toLocaleString('vi-VN', {timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'});

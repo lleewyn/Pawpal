@@ -16,13 +16,33 @@
     }
 
     let schedulePage=1,editingSchedule=null,scheduleRequest=null,selectedShiftStaff=null;
+    let recurringDispose=null,recurringVersion=0;
     const el=id=>document.getElementById(id);
     const localTime=value=>{
         const date=new Date(value),shifted=new Date(date.getTime()+7*3600000);
         return shifted.toISOString().slice(0,16);
     };
-    function scheduleError(error){return ({staff_schedule_changed:'Ca đã thay đổi. Đóng và mở lại để kiểm tra.',staff_schedule_forbidden:'Bạn chưa có quyền phân ca.',staff_has_service_booking:'Nhân viên đang có lịch dịch vụ trong khoảng này. Cần xử lý lịch dịch vụ trước khi ghi nghỉ.',invalid_staff_schedule:'Chọn nhân viên, nhập đủ giờ bắt đầu/kết thúc và lý do nếu nghỉ hoặc hủy.',staff_request_conflict:'Yêu cầu đã được ghi với nội dung khác. Mở lại ca để đối chiếu.'})[error?.message]||(error?.code==='23P01'?'Khoảng thời gian bị trùng với ca đang có.':'Không thể lưu ca. Kiểm tra thông tin và thử lại.');}
+    function scheduleError(error){return ({staff_has_requested_booking:'Nhân viên có yêu cầu đặt lịch đang chờ hoặc đã xác nhận. Xử lý lịch hẹn trước khi ghi nghỉ, hủy hoặc thu ngắn ca.',staff_schedule_changed:'Ca đã thay đổi. Đóng và mở lại để kiểm tra.',staff_schedule_forbidden:'Bạn chưa có quyền phân ca.',staff_has_service_booking:'Nhân viên đang có lịch dịch vụ trong khoảng này. Cần xử lý lịch dịch vụ trước khi ghi nghỉ.',invalid_staff_schedule:'Chọn nhân viên, nhập đủ giờ bắt đầu/kết thúc và lý do nếu nghỉ hoặc hủy.',staff_request_conflict:'Yêu cầu đã được ghi với nội dung khác. Mở lại ca để đối chiếu.'})[error?.message]||(error?.code==='23P01'?'Khoảng thời gian bị trùng với ca đang có.':'Không thể lưu ca. Kiểm tra thông tin và thử lại.');}
     let scheduleReadVersion = 0;
+    let holdRange=null,holdReadRunning=false,holdPollTimer,holdServerOffset=0;
+    async function refreshScheduleHolds(){
+        const client=window.getSupabaseClient?.(),tab=el('subtab-tab-staff-schedule');
+        if(!client?.rpc||!holdRange||holdReadRunning||document.hidden||!tab?.classList.contains('active')||!tab.getClientRects().length)return;
+        const range=holdRange;holdReadRunning=true;
+        try{
+            const {data,error}=await client.rpc('admin_active_booking_holds',{p_start:range.start,p_end:range.end});
+            if(error||!Array.isArray(data?.holds))throw Error('hold_read_failed');
+            if(range!==holdRange)return;
+            holdServerOffset=Date.parse(data.server_now)-Date.now();
+            PawpalStaff.state.scheduleHolds=data.holds;
+            if(el('staffHoldSyncStatus'))el('staffHoldSyncStatus').textContent='';
+            renderScheduleTable();
+        }catch{
+            if(range!==holdRange)return;
+            let note=el('staffHoldSyncStatus');if(!note){note=document.createElement('p');note.id='staffHoldSyncStatus';note.setAttribute('role','status');note.style.cssText='color:#DC2626;background:transparent;border:none';el('scheduleTableBody').before(note);}
+            note.textContent='Chưa cập nhật được giữ chỗ tạm. Hệ thống sẽ tự thử lại.';
+        }finally{holdReadRunning=false;if(range!==holdRange)refreshScheduleHolds();}
+    }
     function renderScheduleTable(){
         if(!PawpalStaff.state.isLoaded)return;
         const picker=el('scheduleDatePicker');if(picker&&!picker.value)picker.value=currentScheduleDate;
@@ -30,6 +50,7 @@
         let start=currentScheduleDate;if(currentScheduleView==='WEEK'){const d=new Date(start+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);start=d.toISOString().slice(0,10);}
         const end=dayOffset(start,currentScheduleView==='WEEK'?7:1),from=Date.parse(start+'T00:00:00+07:00'),to=Date.parse(end+'T00:00:00+07:00');
         const rangeStart = new Date(from).toISOString(), rangeEnd = new Date(to).toISOString();
+        if(holdRange?.start!==rangeStart||holdRange?.end!==rangeEnd){holdRange={start:rangeStart,end:rangeEnd};refreshScheduleHolds();}
         if (PawpalStaff.ensureScheduleRange && !PawpalStaff.hasScheduleRange(rangeStart, rangeEnd)) {
             if (!el('subtab-tab-staff-schedule')?.classList.contains('active')) return;
             const target = el(currentScheduleView === 'WEEK' ? 'scheduleWeekViewWrapper' : 'scheduleTableBody');
@@ -45,7 +66,12 @@
         const role=el('scheduleFilterPosition')?.value||'ALL';
         const availability=el('scheduleFilterShift')?.value||'ALL';
         const rows=PawpalStaff.state.schedules.filter(s=>Date.parse(s.start_at)<to&&Date.parse(s.end_at)>from).filter(s=>role==='ALL'||PawpalStaff.state.staff.find(v=>v.rawId===s.staff_id)?.role===role).filter(s=>availability==='ALL'||s.availability_status===availability).sort((a,b)=>Date.parse(a.start_at)-Date.parse(b.start_at)||a.id.localeCompare(b.id));
-        const people=[...new Set(rows.map(s=>s.staff_id))];
+        const held=(PawpalStaff.state.scheduleHolds||[]).filter(h=>Date.parse(h.expires_at)>Date.now()+holdServerOffset).map(h=>({...h,isHold:true}));
+        const bookings=[...(PawpalStaff.state.scheduleBookings||[]),...held].filter(b=>b.staff_id&&Date.parse(b.scheduled_start_at)<to&&Date.parse(b.scheduled_end_at)>from)
+            .filter(b=>role==='ALL'||PawpalStaff.state.staff.find(v=>v.rawId===b.staff_id)?.role===role)
+            .filter(b=>availability==='ALL'||rows.some(s=>s.staff_id===b.staff_id))
+            .sort((a,b)=>Date.parse(a.scheduled_start_at)-Date.parse(b.scheduled_start_at));
+        const people=[...new Set([...rows.map(s=>s.staff_id),...bookings.map(b=>b.staff_id)])];
         schedulePage=Math.max(1,Math.min(schedulePage,Math.ceil(people.length/10)||1));
         const visible=new Set(people.slice((schedulePage-1)*10,schedulePage*10));
         const body=el('scheduleTableBody');body.replaceChildren();
@@ -65,7 +91,17 @@
             if(schedule.reason)card.append(make('p','staff-calendar-note',schedule.reason));
             const button=make('button','admin-btn admin-btn-secondary staff-calendar-edit','Xem và sửa');button.type='button';button.onclick=()=>openShiftModal(null,null,null,schedule);card.append(button);return card;
         };
-        if(!rows.length)body.append(make('p','staff-calendar-empty','Chưa có ca trong ngày đang xem.'));
+        const bookingCard=(booking,showName=false)=>{
+            const person=PawpalStaff.state.staff.find(s=>s.rawId===booking.staff_id),card=make('div','staff-calendar-appointment');if(!booking.isHold)card.dataset.appointmentId=booking.id;card.dataset.staffId=booking.staff_id;
+            if(showName)card.append(make('strong','staff-calendar-name',person?.name||'—'));
+            card.append(make('div','staff-calendar-time',localTime(booking.scheduled_start_at).slice(11)+' – '+localTime(booking.scheduled_end_at).slice(11)));
+            const state=make('span','admin-badge '+(booking.isHold||booking.awaitingStaff?'badge-warning':booking.appointment_status==='completed'?'badge-success':'badge-info'),booking.isHold?'Đang giữ chỗ':booking.awaitingStaff?'Chờ xác nhận nhân viên':booking.appointment_status==='completed'?'Đã hoàn thành':'Đã có lịch hẹn');card.append(state);
+            if(booking.isHold){card.dataset.holdId=booking.id;card.append(make('div','staff-calendar-meta','Hết giữ chỗ lúc '+localTime(booking.expires_at).slice(11)));return card;}
+            const pet=Array.isArray(booking.pet)?booking.pet[0]:booking.pet,service=(booking.items||[]).find(i=>i.is_primary&&i.status!=='cancelled');
+            card.append(make('div','staff-calendar-meta',[pet?.pet_name,service?.name_snapshot,booking.appointment_code].filter(Boolean).join(' · ')));
+            return card;
+        };
+        if(!rows.length&&!bookings.length)body.append(make('p','staff-calendar-empty','Chưa có ca hoặc lịch hẹn trong ngày đang xem.'));
         for(const id of visible){
             const staff=PawpalStaff.state.staff.find(s=>s.rawId===id),shifts=rows.filter(s=>s.staff_id===id),card=make('article','staff-calendar-person');card.dataset.staffId=id;
             const header=make('div','staff-calendar-person-header'),identity=make('div','staff-calendar-identity'),avatar=make('span','staff-calendar-avatar',(staff?.name||'').trim().split(/\s+/).slice(-2).map(s=>s[0]).join(''));
@@ -73,14 +109,17 @@
             const label=make('div','');label.append(make('h3','staff-calendar-name',staff?.name||'—'),make('div','staff-calendar-meta',position));identity.append(avatar,label);header.append(identity);card.append(header);
             const total=shifts.filter(s=>s.schedule_status==='active'&&s.availability_status==='available').reduce((sum,s)=>sum+Math.max(0,Math.min(to,Date.parse(s.end_at))-Math.max(from,Date.parse(s.start_at))),0);
             card.append(make('div','staff-calendar-total',hours(total)+' làm việc trong ngày'));
-            for(const schedule of shifts)card.append(shiftCard(schedule));body.append(card);
+            for(const schedule of shifts)card.append(shiftCard(schedule));
+            for(const booking of bookings.filter(b=>b.staff_id===id))card.append(bookingCard(booking));body.append(card);
         }
         for(let index=0;index<7;index++){
             const date=dayOffset(start,index),left=Date.parse(date+'T00:00:00+07:00'),right=Date.parse(dayOffset(date,1)+'T00:00:00+07:00'),column=make('section','staff-calendar-day');column.dataset.date=date;
             column.append(make('h3','staff-calendar-day-title',(index===6?'Chủ nhật':'Thứ '+(index+2))+' · '+dayLabel(date)));
             const shifts=rows.filter(s=>visible.has(s.staff_id)&&Date.parse(s.start_at)<right&&Date.parse(s.end_at)>left);
-            if(!shifts.length)column.append(make('p','staff-calendar-empty','Chưa có ca'));
+            const appointments=bookings.filter(b=>visible.has(b.staff_id)&&Date.parse(b.scheduled_start_at)<right&&Date.parse(b.scheduled_end_at)>left);
+            if(!shifts.length&&!appointments.length)column.append(make('p','staff-calendar-empty','Chưa có ca hoặc lịch hẹn'));
             for(const schedule of shifts)column.append(shiftCard(schedule,true));week.append(column);
+            for(const booking of appointments)column.append(bookingCard(booking,true));
         }
         let pager=el('staffSchedulePager');if(!pager){pager=make('div','staff-calendar-pager');pager.id='staffSchedulePager';el('scheduleDayViewWrapper').closest('.admin-card').after(pager);}
         pager.replaceChildren();const pages=Math.ceil(people.length/10)||1;pager.hidden=!people.length;
@@ -341,6 +380,16 @@
     }
 
     function initScheduleSubtab() {
+        if(!holdPollTimer){holdPollTimer=setInterval(refreshScheduleHolds,15000);window.addEventListener('pagehide',()=>clearInterval(holdPollTimer),{once:true});}
+        el('btnStaffRecurringSchedule')?.addEventListener('click',async()=>{
+            const turn=++recurringVersion;
+            let host=el('staffRecurringHost');
+            if(!host){host=document.createElement('div');host.id='staffRecurringHost';host.className='staff-recurring-panel';host.hidden=true;el('scheduleDayViewWrapper').before(host);}
+            if(!host.hidden){host.hidden=true;recurringDispose?.();recurringDispose=null;return;}
+            host.hidden=false;host.textContent='Đang tải lịch định kỳ…';
+            try{const {mountRecurringSchedule}=await import('/pages/admin/modules/staff/staff-recurring.mjs');if(turn!==recurringVersion||host.hidden)return;const cleanup=await mountRecurringSchedule(host,{staff:PawpalStaff.state.staff,client:window.getSupabaseClient(),enhanceSelect:PawpalStaff.enhanceEntitySelect});if(turn!==recurringVersion||host.hidden)cleanup();else recurringDispose=cleanup;}
+            catch{host.textContent='Không tải được lịch định kỳ. Vui lòng thử lại.';}
+        });
         for(const id of ['leaveSwapModalForm','incidentReportModalForm'])document.getElementById(id)?.addEventListener('submit',event=>event.preventDefault());
         // Toggle view DAY / WEEK
         const btnDay = document.getElementById('btnScheduleViewDay');

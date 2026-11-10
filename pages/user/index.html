@@ -58,7 +58,7 @@
     <script src="/scripts/shared/components.js" defer></script>
     <script src="/components/header/header.js" defer></script>
     <script src="/scripts/shared/main.js" defer></script>
-    <script type="module" src="/pages/user/user.js"></script>
+    <script type="module" src="/pages/user/user.js?v=profile-session-1"></script>
 </head>
 <body class="user-portal-body">
     <header class="main-header" id="mainHeader">
@@ -286,7 +286,7 @@
                     </nav>
 
                     <!-- Vùng render module nội dung -->
-                    <div id="userAppContent" class="user-app-content"></div>
+                    <div id="userAppContent" class="user-app-content" aria-busy="true"><p role="status">Đang tải tài khoản…</p></div>
                 </section>
             </div>
         </div>
