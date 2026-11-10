@@ -13,7 +13,7 @@ export async function loadGuestBookingContext(db){
 export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNext,onContext}){
  let pets=(context.pets||[]).map(p=>guestPetFromContext(p,breeds)),selected=null,page=context.page||1,hasMore=!!context.hasMore,busy=false;
  const firstVisit=!pets.length&&!context.contact;
- root.innerHTML=`<div class="step-header"><h2>${firstVisit?'Thông tin đặt lịch':'Chọn bé cưng'}</h2></div><p class="field-note">Bạn có thể đặt lịch mà không cần tài khoản.</p>
+ root.innerHTML=`<div class="step-header"><h2>${firstVisit?'Thông tin đặt lịch':'Chọn bé cưng'}</h2><p class="step-subtitle">Bạn có thể đặt lịch mà không cần tài khoản.</p></div>
  <div id="guestBookingContact" class="booking-owner"></div><div id="guestBookingPets" class="booking-pet-cards" role="group" aria-label="Chọn bé cưng"></div>
  <p id="guestPetFeedback" class="field-note" role="status" aria-live="polite"></p><div class="booking-inline-tools"><button type="button" class="btn-green-outline" id="guestAddPet">Thêm bé cưng</button><button type="button" class="btn-green-outline" id="guestPetMore" hidden>Xem thêm bé</button></div><div id="guestPetEditor"></div>
  <div class="step-actions"><button type="button" class="btn-step-next btn-cta" id="step1Next" disabled>Tiếp theo</button></div>`;
