@@ -41,33 +41,48 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
         }
     }
     async function customer(phone) {
+        let customerData = null;
         const phoneRow = await admin.from('customer_phone')
             .select('customer_id, phone_number, is_primary')
             .eq('phone_number', phone)
             .limit(1)
             .maybeSingle();
         if (phoneRow.error) throw phoneRow.error;
-        if (!phoneRow.data) return null;
 
-        const { data, error } = await admin.from('customer')
-            .select('id, auth_user_id, customer_status, contact_email')
-            .eq('id', phoneRow.data.customer_id)
-            .maybeSingle();
-        if (error) throw error;
-        if (!data) return null;
+        if (phoneRow.data) {
+            const { data, error } = await admin.from('customer')
+                .select('id, auth_user_id, customer_status, contact_email')
+                .eq('id', phoneRow.data.customer_id)
+                .maybeSingle();
+            if (error) throw error;
+            customerData = data;
+        } else {
+            // Check guest customers with unverified_contact_phone
+            const unverified = await admin.from('customer')
+                .select('id, auth_user_id, customer_status, contact_email, unverified_contact_phone')
+                .eq('unverified_contact_phone', phone)
+                .limit(1)
+                .maybeSingle();
+            if (unverified.error) throw unverified.error;
+            if (unverified.data && unverified.data.unverified_contact_phone === phone) {
+                customerData = unverified.data;
+            }
+        }
+
+        if (!customerData) return null;
 
         const staff = await admin.from('staff').select('id').eq('phone_number', phone).limit(1);
         if (staff.error) throw staff.error;
         if (staff.data?.length) throw new Error('Tài khoản nhân sự phải đăng nhập tại cổng quản trị.');
-        if (data.customer_status === 'LOCKED' || data.customer_status === 'da_khoa' || data.customer_status === 'locked') {
+        if (customerData.customer_status === 'LOCKED' || customerData.customer_status === 'da_khoa' || customerData.customer_status === 'locked') {
             throw new Error('Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.');
         }
         return {
-            id: data.id,
+            id: customerData.id,
             phone_main: phone,
-            auth_user_id: data.auth_user_id,
-            account_status: (data.customer_status === 'active' || data.customer_status === 'ACTIVE') ? 'ACTIVE' : data.customer_status,
-            is_temporary: !data.auth_user_id
+            auth_user_id: customerData.auth_user_id,
+            account_status: (customerData.customer_status === 'active' || customerData.customer_status === 'ACTIVE') ? 'ACTIVE' : customerData.customer_status,
+            is_temporary: !customerData.auth_user_id
         };
     }
     async function identity(authId) {
@@ -241,7 +256,7 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             await limit('sms:' + phone, 1, 60000);
             const c = await customer(phone);
             if (purpose === 'reset' && !c) throw new Error('Không tìm thấy tài khoản.');
-            if (purpose !== 'reset' && c && !c.is_temporary) throw new Error('Tài khoản đã đăng ký. Vui lòng đăng nhập hoặc chọn quên mật khẩu.');
+            if (purpose !== 'reset' && c && !c.is_temporary) throw new Error('Số điện thoại đã tồn tại. Vui lòng đăng nhập hoặc khôi phục mật khẩu!');
             await assertSimulationTarget(phone, c);
             const id = crypto.randomUUID();
             const code = mode === 'demo' ? '555666' : simulate ? randomCode() : null;
@@ -276,7 +291,7 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                 if (wantsGuestLink && challenge.purpose === 'reset') throw new Error('Không liên kết hồ sơ trong yêu cầu khôi phục mật khẩu.');
                 if (wantsGuestLink) await guestLink.validate(guestProof, challenge.phone);
                 const c = await customer(challenge.phone);
-                if (challenge.purpose !== 'reset' && c && !c.is_temporary) throw new Error('Tài khoản đã được kích hoạt.');
+                if (challenge.purpose !== 'reset' && c && !c.is_temporary) throw new Error('Số điện thoại đã tồn tại. Vui lòng đăng nhập hoặc khôi phục mật khẩu!');
                 if (challenge.purpose === 'register' && (typeof name !== 'string' || !name.trim() || name.length > 150)) throw new Error('Vui lòng nhập họ tên hợp lệ.');
                 await assertSimulationTarget(challenge.phone, c);
                 let session, authId;

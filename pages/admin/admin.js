@@ -907,8 +907,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             html: 'modules/dashboard/dashboard.html',
             scripts: [
                 'modules/dashboard/dashboard.js',
-                'modules/dashboard-operations/operations-metrics.js',
-                'modules/dashboard-operations/dashboard-operations.js'
+                'modules/dashboard/operations-metrics.js',
+                'modules/dashboard/dashboard-operations.js'
             ],
             postLoad: async () => {
                 if (window.PawpalDashboard?.init) await window.PawpalDashboard.init();

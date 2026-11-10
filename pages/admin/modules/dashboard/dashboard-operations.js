@@ -9,7 +9,7 @@
 (function initOperationsDashboard() {
     'use strict';
 
-    const HTML_URL = '/pages/admin/modules/dashboard-operations/dashboard-operations.html';
+    const HTML_URL = '/pages/admin/modules/dashboard/dashboard-operations.html';
     const PAGE_SIZE = 500;
     const MAX_ROWS = 5000;
     const ALERTS_PER_PAGE = 10;

@@ -87,18 +87,37 @@
         inputs.forEach((input, index) => { input.value = ''; input.disabled = index > 0; });
         inputs[0]?.focus();
     }
-    function countdown(register, seconds = 60) {
+    function countdown(register, resendCooldown = 60, otpLifetime = 300) {
         clearInterval(timer);
         const label = byId(register ? 'otpTimer' : 'forgotOtpTimer');
         const button = byId(register ? 'btnResendOtp' : 'btnForgotResendOtp');
-        const ends = Date.now() + seconds * 1000;
+        const expireEnds = Date.now() + otpLifetime * 1000;
+        const resendEnds = Date.now() + resendCooldown * 1000;
         if (button) button.disabled = true;
+
         const tick = () => {
-            const left = Math.max(0, Math.ceil((ends - Date.now()) / 1000));
-            if (label) label.textContent = String(Math.floor(left / 60)).padStart(2, '0') + ':' + String(left % 60).padStart(2, '0');
-            if (!left) { clearInterval(timer); if (button) button.disabled = false; }
+            const now = Date.now();
+            const leftOtp = Math.max(0, Math.ceil((expireEnds - now) / 1000));
+            const leftResend = Math.max(0, Math.ceil((resendEnds - now) / 1000));
+
+            if (label) {
+                label.textContent = String(Math.floor(leftOtp / 60)).padStart(2, '0') + ':' + String(leftOtp % 60).padStart(2, '0');
+            }
+            if (button) {
+                if (leftResend > 0) {
+                    button.disabled = true;
+                    button.textContent = `Gửi lại mã (${leftResend}s)`;
+                } else {
+                    button.disabled = false;
+                    button.textContent = 'Gửi lại mã';
+                }
+            }
+            if (!leftOtp && !leftResend) {
+                clearInterval(timer);
+            }
         };
-        tick(); timer = setInterval(tick, 1000);
+        tick();
+        timer = setInterval(tick, 1000);
     }
     async function sendOtp(phone, purpose) {
         if (!validPhone(phone)) throw new Error('Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.');
@@ -110,7 +129,7 @@
         renderTestCode(result, register);
         if (byId('forgotPhone')) byId('forgotPhone').value = phone;
         resetInputs(register ? '#otpSection .otp-input' : '.forgot-otp-input');
-        countdown(register, result.resendAfter);
+        countdown(register, result.resendAfter || 60, result.expiresIn || 300);
         notice(result.testMode === true ? 'Mã thử nghiệm đã sẵn sàng, có hiệu lực trong 5 phút.' : 'Đã gửi mã xác thực. Mã có hiệu lực trong 5 phút.');
     }
     async function finish(passwordValue, name) {
@@ -120,10 +139,33 @@
         }
         if (!challenge) throw new Error('Vui lòng yêu cầu mã xác thực mới.');
         if (!validPassword(passwordValue)) throw new Error('Mật khẩu cần ít nhất 8 ký tự, một chữ số và một ký tự đặc biệt.');
+        const isNewRegistration = challenge.purpose === 'register' || challenge.purpose === 'activate';
         const result = await auth().request('otp/complete', { challengeId: challenge.id, code: challenge.code, password: passwordValue, name, ...(challenge.linkGuest ? { linkGuest: true } : {}) });
         await auth().accept(result);
         clearChallenge();
         for (const id of ['registerPassword', 'registerConfirmPassword', 'forgotNewPassword', 'forgotConfirmNewPassword', 'setupPassword', 'setupConfirmPassword']) if (byId(id)) byId(id).value = '';
+
+        if (isNewRegistration && byId('congratsSection')) {
+            show('congratsSection');
+            const pointsEl = byId('pointsCounter');
+            if (pointsEl) {
+                let currentPoints = 0;
+                pointsEl.textContent = '0';
+                const pointInterval = setInterval(() => {
+                    currentPoints += 5;
+                    if (currentPoints >= 50) {
+                        currentPoints = 50;
+                        clearInterval(pointInterval);
+                    }
+                    pointsEl.textContent = String(currentPoints);
+                }, 30);
+            }
+            setTimeout(() => {
+                window.location.href = consumeLoginTarget(sessionStorage, location.origin, new URLSearchParams(location.search).get('redirect'));
+            }, 2500);
+            return;
+        }
+
         notice('Xác thực và lưu mật khẩu thành công.');
         window.location.href = consumeLoginTarget(sessionStorage, location.origin, new URLSearchParams(location.search).get('redirect'));
     }
@@ -246,11 +288,48 @@
         });
         on('tabLogin', 'click', () => { history.pushState({}, '', '?action=login'); route(); });
         on('tabRegister', 'click', () => { history.pushState({}, '', '?action=register'); route(); });
+        on('loginPhone', 'input', () => {
+            const phone = value('loginPhone');
+            const phoneFeedback = byId('loginPhoneFeedback');
+            if (phone.length > 0 && !validPhone(phone)) {
+                if (phoneFeedback) {
+                    phoneFeedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
+                    phoneFeedback.classList.add('d-block');
+                }
+                byId('loginPhone')?.classList.add('is-invalid');
+            } else {
+                phoneFeedback?.classList.remove('d-block');
+                byId('loginPhone')?.classList.remove('is-invalid');
+            }
+        });
         on('btnLoginContinue', 'click', () => run(byId('btnLoginContinue'), async () => {
             const phone = value('loginPhone');
-            if (!validPhone(phone)) throw new Error('Vui lòng nhập số điện thoại hợp lệ.');
+            const phoneFeedback = byId('loginPhoneFeedback');
+            if (!validPhone(phone)) {
+                if (phoneFeedback) {
+                    phoneFeedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
+                    phoneFeedback.classList.add('d-block');
+                }
+                byId('loginPhone')?.classList.add('is-invalid');
+                byId('loginPhone')?.focus();
+                throw new Error('Vui lòng nhập số điện thoại hợp lệ.');
+            }
+            byId('loginPhone')?.classList.remove('is-invalid');
+            phoneFeedback?.classList.remove('d-block');
+
             const result = await auth().request('lookup', { phone });
-            if (!result.exists) throw new Error('Số điện thoại chưa đăng ký. Vui lòng tạo tài khoản.');
+            if (!result.exists) {
+                if (phoneFeedback) {
+                    phoneFeedback.textContent = 'Số điện thoại chưa đăng ký. Đang chuyển sang trang Đăng ký...';
+                    phoneFeedback.classList.add('d-block');
+                }
+                byId('loginPhone')?.classList.add('is-invalid');
+                setTimeout(() => {
+                    history.pushState({}, '', '?action=register&phone=' + encodeURIComponent(phone));
+                    route();
+                }, 1000);
+                throw new Error('Số điện thoại chưa đăng ký. Vui lòng tạo tài khoản mới.');
+            }
             byId('loginStepPhone').classList.add('d-none');
             byId('loginStepSendOTP')?.classList.toggle('d-none', !result.isTemporary);
             byId('loginStepPassword').classList.toggle('d-none', result.isTemporary);
@@ -277,17 +356,32 @@
             });
         });
         const validateRegister = () => {
+            const phone = value('registerPhone');
             const pass = password('registerPassword');
             const confirm = password('registerConfirmPassword');
+            const invalidPhone = phone.length > 0 && !validPhone(phone);
             const invalidPass = pass.length > 0 && !validPassword(pass);
             const mismatch = confirm.length > 0 && pass !== confirm;
-            byId('registerPasswordFeedback').classList.toggle('d-block', invalidPass);
-            byId('registerConfirmFeedback').classList.toggle('d-block', mismatch);
-            for (const [id, invalid] of [['registerPassword', invalidPass], ['registerConfirmPassword', mismatch]]) {
-                byId(id).classList.toggle('is-invalid', invalid);
-                byId(id).setAttribute('aria-invalid', String(invalid));
+
+            const phoneFeedback = byId('registerPhoneFeedback');
+            if (phoneFeedback) {
+                if (invalidPhone) {
+                    phoneFeedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
+                    phoneFeedback.classList.add('d-block');
+                } else {
+                    phoneFeedback.classList.remove('d-block');
+                }
             }
-            byId('btnRegisterSubmit').disabled = busy || !(value('registerName') && validPhone(value('registerPhone')) && validPassword(pass) && pass === confirm);
+            byId('registerPhone')?.classList.toggle('is-invalid', invalidPhone);
+            byId('registerPhone')?.setAttribute('aria-invalid', String(invalidPhone));
+
+            byId('registerPasswordFeedback')?.classList.toggle('d-block', invalidPass);
+            byId('registerConfirmFeedback')?.classList.toggle('d-block', mismatch);
+            for (const [id, invalid] of [['registerPassword', invalidPass], ['registerConfirmPassword', mismatch]]) {
+                byId(id)?.classList.toggle('is-invalid', invalid);
+                byId(id)?.setAttribute('aria-invalid', String(invalid));
+            }
+            byId('btnRegisterSubmit').disabled = busy || !(value('registerName') && validPhone(phone) && validPassword(pass) && pass === confirm);
         };
         for (const id of ['registerName', 'registerPhone', 'registerPassword', 'registerConfirmPassword']) {
             on(id, 'input', validateRegister);
@@ -297,8 +391,34 @@
         on('registerForm', 'submit', event => {
             event.preventDefault();
             run(byId('btnRegisterSubmit'), async () => {
-                if (!value('registerName') || !validPassword(password('registerPassword')) || password('registerPassword') !== password('registerConfirmPassword')) throw new Error('Vui lòng kiểm tra họ tên và mật khẩu.');
-                await sendOtp(value('registerPhone'), 'register');
+                const phone = value('registerPhone');
+                if (!validPhone(phone)) {
+                    const phoneFeedback = byId('registerPhoneFeedback');
+                    if (phoneFeedback) {
+                        phoneFeedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
+                        phoneFeedback.classList.add('d-block');
+                    }
+                    byId('registerPhone')?.classList.add('is-invalid');
+                    byId('registerPhone')?.focus();
+                    throw new Error('Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0.');
+                }
+                if (!value('registerName') || !validPassword(password('registerPassword')) || password('registerPassword') !== password('registerConfirmPassword')) {
+                    throw new Error('Vui lòng kiểm tra họ tên và mật khẩu.');
+                }
+                try {
+                    await sendOtp(phone, 'register');
+                } catch (err) {
+                    if (err.message && (err.message.includes('tồn tại') || err.message.includes('đăng ký'))) {
+                        const phoneFeedback = byId('registerPhoneFeedback');
+                        if (phoneFeedback) {
+                            phoneFeedback.textContent = 'Số điện thoại đã tồn tại. Vui lòng đăng nhập hoặc khôi phục mật khẩu!';
+                            phoneFeedback.classList.add('d-block');
+                        }
+                        byId('registerPhone')?.classList.add('is-invalid');
+                        byId('registerPhone')?.focus();
+                    }
+                    throw err;
+                }
             }).finally(validateRegister);
         });
         for (const selector of ['#otpSection .otp-input', '.forgot-otp-input']) {
@@ -353,7 +473,16 @@
                 catch (error) { show('forgotOtpSection'); resetInputs('.forgot-otp-input'); throw error; }
             });
         });
-        on('btnRequestNewLink', 'click', () => { clearChallenge(); show('forgotPhoneSection'); });
+        on('btnRequestNewLink', 'click', () => {
+            const phone = value('expiredPhone') || new URLSearchParams(window.location.search).get('phone') || '';
+            clearChallenge();
+            if (phone && validPhone(phone)) {
+                run(byId('btnRequestNewLink'), () => sendOtp(phone, 'activate'));
+            } else {
+                show('forgotPhoneSection');
+                if (phone && byId('forgotPhone')) byId('forgotPhone').value = phone;
+            }
+        });
         const validateSetup = () => {
             const pass = password('setupPassword'), confirm = password('setupConfirmPassword');
             const invalidPass = pass.length > 0 && !validPassword(pass);
