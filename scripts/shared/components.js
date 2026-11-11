@@ -82,7 +82,7 @@
         var rootPath = getRootPath();
         if (!document.querySelector('script[src*="fab.js"]')) {
             var fabScript = document.createElement('script');
-            fabScript.src = rootPath + 'components/fab/fab.js?v=20261031_member_complete';
+            fabScript.src = rootPath + 'components/fab/fab.js?v=20261111_member_photo';
             fabScript.defer = true;
             document.head.appendChild(fabScript);
         }

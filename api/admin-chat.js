@@ -173,6 +173,15 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     if(token){const result=await service.auth.getUser(token);if(result.error||!result.data.user)return fail(401,'Phiên đăng nhập đã hết hạn.');user=result.data.user;const result2=await service.from('customer').select('id').eq('auth_user_id',user.id).eq('customer_status','active').maybeSingle();if(result2.error)throw result2.error;customer=result2.data;if(!customer)return fail(403,'Chưa xác nhận được tài khoản khách hàng.');}
     if(!customer&&hash){const {data,error}=await service.from('guest_session').select('id').eq('token_hash',hash).is('revoked_at',null).gt('expires_at',new Date().toISOString()).maybeSingle();if(error)throw error;guest=data;}
     if(!customer&&!hash)return fail(401,'Cần phiên khách hợp lệ.');
+    const membershipMessage='Để trò chuyện với nhân viên, bạn vui lòng đăng nhập hoặc thiết lập mật khẩu để trở thành thành viên tại [Đăng nhập](/login). Nội dung trao đổi vẫn được giữ. Nếu gặp khó khăn khi kích hoạt hoặc cần phản ánh thanh toán, bạn có thể gửi yêu cầu tại [Liên hệ](/contact).';
+    let eligible;
+    async function canHandoff(){if(eligible!==undefined)return eligible;if(!customer)return eligible=false;const result=await service.rpc('public_chat_membership',{p_auth:user.id});if(result.error)throw result.error;return eligible=result.data===true;}
+    if(payload.action==='public_claim'){
+     if(!uuid(payload.conversationId)||!hash)return fail(400,'Thiếu thông tin hội thoại gốc.');
+     if(!await canHandoff())return fail(403,membershipMessage,{code:'MEMBERSHIP_REQUIRED'});
+     const result=await service.rpc('claim_public_chat',{p_auth:user.id,p_guest_hash:hash,p_conversation:payload.conversationId});if(result.error)throw result.error;
+     return res.json({ok:true,conversationId:result.data});
+    }
     if(payload.action==='public_open'){
      if(!uuid(payload.conversationId))return fail(400,'Mã hội thoại không hợp lệ.');
      const result=await service.rpc('open_public_chat',{p_id:payload.conversationId,p_customer:customer?.id||null,p_guest_hash:customer?null:hash});if(result.error)throw result.error;return res.json({ok:true,conversationId:result.data});
@@ -202,12 +211,14 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      return res.json({ok:true,...result.data});
     }
     if(payload.action==='public_mode'){
+     if(payload.mode==='waiting_agent'&&!await canHandoff())return fail(403,membershipMessage,{code:'MEMBERSHIP_REQUIRED'});
      const result=await service.rpc('set_public_chat_mode',{p_conversation:c.id,p_mode:payload.mode});if(result.error)throw result.error;return res.json({ok:true});
     }
     if(payload.action!=='public_send')return fail(400,'Thao tác không hợp lệ.');
     const question=typeof payload.question==='string'?payload.question.trim():'';
     const assets=payload.mediaAssetIds??[];
     if(!Array.isArray(assets)||assets.length>3||assets.some(id=>!uuid(id))||new Set(assets).size!==assets.length)return fail(400,'Tối đa 3 ảnh trong một tin nhắn.');
+    if(assets.length&&!await canHandoff())return fail(403,membershipMessage,{code:'MEMBERSHIP_REQUIRED'});
     if(!uuid(payload.requestId)||question.length<1||question.length>2000)return fail(400,'Tin nhắn tối đa 2.000 ký tự.');
     const prior=await service.from('chat_message').select('conversation_id,raw_content,sender_account_id,sender_guest_session_id').eq('id',payload.requestId).maybeSingle();if(prior.error)throw prior.error;
     if(prior.data){if(prior.data.conversation_id!==c.id||prior.data.raw_content!==question||prior.data.sender_account_id!==(user?.id||null)||prior.data.sender_guest_session_id!==(guest?.id||null))return fail(409,'Yêu cầu đã được dùng.');
@@ -226,12 +237,14 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      evaluation.shouldHandover=false;evaluation.detectedLevel=Math.min(evaluation.detectedLevel,2);
     }
     if(assets.length)evaluation.shouldHandover=true;
+    const membershipRequired=evaluation.shouldHandover&&!await canHandoff();
     let reply=null,understood=true;
     if(!['waiting_agent','agent_handling'].includes(c.status)){
      if(evaluation.shouldHandover){
       reply=evaluation.riskType==='billing_dispute'?'PawPal ghi nhận phản ánh về thanh toán của bạn và chuyển hội thoại cho nhân viên kiểm tra. Bạn vui lòng gửi mã đơn hàng và thời điểm giao dịch để đối soát.':evaluation.riskType==='service_complaint'?'PawPal ghi nhận phản ánh của bạn và chuyển hội thoại cho nhân viên xử lý. Bạn vui lòng gửi mã đơn hoặc lịch hẹn cùng mô tả sự cố để nhân viên kiểm tra.':'PawPal ghi nhận yêu cầu của bạn và chuyển hội thoại cho nhân viên hỗ trợ.';
       if(requestedStaff)reply+=' Yêu cầu vừa nhận: '+Array.from(evaluation.maskedText||question).slice(0,300).join('')+'. Nhân viên sẽ xem nội dung hội thoại để tiếp tục hỗ trợ; chưa xác nhận đã có người nhận ca.';
       if(assets.length)reply='PawPal đã nhận ảnh và chuyển hội thoại sang chờ nhân viên xem. Trợ lý tự động chưa phân tích nội dung ảnh.';
+      if(membershipRequired){reply=membershipMessage;evaluation.shouldHandover=false;}
      }else if(understanding.isUnclearInput(question)){
       reply=understanding.clarification;understood=false;
      }else{

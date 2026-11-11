@@ -1,3 +1,14 @@
+// Shared composer validation; no request is sent while named template fields remain.
+(function () {
+    'use strict';
+    const fields = /\[(?:tên|mã|số tiền|số điện thoại|ngày|giờ|địa chỉ|thời gian)(?:\s+[^\]\n]{1,80})?\]/giu;
+    window.PawpalChatTemplateGuard = Object.freeze({
+        find(text) {
+            return [...new Set(typeof text === 'string' ? text.match(fields) || [] : [])];
+        }
+    });
+})();
+
 // Role-specific operations live in this domain; management initialization requires verified ADMIN.
 (function(){
     'use strict';
@@ -139,6 +150,8 @@ render:async(ctx)=>{if(ctx.kind==='staff-copilot')return renderStaffCopilot(ctx)
                     const submit = async () => {
                         if (send.disabled) return true;
                         const text = input.value.trim()||(mode.value==='send'&&chatEditor.count()?'[Hình ảnh]':''); if (mode.value==='send'&&!text || text.length > 8000) { message.textContent = mode.value==='send'?'Nhập tin nhắn từ 1 đến 8000 ký tự.':'Ghi chú tối đa 8000 ký tự.'; input.focus(); return true; }
+                        const missingFields = mode.value==='send' ? window.PawpalChatTemplateGuard.find(text) : [];
+                        if (missingFields.length) { message.textContent = 'Điền thông tin còn trống trong mẫu trước khi gửi: ' + missingFields.join(', '); input.focus(); return true; }
                         if (!pendingSend || pendingSend.p_content !== text || pendingSend.p_action!==mode.value) pendingSend = { p_request_id: mode.value==='send'?chatMessageId:crypto.randomUUID(), p_conversation_id: id,
                             p_expected_updated_at: conversations[0].updated_at, p_action: mode.value, p_content: text };
                         send.disabled = true;mode.disabled=input.disabled=true;message.textContent = '';
@@ -528,6 +541,7 @@ rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.inc
                     slaDeadline: rc.sla_deadline,
                     isRealDb: true,
                     customerId: rc.customer_id,
+                    canHandoff: rc.customer_profile?.can_handoff === true,
                     customerName: custName,
                     phone: phone,
                     tier: existingConv?.tier || (rc.customer_id ? 'Thành viên' : 'Vãng lai'),

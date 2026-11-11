@@ -11,7 +11,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   await p.evaluate(()=>{
    window.calls=[];window.serverMode='bot_handling';window.failMode=false;
    window.setInterval=()=>1;
-   window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange(){}}});
+   window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:{user:{id:'offline-member'},access_token:'offline'}}}),onAuthStateChange(){}}});
    window.fetch=async(_url,init)=>{
     const b=JSON.parse(init.body);calls.push(b.action);
     if(b.action==='public_mode'&&failMode)return {ok:false,status:503,json:async()=>({ok:false,error:'Chưa chuyển được kiểm thử'})};

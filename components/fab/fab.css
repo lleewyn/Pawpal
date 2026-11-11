@@ -1202,3 +1202,19 @@ body:not(.admin-body) .fab-answer-link{color:#236B48;text-decoration:underline;t
 body:not(.admin-body) .fab-answer-link:focus-visible{outline:2px solid #236B48;outline-offset:3px;border-radius:3px}
 body:not(.admin-body) .fab-send-state{align-self:flex-start;color:#526d5b;font:12px/1.7 Inter,system-ui,sans-serif;overflow-wrap:anywhere}
 body:not(.admin-body) .fab-send-state button{margin-left:8px}
+
+/* Account invitation is a compact chat state, with one clear primary action. */
+#fabChatAttachBtn[hidden]{display:none!important}
+.fab-member-prompt-open > .fab-chat-welcome{display:none}
+.fab-member-prompt{align-self:stretch;flex-shrink:0;padding:8px 0;color:#203a2c;text-align:left}
+.fab-member-prompt h3{margin:0 0 8px;font:600 17px/1.45 Inter,system-ui,sans-serif;color:#236b48}
+.fab-member-prompt p{margin:0;font:400 13px/1.65 Inter,system-ui,sans-serif;color:#4f7a65}
+.fab-member-prompt p.fab-member-prompt-note{margin-top:8px;font-size:11.5px;color:#718476}
+.fab-member-prompt-actions{display:grid;gap:8px;margin-top:20px}
+.fab-member-prompt-button{display:block;width:100%;box-sizing:border-box;min-height:40px;padding:10px 12px;border:1px solid #dce5d8;border-radius:9px;background:transparent;color:#236b48;font:500 12px/1.5 Inter,system-ui,sans-serif;cursor:pointer;white-space:normal}
+.fab-member-prompt-button:first-child{border-color:#214939;background:#214939;color:#fff}
+.fab-member-prompt-button:hover{background:#eef4ed}
+.fab-member-prompt-button:first-child:hover{background:#2b5944}
+.fab-member-prompt-back{display:block;width:100%;padding:10px 0;margin-top:4px;border:0;background:transparent;color:#236b48;font:500 12px/1.5 Inter,system-ui,sans-serif;cursor:pointer}
+.fab-member-prompt-contact{display:block;width:fit-content;margin:14px auto 0;color:#718476;font:400 11px/1.6 Inter,system-ui,sans-serif;text-decoration:underline;text-underline-offset:3px}
+.fab-member-prompt :is(button,a):focus-visible{outline:2px solid #236b48;outline-offset:3px}

@@ -572,8 +572,8 @@
         const mediaHost=document.getElementById('adminChatMediaHost');
         if(mediaHost){mediaHost.replaceChildren();const draft=chatMediaDrafts.get(currentConversation.id);if(draft){mediaHost.append(draft.root);draft.editor.freeze(!canSend||Boolean(draft.payload));}}
         if (takeoverBtn) {
-            takeoverBtn.disabled = conversationClosed || operationPending || Boolean(currentConversation.assignedStaffId && !ownsConversation(currentConversation));
-            takeoverBtn.textContent = conversationClosed ? 'Đã kết thúc' : currentConversation.isHandover ? 'Trả lại AI' : 'Tiếp nhận';
+            takeoverBtn.disabled = !currentConversation.canHandoff || conversationClosed || operationPending || Boolean(currentConversation.assignedStaffId && !ownsConversation(currentConversation));
+            takeoverBtn.textContent = conversationClosed ? 'Đã kết thúc' : !currentConversation.canHandoff ? 'Chưa kích hoạt tài khoản' : currentConversation.isHandover ? 'Trả lại AI' : 'Tiếp nhận';
             takeoverBtn.className = 'admin-btn btn-takeover-compact ' + (currentConversation.isHandover ? 'admin-btn-secondary' : 'admin-btn-primary');
         }
 
@@ -1072,6 +1072,8 @@
         const conversation=PawpalChatbot.state?.currentConversation,input=document.getElementById('chatMessageInput'),button=document.getElementById('btnSendLiveMessage');
         const draft=chatMediaDrafts.get(conversation?.id);
         const text=draft?.payload?.p_content||input?.value.trim()||(draft?.editor.count()?'[Hình ảnh]':'');if(!conversation || !text || input.disabled || button?.disabled || !ownsConversation(conversation) || pendingConversationOperations.has(conversation.id))return;
+        const missingFields = window.PawpalChatTemplateGuard.find(text);
+        if (missingFields.length) { PawpalChatbot.showToast?.('Điền thông tin còn trống trong mẫu trước khi gửi: ' + missingFields.join(', '), 'error'); input.focus(); return; }
         isSendingLiveMsg=true;
         try{
           if(draft?.editor.count()){

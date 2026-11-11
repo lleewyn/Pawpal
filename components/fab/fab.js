@@ -6,6 +6,28 @@ function initFab(){
  const tokenKey='pawpal_chat_guest_v1';let guest=localStorage.getItem(tokenKey);let issued=Number(localStorage.getItem(tokenKey+'_at'));
  if(!guest||!issued||Date.now()-issued>7*86400000){guest=crypto.randomUUID()+crypto.randomUUID();issued=Date.now();localStorage.setItem(tokenKey,guest);localStorage.setItem(tokenKey+'_at',issued);}
  let identity='guest',epoch=0;const pending=new Set(),partReads=new Map();
+ const handoffKey='pawpal_chat_member_handoff_v1';let resumingHandoff=false;
+ function pendingHandoff(){try{const value=JSON.parse(sessionStorage.getItem(handoffKey)||'null');if(value&&value.guestIssued===issued&&Date.now()-value.at>=0&&Date.now()-value.at<1800000&&/^[0-9a-f-]{36}$/i.test(value.conversation)&&typeof value.draft==='string'&&value.draft.length<=2000)return value;}catch{}sessionStorage.removeItem(handoffKey);return null;}
+ function membershipPrompt(){
+  let prompt=$('fabMemberPrompt');if(prompt){prompt.scrollIntoView?.({block:'nearest'});return;}
+  prompt=document.createElement('section');prompt.id='fabMemberPrompt';prompt.className='fab-member-prompt';prompt.setAttribute('aria-labelledby','fabMemberPromptTitle');
+  const title=document.createElement('h3');title.id='fabMemberPromptTitle';title.textContent='Chat với nhân viên';
+  const text=document.createElement('p');text.textContent='Đăng nhập hoặc thiết lập mật khẩu thành viên để tiếp tục.';
+  const note=document.createElement('p');note.className='fab-member-prompt-note';note.textContent='Hội thoại và bản nháp của bạn được giữ nguyên.';prompt.append(title,text,note);
+  const actions=document.createElement('div');actions.className='fab-member-prompt-actions';
+  for(const [label,url]of [['Đăng nhập hoặc kích hoạt','/login'],['Đăng ký thành viên','/login?action=register']]){const button=document.createElement('button');button.type='button';button.className='fab-member-prompt-button';button.textContent=label;
+   button.onclick=async()=>{if(busy)return;const stamp=epoch;busy=true;syncControls();try{await ensure();current(stamp);sessionStorage.setItem(handoffKey,JSON.stringify({conversation:active,guestIssued:issued,draft:input.value,at:Date.now()}));sessionStorage.setItem('pawpal_redirect_after_login','/user');location.assign(url);}catch(error){showError(error);}finally{if(stamp===epoch){busy=false;syncControls();}}};actions.append(button);}
+  const back=document.createElement('button');back.type='button';back.className='fab-member-prompt-back';back.textContent='Tiếp tục hỏi trợ lý';back.onclick=()=>{prompt.remove();messages.classList.remove('fab-member-prompt-open');input.focus();};
+  const contact=document.createElement('a');contact.className='fab-member-prompt-contact';contact.href='/contact';contact.textContent='Hỗ trợ kích hoạt và thanh toán';prompt.append(actions,back,contact);messages.classList.add('fab-member-prompt-open');messages.append(prompt);messages.scrollTop=messages.scrollHeight;
+ }
+ async function resumeHandoff(){
+  const value=pendingHandoff();if(!value||identity==='guest'||resumingHandoff||busy)return;
+  if(value.owner&&value.owner!==identity){sessionStorage.removeItem(handoffKey);return;}
+  value.owner=identity;sessionStorage.setItem(handoffKey,JSON.stringify(value));const stamp=epoch;resumingHandoff=true;busy=true;syncControls();
+  try{await api('public_claim',{conversationId:value.conversation});current(stamp);active=value.conversation;rows=[];version=null;remember();input.value=value.draft;panel.classList.add('open');await read(true);current(stamp);if(status==='bot_handling'){await api('public_mode',{conversationId:active,mode:'waiting_agent'});current(stamp);await read(true);}sessionStorage.removeItem(handoffKey);}
+  catch(error){if(!error.stale){panel.classList.add('open');input.value=value.draft;showError(error);}}
+  finally{if(stamp===epoch){busy=false;resumingHandoff=false;syncControls();}}
+ }
  let mediaDraft=null,mediaGallery=null,mediaReady=null;
  async function mediaHeaders(){const stamp=epoch,session=(await client?.auth.getSession())?.data?.session;current(stamp);if((session?.user?.id||'guest')!==identity)throw stale();return session?{Authorization:'Bearer '+session.access_token}:{'X-Pawpal-Chat-Session':guest};}
  function initChatMedia(){
@@ -42,7 +64,7 @@ function initFab(){
   try{
    const streaming=action==='public_send';
    const response=await fetch('/api/admin-chat',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json',...(streaming?{Accept:'text/event-stream'}:{}),...(session?.access_token?{Authorization:'Bearer '+session.access_token}:{})},body:JSON.stringify({action,sessionToken:guest,...body,...(streaming?{stream:true}:{})})});
-   const data=streaming&&response.headers?.get('content-type')?.includes('text/event-stream')?await readStream(response,stamp):await response.json();current(stamp);if(!response.ok||!data.ok)throw Object.assign(Error(data.error||'Không thể kết nối chat.'),{status:response.status,retryable:data.retryable});if(action==='public_read')resetReads();return data;
+   const data=streaming&&response.headers?.get('content-type')?.includes('text/event-stream')?await readStream(response,stamp):await response.json();current(stamp);if(!response.ok||!data.ok)throw Object.assign(Error(data.error||'Không thể kết nối chat.'),{status:response.status,retryable:data.retryable,code:data.code});if(action==='public_read')resetReads();return data;
   }catch(error){current(stamp);if(action==='public_read'||action==='public_send')deferReads(error);if(error.name==='AbortError')throw Error('Phản hồi quá lâu. Nội dung vẫn được giữ để bạn thử lại.');throw error;}
   finally{clearTimeout(timeout);pending.delete(controller);}
  }
@@ -50,7 +72,7 @@ function initFab(){
   const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='',done=null,total=0;
   try{while(true){const chunk=await reader.read();current(stamp);if(chunk.done)break;total+=chunk.value.byteLength;if(total>131072)throw Error('Phản hồi quá dài. Bạn mở lại chat để kiểm tra nhé.');buffer+=decoder.decode(chunk.value,{stream:true}).replace(/\r\n/g,'\n');
     let boundary;while((boundary=buffer.indexOf('\n\n'))>=0){const frame=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);const type=frame.match(/^event: (\w+)$/m)?.[1],raw=frame.match(/^data: (.*)$/m)?.[1];if(!raw)continue;const data=JSON.parse(raw);
-     if(type==='error')throw Object.assign(Error(data.error||'PawPal chưa trả lời xong. Bạn thử gửi lại nhé.'),{status:data.status,retryable:data.retryable});
+     if(type==='error')throw Object.assign(Error(data.error||'PawPal chưa trả lời xong. Bạn thử gửi lại nhé.'),{status:data.status,retryable:data.retryable,code:data.code});
      if(type==='done'){if(data.ok!==true)throw Error('Chưa xác nhận gửi.');done=data;}
      else if(!done&&submission&&type==='reset'){submission.answer='';updateStreamPreview();}
      else if(!done&&submission&&type==='delta'){if(typeof data.text!=='string'||(submission.answer||'').length+data.text.length>16000)throw Error('Phản hồi chưa hợp lệ.');submission.answer=(submission.answer||'')+data.text;updateStreamPreview();}
@@ -65,9 +87,10 @@ function initFab(){
   bubble.querySelector('.fab-stream-content').textContent=submission.answer;if(atBottom)messages.scrollTop=messages.scrollHeight;
  }
  function notify(text){$('fabChatStatus').textContent=text;}
- function showError(error){if(!error.stale)notify(error.message);}
+ function showError(error){if(!error.stale){notify(error.message);if(error.code==='MEMBERSHIP_REQUIRED')membershipPrompt();}}
  function syncControls(){
   const closed=['resolved','closed','completed','blocked'].includes(status);input.disabled=closed;send.disabled=busy||closed;
+  const attach=$('fabChatAttachBtn');if(attach){attach.hidden=identity==='guest';attach.disabled=identity==='guest'||busy||closed;}
   input.readOnly=Boolean(busy&&mediaDraft?.count()||recovery?.mediaAssetIds?.length&&submission?.phase==='failed');
   const button=$('fabHandoverBtn');if(button){button.textContent=status==='waiting_agent'?'Hỏi lại trợ lý':'Gặp chuyên viên';button.disabled=busy||['agent_handling','resolved','closed','completed','blocked'].includes(status);}
  }
@@ -78,10 +101,11 @@ function initFab(){
  }
  function remember(){if(active)sessionStorage.setItem('pawpal_chat_active_'+identity,active);}
  function render(){
+  messages.classList.remove('fab-member-prompt-open');
   mediaGallery?.clear();const mediaSlots=[];
   messages.replaceChildren();if(!rows.length&&!submission){
    const empty=document.createElement('div');empty.className='fab-chat-welcome';
-   empty.innerHTML='<span class="fab-welcome-label">Chào bạn, PawPal đây!</span><h3>Mình có thể giúp gì cho bé?</h3><p>Hỏi về dịch vụ, cách đặt lịch hoặc những điều cần chuẩn bị khi đưa bé đến PawPal.</p><div class="fab-welcome-prompts"></div><small>Trợ lý tự động hỗ trợ thông tin ban đầu. Bạn có thể chọn “Gặp chuyên viên” khi cần tư vấn trực tiếp.</small>';
+   empty.innerHTML='<span class="fab-welcome-label">Chào bạn, PawPal đây!</span><h3>Mình có thể giúp gì cho bé?</h3><p>Hỏi về dịch vụ, cách đặt lịch hoặc những điều cần chuẩn bị khi đưa bé đến PawPal.</p><div class="fab-welcome-prompts"></div><small>Trợ lý tự động hỗ trợ thông tin ban đầu. Đăng nhập hoặc thiết lập mật khẩu thành viên để chọn “Gặp chuyên viên”.</small>';
    for(const prompt of ['Tư vấn dịch vụ tắm và cắt tỉa','Cách đặt lịch cho bé','Cần chuẩn bị gì khi gửi bé?']){const button=document.createElement('button');button.type='button';button.textContent=prompt;button.onclick=()=>{input.value=prompt;input.focus();};empty.querySelector('.fab-welcome-prompts').append(button);}
    messages.append(empty);
   }
@@ -102,7 +126,7 @@ function initFab(){
     const value=String(row.content||'');let start=0;
     if(row.sender_type==='bot')for(const match of value.matchAll(/\[([^\]\n]{1,100})\]\((\/[^\s)]{1,200})\)/g)){
      const safe=/^\/(?:booking(?:\?service=[0-9a-f-]{36})?|product-detail\?id=[0-9a-f-]{36}|shop|services|return-guest|contact|login|user#(?:orders|bookings|pets|loyalty|diary|support|(?:order-detail|booking-detail)\?id=[0-9a-f-]{36}))$/.test(match[2]);if(!safe)continue;
-     content.append(document.createTextNode(value.slice(start,match.index)));const a=document.createElement('a');a.className='fab-answer-link';a.textContent=match[1];a.href=match[2];content.append(a);start=match.index+match[0].length;
+     content.append(document.createTextNode(value.slice(start,match.index)));const a=document.createElement('a');a.className='fab-answer-link';a.textContent=match[1];a.href=match[2];if(match[2]==='/login'&&identity==='guest')a.onclick=event=>{event.preventDefault();membershipPrompt();};content.append(a);start=match.index+match[0].length;
     }
     content.append(document.createTextNode(value.slice(start)));div.append(content);
     if(row.content_partial){const b=document.createElement('button');b.type='button';b.className='fab-chat-read-btn';b.textContent='Đọc tiếp tin nhắn';
@@ -159,7 +183,7 @@ function initFab(){
    await api('public_send',{conversationId:active,question,requestId:request.id,mediaAssetIds});current(stamp);mediaDraft?.saved();submission.phase='reading';request=null;clearRecovery();await read(true);current(stamp);submission=null;
   }catch(error){if(stamp===epoch){if(!sendStarted)mediaDraft?.freeze(false);sendError=error;if(submission){submission.answer='';submission.phase=submission.phase==='reading'?'read_failed':'failed';if(submission.phase==='failed'&&!input.value)input.value=question;}}}finally{if(stamp===epoch){busy=false;render();messages.scrollTop=messages.scrollHeight;if(sendError)showError(sendError);}}
  }
- function fresh(){if(busy)return;mediaDraft?.clear();mediaGallery?.clear();resetReads();clearRecovery();submission=null;active=null;rows=[];version=null;more=false;newPage=null;request=null;input.value='';sessionStorage.removeItem('pawpal_chat_active_'+identity);$('fabChatHistoryView').style.display='none';$('fabChatMainView').style.display='flex';status='bot_handling';render();}
+ function fresh(){if(busy)return;sessionStorage.removeItem(handoffKey);mediaDraft?.clear();mediaGallery?.clear();resetReads();clearRecovery();submission=null;active=null;rows=[];version=null;more=false;newPage=null;request=null;input.value='';sessionStorage.removeItem('pawpal_chat_active_'+identity);$('fabChatHistoryView').style.display='none';$('fabChatMainView').style.display='flex';status='bot_handling';render();}
  async function history(){
   if(busy)return;const view=$('fabChatHistoryView'),list=$('fabHistoryList');view.style.display='flex';$('fabChatMainView').style.display='none';list.textContent='Đang tải...';
   try{const data=await api('public_list',{offset:historyPage*10});list.replaceChildren();if(!data.conversations.length)list.textContent='Chưa có hội thoại.';
@@ -181,14 +205,14 @@ function initFab(){
  $('fabChatExpand')?.addEventListener('click',()=>panel.classList.toggle('expanded'));
  $('fabChatNewBtn')?.addEventListener('click',fresh);$('fabHistoryNewBtn')?.addEventListener('click',fresh);$('fabChatHistoryBtn')?.addEventListener('click',()=>{historyPage=0;history();});
  $('fabHistoryBackBtn')?.addEventListener('click',()=>{$('fabChatHistoryView').style.display='none';$('fabChatMainView').style.display='flex';});
- $('fabHandoverBtn')?.addEventListener('click',async()=>{if(busy)return;const stamp=epoch;busy=true;syncControls();try{await ensure();current(stamp);await api('public_mode',{conversationId:active,mode:status==='waiting_agent'?'bot_handling':'waiting_agent'});current(stamp);await read(true);}catch(error){showError(error);}finally{if(stamp===epoch){busy=false;syncControls();}}});
+ $('fabHandoverBtn')?.addEventListener('click',async()=>{if(busy)return;if(identity==='guest'&&status!=='waiting_agent'){membershipPrompt();return;}if(pendingHandoff()){await resumeHandoff();return;}const stamp=epoch;busy=true;syncControls();try{await ensure();current(stamp);await api('public_mode',{conversationId:active,mode:status==='waiting_agent'?'bot_handling':'waiting_agent'});current(stamp);await read(true);}catch(error){showError(error);}finally{if(stamp===epoch){busy=false;syncControls();}}});
  send.addEventListener('click',submit);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit();}});
  document.querySelectorAll('.fab-chat-suggest').forEach(b=>b.addEventListener('click',()=>{input.value=b.dataset.prompt||b.textContent;input.focus();}));
- if($('fabChatAttachBtn')){$('fabChatAttachBtn').disabled=false;$('fabChatAttachBtn').hidden=false;$('fabChatAttachBtn').textContent='Ảnh';$('fabChatAttachBtn').onclick=()=>initChatMedia().catch(showError);}
+ if($('fabChatAttachBtn')){$('fabChatAttachBtn').disabled=true;$('fabChatAttachBtn').hidden=true;$('fabChatAttachBtn').textContent='Ảnh';$('fabChatAttachBtn').onclick=()=>{if(identity!=='guest'&&!busy&&!input.disabled)initChatMedia().catch(showError);};}
  window.addEventListener('scroll',()=>$('fabBookingBtn')?.classList.toggle('visible',scrollY>400),{passive:true});
- function adopt(next){if(next===identity)return;mediaDraft?.clear();mediaGallery?.clear();epoch++;for(const controller of pending)controller.abort();resetReads();identity=next;active=sessionStorage.getItem('pawpal_chat_active_'+identity);rows=[];submission=null;version=null;more=false;newPage=null;request=null;historyPage=0;busy=false;polling=false;status='bot_handling';input.value='';send.disabled=false;$('fabHistoryList').replaceChildren();restoreRecovery();render();if(panel.classList.contains('open'))read(true).catch(showError);}
- client?.auth.onAuthStateChange((_event,session)=>adopt(session?.user?.id||'guest'));
- (async()=>{const stamp=epoch;const session=(await client?.auth.getSession())?.data?.session;if(stamp!==epoch)return;const next=session?.user?.id||'guest';if(next!==identity)adopt(next);else{active=sessionStorage.getItem('pawpal_chat_active_'+identity);restoreRecovery();render();}})();
+ function adopt(next){if(next===identity)return;mediaDraft?.clear();mediaGallery?.clear();epoch++;resumingHandoff=false;for(const controller of pending)controller.abort();resetReads();identity=next;active=sessionStorage.getItem('pawpal_chat_active_'+identity);rows=[];submission=null;version=null;more=false;newPage=null;request=null;historyPage=0;busy=false;polling=false;status='bot_handling';input.value='';send.disabled=false;$('fabHistoryList').replaceChildren();restoreRecovery();render();if(panel.classList.contains('open'))read(true).catch(showError);}
+ client?.auth.onAuthStateChange((_event,session)=>{const next=session?.user?.id||'guest';if(identity!=='guest'&&next!==identity)sessionStorage.removeItem(handoffKey);adopt(next);setTimeout(()=>resumeHandoff(),0);});
+ (async()=>{const stamp=epoch;const session=(await client?.auth.getSession())?.data?.session;if(stamp!==epoch)return;const next=session?.user?.id||'guest';if(next!==identity)adopt(next);else{active=sessionStorage.getItem('pawpal_chat_active_'+identity);restoreRecovery();render();}await resumeHandoff();})();
  const timer=setInterval(async()=>{if(readBlocked||Date.now()<nextReadAt||polling||busy||document.hidden||!panel.isConnected||!panel.classList.contains('open')||!active)return;const stamp=epoch;polling=true;try{await read();}catch(error){showError(error);}finally{if(stamp===epoch)polling=false;}},10000);
  window.addEventListener('beforeunload',()=>{clearInterval(timer);for(const controller of pending)controller.abort();},{once:true});
 }
