@@ -2,7 +2,8 @@
  * MODULE DASHBOARD COORDINATOR (PAWPAL ADMIN)
  * Tuân thủ mô hình module chuẩn của Pawpal Admin (tương tự customers.js, orders.js):
  * - Quản lý cấu trúc subtabs:
- *   + subtabs/tab-dashboard-overview.js (Tổng quan)
+ *   + subtabs/business-metrics.js (Dữ liệu kinh doanh)
+ *   + subtabs/tab-dashboard-business.js (Kinh doanh và tăng trưởng)
  *   + subtabs/tab-dashboard-operations.js (Quản trị vận hành)
  *   + subtabs/operations-metrics.js (Lớp tính toán số liệu vận hành)
  * - Điều phối vòng đời nạp/hủy/làm mới và đồng bộ subtab qua admin.js
@@ -16,11 +17,13 @@
     async function initDashboard(options = {}) {
         const activeSubtab = sessionStorage.getItem('pawpal_admin_dashboard_subtab') || 'tab-dashboard';
         if (activeSubtab === 'tab-dashboard-operations') {
+            subtabs.overview?.unmount?.();
             const opsRoot = document.getElementById('subtab-tab-dashboard-operations');
             if (opsRoot && (subtabs.operations?.mount || window.PawpalOperationsDashboard?.mount)) {
                 await (subtabs.operations?.mount || window.PawpalOperationsDashboard.mount)(opsRoot);
             }
         } else {
+            subtabs.operations?.unmount?.();
             const overview = subtabs.overview || window.PawpalDashboardOverview;
             if (overview?.init) {
                 await overview.init(options);
@@ -51,12 +54,14 @@
         if (e.detail?.module !== 'Dashboard') return;
         const tabId = e.detail.tabId;
         if (tabId === 'tab-dashboard-operations') {
+            subtabs.overview?.unmount?.();
             const opsRoot = document.getElementById('subtab-tab-dashboard-operations');
             const ops = subtabs.operations || window.PawpalOperationsDashboard;
             if (opsRoot && ops?.mount) {
                 await ops.mount(opsRoot);
             }
         } else if (tabId === 'tab-dashboard') {
+            subtabs.operations?.unmount?.();
             const overview = subtabs.overview || window.PawpalDashboardOverview;
             if (overview?.init) {
                 await overview.init();
@@ -66,7 +71,15 @@
 
     // Lắng nghe sự kiện hiển thị module Dashboard
     window.addEventListener('admin:module-show', async (e) => {
-        if (e.detail?.module !== 'Dashboard') return;
+        if (e.detail?.module !== 'Dashboard') {
+            subtabs.overview?.unmount?.();
+            return;
+        }
+        // A cached DOM may have been detached; remount listeners before refreshing.
+        if ((sessionStorage.getItem('pawpal_admin_dashboard_subtab') || 'tab-dashboard') === 'tab-dashboard') {
+            await (subtabs.overview || window.PawpalDashboardOverview)?.init?.();
+            return;
+        }
         await refreshDashboard();
     });
 

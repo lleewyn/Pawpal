@@ -553,14 +553,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
             if (activeMod === 'Dashboard') {
-                if (window.PawpalDashboard?.loadDashboardData) {
-                    window.PawpalDataStore?.invalidate('dashboard:*');
-                    await window.PawpalDashboard.loadDashboardData({ force: true });
-                    window.PawpalDashboard.init?.();
-                }
-                if (window.PawpalOperationsDashboard?.refresh) {
-                    await window.PawpalOperationsDashboard.refresh();
-                }
+                window.PawpalDataStore?.invalidate('dashboard:*');
+                await window.PawpalDashboard?.refresh?.({ force: true });
             } else if (activeMod === 'Khách hàng' && window.PawpalCustomers?.loadCustomersModuleData) {
                 window.PawpalDataStore?.invalidate('customers:*');
                 await window.PawpalCustomers.loadCustomersModuleData({ force: true });
@@ -659,7 +653,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             defaultTab: 'tab-dashboard',
             storageKey: 'pawpal_admin_dashboard_subtab',
             subtabs: [
-                { id: 'tab-dashboard', label: 'Tổng quan' },
+                { id: 'tab-dashboard', label: 'Kinh doanh và tăng trưởng' },
                 { id: 'tab-dashboard-operations', label: 'Quản trị vận hành' }
             ]
         },
@@ -908,7 +902,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             scripts: [
                 'modules/dashboard/dashboard.js',
                 'modules/dashboard/subtabs/operations-metrics.js',
-                'modules/dashboard/subtabs/tab-dashboard-overview.js',
+                'modules/dashboard/subtabs/business-metrics.js',
+                'modules/dashboard/subtabs/tab-dashboard-business.js',
                 'modules/dashboard/subtabs/tab-dashboard-operations.js'
             ],
             postLoad: async () => {
