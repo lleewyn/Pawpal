@@ -45,7 +45,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
         }));
         console.log(JSON.stringify({ ...report, failures, reads: [...reads] }, null, 2));
         assert.deepEqual(report.state.errors, {});
-        assert.deepEqual(failures.filter(item => item.path !== '/rest/v1/rpc/own_complaint_reply_notices'), []);
+        assert.deepEqual(failures, []);
         assert(report.kpis.every(kpi => /^\d/.test(kpi.value)), 'All KPI values must finish loading');
         const direct = await page.evaluate(async () => {
             const period = PawpalOperationsDashboard.getState().period;

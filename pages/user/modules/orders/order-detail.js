@@ -50,7 +50,10 @@ function render(){
         if(['draft','pending','confirmed','packing'].includes(o.orderStatus))add('detail-cancel-order','Hủy đơn hàng',()=>openOrderAction('cancel'));
         if(['shipped','shipping'].includes(o.orderStatus))add('detail-receive-order','Đã nhận hàng',()=>openOrderAction('receive'));
         add('detail-reorder','Mua lại',reorder);
-        if(['completed','delivered','returned'].includes(o.orderStatus))add('detail-request-return','Yêu cầu đổi trả',()=>window.openRMADrawer(o.id));
+        const deliveredAt = o.deliveredAt ? new Date(o.deliveredAt) : new Date(o.updatedAt || o.createdAt || 0);
+        const daysPassed = (Date.now() - deliveredAt.getTime()) / (1000 * 60 * 60 * 24);
+        const canRequestReturn = o.orderStatus === 'returned' || (['completed','delivered'].includes(o.orderStatus) && daysPassed <= 7);
+        if(canRequestReturn)add('detail-request-return','Yêu cầu đổi trả',()=>window.openRMADrawer(o.id));
         document.querySelector('.order-payment-note')?.remove();
         if(o.paymentStatus!=='paid'&&Number(o.pricing.grandTotal)>0){
             const note=document.createElement('p');note.className='order-payment-note';note.textContent='Thanh toán được cập nhật sau khi cửa hàng xác nhận đã nhận tiền.';
@@ -59,7 +62,7 @@ function render(){
         }
         if(o.note){const note=document.createElement('p');note.id='order-note';note.style.whiteSpace='pre-wrap';note.textContent='Ghi chú đơn hàng: '+o.note;actions.append(note);}
     }
-    const support=document.getElementById('btnOrderReturnSupport');if(support){support.hidden=!['completed','delivered','returned'].includes(o.orderStatus);support.onclick=()=>window.openRMADrawer(o.id);}
+    const support=document.getElementById('btnOrderReturnSupport');if(support){support.hidden=!canRequestReturn;support.onclick=()=>window.openRMADrawer(o.id);}
     document.getElementById('guest-notice')?.classList.add('d-none');
     document.getElementById('pending-payment-banner')?.classList.add('d-none');
     window.setUserSubBreadcrumb?.('#'+o.id,'order-detail');

@@ -240,6 +240,8 @@ async function getSentimentTriggers() {
     return cachedTriggers || [];
 }
 
+const { selectPromptRules } = require('./chat_prompt_rules.js');
+
 async function getActiveSystemPrompts() {
     if (cachedSystemPrompts && (Date.now() - lastPromptsFetchTime < CACHE_TTL_RULES)) {
         return cachedSystemPrompts;
@@ -248,11 +250,14 @@ async function getActiveSystemPrompts() {
         const { data, error } = await supabase
             .from('chatbot_system_prompt')
             .select('prompt_key, persona_name, tone_of_voice, content')
-            .eq('is_active', true);
+            .eq('is_active', true)
+            .eq('channel', 'web')
+            .order('prompt_key', { ascending: true })
+            .limit(50);
         if (!error && data) {
-            cachedSystemPrompts = data;
+            cachedSystemPrompts = selectPromptRules(data);
             lastPromptsFetchTime = Date.now();
-            return data;
+            return cachedSystemPrompts;
         }
     } catch (e) {
         console.error('Lỗi tải system prompts:', e.message);
@@ -2461,7 +2466,7 @@ module.exports = async function handler(req, res) {
         // Bổ sung các chỉ thị cấu hình từ database
         if (systemPrompts && systemPrompts.length > 0) {
             systemInstruction += "\n--- QUY TẮC BỔ SUNG TỪ HỆ THỐNG ---\n";
-            systemPrompts.slice(0, 5).forEach(p => {
+            systemPrompts.forEach(p => {
                 systemInstruction += `${p.content}\n`;
             });
         }

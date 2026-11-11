@@ -21,13 +21,29 @@
    const pending=products.filter(p=>!byLine.has(p.lineId));
    if(!pending.length)reviewedOrders.add(orderId);
    const ids=new Map(pending.map(p=>[p.lineId,crypto.randomUUID()]));
-   section.innerHTML=`<h3 class="card-section-title">Đánh giá sản phẩm</h3>
+   section.innerHTML=`<h3 class="card-section-title">Đánh giá sản phẩm</h3>${!pending.length ? '<p class="review-completed-notice" style="background:#EEF5F1;border:1px solid #C3DEC7;color:#236B48;padding:8px 12px;border-radius:9px;font-size:13px;margin:8px 0 14px;">Giao dịch này đã hoàn tất phản hồi.</p>' : ''}
     <form id="sales-review-form" onsubmit="return false;">${products.map((p,index)=>{
      const prior=byLine.get(p.lineId);
      return `<fieldset style="border:none;padding:0;margin:16px 0"><legend style="font-size:16px;color:#236B48">${escapeHtml(p.name)} — ${escapeHtml(p.sku||'')}</legend>${prior?
-      `<p>${prior.rating}/5 — ${escapeHtml(({pending:'Chờ duyệt',published:'Đã công bố',approved:'Đã duyệt',hidden:'Đã ẩn',rejected:'Không được duyệt'})[prior.review_status]||'Đã tiếp nhận')}</p><p>${escapeHtml(prior.review_content)}</p><div data-review-gallery="${prior.id}"></div>`:
-      `<label for="review-rating-${index}">Mức đánh giá <span style="color:#DC2626">*</span></label><select class="form-select" id="review-rating-${index}" data-review-rating="${p.lineId}" required><option value="">Chọn mức đánh giá</option>${[1,2,3,4,5].map(n=>`<option value="${n}">${n}/5</option>`).join('')}</select>
-      <label for="review-content-${index}" style="margin-top:12px">Nhận xét <span style="color:#DC2626">*</span></label><textarea class="form-control" id="review-content-${index}" data-review-content="${p.lineId}" maxlength="3000" required></textarea><div data-review-media="${p.lineId}"></div>`}</fieldset>`;
+      `<p style="color:#D97706;font-size:15px;letter-spacing:1px;margin:4px 0;">${'★'.repeat(prior.rating)}${'☆'.repeat(5 - prior.rating)} <strong style="color:#203A2C;font-size:13px;margin-left:4px;">${prior.rating}/5</strong> — <span style="color:#4F7A65;font-size:12.5px;">${escapeHtml(({pending:'Chờ duyệt',published:'Đã công bố',approved:'Đã duyệt',hidden:'Đã ẩn',rejected:'Không được duyệt'})[prior.review_status]||'Đã tiếp nhận')}</span></p><p>${escapeHtml(prior.review_content)}</p><div data-review-gallery="${prior.id}"></div>`:
+      `<label style="font-weight:600;margin-bottom:6px;display:block;">Mức đánh giá <span style="color:#DC2626">*</span></label>
+       <div class="batch-star-group">
+         <div class="star-picker" role="radiogroup" aria-label="Mức đánh giá từ 1 đến 5 sao">
+           <input type="radio" id="prod_star5_${p.lineId}" name="prod_rating_${p.lineId}" value="5" data-line-id="${p.lineId}">
+           <label for="prod_star5_${p.lineId}" title="5 sao - Tuyệt vời">★</label>
+           <input type="radio" id="prod_star4_${p.lineId}" name="prod_rating_${p.lineId}" value="4" data-line-id="${p.lineId}">
+           <label for="prod_star4_${p.lineId}" title="4 sao - Hài lòng">★</label>
+           <input type="radio" id="prod_star3_${p.lineId}" name="prod_rating_${p.lineId}" value="3" data-line-id="${p.lineId}">
+           <label for="prod_star3_${p.lineId}" title="3 sao - Bình thường">★</label>
+           <input type="radio" id="prod_star2_${p.lineId}" name="prod_rating_${p.lineId}" value="2" data-line-id="${p.lineId}">
+           <label for="prod_star2_${p.lineId}" title="2 sao - Chưa hài lòng">★</label>
+           <input type="radio" id="prod_star1_${p.lineId}" name="prod_rating_${p.lineId}" value="1" data-line-id="${p.lineId}">
+           <label for="prod_star1_${p.lineId}" title="1 sao - Rất tệ">★</label>
+         </div>
+         <span class="batch-star-emotion" data-star-emotion="${p.lineId}">Chưa chọn mức đánh giá</span>
+         <input type="hidden" id="review-rating-${index}" data-review-rating="${p.lineId}" value="">
+       </div>
+       <label for="review-content-${index}" style="margin-top:12px;font-weight:600;display:block;">Nhận xét <span style="color:#DC2626">*</span></label><textarea class="form-control" id="review-content-${index}" data-review-content="${p.lineId}" maxlength="3000" rows="3" placeholder="Chia sẻ cảm nhận chân thật của bạn về sản phẩm..." required></textarea><div data-review-media="${p.lineId}"></div>`}</fieldset>`;
     }).join('')}<p id="sales-review-error" role="alert" style="color:#DC2626"></p>${pending.length?'<p>Đánh giá sẽ được kiểm duyệt trước khi công bố.</p><button type="button" class="btn-cta" id="sales-review-submit">Gửi đánh giá</button>':''}</form>`;
    section.querySelector('form').addEventListener('submit',e=>e.preventDefault());
    const [{createReviewMediaEditor},{createEvidenceGallery}]=await Promise.all([import('/scripts/shared/review-media.mjs'),import('/scripts/shared/evidence-gallery.mjs')]);
@@ -42,6 +58,18 @@
     await Promise.all([...section.querySelectorAll('[data-review-gallery]')].map(root=>{const gallery=createEvidenceGallery({root,db:db()});galleries.push(gallery);return gallery.render((media.data||[]).filter(r=>r.review_id===root.dataset.reviewGallery).map(r=>({...r,media_url:r.image_url})));}));
    }
    section.querySelector('form').addEventListener('input',()=>{section.querySelector('#sales-review-error').textContent='';});
+    section.querySelector('form').addEventListener('change',e=>{
+     if(e.target.matches('.star-picker input[type="radio"]')){
+      const lineId=e.target.dataset.lineId;
+      const val=e.target.value;
+      const hidden=section.querySelector(`[data-review-rating="${lineId}"]`);
+      if(hidden)hidden.value=val;
+      const emotionEl=section.querySelector(`[data-star-emotion="${lineId}"]`);
+      const emotions={'5':'Tuyệt vời (5/5)','4':'Hài lòng (4/5)','3':'Bình thường (3/5)','2':'Chưa hài lòng (2/5)','1':'Rất tệ (1/5)'};
+      if(emotionEl){emotionEl.textContent=emotions[val]||'';emotionEl.classList.add('active');}
+      section.querySelector('#sales-review-error').textContent='';
+     }
+    });
    const button=section.querySelector('#sales-review-submit');
    if(button)button.onclick=async()=>{
     if(button.disabled||version!==generation)return;

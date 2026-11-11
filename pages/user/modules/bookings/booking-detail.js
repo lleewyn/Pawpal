@@ -443,15 +443,44 @@ async function renderServiceReviewSection(booking,valid=()=>true) {
     const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     const labels = {pending:'Chờ duyệt',published:'Đã công bố',approved:'Đã duyệt',da_duyet:'Đã duyệt',hidden:'Đã ẩn',rejected:'Không được duyệt'};
     section.querySelector('#serviceReviewStatus').textContent = pending.length ? 'Chưa đánh giá đủ' : 'Đã đánh giá';
-    section.querySelector('.service-review-body').innerHTML = `<form id="serviceReviewForm" onsubmit="return false;">${lines.map((line, index) => {
+    section.querySelector('.service-review-body').innerHTML = `${!pending.length ? '<p class="service-review-completed-notice" style="background:#EEF5F1;border:1px solid #C3DEC7;color:#236B48;padding:8px 12px;border-radius:9px;font-size:13px;margin:8px 0 14px;">Giao dịch này đã hoàn tất phản hồi.</p>' : ''}<form id="serviceReviewForm" onsubmit="return false;">${lines.map((line, index) => {
         const review = prior.get(line.id);
         return `<fieldset style="border:0;padding:12px 0"><legend style="font-size:16px">${esc(line.name)}</legend>${review ?
-            `<p>${review.rating}/5 — ${esc(labels[review.review_status] || 'Đã tiếp nhận')}</p><p>${esc(review.review_content)}</p><div data-service-review-gallery="${review.id}"></div>${review.shop_reply ? `<p><strong>Phản hồi cửa hàng</strong></p><p>${esc(review.shop_reply)}</p>` : ''}` :
-            `<label for="serviceRating${index}">Mức đánh giá <span style="color:#DC2626">*</span></label><select class="form-select mb-3" id="serviceRating${index}" data-service-rating="${line.id}"><option value="">Chọn mức đánh giá</option>${[1,2,3,4,5].map(n => `<option value="${n}">${n}/5</option>`).join('')}</select><label for="serviceContent${index}">Nhận xét <span style="color:#DC2626">*</span></label><textarea class="form-control" id="serviceContent${index}" data-service-content="${line.id}" maxlength="3000" rows="3"></textarea><div data-service-review-media="${line.id}"></div>`}</fieldset>`;
+            `<p style="color:#D97706;font-size:15px;letter-spacing:1px;margin:4px 0;">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)} <strong style="color:#203A2C;font-size:13px;margin-left:4px;">${review.rating}/5</strong> — <span style="color:#4F7A65;font-size:12.5px;">${esc(labels[review.review_status] || 'Đã tiếp nhận')}</span></p><p>${esc(review.review_content)}</p><div data-service-review-gallery="${review.id}"></div>${review.shop_reply ? `<p><strong>Phản hồi cửa hàng</strong></p><p>${esc(review.shop_reply)}</p>` : ''}` :
+            `<label style="font-weight:600;margin-bottom:6px;display:block;">Mức đánh giá <span style="color:#DC2626">*</span></label>
+        <div class="batch-star-group">
+          <div class="star-picker" role="radiogroup" aria-label="Mức đánh giá từ 1 đến 5 sao">
+            <input type="radio" id="svc_star5_${line.id}" name="svc_rating_${line.id}" value="5" data-line-id="${line.id}">
+            <label for="svc_star5_${line.id}" title="5 sao - Tuyệt vời">★</label>
+            <input type="radio" id="svc_star4_${line.id}" name="svc_rating_${line.id}" value="4" data-line-id="${line.id}">
+            <label for="svc_star4_${line.id}" title="4 sao - Hài lòng">★</label>
+            <input type="radio" id="svc_star3_${line.id}" name="svc_rating_${line.id}" value="3" data-line-id="${line.id}">
+            <label for="svc_star3_${line.id}" title="3 sao - Bình thường">★</label>
+            <input type="radio" id="svc_star2_${line.id}" name="svc_rating_${line.id}" value="2" data-line-id="${line.id}">
+            <label for="svc_star2_${line.id}" title="2 sao - Chưa hài lòng">★</label>
+            <input type="radio" id="svc_star1_${line.id}" name="svc_rating_${line.id}" value="1" data-line-id="${line.id}">
+            <label for="svc_star1_${line.id}" title="1 sao - Rất tệ">★</label>
+          </div>
+          <span class="batch-star-emotion" data-star-emotion="${line.id}">Chưa chọn mức đánh giá</span>
+          <input type="hidden" id="serviceRating${index}" data-service-rating="${line.id}" value="">
+        </div>
+        <label for="serviceContent${index}" style="margin-top:12px;font-weight:600;display:block;">Nhận xét <span style="color:#DC2626">*</span></label><textarea class="form-control" id="serviceContent${index}" data-service-content="${line.id}" maxlength="3000" rows="3" placeholder="Chia sẻ cảm nhận chân thật của bạn về dịch vụ..." required></textarea><div data-service-review-media="${line.id}"></div>`}</fieldset>`;
     }).join('')}<p id="serviceReviewError" role="alert" style="color:#DC2626"></p>${pending.length ? '<p>Đánh giá sẽ được kiểm duyệt trước khi công bố.</p><button type="button" class="btn-detail-action btn-action-primary-green" id="btnSubmitServiceReview">Gửi đánh giá</button>' : ''}${!lines.length ? '<p>Chưa có dòng dịch vụ hoàn thành để đánh giá.</p>' : ''}</form>`;
     const form = section.querySelector('form');
     form.addEventListener('submit', e => e.preventDefault());
     form.addEventListener('input', () => { section.querySelector('#serviceReviewError').textContent = ''; });
+    form.addEventListener('change', e => {
+        if (e.target.matches('.star-picker input[type="radio"]')) {
+            const lineId = e.target.dataset.lineId;
+            const val = e.target.value;
+            const hidden = form.querySelector(`[data-service-rating="${lineId}"]`);
+            if (hidden) hidden.value = val;
+            const emotionEl = form.querySelector(`[data-star-emotion="${lineId}"]`);
+            const emotions = {'5':'Tuyệt vời (5/5)','4':'Hài lòng (4/5)','3':'Bình thường (3/5)','2':'Chưa hài lòng (2/5)','1':'Rất tệ (1/5)'};
+            if (emotionEl) { emotionEl.textContent = emotions[val] || ''; emotionEl.classList.add('active'); }
+            section.querySelector('#serviceReviewError').textContent = '';
+        }
+    });
     const button = section.querySelector('#btnSubmitServiceReview');
     const reviewOwner=detailOwner();
     const reviewKey=line=>`pawpal_service_review_request:${reviewOwner}:${booking._supabaseId}:${line.id}`;

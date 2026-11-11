@@ -268,8 +268,8 @@ function createOrderCard(order) {
         `;
     }
 
-    // 2. Hủy đơn hàng (Chỉ cho phép khi đơn ở trạng thái Chờ xác nhận)
-    if (normalizedStatus === 'pending') {
+    // 2. Hủy đơn hàng (Cho phép khi đơn ở trạng thái Chờ xác nhận hoặc Đang chuẩn bị hàng)
+    if (['pending', 'preparing'].includes(normalizedStatus)) {
         actionButtonsHtml += `
             <button type="button" class="btn-order-action btn-action-cancel" onclick="event.stopPropagation(); cancelOrder('${escapeHtml(orderId)}')">
                 Hủy đơn
@@ -325,7 +325,7 @@ function createOrderCard(order) {
         if (!orderAlreadyReviewed) {
             actionButtonsHtml += `
                 <a class="btn-order-action btn-action-review" href="#order-detail?id=${encodeURIComponent(orderId)}&section=reviews" onclick="event.stopPropagation()">
-                    Đánh giá
+                    Viết đánh giá
                 </a>
             `;
         } else {

@@ -72,7 +72,11 @@ export async function initLoyalty(){
   }).join(''):'<p>Bạn chưa có voucher nào.</p>';
   const catalog=snapshot.catalog || [];
 
-  document.getElementById('vouchers-grid').innerHTML=catalog.length?(serverPaging?catalog:catalog.slice(catalogPage*6,(catalogPage+1)*6)).map(v=>`<div class="voucher-ticket-card" data-id="${v.id}"><div class="ticket-stub"><strong>${esc(discount(v))}</strong></div><div class="ticket-body"><h4>${esc(v.voucher_name)}</h4><p>${num(v.required_points)} điểm · Đơn từ ${num(v.minimum_order_amount)}đ</p><p>${esc(scope(v))} · Đến ${day(v.end_date)}</p><button type="button" class="btn-modal-cancel" data-detail="${v.id}">Chi tiết</button><button type="button" class="redeem-btn" data-redeem="${v.id}" ${snapshot.points<v.required_points?'disabled':''}>${snapshot.points<v.required_points?'Chưa đủ điểm':'Đổi '+num(v.required_points)+' điểm'}</button></div></div>`).join(''):'<p>Chưa có ưu đãi đổi điểm đang hiệu lực.</p>';
+  document.getElementById('vouchers-grid').innerHTML=catalog.length?(serverPaging?catalog:catalog.slice(catalogPage*6,(catalogPage+1)*6)).map(v=>{
+   const hasEnough=snapshot.points>=v.required_points;
+   const isOutOfStock=Boolean(v.is_out_of_stock || (v.quantity !== undefined && v.quantity <= 0) || (v.max_usage && v.used_count >= v.max_usage));
+   return `<div class="voucher-ticket-card" data-id="${v.id}"><div class="ticket-stub"><strong>${esc(discount(v))}</strong></div><div class="ticket-body"><h4>${esc(v.voucher_name)}</h4><p>${num(v.required_points)} điểm · Đơn từ ${num(v.minimum_order_amount)}đ</p><p>${esc(scope(v))} · Đến ${day(v.end_date)}</p><button type="button" class="btn-modal-cancel" data-detail="${v.id}">Chi tiết</button>${isOutOfStock?'<button type="button" class="redeem-btn btn-out-of-stock" disabled>Hết hàng</button>':`<button type="button" class="redeem-btn" data-redeem="${v.id}" ${!hasEnough?'disabled':''}>${!hasEnough?'Không đủ điểm':'Đổi ngay'}</button>`}</div></div>`;
+  }).join(''):'<p>Chưa có ưu đãi đổi điểm đang hiệu lực.</p>';
   paginate('my-vouchers-list',Number(snapshot.wallet_total??wallet.length),walletPage,value=>walletPage=value);
   paginate('vouchers-grid',Number(snapshot.catalog_total??catalog.length),catalogPage,value=>catalogPage=value);
   for(const id of ['loyalty-card-wrapper','my-vouchers-list','vouchers-grid']){document.getElementById(id).setAttribute('aria-busy','false');document.getElementById(id).classList.add('loyalty-loaded');}
@@ -91,7 +95,12 @@ export async function initLoyalty(){
  function confirmRedeem(v){
   if(!snapshot)return;
   const owner=snapshot.customer_id,key='pawpal_loyalty_request:'+owner+':'+v.id;
-  const {overlay,close}=dialog('Xác nhận đổi ưu đãi',`<p>Đổi <strong>${num(v.required_points)} điểm</strong> lấy <strong>${esc(v.voucher_name)}</strong>?</p><p>Mã sẽ được lưu vào ví. Chưa áp dụng giảm giá hoặc thanh toán đơn hàng.</p><p id="loyaltyRedeemError" role="alert" style="color:#DC2626"></p>`);
+  const userData=(()=>{try{return JSON.parse(localStorage.getItem('pawpal_current_user')||'null');}catch{return null;}})();
+  if(userData?.is_temporary){
+   dialog('Yêu cầu mật khẩu', '<p>Bạn cần thiết lập mật khẩu để sử dụng điểm thưởng.</p><p style="margin-top:14px"><a href="/pages/public/login/login.html?action=setup-password&phone=' + encodeURIComponent(userData.phone||'') + '" class="btn-modal-confirm" style="display:inline-block;text-align:center;text-decoration:none;padding:8px 16px;border-radius:9px;background:#236B48;color:#fff;">Thiết lập mật khẩu ngay</a></p>');
+   return;
+  }
+  const {overlay,close}=dialog('Xác nhận đổi ưu đãi',`<p>Bạn có chắc chắn muốn sử dụng <strong>${num(v.required_points)} điểm</strong> để đổi lấy ưu đãi <strong>${esc(v.voucher_name)}</strong> không?</p><p style="font-size:12.5px;color:#4F7A65;line-height:1.45">Mã này xuất hiện ngay trong "Voucher của tôi" để bạn sử dụng trực tiếp tại bước thanh toán cho các đơn hàng tiếp theo.</p><p id="loyaltyRedeemError" role="alert" style="color:#DC2626"></p>`);
   const button=document.createElement('button');button.type='button';button.id='confirmLoyaltyRedeem';button.className='btn-modal-confirm';button.textContent='Xác nhận đổi';overlay.querySelector('.modal-footer').append(button);
   button.onclick=async()=>{
    if(button.disabled)return;button.disabled=true;button.textContent='Đang đổi...';
@@ -104,7 +113,7 @@ export async function initLoyalty(){
     if(!sync.valid())return;
     if(saved!==request.id)throw Error('Chưa xác nhận được kết quả. Vui lòng thử lại cùng yêu cầu.');
     sessionStorage.removeItem(key);close();if(!active)return;
-    const banner=document.getElementById('loyalty-warning-banner');banner.textContent='Đã đổi ưu đãi và ghi nhận điểm trên hệ thống.';banner.classList.remove('d-none');banner.setAttribute('role','status');await refresh();
+    const banner=document.getElementById('loyalty-warning-banner');banner.textContent='Đổi quà thành công! Mã ưu đãi đã xuất hiện ngay trong "Voucher của tôi" kèm đầy đủ thời hạn và điều kiện sử dụng.';banner.classList.remove('d-none');banner.setAttribute('role','status');await refresh();
    }catch(e){if(e.code==='PT409')sessionStorage.removeItem(key);if(overlay.isConnected)error.textContent=e.message;}
    finally{button.disabled=false;button.textContent='Xác nhận đổi';}
   };

@@ -316,3 +316,57 @@
 .booking-detail-module-container .booking-service-detail-row span{font-size:12px;color:#718476;line-height:1.7}
 .booking-detail-module-container .booking-service-detail-row>b{font-size:14px;font-weight:600;white-space:nowrap;padding-top:2px}
 .booking-detail-module-container #bookingExecutionDetails[hidden]{display:none!important}
+
+
+/* Pawpal Interactive Star Rating (AGENTS.md: 9px radius, solid flat colors, touch-friendly) */
+.batch-star-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 16px;
+    flex-wrap: wrap;
+}
+.star-picker {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    position: relative;
+    gap: 2px;
+}
+.star-picker input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+.star-picker label {
+    font-size: 28px;
+    color: #CBD5CE;
+    cursor: pointer;
+    padding: 0 3px;
+    line-height: 1;
+    transition: color 0.15s ease;
+    user-select: none;
+}
+.star-picker label:hover,
+.star-picker label:hover ~ label {
+    color: #F59E0B;
+}
+.star-picker input:checked ~ label {
+    color: #D99B24;
+}
+.star-picker input:focus-visible + label {
+    outline: 2px solid #236B48;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+.batch-star-emotion {
+    font-size: 13.5px;
+    color: #4F7A65;
+    font-weight: 500;
+    user-select: none;
+}
+.batch-star-emotion.active {
+    color: #236B48;
+    font-weight: 600;
+}

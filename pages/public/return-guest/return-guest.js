@@ -523,7 +523,7 @@ function esc(s) {
 
 function canCancelOrder(o) {
     const status = normalizeOrderStatus(o.status);
-    if (status !== 'pending') return false;
+    if (!['pending', 'preparing'].includes(status)) return false;
     if (o.paymentStatus === 'pending_refund' || o.paymentStatus === 'refunded') return false;
     
     return true;

@@ -295,7 +295,7 @@ function createBookingCard(booking) {
         if (!alreadyReviewed) {
             actionButtonsHtml += `
                 <a class="btn-booking-action btn-action-review" href="#booking-detail?id=${encodeURIComponent(bookingId)}&section=service-review" onclick="event.stopPropagation()">
-                    Đánh giá
+                    Viết đánh giá
                 </a>
             `;
         } else {

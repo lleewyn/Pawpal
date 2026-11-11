@@ -8,11 +8,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/pages/admin/admin.css?v=42">
-    <link rel="stylesheet" href="/pages/admin/login/login.css?v=7">
+    <link rel="stylesheet" href="/pages/admin/login/login.css?v=13">
 </head>
 <body class="admin-login-body">
 
     <header class="login-site-header"><a href="/" class="login-brand">PawPal<span>Quản trị</span></a><a href="/" class="login-home-link">Về trang khách hàng</a></header>
+    <div class="login-workspace">
+    <div class="login-scene">
+    <img class="login-cat" src="/assets/images/admin/login-cat.webp" alt="" aria-hidden="true" fetchpriority="high" width="768" height="1024">
+    <img class="login-cat login-cat-paw-top" src="/assets/images/admin/login-cat.webp" alt="" aria-hidden="true" width="768" height="1024">
+    <img class="login-cat login-cat-paw-side" src="/assets/images/admin/login-cat.webp" alt="" aria-hidden="true" width="768" height="1024">
     <main class="admin-login-card" aria-label="Đăng nhập quản trị">
         <!-- BƯỚC 1: BIỂU MẪU ĐĂNG NHẬP CHÍNH -->
         <div class="step-section active" id="sectionLogin">
@@ -21,7 +26,7 @@
 
             <div class="admin-login-error" id="loginErrorMessage" role="alert"></div>
 
-            <form id="formAdminLogin" autocomplete="on">
+            <form id="formAdminLogin" autocomplete="on" onsubmit="return false;">
                 <div class="login-form-group">
                     <label class="login-label" for="inputAdminEmail">Email công vụ <span class="login-required">*</span></label>
                     <input type="email" class="admin-input" id="inputAdminEmail" placeholder="ten.nv@pawpal.vn" required autofocus autocomplete="username">
@@ -31,7 +36,7 @@
                     <label class="login-label" for="inputAdminPassword">Mật khẩu <span class="login-required">*</span></label>
                     <div class="password-input-wrapper">
                         <input type="password" class="admin-input" id="inputAdminPassword" placeholder="••••••••" required autocomplete="current-password">
-                        <button type="button" class="btn-toggle-view" id="btnTogglePasswordView">Hiện</button>
+                        <button type="button" class="btn-toggle-view" id="btnTogglePasswordView" aria-controls="inputAdminPassword" aria-pressed="false" aria-label="Hiện mật khẩu">Hiện</button>
                     </div>
                 </div>
 
@@ -53,14 +58,14 @@
 
             <div class="admin-login-error" id="changePassErrorMessage" role="alert"></div>
 
-            <form id="formFirstChangePassword">
+            <form id="formFirstChangePassword" onsubmit="return false;">
                 <div class="login-form-group">
-                    <label class="login-label" for="inputNewPassword">Mật khẩu mới</label>
+                    <label class="login-label" for="inputNewPassword">Mật khẩu mới <span class="login-required">*</span></label>
                     <input type="password" class="admin-input" id="inputNewPassword" placeholder="Tối thiểu 6 ký tự" required autocomplete="new-password">
                 </div>
 
                 <div class="login-form-group">
-                    <label class="login-label" for="inputConfirmPassword">Xác nhận mật khẩu mới</label>
+                    <label class="login-label" for="inputConfirmPassword">Xác nhận mật khẩu mới <span class="login-required">*</span></label>
                     <input type="password" class="admin-input" id="inputConfirmPassword" placeholder="Nhập lại mật khẩu mới" required autocomplete="new-password">
                 </div>
 
@@ -70,7 +75,8 @@
             </form>
         </div>
     </main>
-    <footer class="login-site-footer">PawPal · Hệ thống dành cho nhân sự được cấp quyền</footer>
+    </div>
+    </div>
 
     <!-- Nạp Supabase Client -->
     <script src="/scripts/vendor/supabase.js"></script>

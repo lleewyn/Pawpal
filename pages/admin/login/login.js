@@ -25,6 +25,8 @@
             const isPass = inputPassword.type === 'password';
             inputPassword.type = isPass ? 'text' : 'password';
             btnToggleView.textContent = isPass ? 'Ẩn' : 'Hiện';
+            btnToggleView.setAttribute('aria-pressed', String(isPass));
+            btnToggleView.setAttribute('aria-label', isPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
         });
     }
 

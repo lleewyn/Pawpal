@@ -138,6 +138,11 @@ const contextChildren = new Set(['public.customer_profile','public.customer_phon
     return;
   }
   if(graphHash!==approved.fingerprint)throw Error('Source records changed after reviewed plan; abort without deletion');
+  if(mode==='apply'){
+    const verification=JSON.parse(fs.readFileSync(path.join(folder,'verified.private.json'),'utf8'));
+    if(verification.fingerprint!==graphHash||!verification.protectedAndUnselectedRowsUnchanged)throw Error('Matching rolled-back verification is required');
+  }
+  console.log('Source fingerprint matches reviewed plan; '+selected.size+' records selected.');
   const lockTables=[...new Set([...selected.values()].map(n=>n.table))];
   if(!lockTables.length)throw Error('No safely removable test data');
   await client.query('LOCK TABLE '+lockTables.sort().map(qualified).join(',')+' IN SHARE ROW EXCLUSIVE MODE');
@@ -156,10 +161,12 @@ const contextChildren = new Set(['public.customer_profile','public.customer_phon
     return result;
   };
   const before=await snapshots();
+  console.log('Protected catalogs, ledgers, posted payments and retained rows snapshotted.');
   const backup={createdAt:new Date().toISOString(),fingerprint:graphHash,records:[...selected.values()],protectedDigests:before};
   const backupFile=path.join(folder,mode==='verify'?'before-verify.private.json':'before-delete.private.json');
   fs.writeFileSync(backupFile,JSON.stringify(backup,null,2),{flag:'wx'});
   fs.writeFileSync(backupFile.replace('.private.json','.sha256'),digest(fs.readFileSync(backupFile))+'\n');
+  console.log('Private backup written before any deletion.');
   const pending=new Map(selected),deleted={};
   // Topological leaf-first order. Cycles fail closed rather than bypass constraints.
   while(pending.size){

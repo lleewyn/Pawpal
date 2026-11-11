@@ -122,6 +122,7 @@
   show('btnReopenTicket',finished(t)&&!reopenExpired); show('btnCloseComplaint',t.status==='resolved');
   ['btnAssignHandler','btnRequestMoreInfo','btnOpenResolveModal','btnSubmitReply'].forEach(id=>{if($(id))$(id).disabled=finished(t);});
   show('btnRequestMoreInfo',Boolean(t.customerId));
+  text('btnAssignHandler', (t.status==='new' || !t.staffAssigned || t.staffAssigned==='Chưa phân công') ? 'Nhận xử lý' : 'Đổi người xử lý');
   text('btnCompleteComplaint',directAward(t.resolution_type)?'Thực hiện bồi hoàn':'Liên kết kết quả thực hiện');
   show('btnCompleteComplaint',t.status==='processing' && Boolean(t.resolved_by) && Boolean(t.resolution_type));
   show('btnLinkComplaintSource',!finished(t) && !t.bookingId && !t.orderId);

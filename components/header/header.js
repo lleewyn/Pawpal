@@ -593,8 +593,28 @@
         navigation.innerHTML=pages<=1?'':`<button type="button" data-page-back ${noticeState.page===1?'disabled':''}>&lt;</button><span>${noticeState.page} / ${pages}</span><button type="button" data-page-next ${noticeState.page===pages?'disabled':''}>&gt;</button>`;
         const move=async delta=>{if(noticeState.pending)return;noticeState.page+=delta;selectedNotice=null;await refreshNotices();};
         navigation.querySelector('[data-page-back]')?.addEventListener('click',()=>move(-1));navigation.querySelector('[data-page-next]')?.addEventListener('click',()=>move(1));
-        const rows=noticeState.rows.filter(n=>noticeFilter!=='unread'||!n.read_at);
-        modal.querySelector('#noticeCloudRows').innerHTML=rows.map(n=>`<button type="button" style="width:100%;text-align:left;background:transparent;border:0;padding:12px;display:grid;gap:4px;border-radius:9px" class="notification-item-dropdown ${n.read_at?'':'unread'}" data-notice="${escapeHtml(n.id)}"><strong>${escapeHtml(n.title)}</strong><span>${escapeHtml(new Date(n.sent_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}))}</span></button>`).join('') || '<p>Chưa có thông báo phù hợp.</p>';
+        const getCategoryBadge = n => {
+            const t = (n.notification_type || '').toLowerCase();
+            if (n.appointment_id || t.includes('service') || t.includes('booking') || t.includes('appointment') || t.includes('care_log')) {
+                return '<span style="display:inline-block;padding:2px 8px;border-radius:9px;background:#EEF5F1;color:#236B48;font-size:11px;font-weight:600;">Dịch vụ</span>';
+            }
+            if (n.sales_order_id || t.includes('order') || t.includes('sales') || t.includes('product') || t.includes('delivery')) {
+                return '<span style="display:inline-block;padding:2px 8px;border-radius:9px;background:#EBF5FF;color:#1E40AF;font-size:11px;font-weight:600;">Mua sắm</span>';
+            }
+            if (n.voucher_id || t.includes('voucher') || t.includes('offer') || t.includes('loyalty') || t.includes('promotion') || t.includes('point')) {
+                return '<span style="display:inline-block;padding:2px 8px;border-radius:9px;background:#FEF3C7;color:#92400E;font-size:11px;font-weight:600;">Ưu đãi</span>';
+            }
+            return '<span style="display:inline-block;padding:2px 8px;border-radius:9px;background:#F3F4F6;color:#4B5563;font-size:11px;font-weight:600;">Hệ thống</span>';
+        };
+        const rows=noticeState.rows.filter(n=>{
+            if(noticeFilter==='unread')return !n.read_at;
+            const t = (n.notification_type || '').toLowerCase();
+            if(noticeFilter==='service')return n.appointment_id || t.includes('service') || t.includes('booking') || t.includes('appointment') || t.includes('care_log');
+            if(noticeFilter==='shop')return n.sales_order_id || t.includes('order') || t.includes('sales') || t.includes('product') || t.includes('delivery');
+            if(noticeFilter==='offer')return n.voucher_id || t.includes('voucher') || t.includes('offer') || t.includes('loyalty') || t.includes('promotion') || t.includes('point');
+            return true;
+        });
+        modal.querySelector('#noticeCloudRows').innerHTML=rows.map(n=>`<button type="button" style="width:100%;text-align:left;background:transparent;border:0;padding:12px;display:grid;gap:6px;border-radius:9px" class="notification-item-dropdown ${n.read_at?'':'unread'}" data-notice="${escapeHtml(n.id)}"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><strong>${escapeHtml(n.title)}</strong>${getCategoryBadge(n)}</div><span>${escapeHtml(new Date(n.sent_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}))}</span></button>`).join('') || '<p>Chưa có thông báo phù hợp.</p>';
         modal.querySelectorAll('[data-notice]').forEach(button=>button.onclick=()=>{
             selectedNotice=rows.find(n=>n.id===button.dataset.notice);
             if(!selectedNotice)return;
@@ -614,11 +634,11 @@
         if(!owner || owner!==getCurrentUser()?.id)return;
         document.getElementById('notificationsCloudModal')?.querySelector('[data-close-modal]')?.click();
         const modal=document.createElement('div');modal.id='notificationsCloudModal';modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,30,.4);display:flex;align-items:center;justify-content:center;z-index:10000;padding:16px;';
-        modal.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="noticeCloudTitle" style="background:white;border-radius:9px;width:760px;max-width:95vw;max-height:90vh;overflow:auto;padding:26px 30px"><div style="display:flex;justify-content:space-between"><h3 id="noticeCloudTitle">Thông báo</h3><button type="button" data-close-modal="notificationsCloudModal">Đóng</button></div><p id="noticeCloudError" role="alert" style="color:#DC2626"></p><div id="noticeCloudDetail" tabindex="-1" style="overflow-wrap:anywhere"></div><div style="display:flex;gap:12px;flex-wrap:wrap"><button type="button" data-notice-filter="all">Tất cả</button><button type="button" data-notice-filter="unread">Chưa đọc</button><button type="button" id="noticeCloudMarkAll">Đọc tất cả</button></div><div id="noticeCloudRows"></div><button type="button" data-close-modal="notificationsCloudModal">Để sau</button></section>';
+        modal.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="noticeCloudTitle" style="background:white;border-radius:9px;width:760px;max-width:95vw;max-height:90vh;overflow:auto;padding:26px 30px"><div style="display:flex;justify-content:space-between"><h3 id="noticeCloudTitle">Thông báo</h3><button type="button" data-close-modal="notificationsCloudModal">Đóng</button></div><p id="noticeCloudError" role="alert" style="color:#DC2626"></p><div id="noticeCloudDetail" tabindex="-1" style="overflow-wrap:anywhere"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px;"><button type="button" data-notice-filter="all" style="font-weight:700">Tất cả</button><button type="button" data-notice-filter="service">Dịch vụ</button><button type="button" data-notice-filter="shop">Mua sắm</button><button type="button" data-notice-filter="offer">Ưu đãi</button><button type="button" data-notice-filter="unread">Chưa đọc</button><button type="button" id="noticeCloudMarkAll">Đánh dấu đã đọc tất cả</button></div><div id="noticeCloudRows"></div><button type="button" data-close-modal="notificationsCloudModal">Để sau</button></section>';
         const previous=document.activeElement,overflow=document.body.style.overflow,close=()=>{modal.remove();document.body.style.overflow=overflow;document.removeEventListener('keydown',key);if(previous?.isConnected)previous.focus();},key=event=>{if(event.key==='Escape')close();};
         modal.onclick=event=>{if(event.target===modal || event.target.closest('[data-close-modal]') || event.target.closest('#noticeCloudDetail a'))close();};document.addEventListener('keydown',key);document.body.append(modal);document.body.style.overflow='hidden';modal.querySelectorAll('button').forEach(button=>{button.classList.add('btn','btn-sm','btn-outline-success');button.style.borderRadius='9px';});modal.querySelector('button').focus();
         selectedNotice=noticeState.rows.find(row=>row.id===initialNoti?.id) || initial || null;noticeFilter='all';
-        modal.querySelectorAll('[data-notice-filter]').forEach(button=>button.onclick=async()=>{if(noticeState.pending)return;noticeFilter=button.dataset.noticeFilter;noticeState.onlyUnread=noticeFilter==='unread';noticeState.page=1;selectedNotice=null;await refreshNotices();});
+        modal.querySelectorAll('[data-notice-filter]').forEach(button=>button.onclick=async()=>{if(noticeState.pending)return;noticeFilter=button.dataset.noticeFilter;noticeState.onlyUnread=noticeFilter==='unread';noticeState.page=1;selectedNotice=null;modal.querySelectorAll('[data-notice-filter]').forEach(b=>b.style.fontWeight=(b===button?'700':'400'));renderNoticeModal();if(noticePagingEnabled)await refreshNotices();});
         modal.querySelector('#noticeCloudMarkAll').onclick=async event=>{const button=event.target;button.disabled=true;try{await markNoticeRead(null);}catch(error){noticeError(error.message);}finally{button.disabled=false;}};
         if(!modal.isConnected)return;renderNoticeModal();
         if(selectedNotice){focusNoticeDetail(modal);if(!selectedNotice.read_at)try{await markNoticeRead(selectedNotice.id);}catch(error){noticeError(error.message);}}
