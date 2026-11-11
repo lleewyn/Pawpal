@@ -421,32 +421,32 @@
     }
 
     // ------------------------------------------------------------------
-    // Màu biểu đồ (đã kiểm tra phân biệt được với người mù màu, các khối liền kề có khe 2px):
-    // hổ phách = cần xử lý; xanh rừng nhạt -> đậm = tiến trình; xám = hủy; đỏ = không đến / trả hàng.
+    // Dùng cùng bảng màu trạng thái pastel với badge của hệ thống Admin.
     // ------------------------------------------------------------------
     const SEG = {
-        amber: { color: '#D9892B', text: 'on-light' },
-        green1: { color: '#88C3A0', text: 'on-light' },
-        green2: { color: '#3F8F66', text: 'on-dark' },
-        green3: { color: '#1E5E40', text: 'on-dark' },
-        gray: { color: '#A7B0AB', text: 'on-light' },
-        red: { color: '#C0504D', text: 'on-dark' }
+        warning: { color: '#F5E8D3', text: 'status-warning' },
+        info: { color: '#DCEAF2', text: 'status-info' },
+        success: { color: '#DCEEE2', text: 'status-success' },
+        neutral: { color: '#E2ECE5', text: 'status-neutral' },
+        danger: { color: '#F7DCDC', text: 'status-danger' }
     };
     const APPOINTMENT_SEGMENTS = [
-        { label: 'Chờ xác nhận', groups: ['pending'], ...SEG.amber },
-        { label: 'Đã xác nhận', groups: ['confirmed'], ...SEG.green1 },
-        { label: 'Đang phục vụ', groups: ['checked_in', 'in_progress'], ...SEG.green2 },
-        { label: 'Hoàn thành', groups: ['completed'], ...SEG.green3 },
-        { label: 'Đã hủy', groups: ['cancelled', 'expired', 'other'], ...SEG.gray },
-        { label: 'Không đến', groups: ['no_show'], ...SEG.red }
+        { label: 'Chờ xác nhận', groups: ['pending'], ...SEG.warning },
+        { label: 'Đã xác nhận', groups: ['confirmed'], ...SEG.info },
+        { label: 'Đang phục vụ', groups: ['checked_in', 'in_progress'], ...SEG.info },
+        { label: 'Hoàn thành', groups: ['completed'], ...SEG.success },
+        { label: 'Đã hủy', groups: ['cancelled', 'expired'], ...SEG.danger },
+        { label: 'Không đến', groups: ['no_show'], ...SEG.danger },
+        { label: 'Khác', groups: ['other'], ...SEG.neutral }
     ];
     const ORDER_SEGMENTS = [
-        { label: 'Chờ xác nhận', groups: ['pending'], ...SEG.amber },
-        { label: 'Đang chuẩn bị', groups: ['processing'], ...SEG.green1 },
-        { label: 'Đang giao', groups: ['shipping'], ...SEG.green2 },
-        { label: 'Hoàn thành', groups: ['completed'], ...SEG.green3 },
-        { label: 'Đã hủy', groups: ['cancelled', 'other'], ...SEG.gray },
-        { label: 'Trả hàng', groups: ['returned'], ...SEG.red }
+        { label: 'Chờ xác nhận', groups: ['pending'], ...SEG.warning },
+        { label: 'Đang chuẩn bị', groups: ['processing'], ...SEG.info },
+        { label: 'Đang giao', groups: ['shipping'], ...SEG.info },
+        { label: 'Hoàn thành', groups: ['completed'], ...SEG.success },
+        { label: 'Đã hủy', groups: ['cancelled'], ...SEG.danger },
+        { label: 'Trả hàng', groups: ['returned'], ...SEG.danger },
+        { label: 'Khác', groups: ['other'], ...SEG.neutral }
     ];
 
     // ------------------------------------------------------------------
@@ -457,7 +457,7 @@
     }
 
     function segmentedBar(breakdown, segments, unit) {
-        // Trạng thái lạ nằm trong nhóm "other", được gộp vào khối xám "Đã hủy" và báo riêng dưới biểu đồ.
+        // Trạng thái chưa phân loại được hiển thị riêng trong nhóm "Khác".
         const counts = new Map(breakdown.items.map(item => [item.key, item.value]));
         const parts = segments
             .map(segment => ({ ...segment, value: segment.groups.reduce((sum, group) => sum + (counts.get(group) || 0), 0) }))
@@ -465,11 +465,10 @@
         const total = breakdown.total;
         const bar = parts.map(part => {
             const share = part.value / total;
-            const label = share >= 0.07 ? num(part.value) : '';
-            return `<span class="ops-seg-part ${part.text}" style="flex:${part.value} 1 0;background:${part.color}" tabindex="0"${tip(`${part.label}: ${num(part.value)} ${unit} (${Math.round(share * 100)}%)`)}>${label}</span>`;
+            return `<span class="ops-seg-part ${part.text}" style="flex:${part.value} 1 0;background:${part.color}" tabindex="0"${tip(`${part.label}: ${num(part.value)} ${unit} (${Math.round(share * 100)}%)`)}></span>`;
         }).join('');
-        const legend = parts.map(part => `<li><i style="background:${part.color}"></i>${esc(part.label)}</li>`).join('');
-        return `<div class="ops-seg" role="group">${bar}</div><ul class="ops-legend">${legend}</ul>`;
+        const legend = parts.map(part => `<li><i aria-hidden="true" style="background:${part.color}"></i><span>${esc(part.label)}</span><strong>${num(part.value)}</strong><small>${Math.round(part.value / total * 100)}%</small></li>`).join('');
+        return `<div class="ops-seg" role="group" aria-label="Tỷ lệ theo trạng thái">${bar}</div><ul class="ops-legend">${legend}</ul>`;
     }
 
     function rankedBars(items) {
@@ -630,7 +629,7 @@
         guard(panelName, PANEL_RESOURCES[panelName], ({ refreshing, truncated }) => {
             const breakdown = breakdownFn(rows(resource));
             if (!breakdown.total) return setPanel(panelName, `<p class="ops-empty">${emptyText}</p>`, { refreshing });
-            const unknown = breakdown.unknownStatuses?.length ? `<p class="ops-caption"${tip(`Trạng thái chưa phân loại: ${breakdown.unknownStatuses.map(item => `${item.status} (${item.count})`).join(', ')}`)} tabindex="0">Có ${num(breakdown.unknownStatuses.reduce((sum, item) => sum + item.count, 0))} ${unit} trạng thái chưa phân loại, đang tính vào "Đã hủy".</p>` : '';
+            const unknown = breakdown.unknownStatuses?.length ? `<p class="ops-caption"${tip(`Trạng thái chưa phân loại: ${breakdown.unknownStatuses.map(item => `${item.status} (${item.count})`).join(', ')}`)} tabindex="0">Có ${num(breakdown.unknownStatuses.reduce((sum, item) => sum + item.count, 0))} ${unit} trạng thái chưa phân loại, đang tính vào "Khác".</p>` : '';
             setPanel(panelName, `<p class="ops-hero"><strong>${num(breakdown.total)}</strong><span>${unit}</span></p>${segmentedBar(breakdown, segments, unit)}${unknown}${truncatedNote(truncated)}`, { refreshing });
         });
     }
@@ -750,13 +749,13 @@
         const time = state.lastUpdatedAt ? state.lastUpdatedAt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : null;
         let text;
         if (!time) text = state.loading.size ? 'Đang tải' : 'Đang kết nối';
-        else if (state.realtime === 'live') text = `• Trực tiếp · ${time}`;
+        else if (state.realtime === 'live') text = `Trực tiếp · ${time}`;
         else if (state.realtime === 'connecting') text = `Đang kết nối · ${time}`;
         else text = `Tự làm mới mỗi phút · ${time}`;
         node.textContent = text;
         node.dataset.tip = state.realtime === 'live'
             ? 'Đang nhận thay đổi trực tiếp từ hệ thống. Số liệu tự cập nhật khi có lịch, đơn, ca làm, tồn kho hoặc hỗ trợ thay đổi.'
-            : 'Chưa nhận được thay đổi trực tiếp. Trang tự làm mới mỗi phút, hoặc bấm Làm mới.';
+            : 'Chưa nhận được thay đổi trực tiếp. Trang tự làm mới mỗi phút, hoặc dùng nút Làm mới trên header.';
         node.classList.toggle('is-live', state.realtime === 'live');
         node.classList.toggle('is-offline', state.realtime === 'offline');
     }
@@ -865,7 +864,6 @@
                 applyPeriod('custom', { from: state.root.querySelector('[data-ops-from]').value, to: state.root.querySelector('[data-ops-to]').value });
                 return;
             }
-            if (event.target.closest('[data-ops-refresh]')) { reloadAll(); return; }
             if (event.target.closest('[data-ops-toggle-alerts]')) {
                 state.alertsExpanded = !state.alertsExpanded;
                 state.alertsPage = 1;
