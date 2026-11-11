@@ -1,0 +1,120 @@
+# Dự thảo làm sạch dữ liệu — chưa ghi Supabase
+
+Chỉ là danh sách để xác định phạm vi; chưa thực hiện thêm, sửa hoặc xóa bản ghi.
+
+## Chuẩn hóa khoảng trắng (giữ nguyên ý nghĩa)
+- appointment / 8bb3024a-c129-430f-b0e6-e8ac935c3c0d / note
+  - Trước: Lý do hủy: Khác / 
+  - Sau: Lý do hủy: Khác
+- appointment / b291cffd-0487-4fdd-8647-bcde6e9ce8ed / note
+  - Trước: [Pawpal handover v1] / qualityAccepted	true / belongingsReturned	true / recordedAt	2026-10-17T12%3A07%3A39.928Z / intakeRecordedAt	2026-10-17T10%3A00%3A37.148Z / total	304000 / [/Pawpal handover] / [Pawpal intake v1] / actualWeight	1 / staffId	e0000000-5555-5555-5555-555555555555 / staffName	Nguy%E1%BB%85n%20Th%E1%BB%8B%20Ch%C4%83m%20S%C3%B3c / skinCoat	S%E1%BA%A1ch%20s%E1%BA%BD / eyesEars	B%C3%ACnh%20th%C6%B0%E1%BB%9Dng / wounds	Kh%C3%B4ng%20c%C3%B3%20v%E1%BA%BFt%20th%C6%B0%C6%A1ng%20c%C5%A9 / woundNote	 / temperament	Ngoan%20hi%E1%BB%81n / belongings	Qu%E1%BA%A7n%20%C3%A1o%20ho%E1%BA%B7c%20y%E1%BA%BFm / belongingsNote	 / recordedAt	2026-10-17T10%3A00%3A37.148Z / updatedAt	2026-10-17T10%3A00%3A37.148Z / [/Pawpal intake] / 
+  - Sau: [Pawpal handover v1] / qualityAccepted	true / belongingsReturned	true / recordedAt	2026-10-17T12%3A07%3A39.928Z / intakeRecordedAt	2026-10-17T10%3A00%3A37.148Z / total	304000 / [/Pawpal handover] / [Pawpal intake v1] / actualWeight	1 / staffId	e0000000-5555-5555-5555-555555555555 / staffName	Nguy%E1%BB%85n%20Th%E1%BB%8B%20Ch%C4%83m%20S%C3%B3c / skinCoat	S%E1%BA%A1ch%20s%E1%BA%BD / eyesEars	B%C3%ACnh%20th%C6%B0%E1%BB%9Dng / wounds	Kh%C3%B4ng%20c%C3%B3%20v%E1%BA%BFt%20th%C6%B0%C6%A1ng%20c%C5%A9 / woundNote	 / temperament	Ngoan%20hi%E1%BB%81n / belongings	Qu%E1%BA%A7n%20%C3%A1o%20ho%E1%BA%B7c%20y%E1%BA%BFm / belongingsNote	 / recordedAt	2026-10-17T10%3A00%3A37.148Z / updatedAt	2026-10-17T10%3A00%3A37.148Z / [/Pawpal intake]
+
+## Khách có dấu hiệu kiểm thử
+- 030b48d9-972c-4459-9dcb-61d62fbf3c64: Test Name
+- 0e852ba0-290b-4e2d-b09b-c9c520a0905f: Khách QA Quầy CUS02
+- 0fc4feb3-8c6b-49f1-9c50-13457fdaf6f7: Le Van Thu Nghiem QA02
+- 28c2fcb2-ed12-4ba5-ae6c-ef4f463cc742: Khách QA Quầy CUS02
+- 3527b05f-fa9f-4a54-9a8f-ca0cc2631713: Khách QA Quầy CUS02
+- 592961ad-d90e-4d19-b504-15a124df6111: Khach Thu Nghiem QA01
+- c5ee0922-87ee-4304-8f0e-cab7e5853680: Khách QA Quầy CUS02
+- d0000000-0000-0000-0000-000000000002: Lê Lệ Quyên QA
+- d0000000-0000-0000-0000-000000000003: Lê Lệ Quyên QA
+- f88a4506-d8ea-47f6-8ce3-903ccf47f730: Khách QA Quầy CUS02
+
+## Lịch có dấu hiệu kiểm thử
+- BKG-08e4e094-a5e6-48c9-b135-ffac698f70c8 / 0add4b39-b83b-4264-835c-7b3ba79789dc: cancelled; 2026-10-18T04:30:00+00:00 → 2026-10-18T05:30:00+00:00
+  - Ghi chú: Lý do hủy: Khách bận đột xuất - QA r65 kết thúc kiểm thử chuyến Taxi / Điều phối: Chưa phân công → Trần Văn Nhân Viên. Lý do: QA r65 kiểm thử lưu điều phối / QA r64 kiểm thử lưu Taxi 1
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- APP-GEN-3-4 / 1d194296-534c-4f5a-a8f6-f086a1fd54aa: cancelled; 2026-07-15T02:00:00+00:00 → 2026-07-15T03:00:00+00:00
+  - Ghi chú: 
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-46e6e9c7-9896-4f15-956c-5eafe0a4c7f5 / 28da19fb-3a41-472d-bebd-93ce1474d3df: completed; 2026-10-19T03:00:00+00:00 → 2026-10-19T03:30:00+00:00
+  - Ghi chú: [Pawpal handover v1] / qualityAccepted	true / belongingsReturned	true / recordedAt	2026-10-16T01%3A18%3A34.464Z / intakeRecordedAt	2026-10-16T01%3A17%3A00.545Z / total	100000 / [/Pawpal handov
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-E2E12-5973 / 2a3434d9-e485-4352-81b5-b11ea1c4d29d: confirmed; 2026-10-19T07:30:00+00:00 → 2026-10-19T08:30:00+00:00
+  - Ghi chú: Lịch hẹn QA E2E-12 kiểm thử Dashboard
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-E2E12-1249 / 2d5c7430-8544-4823-a2c5-5be817ca5078: confirmed; 2026-10-19T07:30:00+00:00 → 2026-10-19T08:30:00+00:00
+  - Ghi chú: Lịch hẹn QA E2E-12 kiểm thử Dashboard
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- APP-GEN-2-0 / 2db689bd-0d8c-4b8c-a714-34e327c91bdd: pending; 2026-07-15T02:00:00+00:00 → 2026-07-15T03:00:00+00:00
+  - Ghi chú: 
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- APP-GEN-4-4 / 2e0905fd-ef7d-4d6b-880d-eeca5a1ac9ce: cancelled; 2026-07-15T02:00:00+00:00 → 2026-07-15T03:00:00+00:00
+  - Ghi chú: 
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-c8237798-4ead-4e89-8a5b-d6cafce481c8 / 38282b34-bdd8-4e4e-afd2-8ddcb57401a1: completed; 2026-10-17T04:30:00+00:00 → 2026-10-17T05:00:00+00:00
+  - Ghi chú: [Pawpal charges v1] / 471f243f-29a6-4a0a-85a9-e894c41831db	surcharge	1000	QA%20r69%20ph%E1%BB%A5%20ph%C3%AD%20l%C6%B0u%20th%E1%BA%ADt	QA%20r69%20ki%E1%BB%83m%20th%E1%BB%AD%20ghi%20d%
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- QA48-LIVE / 528cc8a0-f592-43c0-8649-c05dc27dba05: cancelled; 2026-12-18T04:30:00+00:00 → 2026-12-18T05:30:00+00:00
+  - Ghi chú: QA testcase 48 - sẽ hủy sau test
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-5b927c05-5abd-482f-b96c-8385ba133d78 / 59a8c7c8-8a46-49f6-b09d-4cca8e720552: in_progress; 2026-10-17T04:30:00+00:00 → 2026-10-17T05:00:00+00:00
+  - Ghi chú: [Pawpal intake v1] / actualWeight	7 / staffId	e0000000-5555-5555-5555-555555555555 / staffName	Nguy%E1%BB%85n%20Th%E1%BB%8B%20Ch%C4%83m%20S%C3%B3c / skinCoat	S%E1%BA%A1ch%20s%E1%BA%BD / eyes
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-E2E12-4053 / 63728349-b93c-498a-b570-c97decc1f174: confirmed; 2026-10-19T07:30:00+00:00 → 2026-10-19T08:30:00+00:00
+  - Ghi chú: Lịch hẹn QA E2E-12 kiểm thử Dashboard
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- QA48-FIRST / 65068c46-e3fa-4c2e-b290-3ba0b69e60a8: cancelled; 2026-12-19T01:00:00+00:00 → 2026-12-19T02:00:00+00:00
+  - Ghi chú: QA testcase 48 - sẽ hủy sau test
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- QA48-EARLY / 69f2b154-4c43-45a1-855b-5852a2bb2813: cancelled; 2026-12-19T03:00:00+00:00 → 2026-12-19T04:00:00+00:00
+  - Ghi chú: QA testcase 48 - sẽ hủy sau test
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-QA02-TEST / 792859b8-efd2-4c7c-ae78-a000991e9e43: completed; 2026-10-18T07:00:00+00:00 → 2026-10-18T08:00:00+00:00
+  - Ghi chú: Lịch hẹn thử nghiệm E2E-01 /  / [Pawpal intake v1] / actualWeight	12.5 / staffId	f12d8dcc-aceb-4c80-adb4-c14e1d9afc30 / staffName	L%C3%AA%20Ho%C3%A0ng%20Ti%E1%BA%BFn / skinCoat	S%E1%BA%A1ch%20
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- APP-GEN-6-2 / 82ebe185-1eac-4a63-99c4-a4cc5544395d: in_progress; 2026-07-15T02:00:00+00:00 → 2026-07-15T03:00:00+00:00
+  - Ghi chú: 
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-E2E12-1108 / 9a41d599-a767-4bbc-a17b-91fec61bd5fc: confirmed; 2026-10-19T07:30:00+00:00 → 2026-10-19T08:30:00+00:00
+  - Ghi chú: Lịch hẹn QA E2E-12 kiểm thử Dashboard
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-E2E09-TIEN / bd388ea2-1a31-4f51-88e7-cfc0e21cf069: confirmed; 2026-10-25T02:00:00+00:00 → 2026-10-25T03:00:00+00:00
+  - Ghi chú: Điều phối: hrth → Nguyễn Thị Chăm Sóc. Lý do: KTV LKTV Le Hoang Tien nghi phep da duyet, dieu chuyen ca sang KTV truc thay Nguyen Thi Cham Soc / Điều phối: Lê Hoàng Tiến → hrth. Lý d
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- QA48-LATE / cbb1c4cb-afc2-4f18-b224-2625c7f437f1: cancelled; 2026-12-20T08:00:00+00:00 → 2026-12-20T09:00:00+00:00
+  - Ghi chú: QA testcase 48 - sẽ hủy sau test
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- APP-GEN-1-3 / cc135587-3b12-4173-9095-270636a2b2b2: completed; 2026-07-15T02:00:00+00:00 → 2026-07-15T03:00:00+00:00
+  - Ghi chú: 
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-68b6ff1f-25f3-4af5-b12b-1c8f30f9b8d9 / d12ab1de-15fc-461b-b00c-6c8d95845716: confirmed; 2026-10-17T03:30:00+00:00 → 2026-10-17T04:00:00+00:00
+  - Ghi chú: QA r81 tạo lịch hẹn để kiểm thử lưu biên bản sự cố
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- APP-GEN-5-2 / d680d760-1cb4-4a95-8559-1c38fe3497fc: in_progress; 2026-07-15T02:00:00+00:00 → 2026-07-15T03:00:00+00:00
+  - Ghi chú: 
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- APP-GEN-0-3 / e6621910-02e1-481e-a6b2-ae82ec8546c6: completed; 2026-07-15T02:00:00+00:00 → 2026-07-15T03:00:00+00:00
+  - Ghi chú: 
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-d0380934-64c7-4819-ba27-147b390b6807 / efd1388e-3ef7-4e15-9eda-de593f735bea: completed; 2026-10-17T05:00:00+00:00 → 2026-10-17T05:30:00+00:00
+  - Ghi chú: [Pawpal handover v1] / qualityAccepted	true / belongingsReturned	true / recordedAt	2026-10-16T08%3A32%3A05.576Z / intakeRecordedAt	2026-10-16T08%3A26%3A08.991Z / total	101000 / [/Pawpal handov
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+- BKG-E2E12-5403 / f6b543c7-93df-418d-9978-d29010ba539b: confirmed; 2026-10-19T07:30:00+00:00 → 2026-10-19T08:30:00+00:00
+  - Ghi chú: Lịch hẹn QA E2E-12 kiểm thử Dashboard
+  - Thanh toán liên quan: 0; không có trong phạm vi phiên Admin
+
+## Thú cưng có dấu hiệu kiểm thử
+- PET-009 / 0c51105e-f6f8-432b-9b89-e9864a7d50a0: Bông kiểm thử skeleton
+- PET-TEST-A1 / 4a3eb860-17c2-4c8d-aca1-66fce9cba299: Mèo Miu Miu
+- PET-QA01MOCHI / 4c236791-feed-4671-855f-97e7daedb079: Corgi Mochi QA
+- PET-TEST001 / 4e4a3c1c-055f-43bb-adb2-cee01e896107: Corgi Mochi QA02
+- PET-QA-193040-2 / 5d558096-ee80-4489-8715-5a6638424bfe: Cún Lu Lu
+- PET-GUEST-921755 / 67b7a15a-bcef-453a-9ee7-0e873ff36213: Cún Test
+- TEST-PET-2 / 6dc05212-631d-463a-a3e9-4f6029788aa4: Test2
+- PET-QA-444896 / 6f359db8-3124-4f7b-a6f1-42438d10585d: Bé Corgi QA Mỡ Mỡ
+- PET-1aa8b31e8d324e1aa9f64fd5 / 7af957c2-a90c-41b9-9ed2-ee2b1b4fdfd6: Bé QA danh sách 46
+- PET-6f23eee7142144eca7998a8b / 958aa8f5-9525-4c6f-95a0-1d8c405d2594: Bé QA danh sách 46 số 9
+- PET-7c69ff8fc9b948de80fc9567 / 971c45e4-a3ef-44d4-a87f-0de37f9a0a92: Bé QA danh sách 46 số 6
+- PET-66eb310e7a8c491fa3e1ae84 / 9d6ef7e1-2e16-4288-9521-25047e8ef988: Bé QA danh sách 46 số 4
+- PET-c1615adee38842f38b27de33 / a3c0b0ca-0736-4319-b5e4-ac9393c9414d: Bé QA danh sách 46 số 5
+- PET-38f4281ce8584cccb5e63bea / a3fc7240-bb2e-4728-9307-a4c764b87d19: Bé QA danh sách 46 số 8
+- TEST-PET-3 / a558329e-ef1f-4c28-911b-fbc45adf630d: Test3
+- PET-7d4c0df031c64fdfa399071d / c324cf2e-997f-4c56-a179-436ec98fd32d: Bé QA danh sách 46 số 10
+- PET-QA-193040-1 / d4c39835-1b6d-4050-bc5f-88fa6db47f9a: Mèo Miu Miu
+- PET-TEST-A2 / dec666aa-bd1f-4698-8815-e0ea0bc084cf: Cún Lu Lu
+- PET-TEST-QA2782 / e1868397-c251-4890-b2a0-724915e0c135: Mèo Miu Miu
+- PET-c173e03ef17c4e6c89a3b869 / e4de0e3e-6ff9-4af1-a40f-231da4d231c5: Bé QA danh sách 46 số 7
+- PET-QA-234809-1 / f131da9d-2483-412e-9cc1-2e0b34459dcc: Mèo Miu Miu

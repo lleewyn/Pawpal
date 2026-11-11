@@ -1928,8 +1928,9 @@ body.booking-page-body{background:#fff;color:#274b39;font-family:Inter,system-ui
 .booking-page-body .btn-owner-edit:hover{color:#184c33}
 .booking-page-body .booking-owner strong{font-family:Lora,Inter,serif;color:#214939;font-size:20px;font-weight:600}
 .booking-page-body .booking-owner a{font-size:12px;color:#315d46}
-.booking-page-body .booking-pet-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
-.booking-page-body .booking-pet-card,.booking-page-body .booking-service-card{display:flex;flex-direction:column;gap:7px;text-align:left;background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:18px;color:#526d5b;font-family:Inter,system-ui,sans-serif;box-shadow:none;cursor:pointer}
+.booking-page-body .booking-pet-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,260px));gap:14px;margin-bottom:18px}
+.booking-page-body .booking-pet-card{display:flex;flex-direction:column;gap:6px;text-align:left;background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:14px 16px;color:#526d5b;font-family:Inter,system-ui,sans-serif;box-shadow:none;cursor:pointer}
+.booking-page-body .booking-service-card{display:flex;flex-direction:column;gap:7px;text-align:left;background:#fff;border:1px solid #dce5d8;border-radius:9px;padding:18px;color:#526d5b;font-family:Inter,system-ui,sans-serif;box-shadow:none;cursor:pointer}
 .booking-page-body .booking-pet-card strong,.booking-page-body .booking-service-card strong{font-family:Lora,Inter,serif;font-size:20px;font-weight:600;color:#214939;line-height:1.4}
 .booking-page-body .booking-pet-card span,.booking-page-body .booking-service-card span{font-size:12px;line-height:1.7}
 .booking-page-body .booking-pet-card small,.booking-page-body .booking-service-card small{font-size:12px;line-height:1.7;color:#718476}
@@ -1938,10 +1939,17 @@ body.booking-page-body{background:#fff;color:#274b39;font-family:Inter,system-ui
 .booking-page-body .btn-card-edit{background:transparent;border:0;color:#236b48;font-weight:600;font-size:13px;cursor:pointer;padding:2px 6px;border-radius:4px;text-decoration:underline;text-underline-offset:3px;font-family:Inter,system-ui,sans-serif}
 .booking-page-body .btn-card-edit:hover{color:#184c33;background-color:#eef5f1}
 .booking-page-body .booking-service-card:disabled{opacity:.6;cursor:not-allowed}
+.booking-page-body .booking-service-card-top{display:flex;justify-content:space-between;align-items:center;width:100%;gap:10px}
+.booking-page-body .booking-service-tag{font-size:11.5px;font-weight:500;color:#4f7a65;background:#eef5f1;padding:2px 8px;border-radius:6px;font-family:Inter,system-ui,sans-serif}
+.booking-page-body .booking-service-price{font-family:Lora,Inter,serif;font-size:15px;font-weight:700;color:#236b48}
 .booking-page-body .booking-service-filters{display:flex;flex-wrap:wrap;gap:10px}
 .booking-page-body .booking-service-filters button,.booking-page-body .booking-day-slots button,.booking-page-body .booking-staff-options button{font-family:Inter,system-ui,sans-serif;font-size:12px;padding:9px 12px;background:#f1f5ed;border:1px solid #d5e0d0;border-radius:9px;color:#31553f}
 .booking-page-body .booking-service-filters button.active,.booking-page-body .booking-day-slots button.selected,.booking-page-body .booking-staff-options button.selected{background:#214939;border-color:#214939;color:#fff}
-.booking-page-body .booking-service-cards{display:grid;gap:12px;max-height:460px;overflow:auto;overscroll-behavior:contain;padding:2px}
+.booking-page-body .booking-service-cards{display:grid;gap:12px;max-height:480px;overflow-y:auto!important;overscroll-behavior:contain;padding:4px 6px 4px 2px;-webkit-overflow-scrolling:touch}
+.booking-page-body .booking-service-cards::-webkit-scrollbar{width:6px}
+.booking-page-body .booking-service-cards::-webkit-scrollbar-track{background:#f1f5ed;border-radius:9px}
+.booking-page-body .booking-service-cards::-webkit-scrollbar-thumb{background:#c5d4c8;border-radius:9px}
+.booking-page-body .booking-service-cards::-webkit-scrollbar-thumb:hover{background:#9ab39f}
 .booking-page-body .booking-service-card small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .booking-page-body .booking-availability{display:grid;gap:14px}
 .booking-page-body .booking-day-slots,.booking-page-body .booking-staff-options{display:flex;flex-wrap:wrap;gap:9px}

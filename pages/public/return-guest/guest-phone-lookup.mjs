@@ -9,6 +9,33 @@ function normalizeVietnamPhone(value){
     return phone;
 }
 
+function resolveProductThumbnail(name, rawImage) {
+    if (rawImage && rawImage !== '/assets/images/shop/products/placeholder.webp' && !rawImage.includes('undefined')) {
+        return rawImage;
+    }
+    const n = String(name || '').toLowerCase();
+    if (n.includes('royal canin') || n.includes('babycat')) return '/assets/images/shop/products/tp-hat-01.png';
+    if (n.includes('churu') || n.includes('ciao')) return '/assets/images/shop/products/tp-sup-03.png';
+    if (n.includes('orijen') || n.includes('fit & trim') || n.includes('fit và trim')) return '/assets/images/shop/products/TP-HAT-05.png';
+    if (n.includes('king') && n.includes('pet')) return '/assets/images/shop/products/TP-PATE-02.png';
+    if (n.includes('whiskas')) return '/assets/images/shop/products/TP-HAT-04.png';
+    if (n.includes('taste of the wild')) return '/assets/images/shop/products/TP-HAT-06.png';
+    if (n.includes('intense beauty')) return '/assets/images/shop/products/TP-PATE-08.png';
+    if (n.includes('pate') || n.includes('home-cooked')) return '/assets/images/shop/products/TP-PATE-07.png';
+    if (n.includes('wanpy')) return '/assets/images/shop/products/TP-SUP-09.png';
+    if (n.includes('cá hồi') || n.includes('dầu cá')) return '/assets/images/shop/products/TP-SUP-10.png';
+    if (n.includes('virbac') || n.includes('gel')) return '/assets/images/shop/products/TP-SUP-11.png';
+    if (n.includes('bene-bac') || n.includes('men vi sinh')) return '/assets/images/shop/products/TP-SUP-12.png';
+    if (n.includes('jolly') || n.includes('fullvit')) return '/assets/images/shop/products/TP-HAT-13.png';
+    if (n.includes('timothy') || n.includes('cỏ khô')) return '/assets/images/shop/products/TP-CO-14.png';
+    if (n.includes('bánh mài răng')) return '/assets/images/shop/products/TP-SUP-15.png';
+    if (n.includes('bát ăn') || n.includes('cà rốt')) return '/assets/images/shop/products/DD-BAT-18.png';
+    if (n.includes('bình nước')) return '/assets/images/shop/products/DD-BINH-02.png';
+    if (n.includes('nệm') || n.includes('lông cừu')) return '/assets/images/shop/products/PK-NEM-06.png';
+    if (n.includes('vòng cổ') || n.includes('chuông')) return '/assets/images/shop/products/PK-VONG-10.png';
+    return '/assets/images/shop/products/TP-HAT-05.png';
+}
+
 export function mapGuestReceipts(data){
     return {
         customer:data.customer,
@@ -24,7 +51,7 @@ export function mapGuestReceipts(data){
             status:({packing:'preparing',shipped:'shipping'})[receipt.status]||receipt.status,
             paymentStatus:receipt.paymentStatus,pricing:{total:Number(receipt.total)},
             delivery:{name:receipt.receiver?.name,address:[receipt.receiver?.address,receipt.receiver?.province].filter(Boolean).join(', ')},
-            products:(receipt.lines||[]).map(line=>({name:line.name,quantity:Number(line.quantity),price:Number(line.unitPrice),image:'/assets/images/shop/products/placeholder.webp'}))
+            products:(receipt.lines||[]).map(line=>({name:line.name,quantity:Number(line.quantity),price:Number(line.unitPrice),image:resolveProductThumbnail(line.name,line.image||line.image_url)}))
         }))
     };
 }

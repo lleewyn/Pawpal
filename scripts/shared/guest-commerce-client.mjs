@@ -77,7 +77,7 @@ export function createGuestCommerceClient({
                 }, timeoutMs);
             })]);
         } catch (error) {
-            if (error instanceof GuestCommerceError) throw error;
+            if (error instanceof GuestCommerceError || error?.name === 'GuestCommerceError') throw error;
             throw new GuestCommerceError('Kết nối bị gián đoạn. Vui lòng kiểm tra trước khi gửi lại.', {uncertain: mutating});
         } finally { clearTimeout(timer); }
     }
@@ -126,7 +126,15 @@ export function createGuestCommerceClient({
         const promise = (async () => {
             await ensureSession();
             if(epoch!==expectedEpoch)throw new GuestCommerceError('Phiên đã thay đổi. Vui lòng kiểm tra lại kết quả.',{status:401,uncertain:false});
-            return post(action, body, mutating);
+            try {
+                return await post(action, body, mutating);
+            } catch (err) {
+                if (!mutating && (err?.status === 401 || err?.message?.includes('hết hiệu lực') || err?.message?.includes('Phiên đã thay đổi'))) {
+                    await ensureSession();
+                    return await post(action, body, mutating);
+                }
+                throw err;
+            }
         })();
         if (key) {
             const entry = {body, promise};

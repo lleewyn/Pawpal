@@ -157,12 +157,16 @@ async function handleSubmit(event) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initContactForm() {
     const form = document.getElementById('contactForm');
-    if (form) {
-        if(form.dataset.contactReady)return;
-        form.dataset.contactReady='true';
-        form.addEventListener('submit', handleSubmit);
-    }
+    if (!form || form.dataset.contactReady) return;
+    form.dataset.contactReady = 'true';
+    form.onsubmit = handleSubmit;
+    form.addEventListener('submit', handleSubmit);
+}
 
-});
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initContactForm);
+} else {
+    initContactForm();
+}

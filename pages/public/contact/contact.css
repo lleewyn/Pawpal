@@ -196,3 +196,45 @@ body.contact-page-body{background:#fff;font-family:Inter,system-ui,sans-serif;co
 .contact-page-body .contact-main{background:#fff}
 .contact-page-body .contact-info{gap:16px}
 .contact-page-body .contact-form .form-row{gap:20px}
+
+
+/* Contact receipt confirmation card */
+#contactReceipt {
+    margin-top: 18px;
+    padding: 16px 18px;
+    background-color: #EEF5F1;
+    border: 1px solid #C3DEC7;
+    border-radius: 9px;
+    color: #203A2C;
+}
+
+#contactReceiptCode {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #236B48;
+    margin-bottom: 6px;
+}
+
+#contactReceiptHint {
+    font-size: 13px;
+    color: #4F7A65;
+    line-height: 1.45;
+    margin-bottom: 10px;
+}
+
+#contactReceiptLink {
+    display: inline-block;
+    padding: 7px 14px;
+    background-color: #236B48;
+    color: #ffffff;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+}
+
+#contactReceiptLink:hover {
+    background-color: #1b5338;
+    color: #ffffff;
+}

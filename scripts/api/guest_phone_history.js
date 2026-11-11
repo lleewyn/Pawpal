@@ -129,7 +129,7 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
     }
     await store.finish(body.challengeId,claimId,true);finished=true;
     let bookingQuery=admin.from('appointment').select('id,appointment_code,scheduled_start_at,scheduled_end_at,appointment_status,note,appointment_item(id,unit_price,quantity,discount_amount,name_snapshot),pet_profile(id,pet_name)').eq('customer_id',c.id);
-    let orderQuery=admin.from('sales_order').select('id,order_code,order_status,shipping_fee_snapshot,receiver_name_snapshot,receiver_phone_snapshot,street_address_snapshot,province_snapshot,created_at,updated_at,delivered_at,note,sales_order_detail(id,quantity,unit_price,discount_amount,product_name_snapshot,sku_snapshot)').eq('customer_id',c.id);
+    let orderQuery=admin.from('sales_order').select('id,order_code,order_status,shipping_fee_snapshot,receiver_name_snapshot,receiver_phone_snapshot,street_address_snapshot,province_snapshot,created_at,updated_at,delivered_at,note,sales_order_detail(id,quantity,unit_price,discount_amount,product_name_snapshot,sku_snapshot,product_variant(id,product(id,product_media(image_url,is_thumbnail))))').eq('customer_id',c.id);
     if(c.snapshotOnly){
      bookingQuery=bookingQuery.eq('booking_contact_phone',phone);
      orderQuery=orderQuery.eq('receiver_phone_snapshot',phone);

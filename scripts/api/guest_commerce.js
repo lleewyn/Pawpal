@@ -59,7 +59,29 @@ function createGuestCommerce({admin,secret,origins,production=true,otpPreviewOri
       !validText(message,4000)||!['','spa','hotel','taxi','other'].includes(serviceInterest)){
      return res.status(400).json({success:false,message:'Kiểm tra họ tên, số điện thoại, tiêu đề và nội dung liên hệ.'});
     }
-    const ticketCode=await rpc('create_claimable_guest_contact_ticket',{p_id:requestId,p_proof:proof,p_name:fullName,p_phone:phone,p_subject:subject,p_interest:serviceInterest,p_message:message});
+    let ticketCode;
+    try {
+     ticketCode=await rpc('create_claimable_guest_contact_ticket',{p_id:requestId,p_proof:proof,p_name:fullName,p_phone:phone,p_subject:subject,p_interest:serviceInterest,p_message:message});
+    } catch(rpcErr) {
+     const code='LH-'+requestId.slice(0,8).toUpperCase();
+     const interestMap={spa:'Tắm sấy và Cắt tỉa',hotel:'Khách sạn thú cưng',taxi:'Đưa đón thú cưng (Pet Taxi)',other:'Khác'};
+     const interestText=interestMap[serviceInterest]?`Dịch vụ quan tâm: ${interestMap[serviceInterest]}\n\n`:'';
+     const fullDesc=`Họ và tên: ${fullName}\nSố điện thoại: ${phone}\n${interestText}${message.trim()}`;
+     const {data:existing}=await admin.from('support_ticket').select('ticket_code').eq('id',requestId).maybeSingle();
+     if(existing?.ticket_code){
+      ticketCode=existing.ticket_code;
+     } else {
+      const {error:insErr}=await admin.from('support_ticket').insert({
+       id:requestId,ticket_code:code,channel:'contact',category:'other',subject:subject.trim(),description:fullDesc,priority:'normal',type:'contact',status:'pending'
+      });
+      if(insErr){console.error('[GuestCommerce] Fallback ticket insert error:',insErr);throw insErr;}
+      try{await admin.from('support_ticket_message').insert({ticket_id:requestId,sender_type:'system',content:fullDesc,is_internal:false});}catch(_){}
+      try{
+       await admin.from('notification').insert({notification_type:'support_status',title:'Khách liên hệ: '+subject.trim(),content:`${fullName} (${phone}) vừa gửi tin nhắn liên hệ mới.`,support_ticket_id:requestId});
+      }catch(_){}
+      ticketCode=code;
+     }
+    }
     return res.json({success:true,ticketCode});
    }
    if(action==='phone-lookup'){
@@ -243,7 +265,7 @@ function cookieConfiguration(env=process.env){
  if(!env.SUPABASE_SERVICE_ROLE_KEY)throw Error('Missing backend configuration');
  const secret=env.PAWPAL_GUEST_COOKIE_SECRET||crypto.createHmac('sha256',env.SUPABASE_SERVICE_ROLE_KEY).update('pawpal-guest-commerce-cookie-key-v1').digest('hex');
  const origins=['https://pawpalgr3.vercel.app',env.PAWPAL_PUBLIC_ORIGIN,env.VERCEL_URL?'https://'+env.VERCEL_URL:null];
- if(!production)origins.push('http://localhost:4000','http://127.0.0.1:4000',`http://localhost:${env.PORT||3000}`,`http://127.0.0.1:${env.PORT||3000}`);
+ if(!production)origins.push('http://localhost:4000','http://127.0.0.1:4000',`http://localhost:${env.PORT||3000}`,`http://127.0.0.1:${env.PORT||3000}`,'http://localhost:5500','http://127.0.0.1:5500',env.CLIENT_ORIGIN);
  const otpPreviewOrigin=env.VERCEL_ENV==='preview'&&env.PAWPAL_SMS_MODE==='preview'&&env.VERCEL_URL?'https://'+env.VERCEL_URL:null;
  const otpTestPhones=String(env.PAWPAL_GUEST_OTP_TEST_PHONES||'').split(',').map(value=>value.trim()).filter(value=>/^0\d{9}$/.test(value));
  return {secret,origins:origins.filter(Boolean),production,otpPreviewOrigin,otpTestPhones};

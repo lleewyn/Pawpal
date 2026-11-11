@@ -1,4 +1,38 @@
 
+const toSentenceCase = str => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1).toLocaleLowerCase('vi')
+        .replace(/\b(spa|ktv|vip|pos|daycare)\b/gi, m => m.toUpperCase())
+        .replace(/\(pet taxi\)/gi, '(Pet Taxi)');
+};
+
+function resolveProductThumbnail(name, rawImage) {
+    if (rawImage && rawImage !== '/assets/images/shop/products/placeholder.webp' && !rawImage.includes('undefined')) {
+        return rawImage;
+    }
+    const n = String(name || '').toLowerCase();
+    if (n.includes('royal canin') || n.includes('babycat')) return '/assets/images/shop/products/tp-hat-01.png';
+    if (n.includes('churu') || n.includes('ciao')) return '/assets/images/shop/products/tp-sup-03.png';
+    if (n.includes('orijen') || n.includes('fit & trim') || n.includes('fit và trim')) return '/assets/images/shop/products/TP-HAT-05.png';
+    if (n.includes('king') && n.includes('pet')) return '/assets/images/shop/products/TP-PATE-02.png';
+    if (n.includes('whiskas')) return '/assets/images/shop/products/TP-HAT-04.png';
+    if (n.includes('taste of the wild')) return '/assets/images/shop/products/TP-HAT-06.png';
+    if (n.includes('intense beauty')) return '/assets/images/shop/products/TP-PATE-08.png';
+    if (n.includes('pate') || n.includes('home-cooked')) return '/assets/images/shop/products/TP-PATE-07.png';
+    if (n.includes('wanpy')) return '/assets/images/shop/products/TP-SUP-09.png';
+    if (n.includes('cá hồi') || n.includes('dầu cá')) return '/assets/images/shop/products/TP-SUP-10.png';
+    if (n.includes('virbac') || n.includes('gel')) return '/assets/images/shop/products/TP-SUP-11.png';
+    if (n.includes('bene-bac') || n.includes('men vi sinh')) return '/assets/images/shop/products/TP-SUP-12.png';
+    if (n.includes('jolly') || n.includes('fullvit')) return '/assets/images/shop/products/TP-HAT-13.png';
+    if (n.includes('timothy') || n.includes('cỏ khô')) return '/assets/images/shop/products/TP-CO-14.png';
+    if (n.includes('bánh mài răng')) return '/assets/images/shop/products/TP-SUP-15.png';
+    if (n.includes('bát ăn') || n.includes('cà rốt')) return '/assets/images/shop/products/DD-BAT-18.png';
+    if (n.includes('bình nước')) return '/assets/images/shop/products/DD-BINH-02.png';
+    if (n.includes('nệm') || n.includes('lông cừu')) return '/assets/images/shop/products/PK-NEM-06.png';
+    if (n.includes('vòng cổ') || n.includes('chuông')) return '/assets/images/shop/products/PK-VONG-10.png';
+    return '/assets/images/shop/products/TP-HAT-05.png';
+}
+
 const BOOKING_STATUS = {
     upcoming:        { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
     confirmed:       { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
@@ -180,16 +214,20 @@ async function loadSupabaseGuestResults(phone) {
 
 function mapSupabaseOrderRow(row) {
     const products = Array.isArray(row.sales_order_detail)
-        ? row.sales_order_detail.map((detail) => ({
-            id: detail.id || '',
-            variant_id: detail.product_variant_id,
-            name: detail.product_name_snapshot || 'Sản phẩm',
-            sku: detail.sku_snapshot || '',
-            image: '/assets/images/shop/products/placeholder.webp',
-            quantity: detail.quantity,
-            price: detail.unit_price,
-            total: (Number(detail.quantity) || 1) * (Number(detail.unit_price) || 0) - (Number(detail.discount_amount) || 0),
-        }))
+        ? row.sales_order_detail.map((detail) => {
+            const medias = detail.product_variant?.product?.product_media || [];
+            const thumb = medias.find(m => m.is_thumbnail)?.image_url || medias[0]?.image_url || resolveProductThumbnail(detail.product_name_snapshot, detail.image);
+            return {
+                id: detail.id || '',
+                variant_id: detail.product_variant_id,
+                name: detail.product_name_snapshot || 'Sản phẩm',
+                sku: detail.sku_snapshot || '',
+                image: thumb,
+                quantity: detail.quantity,
+                price: detail.unit_price,
+                total: (Number(detail.quantity) || 1) * (Number(detail.unit_price) || 0) - (Number(detail.discount_amount) || 0),
+            };
+        })
         : [];
 
     const itemsSubtotal = products.reduce((acc, p) => acc + p.total, 0);
@@ -297,6 +335,7 @@ function mapOrderStatus(status) {
 
 
 function renderResults(bookings, orders) {
+    document.querySelector('.rg-search-hub')?.classList.add('rg-search-compact');
     const tabsEl = document.getElementById('rg-tabs');
     const chipsEl = document.getElementById('rg-status-chips');
     const listEl = document.getElementById('rg-list');
@@ -440,9 +479,14 @@ function fmtDate(d) {
 function guestVisibleBookingNote(value) {
     // Structured operational records are not customer-facing notes. Preserve surrounding prose.
     return String(value || '')
-        .replace(/\[Pawpal\s+(intake|handover)(?:\s+v\d+)?\][\s\S]*?\[\/Pawpal\s+\1\]/gi,' ')
-        .replace(/\[Pawpal\s+(?:intake|handover)(?:\s+v\d+)?\][\s\S]*$/gi,' ')
-        .replace(/[ \t]{2,}/g,' ').replace(/\n[ \t]*\n+/g,'\n').trim();
+        .replace(/\[Pawpal\s+[^\]]+\][\s\S]*?\[\/Pawpal\s+[^\]]+\]/gi, ' ')
+        .replace(/\[Pawpal\s+[^\]]+\][\s\S]*$/gi, ' ')
+        .replace(/Điều phối:[\s\S]*?(?=(?:Lý do:|\n|$))/gi, ' ')
+        .replace(/%[0-9A-Fa-f]{2}/g, ' ')
+        .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ' ')
+        .replace(/[ \t]{2,}/g, ' ')
+        .replace(/\n[ \t]*\n+/g, '\n')
+        .trim();
 }
 
 function resolveBookingStatus(booking) {
@@ -526,30 +570,43 @@ function canCancelBooking(b) {
 }
 
 function buildBookingCard(b) {
-    const pet     = esc(b.petName || 'Bé cưng');
-    const service = esc(b.serviceName || b.service || 'Dịch vụ');
+    const rawPet  = (b.petName || 'Bé cưng').trim();
+    const pet     = esc(rawPet);
+    const petInitial = esc(rawPet.charAt(0).toUpperCase());
+    const rawService = b.serviceName || b.service || 'Dịch vụ';
+    const service = esc(toSentenceCase(rawService));
     const date    = fmtDate(b.date || b.schedule?.date);
     const time    = b.timeStart || b.time || b.schedule?.slot || '';
     const staff   = esc(b.staff || 'Chưa phân công');
     const branch  = esc(b.branch || '');
     const endAt = b.scheduledEndAt ? new Date(b.scheduledEndAt) : null;
     const endTime = endAt && !Number.isNaN(endAt.getTime()) ? `${endAt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} · ${fmtDate(b.scheduledEndAt)}` : '';
-    const serviceItems = (b.serviceItems || []).filter(item => item.name).map(item => `${esc(item.name)}${Number(item.quantity) > 1 ? ` × ${Number(item.quantity)}` : ''}`).join('<br>');
+    const rawItems = (b.serviceItems || []).filter(item => item.name);
+    const hasExtraItems = rawItems.length > 1 || (rawItems.length === 1 && rawItems[0].name.trim().toLowerCase() !== rawService.trim().toLowerCase());
+    const serviceItems = hasExtraItems ? rawItems.map(item => `${esc(item.name)}${Number(item.quantity) > 1 ? ` × ${Number(item.quantity)}` : ''}`).join('<br>') : '';
     const visibleNote = guestVisibleBookingNote(b.note);
     const resolvedStatus = resolveBookingStatus(b);
     const cancelClass = resolvedStatus === 'cancelled' ? ' rg-item-cancelled' : '';
+    const rawId = String(b.id || '');
+    const shortCode = rawId.length > 18 ? (rawId.startsWith('BKG-') ? 'BKG-' + rawId.slice(4, 12).toUpperCase() : rawId.slice(0, 8).toUpperCase()) : rawId;
+    const scheduledAt = getBookingScheduledAt(b);
+    const diffMinutes = scheduledAt ? (scheduledAt - new Date()) / (1000 * 60) : 999;
 
     return `
     <div class="rg-item${cancelClass}" data-type="booking" data-status="${resolvedStatus}">
         <div class="rg-item-header">
-            <div>
-                <h4 class="rg-item-name">${service}</h4>
-                <div class="rg-item-meta">
-                    <span>Mã: ${esc(b.id)}</span>
-                    ${branch ? `<span>${branch}</span>` : ''}
+            <div class="rg-header-left">
+                <div class="rg-pet-avatar" title="${pet}">${petInitial}</div>
+                <div>
+                    <h4 class="rg-item-name">${service}</h4>
+                    <div class="rg-item-meta">
+                        <span>Mã: <code class="rg-code" title="${esc(rawId)}">${esc(shortCode)}</code></span>
+                        <button type="button" class="btn-copy-code" title="Sao chép toàn bộ mã" onclick="navigator.clipboard.writeText('${esc(rawId)}');this.textContent='Đã chép!';setTimeout(()=>this.textContent='Sao chép',1500)">Sao chép</button>
+                        ${branch ? `<span>· ${branch}</span>` : ''}
+                    </div>
                 </div>
             </div>
-            <div class="text-end">
+            <div class="text-end rg-header-right">
                 <div class="rg-item-price">${b.price > 0 ? fmtPrice(b.price) : 'Giá theo thực tế'}</div>
                 ${badge(BOOKING_STATUS, resolvedStatus)}
             </div>
@@ -558,7 +615,7 @@ function buildBookingCard(b) {
         <div class="rg-summary rg-booking-summary">
             ${!b._receiptOnly || b.petName ? `<div>
                 <div class="rg-summary-label">Bé cưng</div>
-                <div class="rg-summary-value">${pet}</div>
+                <div class="rg-summary-value rg-pet-val"><strong>${pet}</strong></div>
             </div>` : ''}
             <div>
                 <div class="rg-summary-label">Lịch hẹn</div>
@@ -572,35 +629,49 @@ function buildBookingCard(b) {
                 <div class="rg-summary-label">Nhân viên</div>
                 <div class="rg-summary-value">${staff}</div>
             </div>` : ''}
-            ${serviceItems ? `<div class="rg-booking-services">
-                <div class="rg-summary-label">Dịch vụ đã đặt</div>
-                <div class="rg-summary-value">${serviceItems}</div>
-            </div>` : ''}
-            ${visibleNote ? `<div class="rg-summary-note rg-booking-note">
-                <div class="rg-summary-label">Ghi chú</div>
-                <div class="rg-summary-value">${esc(visibleNote)}</div>
-            </div>` : ''}
         </div>
-        ${(canModifyBooking(b) || canCancelBooking(b) || ['in-progress', 'completed'].includes(resolvedStatus)) ? `
-        <div class="rg-actions" class="rg-actions-flex">
-            ${canCancelBooking(b) ? `
-            <button class="btn-track-order text-danger border-danger" onclick="handleGuestBookingAction('${esc(b.id)}', 'cancel')">
-                Hủy lịch
-            </button>` : ''}
-            ${canModifyBooking(b) ? `
-            <button class="btn-track-order" onclick="handleGuestBookingAction('${esc(b.id)}', 'change')">
-                Thay đổi lịch
-            </button>` : ''}
-            ${['in-progress', 'completed'].includes(resolvedStatus) ? `
-            <button class="btn-track-order" onclick="handleGuestViewCareLog('${esc(b._supabaseId || b.id)}')">
-                Nhật ký chăm sóc
-            </button>` : ''}
+        ${(visibleNote || serviceItems) ? `
+        <div class="rg-booking-note-row">
+            ${serviceItems ? `<div class="rg-note-plain"><span class="rg-note-label">Kèm theo:</span> <span class="rg-note-value">${serviceItems}</span></div>` : ''}
+            ${visibleNote ? `<div class="rg-note-plain"><span class="rg-note-label">Ghi chú:</span> <span class="rg-note-value">${esc(visibleNote)}</span></div>` : ''}
         </div>` : ''}
+        <div class="rg-actions-bar">
+            <div class="rg-actions-bar-right">
+                ${canCancelBooking(b) ? (
+                    diffMinutes < 120 ? `
+                    <button class="btn-track-order btn-track-danger disabled" disabled title="Đã quá thời gian tự hủy lịch tự động (< 2 tiếng). Vui lòng gọi Hotline để được hỗ trợ trực tiếp.">
+                        Hủy lịch
+                    </button>` : `
+                    <button class="btn-track-order btn-track-danger" onclick="handleGuestBookingAction('${esc(b.id)}', 'cancel')">
+                        Hủy lịch
+                    </button>`
+                ) : ''}
+                ${canModifyBooking(b) ? (
+                    diffMinutes < 120 ? `
+                    <button class="btn-track-order disabled" disabled title="Đã quá thời gian tự thay đổi lịch tự động, vui lòng gọi Hotline để nhân viên hỗ trợ bạn trực tiếp.">
+                        Thay đổi lịch
+                    </button>` : `
+                    <button class="btn-track-order" onclick="handleGuestBookingAction('${esc(b.id)}', 'change')">
+                        Thay đổi lịch
+                    </button>`
+                ) : ''}
+                ${['in-progress', 'completed'].includes(resolvedStatus) ? `
+                <button class="btn-track-order" onclick="handleGuestViewCareLog('${esc(b._supabaseId || b.id)}')">
+                    Nhật ký chăm sóc
+                </button>` : ''}
+                ${['completed', 'cancelled'].includes(resolvedStatus) ? `
+                <a class="btn-track-order btn-track-primary" href="/booking" style="text-decoration:none;">
+                    Đặt lại dịch vụ
+                </a>` : ''}
+            </div>
+        </div>
     </div>`;
 }
 
 function buildOrderCard(o) {
     const address = esc(o.delivery?.address || '');
+    const rawOrderId = String(o.id || '');
+    const shortOrderCode = rawOrderId.length > 18 ? (rawOrderId.startsWith('ORD-') ? 'ORD-' + rawOrderId.slice(4, 12).toUpperCase() : rawOrderId.slice(0, 8).toUpperCase()) : rawOrderId;
 
     const isPaid = o.paymentStatus === 'paid' || o.payment?.status === 'paid';
     const isPendingRefund = o.paymentStatus === 'pending_refund';
@@ -620,16 +691,18 @@ function buildOrderCard(o) {
         paymentColor = 'rg-text-inherit';
     }
 
-    const productsHtml = (o.products || []).map(p => `
+    const productsHtml = (o.products || []).map(p => {
+        const prodImg = resolveProductThumbnail(p.name, p.image);
+        return `
         <div class="rg-product-item-flex">
-            <img src="${p.image}" class="rg-product-image" onerror="this.src='/assets/images/shop/products/placeholder.webp'">
+            <img src="${prodImg}" class="rg-product-image" alt="${esc(p.name)}" onerror="this.onerror=null;this.src='/assets/images/shop/products/TP-HAT-05.png'">
             <div class="rg-product-details">
                 <div class="rg-product-name">${esc(p.name)}</div>
-                <div class="rg-product-price-qty">${fmtPrice(p.price)} <span class="mx-1">x</span> ${p.quantity}</div>
+                <div class="rg-product-price-qty">${fmtPrice(p.price)} <span class="mx-1">×</span> ${p.quantity}</div>
             </div>
             <div class="rg-product-total">${fmtPrice(p.price * p.quantity)}</div>
         </div>
-    `).join('');
+    `}).join('');
 
     const normalizedStatus = normalizeOrderStatus(o.status);
     const cancelClass = normalizedStatus === 'cancelled' ? ' rg-item-cancelled' : '';
@@ -638,52 +711,53 @@ function buildOrderCard(o) {
     <div class="rg-item${cancelClass}" data-type="order" data-status="${normalizedStatus}">
         <div class="rg-item-header">
             <div>
-                <h4 class="rg-item-name">Đơn hàng: ${esc(o.id)}</h4>
+                <h4 class="rg-item-name">Đơn hàng: <code class="rg-code" title="${esc(rawOrderId)}">${esc(shortOrderCode)}</code> <button type="button" class="btn-copy-code" title="Sao chép toàn bộ mã" onclick="navigator.clipboard.writeText('${esc(rawOrderId)}');this.textContent='Đã chép!';setTimeout(()=>this.textContent='Sao chép',1500)">Sao chép</button></h4>
                 <div class="rg-item-meta">
                     ${o.createdAt ? `<span>Ngày đặt: ${fmtDate(o.createdAt)}</span>` : ''}
-                    ${o.delivery?.name ? `<span>Nhận: ${esc(o.delivery.name)}</span>` : ''}
+                    ${o.delivery?.name ? `<span>· Người nhận: ${esc(o.delivery.name)}</span>` : ''}
                 </div>
             </div>
-            <div class="text-end">
+            <div class="text-end rg-header-right">
                 <div class="rg-item-price">${fmtPrice(o.pricing?.total)}</div>
                 ${badge(ORDER_STATUS, o.status)}
             </div>
         </div>
         <hr class="rg-divider">
-        <div class="rg-products p-md">
+        <div class="rg-products">
             ${productsHtml}
         </div>
-        <hr class="rg-divider">
-        <div class="rg-summary">
-            ${address ? `<div>
-                <div class="rg-summary-label">Địa chỉ giao</div>
-                <div class="rg-summary-value">${address}</div>
-            </div>` : ''}
-            <div>
-                <div class="rg-summary-label">Thanh toán</div>
-                <div class="rg-summary-value fw-medium ${paymentColor}">${paymentLabel}</div>
+        ${(address || paymentLabel) ? `
+        <div class="rg-order-note-row">
+            ${address ? `<div class="rg-note-plain"><span class="rg-note-label">Địa chỉ giao:</span> <span class="rg-note-value">${address}</span></div>` : ''}
+            <div class="rg-note-plain"><span class="rg-note-label">Thanh toán:</span> <span class="rg-note-value fw-medium ${paymentColor}">${paymentLabel}</span></div>
+        </div>` : ''}
+        <div class="rg-actions-bar">
+            <div class="rg-actions-bar-right">
+                ${(canCancelOrder(o) || canConfirmOrder(o) || canReturnOrder(o) || o.status === 'return_pending' || (!o._receiptOnly && o.returnGrant)) ? `
+                ${canConfirmOrder(o) ? `
+                <button class="btn-track-order btn-track-primary" onclick="handleGuestConfirmOrder('${esc(o.id)}')">
+                    Đã nhận được hàng
+                </button>` : ''}
+                ${canReturnOrder(o) ? `
+                <button class="btn-track-order" onclick="handleGuestReturnOrder('${esc(o.id)}')">
+                    Yêu cầu đổi trả
+                </button>` : ''}
+                ${o.status === 'return_pending' ? `
+                <span class="badge bg-warning text-dark p-2 align-self-center">Chờ duyệt đổi trả</span>` : ''}
+                ${(!o._receiptOnly && o.returnGrant) ? `
+                <button class="btn-track-order" onclick="handleGuestViewReturnGrant('${esc(o.id)}')">
+                    Xem phiếu đổi trả
+                </button>` : ''}
+                ${canCancelOrder(o) ? `
+                <button class="btn-track-order btn-track-danger" onclick="handleGuestCancelOrder('${esc(o.id)}')">
+                    Hủy đơn hàng
+                </button>` : ''}
+                ` : ''}
+                <a class="btn-track-order btn-track-primary" href="/shop" style="text-decoration:none;">
+                    Mua sắm thêm
+                </a>
             </div>
         </div>
-        ${(canCancelOrder(o) || canConfirmOrder(o) || canReturnOrder(o) || o.status === 'return_pending' || (!o._receiptOnly && o.returnGrant)) ? `<div class="rg-actions rg-actions-center">
-            ${(o.status === 'return_pending') ? `
-            <div class="flex-grow-1 text-start">
-                <span class="rg-return-alert">
-                    Đã yêu cầu đổi trả.
-                </span>
-            </div>` : ''}
-            ${canCancelOrder(o) ? `
-            <button class="btn-track-order text-danger border-danger" onclick="handleGuestCancelOrder('${esc(o.id)}')">
-                Hủy đơn hàng
-            </button>` : ''}
-            ${canConfirmOrder(o) ? `
-            <button class="btn-track-order" onclick="handleGuestConfirmOrder('${esc(o.id)}')">
-                Xác nhận đơn hàng
-            </button>` : ''}
-            ${(o.returnGrant && o.status !== 'return_pending') || canReturnOrder(o) ? `
-            <button class="btn-track-order" onclick="handleGuestReturnRequest('${esc(o.id)}')">
-                Yêu cầu trả hàng/hoàn tiền
-            </button>` : ''}
-        </div>` : ''}
     </div>`;
 }
 
@@ -710,13 +784,23 @@ window.handleGuestBookingAction = function(bookingId, action) {
             showToast('Lịch hẹn này đã vượt quá ngưỡng hủy cho phép (> 3 lần). Vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
             return;
         }
-        showActionConfirm(
-            'Hủy lịch hẹn',
-            `Bạn có chắc chắn muốn hủy lịch hẹn <strong>${esc(bookingId)}</strong>? Lịch hẹn sau khi hủy sẽ không thể khôi phục.`,
-            () => {
-                showOTPModal(phone, () => confirmCancelBooking(bookingId), 'xác thực hủy lịch hẹn');
+        showReasonActionModal({
+            title: 'Hủy lịch hẹn',
+            subtitle: `Bạn đang yêu cầu hủy lịch hẹn <strong>${esc(bookingId)}</strong>. Vui lòng cho PawPal biết lý do để cửa hàng cải thiện dịch vụ:`,
+            confirmText: 'Xác nhận hủy lịch',
+            chips: [
+                'Bận việc đột xuất',
+                'Bé cưng không khỏe',
+                'Muốn đổi dịch vụ khác',
+                'Thời tiết xấu / Mưa lớn',
+                'Đặt nhầm giờ / chi nhánh'
+            ],
+            placeholder: 'Chọn gợi ý ở trên hoặc nhập lý do cụ thể...',
+            isDanger: true,
+            onConfirm: (reason) => {
+                showOTPModal(phone, () => confirmCancelBooking(bookingId, reason), 'xác thực hủy lịch hẹn');
             }
-        );
+        });
     } else {
         if (diffMinutes < 120) {
             showToast('Đã quá thời gian tự thay đổi lịch hẹn (< 2 tiếng). Ca hẹn sắp diễn ra, vui lòng liên hệ Hotline 1900 1234 để được hỗ trợ.', 'danger');
@@ -745,11 +829,21 @@ window.handleGuestCancelOrder = function(orderId) {
         ? `<br><span class="text-muted small">Số tiền <strong>${fmtPrice(total)}</strong> sẽ được hoàn lại theo chính sách của cửa hàng.</span>`
         : '';
 
-    showActionConfirm(
-        'Hủy đơn hàng',
-        `Bạn có chắc chắn muốn hủy đơn hàng <strong>${esc(orderId)}</strong>? Đơn hàng sau khi hủy sẽ không thể khôi phục.${refundNote}`,
-        () => confirmCancelOrder(orderId, isPaidOnline)
-    );
+    showReasonActionModal({
+        title: 'Hủy đơn hàng',
+        subtitle: `Bạn đang yêu cầu hủy đơn hàng <strong>${esc(orderId)}</strong>.${refundNote}<br>Vui lòng cho PawPal biết lý do để cửa hàng cải thiện:`,
+        confirmText: 'Xác nhận hủy đơn',
+        chips: [
+            'Đặt nhầm sản phẩm',
+            'Muốn đổi địa chỉ nhận',
+            'Tìm thấy giá tốt hơn',
+            'Đổi ý không mua nữa',
+            'Thời gian giao hàng lâu'
+        ],
+        placeholder: 'Chọn gợi ý ở trên hoặc nhập lý do cụ thể...',
+        isDanger: true,
+        onConfirm: (reason) => confirmCancelOrder(orderId, isPaidOnline, reason)
+    });
 };
 
 window.handleGuestConfirmOrder = async function(orderId) {
@@ -814,16 +908,57 @@ function openVerifiedGuestReturn(order) {
     const verifiedPhone = rgVerifiedPhone;
     const dialog = document.createElement('dialog');
     dialog.id = 'verifiedGuestReturn';
-    dialog.style.cssText = 'width:min(540px,92vw);padding:24px;border:1px solid #dce6db;border-radius:9px;max-height:90vh';
-    dialog.innerHTML = `<form><h3>Yêu cầu trả hàng</h3><p>Đơn ${esc(order.id)} · Số điện thoại ${esc(verifiedPhone)}</p>
-        ${order.products.map((item,index)=>`<label style="display:block;margin:8px 0">${esc(item.name)}
-            <input data-line="${index}" class="form-control" type="number" min="0" max="${Number(item.quantity)}" step="1" value="0">
-        </label>`).join('')}
-        <label for="verifiedGuestReturnReason">Lý do trả hàng</label>
-        <textarea id="verifiedGuestReturnReason" class="form-control" minlength="2" maxlength="2000" required></textarea>
-        <p role="alert"></p><div class="d-flex gap-2 justify-content-end">
-        <button type="button" class="btn-green-outline">Hủy</button><button type="submit" class="btn-cta">Gửi yêu cầu</button></div></form>`;
+    dialog.style.cssText = 'width:min(540px,92vw);padding:24px;border:1px solid #dce6db;border-radius:9px;max-height:90vh;box-shadow:0 12px 32px rgba(35,107,72,0.12)';
+    dialog.innerHTML = `<form>
+        <h3 style="font-family:Lora,serif;color:#214939;font-size:20px;margin-bottom:4px;">Yêu cầu trả hàng</h3>
+        <p style="font-size:12.5px;color:#526d5b;margin-bottom:14px;">Đơn hàng <strong>${esc(order.id)}</strong> · SĐT <strong>${esc(verifiedPhone)}</strong></p>
+        <label class="form-label" style="font-size:11.5px;font-weight:600;color:#236B48;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:6px;">Chọn số lượng sản phẩm cần trả</label>
+        <div style="background:#f9fbf8;border:1px solid #edf2eb;border-radius:9px;padding:8px 12px;margin-bottom:12px;">
+            ${order.products.map((item,index)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #edf2eb;">
+                <span style="font-size:13px;color:#203a2c;font-weight:500;">${esc(item.name)}</span>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:11.5px;color:#718476;">Tối đa ${Number(item.quantity)}:</span>
+                    <input data-line="${index}" class="form-control" type="number" min="0" max="${Number(item.quantity)}" step="1" value="0" style="width:70px;height:32px;padding:2px 8px;font-size:13px;border-radius:6px;border:1px solid #d1decf;">
+                </div>
+            </div>`).join('')}
+        </div>
+        <label class="form-label" style="font-size:11.5px;font-weight:600;color:#236B48;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:6px;">Chọn nhanh lý do đổi trả</label>
+        <div class="rg-quick-chips-wrapper" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+            <button type="button" class="reason-quick-chip">Sản phẩm bị lỗi / Hư hỏng</button>
+            <button type="button" class="reason-quick-chip">Giao sai phân loại / Kích cỡ</button>
+            <button type="button" class="reason-quick-chip">Hàng cận date / Hết hạn</button>
+            <button type="button" class="reason-quick-chip">Bé không chịu dùng / Dị ứng</button>
+            <button type="button" class="reason-quick-chip">Không giống hình ảnh mô tả</button>
+        </div>
+        <label for="verifiedGuestReturnReason" class="form-label" style="font-size:11.5px;font-weight:600;color:#236B48;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:6px;">
+            Lý do chi tiết <span style="color:#DC2626;">*</span>
+        </label>
+        <textarea id="verifiedGuestReturnReason" class="form-control" rows="3" minlength="2" maxlength="2000" placeholder="Chọn gợi ý ở trên hoặc nhập chi tiết tình trạng sản phẩm..." required style="border:1px solid #d1decf;border-radius:9px;font-size:13px;line-height:1.5;padding:10px;resize:vertical;"></textarea>
+        <p role="alert" style="color:#dc2626;font-size:12px;margin:6px 0 0;"></p>
+        <div class="d-flex gap-2 justify-content-end mt-3">
+            <button type="button" class="btn-track-order" style="min-height:34px;padding:6px 16px;">Hủy bỏ</button>
+            <button type="submit" class="btn-track-order btn-track-primary" style="min-height:34px;padding:6px 18px;font-weight:600;">Gửi yêu cầu</button>
+        </div>
+    </form>`;
+
     const form = dialog.querySelector('form'), submit = form.querySelector('[type=submit]');
+    const textarea = form.querySelector('#verifiedGuestReturnReason');
+    const chipBtns = form.querySelectorAll('.reason-quick-chip');
+    chipBtns.forEach(btn => {
+        btn.onclick = () => {
+            chipBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            textarea.value = btn.textContent.trim();
+            textarea.focus();
+        };
+    });
+    textarea.addEventListener('input', () => {
+        chipBtns.forEach(b => {
+            if (b.textContent.trim() !== textarea.value.trim()) b.classList.remove('active');
+            else b.classList.add('active');
+        });
+    });
+
     const errorText = form.querySelector('[role=alert]');
     let pending;
     form.querySelector('[type=button]').onclick = () => { if (!submit.disabled) dialog.close(); };
@@ -859,6 +994,85 @@ function openVerifiedGuestReturn(order) {
     };
     document.body.append(dialog);
     dialog.showModal();
+}
+
+function showReasonActionModal({ title, subtitle, confirmText = 'Xác nhận', chips = [], placeholder = 'Nhập lý do chi tiết...', isDanger = false, onConfirm }) {
+    const existing = document.getElementById('rg-reason-modal');
+    if (existing) existing.remove();
+
+    const el = document.createElement('div');
+    el.id = 'rg-reason-modal';
+    el.className = 'modal fade';
+    el.tabIndex = -1;
+    el.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+            <div class="modal-content" style="border-radius: 9px; border: 1px solid #dce6db; padding: 22px 24px; box-shadow: 0 10px 28px rgba(35, 107, 72, 0.12);">
+                <div class="modal-header p-0 pb-2 border-0">
+                    <h5 class="modal-title" style="font-family: Lora, serif; color: #214939; font-size: 19px; font-weight: 600;">${esc(title)}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body p-0 pt-2 pb-3">
+                    ${subtitle ? `<p style="font-size: 13px; color: #526d5b; line-height: 1.5; margin-bottom: 12px;">${subtitle}</p>` : ''}
+                    
+                    ${chips.length ? `
+                    <label class="form-label" style="font-size: 11.5px; font-weight: 600; color: #236B48; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px;">Chọn nhanh lý do</label>
+                    <div class="rg-quick-chips-wrapper" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
+                        ${chips.map(chip => `<button type="button" class="reason-quick-chip">${esc(chip)}</button>`).join('')}
+                    </div>` : ''}
+
+                    <label class="form-label" style="font-size: 11.5px; font-weight: 600; color: #236B48; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px;">
+                        Lý do cụ thể <span style="color: #DC2626;">*</span>
+                    </label>
+                    <textarea class="form-control rg-reason-textarea" rows="3" placeholder="${esc(placeholder)}" style="border: 1px solid #d1decf; border-radius: 9px; font-size: 13px; line-height: 1.5; padding: 10px; resize: vertical;"></textarea>
+                    <div class="rg-reason-error" style="color: #dc2626; font-size: 12px; margin-top: 4px; display: none;">Vui lòng chọn hoặc nhập lý do trước khi tiếp tục.</div>
+                </div>
+                <div class="modal-footer p-0 pt-2 border-0 d-flex justify-content-end gap-2">
+                    <button type="button" class="btn-track-order" data-bs-dismiss="modal" style="min-height: 34px; padding: 6px 16px; font-size: 12.5px;">Hủy bỏ</button>
+                    <button type="button" class="btn-track-order ${isDanger ? 'btn-track-danger' : 'btn-track-primary'} rg-confirm-reason-btn" style="min-height: 34px; padding: 6px 18px; font-size: 12.5px; font-weight: 600;">
+                        ${esc(confirmText)}
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(el);
+
+    const modal = new bootstrap.Modal(el);
+    const textarea = el.querySelector('.rg-reason-textarea');
+    const errorEl = el.querySelector('.rg-reason-error');
+    const chipBtns = el.querySelectorAll('.reason-quick-chip');
+    const confirmBtn = el.querySelector('.rg-confirm-reason-btn');
+
+    chipBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            chipBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            textarea.value = btn.textContent.trim();
+            errorEl.style.display = 'none';
+            textarea.focus();
+        });
+    });
+
+    textarea.addEventListener('input', () => {
+        if (textarea.value.trim()) errorEl.style.display = 'none';
+        chipBtns.forEach(b => {
+            if (b.textContent.trim() !== textarea.value.trim()) b.classList.remove('active');
+            else b.classList.add('active');
+        });
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        const reason = textarea.value.trim();
+        if (!reason) {
+            errorEl.style.display = 'block';
+            textarea.focus();
+            return;
+        }
+        modal.hide();
+        if (typeof onConfirm === 'function') onConfirm(reason);
+    });
+
+    el.addEventListener('hidden.bs.modal', () => el.remove());
+    modal.show();
 }
 
 function showActionConfirm(title, descHtml, onConfirm) {
@@ -1177,7 +1391,7 @@ function showCancelConfirmModal(bookingId, phone) {
     });
 }
 
-function confirmCancelBooking(bookingId) {
+function confirmCancelBooking(bookingId, reason = '') {
     const booking = rgLastSearchState.bookings.find(b => String(b.id || b._supabaseId) === String(bookingId));
     if (!booking) {
         showToast('Không tìm thấy lịch hẹn.', 'error');
@@ -1186,6 +1400,10 @@ function confirmCancelBooking(bookingId) {
 
     booking.status = 'cancelled';
     booking.cancelCount = (booking.cancelCount || 0) + 1;
+    if (reason) {
+        booking.cancelReason = reason;
+        booking.note = (booking.note ? booking.note + '\n' : '') + `Lý do hủy: ${reason}`;
+    }
 
     // Gửi thông báo đến Admin
     try {
@@ -1194,7 +1412,7 @@ function confirmCancelBooking(bookingId) {
             id: `admin-notif-${Date.now()}`,
             type: 'booking_cancelled',
             title: 'Khách vãng lai hủy lịch hẹn',
-            content: `Khách hàng vãng lai (${rgLastSearchState.phone}) vừa hủy ca hẹn #${booking.id || bookingId}.`,
+            content: `Khách hàng vãng lai (${rgLastSearchState.phone}) vừa hủy ca hẹn #${booking.id || bookingId}.${reason ? ' Lý do: ' + reason : ''}`,
             createdAt: new Date().toISOString(),
             read: false
         });
@@ -1208,6 +1426,7 @@ function confirmCancelBooking(bookingId) {
         if (idx !== -1) {
             localBookings[idx].status = 'cancelled';
             localBookings[idx].cancelCount = (localBookings[idx].cancelCount || 0) + 1;
+            if (reason) localBookings[idx].note = (localBookings[idx].note ? localBookings[idx].note + '\n' : '') + `Lý do hủy: ${reason}`;
             localStorage.setItem('pawpal_bookings', JSON.stringify(localBookings));
         }
     } catch (_) {}
@@ -1215,7 +1434,9 @@ function confirmCancelBooking(bookingId) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (db) {
         const isUUID = typeof bookingId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId);
-        let query = db.from('appointment').update({ appointment_status: 'da_huy', updated_at: new Date().toISOString() });
+        const updatePayload = { appointment_status: 'da_huy', updated_at: new Date().toISOString() };
+        if (booking.note) updatePayload.note = booking.note;
+        let query = db.from('appointment').update(updatePayload);
         query = isUUID ? query.eq('id', bookingId) : query.eq('appointment_code', bookingId);
         query.then(({error}) => { if (error) console.warn('[ReturnGuest] Cancel booking sync error:', error); });
     }
@@ -1246,14 +1467,21 @@ async function updateGuestOrderStatus(order, fields) {
     }
 }
 
-async function confirmCancelOrder(orderId, isPaidOnline = false) {
+async function confirmCancelOrder(orderId, isPaidOnline = false, reason = '') {
     const order = rgLastSearchState.orders.find(o => o.id === orderId);
     if (!order) {
         showToast('Không tìm thấy đơn hàng trong kết quả tra cứu.', 'error');
         return;
     }
 
-    const saved = await updateGuestOrderStatus(order, { order_status: 'cancelled' });
+    const updatePayload = { order_status: 'cancelled' };
+    if (reason) {
+        order.cancelReason = reason;
+        order.note = (order.note ? order.note + '\n' : '') + `Lý do hủy: ${reason}`;
+        updatePayload.note = order.note;
+    }
+
+    const saved = await updateGuestOrderStatus(order, updatePayload);
     if (!saved) {
         showToast('Chưa hủy được đơn hàng. Vui lòng thử lại sau.', 'error');
         return;
@@ -1262,7 +1490,6 @@ async function confirmCancelOrder(orderId, isPaidOnline = false) {
     order.status = 'cancelled';
     order.orderStatus = 'CANCELLED';
     order.updatedAt = new Date().toISOString();
-
 
     const toastMsg = isPaidOnline
         ? 'Đã hủy đơn hàng. Yêu cầu hoàn tiền đã được ghi nhận!'

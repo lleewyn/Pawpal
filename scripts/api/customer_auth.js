@@ -206,7 +206,7 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                     created_at,
                     updated_at,
                     note,
-                    sales_order_detail ( id, quantity, unit_price, discount_amount, product_name_snapshot, sku_snapshot )
+                    sales_order_detail ( id, quantity, unit_price, discount_amount, product_name_snapshot, sku_snapshot, product_variant ( id, product ( id, product_media ( image_url, is_thumbnail ) ) ) )
                 `)
                 .eq('customer_id', c.id)
                 .order('created_at', { ascending: false });

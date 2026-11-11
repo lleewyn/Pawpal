@@ -1,4 +1,4 @@
-import {guestCommerce} from '../../../scripts/shared/guest-commerce-client.mjs';
+import {guestCommerce} from '/scripts/shared/guest-commerce-client.mjs';
 import {editGuestContact} from '../../../scripts/shared/guest-contact-editor.mjs';
 const pendingKey='pawpal_guest_pet_request_v1';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
