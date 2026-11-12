@@ -35,7 +35,7 @@ function render(){
     const paymentLabels={paid:'Đã thanh toán',partial:'Đã thanh toán một phần',cancelled:'Đơn đã hủy',pending_payment:'Chưa thanh toán'};
     text('payment-status',Number(o.pricing.grandTotal)===0?'Không thu thêm tiền':paymentLabels[o.paymentStatus]||'Chưa thanh toán');
     const products=document.getElementById('products-list');
-    if(products)products.innerHTML=(o.products||[]).map(p=>`<div class="product-item"><div class="product-item-info"><h4 class="product-item-name">${escapeHtml(p.name)}</h4><p class="product-item-variant">${escapeHtml(p.sku||'')}</p><p class="product-item-meta">Số lượng ${Number(p.quantity)}</p></div><div class="product-item-price">${money(p.total)}</div></div>`).join('')||'<p>Đơn hàng chưa có dòng sản phẩm.</p>';
+    if(products)products.innerHTML=(o.products||[]).map(p=>`<div class="product-item"><img src="${escapeHtml(p.image || '/assets/images/shop/products/placeholder.webp')}" alt="${escapeHtml(p.name)}" class="product-item-img" loading="lazy" onerror="this.onerror=null; this.src='/assets/images/shop/products/placeholder.webp';"><div class="product-item-info"><h4 class="product-item-name">${escapeHtml(p.name)}</h4><p class="product-item-variant">${escapeHtml(p.sku||'')}</p><p class="product-item-meta">Số lượng ${Number(p.quantity)}</p></div><div class="product-item-price">${money(p.total)}</div></div>`).join('')||'<p>Đơn hàng chưa có dòng sản phẩm.</p>';
     text('subtotal',money(o.pricing.subtotal));text('shipping-fee',money(o.pricing.shippingFee));text('discount',money(o.pricing.discount));text('total',money(o.pricing.grandTotal));
     const timeline=[{title:'Đã tạo đơn',at:o.createdAt}];
     if(o.shippedAt)timeline.push({title:'Đã bàn giao vận chuyển',at:o.shippedAt});

@@ -485,7 +485,7 @@ function createPetCard(pet, isArchived = false) {
 
     card.innerHTML = `
         <div class="pet-card-header">
-            <img src="${avatarSrc}" class="pet-avatar" alt="${escapeHtml(pet.name)}" loading="lazy">
+            <img src="${avatarSrc}" class="pet-avatar" alt="${escapeHtml(pet.name)}" loading="lazy" onerror="this.onerror=null; this.src='${getDefaultPetAvatar(pet.species)}';">
             <div class="pet-card-info">
                 <div class="pet-title-row" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                     <h4 class="pet-name">${escapeHtml(pet.name)}</h4>

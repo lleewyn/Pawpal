@@ -60,7 +60,7 @@ async function loadOrders() {
                 ...p,
                 id: p.id || p.productId || '',
                 name: p.name || p.title || 'Sản phẩm',
-                image: p.image || p.img || '/assets/images/publics/feed.jpg',
+                image: p.image || p.img || '/assets/images/shop/products/placeholder.webp',
                 quantity: Number(p.quantity ?? p.qty) || 1,
                 price: Number(p.price ?? p.unitPrice) || 0,
                 total: Number(p.total) || ((Number(p.price) || 0) * (Number(p.quantity) || 1))

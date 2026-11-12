@@ -188,14 +188,14 @@ async function renderPetSwitcherPills(activePetId) {
 
     const pillsMarkup = await Promise.all(pets.map(async (pet) => {
         const isActive = String(pet.id).toLowerCase() === String(activePetId).toLowerCase();
-        const avatar = pet.avatar || '/assets/images/shared/default-pet.png';
+        const avatar = pet.avatar || '/assets/images/publics/pet.png';
         const logs = await getOrSeedTrackerLogs(pet);
         const isLive = Boolean(logs?.currentSession && logs.currentSession.status === 'Đang thực hiện');
         const liveTag = isLive ? `<span class="pill-live-tag">Đang spa</span>` : '';
 
         return `
             <button type="button" class="pet-switch-pill ${isActive ? 'active' : ''} ${isLive ? 'has-live-service' : ''}" data-pet-id="${escapeHtml(pet.id)}" title="Xem nhật ký ${escapeHtml(pet.name)}">
-                <img src="${avatar}" alt="${escapeHtml(pet.name)}" class="pill-pet-avatar">
+                <img src="${avatar}" alt="${escapeHtml(pet.name)}" class="pill-pet-avatar" onerror="this.onerror=null; this.src='/assets/images/publics/pet.png';">
                 <span class="pill-pet-name">${escapeHtml(pet.name)}</span>
                 ${liveTag}
             </button>
@@ -1318,14 +1318,14 @@ async function renderActiveServicesDashboard() {
         activeGrid.innerHTML = activeSessions.map(item => {
             const latestEvent = item.session.timeline && item.session.timeline.length > 0 ? item.session.timeline[0] : null;
             const statusText = latestEvent?.status || item.session.status || 'Đang thực hiện';
-            const petImage = item.pet.avatar || '/assets/images/shared/default-pet.png';
+            const petImage = item.pet.avatar || '/assets/images/publics/pet.png';
             const serviceName = escapeHtml(item.session.service || 'Spa và Grooming').replace(/&/g, 'và');
 
             return `
                 <div class="col-md-6 col-lg-5">
                     <div class="active-service-card">
                         <div class="active-service-pet-info">
-                            <img src="${petImage}" alt="${escapeHtml(item.pet.name)}" class="active-service-avatar">
+                            <img src="${petImage}" alt="${escapeHtml(item.pet.name)}" class="active-service-avatar" onerror="this.onerror=null; this.src='/assets/images/publics/pet.png';">
                             <div class="active-service-details">
                                 <h5 class="active-service-name">${escapeHtml(item.pet.name)}</h5>
                                 <p class="active-service-type">${serviceName}</p>
@@ -1353,7 +1353,7 @@ async function renderActiveServicesDashboard() {
     if (pastSessions.length > 0 && pastContainer && pastGrid) {
         pastContainer.classList.remove('d-none');
         pastGrid.innerHTML = pastSessions.map(item => {
-            const petImage = item.pet.avatar || '/assets/images/shared/default-pet.png';
+            const petImage = item.pet.avatar || '/assets/images/publics/pet.png';
             const serviceName = escapeHtml(item.session.service || 'Spa và Grooming').replace(/&/g, 'và');
             const dateStr = formatDate(item.session.date);
 
@@ -1361,7 +1361,7 @@ async function renderActiveServicesDashboard() {
                 <div class="col-md-6 col-lg-5">
                     <div class="active-service-card past-service-card">
                         <div class="active-service-pet-info">
-                            <img src="${petImage}" alt="${escapeHtml(item.pet.name)}" class="active-service-avatar">
+                            <img src="${petImage}" alt="${escapeHtml(item.pet.name)}" class="active-service-avatar" onerror="this.onerror=null; this.src='/assets/images/publics/pet.png';">
                             <div class="active-service-details">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <h5 class="active-service-name m-0">${escapeHtml(item.pet.name)}</h5>
@@ -1400,13 +1400,13 @@ async function renderActiveServicesDashboard() {
         if (pets.length > 0) {
             quickPetsSection.classList.remove('d-none');
             quickPetsGrid.innerHTML = pets.map(pet => {
-                const petImage = pet.avatar || '/assets/images/shared/default-pet.png';
+                const petImage = pet.avatar || '/assets/images/publics/pet.png';
                 const speciesName = getSpeciesDisplay(pet);
                 const subText = pet.breed ? `${speciesName} • ${pet.breed}` : speciesName;
                 return `
                     <div class="col-12 col-sm-8 col-md-6 col-lg-5 col-xl-4 d-flex justify-content-center">
                         <div class="quick-pet-card" data-pet-id="${escapeHtml(pet.id)}">
-                            <img src="${petImage}" alt="${escapeHtml(pet.name)}" class="quick-pet-avatar">
+                            <img src="${petImage}" alt="${escapeHtml(pet.name)}" class="quick-pet-avatar" onerror="this.onerror=null; this.src='/assets/images/publics/pet.png';">
                             <div class="quick-pet-info">
                                 <h5 class="quick-pet-name">${escapeHtml(pet.name)}</h5>
                                 <p class="quick-pet-meta">${escapeHtml(subText)}</p>
