@@ -159,11 +159,12 @@ test('private evidence prepare binds an exact target and context without accepti
 });
 
 test('customer pet images bind the pet and purpose using caller credentials and reject mixed scopes',async()=>{
- for(const purpose of ['customer_pet_avatar','customer_pet_vaccine']){
-  const deps=dependencies({prepare_customer_pet_media_upload:async()=>({data:{session_id:session}})}),handler=createMediaHandler({env,clientFactory:deps.clientFactory,store:{}});
+ for(const purpose of ['customer_pet_avatar','customer_pet_vaccine','customer_avatar']){
+  const rpcName=purpose==='customer_avatar'?'prepare_customer_avatar_upload':'prepare_customer_pet_media_upload';
+  const deps=dependencies({[rpcName]:async()=>({data:{session_id:session}})}),handler=createMediaHandler({env,clientFactory:deps.clientFactory,store:{}});
   const body={request_id:actor,purpose,pet_id:asset,size_bytes:100,mime_type:'image/png',name:'pet.png'};
   const good=res();await handler(request(Buffer.from(JSON.stringify(body)),'application/json','/api/media?action=prepare'),good);assert.equal(good.statusCode,200);
-  assert.equal(deps.calls[0].key,'anon-test');assert.equal(deps.calls[0].name,'prepare_customer_pet_media_upload');assert.equal(deps.calls[0].args.p_pet,asset);assert.equal(deps.calls[0].args.p_kind,purpose);
+  assert.equal(deps.calls[0].key,'anon-test');assert.equal(deps.calls[0].name,rpcName);assert.equal(deps.calls[0].args.p_pet,asset);assert.equal(deps.calls[0].args.p_kind,purpose);
   for(const value of [{...body,pet_id:null},{...body,appointment_id:actor},{...body,draft_id:actor},{...body,size_bytes:6*1024*1024}]){
    const bad=res();await handler(request(Buffer.from(JSON.stringify(value)),'application/json','/api/media?action=prepare'),bad);assert.equal(bad.statusCode,400);
   }

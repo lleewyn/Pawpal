@@ -8,6 +8,8 @@ import { normalizeOrderStatus, getStatusLabel } from '/scripts/shared/order-stat
 import { API } from '/scripts/api/api.js';
 import { getPets } from '/scripts/api/petService.js';
 import { applyProfileSnapshot, saveCustomerProfile, loadCustomerProfileSnapshot } from '/scripts/shared/customer-profile.mjs';
+import {mountCustomerAvatarEditor} from '/scripts/shared/customer-avatar.mjs';
+let disposeAvatarEditor=()=>{};
 import { loadCustomerMembership } from '/scripts/shared/customer-membership.mjs';
 
 const CURRENT_USER_KEY = 'pawpal_current_user';
@@ -809,6 +811,7 @@ let stopProfileWatch = () => {};
 let profileModal;
 
 export function dispose() {
+    disposeAvatarEditor();
     ++profileGeneration;
     stopProfileWatch();
     if (profileModal?.parentNode === document.body) profileModal.remove();
@@ -928,6 +931,8 @@ export async function init() {
         if (generation !== profileGeneration || getCurrentUser()?.id !== user.id) return;
         // Tải và hiển thị dữ liệu chuẩn một lần duy nhất
         await loadProfileData(user);
+        disposeAvatarEditor();
+        if(document.getElementById('accountAvatarEditor'))disposeAvatarEditor=mountCustomerAvatarEditor(document.getElementById('accountAvatarEditor'));
         initProfileEditModal(user);
         profileModal = document.getElementById('profileEditModal');
         ['welcomeName', 'statPoints', 'statAccountType', 'profileName', 'profileEmail', 'profilePhone', 'profileAddress'].forEach(id => document.getElementById(id)?.classList.add('profile-data-ready'));

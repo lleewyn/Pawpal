@@ -61,12 +61,12 @@ function createMediaHandler({ env = process.env, clientFactory = createClient, s
             const chatArgs=()=>({p_actor:actor,p_guest_hash:guestHash});
             if (action === 'prepare') {
                 const body = await readJson(req);
-                if (!chat && ['customer_pet_avatar','customer_pet_vaccine'].includes(body.purpose)) {
+                if (!chat && ['customer_pet_avatar','customer_pet_vaccine','customer_avatar'].includes(body.purpose)) {
                     if (Object.keys(body).some(key=>!['request_id','purpose','pet_id','size_bytes','mime_type','name'].includes(key))
                         || !uuid(body.request_id) || !uuid(body.pet_id) || !Number.isSafeInteger(body.size_bytes)
                         || body.size_bytes<1 || body.size_bytes>3145728 || !Object.values(MIME).includes(body.mime_type)
                         || typeof body.name!=='string' || !body.name.trim() || body.name.length>200 || /[\x00-\x1f]/.test(body.name)) throw mediaError('MEDIA_INVALID_REQUEST');
-                    const result=await rpc(caller,'prepare_customer_pet_media_upload',{p_request:body.request_id,p_pet:body.pet_id,p_kind:body.purpose,p_size:body.size_bytes,p_mime:body.mime_type,p_name:body.name});
+                    const result=await rpc(caller,body.purpose==='customer_avatar'?'prepare_customer_avatar_upload':'prepare_customer_pet_media_upload',{p_request:body.request_id,p_pet:body.pet_id,p_kind:body.purpose,p_size:body.size_bytes,p_mime:body.mime_type,p_name:body.name});
                     return res.status(200).json({ok:true,...result});
                 }
                 if(chat){

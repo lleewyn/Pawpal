@@ -1,4 +1,18 @@
 require('dotenv').config();
+// Optional local-only media configuration stays outside the served workspace.
+if (process.env.PAWPAL_MEDIA_ENV_FILE) {
+    const fs = require('node:fs'), path = require('node:path');
+    const file = path.resolve(process.env.PAWPAL_MEDIA_ENV_FILE);
+    const relative = path.relative(__dirname, file);
+    if (!relative.startsWith('..' + path.sep) && !path.isAbsolute(relative)) throw Error('Media configuration must be outside the webroot.');
+    const values = require('dotenv').parse(fs.readFileSync(file));
+    for (const [key, value] of Object.entries(values)) {
+        if (/^(PAWPAL_MEDIA_|MEDIA_|MONGODB_)/.test(key) && process.env[key] === undefined) process.env[key] = value;
+    }
+}
+if (process.env.PAWPAL_MEDIA_DNS_SERVERS) {
+    require('node:dns').setServers(process.env.PAWPAL_MEDIA_DNS_SERVERS.split(',').map(value => value.trim()).filter(Boolean));
+}
 const express = require('express');
 const path = require('path');
 const chatApi = require('./scripts/api/chat.js');

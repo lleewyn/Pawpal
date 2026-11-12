@@ -10,7 +10,10 @@ async function api(db,action,body,query=''){
  const multipart=body instanceof FormData;
  const response=await fetch('/api/media?action='+action+query,{method:'POST',headers:{Authorization:'Bearer '+await token(db),...(!multipart?{'Content-Type':'application/json'}:{})},body:multipart?body:JSON.stringify(body)});
  const result=await response.json();
- if(!response.ok||!result.ok)throw Error(response.status===503?'Chức năng tải ảnh chưa sẵn sàng. Ảnh đã chọn vẫn được giữ, vui lòng thử lại.':'Không thể lưu ảnh. Vui lòng kiểm tra ảnh và thử lại.');
+ if(!response.ok||!result.ok){
+  const messages={MEDIA_DISABLED:'Máy chủ đang tắt tải ảnh. Vui lòng liên hệ PawPal.',MEDIA_NOT_CONFIGURED:'Máy chủ chưa được cấu hình lưu ảnh. Vui lòng liên hệ PawPal.',MEDIA_UNAUTHORIZED:'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',MEDIA_MONGODB_UNAVAILABLE:'Kho ảnh tạm thời chưa kết nối được. Vui lòng thử lại.'};
+  throw Error(messages[result.code]||(response.status===503?'Chưa kết nối được dịch vụ lưu ảnh. Vui lòng thử lại.':'Không thể lưu ảnh. Vui lòng kiểm tra ảnh và thử lại.'));
+ }
  return result;
 }
 async function imageForUpload(file){
@@ -27,7 +30,7 @@ async function imageForUpload(file){
  }finally{bitmap.close();}
 }
 export async function uploadCustomerPetImage(db,file,petId,kind){
- const purpose=kind==='avatar'?'customer_pet_avatar':'customer_pet_vaccine';
+ const purpose=kind==='account'?'customer_avatar':kind==='avatar'?'customer_pet_avatar':'customer_pet_vaccine';
  let slots=drafts.get(file);if(!slots){slots=new Map();drafts.set(file,slots);}
  const key=(await token(db))+':'+petId+':'+purpose;
  let item=slots.get(key);if(!item){item={request:crypto.randomUUID()};slots.set(key,item);}

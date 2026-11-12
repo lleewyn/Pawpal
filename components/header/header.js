@@ -407,6 +407,7 @@
                 if (avatarEl && avatarEl.textContent !== userInitial) avatarEl.textContent = userInitial;
             }
             
+            import('/scripts/shared/customer-avatar.mjs').then(module=>module.refreshCustomerAvatar()).catch(()=>{});
             // Cập nhật Mobile Nav
             setMobileGroupVisibility(mobileGuestOnly, false);
             setMobileGroupVisibility(mobileUserOnly, true);
