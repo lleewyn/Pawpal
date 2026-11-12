@@ -44,15 +44,15 @@ function render(){
     const timelineElement=document.getElementById('order-timeline');
     if(timelineElement)timelineElement.innerHTML=timeline.map(t=>`<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h4 class="timeline-title">${escapeHtml(t.title)}</h4><p class="timeline-time">${date(t.at)}</p></div></div>`).join('');
     const actions=document.getElementById('order-actions');
+    const deliveredAt = o.deliveredAt ? new Date(o.deliveredAt) : new Date(o.updatedAt || o.createdAt || 0);
+    const daysPassed = (Date.now() - deliveredAt.getTime()) / (1000 * 60 * 60 * 24);
+    const canRequestReturn = o.orderStatus === 'returned' || (['completed','delivered'].includes(o.orderStatus) && daysPassed <= 7);
     if(actions){
         actions.innerHTML='<p id="order-action-message" role="status"></p>';
         const add=(id,label,handler)=>{const button=document.createElement('button');button.type='button';button.id=id;button.className='btn-green-outline';button.textContent=label;button.onclick=handler;actions.append(button);};
         if(['draft','pending','confirmed','packing'].includes(o.orderStatus))add('detail-cancel-order','Hủy đơn hàng',()=>openOrderAction('cancel'));
         if(['shipped','shipping'].includes(o.orderStatus))add('detail-receive-order','Đã nhận hàng',()=>openOrderAction('receive'));
         add('detail-reorder','Mua lại',reorder);
-        const deliveredAt = o.deliveredAt ? new Date(o.deliveredAt) : new Date(o.updatedAt || o.createdAt || 0);
-        const daysPassed = (Date.now() - deliveredAt.getTime()) / (1000 * 60 * 60 * 24);
-        const canRequestReturn = o.orderStatus === 'returned' || (['completed','delivered'].includes(o.orderStatus) && daysPassed <= 7);
         if(canRequestReturn)add('detail-request-return','Yêu cầu đổi trả',()=>window.openRMADrawer(o.id));
         document.querySelector('.order-payment-note')?.remove();
         if(o.paymentStatus!=='paid'&&Number(o.pricing.grandTotal)>0){
