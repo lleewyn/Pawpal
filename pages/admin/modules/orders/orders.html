@@ -433,7 +433,7 @@
   </div>
  </div>
  <div class="" id="orderDetailData" style="display:none;">
-  <div class="admin-card order-detail-card">
+  <div class="admin-card order-detail-card admin-detail-surface">
    <!-- THANH TIÊU ĐỀ CHI TIẾT ĐƠN HÀNG VÀ NÚT THAO TÁC 1-CHẠM -->
    <div class="order-detail-header-bar">
     <div class="order-headline-group">
@@ -459,7 +459,7 @@
       <div class="detail-section-title">
        Danh sách sản phẩm
       </div>
-      <table class="order-items-table">
+      <div class="order-items-scroll"><table class="order-items-table">
        <thead>
         <tr>
          <th scope="col">
@@ -482,7 +482,7 @@
        <tbody class="" id="detailOrderItemsBody">
         <!-- Nạp động từ orders.js -->
        </tbody>
-      </table>
+      </table></div>
      </div>
      <div>
       <div class="detail-section-title">
@@ -491,7 +491,7 @@
       <div class="financial-summary-list">
        <div class="summary-row">
         <span>
-         Tiền hàng tạm tính:
+         Tiền hàng tạm tính
         </span>
         <span class="" id="detailSummarySubtotal">
          850.000 đ
@@ -499,7 +499,7 @@
        </div>
        <div class="summary-row">
         <span>
-         Phí vận chuyển:
+         Phí vận chuyển
         </span>
         <span class="" id="detailSummaryShipping">
          30.000 đ
@@ -507,7 +507,7 @@
        </div>
        <div class="summary-row">
         <span>
-         Mã giảm giá Voucher:
+         Mã giảm giá
         </span>
         <span class="text-success" id="detailSummaryVoucher">
          - 0 đ
@@ -515,7 +515,7 @@
        </div>
        <div class="summary-row">
         <span>
-         Điểm thưởng Pawpoint đã đổi:
+         Điểm Pawpoint đã đổi
         </span>
         <span class="text-success" id="detailSummaryPoints">
          - 0 đ
@@ -523,7 +523,7 @@
        </div>
        <div class="summary-row total-row">
         <span>
-         Tổng tiền thanh toán:
+         Tổng tiền thanh toán
         </span>
         <span class="" id="detailSummaryTotal">
          880.000 đ
@@ -538,7 +538,7 @@
       <div style="display: flex; flex-direction: column; gap: 8px;">
        <div class="info-pair">
         <span class="info-label">
-         Ghi chú của khách hàng:
+         Ghi chú của khách hàng
         </span>
         <span class="info-value orders-inline-4e5b78aa" id="detailCustomerNote">
          "Giao hàng giờ hành chính, gọi trước khi đến."
@@ -546,7 +546,7 @@
        </div>
        <div class="info-pair">
         <span class="info-label">
-         Ghi chú nội bộ PawPal:
+         Ghi chú nội bộ
         </span>
         <span class="info-value orders-inline-7c8ebd94" id="detailInternalNote">
          Đã xác nhận địa chỉ và kiểm tra hạn sử dụng của túi thức ăn còn trên 12 tháng.
@@ -574,7 +574,7 @@
        <div class="info-pair"><span class="info-label">Liên hệ khách đặt</span><span class="info-value" id="detailOrderCustomerPhone">—</span></div>
        <div class="info-pair">
         <span class="info-label">
-         Người nhận hàng:
+         Người nhận hàng
         </span>
         <span class="info-value">
          <a class="user-link-text" href="javascript:void(0)" id="detailReceiverName">
@@ -584,7 +584,7 @@
        </div>
        <div class="info-pair">
         <span class="info-label">
-         Số điện thoại:
+         Số điện thoại
         </span>
         <span class="info-value" id="detailReceiverPhone">
          0901234567
@@ -592,7 +592,7 @@
        </div>
        <div class="info-pair">
         <span class="info-label">
-         Địa chỉ giao hàng:
+         Địa chỉ giao hàng
         </span>
         <span class="info-value" id="detailReceiverAddress">
          123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh
@@ -600,7 +600,7 @@
        </div>
        <div class="info-pair">
         <span class="info-label">
-         Phương thức thanh toán:
+         Phương thức thanh toán
         </span>
         <span class="info-value" id="detailPaymentMethod">
          Tiền mặt khi nhận hàng (COD)
@@ -608,7 +608,7 @@
        </div>
        <div class="info-pair">
         <span class="info-label">
-         Trạng thái đối soát:
+         Trạng thái đối soát
         </span>
         <span class="admin-badge badge-unpaid" id="detailPaymentBadge">
          Chưa thanh toán

@@ -1,0 +1,165 @@
+/* Shared detail presentation. List pages and modal layouts keep their own rules. */
+body.admin-body :is(#orderDetailData, #subtab-tab-service-detail, #subtab-tab-profile, #subtab-tab-pet-profile, #subtab-tab-staff-profile) .admin-detail-surface {
+    padding: 26px 30px;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .70);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: none;
+    min-width: 0;
+}
+body.admin-body .admin-detail-surface :is(.order-detail-header-bar, .service-detail-header-bar, .profile-quick-actions-bar, .staff-profile-quick-bar) {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    padding: 0;
+    margin: 0 0 24px;
+    border: none;
+    background: transparent;
+}
+body.admin-body .admin-detail-surface :is(.order-headline-group, .service-headline-group, .drawer-user-headline, .staff-headline-group) {
+    flex: 1 1 240px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+body.admin-body .admin-detail-surface :is(.order-action-bar-top, .service-action-bar-top, .drawer-action-buttons, .staff-quick-actions) {
+    display: flex;
+    flex: 0 1 auto;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 0 auto;
+    max-width: 100%;
+}
+body.admin-body .admin-detail-surface :is(.order-detail-grid, .service-detail-grid, .staff-profile-sections-grid, .detail-grid-two-col) {
+    align-items: start;
+    gap: 28px;
+    padding: 0;
+    min-width: 0;
+}
+body.admin-body .admin-detail-surface :is(.order-main-col, .order-side-col, .detail-column-left, .detail-column-right, .staff-profile-left-col, .staff-profile-right-col) {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    min-width: 0;
+}
+body.admin-body .admin-detail-surface :is(.shipping-info-block, .order-finance-card, .order-customer-card, .order-payment-card, .detail-info-group, .service-finance-card, .service-pet-card, .service-customer-card, .booking-action-card, .service-detail-side-card, .detail-box, .drawer-info-block) {
+    min-width: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+body.admin-body .admin-detail-surface :is(.detail-section-title, .detail-box-title, .drawer-section-title) {
+    margin: 0 0 12px;
+    padding: 0;
+    border: none;
+    color: #236B48;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+body.admin-body .admin-detail-surface :is(.info-pair, .data-pair-row) {
+    min-width: 0;
+    border: none !important;
+    background: transparent;
+    line-height: 1.6;
+}
+body.admin-body .admin-detail-surface :is(.info-label, .data-key) {
+    color: #4F7A65;
+    font-size: 12px;
+    font-weight: 400;
+}
+body.admin-body .admin-detail-surface :is(.info-value, .data-val) {
+    min-width: 0;
+    color: #203A2C;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+body.admin-body .orders-module #orderDetailData .info-pair {
+    display: grid;
+    grid-template-columns: minmax(100px, .8fr) minmax(0, 1.4fr);
+    align-items: start;
+    gap: 8px 16px;
+    padding: 5px 0;
+}
+body.admin-body .orders-module #orderDetailData .info-value { text-align: left; }
+body.admin-body .orders-module #orderDetailData .info-pair:has(#detailCustomerNote, #detailInternalNote) {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 6px;
+}
+body.admin-body .orders-module #detailCustomerNote,
+body.admin-body .services-module #detailBookingCustomerNote {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    font-style: normal;
+}
+body.admin-body .orders-module #detailOrderRmaBannerContainer:empty { display: none; }
+body.admin-body .admin-detail-surface .financial-summary-list .total-row {
+    border: none;
+    padding-top: 12px;
+}
+body.admin-body .services-module .admin-detail-surface .detail-group-heading {
+    border: none;
+    padding-bottom: 0;
+    margin-bottom: 12px;
+}
+body.admin-body .services-module .admin-detail-surface .pet-safety-banner {
+    color: #DC2626;
+    background: transparent;
+    border: none;
+}
+body.admin-body .admin-detail-surface .order-timeline-item {
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 0;
+}
+body.admin-body .admin-detail-surface .order-timeline-list { gap: 16px; }
+body.admin-body .admin-detail-surface .order-items-scroll {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior: contain;
+}
+body.admin-body .admin-detail-surface .order-items-table { min-width: 520px; }
+body.admin-body .admin-detail-surface .order-items-table :is(tbody, tr, td) { background: transparent; }
+body.admin-body .admin-detail-surface .info-grid-2col { gap: 16px 24px; }
+body.admin-body :is(#subtab-tab-profile, #subtab-tab-pet-profile) .drawer-subtabs-row {
+    min-width: 0;
+    max-width: 100%;
+}
+body.admin-body :is(#subtab-tab-profile, #subtab-tab-pet-profile) .drawer-subtabs-bar {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior: contain;
+    flex-wrap: nowrap;
+    gap: 16px;
+    border: none;
+}
+body.admin-body :is(#subtab-tab-profile, #subtab-tab-pet-profile) .drawer-tab-btn {
+    flex: 0 0 auto;
+}
+body.admin-body .admin-detail-surface :is(.pet-profile-note-read, .v7-note-read) { color: #203A2C; line-height: 1.75; }
+@media (max-width: 900px) {
+    body.admin-body .admin-detail-surface :is(.order-detail-grid, .service-detail-grid, .staff-profile-sections-grid, .detail-grid-two-col) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (max-width: 600px) {
+    body.admin-body :is(#orderDetailData, #subtab-tab-service-detail, #subtab-tab-profile, #subtab-tab-pet-profile, #subtab-tab-staff-profile) .admin-detail-surface { padding: 20px 18px; }
+    body.admin-body .admin-detail-surface :is(.order-action-bar-top, .service-action-bar-top, .drawer-action-buttons, .staff-quick-actions) { width: 100%; }
+    body.admin-body .admin-detail-surface .info-grid-2col { grid-template-columns: minmax(0, 1fr); }
+}
