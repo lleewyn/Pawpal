@@ -3,14 +3,14 @@ const fs = require('node:fs');
 const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 (async () => {
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) });
     try {
         const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
         await page.route('**/*', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><head></head><body></body></html>' }));
         await page.goto('http://dashboard.test');
-        await page.setContent('<style>body{margin:16px}*{box-sizing:border-box}</style><section data-business-root></section>');
+        await page.setContent('<style>body{margin:16px}*{box-sizing:border-box}</style><section class="dashboard-module dash-page business-dash" data-business-root></section>');
         await page.addStyleTag({ content: fs.readFileSync('pages/admin/modules/dashboard/dashboard.css', 'utf8') });
         await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/subtabs/business-metrics.js', 'utf8') });
         await page.evaluate(() => {
@@ -30,8 +30,47 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
             });
         });
         await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/subtabs/tab-dashboard-business.js', 'utf8') });
-        await page.evaluate(() => PawpalDashboardOverview.init());
+        await page.evaluate(() => {
+            window.originalMetricLoad = PawpalBusinessMetrics.load;
+            const gate = new Promise(resolve => {window.releaseInitialLoad = resolve;});
+            PawpalBusinessMetrics.load = async (...args) => {await gate;return window.originalMetricLoad(...args);};
+            window.initialLoad = PawpalDashboardOverview.init();
+        });
+        assert.equal(await page.locator('.biz-kpi[aria-busy="true"]').count(), 8);
+        assert.equal(await page.locator('.biz-kpi-skeleton').count(), 8);
+        assert.equal(await page.locator('[data-biz-panel="customers"] .biz-skeleton').count(), 1);
+        assert.equal(await page.locator('[data-biz-panel="membership"] .biz-skeleton').count(), 1);
+        assert.equal(await page.locator('[data-biz-panel="insights"] .biz-skeleton').count(), 1);
+        await page.evaluate(async () => {releaseInitialLoad();await initialLoad;PawpalBusinessMetrics.load = originalMetricLoad;});
+        assert.equal(await page.locator('.biz-skeleton,.biz-kpi-skeleton').count(), 0);
+        await page.evaluate(() => {
+            const gate = new Promise(resolve => {window.releaseCustomerLoad = resolve;});
+            PawpalBusinessMetrics.load = async (db, key, range) => {if(key === 'customers')await gate;return originalMetricLoad(db, key, range);};
+            window.partialLoad = PawpalDashboardOverview.refresh();
+        });
+        await page.waitForFunction(() => document.querySelector('[data-biz-panel="membership"]').getAttribute('aria-busy') === 'false');
+        assert.equal(await page.locator('[data-biz-panel="customers"]').getAttribute('aria-busy'), 'true');
+        assert.equal(await page.locator('[data-biz-panel="membership"] .biz-empty').count(), 1);
+        const groupSurface = await page.locator('[data-biz-panel="membership"]').evaluate(n => {const s=getComputedStyle(n.closest('.biz-group'));return {background:s.backgroundColor,blur:s.backdropFilter};});
+        assert.deepEqual(groupSurface, {background:'rgb(255, 255, 255)',blur:'none'});
+        await page.evaluate(async () => {releaseCustomerLoad();await partialLoad;PawpalBusinessMetrics.load = originalMetricLoad;});
+        await page.evaluate(async () => {PawpalBusinessMetrics.load = async (db,key,range) => {if(key==='cash')throw {code:'42501'};return originalMetricLoad(db,key,range);};await PawpalDashboardOverview.refresh();});
+        assert.equal(await page.locator('[data-biz-panel="cash"] [role="alert"]').count(), 1);
+        assert.equal(await page.locator('[data-biz-panel="insights"] [role="alert"]').count(), 1);
+        assert.equal(await page.locator('.biz-kpi-error').count(), 4);
+        await page.evaluate(async () => {PawpalBusinessMetrics.load = originalMetricLoad;await PawpalDashboardOverview.refresh();});
         assert.equal(await page.locator('.biz-kpi').count(), 8);
+        const styleDifferences = await page.evaluate(() => {
+            const reference = document.createElement('section');
+            reference.className = 'dashboard-module dash-page ops-dash';
+            reference.style.cssText = 'position:fixed;left:-10000px;width:1200px;visibility:hidden';
+            reference.innerHTML = '<div class="ops-kpis"><div class="ops-kpi"><span class="kpi-label">Chỉ số</span><strong class="kpi-val">123</strong></div></div><section class="ops-panel"><header class="ops-panel-head"><h3 class="admin-card-title">Tiêu đề</h3></header></section>';
+            document.body.append(reference);
+            const pairs = [['.ops-kpis', '.biz-kpis', ['backgroundColor', 'borderRadius', 'borderColor']], ['.ops-kpi .kpi-label', '.biz-kpi .kpi-label', ['fontSize', 'fontWeight', 'color']], ['.ops-kpi .kpi-val', '.biz-kpi .kpi-val', ['fontSize', 'fontWeight', 'color', 'lineHeight', 'letterSpacing']], ['.ops-panel-head .admin-card-title', '.biz-panel-head .admin-card-title', ['fontSize', 'fontWeight', 'color']]];
+            const differences = pairs.flatMap(([a, b, props]) => {const x = getComputedStyle(reference.querySelector(a)), y = getComputedStyle(document.querySelector(b));return props.filter(p => x[p] !== y[p]).map(p => `${b}: ${p} ${y[p]} != ${x[p]}`);});
+            reference.remove();return differences;
+        });
+        assert.deepEqual(styleDifferences, [], 'Business must match Operations workspace styles');
         assert.match(await page.locator('.biz-kpi').nth(2).innerText(), /2\.250 đ/);
         assert.equal(await page.locator('.biz-chart').count(), 1);
         assert.equal(await page.locator('.biz-donut-legend li').count(), 3);
@@ -57,6 +96,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         await page.waitForFunction(() => !document.querySelector('[data-biz-updated]').textContent.includes('Đang'));
         assert.match(await page.locator('.biz-kpi').nth(2).innerText(), /6\.750 đ/);
         const requestsBefore = await page.evaluate(() => requests.length);
+        await page.locator('[data-biz-preset="custom"]').click();
         await page.locator('[data-biz-from]').fill('2026-11-11');
         await page.locator('[data-biz-to]').fill('2026-11-01');
         await page.locator('[data-biz-apply]').click();
@@ -74,6 +114,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         for (const width of [1440, 390]) {
             await page.setViewportSize({ width, height: 1000 });
             assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'horizontal overflow at ' + width);
+            if (process.argv.includes('--preview')) { fs.mkdirSync('artifacts/dashboard-business-style', { recursive: true }); await page.screenshot({ path: `artifacts/dashboard-business-style/${width}.png`, fullPage: true }); }
         }
         const saved = await page.evaluate(() => sessionStorage.getItem('pawpal_admin_business_range'));
         await page.evaluate(async () => { PawpalDashboardOverview.unmount(); await PawpalDashboardOverview.init(); });

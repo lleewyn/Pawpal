@@ -1466,7 +1466,7 @@ button[disabled]{cursor:not-allowed}
    - Triệt tiêu hoàn toàn hover rung giật, không dùng gradient
    - Thanh công cụ, nút chip thời gian phẳng, thanh lịch
 */
-.dashboard-module.dash-page.ops-dash {
+.dashboard-module.dash-page:is(.ops-dash, .business-dash) {
     /* Match the existing Overview workspace; keep these values scoped to Operations. */
     --ops-text: #283D31;
     --ops-muted: #65776A;
@@ -1493,7 +1493,8 @@ button[disabled]{cursor:not-allowed}
 .ops-dash *,
 .ops-dash *::before,
 .ops-dash *::after { box-sizing: border-box; }
-.ops-dash .ops-sr-only {
+.ops-dash .ops-sr-only,
+.business-dash .ops-sr-only {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -2158,93 +2159,749 @@ button[disabled]{cursor:not-allowed}
     .ops-dash .ops-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/* Business and growth: isolated from the operations tab. */
-body.business-dashboard-active #btnHeaderRefresh { display: none !important; }
-.business-dash { color: #203A2C; min-width: 0; }
-.business-dash [hidden] { display: none !important; }
-.biz-toolbar, .biz-presets, .biz-dates, .biz-meta, .biz-heading { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.biz-toolbar { justify-content: space-between; }
-.biz-presets { gap: 4px; }
-.biz-presets button, .biz-text-button { border: 0; border-radius: 9px; padding: 8px 12px; color: #236B48; background: transparent; cursor: pointer; font: inherit; }
-.biz-presets button[aria-pressed="true"] { background: #236B48; color: white; }
-.biz-dates label { display: flex; align-items: center; gap: 6px; font-size: 13px; }
-.biz-dates input { width: 145px; min-width: 0; }
-.biz-meta { justify-content: space-between; margin: 16px 0 20px; color: #4F7A65; font-size: 12px; }
-.biz-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
-.business-dash .biz-kpi, .business-dash .biz-panel { background: rgba(255,255,255,.70); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid #ECF2EE; border-radius: 9px; padding: 22px; min-width: 0; }
-.biz-kpi > span { color: #4F7A65; font-size: 13px; }
-.biz-kpi > strong { display: block; color: #236B48; font-size: clamp(18px, 1.6vw, 26px); margin: 10px 0; overflow-wrap: anywhere; }
-.business-dash details { margin-top: 12px; font-size: 12px; color: #4F7A65; }
-.business-dash summary { cursor: pointer; width: fit-content; }
-.business-dash p { line-height: 1.6; }
-.biz-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
-.biz-wide { grid-column: 1 / -1; }
-.biz-panel h2 { font-size: 17px; color: #236B48; margin: 0 0 18px; font-weight: 600; }
-.biz-heading { justify-content: space-between; margin-bottom: 12px; }
-.biz-heading h2 { margin-bottom: 0; }
-.biz-heading label, .biz-ranking-filter label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-.biz-heading select, .biz-ranking-filter select { width: auto; }
-.biz-error { color: #8F2424; background: transparent; border: none; }
-.biz-empty, .biz-caption { color: #4F7A65; font-size: 13px; }
-.biz-bars { display: grid; gap: 18px; max-height: 380px; overflow: auto; overscroll-behavior: contain; }
-.biz-bar-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; font-size: 13px; }
-.biz-bar-row strong { color: #236B48; }
-.biz-bar-track { grid-column: 1 / -1; height: 7px; background: #EEF5F1; border-radius: 9px; }
-.biz-bar-track > span { display: block; height: 7px; background: #4F7A65; border-radius: 9px; }
-.biz-chart { width: 100%; height: auto; min-height: 200px; }
-.biz-donut-layout { display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 16px; }
-.biz-donut { position: relative; width: 240px; max-width: 100%; flex-shrink: 0; }
-.biz-donut svg { display: block; width: 100%; }
-.biz-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; pointer-events: none; }
-.biz-donut-center strong { font-size: 20px; color: #236B48; }
-.biz-donut-center span { font-size: 12px; color: #4F7A65; }
-.biz-donut-legend { list-style: none; padding: 0; margin: 0; flex: 1; min-width: 210px; display: grid; gap: 22px; }
-.biz-donut-legend li { display: grid; grid-template-columns: 9px 1fr auto; align-items: baseline; gap: 10px; font-size: 13px; color: #4F7A65; }
-.biz-donut-legend strong { display: block; color: #236B48; margin-top: 5px; }
-.biz-legend-dot { width: 9px; height: 9px; border-radius: 50%; }
-.biz-comparison-total { display: flex; flex-direction: column; gap: 8px; color: #4F7A65; font-size: 13px; }
-.biz-comparison-total strong { font-size: 26px; color: #236B48; }
-.biz-comparison-badge { display: inline-block; border-radius: 9px; background: #DCEEE2; color: #165335; padding: 5px 9px; margin-top: 12px; font-size: 12px; }
-.biz-comparison-badge.is-down { background: #F7DCDC; color: #8F2424; }
-.biz-comparison-chart { display: block; width: 100%; margin-top: 18px; }
-.biz-comparison-chart text { fill: #4F7A65; font-size: 11px; }
-.biz-comparison-chart .biz-comparison-value { fill: #236B48; font-weight: 600; font-size: 12px; }
-.biz-chart text { fill: #4F7A65; font-size: 11px; }
-.biz-chart-legend { display: flex; gap: 18px; flex-wrap: wrap; color: #4F7A65; font-size: 12px; }
-.biz-chart-legend i { display: inline-block; width: 20px; border-top: 3px solid; margin-right: 7px; vertical-align: middle; }
-.biz-table-wrap { max-height: 360px; overflow: auto; overscroll-behavior: contain; margin-top: 12px; }
-.business-dash table { width: 100%; border-collapse: collapse; background: transparent; font-size: 13px; }
-.business-dash tbody, .business-dash tr, .business-dash td { background: transparent; }
-.business-dash th { color: #236B48; background: rgba(238,245,241,.75); text-transform: none; }
-.business-dash th, .business-dash td { padding: 10px 8px; text-align: left; }
-.business-dash td:first-child { overflow-wrap: anywhere; }
-.biz-facts { display: grid; grid-template-columns: 1fr auto; gap: 20px; font-size: 14px; }
-.biz-facts dd { margin: 0; font-weight: 600; color: #236B48; }
-.biz-customer-chart { overflow-x: auto; overscroll-behavior: contain; padding-top: 24px; }
-.biz-customer-columns { display: flex; gap: 14px; min-width: 100%; width: max-content; }
-.biz-customer-column { flex: 1 0 38px; text-align: center; }
-.biz-customer-plot { height: 164px; display: flex; align-items: flex-end; justify-content: center; }
-.biz-customer-bar { position: relative; display: block; width: 26px; background: #308264; border-radius: 5px 5px 0 0; }
-.biz-customer-bar strong { position: absolute; bottom: calc(100% + 5px); left: 50%; translate: -50% 0; color: #203A2C; font-size: 13px; font-weight: 500; }
-.biz-customer-date { display: block; color: #4F7A65; font-size: 11px; margin-top: 10px; }
-.biz-membership-stack { display: flex; height: 24px; overflow: hidden; border-radius: 9px; background: #EEF5F1; margin: 26px 0; }
-.biz-membership-legend { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; font-size: 13px; }
-.biz-membership-legend li { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-.biz-membership-legend strong { font-weight: 500; }
-.biz-membership-legend i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; }
-.biz-stat-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 30px 0 18px; }
-.biz-stat-pair dt { color: #4F7A65; font-size: 12px; line-height: 1.5; }
-.biz-stat-pair dd { margin: 14px 0 0; color: #236B48; font-size: 28px; font-weight: 500; overflow-wrap: anywhere; }
-.biz-forecast-icon { width: 20px; height: 20px; vertical-align: middle; margin-right: 12px; }
-.biz-skeleton { background: #EEF5F1; border-radius: 9px; padding: 25px; min-height: 100px; color: #4F7A65; }
-.business-dash :focus-visible { outline: 2px solid #236B48; outline-offset: 3px; }
-@media (max-width: 1100px) { .biz-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* ==========================================================================
+   TAB 3: KINH DOANH VÀ TĂNG TRƯỞNG (PAWPAL ADMIN - QUIET ENTERPRISE)
+   Đồng nhất 100% với Quản trị vận hành (Tab 2) và Tổng quan (Tab 1) theo AGENTS.md:
+   - Bo góc cố định 9px (--admin-radius: 9px)
+   - Bề mặt bán trong suốt Frosted Glass (--surface-white, backdrop-filter: blur(10px))
+   - Viền phân cách siêu mảnh (--border-neutral: #ECF2EE)
+   - Bộ lọc thời gian text-only tabs phẳng gạch chân theo nội dung (Underline by content length)
+   - Lưới KPI card liên hoàn phân tách bằng viền thanh mảnh
+   - Tiêu chuẩn màu Forest Green (#236B48), Sage (#4F7A65), Amber (#C27803), Red-brick (#B43F37)
+   - Triệt tiêu 100% icon SVG ngoài Sidebar, giữ giao diện phẳng, thanh thoát
+   ========================================================================== */
+
+.business-dash {
+    /* Use the same workspace tokens as Operations, including its accepted surfaces. */
+    --text-main: var(--ops-text);
+    --text-dark: var(--ops-text);
+    --text-muted: var(--ops-muted);
+    --text-heading: var(--ops-heading);
+    --surface-white: var(--ops-surface);
+    --border-neutral: var(--ops-line);
+    color: var(--text-main, #203A2C);
+    font-family: var(--admin-ui-font, Inter, 'Segoe UI', sans-serif);
+    min-width: 0;
+}
+.business-dash [hidden] {
+    display: none !important;
+}
+
+/* Thanh công cụ & Bộ lọc thời gian chuẩn Pawpal (Text-Only Tabs & Frosted Glass) */
+.business-dash .biz-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 18px;
+    padding: 4px 0;
+    margin-bottom: 4px;
+    background: transparent;
+    border: none;
+}
+.business-dash .biz-toolbar-left {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+}
+.business-dash .biz-presets {
+    display: inline-flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+}
+.business-dash .biz-range {
+    height: auto;
+    padding: 4px 0;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-muted, #4F7A65);
+    font: 500 13px/1.4 var(--admin-ui-font, Inter, sans-serif);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    transform: none !important;
+    box-shadow: none !important;
+}
+.business-dash .biz-range:hover {
+    color: var(--text-heading, #236B48);
+    background: transparent;
+}
+.business-dash .biz-range.active,
+.business-dash .biz-range[aria-pressed="true"] {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--text-heading, #236B48);
+    color: var(--text-heading, #236B48);
+    font-weight: 700;
+    box-shadow: none;
+}
+.business-dash .biz-period-label {
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-muted, #4F7A65);
+    white-space: nowrap;
+    margin-left: 6px;
+}
+.business-dash .biz-dates {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 8px;
+}
+.business-dash .biz-dates input[type="date"] {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 12.5px;
+    border: 1px solid var(--border-neutral, #ECF2EE);
+    border-radius: var(--admin-radius, 9px);
+    background: var(--surface-white, rgba(255, 255, 255, 0.70));
+    color: var(--text-dark, #203A2C);
+    box-sizing: border-box;
+}
+.business-dash .biz-dates .admin-btn {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: var(--admin-radius, 9px);
+}
+.business-dash .biz-sync {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+.business-dash .biz-sync-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted, #4F7A65);
+}
+.business-dash .biz-sync-status.is-live::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-heading, #236B48);
+}
+.business-dash .biz-refresh-btn {
+    height: 30px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: var(--admin-radius, 9px);
+}
+.business-dash .biz-error {
+    color: #DC2626;
+    background: transparent;
+    border: none;
+    padding: 0;
+    border-radius: var(--admin-radius, 9px);
+    font-size: 12.5px;
+    margin: 8px 0;
+}
+
+/* Lưới KPI kinh doanh: Frosted Glass, bo góc 9px, đường phân cách thanh mảnh, đồng bộ với Ops KPIs */
+.business-dash .biz-kpis {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    background: var(--surface-white, rgba(255, 255, 255, 0.70)) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid #DCE4DF !important;
+    border-radius: 5px !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    gap: 0 !important;
+}
+.business-dash .biz-kpi {
+    padding: 12px 16px 14px !important;
+    min-height: 78px !important;
+    background: transparent !important;
+    border: none !important;
+    border-right: 1px solid #E5EAE6 !important;
+    border-bottom: 1px solid #E5EAE6 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    gap: 5px !important;
+    transition: background 0.15s ease !important;
+    box-sizing: border-box !important;
+}
+.business-dash .biz-kpi:nth-child(4n) {
+    border-right: none !important;
+}
+.business-dash .biz-kpi:nth-child(n+5) {
+    border-bottom: none !important;
+}
+.business-dash .biz-kpi:hover {
+    background: rgba(238, 245, 241, 0.45) !important;
+}
+.business-dash .biz-kpi .kpi-label {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #62776A !important;
+    line-height: 1.3 !important;
+}
+.business-dash .biz-kpi .kpi-val {
+    font-size: 25px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.6px !important;
+    color: #285C43 !important;
+    line-height: 1.14 !important;
+    font-variant-numeric: tabular-nums !important;
+    margin: 0 !important;
+}
+.business-dash .biz-kpi .kpi-sub {
+    font-size: 11.5px !important;
+    color: var(--text-muted, #4F7A65) !important;
+    line-height: 1.3 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.business-dash .biz-kpi[data-status="error"] .kpi-val {
+    color: var(--text-muted, #4F7A65) !important;
+}
+
+/* Lưới Cards / Panels kinh doanh */
+.business-dash .biz-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+}
+.business-dash .biz-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 24px;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    border: 1px solid var(--border-neutral, #ECF2EE);
+    border-radius: 5px;
+    background: var(--surface-white, rgba(255,255,255,.70));
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+}
+.business-dash .biz-group > .biz-panel {
+    background: transparent !important;
+    border: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    min-width: 0;
+}
+.business-dash .biz-wide {
+    grid-column: 1 / -1;
+}
+.business-dash .biz-panel {
+    background: var(--surface-white, rgba(255, 255, 255, 0.70)) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid var(--border-neutral, #ECF2EE) !important;
+    border-radius: 5px !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+}
+.business-dash .biz-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 17px 13px;
+    border-bottom: none;
+    min-height: 55px;
+    box-sizing: border-box;
+}
+.business-dash .biz-panel-head .admin-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-heading, #236B48);
+    margin: 0;
+    line-height: 1.3;
+}
+.business-dash .biz-panel-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-muted, #4F7A65);
+}
+.business-dash .biz-panel-control select {
+    height: 30px;
+    padding: 0 8px;
+    font-size: 12px;
+    border-radius: var(--admin-radius, 9px);
+    border: 1px solid var(--border-neutral, #ECF2EE);
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--text-dark, #203A2C);
+}
+.business-dash .biz-panel-body {
+    padding: 0 17px 17px;
+    min-height: 96px;
+}
+.business-dash .biz-panel-body:is([data-biz-panel="cash"]) {min-height:326px;}
+.business-dash .biz-panel-body:is([data-biz-panel="sources"],[data-biz-panel="insights"]) {min-height:280px;}
+.business-dash .biz-panel-body:is([data-biz-panel="customers"],[data-biz-panel="membership"]) {min-height:200px;}
+.business-dash .biz-kpi-skeleton {display:block;width:64%;max-width:110px;height:9px;margin:10px 0 9px;border-radius:9px;background:#EEF5F1;}
+.business-dash .biz-kpi .biz-kpi-error {font-size:12px;font-weight:500;letter-spacing:normal;color:var(--text-muted);}
+
+/* Ranking filter bar */
+.business-dash .biz-ranking-filter {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 0;
+    padding: 12px 17px 0;
+}
+
+/* Thông điệp rỗng & phụ chú */
+.business-dash .biz-empty {
+    color: var(--text-muted, #4F7A65);
+    font-size: 13px;
+    text-align: left;
+    padding: 0;
+    margin: 6px 0;
+}
+.business-dash .biz-caption {
+    color: var(--text-muted, #4F7A65);
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 8px 0 0;
+}
+.business-dash .biz-skeleton {
+    background: transparent;
+    border-radius: var(--admin-radius, 9px);
+    padding: 6px 0;
+    min-height: 32px;
+    color: var(--text-muted, #4F7A65);
+    display: grid;
+    gap: 12px;
+    font-size: 13px;
+}
+.business-dash .biz-skeleton > span[aria-hidden] {display:block;height:8px;width:68%;max-width:360px;border-radius:9px;background:#EEF5F1;}
+.business-dash .biz-skeleton > span[aria-hidden]:nth-last-child(2) {width:52%;max-width:280px;}
+.business-dash .biz-skeleton > span[aria-hidden]:last-child {width:38%;max-width:200px;}
+.business-dash .biz-panel-error {
+    padding: 12px 0;
+    background: transparent;
+    border: none;
+    border-radius: var(--admin-radius, 9px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.business-dash .biz-panel-error .biz-error {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    color: #DC2626;
+}
+.business-dash .biz-text-button {
+    border: none;
+    background: transparent;
+    color: var(--text-heading, #236B48);
+    font-weight: 600;
+    font-size: 12.5px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+}
+
+/* Thanh tiến độ & Track (Meters) */
+.business-dash .biz-bars {
+    display: grid;
+    gap: 14px;
+    max-height: 360px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.business-dash .biz-bar-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px;
+    font-size: 13px;
+}
+.business-dash .biz-bar-row strong {
+    color: var(--text-heading, #236B48);
+    font-variant-numeric: tabular-nums;
+}
+.business-dash .biz-bar-track {
+    grid-column: 1 / -1;
+    height: 5px;
+    background: #EEF5F1;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.business-dash .biz-bar-track > span {
+    display: block;
+    height: 100%;
+    background: var(--text-heading, #236B48);
+    border-radius: 3px;
+}
+
+/* Biểu đồ Donut */
+.business-dash .biz-donut-layout {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+    padding: 8px 0;
+}
+.business-dash .biz-donut {
+    position: relative;
+    width: 164px;
+    max-width: 100%;
+    flex-shrink: 0;
+}
+.business-dash .biz-donut svg {
+    display: block;
+    width: 100%;
+}
+.business-dash .biz-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    pointer-events: none;
+}
+.business-dash .biz-donut-center strong {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-heading, #236B48);
+    letter-spacing: -0.3px;
+}
+.business-dash .biz-donut-center span {
+    font-size: 11.5px;
+    color: var(--text-muted, #4F7A65);
+}
+.business-dash .biz-donut-legend {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+    min-width: 190px;
+    display: grid;
+    gap: 16px;
+}
+.business-dash .biz-donut-legend li {
+    display: grid;
+    grid-template-columns: 8px 1fr auto;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-dark, #203A2C);
+}
+.business-dash .biz-donut-legend strong {
+    display: block;
+    color: var(--text-heading, #236B48);
+    margin-top: 3px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.business-dash .biz-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+/* So sánh & Nhận xét */
+.business-dash .biz-comparison-total {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: var(--text-muted, #4F7A65);
+    font-size: 12.5px;
+}
+.business-dash .biz-comparison-total strong {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-heading, #236B48);
+    letter-spacing: -0.4px;
+}
+.business-dash .biz-comparison-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    border: none;
+    border-radius: var(--admin-radius, 9px);
+    background: transparent;
+    color: var(--text-muted, #4F7A65);
+    padding: 0;
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    width: fit-content;
+}
+.business-dash .biz-comparison-badge.is-down {
+    background: transparent;
+    color: var(--text-main, #203A2C);
+}
+.business-dash .biz-comparison-chart {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+}
+.business-dash .biz-comparison-chart text {
+    fill: var(--text-muted, #4F7A65);
+    font-size: 11px;
+}
+.business-dash .biz-comparison-chart .biz-comparison-value {
+    fill: var(--text-heading, #236B48);
+    font-weight: 600;
+    font-size: 12px;
+}
+
+/* Biểu đồ đường (Line Chart) */
+.business-dash .biz-chart {
+    display: block;
+    width: 100%;
+    min-width: 600px;
+    height: 270px;
+}
+.business-dash .biz-chart-scroll {overflow-x:auto;overscroll-behavior:contain;}
+.business-dash .biz-comparison-chart {max-width:440px;margin-inline:auto;}
+.business-dash .biz-chart text {
+    fill: var(--text-muted, #4F7A65);
+    font-size: 11px;
+}
+.business-dash .biz-chart-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    color: var(--text-muted, #4F7A65);
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+.business-dash .biz-chart-legend i {
+    display: inline-block;
+    width: 18px;
+    border-top: 2px solid;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.business-dash .biz-details {
+    margin-top: 12px;
+    border-top: none;
+    padding-top: 10px;
+}
+.business-dash .biz-summary {
+    cursor: pointer;
+    font-size: 12.5px;
+    color: var(--text-heading, #236B48);
+    font-weight: 500;
+    width: fit-content;
+}
+.business-dash .biz-summary:hover {
+    text-decoration: underline;
+}
+
+/* Bảng dữ liệu xếp hạng và chi tiết (Anti-Opacity Stacking) */
+.business-dash .biz-table-wrap {
+    max-height: 360px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin-top: 10px;
+}
+.business-dash .table-responsive-wrapper {
+    background: transparent !important;
+}
+.business-dash .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: transparent !important;
+    font-size: 13px;
+}
+.business-dash .admin-table tbody,
+.business-dash .admin-table tr,
+.business-dash .admin-table td {
+    background: transparent !important;
+}
+.business-dash .admin-table th {
+    color: var(--text-heading, #236B48);
+    background: rgba(238, 245, 241, 0.75) !important;
+    text-transform: none;
+    font-weight: 600;
+    font-size: 12.5px;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border-neutral, #ECF2EE);
+}
+.business-dash .admin-table td {
+    padding: 9px 12px;
+    color: var(--text-dark, #203A2C);
+    border-bottom: 1px solid var(--border-neutral, #ECF2EE);
+}
+.business-dash .admin-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Khách hàng mới theo ngày */
+.business-dash .biz-customer-chart {
+    overflow-x: auto;
+    overscroll-behavior: contain;
+    padding-top: 20px;
+}
+.business-dash .biz-customer-columns {
+    display: flex;
+    gap: 12px;
+    min-width: 100%;
+    width: max-content;
+    align-items: flex-end;
+}
+.business-dash .biz-customer-column {
+    flex: 1 0 36px;
+    text-align: center;
+}
+.business-dash .biz-customer-plot {
+    height: 140px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+.business-dash .biz-customer-bar {
+    position: relative;
+    display: block;
+    width: 22px;
+    background: var(--text-heading, #236B48);
+    border-radius: 4px 4px 0 0;
+}
+.business-dash .biz-customer-bar strong {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    translate: -50% 0;
+    color: var(--text-dark, #203A2C);
+    font-size: 12px;
+    font-weight: 600;
+}
+.business-dash .biz-customer-date {
+    display: block;
+    color: var(--text-muted, #4F7A65);
+    font-size: 11px;
+    margin-top: 8px;
+}
+
+/* Hạng thành viên (Membership Stack) */
+.business-dash .biz-membership-stack {
+    display: flex;
+    height: 7px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: #EEF5F1;
+    margin: 18px 0 16px;
+}
+.business-dash .biz-membership-legend {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 10px;
+    font-size: 12.5px;
+}
+.business-dash .biz-membership-legend li {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.business-dash .biz-membership-legend strong {
+    font-weight: 600;
+    color: var(--text-heading, #236B48);
+}
+.business-dash .biz-membership-legend i {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+/* Cặp chỉ số (Vouchers, Points) */
+.business-dash .biz-stat-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin: 10px 0 16px;
+}
+.business-dash .biz-stat-pair dl {
+    margin: 0;
+}
+.business-dash .biz-stat-pair dt {
+    color: var(--text-muted, #4F7A65);
+    font-size: 12px;
+    line-height: 1.4;
+}
+.business-dash .biz-stat-pair dd {
+    margin: 6px 0 0;
+    color: var(--text-heading, #236B48);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    overflow-wrap: anywhere;
+}
+
+/* Hộp thông báo điềm tĩnh (Quiet box) */
+.business-dash .biz-quiet-box {
+    background: transparent;
+    border-radius: var(--admin-radius, 9px);
+    padding: 0;
+}
+.business-dash .biz-quiet-box .biz-caption {
+    margin: 0;
+    font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .business-dash .biz-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    .business-dash .biz-kpi:nth-child(2n) {
+        border-right: none !important;
+    }
+    .business-dash .biz-kpi:nth-child(4n) {
+        border-right: none !important;
+    }
+    .business-dash .biz-kpi:nth-child(n+5) {
+        border-bottom: 1px solid var(--border-neutral, #ECF2EE) !important;
+    }
+    .business-dash .biz-kpi:nth-last-child(-n+2) {
+        border-bottom: none !important;
+    }
+}
+@media (max-width: 900px) {
+    .business-dash .biz-group {grid-template-columns: minmax(0, 1fr);}
+}
 @media (max-width: 640px) {
-    .biz-grid { grid-template-columns: minmax(0, 1fr); }
-    .business-dash .biz-panel, .business-dash .biz-kpi { padding: 15px; }
-    .biz-dates { align-items: flex-end; gap: 8px; }
-    .biz-dates label { flex-direction: column; align-items: flex-start; }
-    .biz-dates input { width: 132px; }
-    .biz-meta { align-items: flex-start; }
-    .biz-chart { min-height: 150px; }
+    .business-dash .biz-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .business-dash .biz-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .business-dash .biz-sync {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+    }
+    .business-dash .biz-dates {
+        align-items: flex-start;
+        flex-direction: column;
+        margin-left: 0;
+    }
 }
