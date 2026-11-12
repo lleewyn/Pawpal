@@ -1058,3 +1058,115 @@ body.about-page {
         transition: none;
     }
 }
+
+/* Two little companions rest on the section edge without masking or cropped paws. */
+.about-page .ap-opening {
+    padding-bottom: 215px;
+}
+.about-page .ap-statement {
+    position: relative;
+    isolation: isolate;
+}
+.about-page .ap-companions-anchor {
+    position: absolute;
+    inset: 0;
+    width: min(100% - 88px, 1320px);
+    margin-inline: auto;
+    pointer-events: none;
+    user-select: none;
+}
+.about-page .ap-page .ap-companions {
+    position: absolute;
+    top: -214px;
+    right: 28px;
+    z-index: 1;
+    width: 360px;
+    height: auto;
+    max-width: 100%;
+}
+@media (max-width: 1100px) {
+    .about-page .ap-companions-anchor { width: calc(100% - 64px); }
+    .about-page .ap-page .ap-companions { width: 320px; top: -190px; right: 0; }
+}
+@media (max-width: 620px) {
+    .about-page .ap-opening { padding-bottom: 175px; }
+    .about-page .ap-companions-anchor { width: calc(100% - 36px); }
+    .about-page .ap-page .ap-companions { width: 240px; top: -143px; right: 0; }
+}
+
+/* Additional quiet moments: a resting cat and a dog welcoming the next visit. */
+.about-page .ap-values,
+.about-page .ap-closing {
+    position: relative;
+    isolation: isolate;
+}
+.about-page .ap-photo-essay { padding-bottom: 200px; }
+.about-page .ap-explore { padding-bottom: 270px; }
+.about-page .ap-edge-pet-anchor {
+    position: absolute;
+    inset: 0;
+    width: min(100% - 88px, 1320px);
+    margin-inline: auto;
+    pointer-events: none;
+    user-select: none;
+}
+.about-page .ap-page .ap-edge-pet {
+    position: absolute;
+    z-index: 1;
+    height: auto;
+    max-width: 100%;
+}
+.about-page .ap-lounging-cat {
+    width: 360px;
+    top: -164px;
+    right: 28px;
+}
+.about-page .ap-closing-dog {
+    width: 400px;
+    top: -240px;
+    left: 28px;
+}
+@media (max-width: 1100px) {
+    .about-page .ap-edge-pet-anchor { width: calc(100% - 64px); }
+    .about-page .ap-lounging-cat { right: 0; }
+    .about-page .ap-closing-dog { left: 0; }
+}
+@media (max-width: 620px) {
+    .about-page .ap-photo-essay { padding-bottom: 160px; }
+    .about-page .ap-explore { padding-bottom: 200px; }
+    .about-page .ap-edge-pet-anchor { width: calc(100% - 36px); }
+    .about-page .ap-lounging-cat { width: 250px; top: -114px; }
+    .about-page .ap-closing-dog { width: 280px; top: -168px; }
+}
+
+/* Small pets keep their full silhouettes, standing rather than peeking. */
+.about-page .ap-chapter-first { padding-bottom: 180px; }
+.about-page .ap-chapter-second { position: relative; isolation: isolate; }
+.about-page .ap-standing-hamster { width: 130px; top: -161px; left: 32px; }
+.about-page .ap-sitting-rabbit { width: 205px; top: -133px; right: 32px; }
+@media (max-width: 620px) {
+    .about-page .ap-chapter-first { padding-bottom: 150px; }
+    .about-page .ap-standing-hamster { width: 92px; top: -114px; left: 12px; }
+    .about-page .ap-sitting-rabbit { width: 150px; top: -97px; right: 8px; }
+}
+
+/* A small bird perches on the arch, away from the dog's face and headline. */
+.about-page .ap-opening-photo { position: relative; }
+.about-page .ap-opening-photo .ap-opening-bird {
+    position: absolute;
+    z-index: 2;
+    top: -15px;
+    left: 0;
+    width: 110px;
+    height: auto;
+    border-radius: 0;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+}
+@media (max-width: 620px) {
+    .about-page .ap-opening-photo .ap-opening-bird {
+        width: 80px;
+        top: -15px;
+    }
+}

@@ -1782,3 +1782,46 @@ body.landing-v218 #homePage .catalog-item .catalog-desc{display:-webkit-box!impo
 
 
 .landing-v218 .campaign-arrows .arrow:disabled{opacity:.5;cursor:default}
+
+/* Each decoration is anchored to the actual rule or edge it touches. */
+body.landing-v218 #homePage :is(.intro,.services-top,.pet-personality-inner,.v4-shop-list,.v28-team-editorial,#process,#pawpass,.v29-faq-heading){position:relative;isolation:isolate}
+body.landing-v218 #homePage .home-pet{position:absolute;z-index:2;display:block;height:auto;max-width:none;pointer-events:none;user-select:none;object-fit:contain;animation:none;filter:none}
+body.landing-v218 #homePage .home-pet-hero{width:120px;right:320px;bottom:-5px}
+body.landing-v218 #homePage .home-pet-services{width:150px;right:30%;bottom:-3px}
+body.landing-v218 #homePage .home-pet-hamster{width:105px;right:12%;top:-63px}
+body.landing-v218 #homePage .home-pet-rabbit{width:180px;right:0;top:-108px}
+body.landing-v218 #homePage .home-pet-spa{width:140px;right:12%;top:-84px}
+body.landing-v218 #homePage .home-pet-people{width:140px;left:52%;top:-80px}
+body.landing-v218 #homePage .home-pet-member{width:180px;left:8%;top:-76px}
+body.landing-v218 #homePage .home-pet-bird{width:64px;right:12px;bottom:-18px}
+body.landing-v218 #homePage :is(#process,#faq){overflow:visible}
+@media(max-width:1100px) and (min-width:701px){
+ body.landing-v218 #homePage .home-pet-hero{width:95px;right:295px}
+ body.landing-v218 #homePage .home-pet-people{left:48%;width:110px;top:-63px}
+}
+@media(max-width:700px){
+ body.landing-v218 #homePage .home-pet-hero{width:70px;right:0;bottom:-4px}
+ body.landing-v218 #homePage .home-pet-services{width:92px;right:12px;bottom:-2px}
+ body.landing-v218 #homePage .home-pet-hamster{width:75px;right:18px;top:-45px}
+ body.landing-v218 #homePage .home-pet-rabbit{width:130px;right:0;top:-78px}
+ body.landing-v218 #homePage .home-pet-spa{width:100px;right:24px;top:-60px}
+ body.landing-v218 #homePage .home-pet-people{width:75px;left:auto;right:0;top:-43px}
+ body.landing-v218 #homePage .home-pet-member{width:110px;left:20px;top:-46px}
+ body.landing-v218 #homePage .home-pet-bird{width:42px;right:0;bottom:-12px}
+}
+body.landing-v218 #homePage .home-pet-bird{bottom:-24px}
+@media(max-width:700px){body.landing-v218 #homePage .home-pet-bird{bottom:-16px}}
+@media(max-width:360px){
+ body.landing-v218 #homePage .home-pet-people{right:-10px;width:65px;top:-37px}
+ body.landing-v218 #homePage .home-pet-bird{right:-6px;width:34px;bottom:-13px}
+}
+/* Journal companion rests on the photo's actual top rule. */
+body.landing-v218 #homePage .pj-feature{position:relative;isolation:isolate}
+body.landing-v218 #homePage .home-pet-journal{width:150px;right:0;top:-84px}
+@media(max-width:700px){body.landing-v218 #homePage .home-pet-journal{width:90px;top:-50px}}
+/* Kitten paws meet the introduction divider; its body does not affect layout. */
+body.landing-v218 #homePage .home-pet-hero{width:130px;bottom:-3px}
+@media(max-width:1100px) and (min-width:701px){body.landing-v218 #homePage .home-pet-hero{width:95px}}
+@media(max-width:700px){body.landing-v218 #homePage .home-pet-hero{width:70px;bottom:-2px}}
+@media(min-width:701px) and (max-width:900px){body.landing-v218 #homePage .home-pet-journal{width:130px;right:-80px;top:-73px}}
+@media(max-width:700px){body.landing-v218 #homePage .home-pet-journal{width:55px;top:-31px}}

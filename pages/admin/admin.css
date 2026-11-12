@@ -1216,3 +1216,103 @@ textarea.admin-input,
         padding: 12px;
     }
 }
+
+/* ==========================================================================
+   QUIET ENTERPRISE: MÀN HÌNH YÊU CẦU ĐĂNG NHẬP LẠI & XÁC THỰC QUẢN TRỊ
+   Phong cách Quiet Enterprise điềm đạm, tinh gọn, chuẩn mật độ admin:
+   - Bo góc cố định 9px
+   - Thẻ chuẩn .admin-card với header và body sắc nét
+   - Không huy hiệu rườm rà, không popup nổi giữa trang, không màu mè consumer
+   - Phím bấm và typography điềm tĩnh, chuẩn tỷ lệ Admin V7
+   ========================================================================== */
+.admin-card.admin-auth-card {
+    max-width: 580px;
+    width: 100%;
+    margin: 0;
+    background-color: var(--surface-white, rgba(255, 255, 255, 0.70));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-neutral, #ECF2EE);
+    border-radius: var(--admin-radius, 9px);
+    box-sizing: border-box;
+}
+
+.admin-card.admin-auth-card .admin-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 18px;
+    height: 48px;
+    min-height: 48px;
+    border-bottom: 1px solid var(--border-neutral, #ECF2EE);
+}
+
+.admin-card.admin-auth-card .admin-card-title {
+    font-size: 13.5px;
+    font-weight: 650;
+    color: var(--text-heading, #236B48);
+    margin: 0;
+    line-height: 1.4;
+    letter-spacing: -0.2px;
+}
+
+.admin-card.admin-auth-card .auth-quiet-status {
+    font-size: 11px;
+    font-weight: 500;
+    color: #BA4745;
+}
+
+.admin-card.admin-auth-card .admin-card-body {
+    padding: 18px;
+}
+
+.admin-card.admin-auth-card .admin-auth-error-message {
+    font-size: 13px;
+    font-weight: 600;
+    color: #BA4745;
+    line-height: 1.5;
+    margin: 0 0 4px 0;
+}
+
+.admin-card.admin-auth-card .admin-auth-subtext {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted, #4F7A65);
+    line-height: 1.5;
+    margin: 0 0 16px 0;
+}
+
+.admin-card.admin-auth-card .admin-auth-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.admin-card.admin-auth-card .admin-auth-actions .admin-btn {
+    height: 32px;
+    padding: 0 14px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--admin-radius, 9px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.4;
+    box-sizing: border-box;
+}
+
+.admin-card.admin-auth-card .admin-auth-actions .admin-btn-primary {
+    background-color: #315E49 !important;
+    color: #FFFFFF !important;
+    border: 1px solid #315E49 !important;
+    font-weight: 600;
+}
+
+.admin-card.admin-auth-card .admin-auth-actions .admin-btn-secondary {
+    background-color: #FFFFFF !important;
+    color: #30483A !important;
+    border: 1px solid #DCE4DE !important;
+    font-weight: 500;
+}

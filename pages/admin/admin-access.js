@@ -119,14 +119,57 @@
         const content = document.querySelector('.admin-preview-content');
         if (!content) return;
         const userTag = document.querySelector('.header-user-tag'); if (userTag) userTag.textContent = 'Chưa xác minh';
+        const syncStatus = document.getElementById('headerSyncStatus'); if (syncStatus) syncStatus.textContent = 'Chưa xác thực';
         for (const id of ['headerModuleTitle', 'headerSubtabsGroup', 'headerDeepBreadcrumb']) document.getElementById(id)?.replaceChildren();
         const refresh = document.getElementById('btnHeaderRefresh'); if (refresh) refresh.disabled = true;
         document.querySelectorAll('.action-dropdown-menu').forEach(menu => { menu.hidden = true; menu.style.display = 'none'; });
-        const wrapper = document.createElement('section'), message = document.createElement('p'), retry = document.createElement('button');
-        wrapper.className = 'admin-card'; message.textContent = error?.message || 'Không thể xác minh quyền truy cập.';
-        message.style.color = '#DC2626'; retry.className = 'admin-btn admin-btn-secondary'; retry.textContent = 'Thử lại';
-        const login = document.createElement('a'); login.href = '/admin/login'; login.textContent = 'Đăng nhập lại'; login.className = 'admin-btn admin-btn-secondary';
-        retry.type = 'button'; retry.onclick = () => window.location.reload(); wrapper.append(message, retry, login); content.replaceChildren(wrapper);
+
+        const card = document.createElement('section');
+        card.className = 'admin-card admin-auth-card';
+
+        const header = document.createElement('div');
+        header.className = 'admin-card-header';
+
+        const title = document.createElement('h2');
+        title.className = 'admin-card-title';
+        title.textContent = 'Yêu cầu đăng nhập lại';
+
+        const status = document.createElement('span');
+        status.className = 'auth-quiet-status';
+        status.textContent = 'Chưa xác thực';
+
+        header.append(title, status);
+
+        const body = document.createElement('div');
+        body.className = 'admin-card-body';
+
+        const message = document.createElement('p');
+        message.className = 'admin-auth-error-message';
+        message.textContent = error?.message || 'Không thể xác minh quyền truy cập.';
+
+        const subtext = document.createElement('p');
+        subtext.className = 'admin-auth-subtext';
+        subtext.textContent = 'Phiên làm việc quản trị đã hết hạn hoặc chưa được cấp quyền truy cập. Vui lòng đăng nhập lại để tiếp tục thao tác.';
+
+        const actions = document.createElement('div');
+        actions.className = 'admin-auth-actions';
+
+        const login = document.createElement('a');
+        login.href = '/admin/login';
+        login.className = 'admin-btn admin-btn-primary';
+        login.textContent = 'Đăng nhập lại';
+
+        const retry = document.createElement('button');
+        retry.type = 'button';
+        retry.className = 'admin-btn admin-btn-secondary';
+        retry.textContent = 'Thử lại';
+        retry.onclick = () => window.location.reload();
+
+        actions.append(login, retry);
+        body.append(message, subtext, actions);
+        card.append(header, body);
+
+        content.replaceChildren(card);
         applyNavigation();
     }
     const ready = verify().catch(() => null);
