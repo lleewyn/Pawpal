@@ -30,6 +30,21 @@ function dependencies(overrides = {}) {
     } }) };
 }
 
+test('responsive public images shrink bytes, separate ETags, and never transform private media', async () => {
+    const bytes=await sharp({create:{width:1720,height:540,channels:3,background:'#236B48'}}).png().toBuffer();
+    let published=true,reads=0;
+    const deps=dependencies({resolve_media_asset:async()=>({data:{mime_type:'image/png',sha256:'a'.repeat(64),public:published}})});
+    const handler=createMediaHandler({env,clientFactory:deps.clientFactory,store:{read:async()=>{reads++;return bytes;}}});
+    const get=async(width,headers={})=>{const req=request(Buffer.alloc(0),'','/api/media?id='+asset+'&width='+width,{authorization:undefined,...headers});req.method='GET';const response=res();await handler(req,response);return response;};
+    const result=await get(640);
+    assert.equal(result.statusCode,200);assert.equal(result.headers['Content-Type'],'image/webp');
+    assert.equal((await sharp(result.body).metadata()).width,640);assert.ok(result.body.length<bytes.length);
+    assert.match(result.headers.ETag,/-w640-webp-v1/);
+    assert.equal((await get(640,{'if-none-match':result.headers.ETag})).statusCode,304);assert.equal(reads,1);
+    assert.equal((await get(9000)).statusCode,400);assert.equal(reads,1);
+    published=false;assert.equal((await get(640)).statusCode,404);assert.equal(reads,1);
+});
+
 test('chat guest upload hashes the session secret and uses only service RPCs; arbitrary actors are rejected',async()=>{
  const deps=dependencies({prepare_chat_media_upload:async()=>({data:{session_id:session}})});
  const handler=createMediaHandler({chat:true,env,clientFactory:deps.clientFactory,store:{}});

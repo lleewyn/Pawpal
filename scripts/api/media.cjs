@@ -30,9 +30,11 @@ function createMediaHandler({ env = process.env, clientFactory = createClient, s
         try {
             const url = new URL(req.url, 'https://pawpal.invalid');
             const action = url.searchParams.get('action') || 'read';
-            const allowedQuery = new Set(['action', 'id', 'session']);
+            const allowedQuery = new Set(['action', 'id', 'session', 'width']);
             if ([...url.searchParams.keys()].some(key => !allowedQuery.has(key) || url.searchParams.getAll(key).length !== 1)) throw mediaError('MEDIA_INVALID_REQUEST');
             if (!['read', 'prepare', 'upload', 'cancel'].includes(action)) throw mediaError('MEDIA_NOT_FOUND', 404);
+            const width = url.searchParams.get('width');
+            if (width !== null && (chat || action !== 'read' || !['640', '1280', '1720'].includes(width))) throw mediaError('MEDIA_INVALID_REQUEST');
             if (req.method !== (action === 'read' ? 'GET' : 'POST')) {
                 res.setHeader('Allow', action === 'read' ? 'GET' : 'POST'); throw mediaError('MEDIA_METHOD_NOT_ALLOWED', 405);
             }
@@ -132,14 +134,17 @@ function createMediaHandler({ env = process.env, clientFactory = createClient, s
             if (!uuid(id)) throw mediaError('MEDIA_INVALID_REQUEST');
             const asset = await rpc(chat?server:caller, chat?'resolve_chat_media':'resolve_media_asset', { ...(chat?chatArgs():{}),p_asset: id });
             if (!asset) throw mediaError('MEDIA_NOT_FOUND', 404);
+            // Only published public artwork can use responsive derivatives. Private media stays unchanged.
+            if (width && (asset.public !== true || asset.cache_public === false)) throw mediaError('MEDIA_NOT_FOUND', 404);
             if (!Object.values(MIME).includes(asset.mime_type) || !/^[a-f0-9]{64}$/.test(asset.sha256 || '')) throw mediaError('MEDIA_FILE_UNAVAILABLE', 503);
-            const etag = '"' + asset.sha256 + '"';
+            const etag = '"' + asset.sha256 + (width ? '-w' + width + '-webp-v1' : '') + '"';
             if (asset.public === true && asset.cache_public !== false) {
                 res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60'); res.setHeader('ETag', etag);
                 if (req.headers['if-none-match'] === etag) return res.status(304).end();
             }
-            const bytes = await store.read(asset);
-            res.setHeader('Content-Type', asset.mime_type); res.setHeader('Content-Length', bytes.length);
+            let bytes = await store.read(asset);
+            if (width) bytes = await require('sharp')(bytes, { limitInputPixels: 20000000 }).rotate().resize({ width: Number(width), withoutEnlargement: true }).webp({ quality: 78 }).toBuffer();
+            res.setHeader('Content-Type', width ? 'image/webp' : asset.mime_type); res.setHeader('Content-Length', bytes.length);
             return res.status(200).end(bytes);
         } catch (error) {
             if (claim?.state === 'uploading' && uuid(claim.lease) && (actor||guestHash) && server && !committed) {

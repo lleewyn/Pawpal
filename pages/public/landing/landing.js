@@ -129,7 +129,8 @@
                     try {url=new URL(rawImage, location.origin);link=new URL(b.link || '/services',location.origin);}catch(_){continue;}
                     if (!['https:','http:'].includes(url.protocol) || /(^|\.)example\.(com|org|net)$/.test(url.hostname) || link.origin !== location.origin) continue;
                     if ((b.start_date && Date.parse(b.start_date)>now) || (b.end_date && Date.parse(b.end_date)<now)) continue;
-                    slides.push({src:url.href,name:b.title||'Ưu đãi PawPal',link:link.pathname+link.search});
+                    const responsive = b.image_media_asset_id ? [640,1280,1720].map(w=>url.href+'&width='+w+' '+w+'w').join(', ') : '';
+                    slides.push({src:b.image_media_asset_id?url.href+'&width=1720':url.href,srcset:responsive,name:b.title||'Ưu đãi PawPal',link:link.pathname+link.search});
                 }
             } catch (_) { /* Approved brand artwork remains available if the catalogue is unavailable. */ }
 
@@ -141,7 +142,9 @@
             if (!grid.isConnected) return;
             const prev=$('#prevSlide'), next=$('#nextSlide');
             function show() {
-                const row=slides[current];imgEl.src=row.src;imgEl.alt=row.name;
+                const row=slides[current];imgEl.sizes='(max-width: 700px) calc(100vw - 32px), (max-width: 1800px) calc(100vw - 80px), 1720px';
+                if(row.srcset)imgEl.srcset=row.srcset;else imgEl.removeAttribute('srcset');
+                imgEl.src=row.src;imgEl.alt=row.name;
                 $('#slideName').textContent=row.name;$('#slideNum').textContent=String(current+1).padStart(2,'0');
                 $('#slidePager').textContent=`${String(current+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}`;
                 $('.book-inline').href=row.link;
@@ -152,14 +155,15 @@
             next.onclick = ()=>{current=(current+1)%slides.length;show();};
             show();
 
-            // Tải ngầm các slide tiếp theo để khi chuyển slide không bị trễ
+            // Fetch only the next slide, after the visible banner has finished.
             if (slides.length > 1) {
-                setTimeout(() => {
-                    for (let i = 1; i < slides.length; i++) {
-                        const pre = new Image();
-                        pre.src = slides[i].src;
-                    }
-                }, 300);
+                const preloadNext = () => {
+                    if(!grid.isConnected)return;
+                    const pre = new Image();pre.fetchPriority='low';pre.sizes=imgEl.sizes;
+                    if(slides[1].srcset)pre.srcset=slides[1].srcset;
+                    pre.src=slides[1].src;
+                };
+                imgEl.decode().then(()=>setTimeout(preloadNext,1500)).catch(()=>{});
             }
         }
         const entries = [...root.querySelectorAll('.pj-entry')];
@@ -170,7 +174,14 @@
             photo.src = i===0 ? original : art[i-1];photo.alt=entry.querySelector('strong').textContent+' — minh họa';
             $('#pj-photo-caption').textContent = `${String(i+1).padStart(2,'0')} / 03 · ${entry.querySelector('.pj-time').textContent} — ${entry.querySelector('strong').textContent}`;
         }));
-        loadServices();loadTiers();loadBanners();
+        loadBanners();
+        // Below-the-fold data and images should not compete with the first banner.
+        const observer = new IntersectionObserver(entries => entries.forEach(entry=>{
+            if(!entry.isIntersecting)return;
+            observer.unobserve(entry.target);
+            if(entry.target===grid)loadServices();else loadTiers();
+        }),{rootMargin:'200px'});
+        observer.observe(grid);observer.observe($('#home-tiers'));
     }
     document.addEventListener('DOMContentLoaded',init);
     document.addEventListener('page_navigated',init);
