@@ -252,6 +252,10 @@ function createOrderCard(order) {
     const productCount = Array.isArray(order.products)
         ? order.products.reduce((sum, product) => sum + (Number(product.quantity) || 1), 0)
         : 0;
+    const totalItems = productCount > 0 ? productCount : 1;
+    const itemCountText = prods.length > 1
+        ? `Tổng ${totalItems} sản phẩm (gồm ${prods.length} loại mặt hàng)`
+        : `Tổng ${totalItems} sản phẩm`;
     const paymentLabel = getPaymentMethodLabel(order.paymentMethod).replace(/\s*&\s*/g, ' và ');
     const orderAlreadyReviewed = (isDelivered || isCompleted) && ordersState.reviews.includes(String(orderId));
 
@@ -382,7 +386,7 @@ function createOrderCard(order) {
                     </div>
                     <h4 class="order-product-name">${escapeHtml(firstProduct.name)}</h4>
                     <div class="order-meta-row">
-                        <span class="order-meta-item">${productCount > 0 ? `${productCount} sản phẩm` : '1 sản phẩm'}${remainingCount > 0 ? ` (và ${remainingCount} sản phẩm khác)` : ''}</span>
+                        <span class="order-meta-item">${itemCountText}</span>
                         <span class="order-dot-sep">•</span>
                         <span class="order-meta-item">${escapeHtml(paymentLabel)}</span>
                     </div>
