@@ -372,7 +372,7 @@ function createOrderCard(order) {
         <article class="order-card pawpal-smooth-entrance status-${normalizedStatus}" data-order-id="${orderId}">
             <div class="order-card-main-content" onclick="window.location.href='${detailUrl}'" role="link" tabindex="0">
                 <div class="order-product-thumb-wrapper">
-                    <img src="${firstProduct.image || '/assets/images/publics/feed.jpg'}" alt="${escapeHtml(firstProduct.name)}" class="order-product-thumb" loading="lazy" onerror="this.onerror=null; this.src='/assets/images/publics/feed.jpg';">
+                    <img src="${escapeHtml(firstProduct.image || '/assets/images/shop/products/placeholder.webp')}" alt="${escapeHtml(firstProduct.name)}" class="order-product-thumb" loading="lazy" onerror="this.onerror=null; this.src='/assets/images/shop/products/placeholder.webp';">
                 </div>
                 <div class="order-info-col">
                     <div class="order-title-row">

@@ -3,6 +3,7 @@ import { vietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
 import { resolveAuthenticatedCustomerId } from '/scripts/shared/customer-identity.mjs';
 import { normalizeCartItems, publishCart } from '/scripts/shared/cart-state.mjs';
 import { guestCart, isGuestShopper } from '/scripts/shared/guest-cart.mjs';
+import { mediaSource } from '/scripts/shared/media-source.mjs';
 
 const wishlistIntents = new Map();
 let cartWriteQueue = Promise.resolve();
@@ -263,6 +264,14 @@ export const API = {
             const methodResponse=await db.rpc('customer_shop_options');
             if(methodResponse.error)throw methodResponse.error;
             const paymentMethods=new Map((methodResponse.data?.payment_methods||[]).map(m=>[m.id,m]));
+            const variantIds=[...new Set((data||[]).flatMap(o=>(o.sales_order_detail||[]).map(d=>d.product_variant_id)).filter(Boolean))];
+            const orderImages=new Map();
+            for(let offset=0;offset<variantIds.length;offset+=100){
+                const thumbnails=await db.rpc('own_order_thumbnails',{p_variants:variantIds.slice(offset,offset+100)});
+                // Media availability must not prevent reading an otherwise valid order.
+                if(thumbnails.error){console.warn('[API] Order thumbnails unavailable:',thumbnails.error.code);continue;}
+                for(const row of thumbnails.data||[]){try{const source=mediaSource(row.media_asset_id?{media_asset_id:row.media_asset_id}:{url:row.image_url});if(source)orderImages.set(row.product_variant_id,source.url);}catch{}}
+            }
             const orders = (data || []).map(o => {
                 const details = o.sales_order_detail || [];
                 const products = details.map(d => {
@@ -278,7 +287,7 @@ export const API = {
                         variant_id:  d.product_variant_id,
                         name:        d.product_name_snapshot || 'Sản phẩm',
                         sku:         d.sku_snapshot || '',
-                        image:       '/assets/images/publics/feed.jpg',
+                        image:       orderImages.get(d.product_variant_id) || '/assets/images/shop/products/placeholder.webp',
                         quantity:    qty,
                         price:       unitPrice,
                         discount:    discount,
