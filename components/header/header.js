@@ -394,7 +394,7 @@
                             <a href="/pages/user/#wishlist" class="dropdown-item">Yêu thích</a>
                             <a href="/pages/user/#diary" class="dropdown-item">Nhật ký chăm sóc</a>
                             <a href="/pages/user/#loyalty" class="dropdown-item">Paw Points</a>
-                            <a href="/pages/user/#settings" class="dropdown-item">Cài đặt</a>
+                            <a href="/pages/user/#settings" class="dropdown-item">Cài đặt</a><a href="/pages/user/#support" class="dropdown-item">Hỗ trợ</a>
                             <div class="dropdown-divider"></div>
                             <button class="dropdown-item dropdown-item-danger" id="btnLogout">Đăng xuất</button>
                         </div>
