@@ -1,3 +1,4 @@
+import {mountCancellationReasons,renderCancellationSummary,styleOrderAction} from '/scripts/shared/order-cancellation.mjs';
 import {API} from '/scripts/api/api.js';
 import {watchCustomerTables} from '/scripts/shared/customer-realtime.mjs';
 import {getStatusLabel} from '/scripts/shared/order-status.mjs';
@@ -28,8 +29,11 @@ async function loadOrderDetail(){
 }
 function render(){
     const o=currentOrder;
+    renderCancellationSummary(document.querySelector('.order-detail-module-container'),o);
     text('order-id',o.id);text('order-created-date','Đặt ngày '+date(o.createdAt));
     text('order-status-badge',getStatusLabel(o.status));
+    const statusBadge=document.getElementById('order-status-badge');
+    if(statusBadge)statusBadge.className='admin-badge '+({cancelled:'status-cancelled',completed:'status-completed',delivered:'status-completed',shipping:'status-shipping'}[o.status]||'status-placed');
     text('receiver-name',o.shipping?.name||'—');text('receiver-phone',o.shipping?.phone||'—');text('receiver-address',o.shipping?.address||'—');
     text('payment-method',o.paymentMethodName||'Chưa xác định');
     const paymentLabels={paid:'Đã thanh toán',partial:'Đã thanh toán một phần',cancelled:'Đơn đã hủy',pending_payment:'Chưa thanh toán'};
@@ -76,10 +80,12 @@ function openOrderAction(action){
     actionDialog?.close();actionDialog?.remove();
     const order=currentOrder,owner=mountedOwner,request=crypto.randomUUID(),cancel=action==='cancel';
     const dialog=document.createElement('dialog');actionDialog=dialog;dialog.id='order-detail-action-dialog';
+    styleOrderAction(dialog);
     dialog.style.cssText='position:fixed;inset:0;margin:auto;width:540px;height:fit-content;max-height:92vh;overflow:auto;max-width:92vw;background:#fff;border:1px solid #ECF2EE;border-radius:9px;padding:26px 30px;color:#203A2C';
     dialog.innerHTML=`<h3 style="color:#236B48">${cancel?'Hủy đơn hàng':'Xác nhận nhận hàng'}</h3><p>${escapeHtml(order.id)}</p>
-      ${cancel?'<label for="detail-cancel-reason">Lý do hủy <span style="color:#DC2626">*</span></label><textarea id="detail-cancel-reason" class="form-control" maxlength="2000"></textarea>':'<p>Bạn đã nhận đủ sản phẩm của đơn hàng này?</p>'}
+      ${cancel?'<div id="detail-cancel-reasons"></div>':'<p>Bạn đã nhận đủ sản phẩm của đơn hàng này?</p>'}
       <p id="detail-action-error" role="alert" style="color:#DC2626"></p><div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px"><button type="button" id="detail-action-close" class="btn-green-outline">Đóng</button><button type="button" id="detail-action-confirm" class="btn-cta">${cancel?'Xác nhận hủy':'Xác nhận đã nhận'}</button></div>`;
+    const readReason=cancel?mountCancellationReasons(dialog.querySelector('#detail-cancel-reasons'),'detail-cancel-reason'):()=>'';
     document.body.append(dialog);
     const close=()=>{if(actionPending)return;dialog.close();dialog.remove();actionDialog=null;};
     dialog.querySelector('#detail-action-close').onclick=close;
@@ -89,7 +95,7 @@ function openOrderAction(action){
         if(actionPending)return;
         if(owner!==ownerId() || order!==currentOrder)return;
         const errorElement=dialog.querySelector('#detail-action-error'),button=dialog.querySelector('#detail-action-confirm');
-        const reason=dialog.querySelector('#detail-cancel-reason')?.value.trim();
+        const reason=readReason();
         if(cancel&&(!reason||reason.length<2)){errorElement.textContent='Vui lòng nhập lý do hủy đơn.';return;}
         actionPending=true;button.disabled=true;errorElement.textContent='';
         try{

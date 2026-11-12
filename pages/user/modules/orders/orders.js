@@ -464,7 +464,7 @@ function contactHotline(orderId) {
 
 window.contactHotline = contactHotline;
 
-function cancelOrder(orderId) {
+async function cancelOrder(orderId) {
     const order = ordersState.allOrders.find((item) => item.id === orderId);
     if (!order) {
         showOrdersToast('Không tìm thấy đơn hàng để hủy.', 'error');
@@ -501,15 +501,16 @@ function cancelOrder(orderId) {
     const modal = new bootstrap.Modal(el);
     modal.show();
 
-    const reason=document.createElement('textarea');reason.id='orders-cancel-reason';reason.maxLength=1000;reason.className='form-control';reason.placeholder='Lý do hủy đơn';
-    el.querySelector('.modal-body').appendChild(reason);
+    const {mountCancellationReasons}=await import('/scripts/shared/order-cancellation.mjs');
+    const readReason=mountCancellationReasons(el.querySelector('.modal-body'),'orders-cancel-reason');
+    const cancellationRequest=crypto.randomUUID();
     document.getElementById('orders-cancel-confirm').addEventListener('click',async event=>{
         const button=event.currentTarget;if(button.disabled)return;
-        if(reason.value.trim().length<2){showOrdersToast('Vui lòng nhập lý do hủy đơn.','error');return;}
+        if(readReason().length<2){showOrdersToast('Vui lòng chọn hoặc nhập lý do hủy đơn.','error');return;}
         button.disabled=true;
         try{
             const db=window.getSupabaseClient?.()||window.SupabaseClient;
-            const {error}=await db.rpc('cancel_own_sales_order',{p_request:crypto.randomUUID(),p_order:order._supabaseId,p_expected:order.updatedAt,p_reason:reason.value.trim()});
+            const {error}=await db.rpc('cancel_own_sales_order',{p_request:cancellationRequest,p_order:order._supabaseId,p_expected:order.updatedAt,p_reason:readReason()});
             if(error)throw error;
             modal.hide();await loadOrders();applyFilters();updateStats();updateTabCounts();
             showOrdersToast('Đã hủy đơn hàng.','success');

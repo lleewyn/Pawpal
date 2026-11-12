@@ -241,6 +241,7 @@ function mapSupabaseOrderRow(row) {
         userId: null,
         userPhone: row.receiver_phone_snapshot || '',
         returnGrant: row.return_grant || null,
+        cancelGrant: row.cancel_grant || null,
         deliveredAt: row.delivered_at || null,
         status: mapOrderStatus(row.order_status),
         paymentStatus: String(payRow.payment_status || (row.order_status === 'da_xac_nhan' ? 'da_thanh_toan' : 'chua_thanh_toan')).toLowerCase(),
@@ -261,6 +262,7 @@ function mapSupabaseOrderRow(row) {
             phone: row.receiver_phone_snapshot || '',
             address: [row.street_address_snapshot, row.province_snapshot].filter(Boolean).join(', '),
         },
+        cancelReason: row.cancel_reason || '',
         note: row.note || '',
         createdAt: row.created_at,
         updatedAt: row.updated_at,
@@ -314,6 +316,7 @@ function mapOrderStatus(status) {
         'PENDING_PAYMENT': 'pending',
         'CONFIRMED':       'da_xac_nhan',
         'PREPARING':       'dang_dong_goi',
+        'PACKING':         'preparing',
         'SHIPPING':        'dang_giao_hang',
         'DELIVERED':       'da_giao_hang',
         'COMPLETED':       'completed',
@@ -709,6 +712,7 @@ function buildOrderCard(o) {
 
     return `
     <div class="rg-item${cancelClass}" data-type="order" data-status="${normalizedStatus}">
+        ${normalizedStatus === 'cancelled' ? `<section class="rg-cancellation-summary" style="margin-bottom:16px;white-space:pre-wrap;overflow-wrap:anywhere"><h3 style="font-size:16px;color:#236B48">Lý do hủy đơn hàng</h3><p>${esc(o.cancelReason || o.cancel_reason || 'Chưa ghi nhận lý do hủy')}</p></section>` : ''}
         <div class="rg-item-header">
             <div>
                 <h4 class="rg-item-name">Đơn hàng: <code class="rg-code" title="${esc(rawOrderId)}">${esc(shortOrderCode)}</code> <button type="button" class="btn-copy-code" title="Sao chép toàn bộ mã" onclick="navigator.clipboard.writeText('${esc(rawOrderId)}');this.textContent='Đã chép!';setTimeout(()=>this.textContent='Sao chép',1500)">Sao chép</button></h4>
@@ -814,7 +818,7 @@ window.handleGuestBookingAction = function(bookingId, action) {
     }
 };
 
-window.handleGuestCancelOrder = function(orderId) {
+window.handleGuestCancelOrder = async function(orderId) {
     const phone = document.getElementById('rg-phone').value.trim();
     if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
 
@@ -829,21 +833,26 @@ window.handleGuestCancelOrder = function(orderId) {
         ? `<br><span class="text-muted small">Số tiền <strong>${fmtPrice(total)}</strong> sẽ được hoàn lại theo chính sách của cửa hàng.</span>`
         : '';
 
-    showReasonActionModal({
-        title: 'Hủy đơn hàng',
-        subtitle: `Bạn đang yêu cầu hủy đơn hàng <strong>${esc(orderId)}</strong>.${refundNote}<br>Vui lòng cho PawPal biết lý do để cửa hàng cải thiện:`,
-        confirmText: 'Xác nhận hủy đơn',
-        chips: [
-            'Đặt nhầm sản phẩm',
-            'Muốn đổi địa chỉ nhận',
-            'Tìm thấy giá tốt hơn',
-            'Đổi ý không mua nữa',
-            'Thời gian giao hàng lâu'
-        ],
-        placeholder: 'Chọn gợi ý ở trên hoặc nhập lý do cụ thể...',
-        isDanger: true,
-        onConfirm: (reason) => confirmCancelOrder(orderId, isPaidOnline, reason)
-    });
+    const {mountCancellationReasons}=await import('/scripts/shared/order-cancellation.mjs');
+    const dialog=document.createElement('dialog');dialog.style.cssText='position:fixed;inset:0;margin:auto;width:540px;max-width:92vw;max-height:92vh;overflow:auto;padding:26px 30px;border:1px solid #ECF2EE;border-radius:9px;background:white;color:#203A2C';
+    const title=document.createElement('h3');title.textContent='Hủy đơn hàng';title.style.color='#236B48';dialog.append(title);
+    const readReason=mountCancellationReasons(dialog,'lookup-cancel-reason');
+    const error=document.createElement('p');error.setAttribute('role','alert');error.style.color='#DC2626';
+    const close=document.createElement('button');close.type='button';close.className='btn-green-outline';close.textContent='Đóng';
+    const confirm=document.createElement('button');confirm.type='button';confirm.className='btn-cta';confirm.textContent='Xác nhận hủy';
+    const actions=document.createElement('div');actions.style.cssText='display:flex;gap:12px;justify-content:flex-end';actions.append(close,confirm);dialog.append(error,actions);document.body.append(dialog);
+    const dismiss=()=>{if(confirm.disabled)return;dialog.close();dialog.remove();};close.onclick=dismiss;
+    dialog.oncancel=e=>{e.preventDefault();dismiss();};dialog.onclick=e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dismiss();}};
+    const cancellationRequest=crypto.randomUUID();
+    confirm.onclick=async()=>{
+        if(confirm.disabled)return;
+        const reason=readReason();if(reason.length<2){error.textContent='Vui lòng chọn hoặc nhập lý do hủy đơn.';return;}
+        confirm.disabled=true;error.textContent='';
+        try{await confirmCancelOrder(orderId,isPaidOnline,reason,cancellationRequest);confirm.disabled=false;dismiss();}
+        catch(failure){error.textContent=failure.message||'Chưa hủy được đơn. Vui lòng thử lại.';}
+        finally{confirm.disabled=false;}
+    };dialog.showModal();
+
 };
 
 window.handleGuestConfirmOrder = async function(orderId) {
@@ -1467,28 +1476,30 @@ async function updateGuestOrderStatus(order, fields) {
     }
 }
 
-async function confirmCancelOrder(orderId, isPaidOnline = false, reason = '') {
+async function confirmCancelOrder(orderId, isPaidOnline = false, reason = '', requestId = crypto.randomUUID()) {
     const order = rgLastSearchState.orders.find(o => o.id === orderId);
     if (!order) {
         showToast('Không tìm thấy đơn hàng trong kết quả tra cứu.', 'error');
         return;
     }
 
-    const updatePayload = { order_status: 'cancelled' };
-    if (reason) {
-        order.cancelReason = reason;
-        order.note = (order.note ? order.note + '\n' : '') + `Lý do hủy: ${reason}`;
-        updatePayload.note = order.note;
+    const db=window.getSupabaseClient?.()||window.SupabaseClient;
+    const session=await db?.auth?.getSession();
+    if(session?.data?.session?.access_token){
+        const {error}=await db.rpc('cancel_own_sales_order',{p_request:requestId,p_order:order._supabaseId,p_expected:order.updatedAt,p_reason:reason});
+        if(error)throw Error('Chưa hủy được đơn. Đơn có thể đã thay đổi hoặc cần hoàn tiền trước. Vui lòng tải lại thông tin.');
+    }else if(order.cancelGrant){
+        const {guestCommerce}=await import('/scripts/shared/guest-commerce-client.mjs');
+        await guestCommerce.request('phone-lookup',{phone:rgLastSearchState.phone,cancelRequest:{id:requestId,orderId:order._supabaseId,grant:order.cancelGrant,expectedUpdatedAt:order.updatedAt,reason}});
+    }else{
+        const {guestCommerce}=await import('/scripts/shared/guest-commerce-client.mjs');
+        await guestCommerce.request('order-cancel',{requestId,orderId:order._supabaseId,expectedUpdatedAt:order.updatedAt,reason});
     }
-
-    const saved = await updateGuestOrderStatus(order, updatePayload);
-    if (!saved) {
-        showToast('Chưa hủy được đơn hàng. Vui lòng thử lại sau.', 'error');
-        return;
-    }
+    if(!rgLastSearchState.orders.includes(order))return;
+    order.cancelReason=reason;
 
     order.status = 'cancelled';
-    order.orderStatus = 'CANCELLED';
+    order.orderStatus = 'cancelled';
     order.updatedAt = new Date().toISOString();
 
     const toastMsg = isPaidOnline
@@ -1501,7 +1512,7 @@ async function confirmCancelOrder(orderId, isPaidOnline = false, reason = '') {
 function normalizeOrderStatus(status) {
     const s = String(status || '').toLowerCase().trim();
     if (s === 'cho_xac_nhan' || s === 'placed' || s === 'pending' || s === 'pending_payment' || s === 'cho_thanh_toan') return 'pending';
-    if (s === 'cho_lay_hang' || s === 'preparing' || s === 'confirmed' || s === 'da_xac_nhan' || s === 'dang_chuan_bi') return 'preparing';
+    if (s === 'cho_lay_hang' || s === 'preparing' || s === 'packing' || s === 'dang_dong_goi' || s === 'confirmed' || s === 'da_xac_nhan' || s === 'dang_chuan_bi') return 'preparing';
     if (s === 'dang_giao' || s === 'shipping') return 'shipping';
     if (s === 'da_giao' || s === 'delivered') return 'delivered';
     if (s === 'da_hoan_tat' || s === 'completed') return 'completed';

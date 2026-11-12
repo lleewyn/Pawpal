@@ -389,17 +389,17 @@
     white-space: nowrap;
 }
 
-/* Primary Amber CTA (Thanh toán ngay / Mua lại / Đã nhận hàng) */
+/* Primary Forest CTA (Thanh toán ngay / Mua lại / Đã nhận hàng) */
 .btn-order-action.btn-action-primary,
 .btn-cta {
-    background: #E5A83B;
+    background: #236B48;
     color: #ffffff !important;
-    border: 1px solid #D99827;
+    border: 1px solid #236B48;
 }
 
 .btn-order-action.btn-action-primary:hover,
 .btn-cta:hover {
-    background: #D99827;
+    background: #1D593C;
 }
 
 /* Review CTA (Sage / Forest) */

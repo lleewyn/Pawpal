@@ -1218,3 +1218,9 @@ body:not(.admin-body) .fab-send-state button{margin-left:8px}
 .fab-member-prompt-back{display:block;width:100%;padding:10px 0;margin-top:4px;border:0;background:transparent;color:#236b48;font:500 12px/1.5 Inter,system-ui,sans-serif;cursor:pointer}
 .fab-member-prompt-contact{display:block;width:fit-content;margin:14px auto 0;color:#718476;font:400 11px/1.6 Inter,system-ui,sans-serif;text-decoration:underline;text-underline-offset:3px}
 .fab-member-prompt :is(button,a):focus-visible{outline:2px solid #236b48;outline-offset:3px}
+.fab-support-boundary{flex-shrink:0;padding:10px 16px;background:#f4f9f6;color:#4f7a65;font:400 11.5px/1.5 Inter,system-ui,sans-serif}
+.fab-support-boundary p{margin:0 0 4px}
+.fab-support-boundary a{color:#236b48;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.fab-support-boundary a:focus-visible{outline:2px solid #236b48;outline-offset:3px}
+.fab-support-boundary #fabHandoffNotice{margin:7px 0 0;color:#236b48;font-weight:600}
+.fab-answer-unhelpful{display:block;margin-top:10px;border:0;border-radius:9px;background:#eef5f1;color:#236b48;padding:6px 10px;font:500 11.5px/1.4 Inter,system-ui,sans-serif;cursor:pointer}

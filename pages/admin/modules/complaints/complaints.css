@@ -1052,6 +1052,33 @@
     min-width: 0;
     overflow-wrap: anywhere;
 }
+.complaints-module .complaint-detail-field {
+    display: grid;
+    gap: 8px;
+    margin: 16px 0 12px;
+}
+.complaints-module .complaint-detail-field label {
+    color: #236B48;
+    font-size: 12px;
+    font-weight: 600;
+}
+.complaints-module .complaint-detail-field textarea {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 96px;
+    resize: vertical;
+    border-radius: 9px;
+    border: 1px solid #ECF2EE;
+}
+.complaints-module .complaint-internal-choice {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 12px;
+    color: #4F7A65;
+    font-size: 12px;
+}
 .complaints-module .complaint-v1-columns h4, .complaints-module #detailTicketTitle, .complaints-module #viewTicketCode {
     color: #236B48;
 }

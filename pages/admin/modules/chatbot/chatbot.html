@@ -72,7 +72,6 @@
                         <button type="button" class="btn-chat-actions-dots" id="btnChatActionsDots" title="Tác vụ thêm">•••</button>
                         <div class="chat-actions-dropdown" id="chatActionsDropdown">
                             <button type="button" class="chat-action-item" id="btnRewardPoints">Tặng điểm Pawpoint</button>
-                            <button type="button" class="chat-action-item" id="btnConvertToTicket">Tạo khiếu nại</button>
                             <button type="button" class="chat-action-item" id="btnEscalateManager">Chuyển cấp Quản lý</button>
                             <button type="button" class="chat-action-item" id="btnResolveChatAction">Hoàn tất ca chat</button>
                         </div>
@@ -527,7 +526,7 @@
                             <ul>
                                 <li>Ghi nhận vấn đề, xin lỗi chân thành vì sự bất tiện và nêu rõ các bước xử lý tiếp theo.</li>
                                 <li>Ưu tiên xử lý ngay các trường hợp thanh toán, giao hàng khẩn cấp, thú cưng có dấu hiệu bất thường hoặc khách yêu cầu gặp nhân viên.</li>
-                                <li>Chuyển cấp Quản lý hoặc Bác sĩ thú y trực ban khi vượt thẩm quyền; tạo Ticket khiếu nại chính thức để lưu vết.</li>
+                                <li>Chuyển cấp Quản lý hoặc bác sĩ thú y trực ban khi vượt thẩm quyền. Tạo phiếu chính thức tại mục Khiếu nại.</li>
                             </ul>
                         </section>
                         <section class="chatbot-rule-group">
@@ -618,60 +617,6 @@
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissRewardModal" data-close-modal="rewardPointsModalOverlay">Hủy</button>
                     <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmRewardPoints">Xác nhận nạp điểm</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- ====================================================================
-         MODAL 2: CHUYỂN CUỘC TRÒ CHUYỆN THÀNH TICKET KHIẾU NẠI (CÓ AUTOCOMPLETE)
-         ==================================================================== -->
-    <div class="admin-modal-overlay" id="convertTicketModalOverlay">
-        <div class="admin-modal-card" style="width: 580px; max-width: 94vw;">
-            <div class="modal-header-clean">
-                <div class="modal-title-clean">Chuyển cuộc trò chuyện thành vé khiếu nại</div>
-                <button type="button" class="modal-btn-close-text" id="btnCancelConvertTicket" data-close-modal="convertTicketModalOverlay">Đóng</button>
-            </div>
-            <form novalidate onsubmit="return false;" style="display: flex; flex-direction: column; width: 100%;">
-                <div class="modal-body-clean" style="display: flex; flex-direction: column; gap: 16px;">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Phân loại khiếu nại <span style="color: #DC2626;">*</span></label>
-                        <select class="admin-select" id="selectConvertTicketCategory">
-                            <option value="order">Đơn hàng và sản phẩm</option>
-                            <option value="service">Dịch vụ</option>
-                        </select>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Mã giao dịch liên quan</label>
-                        <div class="customer-autocomplete-wrapper">
-                            <input type="text" class="admin-input" id="inputConvertRefId" placeholder="Nhập hoặc chọn đơn hàng / lịch hẹn liên quan..." autocomplete="off">
-                            <div class="customer-autocomplete-popover" id="convertTicketRefDropdown" style="display: none;"></div>
-                        </div>
-                        <div class="adjust-customer-selected-card" id="convertTicketRefSelectedCard" style="display: none; margin-top: 8px;">
-                            <div class="selected-cust-name-row">
-                                <span class="selected-cust-fullname" id="selectedRefTitle">—</span>
-                                <span class="selected-cust-tag" id="selectedRefBadge">Đơn hàng</span>
-                            </div>
-                            <div class="selected-cust-meta" id="selectedRefMeta">—</div>
-                            <button type="button" class="selected-cust-clear-btn" id="btnClearSelectedRef">✕ Bỏ chọn</button>
-                        </div>
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Tiêu đề vé khiếu nại <span style="color: #DC2626;">*</span></label>
-                        <input type="text" class="admin-input" id="inputConvertTicketTitle" placeholder="Tóm tắt vấn đề của khách...">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Mức độ ưu tiên <span style="color: #DC2626;">*</span></label>
-                        <select class="admin-select" id="selectConvertPriority">
-                            <option value="high">Cao</option>
-                            <option value="normal" selected>Thông thường</option>
-                            <option value="low">Thấp</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer-clean">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissConvertTicket" data-close-modal="convertTicketModalOverlay">Hủy</button>
-                    <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmConvertTicket">Tạo vé khiếu nại</button>
                 </div>
             </form>
         </div>

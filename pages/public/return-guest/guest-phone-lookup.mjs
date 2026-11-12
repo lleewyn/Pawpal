@@ -49,6 +49,7 @@ export function mapGuestReceipts(data){
         orders:(data.orders||[]).map(receipt=>({
             id:receipt.code,_supabaseId:receipt.id,_receiptOnly:true,
             status:({packing:'preparing',shipped:'shipping'})[receipt.status]||receipt.status,
+            cancelReason:receipt.cancelReason,updatedAt:receipt.updatedAt,
             paymentStatus:receipt.paymentStatus,pricing:{total:Number(receipt.total)},
             delivery:{name:receipt.receiver?.name,address:[receipt.receiver?.address,receipt.receiver?.province].filter(Boolean).join(', ')},
             products:(receipt.lines||[]).map(line=>({name:line.name,quantity:Number(line.quantity),price:Number(line.unitPrice),image:resolveProductThumbnail(line.name,line.image||line.image_url)}))

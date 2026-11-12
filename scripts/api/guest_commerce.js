@@ -39,10 +39,10 @@ function createGuestCommerce({admin,secret,origins,production=true,otpPreviewOri
    if(typeof req.body==='string'){if(Buffer.byteLength(req.body)>16384)throw Error('invalid_body');req.body=JSON.parse(req.body);}
    const body=req.body;
    if(!body||typeof body!=='object'||Array.isArray(body)||Buffer.byteLength(JSON.stringify(body))>16384)throw Error('invalid_body');
-   if(!['session','context','lookup','phone-lookup','pets','profile-read','profile-update','recover','end','contact-ticket','booking-staff-response','booking-slots','booking-hold','booking-release','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
-   const keys=action==='contact-ticket'?['requestId','proof','fullName','phoneNumber','subject','serviceInterest','message']:action==='pets'?['requestId','contact','pet']:action==='context'?['page']:action==='lookup'?['phone']:action==='phone-lookup'?['phone','challengeId','code','returnRequest']:
+   if(!['session','context','lookup','phone-lookup','pets','profile-read','profile-update','recover','end','contact-ticket','booking-staff-response','booking-slots','booking-hold','booking-release','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt','order-cancel'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
+   const keys=action==='contact-ticket'?['requestId','proof','fullName','phoneNumber','subject','serviceInterest','message']:action==='pets'?['requestId','contact','pet']:action==='context'?['page']:action==='lookup'?['phone']:action==='phone-lookup'?['phone','challengeId','code','returnRequest','cancelRequest']:
     action==='booking-staff-response'?['requestId','bookingId','revision','accept']:action==='booking-slots'?['details','day']:action==='booking-hold'?['requestId','details']:action==='booking-release'?['requestId']:action==='booking-quote'?['details']:action==='booking-create'?['requestId','expectedQuote','details']:action==='booking-receipt'?['requestId']:
-    action==='order-quote'?['details','lines']:action==='order-create'?['requestId','expectedQuote','contact','details','lines','paymentMethodId']:action==='order-receipt'?['requestId']:
+    action==='order-cancel'?['requestId','orderId','expectedUpdatedAt','reason']:action==='order-quote'?['details','lines']:action==='order-create'?['requestId','expectedQuote','contact','details','lines','paymentMethodId']:action==='order-receipt'?['requestId']:
     action==='profile-read'?['petId']:action==='profile-update'?['requestId','revision','contact','pet']:action==='recover'?['code']:[];
    if(Object.keys(body).some(k=>!keys.includes(k)))throw Error('invalid_body');
    const forwarded=process.env.VERCEL?req.headers['x-vercel-forwarded-for']:null;
@@ -155,6 +155,11 @@ function createGuestCommerce({admin,secret,origins,production=true,otpPreviewOri
     return res.json({success:true,...result});
    }
    if(action.startsWith('order-')){
+    if(action==='order-cancel'){
+     if(!UUID.test(body.requestId)||!UUID.test(body.orderId)||typeof body.expectedUpdatedAt!=='string'||!Number.isFinite(Date.parse(body.expectedUpdatedAt))||typeof body.reason!=='string'||body.reason.trim().length<2||body.reason.length>1000)throw Error('invalid_body');
+     await rpc('cancel_guest_sales_order',{p_hash:session.hash,p_request_id:body.requestId,p_order_id:body.orderId,p_expected_updated_at:body.expectedUpdatedAt,p_action:'cancel',p_details:{reason:body.reason.trim()}});
+     return res.json({success:true,order:await rpc('guest_sales_receipt',{p_hash:session.hash,p_request:body.orderId})});
+    }
     if(action==='order-receipt'){
      if(!UUID.test(body.requestId))throw Error('invalid_body');
      return res.json({success:true,order:await rpc('guest_sales_receipt',{p_hash:session.hash,p_request:body.requestId}),recoveryCode:recoveryCode('order',body.requestId)});
@@ -242,6 +247,7 @@ function createGuestCommerce({admin,secret,origins,production=true,otpPreviewOri
    if(error.dbCode==='P0002'){status=404;message=action.startsWith('order-')?'Không tìm thấy đơn hàng trong phiên này.':'Không tìm thấy lịch hẹn trong phiên này.';}
    if(unboundReceipt){status=404;message='Chưa tìm thấy kết quả đơn hàng trong phiên này. Vui lòng kiểm tra lại trước khi gửi tiếp.';}
    if(error.dbCode==='PT409'){status=409;message='Thông tin yêu cầu đã thay đổi. Vui lòng kiểm tra trước khi gửi lại.';}
+   if(error.reason==='sales_refund_required'){status=409;message='Đơn đã thu tiền. Vui lòng liên hệ cửa hàng để hoàn tiền trước khi hủy.';}
    const holdErrors={booking_hold_expired:'Đã hết 15 phút giữ chỗ. Vui lòng chọn lại giờ và nhân viên.',booking_lead_time_required:'Vui lòng chọn giờ cách hiện tại hơn 2 tiếng.',booking_staff_required:'Vui lòng chọn nhân viên chăm sóc.',preferred_staff_unavailable:'Nhân viên này không còn trống. Vui lòng chọn nhân viên hoặc giờ khác.'};
    if(holdErrors[error.reason]){status=409;message=holdErrors[error.reason];}
    if(error.reason==='sales_available_stock_insufficient'){status=409;message='Sản phẩm không đủ tồn kho khả dụng. Vui lòng cập nhật giỏ hàng.';}

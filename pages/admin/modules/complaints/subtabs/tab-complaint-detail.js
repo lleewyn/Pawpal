@@ -75,6 +75,7 @@
   $('complaintReplyMedia').inert=finished(t)||replySaving;
   sessionStorage.setItem('pawpal_admin_complaint_selected_id',t.id); mod.updateBreadcrumb(t.id);
   text('viewTicketCode',t.id);text('detailTicketTitle',t.title);text('viewTicketStatusBadge',statusNames[t.status] || t.status);
+  if(t.status==='processing'&&!t.resolution_started_at)text('viewTicketStatusBadge',t.resolved_by?'Đã duyệt, chờ thông báo':'Chờ xử lý');
   text('viewTicketPriorityBadge',({khan_cap:'Khẩn cấp',high:'Cao',medium:'Trung bình',low:'Thấp'})[t.priority]);
   const statusBadgeEl = $('viewTicketStatusBadge');
   const statusBadgeClass = {
@@ -116,7 +117,11 @@
    t.autoCloseReason==='resolved_expired'?'Đã đóng sau 3 ngày không có phản hồi.':
    t.status==='waiting_customer'&&!t.customerReplyDueAt?'Phiếu chưa có hạn phản hồi. Gửi lại yêu cầu bổ sung để khách đọc nội dung và bắt đầu thời hạn 72 giờ.':
    t.status==='reprocessing'&&t.rating<3&&t.rating!=null?'Cần quản lý tiếp nhận. Khách đánh giá dưới 3 sao.':'');
-  show('managerApprovalPanel',t.status==='waiting_manager_approval');
+  if(t.proposal_rejected_at&&!finished(t))text('complaintLifecycleNote','Quản lý không duyệt đề xuất. Chọn Từ chối khiếu nại và phản hồi lý do cho khách.');
+  show('managerApprovalPanel',t.status==='waiting_manager_approval' && window.PawpalAdminAccess?.isAdmin());
+  if($('btnManagerApproveProposal'))$('btnManagerApproveProposal').disabled=true;
+  show('btnOpenResolveModal',t.status!=='waiting_manager_approval' && !t.resolved_by && !finished(t));
+  show('btnStartComplaintResolution',t.status==='processing' && Boolean(t.resolved_by) && t.approved_amount!=null && !t.resolution_started_at);
   const reopenExpired=t.autoCloseReason==='resolved_expired' ||
    (t.autoCloseReason==='no_customer_reply' && Date.now()>=Date.parse(t.closedAtRaw)+7*86400000);
   show('btnReopenTicket',finished(t)&&!reopenExpired); show('btnCloseComplaint',t.status==='resolved');
@@ -124,7 +129,7 @@
   show('btnRequestMoreInfo',Boolean(t.customerId));
   text('btnAssignHandler', (t.status==='new' || !t.staffAssigned || t.staffAssigned==='Chưa phân công') ? 'Nhận xử lý' : 'Đổi người xử lý');
   text('btnCompleteComplaint',directAward(t.resolution_type)?'Thực hiện bồi hoàn':'Liên kết kết quả thực hiện');
-  show('btnCompleteComplaint',t.status==='processing' && Boolean(t.resolved_by) && Boolean(t.resolution_type));
+  show('btnCompleteComplaint',t.status==='processing' && Boolean(t.resolved_by) && Boolean(t.resolution_type) && Boolean(t.resolution_started_at));
   show('btnLinkComplaintSource',!finished(t) && !t.bookingId && !t.orderId);
   text('complaintAttachments','Đang tải tệp đính kèm…');
   loadAttachments(t,version);
@@ -153,6 +158,7 @@
    if(version!==renderVersion)return;
    const events=(audit.data || []).flatMap(a=>{try{return [JSON.parse(a.description)];}catch{return [];}});
    const proposal=events.find(e=>e.action==='propose');
+   if($('btnManagerApproveProposal'))$('btnManagerApproveProposal').disabled=!(window.PawpalAdminAccess?.isAdmin() && t.status==='waiting_manager_approval' && proposal?.details?.option===t.resolution_type);
    text('viewProposedAmount',proposal?Number(proposal.voucher_amount ?? proposal.details.amount ?? 0).toLocaleString('vi-VN')+(proposal.details.option==='points'?' điểm':' đ')+(proposal.details.voucher_code?' · '+proposal.details.voucher_code:''):'Chưa có đề xuất có thể duyệt');
    text('complaintLinkedResults',audit.error?'Không tải được kết quả liên kết.':audit.data.flatMap(a=>{try{const d=JSON.parse(a.description);return d.action==='complete'?[`${mod.formatDateTime(a.created_at)} · ${d.result_id || d.details.evidence_id}${d.details.replacement_order_id?' · Đơn đổi mới: '+d.details.replacement_order_id:''}${d.details.return_request_id?' · Hàng trả: '+d.details.return_request_id:''}`]:[];}catch{return [];}}).join('\n') || 'Chưa liên kết kết quả thực hiện.');
   } catch(error) {if(version===renderVersion)text('viewTicketTimeline','Không tải được lịch sử: '+error.message);}
@@ -222,18 +228,23 @@
  async function openResolveModal(mode='resolve'){
   const modal=captureModal('resolveTicketModalOverlay');if(!modal)return;
   const t=current();modal.dataset.mode=mode;
+  if(mode==='resolve'){
+   [...$('selectResolveOption').options].forEach(option=>{option.disabled=Boolean(t.proposal_rejected_at)&&option.value!=='reject';});
+  }
   $('btnConfirmResolveTicket').disabled=false;
   $('complaintEvidenceSearch').disabled=false;
   $('complaintReplacementSearch').readOnly=mode==='complete' && t.resolution_type==='rma_exchange';
   $('inputResolveNote').value='';$('inputResolveAmount').value='';$('selectResolveOption').value='explain';text('resolveTicketModalOverlayError','');
+  if(mode==='resolve'&&t.proposal_rejected_at)$('selectResolveOption').value='reject';
   $('complaintVoucherGroup').hidden=true;$('complaintVoucherCode').value='';
   show('complaintOptionGroup',mode==='resolve');show('complaintEvidenceGroup',mode==='link_source'||(mode==='complete'&&!directAward(t.resolution_type)));show('complaintReplacementGroup',mode==='complete' && ['rma_exchange','rma_refund'].includes(t.resolution_type));
   text('complaintReplacementLabel',t.resolution_type==='rma_refund'?'Yêu cầu trả hàng đã nhận':'Đơn hàng đổi mới đã giao');
   show('complaintAmountGroup',false);
-  text('complaintResolutionTitle',({resolve:'Phương án xử lý',complete:directAward(t.resolution_type)?'Thực hiện bồi hoàn':'Liên kết kết quả thực hiện',close:'Đóng phiếu',reopen:'Mở lại phiếu',link_source:'Liên kết giao dịch'})[mode]);
+  text('complaintResolutionTitle',({start_resolution:'Thông báo phương án và bắt đầu xử lý',resolve:'Phương án xử lý',complete:directAward(t.resolution_type)?'Thực hiện bồi hoàn':'Liên kết kết quả thực hiện',close:'Đóng phiếu',reopen:'Mở lại phiếu',link_source:'Liên kết giao dịch'})[mode]);
   text('btnConfirmResolveTicket',mode==='resolve'?'Lưu phương án':'Xác nhận');
   text('complaintResolutionHint',mode==='complete'?(directAward(t.resolution_type)?'Xác nhận thực hiện đúng phương án đã được quản lý duyệt.':'Thực hiện phương án tại Bán hàng hoặc Dịch vụ, sau đó chọn kết quả đã hoàn tất ở đây.'):'Nhập lý do để lưu vào lịch sử xử lý.');
   if(mode==='resolve')resolutionVisibility();
+  if(mode==='start_resolution')text('complaintResolutionHint','Nhập phương án đã được duyệt để gửi cho khách trong mục Hỗ trợ. Xác nhận khi bắt đầu thực hiện phương án này.');
   if(mode==='link_source'){
    const isOrder=mod.state.orderComplaints.some(c=>c.rawId===t.rawId);modal.dataset.sourceKind=isOrder?'order':'service';
    bindEvidence('complaintEvidence',(isOrder?mod.state.cachedOrders:mod.state.cachedAppointments).filter(r=>r.customer_id===t.customerId).map(r=>({id:r.id,label:r.order_code || r.appointment_code})));return;
@@ -296,6 +307,7 @@
   const root=$('subtab-tab-complaint-detail');if(!root || root.dataset.v1Bound)return;root.dataset.v1Bound='true';
   const bind=(id,fn)=>{if($(id))$(id).onclick=fn;};
   bind('btnAssignHandler',openAssignHandlerModal);bind('btnRequestMoreInfo',openRequestMoreInfoModal);bind('btnOpenResolveModal',()=>openResolveModal());
+  bind('btnStartComplaintResolution',()=>openResolveModal('start_resolution'));
   bind('btnCloseComplaint',()=>openResolveModal('close'));bind('btnReopenTicket',()=>openResolveModal('reopen'));bind('btnCompleteComplaint',()=>openResolveModal('complete'));
   bind('btnLinkComplaintSource',()=>openResolveModal('link_source'));
   bind('btnOpenComplaintSource',()=>{

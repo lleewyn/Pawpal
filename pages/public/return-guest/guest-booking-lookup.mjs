@@ -1,4 +1,5 @@
 import {guestCommerce} from '../../../scripts/shared/guest-commerce-client.mjs';
+import {mountCancellationReasons,renderCancellationSummary} from '../../../scripts/shared/order-cancellation.mjs';
 import {renderBookingStaffRequest,staffRequestLabel} from '../../../scripts/shared/booking-staff-request.mjs';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const statuses={pending:'Chờ xác nhận',confirmed:'Đã xác nhận',in_progress:'Đang thực hiện',completed:'Hoàn tất',cancelled:'Đã hủy',no_show:'Không đến'};
@@ -65,9 +66,32 @@ export function mountGuestOrderLookup(form){
             const {order}=await guestCommerce.request('order-receipt',{requestId});if(!panel.isConnected||invalidated)return;
             if(!order||String(order.id).toLowerCase()!==requestId.toLowerCase()||typeof order.code!=='string'||order.total==null||!Number.isFinite(Number(order.total))||Number(order.total)<0)throw Error('Chưa xác minh được đơn hàng.');
             const labels={pending:'Chờ xác nhận',confirmed:'Đã xác nhận',packing:'Đang chuẩn bị',shipped:'Đang giao',shipping:'Đang giao',delivered:'Đã giao',completed:'Hoàn tất',cancelled:'Đã hủy',returned:'Đã trả hàng'};
+            renderCancellationSummary(panel,order);
             for(const [label,value]of [['Mã đơn hàng',order.code],['Trạng thái',labels[order.status]||'Đang xử lý'],['Tổng tiền',Number(order.total).toLocaleString('vi-VN')+' đ']]){const row=node('div');row.append(node('dt',label),node('dd',value));details.append(row);}feedback.textContent='';
+            if(['draft','pending','confirmed','packing'].includes(order.status)){
+                const cancel=node('button','Hủy đơn hàng','btn-green-outline');cancel.type='button';details.append(cancel);
+                cancel.onclick=()=>{
+                    const dialog=node('dialog');dialog.style.cssText='position:fixed;inset:0;margin:auto;width:540px;max-width:92vw;max-height:92vh;overflow:auto;background:white;border:1px solid #ECF2EE;border-radius:9px;padding:26px 30px';
+                    dialog.append(node('h3','Hủy đơn hàng'));const readReason=mountCancellationReasons(dialog,'guest-receipt-cancel-reason');
+                    const error=node('p');error.setAttribute('role','alert');error.style.color='#DC2626';
+                    const close=node('button','Đóng','btn-green-outline'),submit=node('button','Xác nhận hủy','btn-cta');close.type=submit.type='button';
+                    const actions=node('div');actions.style.cssText='display:flex;gap:12px;justify-content:flex-end';actions.append(close,submit);dialog.append(error,actions);document.body.append(dialog);
+                    const dismiss=()=>{if(submit.disabled)return;dialog.close();dialog.remove();};close.onclick=dismiss;dialog.oncancel=e=>{e.preventDefault();dismiss();};
+                    dialog.onclick=e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dismiss();}};
+                    const operation=crypto.randomUUID();
+                    submit.onclick=async()=>{
+                        if(submit.disabled)return;
+                        const reason=readReason();if(reason.length<2){error.textContent='Vui lòng chọn hoặc nhập lý do hủy đơn.';return;}
+                        if(invalidated){dismiss();return;}
+                        submit.disabled=true;error.textContent='';
+                        try{await guestCommerce.request('order-cancel',{requestId:operation,orderId:order.id,expectedUpdatedAt:order.updatedAt,reason});submit.disabled=false;dismiss();await refresh();}
+                        catch(failure){error.textContent=failure.message||'Chưa hủy được đơn hàng.';}
+                        finally{submit.disabled=false;}
+                    };dialog.showModal();
+                };
+            }
         }catch(error){if(panel.isConnected&&!invalidated)feedback.textContent=[401,403].includes(error.status)?'Phiên hiện tại không có quyền xem đơn này. Bạn có thể nhập mã tra cứu riêng đã lưu bên dưới.':error.message;}
         finally{busy=false;if(panel.isConnected&&!invalidated)button.disabled=false;}
     }
-    button.onclick=refresh;refresh();const clear=()=>{invalidated=true;details.replaceChildren();feedback.textContent='Tài khoản đã thay đổi. Vui lòng tải lại trang.';button.disabled=true;};document.addEventListener('auth_state_changed',clear);window.addEventListener('storage',event=>{if(event.key==='pawpal_current_user'||event.key===null)clear();});
+    button.onclick=refresh;refresh();const clear=()=>{invalidated=true;panel.querySelector('[data-cancellation-summary]')?.remove();details.replaceChildren();feedback.textContent='Tài khoản đã thay đổi. Vui lòng tải lại trang.';button.disabled=true;};document.addEventListener('auth_state_changed',clear);window.addEventListener('storage',event=>{if(event.key==='pawpal_current_user'||event.key===null)clear();});
 }

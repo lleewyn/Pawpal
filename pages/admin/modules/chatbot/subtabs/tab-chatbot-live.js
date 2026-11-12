@@ -498,7 +498,7 @@
         const timeline=document.getElementById('chatMessagesTimeline');
         const selected=PawpalChatbot.state?.currentConversation;
         const unavailable=!selected||['closed','resolved','completed','blocked'].includes(selected.status);
-        for(const id of ['btnRewardPoints','btnConvertToTicket','btnEscalateManager','btnResolveChatAction','btnHeaderResolveChat','btnToggleTakeover','btnSendLiveMessage','btnAdminChatAttach']){
+        for(const id of ['btnRewardPoints','btnEscalateManager','btnResolveChatAction','btnHeaderResolveChat','btnToggleTakeover','btnSendLiveMessage','btnAdminChatAttach']){
             const button=document.getElementById(id);if(button)button.disabled=unavailable;
         }
         if(!selected){
@@ -1283,74 +1283,6 @@
                 PawpalChatbot.closeModal?.('rewardPointsModalOverlay');await PawpalChatbot.loadInboxSummary();
                 PawpalChatbot.showToast?.('Đã lưu điều chỉnh điểm.', 'success');
             }catch(e){PawpalChatbot.showToast?.('Chưa lưu được điểm. Hãy kiểm tra quyền và thử lại.', 'error');}finally{btnReward.disabled=false;}
-        });
-
-        // ====================================================================
-        // MODAL 2: CHUYỂN TICKET (AUTOCOMPLETE GIAO DỊCH CHUẨN AGENTS.md)
-        // ====================================================================
-
-        const convertButton = document.getElementById('btnConfirmConvertTicket');
-        const convertTitle = document.getElementById('inputConvertTicketTitle');
-        const convertRef = document.getElementById('inputConvertRefId');
-        let convertTarget;
-        const convertDropdown = document.getElementById('convertTicketRefDropdown');
-        function showConvertReferences() {
-            convertDropdown.replaceChildren();
-            const c = getCurrentConversationSafe();
-            if (c?.id !== convertTarget?.id) return;
-            const category = document.getElementById('selectConvertTicketCategory').value;
-            const ref = category === 'order' ? c.recentOrder : c.recentBooking;
-            if (ref?.id && ref.id.toLowerCase().includes(convertRef.value.trim().toLowerCase())) {
-                const button = document.createElement('button');
-                button.type = 'button'; button.className = 'admin-btn admin-btn-secondary';
-                button.textContent = ref.code || ref.id;
-                button.addEventListener('click', () => { convertRef.value = ref.id; convertDropdown.style.display = 'none'; });
-                convertDropdown.append(button);
-            } else {
-                convertDropdown.textContent = 'Không có giao dịch phù hợp';
-            }
-            convertDropdown.style.display = 'block';
-        }
-        convertRef?.addEventListener('focus', showConvertReferences);
-        convertRef?.addEventListener('input', showConvertReferences);
-        document.getElementById('selectConvertTicketCategory')?.addEventListener('change', () => {
-            convertRef.value = ''; convertDropdown.style.display = 'none';
-        });
-        document.addEventListener('click', e => {
-            if (!e.target.closest('#convertTicketModalOverlay .customer-autocomplete-wrapper')) convertDropdown.style.display = 'none';
-        });
-        document.getElementById('btnConvertToTicket')?.addEventListener('click', () => {
-            const c = getCurrentConversationSafe();
-            if (!c?.customerId || !c.isHandover) {
-                PawpalChatbot.showToast?.('Cần khách hàng và nhân viên nhận phiên.', 'error'); return;
-            }
-            convertTarget = { id:c.id, version:c.updatedAtRaw, request:crypto.randomUUID() };
-            convertTitle.value = '';convertRef.value = '';
-            document.getElementById('convertTicketRefSelectedCard').style.display = 'none';
-            PawpalChatbot.openModal?.('convertTicketModalOverlay');
-        });
-        document.querySelector('#convertTicketModalOverlay form')?.addEventListener('submit',e=>e.preventDefault());
-        convertButton?.addEventListener('click', async () => {
-            if (!convertTarget || convertButton.disabled) return;
-            if(!targetStillSelected(convertTarget.id))return;
-            const subject=convertTitle.value.trim(), ref=convertRef.value.trim();
-            if(subject.length<2 || subject.length>250 || (ref && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref))) {
-                PawpalChatbot.showToast?.('Kiểm tra tiêu đề và mã giao dịch.', 'error');return;
-            }
-            const args={p_id:convertTarget.request,p_conversation_id:convertTarget.id,p_expected_updated_at:convertTarget.version,p_ref_id:ref||null,
-                p_category:document.getElementById('selectConvertTicketCategory').value,p_subject:subject,
-                p_priority:document.getElementById('selectConvertPriority').value};
-            const key=JSON.stringify({...args,p_id:null});
-            if(convertTarget.payload && convertTarget.payload!==key) args.p_id=convertTarget.request=crypto.randomUUID();
-            convertTarget.payload=key;convertButton.disabled=true;
-            try {
-                const {error}=await supabase.rpc('create_chat_complaint',args);if(error)throw error;
-                PawpalChatbot.closeModal?.('convertTicketModalOverlay');
-                const c=getCurrentConversationSafe();if(c?.id===convertTarget.id){c.contextLoaded=false;PawpalChatbot.invalidateCustomerCache?.(c.customerId);}
-                await PawpalChatbot.loadInboxSummary();
-                PawpalChatbot.showToast?.('Đã tạo khiếu nại.', 'success');
-            }catch(error){PawpalChatbot.showToast?.('Chưa tạo được khiếu nại. Nội dung được giữ lại.', 'error');}
-            finally{convertButton.disabled=false;}
         });
 
         // ====================================================================

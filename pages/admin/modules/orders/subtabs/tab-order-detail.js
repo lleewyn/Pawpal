@@ -51,6 +51,22 @@
             return;
         }
 
+        let summary = document.getElementById('detailOrderCancellation');
+        if (!summary && content) {
+            summary = document.createElement('section');summary.id = 'detailOrderCancellation';
+            summary.style.cssText = 'margin-bottom:20px;color:#203A2C;white-space:pre-wrap;overflow-wrap:anywhere';
+            content.prepend(summary);
+        }
+        if (summary) {
+            summary.replaceChildren();summary.hidden = order.status !== 'cancelled';
+            if (!summary.hidden) {
+                const title = document.createElement('h3');title.textContent = 'Lý do hủy đơn hàng';
+                title.style.cssText = 'font-size:16px;color:#236B48;margin:0 0 8px';
+                const reason = document.createElement('p');reason.style.margin = '0';
+                reason.textContent = order.cancelReason || order.timeline?.find(event => event.title === 'Hủy đơn')?.desc || 'Chưa ghi nhận lý do hủy';
+                summary.append(title,reason);
+            }
+        }
         state.selectedOrderId = order.id;
         sessionStorage.setItem('pawpal_admin_order_selected_id', order.id);
 

@@ -70,7 +70,7 @@
     'use strict';
     const allowed=()=>window.PawpalAdminAccess?.isStaff()&&PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle');
     const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!=null)node.textContent=text;if(cls)node.className=cls;return node;};
-    const names={points:'Cộng Paw Points',voucher:'Tặng voucher',refund:'Hoàn tiền',rma_refund:'Nhận hàng trả và hoàn tiền',rma_exchange:'Đổi hàng',redo_service:'Thực hiện lại dịch vụ',change_staff:'Đổi nhân viên',reject:'Từ chối khiếu nại'};
+    const names={explain:'Giải thích và phản hồi',start_resolution:'Thông báo phương án và bắt đầu xử lý',points:'Cộng Paw Points',voucher:'Tặng voucher',refund:'Hoàn tiền',rma_refund:'Nhận hàng trả và hoàn tiền',rma_exchange:'Đổi hàng',redo_service:'Thực hiện lại dịch vụ',change_staff:'Đổi nhân viên',reject:'Từ chối khiếu nại'};
     const finished=status=>['closed','resolved','completed','rejected'].includes(status),hasAmount=option=>['refund','rma_refund','points'].includes(option);
     async function rpc(name,args){const{data,error}=await getSupabaseClient().rpc(name,args);if(error)throw error;return data;}
     const pending=new Map();let dialog;
@@ -88,9 +88,9 @@
         const footer=el('div',null,'workspace-modal-footer'),cancel=el('button','Hủy','admin-btn admin-btn-secondary'),save=el('button','Gửi đề xuất','admin-btn admin-btn-primary');save.id='staffComplaintProposalSave';cancel.type=save.type='button';cancel.dataset.closeModal=overlay.id;footer.append(cancel,save);form.append(header,summary,option,amount,voucher,note,hint,message,footer);card.append(form);overlay.append(card);document.body.append(overlay);
         const state={ticket:null,ticketId:null,options:[],generation:0,loading:true,blocked:false,saving:false,unresolved:null,onSaved:null,returnFocus:null};
         const key=()=>PawpalAdminAccess.state.user.id+':'+state.ticketId;
-        function sync(){const reject=fields.option.value==='reject';groups.amount.hidden=!hasAmount(fields.option.value);fields.amount.required=!groups.amount.hidden;amount.querySelector('label').firstChild.textContent=(fields.option.value==='points'?'Số Paw Points đề xuất':'Số tiền đề xuất')+' ';voucher.hidden=fields.option.value!=='voucher';fields.voucherCode.required=!voucher.hidden;hint.textContent=reject?'Nhập lý do từ chối để khách có thể xem trong phiếu.':'Gửi phương án để quản lý duyệt trước khi thực hiện.';}
+        function sync(){const option=fields.option.value;groups.amount.hidden=!hasAmount(option);fields.amount.required=!groups.amount.hidden;amount.querySelector('label').firstChild.textContent=(option==='points'?'Số Paw Points đề xuất':'Số tiền đề xuất')+' ';voucher.hidden=option!=='voucher';fields.voucherCode.required=!voucher.hidden;hint.textContent=option==='start_resolution'?'Gửi nội dung phương án đã duyệt cho khách và xác nhận bắt đầu thực hiện.':option==='explain'?'Nội dung giải thích được gửi cho khách và kết thúc phiếu.':option==='reject'?'Nhập lý do từ chối để phản hồi cho khách trong phiếu Hỗ trợ.':'Gửi phương án để quản lý duyệt trước khi thực hiện. Khách vẫn thấy Chờ xử lý.';}
         fields.option.onchange=()=>{fields.amount.value='';fields.voucherCode.value='';message.textContent='';sync();controls();};
-        function controls(){for(const input of Object.values(fields))input.disabled=state.loading||state.blocked||state.saving||!!state.unresolved;save.disabled=state.loading||state.blocked||state.saving;save.textContent=state.saving?'Đang lưu':state.unresolved?'Thử lại':fields.option.value==='reject'?'Lưu từ chối':'Gửi đề xuất';}
+        function controls(){for(const input of Object.values(fields))input.disabled=state.loading||state.blocked||state.saving||!!state.unresolved;save.disabled=state.loading||state.blocked||state.saving;save.textContent=state.saving?'Đang lưu':state.unresolved?'Thử lại':fields.option.value==='start_resolution'?'Thông báo và bắt đầu':fields.option.value==='explain'?'Gửi giải thích':fields.option.value==='reject'?'Gửi từ chối':'Gửi đề xuất';}
         function closeDialog(){state.generation++;overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');if(state.returnFocus?.isConnected)state.returnFocus.focus();}
         overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
         overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog();return;}if(event.key!=='Tab')return;const nodes=[...overlay.querySelectorAll('button:not([disabled]),select:not([disabled]),input:not([disabled]),textarea:not([disabled])')].filter(node=>node.offsetParent!==null),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});
@@ -99,7 +99,7 @@
             if(!allowed()||state.loading||state.blocked||state.saving||!state.ticket)return;
             const option=fields.option.value,note=fields.note.value.trim(),amount=hasAmount(option)?Number(fields.amount.value):0;
             if(!state.unresolved){if(!state.options.includes(option)){message.textContent='Chọn phương án phù hợp giao dịch liên quan.';fields.option.focus();return;}if(hasAmount(option)&&(!Number.isInteger(amount)||amount<=0||amount>999999999999)){message.textContent='Nhập số tiền nguyên dương, tối đa 999.999.999.999 đ.';fields.amount.focus();return;}if(note.length<2||note.length>8000){message.textContent='Nhập lý do từ 2 đến 8000 ký tự.';fields.note.focus();return;}}
-            const attempt=state.unresolved||{args:{p_request_id:crypto.randomUUID(),p_ticket_id:state.ticketId,p_expected_updated_at:state.ticket.updated_at,p_action:option==='reject'?'resolve':'propose',p_details:{option,amount,note,...(option==='voucher'?{voucher_code:fields.voucherCode.value.trim()}: {})}}};
+            const attempt=state.unresolved||{args:{p_request_id:crypto.randomUUID(),p_ticket_id:state.ticketId,p_expected_updated_at:state.ticket.updated_at,p_action:['explain','reject'].includes(option)?'resolve':option==='start_resolution'?'start_resolution':'propose',p_details:option==='start_resolution'?{note}:{option,amount,note,...(option==='voucher'?{voucher_code:fields.voucherCode.value.trim()}: {})}}};
             const generation=state.generation,attemptKey=key();pending.set(attemptKey,attempt);state.saving=true;controls();message.textContent='';
             try{const result=await rpc('act_admin_complaint',attempt.args);if(result!==state.ticketId)throw Error('invalid_proposal_result');pending.delete(attemptKey);if(generation!==state.generation)return;const callback=state.onSaved;closeDialog();if(allowed())callback?.(result);}
             catch(error){const definitive=['42501','22023','23514','PT409','P0002'].includes(error.code);if(definitive)pending.delete(attemptKey);if(generation!==state.generation)return;state.unresolved=definitive?null:attempt;state.blocked=definitive;message.textContent=error.code==='42501'?'Phiếu không còn được giao cho bạn hoặc bạn không có quyền đề xuất. Đóng và tải lại.':error.message==='complaint_approval_pending'?'Phiếu đang chờ Quản lý duyệt, không thể gửi thêm đề xuất.':error.message==='complaint_not_open'?'Phiếu đã kết thúc, không thể gửi đề xuất.':error.message==='invalid_complaint_resolution'?'Phương án không phù hợp giao dịch. Đóng và mở lại để kiểm tra.':error.code==='PT409'?'Phiếu đã thay đổi. Đóng và mở lại để đối chiếu.':definitive?'Chưa lưu đề xuất. Đóng và mở lại để kiểm tra phiếu.':'Chưa xác nhận gửi thành công. Thử lại đúng đề xuất này để tránh ghi trùng.';
@@ -110,8 +110,11 @@
             try{const data=await rpc('get_staff_workspace',{p_kind:'complaints',p_query:'',p_id:ticketId,p_page:1});if(generation!==state.generation)return;const ticket=data.items.find(row=>row.id===ticketId);if(!ticket?.updated_at){state.blocked=true;message.textContent='Không tìm thấy phiếu trong phạm vi được giao.';state.loading=false;controls();return;}
                 if(!Object.hasOwn(ticket,'order_id')||!Object.hasOwn(ticket,'appointment_id'))throw Error('proposal_context_missing');state.ticket=ticket;
                 const order=ticket.order_id&&!ticket.appointment_id&&ticket.linked_order_code,service=ticket.appointment_id&&!ticket.order_id&&ticket.linked_appointment_code;
-                state.options=order?['refund','rma_refund','rma_exchange',...(ticket.approved_amount==null?['reject']:[])]:service?['refund','redo_service','change_staff']:[];
+                state.options=['explain','reject',...(order?['refund','rma_refund','rma_exchange']:service?['refund','redo_service','change_staff']:[])];
                 if(ticket.customer_id)state.options.push('points','voucher');
+                if(ticket.proposal_rejected_at)state.options=['reject'];
+                else if(ticket.resolved_by && ticket.approved_amount!=null)state.options=ticket.resolution_started_at?[]:['start_resolution'];
+                title.textContent=state.options.includes('start_resolution')?'Thông báo phương án và bắt đầu xử lý':'Phương án xử lý';
                 fields.voucherCode.value='';
                 for(const value of state.options)fields.option.append(new Option(names[value],value));
                 for(const[label,value]of [['Mã phiếu',ticket.ticket_code],['Nội dung phản ánh',ticket.subject],['Giao dịch liên quan',order?ticket.linked_order_code:service?ticket.linked_appointment_code:'Chưa xác minh được liên kết']])summary.append(el('dt',label),el('dd',value));
@@ -198,7 +201,10 @@
         dialog={open,close:closeDialog,clear:()=>{closeDialog();state.customer=state.source=state.origin=state.unresolved=null;state.done=state.loading=state.blocked=false;form.reset();pickers.forEach(picker=>picker.reset(false));fields.phone.value='';message.textContent=success.textContent='';}};return dialog;
     }
     window.addEventListener('hashchange',()=>dialog?.close());
-    window.PawpalStaffComplaintCreate=Object.freeze({open:options=>{if(allowed())return build().open(options);},closeAll:()=>dialog?.clear()});
+    window.PawpalStaffComplaintCreate=Object.freeze({open:options=>{
+        if(options?.conversationId){window.PawpalChatbot?.showToast?.('Vui lòng tạo phiếu trong mục Khiếu nại.','info');return;}
+        if(allowed())return build().open(options);
+    },closeAll:()=>dialog?.clear()});
 })();
 
 ;
@@ -217,9 +223,13 @@ profiles:{"complaint-profile":{read:"complaints",render:async(ctx)=>{const {el,d
             if (!['closed','resolved','completed','rejected'].includes(row.status) && window.PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle')) {
                 const message = el('button', 'Trao đổi', 'admin-btn admin-btn-primary'); message.type = 'button';
                 message.onclick = () => window.PawpalStaffComplaintMessage.open({ ticketId: id, onSaved: () => ctx.refresh() }); details.append(message);
-                if (row.status !== 'waiting_manager_approval') {
-                    const propose = el('button','Đề xuất phương án','admin-btn admin-btn-secondary'); propose.type='button';
+                if (row.status !== 'waiting_manager_approval' && !row.resolution_started_at) {
+                    const propose = el('button',row.resolved_by && row.approved_amount!=null?'Thông báo phương án và bắt đầu xử lý':'Phương án xử lý','admin-btn admin-btn-secondary'); propose.type='button';
                     propose.onclick=()=>window.PawpalStaffComplaintProposal.open({ticketId:id,onSaved:()=>ctx.refresh()}); details.append(propose);
+                }
+                if(row.resolution_started_at && (row.order_id||row.appointment_id)){
+                    const execute=el('button',row.order_id?'Mở đơn hàng để xử lý':'Mở lịch hẹn để xử lý','admin-btn admin-btn-secondary');execute.type='button';
+                    execute.onclick=()=>go(row.order_id?'tab-order-detail':'tab-service-detail',row.order_id||row.appointment_id);details.append(execute);
                 }
             }
             staffGallery?.clear();
@@ -383,6 +393,9 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             complaint_replacement_order_required:'Chọn đơn đổi mới của khách đã giao thành công.',
             complaint_booking_mismatch:'Chọn lịch làm lại đã hoàn tất, cùng bé cưng và dịch vụ của lịch gốc.',
             complaint_approved_result_required:'Phương án cần được duyệt và có kết quả thực hiện trước khi hoàn tất.',
+            complaint_approved_plan_required:'Phương án chưa được duyệt hoặc đã bắt đầu xử lý. Vui lòng tải lại phiếu.',
+            complaint_execution_not_started:'Cần thông báo phương án đã duyệt cho khách và bắt đầu xử lý trước khi liên kết kết quả.',
+            complaint_rejected_proposal_requires_reply:'Đề xuất không được duyệt. Chọn từ chối khiếu nại và gửi lý do cho khách.',
             complaint_reopen_expired:'Đã hết hạn mở lại phiếu.',
             complaint_approval_pending:'Phiếu đang chờ duyệt phương án.',
             complaint_not_open:'Phiếu đã kết thúc. Mở lại phiếu trước khi tiếp tục.',
@@ -839,6 +852,9 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                         autoCloseReason: t.auto_close_reason,
                         closedAtRaw: t.closed_at,
                         customerFollowupMessageId: t.customer_followup_message_id,
+                        resolution_started_at: t.resolution_started_at,
+                        resolution_announced_at: t.resolution_announced_at,
+                        proposal_rejected_at: t.proposal_rejected_at,
                         customerName: customerName,
                         phone: phone,
                         petName: pet ? (pet.pet_name || pet.name) : (isContactOrOther ? '—' : 'Chưa gắn hồ sơ bé cưng'),
@@ -945,6 +961,9 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                         autoCloseReason: t.auto_close_reason,
                         closedAtRaw: t.closed_at,
                         customerFollowupMessageId: t.customer_followup_message_id,
+                        resolution_started_at: t.resolution_started_at,
+                        resolution_announced_at: t.resolution_announced_at,
+                        proposal_rejected_at: t.proposal_rejected_at,
                         customerName: customerName,
                         phone: phone,
                         orderId: order ? (order.order_code || order.id) : null,

@@ -504,7 +504,7 @@
                         <div>${safeCarrier}</div>
                         <div class="sub-meta-text admin-table-code" title="${safeTracking}">${safeTracking}</div>
                     </td>
-                    <td>${statusBadge}</td>
+                    <td>${statusBadge}${o.status === 'cancelled' ? `<div class="sub-meta-text" style="max-width:220px;white-space:normal;overflow-wrap:anywhere">${esc(o.cancelReason || 'Chưa ghi nhận lý do hủy')}</div>` : ''}</td>
                     <td>${alertLabel}</td>
                     <td style="text-align: center;">
                         <button type="button" class="btn-action-trigger btn-order-action-trigger" data-id="${safeId}">•••</button>

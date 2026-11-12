@@ -236,7 +236,7 @@ export const API = {
             const { data, error } = await db
                 .from('sales_order')
                 .select(`
-                    id, order_code, order_status, note, created_at, updated_at,
+                    id, order_code, order_status, cancel_reason, note, created_at, updated_at,
                     shipping_fee_snapshot, receiver_name_snapshot, receiver_phone_snapshot,
                     province_snapshot, street_address_snapshot, postal_code_snapshot,
                     delivery_option_id, shipping_provider_id, tracking_code, shipped_at, delivered_at, shipping_status,
@@ -333,6 +333,7 @@ export const API = {
                     shippingStatus: o.shipping_status || '',
                     shippedAt:      o.shipped_at || null,
                     deliveredAt:    o.delivered_at || null,
+                    cancelReason:   o.cancel_reason || '',
                     note:           o.note || '',
                     createdAt:      o.created_at,
                     updatedAt:      o.updated_at,

@@ -171,7 +171,6 @@ render:async(ctx)=>{if(ctx.kind==='staff-copilot')return renderStaffCopilot(ctx)
                     send.onclick = submit; form.addEventListener('submit', event => { event.preventDefault(); submit(); });
                     form.append(mode,label, input,mediaRoot, message, send); composer.append(form);
                     const resolve=el('button','Kết thúc hội thoại','admin-btn admin-btn-secondary');resolve.type='button';resolve.onclick=()=>window.PawpalStaffChatResolution.open({conversationId:id,onSaved:()=>go('tab-support-queue')});composer.append(resolve);
-                    if(PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle')){const complaint=el('button','Tạo khiếu nại','admin-btn admin-btn-secondary');complaint.type='button';complaint.onclick=()=>PawpalStaffComplaintCreate.open({conversationId:id});composer.append(complaint);}
                 }
                 return true;return true;},
 rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.includes('work.chat.handle'),render:(ctx)=>{const {el,go,read,kind,row,options}=ctx;

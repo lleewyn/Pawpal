@@ -196,6 +196,7 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                     id,
                     order_code,
                     order_status,
+                    cancel_reason,
                     shipping_status,
                     shipping_fee_snapshot,
                     receiver_name_snapshot,

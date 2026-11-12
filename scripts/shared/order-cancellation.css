@@ -1,0 +1,40 @@
+.pawpal-order-action {
+    font-family: Inter, system-ui, sans-serif;
+    color: #203A2C;
+    overscroll-behavior: contain;
+}
+.pawpal-order-action h3 { color: #236B48; }
+.pawpal-order-action .btn-cta,
+.pawpal-order-action .btn-danger-outline,
+.pawpal-order-action .btn-green-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-height: 36px;
+    padding: 9px 16px;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    background: #EEF5F1;
+    color: #236B48 !important;
+    font: 600 13px/1.4 Inter, system-ui, sans-serif;
+    box-shadow: none;
+    transform: none !important;
+    cursor: pointer;
+}
+.pawpal-order-action .btn-cta,
+.pawpal-order-action .btn-danger-outline {
+    background: #236B48;
+    border-color: #236B48;
+    color: #fff !important;
+}
+.pawpal-order-action .btn-cta:hover,
+.pawpal-order-action .btn-danger-outline:hover {
+    background: #1D593C;
+    border-color: #1D593C;
+    box-shadow: none;
+}
+.pawpal-order-action .btn-green-outline:hover { background: #DCEEE2; box-shadow: none; }
+.pawpal-order-action button:focus-visible { outline: 2px solid #236B48; outline-offset: 3px; }
+.pawpal-order-action button:disabled { opacity: .6; cursor: wait; }
+.pawpal-order-action textarea { border-radius: 9px; border: 1px solid #ECF2EE; }

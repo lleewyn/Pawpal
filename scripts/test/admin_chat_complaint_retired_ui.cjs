@@ -1,0 +1,25 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+ const page=await browser.newPage({viewport:{width:1440,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/*',r=>{const u=new URL(r.request().url()),file=path.join(process.cwd(),u.pathname);if(u.hostname==='localhost'&&u.pathname.endsWith('.css')&&fs.existsSync(file))return r.fulfill({contentType:'text/css',body:fs.readFileSync(file)});return r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'});});
+ await page.goto('http://localhost/');
+ const styles='<link rel="stylesheet" href="/pages/admin/admin.css"><link rel="stylesheet" href="/pages/admin/admin-components.css"><link rel="stylesheet" href="/pages/admin/admin-typography.css">';
+ await page.setContent(styles+'<link rel="stylesheet" href="/pages/admin/modules/chatbot/chatbot.css"><link rel="stylesheet" href="/pages/admin/modules/chatbot/chatbot-v8.css">'+fs.readFileSync('pages/admin/modules/chatbot/chatbot.html','utf8'));
+ await page.evaluate(()=>{document.body.className='admin-body';window.setInterval=()=>1;window.getSupabaseClient=()=>null;window.PawpalChatbot={state:{liveLoaded:true,liveConversations:[],currentConversation:null},loadInboxSummary:async()=>{},showToast(){}};});
+ await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js','utf8')});
+ await page.click('#btnChatActionsDots');assert.ok(await page.locator('#chatActionsMenuWrap').evaluate(e=>e.classList.contains('open')));
+ assert.equal(await page.locator('#btnConvertToTicket,#convertTicketModalOverlay').count(),0);
+ assert.deepEqual(await page.locator('#chatActionsDropdown button').allTextContents(),['Tặng điểm Pawpoint','Chuyển cấp Quản lý','Hoàn tất ca chat']);
+ const staffSource=fs.readFileSync('pages/admin/modules/chatbot/chatbot.js','utf8');assert.ok(!staffSource.includes('PawpalStaffComplaintCreate.open'));
+ const dir='docs/verification/admin-chat-complaint-retired';fs.mkdirSync(dir,{recursive:true});await page.screenshot({path:dir+'/chat-menu.png'});
+ await page.setContent(styles+'<link rel="stylesheet" href="/pages/admin/modules/complaints/complaints.css">'+fs.readFileSync('pages/admin/modules/complaints/complaints.html','utf8'));
+ await page.evaluate(()=>{document.body.className='admin-body';document.getElementById('createTicketModalOverlay').classList.add('active');});
+ assert.equal(await page.locator('#btnSaveCreateTicket').textContent(),'Tạo khiếu nại');assert.ok(await page.locator('#createTicketModalForm').isVisible());
+ await page.screenshot({path:dir+'/complaints-create-kept.png'});
+ await page.evaluate(()=>{window.PawpalAdminAccess={isStaff:()=>true,isAdmin:()=>false,state:{user:{permissions:['work.complaint.handle']}}};window.getSupabaseClient=()=>{throw Error('Unexpected database call');};});
+ await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/complaints/complaints.js','utf8')});
+ await page.evaluate(()=>PawpalStaffComplaintCreate.open({conversationId:'10000000-0000-4000-8000-000000000001'}));
+ assert.equal(await page.locator('#staffComplaintCreateModal').count(),0);assert.deepEqual(errors,[]);
+ console.log('PASS actual Chatbot menu/events: no create button/modal, staff entry removed, direct chat-origin opener blocked; central complaint form retained. Local UI proof, no business writes.');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

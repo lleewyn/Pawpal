@@ -2,8 +2,8 @@
 import {onGuestAccountChange} from './guest-account-state.mjs';
 import {ensureGuestSessionBoundary} from './guest-session-boundary.mjs';
 const base = '/api/customer/guest/';
-const actions = new Set(['context', 'lookup', 'phone-lookup', 'pets', 'profile-read', 'profile-update', 'booking-staff-response', 'booking-slots', 'booking-hold', 'booking-release', 'booking-quote', 'booking-create', 'booking-receipt', 'order-quote', 'order-create', 'order-receipt']);
-const writes = new Set(['pets', 'profile-update', 'booking-staff-response', 'booking-hold', 'booking-release', 'booking-create', 'order-create']);
+const actions = new Set(['context', 'lookup', 'phone-lookup', 'pets', 'profile-read', 'profile-update', 'booking-staff-response', 'booking-slots', 'booking-hold', 'booking-release', 'booking-quote', 'booking-create', 'booking-receipt', 'order-quote', 'order-create', 'order-receipt', 'order-cancel']);
+const writes = new Set(['pets', 'profile-update', 'booking-staff-response', 'booking-hold', 'booking-release', 'booking-create', 'order-create', 'order-cancel']);
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class GuestCommerceError extends Error {

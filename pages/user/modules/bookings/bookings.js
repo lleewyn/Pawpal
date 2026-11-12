@@ -4,6 +4,7 @@ import { cancelCustomerBooking, quoteCustomerBookingMove, moveCustomerBooking } 
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 import { parseVietnamDateTimeInput, vietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
 import {staffRequestLabel} from '/scripts/shared/booking-staff-request.mjs';
+import {mountBookingCancellationReasons} from '/scripts/shared/booking-cancellation.mjs';
 
 
 
@@ -512,38 +513,40 @@ export function openBookingCancelModal(booking, onSaved) {
     document.getElementById('quickCancelBookingModal')?.remove();
     const modal = document.createElement('dialog');
     modal.id = 'quickCancelBookingModal';
-    modal.style.cssText = 'position:fixed;inset:0;margin:auto;width:540px;max-width:92vw;padding:26px 30px;border:1px solid #ECF2EE;border-radius:9px;color:#203A2C;background:#fff;';
+    modal.style.cssText = 'position:fixed;inset:0;margin:auto;width:540px;max-width:92vw;max-height:92vh;overflow:auto;overscroll-behavior:contain;padding:26px 30px;border:1px solid #ECF2EE;border-radius:9px;color:#203A2C;background:#fff;';
     modal.innerHTML = `<form onsubmit="return false;" style="display:grid;gap:16px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
         <h3 style="margin:0;color:#236B48;font-size:20px;">Hủy lịch hẹn</h3>
         <button type="button" class="btn-green-outline" data-close-modal="quickCancelBookingModal">Đóng</button>
       </div>
       <p style="margin:0;">Hủy lịch <strong>${escapeHtml(booking.serviceName || booking.service)}</strong> của <strong>${escapeHtml(booking.petName)}</strong>?</p>
-      <div><label for="bookingCancelReason" class="form-label">Lý do hủy <span style="color:#DC2626;">*</span></label>
-        <textarea id="bookingCancelReason" class="form-control" rows="3" maxlength="2000" required style="border-radius:9px;"></textarea>
-      </div>
+      <div id="bookingCancelReasons"></div>
       <p id="bookingCancelError" role="alert" style="margin:0;color:#DC2626;" hidden></p>
       <div style="display:flex;justify-content:flex-end;gap:12px;">
         <button type="button" class="btn-green-outline" data-close-modal="quickCancelBookingModal">Giữ lịch</button>
         <button type="button" class="btn-cta" id="quickConfirmCancelBtn">Xác nhận hủy</button>
       </div>
     </form>`;
+    const readReason=mountBookingCancellationReasons(modal.querySelector('#bookingCancelReasons'));
     document.body.appendChild(modal);
     modal.querySelector('form').addEventListener('submit',e=>e.preventDefault());
+    const clearReasonError=()=>{modal.querySelector('#bookingCancelError').hidden=true;};
+    modal.querySelector('#bookingCancelReasons').addEventListener('change',clearReasonError);
+    modal.querySelector('#bookingCancelReasons').addEventListener('input',clearReasonError);
     modal.querySelectorAll('[data-close-modal]').forEach(button=>button.addEventListener('click',()=>modal.close()));
     modal.addEventListener('click',e=>{const r=modal.getBoundingClientRect();if(e.target===modal&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))modal.close();});
     modal.addEventListener('close',()=>modal.remove(),{once:true});
     const requestId=crypto.randomUUID();
     modal.querySelector('#quickConfirmCancelBtn').addEventListener('click',async e=>{
         const button=e.currentTarget;if(button.disabled)return;
-        const reason=modal.querySelector('#bookingCancelReason'),error=modal.querySelector('#bookingCancelError');
+        const reason=readReason(),error=modal.querySelector('#bookingCancelError');
         error.hidden=true;
-        if(!reason.value.trim()){error.textContent='Vui lòng nhập lý do hủy lịch.';error.hidden=false;reason.focus();return;}
+        if(!reason){error.textContent='Vui lòng chọn lý do hủy lịch và nhập nội dung nếu chọn lý do cá nhân khác.';error.hidden=false;modal.querySelector('#bookingCancelReason:not([hidden]), input[type="radio"]')?.focus();return;}
         button.disabled=true;
         try{
             const db=window.getSupabaseClient?.() || window.SupabaseClient;
             const user=window.getCurrentUser?.() || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-            await cancelCustomerBooking(db,user,booking,reason.value,requestId);
+            await cancelCustomerBooking(db,user,booking,reason,requestId);
             if (user) {
                 user.cancelCount = (Number(user.cancelCount) || 0) + 1;
                 try { localStorage.setItem('pawpal_current_user', JSON.stringify(user)); } catch (_) {}

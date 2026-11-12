@@ -93,11 +93,13 @@ function initFab(){
   const attach=$('fabChatAttachBtn');if(attach){attach.hidden=identity==='guest';attach.disabled=identity==='guest'||busy||closed;}
   input.readOnly=Boolean(busy&&mediaDraft?.count()||recovery?.mediaAssetIds?.length&&submission?.phase==='failed');
   const button=$('fabHandoverBtn');if(button){button.textContent=status==='waiting_agent'?'Hỏi lại trợ lý':'Gặp chuyên viên';button.disabled=busy||['agent_handling','resolved','closed','completed','blocked'].includes(status);}
+  messages.querySelectorAll('.fab-answer-unhelpful').forEach(button=>button.disabled=busy||status!=='bot_handling');
  }
  function setMode(){
   syncControls();
   const labels={bot_handling:'Hỗ trợ tự động',waiting_agent:'Đang chờ nhân viên',agent_handling:'Nhân viên đang hỗ trợ',resolved:'Đã hoàn tất',closed:'Đã đóng',completed:'Đã hoàn tất',blocked:'Tạm khóa'};
   notify(labels[status]||'Đang xử lý');$('fabChatTitleText').textContent='PawPal hỗ trợ';
+  const handoffNotice=$('fabHandoffNotice');if(handoffNotice){handoffNotice.hidden=!['waiting_agent','agent_handling'].includes(status);handoffNotice.textContent=status==='agent_handling'?'CSKH đã tiếp nhận cuộc trò chuyện.':'Đã chuyển cuộc trò chuyện sang chờ CSKH tiếp nhận.';}
  }
  function remember(){if(active)sessionStorage.setItem('pawpal_chat_active_'+identity,active);}
  function render(){
@@ -125,8 +127,8 @@ function initFab(){
    }else{const content=document.createElement('div');content.className='fab-message-content';content.style.whiteSpace='pre-wrap';
     const value=String(row.content||'');let start=0;
     if(row.sender_type==='bot')for(const match of value.matchAll(/\[([^\]\n]{1,100})\]\((\/[^\s)]{1,200})\)/g)){
-     const safe=/^\/(?:booking(?:\?service=[0-9a-f-]{36})?|product-detail\?id=[0-9a-f-]{36}|shop|services|return-guest|contact|login|user#(?:orders|bookings|pets|loyalty|diary|support|(?:order-detail|booking-detail)\?id=[0-9a-f-]{36}))$/.test(match[2]);if(!safe)continue;
-     content.append(document.createTextNode(value.slice(start,match.index)));const a=document.createElement('a');a.className='fab-answer-link';a.textContent=match[1];a.href=match[2];if(match[2]==='/login'&&identity==='guest')a.onclick=event=>{event.preventDefault();membershipPrompt();};content.append(a);start=match.index+match[0].length;
+     const safe=/^\/(?:booking(?:\?service=[0-9a-f-]{36})?|product-detail\?id=[0-9a-f-]{36}|shop|services|return-guest|contact|login|user#(?:orders|bookings|pets|loyalty|diary|support|support-create|(?:order-detail|booking-detail)\?id=[0-9a-f-]{36}))$/.test(match[2]);if(!safe)continue;
+     content.append(document.createTextNode(value.slice(start,match.index)));const a=document.createElement('a');a.className='fab-answer-link';a.textContent=match[1];a.href=match[2];if(match[2]==='/login'&&identity==='guest')a.onclick=event=>{event.preventDefault();membershipPrompt();};if(match[2]==='/user#support-create')a.onclick=openSupportRequest;content.append(a);start=match.index+match[0].length;
     }
     content.append(document.createTextNode(value.slice(start)));div.append(content);
     if(row.content_partial){const b=document.createElement('button');b.type='button';b.className='fab-chat-read-btn';b.textContent='Đọc tiếp tin nhắn';
@@ -137,6 +139,10 @@ function initFab(){
        live.content+=data.content;live.content_offset=data.next_offset;live.content_partial=data.hasMore;render();
       }catch(error){showError(error);b.disabled=false;}};div.append(b);
     }
+   }
+   if(row.sender_type==='bot'&&status==='bot_handling'&&row===rows.filter(r=>r.sender_type==='bot').at(-1)){
+    const feedback=document.createElement('button');feedback.type='button';feedback.className='fab-chat-read-btn fab-answer-unhelpful';feedback.textContent='Chưa hữu ích, gặp CSKH';
+    feedback.disabled=busy;feedback.onclick=()=>{if(!busy&&status==='bot_handling')$('fabHandoverBtn')?.click();};div.append(feedback);
    }
    messages.append(div);
    for(const item of row.media||[])mediaSlots.push({root:div,asset:item.asset_id});
@@ -201,6 +207,11 @@ function initFab(){
  }
  $('fabAiBtn')?.addEventListener('click',()=>{panel.classList.toggle('open');if(panel.classList.contains('open')){input.focus();read().catch(showError);}});
  $('fabChatClose')?.addEventListener('click',()=>panel.classList.remove('open'));
+ function openSupportRequest(event){
+  panel.classList.remove('open');
+  if(identity==='guest'){event.preventDefault();sessionStorage.setItem('pawpal_redirect_after_login','/user#support-create');location.assign('/login');}
+ }
+ $('fabSupportRequestLink')?.addEventListener('click',openSupportRequest);
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&panel.classList.contains('open')){panel.classList.remove('open');$('fabAiBtn')?.focus();}});
  $('fabChatExpand')?.addEventListener('click',()=>panel.classList.toggle('expanded'));
  $('fabChatNewBtn')?.addEventListener('click',fresh);$('fabHistoryNewBtn')?.addEventListener('click',fresh);$('fabChatHistoryBtn')?.addEventListener('click',()=>{historyPage=0;history();});

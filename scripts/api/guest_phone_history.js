@@ -9,6 +9,7 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
  const cookieName=production?'__Host-pawpal_lookup':'pawpal_lookup_dev';
  const sign=value=>crypto.createHmac('sha256',secret).update('guest-phone-history:v1\0'+value).digest('base64url');
  const signReturn=value=>crypto.createHmac('sha256',secret).update('guest-return:v1\0'+value).digest('base64url');
+ const signCancel=value=>crypto.createHmac('sha256',secret).update('guest-cancel:v1\0'+value).digest('base64url');
  const digest=value=>crypto.createHash('sha256').update(value).digest('hex');
  function setCookie(res,value){
   res.setHeader('Set-Cookie',`${cookieName}=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=300${production?'; Secure':''}`);
@@ -58,9 +59,21 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
   const mockOtp=previewDemo || (demo&&!production&&/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(req.headers.origin||''));
   const mode=mockOtp?'preview':'supabase';
   try{
-   if(Object.keys(body).some(k=>!['phone','challengeId','code','returnRequest'].includes(k)))throw Error('Yêu cầu tra cứu không hợp lệ.');
+   if(Object.keys(body).some(k=>!['phone','challengeId','code','returnRequest','cancelRequest'].includes(k)))throw Error('Yêu cầu tra cứu không hợp lệ.');
    const phone=normalizeVietnamPhone(body.phone);
    if(previewDemo&&!otpTestPhones.includes(phone))throw Error('Số điện thoại này chưa được cấu hình để thử OTP giả lập.');
+   if(body.cancelRequest){
+    if(body.challengeId!=null||body.code!=null||body.returnRequest)throw Error('Yêu cầu hủy không hợp lệ.');
+    const {id,orderId,grant,reason,expectedUpdatedAt}=body.cancelRequest;
+    const uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
+    const match=typeof grant==='string'&&/^(\d{10})\.([A-Za-z0-9_-]{43})$/.exec(grant);
+    if(!uuid.test(id||'')||!uuid.test(orderId||'')||!match||Number(match[1])<=now()/1000||
+     !crypto.timingSafeEqual(Buffer.from(match[2]),Buffer.from(signCancel(orderId+'.'+phone+'.'+match[1]))))throw Error('Quyền hủy đã hết hạn. Vui lòng tra cứu lại.');
+    if(typeof reason!=='string'||reason.trim().length<2||reason.length>1000||typeof expectedUpdatedAt!=='string'||!Number.isFinite(Date.parse(expectedUpdatedAt)))throw Error('Vui lòng chọn lý do và tải lại thông tin đơn.');
+    const result=await admin.rpc('cancel_verified_guest_sales_order',{p_phone:phone,p_request_id:id,p_order_id:orderId,p_expected_updated_at:expectedUpdatedAt,p_action:'cancel',p_details:{reason:reason.trim()}});
+    if(result.error)throw Error(result.error.message==='sales_refund_required'?'Đơn đã thu tiền. Vui lòng liên hệ cửa hàng để hoàn tiền trước khi hủy.':'Chưa hủy được đơn. Vui lòng tra cứu lại trạng thái mới nhất.');
+    return res.json({success:true});
+   }
    if(body.returnRequest){
     if(body.challengeId!=null||body.code!=null)throw Error('Yêu cầu đổi trả không hợp lệ.');
     const {id,orderId,grant,reason,lines}=body.returnRequest;
@@ -129,7 +142,7 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
     }
     await store.finish(body.challengeId,claimId,true);finished=true;
     let bookingQuery=admin.from('appointment').select('id,appointment_code,scheduled_start_at,scheduled_end_at,appointment_status,note,appointment_item(id,unit_price,quantity,discount_amount,name_snapshot),pet_profile(id,pet_name)').eq('customer_id',c.id);
-    let orderQuery=admin.from('sales_order').select('id,order_code,order_status,shipping_fee_snapshot,receiver_name_snapshot,receiver_phone_snapshot,street_address_snapshot,province_snapshot,created_at,updated_at,delivered_at,note,sales_order_detail(id,quantity,unit_price,discount_amount,product_name_snapshot,sku_snapshot,product_variant(id,product(id,product_media(image_url,is_thumbnail))))').eq('customer_id',c.id);
+    let orderQuery=admin.from('sales_order').select('id,order_code,order_status,cancel_reason,shipping_fee_snapshot,receiver_name_snapshot,receiver_phone_snapshot,street_address_snapshot,province_snapshot,created_at,updated_at,delivered_at,note,sales_order_detail(id,quantity,unit_price,discount_amount,product_name_snapshot,sku_snapshot,product_variant(id,product(id,product_media(image_url,is_thumbnail))))').eq('customer_id',c.id);
     if(c.snapshotOnly){
      bookingQuery=bookingQuery.eq('booking_contact_phone',phone);
      orderQuery=orderQuery.eq('receiver_phone_snapshot',phone);
@@ -142,7 +155,7 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
     if(bookings.error||orders.error||profile.error)throw Error('Đã xác thực nhưng chưa tải được lịch sử. Vui lòng thử lại.');
     res.setHeader('Set-Cookie',`${cookieName}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${production?'; Secure':''}`);
     const expires=Math.floor(now()/1000)+900;
-    const verifiedOrders=(orders.data||[]).map(row=>({...row,return_grant:expires+'.'+signReturn(row.id+'.'+phone+'.'+expires)}));
+    const verifiedOrders=(orders.data||[]).map(row=>({...row,return_grant:expires+'.'+signReturn(row.id+'.'+phone+'.'+expires),cancel_grant:expires+'.'+signCancel(row.id+'.'+phone+'.'+expires)}));
     return res.json({success:true,customer:{name:profile.data?.full_name||'',phone},bookings:bookings.data||[],orders:verifiedOrders});
    }finally{if(!finished)await store.finish(body.challengeId,claimId,false);}
   }catch(error){return res.status(error.smsUnavailable?503:400).json({success:false,message:error.message==='invalid_phone'?'Vui lòng nhập số điện thoại hợp lệ.':error.message||'Chưa tra cứu được. Vui lòng thử lại.'});}

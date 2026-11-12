@@ -138,8 +138,8 @@ export function initSupportTickets() {
             const counts=window.PawPalSupport.getPageInfo?.().counts;
             if(window.PawPalSupport.isPaged?.() && counts){for(const [node,key]of [[countAll,'all'],[countPending,'pending'],[countProcessing,'processing'],[countCompleted,'completed']])if(node)node.textContent=`(${counts[key]||0})`;return;}
             const allCount = tickets.length;
-            const pendingCount = tickets.filter(t => !t.status || t.status === 'pending').length;
-            const processingCount = tickets.filter(t => ['processing','waiting_customer','waiting_manager_approval','reprocessing'].includes(t.status)).length;
+            const pendingCount = tickets.filter(t => !t.status || ['pending','new','waiting_customer','waiting_manager_approval','reprocessing'].includes(t.status)).length;
+            const processingCount = tickets.filter(t => t.status === 'processing').length;
             const completedCount = tickets.filter(t => t.status === 'completed' || t.status === 'resolved' || t.status === 'closed').length;
 
             if (countAll) countAll.textContent = `(${allCount})`;
@@ -238,9 +238,9 @@ export function initSupportTickets() {
 
             let tickets = allTickets;
             if (currentFilter === 'pending') {
-                tickets = allTickets.filter(t => !t.status || t.status === 'pending');
+                tickets = allTickets.filter(t => !t.status || ['pending','new','waiting_customer','waiting_manager_approval','reprocessing'].includes(t.status));
             } else if (currentFilter === 'processing') {
-                tickets = allTickets.filter(t => ['processing','waiting_customer','waiting_manager_approval','reprocessing'].includes(t.status));
+                tickets = allTickets.filter(t => t.status === 'processing');
             } else if (currentFilter === 'completed') {
                 tickets = allTickets.filter(t => t.status === 'completed' || t.status === 'resolved' || t.status === 'closed');
             }
@@ -266,7 +266,7 @@ export function initSupportTickets() {
             tickets.forEach(ticket => {
                 let statusLabel = 'Chờ xử lý';
                 let statusClass = 'badge-status-pending';
-                if (ticket.status === 'processing' || ticket.status === 'waiting_manager_approval') {
+                if (ticket.status === 'processing') {
                     statusLabel = 'Đang giải quyết';
                     statusClass = 'badge-status-processing';
                 } else if (ticket.status === 'waiting_customer') {
@@ -412,7 +412,7 @@ export function initSupportTickets() {
 
             let statusLabel = 'Chờ xử lý';
             let statusClass = 'badge-status-pending';
-            if (ticket.status === 'processing' || ticket.status === 'waiting_manager_approval') {
+            if (ticket.status === 'processing') {
                 statusLabel = 'Đang giải quyết';
                 statusClass = 'badge-status-processing';
             } else if (ticket.status === 'waiting_customer') {

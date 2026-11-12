@@ -1,0 +1,48 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+ const p=await browser.newPage({viewport:{width:1365,height:950}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
+ await p.route('**/*',r=>{const u=new URL(r.request().url());if(u.hostname!=='localhost')return r.abort();
+  if(u.pathname.endsWith('/evidence-media.mjs'))return r.fulfill({contentType:'text/javascript',body:'export const createEvidenceMediaEditor=()=>({reset:async()=>{},prepare:async()=>[],close(){},saved(){}});'});
+  if(u.pathname.endsWith('/evidence-gallery.mjs'))return r.fulfill({contentType:'text/javascript',body:'export const createEvidenceGallery=({root})=>({render:async()=>{root.textContent="Chưa có tệp đính kèm.";},clear(){}});'});
+  const f=path.join(process.cwd(),u.pathname);if(fs.existsSync(f)&&fs.statSync(f).isFile())return r.fulfill({contentType:f.endsWith('.css')?'text/css':'text/javascript',body:fs.readFileSync(f)});return r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'});
+ });
+ await p.goto('http://localhost/');await p.setContent('<link rel="stylesheet" href="/pages/admin/admin.css"><link rel="stylesheet" href="/pages/admin/admin-components.css"><link rel="stylesheet" href="/pages/admin/admin-typography.css"><link rel="stylesheet" href="/pages/admin/modules/complaints/complaints.css">'+fs.readFileSync('pages/admin/modules/complaints/complaints.html','utf8'));
+ await p.evaluate(()=>{document.body.className='admin-body';window.isManager=false;window.calls=[];window.row={id:'10000000-0000-4000-8000-000000000001',ticket_code:'KIEM-THU',subject:'Phiếu kiểm thử giao diện',status:'new',updated_at:'2026-11-13T00:00:00Z',order_id:'20000000-0000-4000-8000-000000000001',appointment_id:null,linked_order_code:'DON-KIEM-THU',approved_amount:null,customer_id:'customer'};
+  window.PawpalAdminAccess={isStaff:()=>!isManager,isAdmin:()=>isManager,state:{user:{id:'staff',permissions:['work.complaint.handle']}}};
+  window.auditRows=[];window.historyRows=[];
+  window.getSupabaseClient=()=>({rpc:async(name,args)=>{calls.push({name,args});return {data:name==='get_staff_workspace'?{items:[structuredClone(row)]}:name==='act_admin_complaint'?row.id:[]};},from(table){const q={select:()=>q,eq:()=>q,order:()=>q,range:async()=>({data:table==='audit_log'?auditRows:table==='support_ticket_message'?historyRows:[]})};return q;}});
+ });
+ await p.addScriptTag({content:fs.readFileSync('pages/admin/modules/complaints/complaints.js','utf8')});
+ const open=()=>p.evaluate(()=>PawpalStaffComplaintProposal.open({ticketId:row.id}));
+ await open();const option=p.locator('#staffComplaintProposaloption');await option.selectOption('explain');await p.locator('#staffComplaintProposalnote').fill('Giải thích rõ cho khách');await p.click('#staffComplaintProposalSave');
+ assert.equal(await p.evaluate(()=>calls.filter(c=>c.name==='act_admin_complaint').at(-1).args.p_action),'resolve');
+ await open();await option.selectOption('refund');await p.locator('#staffComplaintProposalamount').fill('23000');await p.locator('#staffComplaintProposalnote').fill('Đề xuất hoàn tiền, chờ quản lý duyệt');
+ const dir='docs/verification/complaint-execution-gate';fs.mkdirSync(dir,{recursive:true});await p.screenshot({animations:'disabled',path:dir+'/staff-proposal.png'});
+ await p.click('#staffComplaintProposalSave');assert.equal(await p.evaluate(()=>calls.filter(c=>c.name==='act_admin_complaint').at(-1).args.p_action),'propose');
+ await p.evaluate(()=>{row.status='processing';row.resolved_by='manager';row.approved_amount=23000;});await open();assert.deepEqual(await option.locator('option').evaluateAll(es=>es.filter(e=>e.value).map(e=>e.value)),['start_resolution']);
+ await option.selectOption('start_resolution');await p.locator('#staffComplaintProposalnote').fill('Phương án hoàn tiền 23.000 đ đã được duyệt. Chúng tôi bắt đầu thực hiện.');await p.screenshot({animations:'disabled',path:dir+'/staff-notify-start.png'});
+ await p.click('#staffComplaintProposalSave');assert.equal(await p.evaluate(()=>calls.filter(c=>c.name==='act_admin_complaint').at(-1).args.p_action),'start_resolution');
+ await p.evaluate(()=>{row.resolved_by=null;row.approved_amount=null;row.status='new';row.proposal_rejected_at='2026-11-13T00:00:00Z';});await open();assert.deepEqual(await option.locator('option').evaluateAll(es=>es.filter(e=>e.value).map(e=>e.value)),['reject']);
+ await p.locator('#staffComplaintProposalModal [data-close-modal]').first().click();
+ await p.evaluate(()=>{
+  window.t={id:'KN-KIEM-THU',rawId:row.id,status:'waiting_manager_approval',customerId:'customer',title:'Đề nghị hoàn tiền cho sản phẩm bị hỏng',customerName:'Khách kiểm thử',phone:'0950000001',orderId:'DON-KIEM-THU',staffAssigned:'Nhân viên kiểm thử',createdAt:'13/11/2026 09:00',content:'Khách phản ánh sản phẩm bị hỏng khi nhận hàng và đề nghị hoàn tiền.',priority:'medium',resolution_type:'refund',resolution_note:'Đề xuất hoàn tiền 23.000 đ sau khi kiểm tra minh chứng.',approved_amount:null};
+  window.PawpalComplaints={getDbClient:getSupabaseClient,subtabs:{},state:{serviceComplaints:[],orderComplaints:[t],currentTicketId:t.id,isLoaded:true,cachedOrders:[{id:row.order_id,order_code:t.orderId,customer_id:'customer'}],cachedAppointments:[],cachedStaff:[]},escapeHtml:v=>String(v??''),formatDateTime:String,updateBreadcrumb(){},errorMessage:e=>e.message};
+ });
+ await p.addScriptTag({content:fs.readFileSync('pages/admin/modules/complaints/subtabs/tab-complaint-detail.js','utf8')});
+ await p.evaluate(()=>PawpalComplaints.subtabs.detail.renderTicketDetail(t.id));assert.equal(await p.locator('#managerApprovalPanel').isVisible(),false);
+ await p.evaluate(()=>{window.isManager=true;document.querySelectorAll('.complaints-module .subtab-content').forEach(node=>node.classList.toggle('active',node.id==='subtab-tab-complaint-detail'));});
+ await p.evaluate(()=>PawpalComplaints.subtabs.detail.renderTicketDetail(t.id));assert.equal(await p.locator('#btnManagerApproveProposal').isDisabled(),true);
+ await p.evaluate(()=>{
+  auditRows=[{id:'proposal',created_at:'2026-11-13T02:05:00Z',description:JSON.stringify({action:'propose',details:{option:'refund',amount:23000,note:'Đề xuất hoàn tiền sau khi kiểm tra minh chứng'}})}];
+  historyRows=[{id:'public-reply',sender_type:'staff',content:'Chúng tôi đã nhận thông tin và đang chờ quản lý duyệt phương án.',is_internal:false,created_at:'2026-11-13T02:00:00Z'}];
+ });
+ await p.evaluate(()=>PawpalComplaints.subtabs.detail.renderTicketDetail(t.id));assert.equal(await p.locator('#managerApprovalPanel').isVisible(),true);assert.equal(await p.locator('#btnManagerApproveProposal').isEnabled(),true);
+ await p.waitForFunction(()=>!document.querySelector('#complaintAttachments').textContent.includes('Đang tải'));
+ const noteBox=await p.locator('#complaintApprovalNote').boundingBox(),noteLabel=await p.locator('label[for="complaintApprovalNote"]').boundingBox();assert.ok(noteBox.y>=noteLabel.y+noteLabel.height);assert.ok(noteBox.width>300);
+ assert.equal(await p.locator('#subtab-tab-complaint-services').isVisible(),false);
+ await p.locator('#complaintDetailData').screenshot({animations:'disabled',path:dir+'/manager-approval.png'});
+ await p.evaluate(()=>{t.status='processing';t.resolved_by='manager';t.approved_amount=23000;});await p.evaluate(()=>PawpalComplaints.subtabs.detail.renderTicketDetail(t.id));assert.equal(await p.locator('#btnStartComplaintResolution').isVisible(),true);assert.equal(await p.locator('#btnCompleteComplaint').isVisible(),false);
+ await p.evaluate(()=>t.resolution_started_at='2026-11-13T01:00:00Z');await p.evaluate(()=>PawpalComplaints.subtabs.detail.renderTicketDetail(t.id));assert.equal(await p.locator('#btnStartComplaintResolution').isVisible(),false);assert.equal(await p.locator('#btnCompleteComplaint').isVisible(),true);
+ assert.deepEqual(errors,[]);console.log('PASS actual staff/manager UI: self-decide explain, propose refund, approved notification/start, rejection-only followup, manager-only approval and completion gated by start; local screenshots, isolated transport.');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
