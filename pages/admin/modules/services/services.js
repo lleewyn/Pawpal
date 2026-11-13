@@ -1826,7 +1826,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         if(!Array.isArray(data?.exportRows))throw Error('invalid_booking_export');
         return data.exportRows;
     };
-    async function loadServicesData({force=false,forceDirectory=force,forceStaff=force,prefetch=true,filters,page,render=true}={}){
+    async function loadServicesData({force=false,forceDirectory=force,forceStaff=force,prefetch=false,filters,page,render=true}={}){
         const db=window.getSupabaseClient?.()||window.SupabaseClient,state=PawpalServices.state;
         if(!db){state.loadError='Không thể kết nối cơ sở dữ liệu.';return false;}
         if(force)window.PawpalDataStore?.invalidate('services:bookings*');

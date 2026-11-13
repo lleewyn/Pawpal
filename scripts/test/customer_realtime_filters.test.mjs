@@ -28,3 +28,28 @@ test('review media uses ownership RLS and a disposed view never refreshes',async
  await new Promise(resolve=>setTimeout(resolve,220));
  assert.equal(refreshed,0);assert.equal(removed,1);
 });
+
+test('hidden event bursts defer reads until visible and cleanup cancels queued work',async()=>{
+ const doc=new EventTarget();doc.hidden=true;globalThis.document=doc;
+ let callback,reads=0,removed=0;
+ const channel={on(_type,_filter,fn){callback=fn;return this;},subscribe(){}};
+ const stop=watchCustomerTables({channel:()=>channel,removeChannel:()=>removed++},'owner',['sales_order'],()=>reads++);
+ try{
+  for(let i=0;i<100;i++)callback();
+  await new Promise(r=>setTimeout(r,350));assert.equal(reads,0);
+  doc.hidden=false;doc.dispatchEvent(new Event('visibilitychange'));
+  await new Promise(r=>setTimeout(r,350));assert.equal(reads,1);
+  callback();stop();await new Promise(r=>setTimeout(r,350));assert.equal(reads,1);assert.equal(removed,1);
+ }finally{stop();delete globalThis.document;}
+});
+
+test('slow reads never overlap; changes arriving mid-read trigger one trailing refresh',async()=>{
+ let callback,release,reads=0;
+ const channel={on(_type,_filter,fn){callback=fn;return this;},subscribe(){}};
+ const stop=watchCustomerTables({channel:()=>channel,removeChannel(){}},'owner',['review'],async()=>{reads++;if(reads===1)await new Promise(r=>release=r);});
+ try{
+  callback();await new Promise(r=>setTimeout(r,350));assert.equal(reads,1);
+  for(let i=0;i<50;i++)callback();await new Promise(r=>setTimeout(r,350));assert.equal(reads,1);
+  release();await new Promise(r=>setTimeout(r,350));assert.equal(reads,2);
+ }finally{stop();}
+});

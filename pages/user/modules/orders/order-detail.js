@@ -20,7 +20,9 @@ async function loadOrderDetail(){
     const version=++loadVersion,user=JSON.parse(localStorage.getItem('pawpal_current_user')||'null');
     if(!user?.id||user.is_temporary){showError('Vui lòng đăng nhập để xem đơn hàng.');return;}
     try{
-        const orders=await API.getUserOrders(user),id=orderId();
+        const id=orderId();
+        if(!id){showError('Không tìm thấy mã đơn hàng.');return;}
+        const orders=await API.getUserOrders(user,{id});
         if(version!==loadVersion || user.id!==ownerId())return;
         currentOrder=orders.find(o=>[o.id,o._supabaseId].includes(id));
         if(!currentOrder){showError('Không tìm thấy đơn hàng thuộc tài khoản của bạn.');return;}

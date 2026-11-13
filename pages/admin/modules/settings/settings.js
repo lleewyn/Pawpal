@@ -771,23 +771,25 @@
     PawpalSettings.fetchAuditData = fetchAuditData;
 
     let loadSettingsPromise = null;
+    let loadingSettingGroups = new Set();
+    function resourcesForSettingsTab(tab = sessionStorage.getItem('pawpal_admin_settings_subtab')) {
+        return ({'tab-banner-promos':['promos','system'],'tab-content-management':['content'],'tab-system-config':['system'],'tab-audit-logs':['audit','system']})[tab] || ['promos','system'];
+    }
 
     async function loadSettingsModuleData(options = {}) {
         options={...options,force:Boolean(options.force||settingsNeedFresh)};
         settingsNeedFresh=false;
-        if (loadSettingsPromise && !options.force) {
-            return loadSettingsPromise;
-        }
+        const requestedGroups = options.resources || resourcesForSettingsTab();
+        if (loadSettingsPromise && !options.force && requestedGroups.every(key=>loadingSettingGroups.has(key))) return loadSettingsPromise;
+        while (loadSettingsPromise) await loadSettingsPromise;
+        loadingSettingGroups = new Set(requestedGroups);
 
         loadSettingsPromise = (async () => {
             try {
                 PawpalSettings.state.loadError = null;
-                const results=await Promise.allSettled([
-                    fetchPromosData(options),
-                    fetchContentData(options),
-                    fetchSystemConfigData(options),
-                    fetchAuditData(options)
-                ]);
+                const loaders = {promos:fetchPromosData,content:fetchContentData,system:fetchSystemConfigData,audit:fetchAuditData};
+                const resources = requestedGroups;
+                const results=await Promise.allSettled(resources.filter(key=>loaders[key]).map(key=>loaders[key](options)));
                 if(results.some(r=>r.status==='rejected'||r.value===null))PawpalSettings.state.loadError='Không tải được đầy đủ dữ liệu cấu hình. Hãy kiểm tra quyền và kết nối rồi tải lại.';
                 PawpalSettings.state.isLoaded = true;
             } catch (err) {
@@ -796,6 +798,7 @@
             }
         })().finally(() => {
             loadSettingsPromise = null;
+            loadingSettingGroups.clear();
         });
 
         return loadSettingsPromise;
@@ -824,18 +827,26 @@
     // -------------------------------------------------------------
     // SUPABASE REALTIME CHANNEL SYNC (CFG-09: Debounce 300ms)
     // -------------------------------------------------------------
+    const pendingSettingGroups = new Set();
     function debouncedLoadSettings(table) {
+        const group = ({banner:'promos',voucher:'promos',notification:'promos',blog_post:'content',audit_log:'audit',pawpal_setting:'system'})[table];
+        for (const key of group ? [group] : ['promos','content','system','audit']) pendingSettingGroups.add(key);
+        const refresh = () => {
+            const visibleResources = resourcesForSettingsTab();
+            const resources = [...pendingSettingGroups].filter(key=>visibleResources.includes(key));
+            if (!resources.length) return;
+            resources.forEach(key=>pendingSettingGroups.delete(key));
+            return loadSettingsModuleData({ force: true, resources });
+        };
         if (window.PawpalDataStore?.handleRealtimeChange) {
             window.PawpalDataStore.handleRealtimeChange({
                 moduleName: 'Cấu hình',
-                invalidatePattern: table ? `settings:${table}:*` : 'settings:*',
-                onActiveRefresh: async () => {
-                    await loadSettingsModuleData({ force: true });
-                },
+                invalidatePattern: group ? `settings:${group}*` : 'settings:*',
+                onActiveRefresh: refresh,
                 debounceMs: 300
             });
         } else if (sessionStorage.getItem('pawpal_admin_active_module') === 'Cấu hình') {
-            loadSettingsModuleData({ force: true });
+            if (!document.hidden) refresh();
         }
     }
 
@@ -897,7 +908,7 @@
     });
 
     // CFG-10: Scope chuyển subtab chuẩn chỉ trong phạm vi các tab thuộc phân hệ Cấu hình
-    function switchSubtab(tabId) {
+    async function switchSubtab(tabId) {
         if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Cấu hình') return;
         if (!VALID_SETTINGS_TABS.includes(tabId)) return;
 
@@ -916,6 +927,8 @@
             window.location.hash = `#${tabId}`;
         }
         sessionStorage.setItem('pawpal_admin_settings_subtab', tabId);
+        await loadSettingsModuleData({resources:resourcesForSettingsTab(tabId)});
+        if (sessionStorage.getItem('pawpal_admin_settings_subtab') !== tabId) return;
 
         // Xóa deep breadcrumb vì Cấu hình không có cấp con
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
@@ -964,7 +977,6 @@
     // KHỞI ĐỘNG MODULE & EXPORT LIFECYCLE CHUẨN
     // -------------------------------------------------------------
     PawpalSettings.init = async function() {
-        await loadSettingsModuleData();
         const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
         const savedTab = sessionStorage.getItem('pawpal_admin_settings_subtab');
         let initTab = 'tab-banner-promos';
@@ -973,7 +985,7 @@
         } else if (VALID_SETTINGS_TABS.includes(savedTab)) {
             initTab = savedTab;
         }
-        switchSubtab(initTab);
+        await switchSubtab(initTab);
     };
 
     setupSettingsRealtimeChannel();

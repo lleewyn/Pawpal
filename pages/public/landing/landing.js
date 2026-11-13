@@ -72,7 +72,7 @@
             try {
                 services = (await window.DataLoader.loadServices()).sort((a,b) => ({spa:0,hotel:1,taxi:2}[a.category] ?? 3)-({spa:0,hotel:1,taxi:2}[b.category] ?? 3) || a.serviceId.localeCompare(b.serviceId));
                 if (!grid.isConnected) return;
-                renderServices();refreshSaved();await loadReviews();
+                renderServices();refreshSaved();
             } catch (_) {
                 if (!grid.isConnected) return;
                 grid.innerHTML = '<p class="home-state">Chưa tải được dịch vụ. <button type="button" id="home-retry">Thử lại</button></p>';
@@ -81,12 +81,14 @@
             }
         }
         async function loadReviews() {
-            const service = services.find(s => s.reviewCount > 0);
+            let service;
+            try { service = (services.length ? services : await window.DataLoader.loadServices()).find(s => s.reviewCount > 0); }
+            catch (_) { $('#v4-quote').textContent='Chưa tải được đánh giá dịch vụ.';return; }
             let reviews = [], index = 0;
             const buttons = root.querySelectorAll('[data-v4-review]');
             buttons.forEach(b => b.disabled = true);
             if (service) {
-                try { reviews = (await window.DataLoader.getServiceReviews(service.id)).filter(r => r.text.trim()); }
+                try { reviews = (await window.DataLoader.getServiceReviews(service.id, {includeImages:false})).filter(r => r.text.trim()); }
                 catch (_) { if (grid.isConnected) $('#v4-quote').textContent = 'Chưa tải được đánh giá dịch vụ.'; return; }
             }
             if (!grid.isConnected) return;
@@ -102,8 +104,7 @@
         async function loadTiers() {
             const host = $('#home-tiers');
             try {
-                const {data,error} = await window.getSupabaseClient().from('membership_tier').select('id,tier_name,discount_percent,description,is_active').eq('is_active',true).order('minimum_expenditure').limit(12);
-                if (error) throw error;
+                const data = await window.DataLoader.loadMembershipTiers();
                 if (!grid.isConnected) return;
                 const tone = name => ({bac:'silver',vang:'gold',kimcuong:'diamond'})[String(name).normalize('NFD').replace(/[\u0300-\u036f\s]/g,'').toLowerCase().replace(/^hang/,'')];
                 const tiers=data.filter(t=>tone(t.tier_name));
@@ -119,8 +120,7 @@
             let slides = [];
             let current = 0;
             try {
-                const {data,error} = await window.getSupabaseClient().from('banner').select('id,title,image_url,image_media_asset_id,link,start_date,end_date,status').in('status',['active','dang_hien_thi','ACTIVE']).order('display_order').limit(8);
-                if (error) throw error;
+                const data = await window.DataLoader.loadHomeBanners();
                 const now = Date.now();
                 for (const b of data || []) {
                     let url,link;
@@ -155,16 +155,7 @@
             next.onclick = ()=>{current=(current+1)%slides.length;show();};
             show();
 
-            // Fetch only the next slide, after the visible banner has finished.
-            if (slides.length > 1) {
-                const preloadNext = () => {
-                    if(!grid.isConnected)return;
-                    const pre = new Image();pre.fetchPriority='low';pre.sizes=imgEl.sizes;
-                    if(slides[1].srcset)pre.srcset=slides[1].srcset;
-                    pre.src=slides[1].src;
-                };
-                imgEl.decode().then(()=>setTimeout(preloadNext,1500)).catch(()=>{});
-            }
+            // Other banners load only when selected; avoid unused media authorization reads.
         }
         const entries = [...root.querySelectorAll('.pj-entry')];
         const photo = $('#pj-active-photo'), original = photo.src;
@@ -179,9 +170,11 @@
         const observer = new IntersectionObserver(entries => entries.forEach(entry=>{
             if(!entry.isIntersecting)return;
             observer.unobserve(entry.target);
-            if(entry.target===grid)loadServices();else loadTiers();
+            if(entry.target===grid)loadServices();
+            else if(entry.target.id==='reviews')loadReviews();
+            else loadTiers();
         }),{rootMargin:'200px'});
-        observer.observe(grid);observer.observe($('#home-tiers'));
+        observer.observe(grid);observer.observe($('#home-tiers'));observer.observe($('#reviews'));
     }
     document.addEventListener('DOMContentLoaded',init);
     document.addEventListener('page_navigated',init);

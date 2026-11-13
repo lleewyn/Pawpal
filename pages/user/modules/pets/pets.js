@@ -5,6 +5,7 @@ import { getPets, savePets, deletePet as deletePetService, restorePet as restore
 import { API } from '/scripts/api/api.js';
 import {validatePetImage} from '/scripts/shared/customer-pet-media.mjs';
 import {petArchiveCountdown,petArchiveCanRestore} from '/scripts/shared/pet-archive.mjs';
+import {watchCustomerTables} from '/scripts/shared/customer-realtime.mjs';
 
 const DEFAULT_PET_AVATARS = {
     dog: '/assets/images/publics/dogcute3.jpg',
@@ -77,16 +78,12 @@ let isInitRunning = false;
 let editingPetId = null;
 let editingPetSnapshot = null;
 let newPetRequestId = null;
-let petChannel;
-let petRefreshTimer;
+let stopPetRealtime;
 let archiveClock;
 export function dispose() {
-    clearTimeout(petRefreshTimer);
+    stopPetRealtime?.();stopPetRealtime=null;
     clearInterval(archiveClock);
     window.closeDeleteModal?.();
-    const db = window.getSupabaseClient?.() || window.SupabaseClient;
-    if (petChannel) db?.removeChannel(petChannel);
-    petChannel = null;
 }
 
 function getPetRouteParams() {
@@ -145,17 +142,13 @@ export async function initPetProfilePage() {
         const db = window.getSupabaseClient?.() || window.SupabaseClient;
         const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (db?.channel && user?.id) {
-            if(petChannel)db.removeChannel(petChannel);
-            petChannel = db.channel('own-pet-list');
-            petChannel.on('postgres_changes',{event:'*',schema:'public',table:'pet_profile',filter:`customer_id=eq.${user.id}`},()=>{
-                clearTimeout(petRefreshTimer);
-                petRefreshTimer = setTimeout(()=>{
+            stopPetRealtime?.();
+            stopPetRealtime = watchCustomerTables(db,user.id,['pet_profile'],async()=>{
                     // Form đang mở giữ nguyên bản nháp và phiên bản; chỉ cập nhật danh sách.
                     if (!document.getElementById('petListView')?.classList.contains('d-none')) {
-                        renderPetGrids().catch(()=>showToast('Không thể cập nhật danh sách bé cưng.', 'error'));
+                        await renderPetGrids().catch(()=>showToast('Không thể cập nhật danh sách bé cưng.', 'error'));
                     }
-                },250);
-            }).subscribe();
+            });
         }
 
         // Điền form sau khi dữ liệu thật từ Supabase đã tải xong.

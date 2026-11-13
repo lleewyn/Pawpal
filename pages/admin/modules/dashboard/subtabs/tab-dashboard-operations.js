@@ -281,7 +281,7 @@
     }
 
     async function flushReload() {
-        if (!state.root || document.hidden) return;
+        if (!state.root?.isConnected || document.hidden || !state.root.getClientRects().length) return;
         if (state.inFlight) { await state.inFlight; if (state.dirty.size) flushReload(); return; }
         const names = [...state.dirty];
         state.dirty.clear();
@@ -329,7 +329,7 @@
     function startPolling() {
         if (state.pollTimer || !state.root) return;
         state.pollTimer = setInterval(() => {
-            if (!document.hidden) requestReload(allResourceNames());
+            if (!document.hidden && state.root?.isConnected && state.root.getClientRects().length) requestReload(allResourceNames());
         }, POLL_INTERVAL_MS);
     }
 
@@ -902,6 +902,8 @@
         on(document, 'visibilitychange', () => {
             if (!document.hidden && state.dirty.size) flushReload();
         });
+        on(window, 'admin:module-show', () => { if(state.dirty.size) flushReload(); });
+        on(window, 'admin:subtab-change', () => { if(state.dirty.size) flushReload(); });
         bindTooltip();
     }
 

@@ -104,14 +104,14 @@ export const API = {
         }
     },
 
-    async getUserBookings(userOrId) {
+    async getUserBookings(userOrId, { id = null } = {}) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userOrId) throw new Error('Vui lòng đăng nhập để tải dữ liệu.');
         try {
             const customerId = await resolveCustomerId(db, userOrId);
             if (!customerId) return [];
 
-            const { data, error } = await db
+            let query = db
                 .from('appointment')
                 .select(`
                     id, appointment_code, scheduled_start_at, scheduled_end_at, check_in_time, check_out_time,
@@ -131,11 +131,15 @@ export const API = {
                 `)
                 .eq('customer_id', customerId)
                 .order('scheduled_start_at', { ascending: false });
+            if (id) query = query.eq(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id) ? 'id' : 'appointment_code', id);
+            const { data, error } = await query;
                 
             if (error) {
                 console.error('[API] Supabase getUserBookings error:', error.message);
                 throw error;
             }
+
+            if (!data?.length) return [];
 
             const summaryResult = await db.rpc('own_service_booking_summary');
             if (summaryResult.error) throw summaryResult.error;
@@ -226,14 +230,14 @@ export const API = {
         return this.getUserBookings(userOrId);
     },
 
-    async getUserOrders(userOrId) {
+    async getUserOrders(userOrId, { id = null } = {}) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userOrId) throw new Error('Vui lòng đăng nhập để tải dữ liệu.');
         try {
             const customerId = await resolveCustomerId(db, userOrId);
             if (!customerId) return [];
 
-            const { data, error } = await db
+            let query = db
                 .from('sales_order')
                 .select(`
                     id, order_code, order_status, cancel_reason, note, created_at, updated_at,
@@ -250,11 +254,15 @@ export const API = {
                 `)
                 .eq('customer_id', customerId)
                 .order('created_at', { ascending: false });
+            if (id) query = query.eq(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id) ? 'id' : 'order_code', id);
+            const { data, error } = await query;
 
             if (error) { 
                 console.error('[API] Supabase getUserOrders error:', error.message);
                 throw error;
             }
+
+            if (!data?.length) return [];
 
             const mapOrderStatus = normalizeOrderStatus;
 

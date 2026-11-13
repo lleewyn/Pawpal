@@ -3,12 +3,13 @@
  */
 
 import { API } from '/scripts/api/api.js';
+import {watchCustomerTables} from '/scripts/shared/customer-realtime.mjs';
 
 let currentFilter = 'all';
 let wishlistRenderVersion = 0;
-let wishlistChannel=null;
+let stopWishlistRealtime;
 let wishlistChannelKey='';
-export function dispose() { ++wishlistRenderVersion; if(wishlistChannel)(window.getSupabaseClient?.() || window.SupabaseClient)?.removeChannel(wishlistChannel);wishlistChannel=null;wishlistChannelKey='';document.removeEventListener('wishlist_updated',renderWishlist);document.removeEventListener('auth_state_changed',renderWishlist); }
+export function dispose() { ++wishlistRenderVersion;stopWishlistRealtime?.();stopWishlistRealtime=null;wishlistChannelKey='';document.removeEventListener('wishlist_updated',renderWishlist);document.removeEventListener('auth_state_changed',renderWishlist); }
 function esc(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function getCurrentUser() {
@@ -99,8 +100,11 @@ async function getWishlistItems() {
     const finalProductIds=serverWishlist.products || [];
     const finalServiceIds=serverWishlist.services || [];
 
-    const allProducts = await loadAllProductsSafely();
-    const allServices = await loadAllServicesSafely();
+    // Empty groups need no catalogue read. Keep saved identities server-owned.
+    const [allProducts, allServices] = await Promise.all([
+        finalProductIds.length ? loadAllProductsSafely() : [],
+        finalServiceIds.length ? loadAllServicesSafely() : []
+    ]);
 
     const seenProducts = new Set();
     const products = finalProductIds.map((item) => {
@@ -161,13 +165,12 @@ async function getWishlistItems() {
 }
 
 function syncWishlistChannel(owner,id){
+    if(getCurrentUser()?.id!==owner)return;
     const key=owner+':'+id;if(wishlistChannelKey===key)return;
     const db=window.getSupabaseClient?.() || window.SupabaseClient;
-    if(wishlistChannel)db.removeChannel(wishlistChannel);
-    wishlistChannelKey=key;wishlistChannel=db.channel('wishlist-'+crypto.randomUUID());
-    wishlistChannel.on('postgres_changes',{event:'*',schema:'public',table:'wishlist',filter:'customer_id=eq.'+owner},renderWishlist);
-    if(id)for(const table of ['wishlist_product','wishlist_service'])wishlistChannel.on('postgres_changes',{event:'*',schema:'public',table,filter:'wishlist_id=eq.'+id},renderWishlist);
-    wishlistChannel.subscribe();
+    stopWishlistRealtime?.();wishlistChannelKey=key;
+    stopWishlistRealtime=watchCustomerTables(db,owner,id?['wishlist','wishlist_product','wishlist_service']:['wishlist'],renderWishlist,
+        {filters:{wishlist_product:'wishlist_id=eq.'+id,wishlist_service:'wishlist_id=eq.'+id}});
 }
 
 async function removeFromWishlist(type, id) {

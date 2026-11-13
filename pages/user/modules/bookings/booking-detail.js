@@ -141,7 +141,7 @@ async function loadBookingDetail(bookingId, preserveReview = false) {
 
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
 
-    const remoteBookings = currentUser ? await API.getUserBookings(currentUser) : [];
+    const remoteBookings = currentUser ? await API.getUserBookings(currentUser, {id:bookingId}) : [];
     if(!valid())return;
 
     currentBooking = (remoteBookings || []).find(b => [b.id,b._id,b._supabaseId,b.code,b.appointment_code].some(id=>id!=null&&String(id)===String(bookingId)));

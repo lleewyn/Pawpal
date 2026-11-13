@@ -16,6 +16,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
             + fs.readFileSync('pages/admin/modules/pets/pets.html', 'utf8') + '</div>');
         await page.evaluate(() => {
             window._pawpalAdminLoaded = true;
+            window.PawpalAdminAccess={isAdmin:()=>true,isStaff:()=>false,state:{user:{id:'paging-actor',permissions:[]}}};
             sessionStorage.setItem('pawpal_admin_active_module', 'Thú cưng');
             window.petCalls = [];
             window.petHandlers = {};

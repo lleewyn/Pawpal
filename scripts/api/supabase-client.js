@@ -26,25 +26,62 @@
         const nativeFetch = window.fetch.bind(window);
         const restPrefix = `${projectUrl.replace(/\/$/, '')}/rest/v1/`;
         const inFlightReads = new Map();
+        const readRpcNames = new Set([
+            'public_service_directory','public_service_reviews','customer_shop_catalog','customer_shop_options',
+            'customer_profile_snapshot','own_customer_avatar','own_sales_order_totals','own_order_thumbnails',
+            'own_service_booking_summary','own_service_booking_logistics','own_service_booking_execution','own_service_reviews',
+            'own_support_tickets','own_loyalty_snapshot','get_staff_workspace','get_staff_customer_context',
+            'admin_customer_page','admin_pawpoint_page','admin_pet_page','get_admin_service_booking_page',
+            'get_admin_sales_order_page','get_admin_sales_product_page','get_admin_sales_stock_history_page','get_admin_sales_review_page',
+            'admin_complaint_page','admin_staff_directory_page','admin_staff_assessment_page','admin_staff_list_page',
+            'admin_chat_rule_page_bounded','admin_chat_canned_page'
+        ]);
+        const readQueue = [];
+        let activeReads = 0;
+        // Bound read bursts across modules without delaying writes or Auth requests.
+        function readFetch(input, init) {
+            return new Promise((resolve, reject) => {
+                const task = {start() {
+                    init.signal?.removeEventListener('abort', abort);
+                    if(init.signal?.aborted){reject(init.signal.reason || new DOMException('Aborted','AbortError'));pump();return;}
+                    activeReads++;
+                    Promise.resolve().then(()=>nativeFetch(input,init)).then(async response=>{
+                        // Hold the slot through body transfer, not just response headers.
+                        await response.clone().arrayBuffer();return response;
+                    }).then(resolve,reject).finally(()=>{activeReads--;pump();});
+                }};
+                function abort() {
+                    const index=readQueue.indexOf(task);
+                    if(index>=0)readQueue.splice(index,1);
+                    reject(init.signal.reason || new DOMException('Aborted','AbortError'));
+                }
+                if(init.signal?.aborted){abort();return;}
+                init.signal?.addEventListener('abort',abort,{once:true});
+                readQueue.push(task);pump();
+            });
+        }
+        function pump() { while(activeReads<4 && readQueue.length)readQueue.shift().start(); }
         let quotaResponse = null;
         let quotaRetryAt = 0;
 
         return async function bandwidthAwareFetch(input, init = {}) {
             const url = typeof input === 'string' ? input : input instanceof URL ? input.href : '';
             const method = (init.method || 'GET').toUpperCase();
-            // Không gộp thao tác ghi, Auth, RPC POST hoặc request có AbortSignal riêng.
-            if (!url.startsWith(restPrefix) || !['GET', 'HEAD'].includes(method)) {
+            const rpcName = url.startsWith(restPrefix + 'rpc/') ? url.slice((restPrefix + 'rpc/').length).split('?')[0] : '';
+            const readRpc = method === 'POST' && readRpcNames.has(rpcName);
+            // Only explicitly reviewed read RPCs may share a POST. All writes bypass this path.
+            if (!url.startsWith(restPrefix) || (!['GET', 'HEAD'].includes(method) && !readRpc)) {
                 return nativeFetch(input, init);
             }
             if (quotaResponse && Date.now() < quotaRetryAt) return quotaResponse.clone();
 
             const headers = [...new Headers(init.headers).entries()].sort(([a], [b]) => a.localeCompare(b));
-            const key = JSON.stringify([method, url, headers, init.credentials, init.cache]);
+            const key = JSON.stringify([method, url, headers, init.credentials, init.cache, readRpc ? init.body : null]);
             const canShare = !init.signal;
             if (canShare && inFlightReads.has(key)) return (await inFlightReads.get(key)).clone();
 
             const request = (async () => {
-                const response = await nativeFetch(input, init);
+                const response = await readFetch(input, init);
                 if (response.status === 402) {
                     const message = await response.clone().text();
                     if (/egress|bandwidth/i.test(message)) {

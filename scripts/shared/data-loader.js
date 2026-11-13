@@ -6,6 +6,63 @@ const dataCache = {
     blogCategories: null
 };
 
+// Only published, account-independent presentation data belongs in this cache.
+// Checkout, stock checks and customer/admin records continue to read live data.
+const publicReadCache = new Map(), publicReadPending = new Map();
+const PUBLIC_READ_TTL = { services: 60000, homeBanners: 30000, membershipTiers: 120000 };
+async function cachedPublicRead(name, loader) {
+    const ttl = PUBLIC_READ_TTL[name];
+    if (!ttl) throw new Error('Unsupported public cache');
+    const project = window.SupabaseClientConfig?.url || window.SupabaseClient?.supabaseUrl || location.origin;
+    const key = 'pawpal_public_v1:' + project + ':' + name;
+    const clone = value => JSON.parse(JSON.stringify(value));
+    let entry = publicReadCache.get(key);
+    if (!entry) {
+        try { entry = JSON.parse(sessionStorage.getItem(key)); } catch (_) {}
+    }
+    if (entry && Number.isFinite(entry.at) && entry.at <= Date.now() && Date.now() - entry.at < ttl && Array.isArray(entry.data)) {
+        publicReadCache.set(key, entry);
+        return clone(entry.data);
+    }
+    publicReadCache.delete(key);
+    try { sessionStorage.removeItem(key); } catch (_) {}
+    if (!publicReadPending.has(key)) {
+        const request = Promise.resolve().then(loader).then(data => {
+            if (!Array.isArray(data)) throw new Error('Invalid public data');
+            const next = { at: Date.now(), data };
+            // Bound browser storage and never persist a failed request or stale fallback.
+            const serialized = JSON.stringify(next);
+            if (serialized.length <= 250000) {
+                publicReadCache.set(key, next);
+                try { sessionStorage.setItem(key, serialized); } catch (_) {}
+            }
+            return data;
+        }).finally(() => publicReadPending.delete(key));
+        publicReadPending.set(key, request);
+    }
+    return clone(await publicReadPending.get(key));
+}
+
+function loadHomeBanners() {
+    return cachedPublicRead('homeBanners', async () => {
+        const {data,error} = await window.getSupabaseClient().from('banner')
+            .select('id,title,image_url,image_media_asset_id,link,start_date,end_date,status')
+            .in('status',['active','dang_hien_thi','ACTIVE']).order('display_order').limit(8);
+        if (error) throw error;
+        return data || [];
+    });
+}
+
+function loadMembershipTiers() {
+    return cachedPublicRead('membershipTiers', async () => {
+        const {data,error} = await window.getSupabaseClient().from('membership_tier')
+            .select('id,tier_name,discount_percent,description,is_active').eq('is_active',true)
+            .order('minimum_expenditure').limit(12);
+        if (error) throw error;
+        return data || [];
+    });
+}
+
 function parseCSV(csvText) {
     const data = [];
     let row = [];
@@ -329,6 +386,10 @@ async function loadComponent(placeholderId, componentPath) {
 }
 
 async function loadServices() {
+    return cachedPublicRead('services', loadServicesUncached);
+}
+
+async function loadServicesUncached() {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) throw new Error('Chưa kết nối được dữ liệu dịch vụ.');
     const {data, error} = await db.rpc('public_service_directory');
@@ -440,12 +501,12 @@ async function getProductReviews(productId) {
     }
 }
 
-async function getServiceReviews(serviceId) {
+async function getServiceReviews(serviceId, { includeImages = true } = {}) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) throw new Error('Chưa kết nối được đánh giá dịch vụ.');
     const {data, error} = await db.rpc('public_service_reviews', {p_service:serviceId});
     if (error) throw error;
-    const reviewImages=await loadPublishedReviewImages(db,(data||[]).map(r=>r.id));
+    const reviewImages=includeImages ? await loadPublishedReviewImages(db,(data||[]).map(r=>r.id)) : new Map();
     return (data || []).map(r => ({
         id:r.id,name:'Khách đã sử dụng dịch vụ',rating:Number(r.rating),date:r.created_at,
         text:r.review_content || '',images:reviewImages.get(r.id)||[],sellerReply:r.shop_reply || '',helpfulCount:0
@@ -556,6 +617,8 @@ async function loadBanners() {
 }
 
 window.DataLoader = {
+    loadHomeBanners,
+    loadMembershipTiers,
     loadProducts,
     getProductById,
     getProductsByCategory,

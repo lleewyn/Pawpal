@@ -807,8 +807,9 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
     window.PawpalOrders.fetchVouchersData = fetchVouchersData;
     window.PawpalOrders.fetchOrdersData = fetchOrdersData;
 
-    async function syncOrdersAndProductsFromSupabase({ force = false, resources = ['list', 'products', 'vouchers'] } = {}) {
-        const selected = new Set(resources);
+    async function syncOrdersAndProductsFromSupabase({ force = false, resources = null } = {}) {
+        const activeTab = sessionStorage.getItem('pawpal_admin_order_subtab');
+        const selected = new Set(resources || [activeTab === 'tab-order-products' ? 'products' : activeTab === 'tab-order-promos' ? 'vouchers' : 'list']);
         if (force) {
             window.PawpalDataStore?.invalidate('orders:stock-logs*');
             window.PawpalDataStore?.invalidate('orders:customers*');

@@ -4,6 +4,7 @@
  */
 import { getPets } from '/scripts/api/petService.js?v=20261001-dedup';
 import { createCareMediaReader } from '/scripts/shared/care-media-reader.mjs';
+import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 let diaryMediaReader;
 
 let liveDiaryState = {};
@@ -11,18 +12,14 @@ let currentPetId = null;
 let currentPetObject = null;
 let currentSessionId = null;
 let diaryHashHandler = null;
-let diaryChannel = null;
-let diaryRefreshTimer;
+let stopDiaryRealtime;
 
 // user.js nạp lại module mỗi lần vào trang; gỡ listener cũ để không vẽ đè nhật ký của lần trước
 export function dispose() {
     diaryMediaReader?.clear();
     if (diaryHashHandler) window.removeEventListener('hashchange', diaryHashHandler);
     diaryHashHandler = null;
-    clearTimeout(diaryRefreshTimer);
-    const db = window.getSupabaseClient?.() || window.SupabaseClient;
-    if (diaryChannel) db?.removeChannel(diaryChannel);
-    diaryChannel = null;
+    stopDiaryRealtime?.();stopDiaryRealtime=null;
 }
 
 function getTrackerLogs() { return liveDiaryState; }
@@ -134,21 +131,13 @@ export async function initPetDiary() {
     };
     window.addEventListener('hashchange', diaryHashHandler);
     const db = window.getSupabaseClient?.() || window.SupabaseClient;
-    if (db?.channel) {
-        diaryChannel = db.channel('own-pet-diary');
-        for (const table of ['care_log','care_log_media','appointment','pet_profile','pet_weight_history']) {
-            diaryChannel.on('postgres_changes', {event:'*',schema:'public',table}, () => {
-                clearTimeout(diaryRefreshTimer);
-                diaryRefreshTimer = setTimeout(() => {
-                    if (currentPetId && window.location.hash.includes('diary')) {
-                        selectAndLoadPet(currentPetId,currentSessionId,{allowDefaultFallback:false})
-                            .catch(() => showToast('Không thể cập nhật nhật ký. Vui lòng tải lại.', 'error'));
-                    }
-                },250);
-            });
+    const owner = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id;
+    stopDiaryRealtime = watchCustomerTables(db, owner, ['care_log','care_log_media','appointment','pet_profile','pet_weight_history'], async () => {
+        if(currentPetId && window.location.hash.includes('diary')) {
+            try { await selectAndLoadPet(currentPetId,currentSessionId,{allowDefaultFallback:false}); }
+            catch (_) { showToast('Không thể cập nhật nhật ký. Vui lòng tải lại.', 'error'); }
         }
-        diaryChannel.subscribe();
-    }
+    });
 
     const petIdFromUrl = getRouteParam('id') || getRouteParam('pet') || getRouteParam('petId');
     const sessionIdFromUrl = getRouteParam('sessionId') || getRouteParam('session');

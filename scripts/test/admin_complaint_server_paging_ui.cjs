@@ -56,9 +56,10 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
                 removeChannel() {}
             });
         });
+        await page.evaluate(()=>{window.PawpalAdminAccess={isAdmin:()=>true,isStaff:()=>false,state:{user:{id:'paging-actor',permissions:[]}}};});
         await page.addScriptTag({ content: fs.readFileSync('pages/admin/admin-data-store.js', 'utf8') });
         let core = fs.readFileSync('pages/admin/modules/complaints/complaints.js', 'utf8');
-        core = core.slice(0, core.lastIndexOf("    if (document.readyState === 'loading')")) + '})();';
+        core = core.slice(0, core.lastIndexOf("    if (document.readyState === 'loading')")) + '})();})();';
         await page.addScriptTag({ content: core });
         await page.evaluate(() => PawpalComplaints.loadComplaintsModuleData({ force: true }));
         for (const name of ['services', 'orders']) await page.addScriptTag({ content: fs.readFileSync(`pages/admin/modules/complaints/subtabs/tab-complaint-${name}.js`, 'utf8') });
