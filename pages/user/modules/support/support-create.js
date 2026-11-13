@@ -21,28 +21,35 @@ export async function initSupportCreate() {
     const onAuth=()=>{dispose();button.disabled=true;error.textContent='Phiên tài khoản đã thay đổi. Vui lòng mở lại yêu cầu.';};
     document.addEventListener('auth_state_changed',onAuth);
     disposeCreate=()=>{closed=true;editor.close();document.removeEventListener('auth_state_changed',onAuth);};
-    const results=await Promise.allSettled([API.getUserBookings(user),API.getUserOrders(user)]);
-    if(!form.isConnected||closed)return;
-    const bookings=results[0].status==='fulfilled'?results[0].value:[],orders=results[1].status==='fulfilled'?results[1].value:[];
     const showType=()=>{get('serviceContextSection').classList.toggle('d-none',type.value!=='service');get('orderContextSection').classList.toggle('d-none',type.value!=='order');error.textContent='';};
     type.addEventListener('change',showType);
-    function autocomplete(searchId,valueId,optionsId,rows,label,onSelect=()=>{}) {
+    function autocomplete(searchId,valueId,optionsId,kind,label,onSelect=()=>{}) {
         const input=get(searchId),value=get(valueId),options=get(optionsId);
         const close=()=>{options.hidden=true;input.setAttribute('aria-expanded','false');};
         const select=row=>{input.value=label(row);value.value=row._supabaseId;close();onSelect(row);};
-        const render=()=>{options.replaceChildren();const matches=rows.filter(row=>label(row).toLocaleLowerCase('vi').includes(input.value.trim().toLocaleLowerCase('vi')));
-            for(const row of matches){const choice=document.createElement('button');choice.type='button';choice.className='btn text-start w-100';choice.setAttribute('role','option');choice.textContent=label(row);choice.onclick=()=>select(row);options.appendChild(choice);}
-            if(!matches.length){const empty=document.createElement('p');empty.className='p-3 m-0';empty.textContent='Không có lựa chọn phù hợp.';options.appendChild(empty);}options.hidden=false;input.setAttribute('aria-expanded','true');};
+        let version=0;
+        const render=async()=>{const expected=++version,query=input.value.trim();
+            await new Promise(resolve=>setTimeout(resolve,250));if(expected!==version||closed)return;
+            options.replaceChildren();
+            try{const matches=await API.getContextChoices(user,kind,{query});
+                if(expected!==version||closed||!form.isConnected||document.activeElement!==input)return;
+                for(const row of matches){const choice=document.createElement('button');choice.type='button';choice.className='btn text-start w-100';choice.setAttribute('role','option');choice.textContent=label(row);choice.onclick=()=>{version++;select(row);};options.appendChild(choice);}
+                if(!matches.length){const empty=document.createElement('p');empty.className='p-3 m-0';empty.textContent='Không có lựa chọn phù hợp.';options.appendChild(empty);}
+            }catch(e){if(expected!==version||closed)return;options.textContent='Chưa tải được giao dịch. Vui lòng thử lại.';}
+            options.hidden=false;input.setAttribute('aria-expanded','true');};
         input.onfocus=render;input.oninput=()=>{value.value='';onSelect(null);render();};
         input.onkeydown=e=>{if(e.key==='Escape')close();if(e.key==='ArrowDown'){e.preventDefault();options.querySelector('button')?.focus();}if(e.key==='Enter'){e.preventDefault();options.querySelector('button')?.click();}};
         form.addEventListener('click',e=>{if(!input.parentElement.contains(e.target))close();});return select;
     }
-    const selectBooking=autocomplete('serviceBookingSearch','serviceBookingSelect','serviceBookingOptions',bookings,b=>`${b.id} — ${b.serviceName} — ${b.petName}`,b=>{get('serviceSummaryBox').textContent=b?`${b.date} ${b.timeStart || ''}`:'';});
-    const selectOrder=autocomplete('orderSearch','orderSelect','orderOptions',orders,o=>`${o.id} — ${o.products?.[0]?.name || ''}`);
+    const selectBooking=autocomplete('serviceBookingSearch','serviceBookingSelect','serviceBookingOptions','bookings',b=>`${b.id} — ${b.serviceName} — ${b.petName}`,b=>{get('serviceSummaryBox').textContent=b?`${b.date} ${b.timeStart || ''}`:'';});
+    const selectOrder=autocomplete('orderSearch','orderSelect','orderOptions','orders',o=>`${o.id} — ${o.products?.[0]?.name || ''}`);
     const params=new URLSearchParams(location.hash.split('?')[1] || '');
     if(['service','order','payment','other'].includes(params.get('type')))type.value=params.get('type');showType();
-    const booking=bookings.find(b=>[b.id,b._supabaseId].includes(params.get('bookingId')));if(booking)selectBooking(booking);
-    const order=orders.find(o=>[o.id,o._supabaseId].includes(params.get('orderId')));if(order)selectOrder(order);
+    for(const [param,kind,select] of [['bookingId','bookings',selectBooking],['orderId','orders',selectOrder]]){
+        const id=params.get(param);if(!id)continue;
+        try{const rows=await API.getContextChoices(user,kind,{id});if(!closed&&form.isConnected&&rows[0])select(rows[0]);}
+        catch(e){if(!closed)error.textContent='Chưa tải được giao dịch liên quan. Vui lòng tìm lại.';}
+    }
     form.addEventListener('input',()=>{error.textContent='';});
     button.onclick=async()=>{
         if(button.disabled||closed)return;error.textContent='';

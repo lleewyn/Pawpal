@@ -6,7 +6,7 @@
     PawpalServices.subtabs = PawpalServices.subtabs || {};
 
     let currentCatalogGroup = 'spa';
-    let catalogPage=1;
+    let catalogPage=1,catalogDetailVersion=0;
     let catalogSearchTerm = '';
     let catalogFilterStatus = 'ALL';
     let currentEditingServiceSteps = [];
@@ -293,7 +293,7 @@
             const isHidden = svc.status === 'Tạm ẩn';
             const minPrice = svc.minPrice != null ? svc.minPrice.toLocaleString('vi-VN')+' đ' : 'Chưa có giá theo cân nặng';
             const groupName = svc.group === 'hotel' ? 'Pet Hotel' : (svc.group === 'taxi' ? 'Pet Taxi' : 'Spa và Grooming');
-            const stepCount = svc.steps?.length || 0;
+            const stepCount = svc.stepCount ?? svc.steps?.length ?? 0;
 
             return `
                 <tr class="${isHidden ? 'row-locked' : ''}" data-service-code="${esc(svc.code || svc.id)}">
@@ -362,7 +362,8 @@
         });
     }
 
-    function openSopDetailsModal(serviceCode) {
+    async function openSopDetailsModal(serviceCode) {
+        const version=++catalogDetailVersion;
         const servicesData = PawpalServices.state?.servicesData || [];
         const svc = servicesData.find(s => s.code === serviceCode || s.id === serviceCode);
         const modal = document.getElementById('modalViewSopDetails');
@@ -373,6 +374,8 @@
         const container = document.getElementById('sopViewerStepsList');
 
         if(!svc)return;
+        try{await PawpalServices.ensureCatalogDetail(svc);}catch(e){if(version===catalogDetailVersion)PawpalServices.showToast(e.message,'danger');return;}
+        if(version!==catalogDetailVersion)return;
         const sName = svc.name;
         const sCode = svc ? (svc.code || svc.id) : 'SPA02';
         const sGroup = svc ? (svc.group === 'hotel' ? 'Pet Hotel' : (svc.group === 'taxi' ? 'Pet Taxi' : 'Spa và Grooming')) : 'Spa và Grooming';
@@ -414,6 +417,7 @@
         availablePetSpecies=(PawpalServices.state.liveSpecies||[]).map(s=>s.species_name);
     }
     function openCreateServiceModal() {
+        catalogDetailVersion++;
         if(serviceSaving)return;
         configureCatalogForm();
         const modal = document.getElementById('modalServiceForm');
@@ -457,13 +461,16 @@
         if (card) card.scrollTop = 0;
     }
 
-    function openEditServiceModal(serviceCode) {
+    async function openEditServiceModal(serviceCode) {
+        const version=++catalogDetailVersion;
         if(serviceSaving)return;
         configureCatalogForm();
         const servicesData = PawpalServices.state?.servicesData || [];
         const svc = servicesData.find(s => s.code === serviceCode || s.id === serviceCode);
         const modal = document.getElementById('modalServiceForm');
         if (!modal||!svc) return;
+        try{await PawpalServices.ensureCatalogDetail(svc);}catch(e){if(version===catalogDetailVersion)PawpalServices.showToast(e.message,'danger');return;}
+        if(version!==catalogDetailVersion)return;
 
         const titleEl = document.getElementById('serviceFormModalTitle');
         if (titleEl) titleEl.textContent = 'Chỉnh sửa dịch vụ';

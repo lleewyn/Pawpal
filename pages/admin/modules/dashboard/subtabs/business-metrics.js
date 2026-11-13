@@ -37,6 +37,7 @@
         return result;
     }
     function rank(rows, type, sort = 'value') {
+        if(rows.every(r=>r.aggregate===true))return [...rows].sort((a,b)=>number(b[sort])-number(a[sort])||String(a.id).localeCompare(String(b.id))).slice(0,10);
         const grouped = new Map();
         const seen = new Set();
         for (const row of rows) {
@@ -109,34 +110,15 @@
     async function load(db, key, range) {
         // Validate all ranges before starting a database request, including retry paths.
         range = period(range.from, range.to);
-        const during = (query, column) => query.gte(column, range.start).lt(column, range.end);
         if (key === 'cash') return cashflow(db, range);
         if (key === 'previous') return cashflow(db, period(range.previousFrom, range.previousTo));
-        if (key === 'sources') return sources(await readAll(() => during(db.from('payment').select('id,amount,order_id,appointment_id,transaction_status').eq('transaction_status', 'succeeded'), 'succeeded_at')));
-        if (key === 'customers') return readAll(() => during(db.from('customer').select('id,registered_at'), 'registered_at'));
-        if (key === 'returning') {
-            const orders = await readAll(() => during(db.from('sales_order').select('id,customer_id,order_status').in('order_status', ['completed', 'delivered']), 'delivered_at'));
-            const appointments = await readAll(() => during(db.from('appointment').select('id,customer_id,appointment_status').eq('appointment_status', 'completed'), 'check_out_time'));
-            return returningCustomers(orders, appointments);
-        }
-        if (key === 'membership') {
-            const [tiers, members] = await Promise.all([
-                readAll(() => db.from('membership_tier').select('id,tier_name')),
-                readAll(() => db.from('customer_membership').select('customer_id,membership_tier_id'), 'customer_id')
-            ]);
-            return tiers.map(t => ({ name: t.tier_name, value: members.filter(m => m.membership_tier_id === t.id).length }));
-        }
-        if (key === 'vouchers') {
-            const rows = await readAll(() => during(db.from('voucher_redemption').select('id,discount_amount_snapshot').eq('status', 'applied'), 'redeemed_at'));
-            return { count: rows.length, discount: rows.reduce((sum, row) => sum + number(row.discount_amount_snapshot), 0) };
-        }
-        if (key === 'points') {
-            const rows = await readAll(() => during(db.from('paw_point_transaction').select('id,points'), 'created_at'));
-            return rows.reduce((sum, row) => { const value = number(row.points); sum[value >= 0 ? 'credited' : 'debited'] += Math.abs(value); return sum; }, { credited: 0, debited: 0 });
-        }
-        if (key === 'products') return readAll(() => during(db.from('sales_order_detail').select('id,product_variant_id,product_name_snapshot,quantity,unit_price,discount_amount,sales_order!inner(created_at,order_status)').in('sales_order.order_status', ['completed', 'delivered']), 'sales_order.created_at'));
-        if (key === 'services') return readAll(() => during(db.from('appointment_item').select('id,service_id,service_addon_id,name_snapshot,quantity,unit_price,discount_amount,status,appointment!inner(scheduled_start_at,appointment_status)').eq('appointment.appointment_status', 'completed').eq('status', 'completed'), 'appointment.scheduled_start_at'));
+        if (!['sources','customers','returning','membership','vouchers','points','products','services'].includes(key))throw Error('unknown_resource');
+        const {data,error}=await db.rpc('admin_business_metric',{p_key:key,p_from:range.from,p_to:range.to});
+        if(error)throw error;
+        if(data==null)throw Error('invalid_response');
+        return data;
         throw Error('unknown_resource');
     }
-    return { zone, dayKey, shift, period, totals, growth, sources, rank, bucket, readAll, cashflow, returningCustomers, load };
+    const customerCount=rows=>rows?.reduce((n,r)=>n+number(r.count??1),0);
+    return { customerCount, zone, dayKey, shift, period, totals, growth, sources, rank, bucket, readAll, cashflow, returningCustomers, load };
 });

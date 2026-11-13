@@ -38,14 +38,16 @@
         return Promise.resolve();
     }
 
+    let articleSearchTimer;
+    function loadArticlePage(page=1){
+        if(document.hidden||sessionStorage.getItem('pawpal_admin_active_module')!=='Cấu hình'||sessionStorage.getItem('pawpal_admin_settings_subtab')!=='tab-content-management')return;
+        return PawpalSettings.fetchContentData({page,filters:{query:(document.getElementById('searchArticleInput')?.value||'').trim().slice(0,200),category:document.getElementById('filterArticleCategory')?.value||'all',status:document.getElementById('filterArticleStatus')?.value||'all'}});
+    }
     function updateArticleKpis() {
         if (!PawpalSettings.state.isLoaded) return;
         const articlesList = PawpalSettings.state?.articlesList || [];
-        const total = articlesList.length;
-        const pub = articlesList.filter(a => a.status === 'published').length;
-        const draft = articlesList.filter(a => a.status === 'draft').length;
-        const hidden = articlesList.filter(a => a.status === 'hidden').length;
-        const totalViews = articlesList.reduce((sum, a) => sum + (Number(a.views) || 0), 0);
+        const stats=PawpalSettings.state.contentMeta?.stats;if(!stats)return;
+        const total=stats.total,pub=stats.published,draft=stats.draft,hidden=stats.hidden,totalViews=stats.views;
 
         const tEl = document.getElementById('statTotalArticles');
         const pEl = document.getElementById('statPublishedArticles');
@@ -79,22 +81,13 @@
 
     function getFilteredArticles() {
         const articlesList = PawpalSettings.state?.articlesList || [];
-        const keyword = (document.getElementById('searchArticleInput')?.value || '').toLowerCase().trim();
-        const catFilter = document.getElementById('filterArticleCategory')?.value || 'all';
-        const statusFilter = document.getElementById('filterArticleStatus')?.value || 'all';
-
-        return articlesList.filter(a => {
-            if (catFilter !== 'all' && a.category !== catFilter) return false;
-            if (statusFilter !== 'all' && a.status !== statusFilter) return false;
-            if (keyword && !a.title.toLowerCase().includes(keyword)) return false;
-            return true;
-        });
+        return articlesList;
     }
 
     function renderArticles() {
         const tbody = document.getElementById('articlesTableBody');
         if (!tbody) return;
-        if (PawpalSettings.state.loadError) {
+        if (PawpalSettings.state.contentLoadError) {
             delete tbody.dataset.loadingSkeleton;
             tbody.innerHTML = `<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" class="settings-table-message settings-table-message--error">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;
             return;
@@ -103,22 +96,23 @@
         delete tbody.dataset.loadingSkeleton;
 
         const filtered = getFilteredArticles();
-        const totalPages = Math.max(1, Math.ceil(filtered.length / ARTICLE_PAGE_SIZE));
+        const totalPages = Math.max(1, Math.ceil((PawpalSettings.state.contentMeta?.total||0) / ARTICLE_PAGE_SIZE));
+        currentArticlePage=PawpalSettings.state.contentMeta?.page||1;
         if (currentArticlePage > totalPages) currentArticlePage = totalPages;
         if (currentArticlePage < 1) currentArticlePage = 1;
 
-        const pageItems = filtered.slice((currentArticlePage - 1) * ARTICLE_PAGE_SIZE, currentArticlePage * ARTICLE_PAGE_SIZE);
+        const pageItems = filtered;
         const pageBar = document.querySelector('#subtab-tab-content-management .admin-pagination-bar');
         if (pageBar) {
             pageBar.querySelector('.article-page-prev')?.classList.toggle('disabled', currentArticlePage === 1);
             pageBar.querySelector('.article-page-next')?.classList.toggle('disabled', currentArticlePage === totalPages);
             const nums = pageBar.querySelector('.article-page-numbers');
             if (nums) {
-                nums.innerHTML = Array.from({ length: totalPages }, (_, i) => `<button type="button" class="pagination-btn ${i + 1 === currentArticlePage ? 'active' : ''}" data-article-page="${i + 1}">${i + 1}</button>`).join('');
+                nums.innerHTML = PawpalSettings.pageNumbers(currentArticlePage,totalPages).map(p=> `<button type="button" class="pagination-btn ${p === currentArticlePage ? 'active' : ''}" data-article-page="${p}">${p}</button>`).join('');
                 nums.querySelectorAll('[data-article-page]').forEach(btn => {
                     btn.addEventListener('click', () => {
                         currentArticlePage = Number(btn.dataset.articlePage);
-                        renderArticles();
+                        loadArticlePage(currentArticlePage);
                     });
                 });
             }
@@ -220,15 +214,15 @@
         // Lọc Bài viết
         document.getElementById('searchArticleInput')?.addEventListener('input', () => {
             currentArticlePage = 1;
-            renderArticles();
+            clearTimeout(articleSearchTimer);articleSearchTimer=setTimeout(()=>loadArticlePage(1),300);
         });
         document.getElementById('filterArticleCategory')?.addEventListener('change', () => {
             currentArticlePage = 1;
-            renderArticles();
+            loadArticlePage(1);
         });
         document.getElementById('filterArticleStatus')?.addEventListener('change', () => {
             currentArticlePage = 1;
-            renderArticles();
+            loadArticlePage(1);
         });
 
         // Nạp danh mục động
@@ -239,22 +233,22 @@
         pageBar?.querySelector('.article-page-prev')?.addEventListener('click', () => {
             if (currentArticlePage > 1) {
                 currentArticlePage--;
-                renderArticles();
+                loadArticlePage(currentArticlePage);
             }
         });
         pageBar?.querySelector('.article-page-next')?.addEventListener('click', () => {
             const filtered = getFilteredArticles();
-            const totalPages = Math.max(1, Math.ceil(filtered.length / ARTICLE_PAGE_SIZE));
+            const totalPages = Math.max(1, Math.ceil((PawpalSettings.state.contentMeta?.total||0) / ARTICLE_PAGE_SIZE));
             if (currentArticlePage < totalPages) {
                 currentArticlePage++;
-                renderArticles();
+                loadArticlePage(currentArticlePage);
             }
         });
 
         // Modal Tạo Bài Viết Mới
-        document.getElementById('btnActionEditArticle')?.addEventListener('click',()=>{
+        document.getElementById('btnActionEditArticle')?.addEventListener('click',async()=>{
             if(articleSaving)return;
-            const id=PawpalSettings.state.currentActiveArticleId,record=PawpalSettings.getRecord('blog_post',id);
+            const id=PawpalSettings.state.currentActiveArticleId,record=await PawpalSettings.loadFullRecord('blog_post',id).catch(error=>{showToast(error.message,'danger');return null;});
             if(!record)return;
             editingArticleId=id;draftSlug=record.slug;populateBlogCategories();
             document.getElementById('inputArticleTitle').value=record.title;
@@ -367,12 +361,16 @@
         document.getElementById('btnDismissRagModal')?.addEventListener('click', closeRagModalHandler);
 
         // Xem tóm tắt RAG
-        document.getElementById('btnActionViewRag')?.addEventListener('click', () => {
+        document.getElementById('btnActionViewRag')?.addEventListener('click', async () => {
             const currentId = PawpalSettings.state?.currentActiveArticleId;
             if (!currentId) return;
             const articlesList = PawpalSettings.state?.articlesList || [];
             const article = articlesList.find(a => a.id === currentId);
             if (!article) return;
+
+            const {data:knowledge,error}=await getSupabaseClient().from('chatbot_knowledge_faq').select('keywords,answer,is_active').eq('id',currentId).eq('category','blog:'+currentId).maybeSingle();
+            if(error){showToast('Chưa tải được tri thức của bài viết.','danger');return;}
+            article.ragKeywords=knowledge?.keywords||[];article.ragSummary=knowledge?.answer||'';
 
             const titleEl = document.getElementById('ragArticleTitle');
             const catEl = document.getElementById('ragArticleCategory');
@@ -411,7 +409,7 @@
 
         const syncRequests=new Map();
         async function synchronizeKnowledge(){
-            const id=PawpalSettings.state.currentActiveArticleId,record=PawpalSettings.getRecord('blog_post',id);if(!record)return;
+            const id=PawpalSettings.state.currentActiveArticleId,record=await PawpalSettings.loadFullRecord('blog_post',id).catch(error=>{showToast(error.message,'danger');return null;});if(!record)return;
             const key=id+':'+record.updated_at;if(!syncRequests.has(key))syncRequests.set(key,crypto.randomUUID());
             try{
                 const {error}=await getSupabaseClient().rpc('sync_admin_article_knowledge',{p_request:syncRequests.get(key),p_article:id,p_expected:record});if(error)throw error;

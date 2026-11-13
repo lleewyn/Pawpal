@@ -671,21 +671,22 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
         return full||null;
     };
 
-    async function fetchVouchersData({ force = false } = {}) {
+    let voucherReadVersion=0;
+    async function fetchVouchersData({ force = false,page=window.PawpalOrders.state.voucherMeta?.page||1,query=window.PawpalOrders.state.voucherQuery||'' } = {}) {
+        const version=++voucherReadVersion,scope=window.PawpalDataStore?.buildKey?.('sales-vouchers');
+        window.PawpalOrders.state.voucherQuery=query;
         const fetcher = async () => {
             const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
-            const [data, usage] = await Promise.all([
-                window.PawpalOrderV1.rows(() => client.from('voucher').select('*').order('id')),
-                window.PawpalOrderV1.rows(() => client.from('voucher_redemption').select('id,voucher_id,status').eq('status','applied').order('id'))
-            ]);
-            return data.map(v => ({...v, used:usage.filter(r => r.voucher_id===v.id).length}));
+            const {data,error}=await client.rpc('admin_sales_voucher_page',{p_query:query,p_page:page,p_pos:false});
+            if(error)throw error;if(!Array.isArray(data?.rows))throw Error('invalid_voucher_summary');
+            return data;
         };
 
         try {
             let voucherData;
             if (window.PawpalDataStore) {
-                voucherData = await window.PawpalDataStore.fetch('orders:vouchers', fetcher, {
+                voucherData = await window.PawpalDataStore.fetch('orders:vouchers:'+scope+':'+JSON.stringify([query,page]), fetcher, {
                     ttlMs: window.PawpalDataStore.TTL_TIERS.CATALOG,
                     force
                 });
@@ -693,7 +694,9 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
                 voucherData = await fetcher();
             }
 
-            const vouchersList = (voucherData || []).map(v => {
+            if(version!==voucherReadVersion||scope!==window.PawpalDataStore?.buildKey?.('sales-vouchers'))return [];
+            window.PawpalOrders.state.voucherMeta=voucherData;
+            const vouchersList = (voucherData.rows || []).map(v => {
                 const isPct = String(v.type || '').toLowerCase().includes('phan_tram') || v.type === 'percentage' || v.type === 'percent';
                 const rawDiscount = Number(v.discount_value) || 0;
                 const safeDiscount = isPct ? Math.min(100, Math.max(0, rawDiscount)) : Math.max(0, rawDiscount);
@@ -732,6 +735,7 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
             window.PawpalOrders.renderVouchersTable();
             return vouchersList;
         } catch (err) {
+            if(version!==voucherReadVersion||scope!==window.PawpalDataStore?.buildKey?.('sales-vouchers'))return [];
             console.warn('[Orders Core] Lỗi khi nạp voucher:', err);
             window.PawpalOrders.state.vouchersError = true;
             window.PawpalOrders.renderVouchersTable();
@@ -965,7 +969,10 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
             const dirty = new Set();
             let fallbackTimer;
             const flush = async () => {
-                const resources = [...dirty].filter(resource => window.PawpalOrders.state[resource === 'list' ? 'ordersLoaded' : resource+'Loaded']);
+                if(document.hidden || sessionStorage.getItem('pawpal_admin_active_module')!=='Bán hàng')return;
+                const tab=sessionStorage.getItem('pawpal_admin_order_subtab');
+                const visibleResource=tab==='tab-order-products'?'products':tab==='tab-order-promos'?'vouchers':'list';
+                const resources = [...dirty].filter(resource => resource===visibleResource && window.PawpalOrders.state[resource === 'list' ? 'ordersLoaded' : resource+'Loaded']);
                 dirty.clear();
                 if (resources.length) await syncOrdersAndProductsFromSupabase({resources});
             };

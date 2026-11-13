@@ -1071,6 +1071,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Cập nhật module active
         sessionStorage.setItem('pawpal_admin_active_module', moduleName);
+        window.dispatchEvent(new CustomEvent('admin:module-changing',{detail:{module:moduleName}}));
         sidebarBtns.forEach(b => {
             b.classList.toggle('active', b.getAttribute('data-title') === moduleName);
         });

@@ -30,11 +30,11 @@
             'public_service_directory','public_service_reviews','customer_shop_catalog','customer_shop_options',
             'customer_profile_snapshot','own_customer_avatar','own_sales_order_totals','own_order_thumbnails',
             'own_service_booking_summary','own_service_booking_logistics','own_service_booking_execution','own_service_reviews',
-            'own_support_tickets','own_loyalty_snapshot','get_staff_workspace','get_staff_customer_context',
+            'own_support_tickets','own_loyalty_snapshot','own_history_page','admin_service_catalog_summary','admin_business_metric','admin_sales_voucher_page','admin_complaint_action_summary','admin_complaint_completed_page','own_context_choices','own_context_financials','admin_booking_directory','get_staff_workspace','get_staff_customer_context',
             'admin_customer_page','admin_pawpoint_page','admin_pet_page','get_admin_service_booking_page',
             'get_admin_sales_order_page','get_admin_sales_product_page','get_admin_sales_stock_history_page','get_admin_sales_review_page',
             'admin_complaint_page','admin_staff_directory_page','admin_staff_assessment_page','admin_staff_list_page',
-            'admin_chat_rule_page_bounded','admin_chat_canned_page'
+            'admin_chat_rule_page_bounded','admin_chat_canned_page','admin_audit_page','admin_service_review_summary','admin_service_review_page','admin_article_page','admin_promos_page'
         ]);
         const readQueue = [];
         let activeReads = 0;

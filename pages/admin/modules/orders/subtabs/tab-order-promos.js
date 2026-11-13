@@ -29,18 +29,12 @@
         if (!state.vouchersLoaded) return;
         delete tbody.dataset.loadingSkeleton;
         const running = vouchersList.filter(v=>['active','Đang chạy'].includes(v.status) && (!v.endsAt || Date.parse(v.endsAt)>=Date.now()) && (!v.startsAt || Date.parse(v.startsAt)<=Date.now()));
-        const metrics = {statActiveVouchers:running.length,statVoucherUsedToday:'—',statExpiringVouchers:running.filter(v=>v.endsAt && Date.parse(v.endsAt)-Date.now()<=7*86400000).length};
+        const metrics = {statActiveVouchers:state.voucherMeta?.stats.active??running.length,statVoucherUsedToday:state.voucherMeta?.stats.usedToday??'—',statExpiringVouchers:state.voucherMeta?.stats.expiring??0};
         Object.entries(metrics).forEach(([id,value])=>{const el=document.getElementById(id);if(el)el.textContent=value;});
 
 
-        const filtered = vouchersList.filter(v => {
-            if (searchVal) {
-                const matchCode = matchSearch(v.code, searchVal);
-                const matchTitle = matchSearch(v.title || v.name, searchVal);
-                if (!matchCode && !matchTitle) return false;
-            }
-            return true;
-        });
+        const filtered = vouchersList;
+        renderVoucherPager(tbody);
 
         if (filtered.length === 0) {
             tbody.innerHTML = `
@@ -105,6 +99,15 @@
         });
     }
 
+    function renderVoucherPager(tbody){
+        let pager=document.getElementById('salesVoucherPager');
+        if(!pager){pager=document.createElement('div');pager.id='salesVoucherPager';pager.className='pagination-container';pager.style.cssText='display:flex;justify-content:center;gap:4px;background:transparent;border:none;padding:2px 0;margin-top:-6px;';(tbody.closest('.admin-card')||tbody.closest('table').parentElement).after(pager);}
+        pager.replaceChildren();const meta=state.voucherMeta;if(!meta||meta.total<=10)return;
+        const pages=Math.ceil(meta.total/10),page=meta.page;
+        const add=(label,target,disabled)=>{const b=document.createElement('button');b.type='button';b.className='admin-btn admin-btn-secondary';b.style.cssText='border:none;background:transparent;padding:4px 9px;border-radius:9px;';b.textContent=label;b.disabled=disabled;if(target===page&&label===String(page)){b.style.background='#236B48';b.style.color='#fff';}b.onclick=()=>PawpalOrders.fetchVouchersData({page:target});pager.append(b);};
+        add('<',page-1,page===1);for(let i=Math.max(1,page-2);i<=Math.min(pages,page+2);i++)add(String(i),i,i===page);add('>',page+1,page===pages);
+    }
+
     // Đăng ký controller với Core
     PawpalOrders.controllers.promos = {
         renderVouchersTable
@@ -118,7 +121,7 @@
 
         document.getElementById('formCreateVoucher')?.addEventListener('submit', (e) => e.preventDefault());
         document.getElementById('formVoucherAction')?.addEventListener('submit', (e) => e.preventDefault());
-        document.getElementById('promoSearchInput')?.addEventListener('input', renderVouchersTable);
+        let searchTimer;document.getElementById('promoSearchInput')?.addEventListener('input',e=>{clearTimeout(searchTimer);const query=e.target.value.trim().slice(0,200);searchTimer=setTimeout(()=>PawpalOrders.fetchVouchersData({page:1,query}),250);});
 
         // Mở modal tạo mã khuyến mãi
         document.getElementById('btnOpenCreateVoucherModal')?.addEventListener('click', () => {

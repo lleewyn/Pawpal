@@ -229,6 +229,7 @@
     }
 
     async function renderBookingsTable({skipFetch=false}={}) {
+        if(document.hidden || !document.getElementById('subtab-tab-service-bookings')?.classList.contains('active'))return;
         closeBookingGlobalDropdown();
         const tbody = document.getElementById('servicesBookingTableBody');
         if (!tbody) return;
@@ -1689,7 +1690,13 @@
             return [];
         }
 
-        function renderCustomerAutocomplete(query = '') {
+        let customerSearchVersion=0,petSearchVersion=0;
+        async function renderCustomerAutocomplete(query = '') {
+            const version=++customerSearchVersion;
+            await new Promise(resolve=>setTimeout(resolve,250));
+            if(version!==customerSearchVersion)return;
+            try{await PawpalServices.searchBookingDirectory('customers',query);}catch(e){if(version===customerSearchVersion&&customerDropdown){customerDropdown.textContent='Chưa tải được khách hàng. Vui lòng thử lại.';customerDropdown.style.display='block';}return;}
+            if(version!==customerSearchVersion||!customerInput?.isConnected||document.activeElement!==customerInput)return;
             if (!customerDropdown) return;
             const q = PawpalServices.toUnaccent(query || '');
             const customers = getAllCustomersList();
@@ -1701,7 +1708,7 @@
                 const cleanQ = q.replace(/[^0-9]/g, '');
                 const matchPhone = cleanQ && phone.includes(cleanQ);
                 const matchName = name.includes(q);
-                const matchPets = (c.pets || []).some(p => (p.name || '').toLowerCase().includes(q));
+                const matchPets = (c.pets || []).some(p => PawpalServices.toUnaccent(p.name || '').includes(q));
                 return matchName || matchPhone || matchPets;
             }).slice(0, 15);
 
@@ -1746,12 +1753,13 @@
 
         function selectCustomerItem(c) {
             if(selectedBookingPet&&selectedBookingPet.customer_id!==c.id){selectedBookingPet=null;document.getElementById('newBookingPetName').value='';document.getElementById('newBookingPetName').style.display='';document.getElementById('bookingSelectedPetCard').style.display='none';document.getElementById('newBookingPetWeight').value='';}
+            customerSearchVersion++;petSearchVersion++;
             selectedCustomerObj = c;
             const name = c.name || '';
             const phone = c.phone || '';
             if (customerInput) customerInput.value = name;
             if (customerInput) customerInput.style.display='none';
-            if (phoneInput && phone) phoneInput.value = phone;
+            if (phoneInput) phoneInput.value = phone;
 
             if (customerSelectedCard) {
                 customerSelectedCard.innerHTML = `
@@ -1770,8 +1778,13 @@
             if (customerDropdown) customerDropdown.style.display = 'none';
 
             // Tự động gợi ý thú cưng đầu tiên của khách này
-            if (c.pets && c.pets.length > 0) {
-                selectPetItem(c.pets[0]);
+            if (!c._fromPet) {
+                const owner=c.id,version=++petSearchVersion;
+                PawpalServices.searchBookingDirectory('pets','',owner).then(data=>{
+                    if(version!==petSearchVersion||selectedCustomerObj?.id!==owner||!customerInput?.isConnected)return;
+                    c.pets=(data.pets||[]).map(p=>({...p,name:p.pet_name}));
+                    if(c.pets[0])selectPetItem(c.pets[0]);
+                }).catch(()=>{if(selectedCustomerObj?.id===owner)PawpalServices.showToast('Chưa tải được bé cưng. Vui lòng tìm lại bé.');});
             }
         }
 
@@ -1788,23 +1801,22 @@
         const petSelectedCard = document.getElementById('bookingSelectedPetCard');
         const petAlertInput = document.getElementById('newBookingPetAlert');
 
-        function renderPetAutocomplete(query = '') {
+        async function renderPetAutocomplete(query = '') {
+            const version=++petSearchVersion,owner=selectedCustomerObj?.id||null;
+            await new Promise(resolve=>setTimeout(resolve,250));
+            if(version!==petSearchVersion)return;
+            try{await PawpalServices.searchBookingDirectory('pets',query,owner);}catch(e){if(version===petSearchVersion&&petDropdown){petDropdown.textContent='Chưa tải được bé cưng. Vui lòng thử lại.';petDropdown.style.display='block';}return;}
+            if(version!==petSearchVersion||owner!==(selectedCustomerObj?.id||null)||!petInput?.isConnected||document.activeElement!==petInput)return;
             if (!petDropdown) return;
             const q = PawpalServices.toUnaccent(query || '');
             let petList = [];
 
-            if (selectedCustomerObj && selectedCustomerObj.pets && selectedCustomerObj.pets.length > 0) {
-                petList = selectedCustomerObj.pets;
-            } else if (selectedCustomerObj && selectedCustomerObj.pet_profile && selectedCustomerObj.pet_profile.length > 0) {
-                petList = selectedCustomerObj.pet_profile;
-            } else {
-                petList = PawpalServices.state?.livePetDirectory || [];
-            }
+            petList = PawpalServices.state?.livePetDirectory || [];
 
             const matches = petList.filter(p => {
-                const name = (p.pet_name || p.name || '').toLowerCase();
-                const breed = (p.breed || '').toLowerCase();
-                const species = (p.species || '').toLowerCase();
+                const name = PawpalServices.toUnaccent(p.pet_name || p.name || '');
+                const breed = PawpalServices.toUnaccent(p.breed || '');
+                const species = PawpalServices.toUnaccent(p.species || '');
                 return !q || name.includes(q) || breed.includes(q) || species.includes(q);
             }).slice(0, 15);
 
@@ -1869,7 +1881,7 @@
             // Nếu chưa chọn chủ mà pet có thông tin chủ, tự động điền luôn chủ
             if(!selectedCustomerObj || selectedCustomerObj.id!==p.customer_id){
                 const owner=getAllCustomersList().find(c=>(c.rawId||c.id)===p.customer_id);
-                if(owner){selectCustomerItem({...owner,pets:[]});selectedCustomerObj=owner;}
+                if(owner){selectCustomerItem({...owner,pets:[],_fromPet:true});selectedCustomerObj=owner;}
             }
 
         }

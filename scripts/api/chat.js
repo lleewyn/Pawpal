@@ -283,10 +283,11 @@ async function checkCustomerVipAttention(customerId) {
         const [ticketsRes, membershipRes, pointsRes] = await Promise.all([
             supabase.from('support_ticket').select('id', { count: 'exact', head: true }).eq('customer_id', customerId),
             supabase.from('customer_membership').select('membership_tier_id, membership_tier:membership_tier_id(tier_name)').eq('customer_id', customerId).maybeSingle(),
-            supabase.from('paw_point_transaction').select('points').eq('customer_id', customerId)
+            supabase.from('customer_point_balance').select('total_paw_points').eq('customer_id', customerId).maybeSingle()
         ]);
         const ticketCount = ticketsRes.count || 0;
-        const totalPoints = (pointsRes.data || []).reduce((acc, row) => acc + (Number(row.points) || 0), 0);
+        if(pointsRes.error)throw pointsRes.error;
+        const totalPoints = Number(pointsRes.data?.total_paw_points || 0);
 
         let result = { isVip: false, reason: '' };
         if (ticketCount >= 2) {
@@ -669,12 +670,13 @@ const dbTools = {
                     .eq('customer_id', user_id)
                     .maybeSingle(),
                 supabase
-                    .from('paw_point_transaction')
-                    .select('points')
-                    .eq('customer_id', user_id)
+                    .from('customer_point_balance')
+                    .select('total_paw_points')
+                    .eq('customer_id', user_id).maybeSingle()
             ]);
 
-            const totalPoints = (pointsRes.data || []).reduce((acc, row) => acc + (Number(row.points) || 0), 0);
+            if(pointsRes.error)throw pointsRes.error;
+        const totalPoints = Number(pointsRes.data?.total_paw_points || 0);
             const tierData = membershipRes.data?.membership_tier;
             return {
                 points: totalPoints,
@@ -1264,7 +1266,7 @@ const adminDbTools = {
 
             const customers = await Promise.all(data.map(async c => {
                 const [pointsRes, ordersRes, aptsRes] = await Promise.all([
-                    supabase.from('paw_point_transaction').select('points').eq('customer_id', c.id),
+                    supabase.from('customer_point_balance').select('total_paw_points').eq('customer_id', c.id).maybeSingle(),
                     supabase.from('sales_order')
                         .select(`
                             id,
@@ -1290,7 +1292,8 @@ const adminDbTools = {
                         .limit(3)
                 ]);
 
-                const totalPoints = (pointsRes.data || []).reduce((acc, row) => acc + (Number(row.points) || 0), 0);
+                if(pointsRes.error)throw pointsRes.error;
+        const totalPoints = Number(pointsRes.data?.total_paw_points || 0);
                 const phoneObj = (c.customer_phone || []).find(p => p.is_primary) || c.customer_phone?.[0];
                 const custPhone = phoneObj?.phone_number || '';
 

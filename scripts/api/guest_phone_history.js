@@ -23,6 +23,22 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
   if(!crypto.timingSafeEqual(Buffer.from(expected),Buffer.from(parts[3])))throw Error('Phiên xác thực không hợp lệ.');
   return digest(value);
  }
+ const signHistory=value=>crypto.createHmac('sha256',secret).update('guest-history-page:v1\0'+value).digest('base64url');
+ function historyGrant(c,phone){const payload=Buffer.from(JSON.stringify({id:c.id,phone,snapshotOnly:!!c.snapshotOnly,expires:Math.floor(now()/1000)+900})).toString('base64url');return payload+'.'+signHistory(payload);}
+ async function historyRows(c,phone,page){
+    let bookingQuery=admin.from('appointment').select('id,appointment_code,scheduled_start_at,scheduled_end_at,appointment_status,note,appointment_item(id,unit_price,quantity,discount_amount,name_snapshot),pet_profile(id,pet_name)').eq('customer_id',c.id);
+    let orderQuery=admin.from('sales_order').select('id,order_code,order_status,cancel_reason,shipping_fee_snapshot,receiver_name_snapshot,receiver_phone_snapshot,street_address_snapshot,province_snapshot,created_at,updated_at,delivered_at,note,sales_order_detail(id,quantity,unit_price,discount_amount,product_name_snapshot,sku_snapshot,product_variant(id,product(id,product_media(image_url,is_thumbnail))))').eq('customer_id',c.id);
+    if(c.snapshotOnly){bookingQuery=bookingQuery.eq('booking_contact_phone',phone);orderQuery=orderQuery.eq('receiver_phone_snapshot',phone);}
+    const [bookings,orders,profile]=await Promise.all([
+     bookingQuery.order('scheduled_start_at',{ascending:false}).order('id',{ascending:false}).range(page*10,page*10+10),
+     orderQuery.order('is_thumbnail',{referencedTable:'sales_order_detail.product_variant.product.product_media',ascending:false}).limit(1,{referencedTable:'sales_order_detail.product_variant.product.product_media'}).order('created_at',{ascending:false}).order('id',{ascending:false}).range(page*10,page*10+10),
+     c.snapshotOnly?{data:null}:admin.from('customer_profile').select('full_name').eq('customer_id',c.id).maybeSingle()
+    ]);
+    if(bookings.error||orders.error||profile.error)throw Error('Chưa tải được lịch sử. Vui lòng thử lại.');
+    const expires=Math.floor(now()/1000)+900;
+    const verifiedOrders=(orders.data||[]).slice(0,10).map(row=>({...row,return_grant:expires+'.'+signReturn(row.id+'.'+phone+'.'+expires),cancel_grant:expires+'.'+signCancel(row.id+'.'+phone+'.'+expires)}));
+    return {success:true,customer:{name:profile.data?.full_name||'',phone},bookings:(bookings.data||[]).slice(0,10),orders:verifiedOrders,pagination:{page,hasMore:(bookings.data||[]).length>10||(orders.data||[]).length>10,grant:historyGrant(c,phone)}};
+ }
  async function customer(phone){
   const result=await admin.from('customer_phone').select('customer_id').eq('phone_number',phone).limit(2);
   if(result.error)throw Error('Chưa kiểm tra được số điện thoại. Vui lòng thử lại.');
@@ -59,9 +75,23 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
   const mockOtp=previewDemo || (demo&&!production&&/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(req.headers.origin||''));
   const mode=mockOtp?'preview':'supabase';
   try{
-   if(Object.keys(body).some(k=>!['phone','challengeId','code','returnRequest','cancelRequest'].includes(k)))throw Error('Yêu cầu tra cứu không hợp lệ.');
+   if(Object.keys(body).some(k=>!['phone','challengeId','code','returnRequest','cancelRequest','historyPage'].includes(k)))throw Error('Yêu cầu tra cứu không hợp lệ.');
    const phone=normalizeVietnamPhone(body.phone);
    if(previewDemo&&!otpTestPhones.includes(phone))throw Error('Số điện thoại này chưa được cấu hình để thử OTP giả lập.');
+   if(body.historyPage){
+    if(body.challengeId!=null||body.code!=null||body.returnRequest||body.cancelRequest)throw Error('invalid_body');
+    const {grant,page}=body.historyPage;
+    if(typeof grant!=='string'||grant.length>1500||!Number.isInteger(page)||page<0||page>1000)throw Error('invalid_body');
+    const parts=grant.split('.');
+    if(parts.length!==2||!/^[A-Za-z0-9_-]{43}$/.test(parts[1])||!crypto.timingSafeEqual(Buffer.from(signHistory(parts[0])),Buffer.from(parts[1])))throw Error('Phiên tra cứu không hợp lệ.');
+    const proof=JSON.parse(Buffer.from(parts[0],'base64url').toString('utf8'));
+    if(proof.phone!==phone||!Number.isFinite(proof.expires)||proof.expires<=now()/1000||proof.expires>now()/1000+901)throw Error('Phiên tra cứu đã hết hạn. Vui lòng xác thực lại.');
+    await store.limit('guest-history:page:'+String(req.socket?.remoteAddress||req.ip),60,600000);
+    const c=await customer(phone);
+    if(c.id!==proof.id||!!c.snapshotOnly!==proof.snapshotOnly)throw Error('Chủ sở hữu đã thay đổi. Vui lòng xác thực lại.');
+    const result=await historyRows(c,phone,page);result.pagination.grant=grant;
+    return res.json(result);
+   }
    if(body.cancelRequest){
     if(body.challengeId!=null||body.code!=null||body.returnRequest)throw Error('Yêu cầu hủy không hợp lệ.');
     const {id,orderId,grant,reason,expectedUpdatedAt}=body.cancelRequest;
@@ -141,22 +171,9 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
      }
     }
     await store.finish(body.challengeId,claimId,true);finished=true;
-    let bookingQuery=admin.from('appointment').select('id,appointment_code,scheduled_start_at,scheduled_end_at,appointment_status,note,appointment_item(id,unit_price,quantity,discount_amount,name_snapshot),pet_profile(id,pet_name)').eq('customer_id',c.id);
-    let orderQuery=admin.from('sales_order').select('id,order_code,order_status,cancel_reason,shipping_fee_snapshot,receiver_name_snapshot,receiver_phone_snapshot,street_address_snapshot,province_snapshot,created_at,updated_at,delivered_at,note,sales_order_detail(id,quantity,unit_price,discount_amount,product_name_snapshot,sku_snapshot,product_variant(id,product(id,product_media(image_url,is_thumbnail))))').eq('customer_id',c.id);
-    if(c.snapshotOnly){
-     bookingQuery=bookingQuery.eq('booking_contact_phone',phone);
-     orderQuery=orderQuery.eq('receiver_phone_snapshot',phone);
-    }
-    const [bookings,orders,profile]=await Promise.all([
-     bookingQuery.order('scheduled_start_at',{ascending:false}).limit(50),
-     orderQuery.order('created_at',{ascending:false}).limit(50),
-     c.snapshotOnly?{data:null}:admin.from('customer_profile').select('full_name').eq('customer_id',c.id).maybeSingle()
-    ]);
-    if(bookings.error||orders.error||profile.error)throw Error('Đã xác thực nhưng chưa tải được lịch sử. Vui lòng thử lại.');
+    const result=await historyRows(c,phone,0);
     res.setHeader('Set-Cookie',`${cookieName}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${production?'; Secure':''}`);
-    const expires=Math.floor(now()/1000)+900;
-    const verifiedOrders=(orders.data||[]).map(row=>({...row,return_grant:expires+'.'+signReturn(row.id+'.'+phone+'.'+expires),cancel_grant:expires+'.'+signCancel(row.id+'.'+phone+'.'+expires)}));
-    return res.json({success:true,customer:{name:profile.data?.full_name||'',phone},bookings:bookings.data||[],orders:verifiedOrders});
+    return res.json(result);
    }finally{if(!finished)await store.finish(body.challengeId,claimId,false);}
   }catch(error){return res.status(error.smsUnavailable?503:400).json({success:false,message:error.message==='invalid_phone'?'Vui lòng nhập số điện thoại hợp lệ.':error.message||'Chưa tra cứu được. Vui lòng thử lại.'});}
  };

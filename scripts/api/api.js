@@ -31,8 +31,25 @@ function findCartItem(items,id) {
     return matches[0];
 }
 const resolveCustomerId = resolveAuthenticatedCustomerId;
+async function ownHistoryPage(user,kind,{status='all',query='',page=1}={}){
+    const db=window.getSupabaseClient?.()||window.SupabaseClient;
+    if(!db)throw Error('Chưa kết nối được dữ liệu.');
+    const {data,error}=await db.rpc('own_history_page',{p_kind:kind,p_status:status,p_query:query,p_page:page});
+    if(error)throw error;
+    const owner=typeof user==='object'?(user.id||user.custId):user;
+    if(!data||String(data.owner)!==String(owner)||!Array.isArray(data.ids)||data.ids.length>10||!Array.isArray(data.summaries)||!data.counts)throw Error('Không xác nhận được trang lịch sử của tài khoản.');
+    return data;
+}
 
 export const API = {
+    async getContextChoices(user,kind,{query='',id=null}={}){
+        const db=window.getSupabaseClient?.()||window.SupabaseClient;
+        const {data,error}=await db.rpc('own_context_choices',{p_kind:kind,p_query:query.trim().slice(0,200),p_id:id});
+        if(error)throw error;
+        const owner=typeof user==='object'?user.id:user;
+        if(!data||data.owner!==owner||!Array.isArray(data.rows))throw Error('Phiên tài khoản đã thay đổi.');
+        return data.rows;
+    },
     DATA_VERSION: '2026-07-04-v14-guest-data',
 
     async getJSON(url) {
@@ -104,7 +121,12 @@ export const API = {
         }
     },
 
-    async getUserBookings(userOrId, { id = null } = {}) {
+    async getUserBookingPage(user,options={}){
+        const meta=await ownHistoryPage(user,'bookings',options);
+        return {rows:await this.getUserBookings(user,{ids:meta.ids,summary:meta.summaries}),meta};
+    },
+    async getUserBookings(userOrId, { id = null, ids = null, summary = null } = {}) {
+        if(Array.isArray(ids)&&!ids.length)return [];
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userOrId) throw new Error('Vui lòng đăng nhập để tải dữ liệu.');
         try {
@@ -132,6 +154,7 @@ export const API = {
                 .eq('customer_id', customerId)
                 .order('scheduled_start_at', { ascending: false });
             if (id) query = query.eq(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id) ? 'id' : 'appointment_code', id);
+            if(ids)query=query.in('id',ids);
             const { data, error } = await query;
                 
             if (error) {
@@ -141,7 +164,7 @@ export const API = {
 
             if (!data?.length) return [];
 
-            const summaryResult = await db.rpc('own_service_booking_summary');
+            const summaryResult = summary ? {data:summary} : await db.rpc((id||ids)?'own_context_financials':'own_service_booking_summary',(id||ids)?{p_kind:'bookings',p_ids:data.map(row=>row.id)}:undefined);
             if (summaryResult.error) throw summaryResult.error;
             const summaries = new Map((summaryResult.data || []).map(row => [row.id, row]));
 
@@ -230,7 +253,12 @@ export const API = {
         return this.getUserBookings(userOrId);
     },
 
-    async getUserOrders(userOrId, { id = null } = {}) {
+    async getUserOrderPage(user,options={}){
+        const meta=await ownHistoryPage(user,'orders',options);
+        return {rows:await this.getUserOrders(user,{ids:meta.ids,summary:meta.summaries}),meta};
+    },
+    async getUserOrders(userOrId, { id = null, ids = null, summary = null } = {}) {
+        if(Array.isArray(ids)&&!ids.length)return [];
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userOrId) throw new Error('Vui lòng đăng nhập để tải dữ liệu.');
         try {
@@ -255,6 +283,7 @@ export const API = {
                 .eq('customer_id', customerId)
                 .order('created_at', { ascending: false });
             if (id) query = query.eq(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id) ? 'id' : 'order_code', id);
+            if(ids)query=query.in('id',ids);
             const { data, error } = await query;
 
             if (error) { 
@@ -266,7 +295,7 @@ export const API = {
 
             const mapOrderStatus = normalizeOrderStatus;
 
-            const totalsResult=await db.rpc('own_sales_order_totals');
+            const totalsResult=summary ? {data:summary} : await db.rpc((id||ids)?'own_context_financials':'own_sales_order_totals',(id||ids)?{p_kind:'orders',p_ids:data.map(row=>row.id)}:undefined);
             if(totalsResult.error)throw totalsResult.error;
             const totalsById=new Map((totalsResult.data||[]).map(row=>[row.id,row]));
             const methodResponse=await db.rpc('customer_shop_options');

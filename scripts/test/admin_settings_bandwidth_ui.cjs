@@ -12,7 +12,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
    sessionStorage.setItem('pawpal_admin_active_module','Cấu hình');
    sessionStorage.setItem('pawpal_admin_user',JSON.stringify({id:'test-admin'}));
    window.reads=[];window.handlers={};
-   const client={from(table){const q={};for(const name of ['select','order','range','limit','eq'])q[name]=()=>q;q.then=resolve=>{reads.push(table);return Promise.resolve({data:[],error:null}).then(resolve);};return q;},
+   const client={rpc:async(name)=>{reads.push(name);return {data:name==='admin_promos_page'?{banners:[],vouchers:[],usageCounts:{},bannerTotal:0,bannerPage:1,voucherTotal:0,voucherPage:1,stats:{totalVouchers:0,activeVouchers:0,activeBanners:0,expiringBanners:0,exhaustedVouchers:0,lowStockVouchers:0}}:{blogs:[],categories:[],knowledge:[],total:0,page:1,stats:{total:0,published:0,draft:0,hidden:0,views:0}}};},from(table){const q={};for(const name of ['select','order','range','limit','eq'])q[name]=()=>q;q.then=resolve=>{reads.push(table);return Promise.resolve({data:[],error:null}).then(resolve);};return q;},
     channel(){return {on(_type,filter,fn){handlers[filter.table]=fn;return this;},subscribe(){return this;}};},removeChannel(){}};
    window.getSupabaseClient=()=>client;
   });
@@ -20,14 +20,14 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/settings/settings.js','utf8')});
   await page.evaluate(()=>PawpalSettings.init());
   let reads=await page.evaluate(()=>window.reads);
-  assert.ok(reads.includes('banner'));assert.ok(!reads.includes('audit_log'));assert.ok(!reads.includes('blog_post'));
+  assert.ok(reads.includes('admin_promos_page'));assert.ok(!reads.includes('admin_audit_page'));assert.ok(!reads.includes('admin_article_page'));
   await page.evaluate(()=>{reads.length=0;for(let i=0;i<50;i++)handlers.banner();});await page.waitForTimeout(500);
   reads=await page.evaluate(()=>window.reads);
-  assert.equal(reads.filter(t=>t==='banner').length,1);assert.ok(!reads.includes('pawpal_setting'));assert.ok(!reads.includes('audit_log'));
+  assert.equal(reads.filter(t=>t==='admin_promos_page').length,1);assert.ok(!reads.includes('pawpal_setting'));assert.ok(!reads.includes('admin_audit_page'));
   await page.evaluate(()=>{reads.length=0;handlers.blog_post();});await page.waitForTimeout(500);
   assert.equal(await page.evaluate(()=>reads.length),0,'inactive subtab invalidates without fetching');
   await page.evaluate(()=>PawpalSettings.switchSubtab('tab-content-management'));
-  reads=await page.evaluate(()=>window.reads);assert.ok(reads.includes('blog_post'));assert.ok(!reads.includes('audit_log'));
+  reads=await page.evaluate(()=>window.reads);assert.ok(reads.includes('admin_article_page'));assert.ok(!reads.includes('admin_audit_page'));
   await page.evaluate(()=>{reads.length=0;return PawpalSettings.switchSubtab('tab-banner-promos');});
   assert.equal(await page.evaluate(()=>reads.length),0,'return to cached tab does not query');
   assert.deepEqual(errors,[]);

@@ -1,5 +1,9 @@
 # Rà soát tải dữ liệu Admin và User — 13/11/2026
 
+Cập nhật sau đợt rà soát: Nhật ký Cấu hình đã chuyển sang phân trang server; danh mục Dịch vụ dùng số tổng hợp đánh giá, và realtime Bán hàng/Dịch vụ chỉ tải nhóm của tab hiện tại. Xem `admin-load-followup.md`. Những nhận định dưới đây ghi lại trạng thái ở thời điểm rà soát ban đầu.
+
+Đợt bổ sung sau đó đã xử lý các danh sách còn lại được nêu: xem `paged-data-and-realtime.md` cho phân trang Đánh giá/Cấu hình/lịch sử User và realtime nền.
+
 Rà mã nguồn 63 file JavaScript trong `pages/admin/modules` và `pages/user/modules`, các bộ điều phối và lớp API/realtime/cache liên quan. Đây là rà soát mã và kiểm thử cục bộ, không phải phép đo băng thông production của từng màn hình. Không truy vấn Supabase Cloud Logs, không thêm dữ liệu mẫu vào ứng dụng và không sửa dữ liệu nghiệp vụ.
 
 ## Những thay đổi đã thực hiện

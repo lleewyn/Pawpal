@@ -20,6 +20,12 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
                 rpc: async (name, args) => {
                     window.requests.push({ name, args });
                     const M = window.PawpalBusinessMetrics;
+                    if(name==='admin_business_metric'){
+                        if(args.p_key==='vouchers'&&window.fixtureFailure==='voucher_redemption')return {error:{code:'42501'}};
+                        const values={sources:{products:0,services:0,other:0},products:[],services:[],customers:[],membership:[],vouchers:{count:0,discount:0},points:{credited:0,debited:0},returning:{eligible:0,returning:0,rate:null}};
+                        return {data:values[args.p_key]};
+                    }
+
                     return { data: { undated_receipts: 0, undated_refunds: 0, days: Array.from({ length: M.period(args.p_from, args.p_to).length }, (_, i) => ({ day: M.shift(args.p_from, i), collected: 100, refunded: 25 })) } };
                 },
                 from(table) {

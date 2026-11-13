@@ -12,6 +12,7 @@ const ordersState = {
     currentPage: 1,
     ordersPerPage: 10,
     searchQuery: '',
+    pageMeta: null,
     returns: [],
     reviews: []
 };
@@ -29,6 +30,7 @@ export function dispose() {
     ordersListeners?.abort();
     ordersListeners=null;
     clearInterval(pendingOrdersTicker);
+    ordersState.pageMeta=null;
 }
 
 async function loadOrders() {
@@ -48,8 +50,10 @@ async function loadOrders() {
         }
         if(!valid())return;
 
-        const remoteOrders = await API.getUserOrders(currentUser.id);
+        const result = await API.getUserOrderPage(currentUser.id,{page:ordersState.currentPage,status:ordersState.currentTab,query:ordersState.searchQuery});
         if (!valid()) return;
+        const remoteOrders=result.rows;
+        ordersState.pageMeta=result.meta;ordersState.currentPage=result.meta.page;
         // Live data is authoritative; never merge browser copies over server state.
         const mergedList = remoteOrders.map(order => {
             const products = Array.isArray(order.products) && order.products.length > 0
@@ -136,9 +140,9 @@ function startPendingOrdersTicker() {}
 
 function updateStats() {
     const processingStatuses = ['pending', 'preparing', 'shipping', 'delivered'];
-    const processingCount = ordersState.allOrders.filter((order) => processingStatuses.includes(normalizeOrderStatus(order.status))).length;
-    const completedCount = ordersState.allOrders.filter((order) => normalizeOrderStatus(order.status) === 'completed').length;
-    const totalSpent = ordersState.allOrders
+    const processingCount = ordersState.pageMeta?.stats?.processing ?? ordersState.allOrders.filter((order) => processingStatuses.includes(normalizeOrderStatus(order.status))).length;
+    const completedCount = ordersState.pageMeta?.stats?.completed ?? ordersState.allOrders.filter((order) => normalizeOrderStatus(order.status) === 'completed').length;
+    const totalSpent = ordersState.pageMeta?.stats?.spent ?? ordersState.allOrders
         .filter((order) => order.paymentStatus === 'paid' && !['cancelled', 'returned'].includes(normalizeOrderStatus(order.status)))
         .reduce((sum, order) => {
             const amount = toNumber(order.pricing?.total)
@@ -155,7 +159,7 @@ function updateTabCounts() {
     const statuses = ['all', 'pending', 'preparing', 'shipping', 'delivered', 'completed', 'cancelled', 'returned'];
 
     statuses.forEach((status) => {
-        const count = status === 'all'
+        const count = ordersState.pageMeta ? (ordersState.pageMeta.counts[status]||0) : status === 'all'
             ? ordersState.allOrders.length
             : ordersState.allOrders.filter((order) => normalizeOrderStatus(order.status) === status).length;
 
@@ -165,21 +169,22 @@ function updateTabCounts() {
 }
 
 function filterByStatus(status) {
-    ordersState.currentTab = status;
+    ordersState.currentTab = normalizeOrderStatus(status);
     ordersState.currentPage = 1;
-    applyFilters();
+    loadOrders();
 }
 
 function searchOrders(query) {
-    const normalizedQuery = String(query ?? '').trim();
+    const normalizedQuery = String(query ?? '').trim().slice(0,200);
     ordersState.searchQuery = normalizedQuery.toLowerCase();
     const searchInput = document.getElementById('order-search');
     if (searchInput) searchInput.value = normalizedQuery;
     ordersState.currentPage = 1;
-    applyFilters();
+    loadOrders();
 }
 
 function applyFilters() {
+    if(ordersState.pageMeta){ordersState.filteredOrders=ordersState.allOrders;renderOrders();return;}
     let filtered = ordersState.allOrders;
 
     if (ordersState.currentTab !== 'all') {
@@ -223,7 +228,7 @@ function renderOrders() {
 
     const startIndex = (ordersState.currentPage - 1) * ordersState.ordersPerPage;
     const endIndex = startIndex + ordersState.ordersPerPage;
-    const ordersToShow = ordersState.filteredOrders.slice(startIndex, endIndex);
+    const ordersToShow = ordersState.pageMeta ? ordersState.filteredOrders : ordersState.filteredOrders.slice(startIndex, endIndex);
 
     container.innerHTML = ordersToShow.map((order) => createOrderCard(order)).join('');
     renderPagination();
@@ -422,7 +427,7 @@ function showEmptyState(message) {
 }
 
 function renderPagination() {
-    const totalPages = Math.ceil(ordersState.filteredOrders.length / ordersState.ordersPerPage);
+    const totalPages = Math.ceil((ordersState.pageMeta?.total??ordersState.filteredOrders.length) / ordersState.ordersPerPage);
 
     if (totalPages <= 1) {
         document.getElementById('pagination').classList.add('d-none');
@@ -439,7 +444,8 @@ function renderPagination() {
     nextBtn.disabled = ordersState.currentPage === totalPages;
 
     let pagesHTML = '';
-    for (let i = 1; i <= totalPages; i++) {
+    const visiblePages=new Set([1,totalPages]);for(let p=Math.max(1,ordersState.currentPage-2);p<=Math.min(totalPages,ordersState.currentPage+2);p++)visiblePages.add(p);
+    for (const i of [...visiblePages].sort((a,b)=>a-b)) {
         if (i === 1 || i === totalPages || (i >= ordersState.currentPage - 1 && i <= ordersState.currentPage + 1)) {
             pagesHTML += `<button class="page-btn ${i === ordersState.currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
         } else if (i === ordersState.currentPage - 2 || i === ordersState.currentPage + 2) {
@@ -451,8 +457,9 @@ function renderPagination() {
 }
 
 function goToPage(page) {
+    if(page===ordersState.currentPage)return;
     ordersState.currentPage = page;
-    renderOrders();
+    loadOrders();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -655,8 +662,8 @@ export async function initOrders() {
         const urlParams = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
         const initialStatus = urlParams.get('status') || urlParams.get('tab');
         if (initialStatus) {
-            ordersState.currentTab = initialStatus;
-            const targetTab = document.querySelector(`.order-filter-tab[data-status="${initialStatus}"], .tab-btn[data-status="${initialStatus}"]`);
+            ordersState.currentTab = normalizeOrderStatus(initialStatus);
+            const targetTab = [...document.querySelectorAll('.order-filter-tab, .tab-btn')].find(tab=>tab.dataset.status===ordersState.currentTab);
             if (targetTab) {
                 document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((item) => {
                     item.classList.remove('active');
@@ -707,7 +714,7 @@ export async function initOrders() {
         const nextBtn = document.getElementById('next-page');
         if (nextBtn) {
             bind(nextBtn,'click', () => {
-                const totalPages = Math.ceil(ordersState.filteredOrders.length / ordersState.ordersPerPage);
+                const totalPages = Math.ceil((ordersState.pageMeta?.total??ordersState.filteredOrders.length) / ordersState.ordersPerPage);
                 if (ordersState.currentPage < totalPages) goToPage(ordersState.currentPage + 1);
             });
         }

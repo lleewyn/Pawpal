@@ -154,62 +154,14 @@ function validateLookupPhone(phone) {
     return '';
 }
 
-async function loadSupabaseGuestResults(phone) {
-    if (!phone) return { bookings: [], orders: [] };
-    const norm = normalizePhone(phone);
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    const session = await db?.auth?.getSession();
-    const token = session?.data?.session?.access_token;
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    try {
-        const res = await fetch('/api/customer/auth/guest-records', {
-            method: 'POST', headers, body: JSON.stringify({ phone: norm })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-            return {
-                bookings: Array.isArray(data.bookings) ? data.bookings.map(mapSupabaseBookingRow) : [],
-                orders: Array.isArray(data.orders) ? data.orders.map(mapSupabaseOrderRow) : []
-            };
-        }
-    } catch (_) {}
-
-    if (db) {
-        try {
-            const { data: bData } = await db.from('appointment')
-                .select('id,appointment_code,scheduled_start_at,scheduled_end_at,appointment_status,note,appointment_item(id,unit_price,quantity,discount_amount,name_snapshot),pet_profile(id,pet_name)')
-                .order('scheduled_start_at', { ascending: false })
-                .limit(20);
-            if (bData?.length) {
-                return { bookings: bData.map(mapSupabaseBookingRow), orders: [] };
-            }
-        } catch (_) {}
-    }
-
-    try {
-        const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        const matches = localBookings.filter(b => normalizePhone(b.ownerPhone || b.phone || '') === norm || !b.phone);
-        if (matches.length) {
-            return {
-                bookings: matches.map(b => ({
-                    id: b.id || b._id,
-                    serviceName: b.serviceName || b.service || 'Dịch vụ PawPal',
-                    date: b.date || '',
-                    time: b.time || b.timeStart || '09:00',
-                    timeStart: b.timeStart || b.time || '09:00',
-                    status: b.status || 'confirmed',
-                    petName: b.petName || 'Bé cưng',
-                    price: b.price || 0,
-                    note: b.note || '',
-                    _receiptOnly: false
-                })),
-                orders: []
-            };
-        }
-    } catch (_) {}
-
-    return { bookings: [], orders: [] };
+async function loadSupabaseGuestResults(phone,page=0) {
+    const db=window.getSupabaseClient?.()||window.SupabaseClient;
+    const session=await db?.auth?.getSession(),token=session?.data?.session?.access_token;
+    if(!token)throw Error('Vui lòng đăng nhập lại để tra cứu.');
+    const res=await fetch('/api/customer/auth/guest-records',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({phone:normalizePhone(phone),page})});
+    const data=await res.json();
+    if(!res.ok||!data.success)throw Error(data.message||'Chưa tải được lịch sử. Vui lòng thử lại.');
+    return {customer:data.customer,pagination:data.pagination,bookings:(data.bookings||[]).map(mapSupabaseBookingRow),orders:(data.orders||[]).map(mapSupabaseOrderRow)};
 }
 
 function mapSupabaseOrderRow(row) {

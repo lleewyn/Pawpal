@@ -774,7 +774,7 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
             };
 
             _staffRealtimeChannel = client.channel('admin-staff-live-sync')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff' }, () => triggerStaffSync('staff:list*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff' }, payload => triggerStaffSync(payload?.eventType==='RESYNC'?'staff:*':'staff:list*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_schedule' }, () => triggerStaffSync('staff:schedules*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, () => triggerStaffSync('staff:schedules*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment_item' }, () => triggerStaffSync('staff:schedules*'))

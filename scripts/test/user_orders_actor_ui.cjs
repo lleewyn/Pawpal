@@ -5,7 +5,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  await page.route('**/*',route=>{
   const url=new URL(route.request().url());if(url.origin!=='http://pawpal.test')return route.abort();
   if(url.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:fs.readFileSync('pages/user/modules/orders/orders.html','utf8')});
-  if(url.pathname==='/scripts/api/api.js')return route.fulfill({contentType:'text/javascript',body:'export const API={getUserOrders:async owner=>{window.reads++;if(window.hold)await new Promise(r=>window.release=r);return [{id:"PRIVATE-"+owner,status:"completed",paymentStatus:"paid",total:100000,products:[]}];}};'});
+  if(url.pathname==='/scripts/api/api.js')return route.fulfill({contentType:'text/javascript',body:'export const API={getUserOrderPage:async owner=>{window.reads++;if(window.hold)await new Promise(r=>window.release=r);return {rows:[{id:"PRIVATE-"+owner,status:"completed",paymentStatus:"paid",total:100000,products:[]}],meta:{page:1,total:1,counts:{all:1,completed:1},stats:{spent:100000,completed:1,processing:0}}};}};'});
   if(/\/(return-handler|review-handler)\.js$/.test(url.pathname))return route.fulfill({contentType:'text/javascript',body:''});
   const file=path.join(process.cwd(),url.pathname);if(!fs.existsSync(file))return route.abort();return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(file,'utf8')});
  });

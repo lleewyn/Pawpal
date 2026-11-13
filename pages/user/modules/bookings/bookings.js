@@ -92,13 +92,18 @@ function escapeHtml(text) {
 let isInitRunning = false;
 let bookingsLoadVersion = 0;
 let stopBookingsRealtime;
+let bookingPage=1,bookingMeta=null,bookingStatus='all',bookingAuthListener;
 export function dispose() {
     ++bookingsLoadVersion;
     stopBookingsRealtime?.();
+    stopBookingsRealtime=null;
+    if(bookingAuthListener)document.removeEventListener('auth_state_changed',bookingAuthListener);
+    bookingAuthListener=null;bookingMeta=null;
 }
 
 export async function init() {
     if (isInitRunning) return;
+    dispose();
     isInitRunning = true;
     try {
         if (!document.getElementById('bookingsList')) return;
@@ -106,12 +111,16 @@ export async function init() {
             window.setUserSubBreadcrumb('', 'bookings');
         }
         initFilterTabs();
+        const mountedOwner=JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id;
+        bookingAuthListener=()=>{if(JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id===mountedOwner)return;dispose();allBookings=[];renderBookings('all');};
+        document.addEventListener('auth_state_changed',bookingAuthListener);
+        bookingPage=1;
         await loadBookings('all');
         const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         stopBookingsRealtime = watchCustomerTables(client, user?.id, ['appointment', 'appointment_item', 'payment', 'review'], () => {
             const active = document.querySelector('.booking-filter-tab.active, .filter-tab.active');
-            loadBookings(active?.dataset.status || 'all');
+            return loadBookings(active?.dataset.status || 'all');
         });
     } finally {
         isInitRunning = false;
@@ -129,7 +138,7 @@ function initFilterTabs() {
 
             this.classList.add('active');
             this.setAttribute('aria-selected', 'true');
-            renderBookings(this.dataset.status);
+            bookingPage=1;loadBookings(this.dataset.status);
         });
     });
 }
@@ -139,10 +148,13 @@ async function loadBookings(status) {
     try {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (!currentUser) throw new Error('Vui lòng đăng nhập để xem lịch hẹn.');
-        const liveBookings = await API.getUserBookings(currentUser);
+        const result = await API.getUserBookingPage(currentUser,{page:bookingPage,status});
         if (loadVersion !== bookingsLoadVersion) return;
-        allBookings = liveBookings;
-        const userPets = currentUser ? await API.getUserPets(currentUser) : [];
+        if(JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id!==currentUser.id)return;
+        bookingMeta=result.meta;bookingPage=result.meta.page;bookingStatus=status;
+        allBookings = result.rows;
+        // The page already includes each pet's display fields; no second full pet-list query.
+        const userPets = allBookings.map(b=>({id:b.petId,name:b.petName,image:b.petAvatar,species:b.petSpecies,breed:b.petBreed}));
         if (loadVersion !== bookingsLoadVersion) return;
         
         currentPetMap = new Map();
@@ -176,8 +188,8 @@ function renderBookings(status) {
 
     let filteredBookings = [...allBookings];
     
-    const counts = { all: filteredBookings.length, pending: 0, confirmed: 0, 'in-progress': 0, completed: 0, cancelled: 0 };
-    filteredBookings.forEach(booking => {
+    const counts = bookingMeta?.counts || { all: filteredBookings.length, pending: 0, confirmed: 0, 'in-progress': 0, completed: 0, cancelled: 0 };
+    if(!bookingMeta)filteredBookings.forEach(booking => {
         const resolved = resolveBookingStatus(booking);
         Object.keys(counts).forEach(key => {
             if (key !== 'all' && statusAliases[key] && statusAliases[key].includes(resolved)) {
@@ -212,6 +224,7 @@ function renderBookings(status) {
     if (skeletonEl) skeletonEl.remove();
 
     bookingsList.querySelectorAll('.booking-card').forEach((card) => card.remove());
+    renderBookingPager(bookingsList);
 
     if (filteredBookings.length === 0) {
         emptyState.classList.remove('d-none');
@@ -220,6 +233,15 @@ function renderBookings(status) {
 
     emptyState.classList.add('d-none');
     filteredBookings.forEach((booking) => bookingsList.appendChild(createBookingCard(booking)));
+}
+
+function renderBookingPager(list){
+    let pager=document.getElementById('bookingsPagination');
+    if(!pager){pager=document.createElement('nav');pager.id='bookingsPagination';pager.className='bookings-pagination';pager.setAttribute('aria-label','Trang lịch hẹn');list.after(pager);}
+    pager.replaceChildren();const total=Math.ceil((bookingMeta?.total||0)/10);pager.hidden=total<=1;if(total<=1)return;
+    const numbers=new Set([1,total,bookingPage]);for(let p=Math.max(1,bookingPage-1);p<=Math.min(total,bookingPage+1);p++)numbers.add(p);
+    const add=(label,page,disabled=false)=>{const button=document.createElement('button');button.type='button';button.className='booking-page-button';button.textContent=label;button.disabled=disabled;if(page===bookingPage&&label!=='<'&&label!=='>')button.setAttribute('aria-current','page');button.onclick=()=>{bookingPage=page;loadBookings(bookingStatus);};pager.append(button);};
+    add('<',bookingPage-1,bookingPage<=1);for(const p of [...numbers].sort((a,b)=>a-b))add(String(p),p);add('>',bookingPage+1,bookingPage>=total);
 }
 
 function createBookingCard(booking) {

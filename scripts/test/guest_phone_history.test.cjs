@@ -2,14 +2,27 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {createGuestPhoneHistory}=require('../api/guest_phone_history');
 const {hashOtp}=require('../api/customer_auth_store');
 const orderId='00000000-0000-0000-0000-000000000011';
-function fixture({production=false,demo=true,member=false,locked=false,verifyFails=false,otpPreviewOrigin=null,otpTestPhones=[]}={}){
+test('verified history pages return 10/10/3 and reject altered or cross-phone grants',async()=>{
+ const f=fixture({rowCount:23}),{cookie,challengeId}=await f.begin();
+ const first=await f.send({phone:'0908887766',challengeId,code:'555666'},cookie);
+ assert.equal(first.code,200);assert.equal(first.data.orders.length,10);assert.equal(first.data.bookings.length,10);assert.equal(first.data.pagination.hasMore,true);
+ const grant=first.data.pagination.grant;
+ const next=await f.send({phone:'0908887766',historyPage:{grant,page:1}});
+ assert.equal(next.code,200);assert.equal(next.data.orders.length,10);assert.notEqual(first.data.orders[0].id,next.data.orders[0].id);
+ const last=await f.send({phone:'0908887766',historyPage:{grant,page:2}});
+ assert.equal(last.code,200);assert.equal(last.data.orders.length,3);assert.equal(last.data.pagination.hasMore,false);
+ const before=f.reads.length;
+ for(const body of [{phone:'0908887766',historyPage:{grant:grant+'x',page:1}},{phone:'0908887765',historyPage:{grant,page:1}},{phone:'0908887766',historyPage:{grant,page:-1}}])assert.equal((await f.send(body)).code,400);
+ assert.equal(f.reads.length,before);
+});
+function fixture({production=false,demo=true,member=false,locked=false,verifyFails=false,otpPreviewOrigin=null,otpTestPhones=[],rowCount=1}={}){
  const challenges=new Map(),reads=[],sms=[],authChecks=[],writes=[];
  const store={async limit(){},async issue(value){challenges.set(value.id,{...value,status:'pending',attempts:0})},async activate(id,ok){challenges.get(id).status=ok?'active':'failed'},
   async claim(id,mode,hash,claimId){const c=challenges.get(id);if(!c||c.mode!==mode||c.status!=='active'||c.attempts>=5)throw Error('Expired challenge');c.attempts++;if(c.hash&&hash!==c.hash)throw Error('Wrong code');c.status='claimed';c.claimId=claimId;return c},
   async finish(id,claimId,ok){const c=challenges.get(id);assert.equal(c.claimId,claimId);c.status=ok?'consumed':'active'}};
  const admin={from(table){const read={table,filters:[]};reads.push(read);const q={select(){return q},eq(key,value){read.filters.push([key,value]);return q},order(){return q},
   async maybeSingle(){return {data:table==='customer_profile'?{full_name:'Khách thử nghiệm'}:{id:'customer-id',auth_user_id:member?'member-id':null,customer_status:locked?'locked':'active'}}},
-  async limit(){return {data:table==='customer_phone'?[{customer_id:'customer-id'}]:table==='staff'?[]:[{id:table==='sales_order'?orderId:table+'-id'}]}}};return q},
+  range(start,end){read.range=[start,end];return q;},limit(count,opts){(read.limits??=[]).push({count,opts});return q;},then(resolve){return Promise.resolve({data:table==='customer_phone'?[{customer_id:'customer-id'}]:table==='staff'?[]:Array.from({length:rowCount},(_,i)=>({id:table==='sales_order'?(i===0?orderId:'00000000-0000-0000-0000-'+String(i+11).padStart(12,'0')):table+'-'+i})).slice(read.range?.[0]||0,(read.range?.[1]??(rowCount-1))+1)}).then(resolve)}};return q},
   async rpc(name,args){writes.push({name,args});return {data:args.p_id};}};
  const clientFactory=()=>({auth:{
   async signInWithOtp(value){sms.push(value);return {}},
@@ -25,7 +38,7 @@ test('legacy lookup requests a server challenge without reading history or creat
 });
 test('valid local OTP returns only the legacy phone owner history and consumes the challenge',async()=>{
  const f=fixture(),{cookie,challengeId}=await f.begin();const res=await f.send({phone:'0908887766',challengeId,code:'555666'},cookie);
- assert.equal(res.code,200);assert.equal(res.data.bookings.length,1);assert.equal(res.data.orders.length,1);
+ assert.equal(res.code,200);assert.equal(res.data.bookings.length,1);assert.equal(res.data.orders.length,1);assert.ok(f.reads.find(r=>r.table==='sales_order').limits.some(l=>l.count===1&&l.opts?.referencedTable?.endsWith('product_media')));
  assert.deepEqual(res.data.customer,{name:'Khách thử nghiệm',phone:'0908887766'});
  assert.deepEqual(f.reads.find(r=>r.table==='customer_profile').filters,[['customer_id','customer-id']]);
  for(const r of f.reads.filter(r=>['appointment','sales_order'].includes(r.table)))assert.deepEqual(r.filters,[['customer_id','customer-id']]);

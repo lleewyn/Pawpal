@@ -116,9 +116,21 @@
    el(id)?.addEventListener('input',()=>update());el(id)?.addEventListener('change',()=>update());
   }
   const voucher=el('createOrderVoucherCode'),popover=el('createOrderVoucherDropdown');
-  const renderVouchers=()=>{popover.replaceChildren();for(const v of window.PawpalOrders.state.vouchers||[]){if(!['all','shop'].includes(v.target)||v.status!=='active'||!window.PawpalOrders.helpers.matchSearch(v.code+' '+v.name,voucher.value))continue;
-   const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';button.textContent=v.dbCode+' · '+v.name+' · '+v.discount;button.onmousedown=e=>e.preventDefault();button.onclick=()=>{voucher.value=v.dbCode;popover.style.display='none';update();};popover.append(button);
-  }popover.style.display=popover.childElementCount?'block':'none';};
+  let voucherTimer,voucherVersion=0;
+  const renderVouchers=()=>{clearTimeout(voucherTimer);const version=++voucherVersion,query=voucher.value.trim().slice(0,200);popover.replaceChildren();
+   voucherTimer=setTimeout(async()=>{
+    try{
+     const {data,error}=await window.getSupabaseClient().rpc('admin_sales_voucher_page',{p_query:query,p_page:1,p_pos:true});
+     if(error)throw error;if(version!==voucherVersion||document.activeElement!==voucher||!voucher.isConnected)return;
+     for(const v of data.rows||[]){
+      const button=document.createElement('button');button.type='button';button.className='customer-autocomplete-item';button.textContent=v.voucher_code+' · '+(v.voucher_name||v.description||'');button.onmousedown=e=>e.preventDefault();button.onclick=()=>{voucherVersion++;voucher.value=v.voucher_code;popover.style.display='none';update();};popover.append(button);
+     }
+     if(!popover.childElementCount)popover.textContent='Không có voucher phù hợp.';
+     popover.style.display='block';
+    }catch(e){if(version===voucherVersion){popover.textContent='Chưa tải được voucher. Vui lòng thử lại.';popover.style.display='block';}}
+   },250);
+  };
+
   voucher.addEventListener('input',renderVouchers);voucher.addEventListener('focus',renderVouchers);voucher.addEventListener('blur',()=>setTimeout(()=>popover.style.display='none',100));
   return {update,reset,save};
  }};
@@ -851,8 +863,8 @@
             try {
                 ++customerSearchVersion;++productSearchVersion;posProductChoices=[];
                 renderPosCartTable();
-                await Promise.all([window.PawpalOrders.fetchVouchersData(),posPricing.reset()]);
-                if(state.vouchersError) document.getElementById('posPricingNotice').textContent='Không thể tải đủ dữ liệu bán hàng. Đóng và mở lại để thử lại.';
+                await posPricing.reset();
+
             } catch(error) {
                 document.getElementById('posPricingNotice').textContent='Không thể tải dữ liệu bán hàng. Đóng và mở lại để thử lại.';
             } finally { search.disabled=false; }

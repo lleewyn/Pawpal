@@ -14,8 +14,8 @@
     let reviewFilterServiceCode = null;
     let reviewFilterServiceName = null;
     let reviewCurrentPage = 1;
-    let reviewExportRows=[];
     const REVIEWS_PAGE_SIZE = 10;
+    function reviewFilters(){return {query:reviewSearchTerm.slice(0,200),star:reviewFilterStar,category:reviewFilterCategory,staff:reviewFilterStaff,status:reviewFilterStatus,serviceId:reviewFilterServiceId||''};}
     let replyImageGallery=null,replyImageVersion=0;
     async function loadReplyImages(review,modal){
         replyImageGallery?.clear();const version=++replyImageVersion;
@@ -42,22 +42,17 @@
             return;
         }
 
-        const ratedReviews = reviewsData.filter(r => Number.isFinite(Number(r.rating)) && Number(r.rating) >= 1 && Number(r.rating) <= 5);
-        let avgRating = '—';
-        if (ratedReviews.length > 0) {
-            const sumStars = ratedReviews.reduce((acc, r) => acc + Number(r.rating), 0);
-            avgRating = (sumStars / ratedReviews.length).toFixed(1) + ' / 5.0';
-        }
-
-        const pendingCount = reviewsData.filter(r => !r.replyText && r.status !== 'replied').length;
-        const lowStarCount = ratedReviews.filter(r => Number(r.rating) <= 3).length;
+        const stats=PawpalServices.state.reviewPageMeta?.stats;
+        if(!stats)return;
+        const avgRating=stats.average==null?'—':Number(stats.average).toFixed(1)+' / 5.0';
+        const pendingCount=stats.pending,lowStarCount=stats.low;
 
         const statAvg = document.getElementById('statAvgRating');
         const statTotal = document.getElementById('statTotalReviews');
         const statPending = document.getElementById('statPendingReviews');
         const statLow = document.getElementById('statLowRatingReviews');
 
-        const total = reviewsData.length;
+        const total = stats.total;
         if (statAvg) statAvg.textContent = avgRating;
         if (statTotal) statTotal.textContent = total;
         if (statPending) statPending.textContent = pendingCount;
@@ -102,13 +97,22 @@
     }
 
     // Hiển thị bảng danh sách Đánh giá
-    function renderReviewsTable() {
+    async function renderReviewsTable({skipFetch=false}={}) {
         const tbody = document.getElementById('servicesReviewTableBody') || document.getElementById('servicesReviewsTableBody');
         if (!tbody) return;
+        if(document.hidden || !document.getElementById('subtab-tab-service-reviews')?.classList.contains('active'))return;
 
+        if(!skipFetch){
+            tbody.setAttribute('aria-busy','true');
+            const result=await PawpalServices.loadReviewsData({filters:reviewFilters(),page:reviewCurrentPage});
+            if(result===null)return;
+            tbody.setAttribute('aria-busy','false');
+            reviewCurrentPage=PawpalServices.state.reviewPageMeta?.page||1;
+            updateReviewKPIs();
+        }
         const reviewsData = PawpalServices.state?.reviewsData || [];
         const isLoaded = Boolean(PawpalServices.state?.isLoaded);
-        if (PawpalServices.state?.loadError) {
+        if (PawpalServices.state?.reviewLoadError) {
             delete tbody.dataset.loadingSkeleton;
             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px;">Không thể tải đánh giá dịch vụ. Vui lòng tải lại trang.</td></tr>';
             return;
@@ -118,54 +122,7 @@
             return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
         });
 
-        const filtered = reviewsData.filter(r => {
-            if (reviewFilterServiceId || reviewFilterServiceCode) {
-                const matchId = (r.serviceId && r.serviceId === reviewFilterServiceId) ||
-                                (r.serviceDbId && r.serviceDbId === reviewFilterServiceId);
-                const matchCode = reviewFilterServiceCode && r.serviceCode && r.serviceCode.toUpperCase() === reviewFilterServiceCode.toUpperCase();
-                const matchName = reviewFilterServiceName && r.serviceName && r.serviceName.toLowerCase().includes(reviewFilterServiceName.toLowerCase());
-                if (!matchId && !matchCode && !matchName) return false;
-            }
-
-            if (reviewSearchTerm) {
-                const termUnaccent = toUnaccent(reviewSearchTerm);
-                const termRaw = reviewSearchTerm.toLowerCase().trim();
-                const matchCust = toUnaccent(r.customerName || '').includes(termUnaccent) || (r.customerName || '').toLowerCase().includes(termRaw);
-                const matchComment = toUnaccent(r.comment || '').includes(termUnaccent);
-                const matchBooking = (r.bookingId || '').toLowerCase().includes(termRaw);
-                const matchReview = (r.reviewCode || r.id || '').toLowerCase().includes(termRaw);
-                const matchPhone = (r.phone || '').includes(termRaw);
-                if (!matchCust && !matchComment && !matchBooking && !matchReview && !matchPhone) return false;
-            }
-
-            if (reviewFilterStar !== 'ALL') {
-                const rStar = Number.isFinite(Number(r.rating)) && Number(r.rating) >= 1 && Number(r.rating) <= 5 ? Math.round(Number(r.rating)) : null;
-                if (reviewFilterStar === 'LOW') {
-                    if (rStar === null || rStar > 3) return false;
-                } else if (rStar === null || parseInt(reviewFilterStar, 10) !== rStar) {
-                    return false;
-                }
-            }
-
-            if (reviewFilterCategory !== 'ALL' && r.category !== reviewFilterCategory) {
-                return false;
-            }
-
-            if (reviewFilterStaff !== 'ALL' && r.staff !== reviewFilterStaff) {
-                return false;
-            }
-
-            if (reviewFilterStatus !== 'ALL') {
-                const isReplied = Boolean(r.replyText || r.status === 'replied');
-                if (reviewFilterStatus === 'replied' && !isReplied) return false;
-                if (reviewFilterStatus === 'pending' && isReplied) return false;
-                if (reviewFilterStatus === 'escalated' && !r.hasServiceTicket) return false;
-            }
-
-            return true;
-        });
-
-        reviewExportRows=filtered;
+        const filtered = reviewsData;
         if (filtered.length === 0) {
             if (!isLoaded) {
                 tbody.dataset.loadingSkeleton = 'true';
@@ -202,12 +159,12 @@
         // Xóa thuộc tính loading skeleton nếu có
         delete tbody.dataset.loadingSkeleton;
 
-        const totalPages = Math.ceil(filtered.length / REVIEWS_PAGE_SIZE);
+        const totalPages = Math.ceil((PawpalServices.state.reviewPageMeta?.total||0) / REVIEWS_PAGE_SIZE);
         if (reviewCurrentPage > totalPages) reviewCurrentPage = totalPages;
         if (reviewCurrentPage < 1) reviewCurrentPage = 1;
 
         const startIndex = (reviewCurrentPage - 1) * REVIEWS_PAGE_SIZE;
-        const pageItems = filtered.slice(startIndex, startIndex + REVIEWS_PAGE_SIZE);
+        const pageItems = filtered;
 
         tbody.innerHTML = pageItems.map(r => {
             const isReplied = Boolean(r.replyText || r.status === 'replied');
@@ -282,9 +239,10 @@
         const prevDisabled = reviewCurrentPage === 1 ? 'disabled' : '';
         html += `<button type="button" class="btn-pagination ${prevDisabled}" data-page="prev" title="Trang trước" ${prevDisabled ? 'disabled' : ''}>&lt;</button>`;
 
-        for (let p = 1; p <= totalPages; p++) {
-            const activeClass = p === reviewCurrentPage ? 'active' : '';
-            html += `<button type="button" class="btn-pagination ${activeClass}" data-page="${p}">${p}</button>`;
+        const pages=new Set([1,totalPages,reviewCurrentPage]);
+        for(let p=Math.max(1,reviewCurrentPage-1);p<=Math.min(totalPages,reviewCurrentPage+1);p++)pages.add(p);
+        for(const p of [...pages].sort((a,b)=>a-b)){
+            html+=`<button type="button" class="btn-pagination ${p===reviewCurrentPage?'active':''}" data-page="${p}">${p}</button>`;
         }
 
         const nextDisabled = reviewCurrentPage === totalPages ? 'disabled' : '';
@@ -590,8 +548,9 @@
         // Xuất file báo cáo
         const btnExport = document.getElementById('btnExportReviewReport');
         if (btnExport) {
-            btnExport.addEventListener('click', () => {
-                const rows = reviewExportRows;
+            btnExport.addEventListener('click', async () => {
+                if(btnExport.disabled)return;btnExport.disabled=true;
+                let rows;try{rows=await PawpalServices.exportServiceReviews(reviewFilters());}catch(error){PawpalServices.showToast?.(error.message,'warning');return;}finally{btnExport.disabled=false;}
                 if (rows.length === 0) {
                     PawpalServices.showToast?.('Không có đánh giá để xuất.', 'warning');
                     return;

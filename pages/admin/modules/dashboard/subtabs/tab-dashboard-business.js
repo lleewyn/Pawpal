@@ -22,7 +22,7 @@
             ['growth', 'previous', d.cash && d.previous ? M.growth(d.cash.net, d.previous.net) : null, '%', 'get_admin_dashboard_cashflow', 'Chênh lệch thu thuần chia trị tuyệt đối kỳ trước cùng độ dài.'],
             ['products', 'sources', d.sources?.products, 'VND', 'payment.order_id', 'Thu thành công liên kết duy nhất với đơn hàng.'],
             ['services', 'sources', d.sources?.services, 'VND', 'payment.appointment_id', 'Thu thành công liên kết duy nhất với lịch hẹn.'],
-            ['newCustomers', 'customers', d.customers?.length, 'customers', 'customer.registered_at', 'Hồ sơ khách được ghi nhận trong kỳ.'],
+            ['newCustomers', 'customers', d.customers?M.customerCount(d.customers):undefined, 'customers', 'customer.registered_at', 'Hồ sơ khách được ghi nhận trong kỳ.'],
             ['returningRate', 'returning', d.returning?.rate, '%', 'sales_order.delivered_at; appointment.check_out_time', 'Khách có ít nhất 2 đơn/lịch hoàn thành chia khách có ít nhất 1 trong kỳ; mỗi đơn/lịch tính một lần.']
         ];
         return definitions.map(([id, key, value, unit, source, definition]) => ({
@@ -128,7 +128,7 @@
         for (const row of rows) {
             if (!row.registered_at || !Number.isFinite(Date.parse(row.registered_at))) continue;
             const day = M.dayKey(new Date(row.registered_at));
-            days.set(day, (days.get(day) || 0) + 1);
+            days.set(day, (days.get(day) || 0) + Number(row.count??1));
         }
         return [...days].sort(([a], [b]) => a.localeCompare(b)).map(([day, value]) => ({ name: date(day), value }));
     }
@@ -226,7 +226,7 @@
             ['Tăng trưởng thu thuần', percentage === null ? '—' : (percentage > 0 ? '+' : '') + num(percentage) + '%', percentage !== null ? (percentage >= 0 ? 'Tăng so với kỳ trước' : 'Giảm so với kỳ trước') : 'Chưa đủ dữ liệu so sánh'],
             ['Tiền thu sản phẩm', value('sources', d => d.products, money), 'Thu từ đơn bán lẻ phụ kiện'],
             ['Tiền thu dịch vụ', value('sources', d => d.services, money), 'Thu từ các ca dịch vụ'],
-            ['Khách hàng mới', value('customers', d => d.length), 'Ghi nhận hồ sơ trong kỳ'],
+            ['Khách hàng mới', value('customers', d => M.customerCount(d)), 'Ghi nhận hồ sơ trong kỳ'],
             ['Tỷ lệ khách quay lại', value('returning', d => d.rate, rate => rate === null ? '—' : num(rate) + '%'), 'Tần suất phục vụ khách thân thiết']
         ];
         const metrics = getMetrics();

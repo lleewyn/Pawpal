@@ -13,6 +13,11 @@
     const bannerOverlay=document.getElementById('bannerModalOverlay');
     if(bannerOverlay)new MutationObserver(()=>{if(!bannerOverlay.classList.contains('active')){bannerGeneration++;if(bannerSent)bannerMedia?.saved();void bannerMedia?.close();}}).observe(bannerOverlay,{attributes:true,attributeFilter:['class']});
 
+    let voucherSearchTimer;
+    function loadPromoPage({bannerPage,voucherPage=1}={}){
+        if(document.hidden||sessionStorage.getItem('pawpal_admin_active_module')!=='Cấu hình'||sessionStorage.getItem('pawpal_admin_settings_subtab')!=='tab-banner-promos')return;
+        return PawpalSettings.fetchPromosData({bannerPage:bannerPage||PawpalSettings.state.promosMeta?.bannerPage||1,voucherPage,filters:{query:(document.getElementById('searchVoucherInput')?.value||'').trim().slice(0,200),target:document.getElementById('filterVoucherTarget')?.value||'all',status:document.getElementById('filterVoucherStatus')?.value||'all'}});
+    }
     function getSupabaseClient() {
         return PawpalSettings.getSupabaseClient?.() || (window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient);
     }
@@ -37,8 +42,8 @@
 
     function isVoucherZeroMiss(voucher) {
         if (!voucher) return false;
-        if (voucher.used >= voucher.limit) return true;
-        if (voucher.status === 'active' && (voucher.limit - voucher.used <= 10)) return true;
+        if (voucher.limit!==null && voucher.used >= voucher.limit) return true;
+        if (voucher.limit!==null && voucher.status === 'active' && (voucher.limit - voucher.used <= 10)) return true;
         return false;
     }
 
@@ -47,14 +52,15 @@
         const bannersList = PawpalSettings.state?.bannersList || [];
         const vouchersList = PawpalSettings.state?.vouchersList || [];
 
-        const totalVouchers = vouchersList.length;
-        const activeVouchers = vouchersList.filter(v => v.status === 'active').length;
-        const activeBanners = bannersList.filter(b => b.status === 'active').length;
+        const stats=PawpalSettings.state.promosMeta?.stats;
+        const totalVouchers = stats?.totalVouchers ?? vouchersList.length;
+        const activeVouchers = stats?.activeVouchers ?? vouchersList.filter(v => v.status === 'active').length;
+        const activeBanners = stats?.activeBanners ?? bannersList.filter(b => b.status === 'active').length;
 
         const expiringBanners = bannersList.filter(isBannerExpiring);
         const exhaustedVouchers = vouchersList.filter(v => v.limit!==null && v.used >= v.limit);
         const lowStockVouchers = vouchersList.filter(v => v.status === 'active' && v.limit!==null && v.limit - v.used <= 10 && v.used < v.limit);
-        const totalAlerts = expiringBanners.length + exhaustedVouchers.length + lowStockVouchers.length;
+        const totalAlerts = stats ? stats.expiringBanners+stats.exhaustedVouchers+stats.lowStockVouchers : expiringBanners.length + exhaustedVouchers.length + lowStockVouchers.length;
 
         const statTotalVouchersEl = document.getElementById('statTotalVouchers');
         const statActiveVouchersEl = document.getElementById('statActiveVouchers');
@@ -84,7 +90,9 @@
         const exhaustedVouchers = vouchersList.filter(v => v.limit!==null && v.used >= v.limit);
         const lowStockVouchers = vouchersList.filter(v => v.status === 'active' && v.limit!==null && v.limit - v.used <= 10 && v.used < v.limit);
 
-        const totalIssues = expiringBanners.length + exhaustedVouchers.length + lowStockVouchers.length;
+        const stats=PawpalSettings.state.promosMeta?.stats;
+        const expiringCount=stats?.expiringBanners??expiringBanners.length,exhaustedCount=stats?.exhaustedVouchers??exhaustedVouchers.length,lowCount=stats?.lowStockVouchers??lowStockVouchers.length;
+        const totalIssues=expiringCount+exhaustedCount+lowCount;
 
         // Cập nhật giá trị 5 thẻ KPI
         updateBannerKpis();
@@ -101,9 +109,9 @@
         if (alertMsg) {
             if (totalIssues > 0) {
                 const parts = [];
-                if (expiringBanners.length > 0) parts.push(`${expiringBanners.length} banner sắp hết hạn`);
-                if (exhaustedVouchers.length > 0) parts.push(`${exhaustedVouchers.length} voucher hết sạch lượt`);
-                if (lowStockVouchers.length > 0) parts.push(`${lowStockVouchers.length} voucher sắp hết lượt`);
+                if (expiringCount > 0) parts.push(`${expiringCount} banner sắp hết hạn`);
+                if (exhaustedCount > 0) parts.push(`${exhaustedCount} voucher hết sạch lượt`);
+                if (lowCount > 0) parts.push(`${lowCount} voucher sắp hết lượt`);
                 alertMsg.textContent = `Phát hiện ${totalIssues} mục cần xử lý gấp: ${parts.join(', ')}.`;
                 if (strip) {
                     strip.style.display = 'flex';
@@ -127,7 +135,7 @@
         const el = document.getElementById(containerId);
         if (!el) return;
         if (totalPages < 1) { el.innerHTML = ''; return; }
-        el.innerHTML = `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} data-p="prev">&lt;</button>${Array.from({length: totalPages}, (_, i) => `<button class="pagination-btn ${i + 1 === page ? 'active' : ''}" data-p="${i + 1}">${i + 1}</button>`).join('')}<button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} data-p="next">&gt;</button>`;
+        el.innerHTML = `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} data-p="prev">&lt;</button>${PawpalSettings.pageNumbers(page,totalPages).map(p=> `<button class="pagination-btn ${p === page ? 'active' : ''}" data-p="${p}">${p}</button>`).join('')}<button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} data-p="next">&gt;</button>`;
         el.querySelectorAll('[data-p]').forEach(btn => btn.addEventListener('click', () => {
             const p = btn.dataset.p;
             onChange(p === 'prev' ? page - 1 : p === 'next' ? page + 1 : Number(p));
@@ -146,12 +154,14 @@
     function renderBanners() {
         const container = document.getElementById('bannerCardsContainer');
         if (!container) return;
+        if(!document.getElementById('mkt-banners')?.classList.contains('active'))return;
 
         const bannersList = PawpalSettings.state?.bannersList || [];
         container.innerHTML = '';
-        const totalPages = Math.max(1, Math.ceil(bannersList.length / SETTINGS_PAGE_SIZE));
+        const totalPages = Math.max(1, Math.ceil((PawpalSettings.state.promosMeta?.bannerTotal||0) / SETTINGS_PAGE_SIZE));
+        bannerPage=PawpalSettings.state.promosMeta?.bannerPage||1;
         bannerPage = Math.min(bannerPage, totalPages);
-        const pageItems = bannersList.slice((bannerPage - 1) * SETTINGS_PAGE_SIZE, bannerPage * SETTINGS_PAGE_SIZE);
+        const pageItems = bannersList;
 
         pageItems.forEach(b => {
             const isExpiring = isBannerExpiring(b);
@@ -196,7 +206,7 @@
 
         renderSettingsPager('bannerPaginationControls', bannerPage, totalPages, p => {
             bannerPage = p;
-            renderBanners();
+            loadPromoPage({bannerPage:p,voucherPage:PawpalSettings.state.promosMeta?.voucherPage||1});
         });
 
         // Bật/tắt banner
@@ -289,36 +299,18 @@
     function renderVouchers() {
         const tbody = document.getElementById('vouchersTableBody');
         if (!tbody) return;
-        if (PawpalSettings.state.loadError) {delete tbody.dataset.loadingSkeleton;tbody.innerHTML=`<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" class="settings-table-message settings-table-message--error">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;return;}
+        if (PawpalSettings.state.promosLoadError) {delete tbody.dataset.loadingSkeleton;tbody.innerHTML=`<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" class="settings-table-message settings-table-message--error">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;return;}
         if (!PawpalSettings.state.isLoaded) return;
         delete tbody.dataset.loadingSkeleton;
 
         const vouchersList = PawpalSettings.state?.vouchersList || [];
-        const keyword = (document.getElementById('searchVoucherInput')?.value || '').toLowerCase().trim();
-        const targetFilter = document.getElementById('filterVoucherTarget')?.value || 'all';
-        const statusFilter = document.getElementById('filterVoucherStatus')?.value || 'all';
-
-        const filtered = vouchersList.filter(v => {
-            if (targetFilter !== 'all' && v.target !== targetFilter) return false;
-            
-            if (statusFilter === 'zero-miss') {
-                if (!isVoucherZeroMiss(v)) return false;
-            } else if (statusFilter !== 'all' && v.status !== statusFilter) {
-                return false;
-            }
-
-            if (keyword) {
-                return v.code.toLowerCase().includes(keyword) || v.name.toLowerCase().includes(keyword);
-            }
-            return true;
-        });
-
+        const filtered = vouchersList;
         const voucherPageSize = 10;
-        const totalVoucherPages = Math.max(1, Math.ceil(filtered.length / voucherPageSize));
-        const requestedPage = Number(window._settingsVoucherPage) || 1;
+        const totalVoucherPages = Math.max(1, Math.ceil((PawpalSettings.state.promosMeta?.voucherTotal||0) / voucherPageSize));
+        const requestedPage = PawpalSettings.state.promosMeta?.voucherPage || 1;
         window._settingsVoucherPage = Math.max(1, Math.min(requestedPage, totalVoucherPages));
         const voucherPage = window._settingsVoucherPage;
-        const pageItems = filtered.slice((voucherPage - 1) * voucherPageSize, voucherPage * voucherPageSize);
+        const pageItems = filtered;
 
         const pageBar = document.querySelector('#subtab-tab-banner-promos .admin-pagination-bar');
         if (pageBar) {
@@ -327,16 +319,16 @@
             prevBtn?.classList.toggle('disabled', voucherPage <= 1);
             nextBtn?.classList.toggle('disabled', voucherPage >= totalVoucherPages);
             const nums = pageBar.querySelector('.voucher-page-numbers');
-            if (nums) nums.innerHTML = Array.from({ length: totalVoucherPages }, (_, i) => `<button type="button" class="pagination-btn ${i + 1 === voucherPage ? 'active' : ''}" data-voucher-page="${i + 1}">${i + 1}</button>`).join('');
+            if (nums) nums.innerHTML = PawpalSettings.pageNumbers(voucherPage,totalVoucherPages).map(p=> `<button type="button" class="pagination-btn ${p === voucherPage ? 'active' : ''}" data-voucher-page="${p}">${p}</button>`).join('');
             nums?.querySelectorAll('[data-voucher-page]').forEach(btn => btn.addEventListener('click', () => {
                 window._settingsVoucherPage = Number(btn.dataset.voucherPage);
-                renderVouchers();
+                loadPromoPage({voucherPage:window._settingsVoucherPage});
             }));
             if (prevBtn) {
                 prevBtn.onclick = () => {
                     if (window._settingsVoucherPage > 1) {
                         window._settingsVoucherPage -= 1;
-                        renderVouchers();
+                        loadPromoPage({voucherPage:window._settingsVoucherPage});
                     }
                 };
             }
@@ -344,7 +336,7 @@
                 nextBtn.onclick = () => {
                     if (window._settingsVoucherPage < totalVoucherPages) {
                         window._settingsVoucherPage += 1;
-                        renderVouchers();
+                        loadPromoPage({voucherPage:window._settingsVoucherPage});
                     }
                 };
             }
@@ -818,16 +810,16 @@
                 const targetPanel = document.getElementById(targetTabId);
                 if (targetPanel) targetPanel.classList.add('active');
 
-                if (targetTabId === 'mkt-vouchers') renderVouchers();
-                else if (targetTabId === 'mkt-banners') renderBanners();
+                if (targetTabId === 'mkt-vouchers') loadPromoPage();
+                else if (targetTabId === 'mkt-banners') loadPromoPage({bannerPage:PawpalSettings.state.promosMeta?.bannerPage||1,voucherPage:PawpalSettings.state.promosMeta?.voucherPage||1});
                 else if (targetTabId === 'mkt-notices') renderNotifications();
             });
         });
 
         // Lọc Voucher
-        document.getElementById('searchVoucherInput')?.addEventListener('input', () => { window._settingsVoucherPage = 1; renderVouchers(); });
-        document.getElementById('filterVoucherTarget')?.addEventListener('change', () => { window._settingsVoucherPage = 1; renderVouchers(); });
-        document.getElementById('filterVoucherStatus')?.addEventListener('change', () => { window._settingsVoucherPage = 1; renderVouchers(); });
+        document.getElementById('searchVoucherInput')?.addEventListener('input', () => {clearTimeout(voucherSearchTimer);voucherSearchTimer=setTimeout(()=>loadPromoPage(),300);});
+        document.getElementById('filterVoucherTarget')?.addEventListener('change', () => loadPromoPage());
+        document.getElementById('filterVoucherStatus')?.addEventListener('change', () => loadPromoPage());
 
         // Nút lọc nhanh Zero-miss
         document.getElementById('btnFilterZeroMiss')?.addEventListener('click', () => {
@@ -838,7 +830,7 @@
                 } else {
                     statusFilter.value = 'zero-miss';
                 }
-                renderVouchers();
+                loadPromoPage();
                 const tableCard = document.querySelector('.settings-master-card');
                 if (tableCard) {
                     tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -875,7 +867,7 @@
                     editor.saved();
                     await logSystemAudit('UPDATE', 'banner', `Cập nhật Banner: "${title}"`);
                 } else {
-                    await mutateBanner('insert', [{id:target, ...payload, display_order: bannersList.length + 1, status: 'dang_hien_thi' }]);
+                    await mutateBanner('insert', [{id:target, ...payload, display_order: (PawpalSettings.state.promosMeta?.bannerTotal??bannersList.length) + 1, status: 'dang_hien_thi' }]);
                     editor.saved();newBannerId=null;
                     await logSystemAudit('INSERT', 'banner', `Thêm Banner mới: "${title}"`);
                 }

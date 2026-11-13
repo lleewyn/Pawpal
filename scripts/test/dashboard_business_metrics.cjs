@@ -12,12 +12,13 @@ test('returning cohort combines order and appointment, deduplicates and excludes
     assert.deepEqual(M.returningCustomers([order], []), { eligible: 1, returning: 0, rate: 0 });
 });
 
-test('returning queries filter completion timestamps using Vietnam period bounds', async () => {
-    const calls = [];
-    const db = { from(table) { const q = { select() { return q; }, in(k, v) { calls.push([table, 'in', k, v]); return q; }, eq(k, v) { calls.push([table, 'eq', k, v]); return q; }, gte(k, v) { calls.push([table, 'gte', k, v]); return q; }, lt(k, v) { calls.push([table, 'lt', k, v]); return q; }, order() { return q; }, range() { return { data: [] }; } }; return q; } };
-    await M.load(db, 'returning', M.period('2026-11-01', '2026-11-11'));
-    assert.ok(calls.some(c => c[0] === 'sales_order' && c[1] === 'gte' && c[2] === 'delivered_at' && c[3] === '2026-11-01T00:00:00+07:00'));
-    assert.ok(calls.some(c => c[0] === 'appointment' && c[1] === 'lt' && c[2] === 'check_out_time' && c[3] === '2026-11-12T00:00:00+07:00'));
+test('business metrics use bounded aggregate RPCs with validated Vietnam dates',async()=>{
+ const calls=[],db={from(){throw Error('raw table read');},rpc:async(name,args)=>{calls.push({name,args});return {data:args.p_key==='customers'?[{registered_at:'2026-11-01',count:23}]:{eligible:2,returning:1,rate:50}};}};
+ const range=M.period('2026-11-01','2026-11-11');
+ await M.load(db,'returning',range);const rows=await M.load(db,'customers',range);assert.equal(M.customerCount(rows),23);
+ assert.deepEqual(calls[0],{name:'admin_business_metric',args:{p_key:'returning',p_from:'2026-11-01',p_to:'2026-11-11'}});
+ await assert.rejects(()=>M.load(db,'customers',{from:'2026-11-11',to:'2026-11-01'}));assert.equal(calls.length,2);
+ const ranked=[{aggregate:true,id:'a',name:'A',quantity:2,value:100},{aggregate:true,id:'b',name:'B',quantity:3,value:80}];assert.equal(M.rank(ranked,'products')[0].id,'a');assert.equal(M.rank(ranked,'products','quantity')[0].id,'b');
 });
 
 test('Vietnam date boundary, leap day, equivalent previous period and invalid filters', () => {

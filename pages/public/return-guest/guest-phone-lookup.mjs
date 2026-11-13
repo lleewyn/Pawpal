@@ -61,8 +61,8 @@ export function mountGuestPhoneLookup(form,{loadMember,renderMember,clearMember,
     const input=form.querySelector('#rg-phone'),button=form.querySelector('[type="submit"]'),error=form.querySelector('#rg-error');
     mountGuestBookingLookup(form);mountGuestOrderLookup(form);
     error.setAttribute('role','status');error.setAttribute('aria-live','polite');
-    let generation=0,busy=false,verification;
-    const clear=()=>{generation++;verification?.abort();clearMember();document.getElementById('rg-results')?.classList.add('d-none');error.classList.add('d-none');};
+    let generation=0,busy=false,verification,continuation=null,loaded=null;
+    const clear=()=>{generation++;continuation=null;loaded=null;document.getElementById('rg-history-more')?.remove();verification?.abort();clearMember();document.getElementById('rg-results')?.classList.add('d-none');error.classList.add('d-none');};
     input.addEventListener('input',clear);
     form.addEventListener('submit',async event=>{
         event.preventDefault();if(busy)return;clear();const expected=generation;
@@ -75,26 +75,48 @@ export function mountGuestPhoneLookup(form,{loadMember,renderMember,clearMember,
             if(expected!==generation)return;
             if(session?.data?.session?.access_token){
                 const results=await loadMember(phone);if(expected!==generation)return;
+                loaded=results;continuation={...results.pagination,source:'member',phone};
                 renderMember(results.bookings,results.orders,phone,results.customer);
-                document.getElementById('rg-results')?.classList.remove('d-none');
+                document.getElementById('rg-results')?.classList.remove('d-none');renderMore();
                 return;
             }
-            let results;
-            try{const data=await guestCommerce.request('lookup',{phone});if(expected!==generation)return;results=mapGuestReceipts(data);}
+            let results,raw,source;
+            try{raw=await guestCommerce.request('lookup',{phone});source='session';if(expected!==generation)return;results=mapGuestReceipts(raw);}
             catch(failure){
                 if(expected!==generation)return;
                 const challenge=await guestCommerce.request('phone-lookup',{phone});
                 if(expected!==generation)return;
                 if(!challenge?.requiresOtp||!challenge?.challengeId)throw Error('Chưa khởi tạo được xác thực. Vui lòng thử lại.');
                 const rows=await verifyGuestHistoryPhone(phone,challenge,verification.signal);if(expected!==generation)return;
-                results=mapHistory(rows);
+                raw=rows;source='phone';results=mapHistory(rows);
             }
             if(!results.bookings.length&&!results.orders.length){error.textContent='Chưa tìm thấy đơn hàng hoặc lịch hẹn với số điện thoại này.';error.classList.remove('d-none');return;}
+            loaded=results;continuation={...raw.pagination,source,phone};
             renderMember(results.bookings,results.orders,phone,results.customer);
             document.getElementById('rg-results')?.classList.remove('d-none');
+            renderMore();
         }catch(failure){if(expected===generation&&failure.name!=='AbortError'){error.textContent=failure.message||'Chưa tra cứu được. Vui lòng thử lại.';error.classList.remove('d-none');}}
         finally{busy=false;button.disabled=false;button.textContent='Tìm kiếm';}
     });
+    function renderMore(){
+        document.getElementById('rg-history-more')?.remove();
+        if(!continuation?.hasMore)return;
+        const more=document.createElement('button');more.id='rg-history-more';more.type='button';more.className='btn rg-history-more';more.textContent='Xem giao dịch trước';
+        more.onclick=async()=>{
+            const expected=generation,next={...continuation};more.disabled=true;error.classList.add('d-none');
+            try{
+                const page=Number(next.page)+1;
+                const data=next.source==='member'?await loadMember(next.phone,page):next.source==='session'?await guestCommerce.request('lookup',{phone:next.phone,page}):await guestCommerce.request('phone-lookup',{phone:next.phone,historyPage:{grant:next.grant,page}});
+                if(expected!==generation)return;
+                const result=next.source==='member'?data:next.source==='session'?mapGuestReceipts(data):mapHistory(data);
+                const merge=(a,b)=>[...new Map([...a,...b].map(row=>[row._supabaseId||row.id,row])).values()];
+                loaded={customer:loaded.customer,bookings:merge(loaded.bookings,result.bookings),orders:merge(loaded.orders,result.orders)};
+                continuation={...next,...data.pagination};
+                renderMember(loaded.bookings,loaded.orders,next.phone,loaded.customer);renderMore();
+            }catch(failure){if(expected===generation){more.disabled=false;error.textContent=failure.message||'Chưa tải được giao dịch trước. Vui lòng thử lại.';error.classList.remove('d-none');}}
+        };
+        document.getElementById('rg-results')?.after(more);
+    }
     const reset=()=>{clear();input.value='';};
     document.addEventListener('auth_state_changed',reset);
     window.addEventListener('storage',event=>{if(event.key==='pawpal_current_user'||event.key===null)reset();});

@@ -160,6 +160,8 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
         guestRecords: wrap(async (req, res) => {
             await limit(`guest-records:${req.ip}`, 60, 60000);
             const phone = phoneLocal(req.body.phone);
+            const page=req.body.page??0;
+            if(!Number.isInteger(page)||page<0||page>1000)return res.status(400).json({success:false,message:'Trang tra cứu không hợp lệ.'});
             // A phone number and a browser-only OTP flag do not prove ownership.
             // Guest lookup needs a server-issued verified proof before it can be enabled.
             const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
@@ -186,7 +188,7 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                     pet_profile ( id, pet_name )
                 `)
                 .eq('customer_id', c.id)
-                .order('scheduled_start_at', { ascending: false });
+                .order('scheduled_start_at', { ascending: false }).order('id',{ascending:false}).range(page*10,page*10+10);
 
             if (bookingError) console.warn('[GuestRecords] Booking lookup error:', bookingError);
 
@@ -210,14 +212,15 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                     sales_order_detail ( id, quantity, unit_price, discount_amount, product_name_snapshot, sku_snapshot, product_variant ( id, product ( id, product_media ( image_url, is_thumbnail ) ) ) )
                 `)
                 .eq('customer_id', c.id)
-                .order('created_at', { ascending: false });
+                .order('is_thumbnail',{referencedTable:'sales_order_detail.product_variant.product.product_media',ascending:false}).limit(1,{referencedTable:'sales_order_detail.product_variant.product.product_media'}).order('created_at', { ascending: false }).order('id',{ascending:false}).range(page*10,page*10+10);
 
-            if (orderError) console.warn('[GuestRecords] Order lookup error:', orderError);
+            if(bookingError||orderError)throw bookingError||orderError;
 
             res.json({
                 success: true,
-                bookings: bookingRows || [],
-                orders: orderRows || []
+                bookings: (bookingRows || []).slice(0,10),
+                orders: (orderRows || []).slice(0,10),
+                pagination:{page,hasMore:(bookingRows||[]).length>10||(orderRows||[]).length>10}
             });
         }),
         login: wrap(async (req, res) => {

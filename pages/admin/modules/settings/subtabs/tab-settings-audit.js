@@ -8,6 +8,13 @@
     let auditPage = 1;
     const SETTINGS_PAGE_SIZE = 10;
     let isAuditInitialized = false;
+    let searchTimer;
+    function loadPage(page=1) {
+        const request={page,query:(document.getElementById('searchAuditLogInput')?.value||'').trim().slice(0,200),module:document.getElementById('filterAuditTargetModule')?.value||'all'};
+        PawpalSettings.state.auditRequest=request;
+        if(document.hidden || sessionStorage.getItem('pawpal_admin_active_module')!=='Cấu hình' || sessionStorage.getItem('pawpal_admin_settings_subtab')!=='tab-audit-logs')return;
+        return PawpalSettings.fetchAuditData(request);
+    }
 
     function renderSettingsPager(containerId, page, totalPages, onChange) {
         const el = document.getElementById(containerId);
@@ -40,20 +47,30 @@
     function renderAuditLogs() {
         const tbody = document.getElementById('auditLogTableBody');
         if (!tbody) return;
-        if (PawpalSettings.state.loadError) {
-            delete tbody.dataset.loadingSkeleton;
-            tbody.innerHTML = `<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" class="settings-table-message settings-table-message--error">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;
+        tbody.setAttribute('aria-busy',String(Boolean(PawpalSettings.state.auditLoading)));
+        if(PawpalSettings.state.auditLoading){
+            tbody.innerHTML='<tr><td colspan="5" class="settings-table-message">Đang tải nhật ký…</td></tr>';
+            const pager=document.getElementById('auditPaginationControls');if(pager)pager.replaceChildren();
             return;
         }
-        if (!PawpalSettings.state.isLoaded) return;
+        if (PawpalSettings.state.auditLoadError) {
+            delete tbody.dataset.loadingSkeleton;
+            tbody.innerHTML = '<tr><td colspan="5" class="settings-table-message settings-table-message--error">Không tải được nhật ký. <button type="button" class="admin-btn admin-btn-secondary">Thử lại</button></td></tr>';
+            tbody.querySelector('button').onclick=()=>PawpalSettings.fetchAuditData({force:true});
+            document.getElementById('auditPaginationControls')?.replaceChildren();
+            for(const id of ['statTotalAuditLogs','statSyncedAuditLogs','statLastModule']){const node=document.getElementById(id);if(node)node.textContent='—';}
+            return;
+        }
+        if (!PawpalSettings.state.auditMeta) return;
         delete tbody.dataset.loadingSkeleton;
 
         const auditLogsList = PawpalSettings.state?.auditLogsList || [];
         const isSafeModeLocked = PawpalSettings.state?.isSafeModeLocked;
 
-        const totalLogs = auditLogsList.length;
-        const syncedLogs = auditLogsList.filter(l => ['SETTINGS_WRITE','SETTINGS_KNOWLEDGE'].includes(l.action)).length;
-        const lastMod = auditLogsList[0]?.targetModules || 'Chưa có';
+        const meta=PawpalSettings.state.auditMeta;
+        const totalLogs = meta.stats.total;
+        const syncedLogs = meta.stats.synced;
+        const lastMod = meta.stats.lastModule;
 
         const totalEl = document.getElementById('statTotalAuditLogs');
         const syncedEl = document.getElementById('statSyncedAuditLogs');
@@ -68,28 +85,16 @@
             safeModeEl.className = isSafeModeLocked ? 'kpi-val text-warning' : 'kpi-val text-success';
         }
 
-        const keyword = (document.getElementById('searchAuditLogInput')?.value || '').toLowerCase().trim();
-        const targetFilter = document.getElementById('filterAuditTargetModule')?.value || 'all';
+        const filtered = auditLogsList;
 
-        const filtered = auditLogsList.filter(log => {
-            if (targetFilter !== 'all' && log.targetModules !== targetFilter && !log.targetModules.includes(targetFilter)) return false;
-            if (keyword) {
-                return (
-                    log.actionText.toLowerCase().includes(keyword) ||
-                    log.actor.toLowerCase().includes(keyword) ||
-                    log.targetModules.toLowerCase().includes(keyword)
-                );
-            }
-            return true;
-        });
-
-        const totalPages = Math.max(1, Math.ceil(filtered.length / SETTINGS_PAGE_SIZE));
+        const totalPages = Math.max(1, Math.ceil(meta.total / SETTINGS_PAGE_SIZE));
+        auditPage=meta.page;
         if (auditPage > totalPages) auditPage = totalPages;
         if (auditPage < 1) auditPage = 1;
 
         renderSettingsPager('auditPaginationControls', auditPage, totalPages, p => {
             auditPage = p;
-            renderAuditLogs();
+            loadPage(p);
         });
 
         tbody.innerHTML = '';
@@ -98,7 +103,7 @@
             return;
         }
 
-        const pageItems = filtered.slice((auditPage - 1) * SETTINGS_PAGE_SIZE, auditPage * SETTINGS_PAGE_SIZE);
+        const pageItems = filtered;
         const esc = PawpalSettings.escapeHtml || (s => s);
         pageItems.forEach(log => {
             const rawActor = log.actor || 'Quản trị viên';
@@ -139,15 +144,16 @@
             return;
         }
         isAuditInitialized = true;
+        const searchInput=document.getElementById('searchAuditLogInput');if(searchInput)searchInput.maxLength=200;
 
         // Lọc và tìm kiếm trên Subtab 4: Nhật ký Cấu hình
         document.getElementById('searchAuditLogInput')?.addEventListener('input', () => {
             auditPage = 1;
-            renderAuditLogs();
+            clearTimeout(searchTimer);searchTimer=setTimeout(()=>loadPage(1),300);
         });
         document.getElementById('filterAuditTargetModule')?.addEventListener('change', () => {
             auditPage = 1;
-            renderAuditLogs();
+            clearTimeout(searchTimer);loadPage(1);
         });
 
         // Render ban đầu

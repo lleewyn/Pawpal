@@ -941,7 +941,7 @@ async function loadPetBottomInsights() {
 
     try {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || '{}');
-        const bookings = currentUser?.id ? await API.getUserBookings(currentUser.id) : [];
+        const bookings = currentUser?.id ? await API.getContextChoices(currentUser.id,'care') : [];
         const pets = await getPets();
         const activePets = pets.filter(p => !p.isArchived);
         const primaryPet = activePets[0] || null;
@@ -952,7 +952,7 @@ async function loadPetBottomInsights() {
 
         // 1. Phân tích chu kỳ Spa từ các ca hoàn thành gần nhất
         const completedBookings = bookings
-            .filter(b => b.status === 'completed' || b.status === 'in-progress')
+            .filter(b => ['completed','done','da_hoan_tat','in_progress','ready_for_pickup','dang_thuc_hien'].includes(b.status))
             .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
 
         const lastSpa = completedBookings.find(b => {
@@ -994,9 +994,9 @@ async function loadPetBottomInsights() {
             const latestBooking = completedBookings[0];
             if (latestBooking) {
                 const srvTitle = (latestBooking.serviceName || latestBooking.service || 'Tắm sấy và Spa thảo mộc').replace(/\s*&\s*/g, ' và ');
-                const staffName = latestBooking.staff || 'Minh An (Chuyên viên Spa)';
+                const staffName = latestBooking.staff || 'Chưa ghi nhận';
                 const petName = latestBooking.petName || (primaryPet ? primaryPet.name : 'Bé cưng');
-                const noteText = latestBooking.notes || latestBooking.diaryNote || `Bé ${petName} rất ngoan và hợp tác, da sạch và lông sấy phồng mềm mượt.`;
+                const noteText = latestBooking.notes || latestBooking.diaryNote || 'Chưa có lời nhắn từ chuyên viên.';
                 const dateText = latestBooking.date ? new Date(latestBooking.date).toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'}) : 'Gần đây';
 
                 diarySnippetEl.innerHTML = `

@@ -32,7 +32,7 @@ async function openRMADrawer(orderId) {
     }
     try {
         const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        const orders = await API.getUserOrders(user);
+        const orders = await API.getUserOrders(user, {id:orderId});
         currentRmaOrder = orders.find(order => [order.id, order._supabaseId]
             .some(id => id != null && String(id) === String(orderId)));
         if (!currentRmaOrder) throw new Error('Không tìm thấy đơn hàng để đổi trả.');

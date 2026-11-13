@@ -141,27 +141,39 @@
   });
   text('viewTicketTimeline','Đang tải lịch sử…');text('complaintActionError','');
   try {
-   const messages=await readDetailResource(t,'messages',async()=>{
-    const messages=[];
-   for(let offset=0;;offset+=500){
-    const {data,error}=await client().from('support_ticket_message').select('id,sender_type,sender_account_id,content,is_internal,created_at').eq('ticket_id',t.rawId).order('created_at').order('id').range(offset,offset+499);
-    if(error)throw error;messages.push(...data);if(data.length<500)break;
-   }
-    return messages;
-   });
+   await loadMessagePage(t,version);
    if(version!==renderVersion)return;
-   $('viewTicketTimeline').innerHTML=messages.map(m=>{
-    const author=mod.state.cachedStaff.find(s=>s.auth_user_id===m.sender_account_id)?.full_name || (['staff','cskh','nhan_vien'].includes(m.sender_type)?'Nhân viên':m.sender_type==='system'?'Hệ thống':['user','customer','khach_hang'].includes(m.sender_type)?t.customerName:'Người gửi');
-    return `<article class="complaint-history-entry"><strong>${escapeHtml(author)}</strong> <span>${escapeHtml(mod.formatDateTime(m.created_at))} · ${m.is_internal?'Nội bộ':'Trao đổi'}</span>${m.id===t.customerFollowupMessageId?' <strong class="admin-badge badge-info">Phản hồi mới</strong>':''}<p>${escapeHtml(m.content)}</p></article>`;
-   }).join('') || 'Chưa có lịch sử trao đổi.';
-   const audit={data:await readDetailResource(t,'audit',()=>readAll(()=>client().from('audit_log').select('id,description,created_at').eq('entity_id',t.rawId).eq('action','COMPLAINT_ACTION').order('created_at',{ascending:false}).order('id',{ascending:false})))};
+   const audit={data:await readDetailResource(t,'action-summary',async()=>{const {data,error}=await client().rpc('admin_complaint_action_summary',{p_ticket:t.rawId});if(error)throw error;if(!Array.isArray(data))throw Error('invalid_action_summary');return data;})};
    if(version!==renderVersion)return;
    const events=(audit.data || []).flatMap(a=>{try{return [JSON.parse(a.description)];}catch{return [];}});
    const proposal=events.find(e=>e.action==='propose');
    if($('btnManagerApproveProposal'))$('btnManagerApproveProposal').disabled=!(window.PawpalAdminAccess?.isAdmin() && t.status==='waiting_manager_approval' && proposal?.details?.option===t.resolution_type);
    text('viewProposedAmount',proposal?Number(proposal.voucher_amount ?? proposal.details.amount ?? 0).toLocaleString('vi-VN')+(proposal.details.option==='points'?' điểm':' đ')+(proposal.details.voucher_code?' · '+proposal.details.voucher_code:''):'Chưa có đề xuất có thể duyệt');
-   text('complaintLinkedResults',audit.error?'Không tải được kết quả liên kết.':audit.data.flatMap(a=>{try{const d=JSON.parse(a.description);return d.action==='complete'?[`${mod.formatDateTime(a.created_at)} · ${d.result_id || d.details.evidence_id}${d.details.replacement_order_id?' · Đơn đổi mới: '+d.details.replacement_order_id:''}${d.details.return_request_id?' · Hàng trả: '+d.details.return_request_id:''}`]:[];}catch{return [];}}).join('\n') || 'Chưa liên kết kết quả thực hiện.');
+   const completed=audit.data.filter(a=>{try{return JSON.parse(a.description).action==='complete';}catch{return false;}});
+   renderCompletedResults(t,version,completed,completed.length>=10,2);
   } catch(error) {if(version===renderVersion)text('viewTicketTimeline','Không tải được lịch sử: '+error.message);}
+ }
+ function renderCompletedResults(t,version,rows,hasMore,nextPage){
+  const host=$('complaintLinkedResults');if(!host)return;
+  host.textContent=rows.flatMap(a=>{try{const d=JSON.parse(a.description);return [`${mod.formatDateTime(a.created_at)} · ${d.result_id || d.details?.evidence_id || 'Đã ghi nhận'}${d.details?.replacement_order_id?' · Đơn đổi mới: '+d.details.replacement_order_id:''}${d.details?.return_request_id?' · Hàng trả: '+d.details.return_request_id:''}`];}catch{return [];}}).join('\n')||'Chưa liên kết kết quả thực hiện.';
+  if(hasMore){const more=document.createElement('button');more.type='button';more.className='admin-btn admin-btn-secondary';more.textContent='Xem kết quả trước';more.onclick=async()=>{
+   more.disabled=true;
+   try{const page=await readDetailResource(t,'completed:'+nextPage,async()=>{const {data,error}=await client().rpc('admin_complaint_completed_page',{p_ticket:t.rawId,p_page:nextPage});if(error)throw error;return data;});if(version!==renderVersion)return;const seen=new Set();const all=[...rows,...page.slice(0,10)].filter(r=>{if(seen.has(r.id))return false;seen.add(r.id);return true;});renderCompletedResults(t,version,all,page.length>10,nextPage+1);}
+   catch(e){if(version===renderVersion){more.disabled=false;more.textContent='Thử tải lại kết quả trước';}}
+  };host.append(document.createElement('br'),more);}
+ }
+ async function loadMessagePage(t,version,offset=0,existing=[]){
+  const page=await readDetailResource(t,'messages:'+offset,async()=>{
+   const {data,error}=await client().from('support_ticket_message').select('id,sender_type,sender_account_id,content,is_internal,created_at').eq('ticket_id',t.rawId).order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+10);
+   if(error)throw error;return data;
+  });
+  if(version!==renderVersion)return;
+  const seen=new Set(),messages=[...page.slice(0,10).reverse(),...existing].filter(m=>{if(seen.has(m.id))return false;seen.add(m.id);return true;});
+  const host=$('viewTicketTimeline');host.innerHTML=messages.map(m=>{
+   const author=mod.state.cachedStaff.find(s=>s.auth_user_id===m.sender_account_id)?.full_name || (['staff','cskh','nhan_vien'].includes(m.sender_type)?'Nhân viên':m.sender_type==='system'?'Hệ thống':['user','customer','khach_hang'].includes(m.sender_type)?t.customerName:'Người gửi');
+   return `<article class="complaint-history-entry"><strong>${escapeHtml(author)}</strong> <span>${escapeHtml(mod.formatDateTime(m.created_at))} · ${m.is_internal?'Nội bộ':'Trao đổi'}</span>${m.id===t.customerFollowupMessageId?' <strong class="admin-badge badge-info">Phản hồi mới</strong>':''}<p>${escapeHtml(m.content)}</p></article>`;
+  }).join('') || 'Chưa có lịch sử trao đổi.';
+  if(page.length>10){const more=document.createElement('button');more.type='button';more.className='admin-btn admin-btn-secondary';more.textContent='Xem trao đổi trước';more.onclick=async()=>{more.disabled=true;try{await loadMessagePage(t,version,offset+10,messages);}catch(e){if(version===renderVersion){more.disabled=false;more.textContent='Thử tải lại trao đổi trước';}}};host.prepend(more);}
  }
  async function loadAttachments(t,version) {
   try {

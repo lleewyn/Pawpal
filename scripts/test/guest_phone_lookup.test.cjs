@@ -1,8 +1,16 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {createGuestCommerce}=require('../api/guest_commerce');
+test('cookie history reads only 11 IDs per group and hydrates 10 receipts per page',async()=>{
+ const f=fixture({rowCount:23}),cookie=await f.cookie();
+ for(const [page,count] of [[0,10],[1,10],[2,3]]){
+  const before=f.receipts.length,res=await f.send('lookup',{phone:'0901234567',page},cookie);
+  assert.equal(res.statusCode,200);assert.equal(res.data.orders.length,count);assert.equal(res.data.bookings.length,count);assert.equal(f.receipts.length-before,count*2);assert.equal(res.data.pagination.hasMore,page<2);
+ }
+ assert.ok(f.reads.filter(r=>r.table!=='guest_session').every(r=>r.range[1]-r.range[0]===10));
+});
 
-function fixture({initialized=true,phone='0901234567',revoked=false}={}){
+function fixture({initialized=true,phone='0901234567',revoked=false,rowCount=1}={}){
  const reads=[],receipts=[];
  const admin={
   async rpc(name,args){
@@ -12,7 +20,7 @@ function fixture({initialized=true,phone='0901234567',revoked=false}={}){
   from(table){
    const read={table,filters:[]};reads.push(read);
    const query={select(){return query},eq(key,value){read.filters.push([key,value]);return query},order(){return query},
-    async limit(){return {data:[{id:table+'-id'}]}},async maybeSingle(){return {data:{customer_id:'session-owner'}}}};
+    async range(start,end){read.range=[start,end];return {data:Array.from({length:rowCount},(_,i)=>({id:table+'-'+i})).slice(start,end+1)}},async maybeSingle(){return {data:{customer_id:'session-owner'}}}};
    return query;
   }
  };

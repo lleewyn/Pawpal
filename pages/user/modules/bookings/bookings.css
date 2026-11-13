@@ -604,3 +604,8 @@
 /* Cancelled appointments recede gently while remaining readable and clickable. */
 .user-portal-body .bookings-module-container .booking-card.status-cancelled{opacity:.6}
 .user-portal-body .bookings-module-container .booking-card.status-cancelled:hover{opacity:.6}
+.bookings-pagination{display:flex;justify-content:center;gap:8px;margin:16px 0}
+.bookings-pagination[hidden]{display:none}
+.booking-page-button{font:inherit;border:1px solid #ECF2EE;border-radius:9px;padding:7px 12px;background:transparent;color:#236B48;cursor:pointer}
+.booking-page-button[aria-current="page"]{background:#236B48;color:white}
+.booking-page-button:disabled{opacity:.4;cursor:default}

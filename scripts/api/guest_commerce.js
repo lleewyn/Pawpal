@@ -40,7 +40,7 @@ function createGuestCommerce({admin,secret,origins,production=true,otpPreviewOri
    const body=req.body;
    if(!body||typeof body!=='object'||Array.isArray(body)||Buffer.byteLength(JSON.stringify(body))>16384)throw Error('invalid_body');
    if(!['session','context','lookup','phone-lookup','pets','profile-read','profile-update','recover','end','contact-ticket','booking-staff-response','booking-slots','booking-hold','booking-release','booking-quote','booking-create','booking-receipt','order-quote','order-create','order-receipt','order-cancel'].includes(action))return res.status(404).json({success:false,message:'Không tìm thấy chức năng.'});
-   const keys=action==='contact-ticket'?['requestId','proof','fullName','phoneNumber','subject','serviceInterest','message']:action==='pets'?['requestId','contact','pet']:action==='context'?['page']:action==='lookup'?['phone']:action==='phone-lookup'?['phone','challengeId','code','returnRequest','cancelRequest']:
+   const keys=action==='contact-ticket'?['requestId','proof','fullName','phoneNumber','subject','serviceInterest','message']:action==='pets'?['requestId','contact','pet']:action==='context'?['page']:action==='lookup'?['phone','page']:action==='phone-lookup'?['phone','challengeId','code','returnRequest','cancelRequest','historyPage']:
     action==='booking-staff-response'?['requestId','bookingId','revision','accept']:action==='booking-slots'?['details','day']:action==='booking-hold'?['requestId','details']:action==='booking-release'?['requestId']:action==='booking-quote'?['details']:action==='booking-create'?['requestId','expectedQuote','details']:action==='booking-receipt'?['requestId']:
     action==='order-cancel'?['requestId','orderId','expectedUpdatedAt','reason']:action==='order-quote'?['details','lines']:action==='order-create'?['requestId','expectedQuote','contact','details','lines','paymentMethodId']:action==='order-receipt'?['requestId']:
     action==='profile-read'?['petId']:action==='profile-update'?['requestId','revision','contact','pet']:action==='recover'?['code']:[];
@@ -125,11 +125,19 @@ function createGuestCommerce({admin,secret,origins,production=true,otpPreviewOri
     if(!context?.initialized||context.contact?.phone!==phone)return res.status(403).json({success:false,message:'Chưa xác minh được số điện thoại trong phiên này. Vui lòng dùng thiết bị đã đặt đơn hoặc lịch hẹn, đăng nhập hoặc liên hệ PawPal.'});
     const owner=await admin.from('guest_session').select('customer_id').eq('token_hash',session.hash).maybeSingle();
     if(owner.error||!owner.data?.customer_id)throw Error('invalid_session');
-    const groups=await Promise.all(['appointment','sales_order'].map(table=>admin.from(table).select('id').eq('customer_id',owner.data.customer_id).order('created_at',{ascending:false}).limit(50)));
+    const page=body.page??0;
+    if(!Number.isInteger(page)||page<0||page>1000)throw Error('invalid_body');
+    const groups=await Promise.all(['appointment','sales_order'].map(table=>admin.from(table).select('id').eq('customer_id',owner.data.customer_id).order('created_at',{ascending:false}).order('id',{ascending:false}).range(page*10,page*10+10)));
     for(const group of groups)if(group.error)throw group.error;
-    // Each receipt RPC rechecks the session, owner and transaction grant.
-    const [bookings,orders]=await Promise.all(groups.map((group,index)=>Promise.all((group.data||[]).map(row=>rpc(index===0?'guest_booking_receipt':'guest_sales_receipt',{p_hash:session.hash,p_request:row.id})))));
-    return res.json({success:true,customer:{name:context.contact?.name||'',phone},bookings,orders});
+    // Each receipt RPC rechecks the session, owner and transaction grant. Bound fan-out to four.
+    const receipts=[];
+    for(let index=0;index<groups.length;index++){
+     const rows=groups[index].data||[],result=[];
+     for(let offset=0;offset<Math.min(10,rows.length);offset+=4)result.push(...await Promise.all(rows.slice(offset,Math.min(offset+4,10)).map(row=>rpc(index===0?'guest_booking_receipt':'guest_sales_receipt',{p_hash:session.hash,p_request:row.id}))));
+     receipts.push(result);
+    }
+    const [bookings,orders]=receipts;
+    return res.json({success:true,customer:{name:context.contact?.name||'',phone},bookings,orders,pagination:{page,hasMore:groups.some(g=>(g.data||[]).length>10)}});
    }
    if(action==='profile-read'){
     if(body.petId!=null&&!UUID.test(body.petId))throw Error('invalid_body');
