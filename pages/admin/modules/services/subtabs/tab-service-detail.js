@@ -36,12 +36,15 @@
         const section = document.getElementById('subtab-tab-service-detail');
         const card = section?.querySelector('.service-detail-card');
         const state = document.getElementById('serviceDetailState');
-        if (!booking) {
+        const loading = !!bookingId && PawpalServices.state.detailLoadingId === bookingId;
+        if (!booking || loading || PawpalServices.state.detailError) {
             syncComposeMedia(null);
             if (card) card.style.display = 'none';
             if (state) {
                 state.style.display = 'block';
-                state.textContent = PawpalServices.state.loadError || PawpalServices.state.detailError
+                state.setAttribute('role','status');
+                state.setAttribute('aria-live','polite');
+                state.textContent = loading ? 'Đang tải hồ sơ lịch hẹn…' : PawpalServices.state.loadError || PawpalServices.state.detailError
                     ? 'Không thể tải hồ sơ lịch hẹn. Vui lòng tải lại trang.'
                     : !PawpalServices.state.isLoaded ? 'Đang tải hồ sơ lịch hẹn…'
                     : !bookingId ? 'Chọn một lịch hẹn từ danh sách để xem hồ sơ.'

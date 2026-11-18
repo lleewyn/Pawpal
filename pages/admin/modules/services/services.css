@@ -2476,6 +2476,25 @@
     align-items: center;
 }
 
+.services-module #modalCreateBooking .adjust-customer-selected-card {
+    margin-top: 0;
+    min-height: 38px;
+    box-sizing: border-box;
+    gap: 12px;
+}
+
+.services-module #modalCreateBooking .adjust-customer-selected-card > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.services-module #modalCreateBooking .adjust-customer-selected-card .btn-clear-selection {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 /* ====================================================================
    MODAL 14: LỊCH TRỰC VÀ ĐIỀU PHỐI KỸ THUẬT VIÊN
    ==================================================================== */
@@ -4405,10 +4424,7 @@
     margin-top: 10px;
 }
 
-.services-module .svc-inline-e7b13069.svc-inline-e7b13069.svc-inline-e7b13069.svc-inline-e7b13069,
-#changeStaffPresetReason.svc-inline-e7b13069 {
-    margin-bottom: 6px;
-}
+
 
 .services-module .svc-inline-f134e21c.svc-inline-f134e21c.svc-inline-f134e21c.svc-inline-f134e21c {
     width: 45px;

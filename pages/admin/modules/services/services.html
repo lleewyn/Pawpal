@@ -558,8 +558,8 @@
 <div class="customer-autocomplete-wrapper svc-inline-9864299d">
 <input autocomplete="off" class="admin-input" id="newBookingCustomer" placeholder="Nhập tên hoặc số điện thoại khách..." type="text"/>
 <div class="customer-autocomplete-popover svc-inline-c8883f38" id="bookingCustomerDropdown" style="display: none;"></div>
-</div>
 <div class="adjust-customer-selected-card" id="bookingSelectedCustomerCard" style="display: none;"></div>
+</div>
 <div class="field-error-text svc-inline-1ee86b9d" id="errorNewBookingCustomer" style="display: none;"></div>
 </div>
 <div class="form-row-2col">
@@ -573,8 +573,8 @@
 <div class="customer-autocomplete-wrapper svc-inline-9864299d">
 <input autocomplete="off" class="admin-input" id="newBookingPetName" placeholder="Tên bé cưng..." type="text"/>
 <div class="customer-autocomplete-popover svc-inline-c8883f38" id="bookingPetDropdown" style="display: none;"></div>
-</div>
 <div class="adjust-customer-selected-card" id="bookingSelectedPetCard" style="display: none;"></div>
+</div>
 <div class="field-error-text svc-inline-1ee86b9d" id="errorNewBookingPetName" style="display: none;"></div>
 </div>
 </div>
@@ -587,6 +587,7 @@
 <div class="form-group-item">
 <label class="form-label-clean">Nhóm dịch vụ <span class="svc-inline-55f4b7c7">*</span></label>
 <select class="admin-select" id="newBookingCategory">
+<option value="" selected></option>
 <option value="Spa">Spa và Grooming</option>
 <option value="Hotel">Pet Hotel</option>
 <option value="Taxi">Pet Taxi</option>
@@ -599,8 +600,8 @@
 <input autocomplete="off" class="admin-input" id="newBookingServiceInput" placeholder="Tìm hoặc chọn gói dịch vụ..." type="text"/>
 <input id="newBookingServiceSelect" type="hidden" value=""/>
 <div class="customer-autocomplete-popover svc-inline-c8883f38" id="bookingServiceDropdown" style="display: none;"></div>
-</div>
 <div class="adjust-customer-selected-card" id="bookingSelectedServiceCard" style="display: none;"></div>
+</div>
 <div class="field-error-text svc-inline-1ee86b9d" id="errorNewBookingServiceSelect" style="display: none;"></div>
 </div>
 </div>
@@ -634,7 +635,7 @@
 <div class="form-group-item">
 <label class="form-label-clean">Loại phòng và chuồng</label>
 <select class="admin-select" id="newBookingHotelRoomType">
-<option value="">Chọn phòng từ danh mục</option>
+<option value=""></option>
 </select>
 </div>
 <div class="form-group-item">
@@ -662,6 +663,7 @@
 <div class="form-group-item">
 <label class="form-label-clean">Hình thức đưa đón <span class="svc-inline-55f4b7c7">*</span></label>
 <select class="admin-select" id="newBookingTaxiTripType">
+<option value="" selected></option>
 <option value="one_way">Một chiều</option>
 <option value="round_trip">Khứ hồi</option>
 </select>
@@ -695,7 +697,7 @@
 <div class="form-group-item">
 <label class="form-label-clean">Kỹ thuật viên hoặc tài xế phụ trách</label>
 <select class="admin-select" id="newBookingStaff">
-<option value="">Chưa phân công (Phân công sau)</option>
+<option value=""></option>
 </select>
 <div class="svc-inline-71090124" id="newBookingStaffWorkloadHint" style="display: none;"></div>
 </div>
@@ -738,6 +740,7 @@
 <div class="form-group-item">
 <label class="form-label-clean">Nhóm dịch vụ <span class="svc-inline-55f4b7c7">*</span></label>
 <select class="admin-select" id="formServiceGroup" required="">
+<option value="" selected></option>
 <option value="Spa">Spa và Grooming</option>
 <option value="Hotel">Pet Hotel</option>
 <option value="Taxi">Pet Taxi</option>
@@ -829,6 +832,7 @@
 <div class="form-group-item">
 <label class="form-label-clean">Cấp độ KTV thực hiện</label>
 <select class="admin-select" id="formServiceStaffLevel">
+<option value="" selected></option>
 <option value="Junior Groomer">Junior Groomer</option>
 <option value="Senior Groomer">Senior Groomer</option>
 <option value="Master Groomer">Master Groomer</option>
@@ -838,8 +842,9 @@
 </div>
 </div>
 <div class="form-group-item">
-<label class="form-label-clean">Trạng thái kinh doanh</label>
-<select class="admin-select" id="formServiceStatus">
+<label class="form-label-clean">Trạng thái kinh doanh <span class="svc-inline-55f4b7c7">*</span></label>
+<select class="admin-select" id="formServiceStatus" required>
+<option value="" selected></option>
 <option value="Đang phục vụ">Đang phục vụ</option>
 <option value="Tạm ẩn">Tạm ẩn</option>
 </select>
@@ -1350,16 +1355,9 @@
 <div class="svc-inline-58aaa0b2" id="changeStaffWorkloadHint" style="display: none;"></div>
 </div>
 <div class="form-group-item">
-<label class="form-label-clean">Lý do điều chuyển nhân sự <span class="svc-inline-55f4b7c7">*</span></label>
-<select class="admin-select svc-inline-e7b13069" id="changeStaffPresetReason">
-<option value="CUSTOM">-- Chọn lý do điều phối chuẩn hóa --</option>
-<option value="KTV bận ca khẩn cấp hoặc lịch hẹn đột xuất">KTV bận ca khẩn cấp hoặc lịch hẹn đột xuất</option>
-<option value="Bé nhút nhát hoặc khó chịu, cần KTV chuyên môn cao hơn">Bé nhút nhát hoặc khó chịu, cần KTV chuyên môn cao hơn</option>
-<option value="Khách hàng yêu cầu đổi KTV phụ trách">Khách hàng yêu cầu đổi KTV phụ trách</option>
-<option value="Điều phối cân bằng tải công việc trong ca trực">Điều phối cân bằng tải công việc trong ca trực</option>
-<option value="KTV gặp sự cố sức khỏe đột xuất">KTV gặp sự cố sức khỏe đột xuất</option>
-</select>
-<input class="admin-input" id="changeStaffReasonInput" placeholder="Nhập lý do chi tiết hoặc ghi chú bàn giao..." required="" type="text"/>
+<label class="form-label-clean" for="changeStaffReasonInput">Lý do điều chuyển nhân sự <span class="svc-inline-55f4b7c7">*</span></label>
+
+<input class="admin-input" id="changeStaffReasonInput" placeholder="Nhập lý do điều chuyển hoặc ghi chú bàn giao..." required="" type="text"/>
 <div class="adjust-reason-quick-tags" id="quickChangeStaffChips">
 <button class="reason-quick-chip" data-target="changeStaffReasonInput" type="button">KTV bận ca khẩn cấp</button>
 <button class="reason-quick-chip" data-target="changeStaffReasonInput" type="button">Bé cần KTV tay nghề cao hơn</button>

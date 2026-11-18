@@ -837,7 +837,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261106_realtime_signals';
+    const MODULE_SCRIPT_VERSION = '20261118_catalog_retry';
     let staffDomainScriptsReady;
     async function loadStaffDomainScripts() {
         if (!staffDomainScriptsReady) staffDomainScriptsReady = (async () => {
@@ -1663,11 +1663,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Chuẩn hóa Empty state cho mọi phân hệ có tìm kiếm/bộ lọc.
     const ensureEmptyStateReset = (root = document) => {
         root.querySelectorAll('td, .empty-state, [class*="empty-state"]').forEach(node => {
+            if (node.querySelector('td, .empty-state, [class*="empty-state"]')) return;
             if (node.querySelector('button, a, .global-reset-filters')) return;
             const text = (node.textContent || '').toLowerCase();
             if (text.includes('xóa bộ lọc')) return;
             if (!text.includes('không tìm thấy') && !text.includes('không có dữ liệu')) return;
             const scope = node.closest('section, .admin-card, .module-content') || document;
+            if (scope.querySelector('#btnServiceClearFilters')) return;
+            if (scope.querySelector('.global-reset-filters')) return;
             const hasControls = scope.querySelector('input[type="search"], input[type="text"], select');
             if (!hasControls) return;
             const button = document.createElement('button');
@@ -1693,7 +1696,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ensureToolbarReset = (root = document) => {
         root.querySelectorAll('.search-box-wrapper').forEach(searchBox => {
             const scope = searchBox.closest('section, .admin-card, .module-content') || searchBox.parentElement;
-            if (!scope || scope.querySelector('.global-toolbar-reset')) return;
+            if (!scope || scope.querySelector('.global-toolbar-reset, #btnServiceClearFilters')) return;
             const controls = scope.querySelectorAll('input[type="search"], input[type="text"], select');
             if (controls.length < 2) return;
             const button = document.createElement('button');

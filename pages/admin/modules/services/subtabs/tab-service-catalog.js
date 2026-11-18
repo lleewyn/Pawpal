@@ -240,11 +240,21 @@
         let pager=document.getElementById('servicesCatalogPagination');
         if(!pager){pager=document.createElement('div');pager.id='servicesCatalogPagination';pager.className='pagination-container';pager.style.cssText='display:flex;justify-content:center;gap:4px;background:transparent;border:none;padding:2px 0;margin-top:-6px;';tbody.closest('.service-master-card').after(pager);}
         pager.replaceChildren();
-        if (PawpalServices.state.loadError || !PawpalServices.state.isLoaded) {
-            if (PawpalServices.state.loadError) {
-                delete tbody.dataset.loadingSkeleton;
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:28px;">Không thể tải dữ liệu dịch vụ. Vui lòng tải lại trang.</td></tr>';
-            }
+        if (PawpalServices.state.catalogLoading) {
+            delete tbody.dataset.loadingSkeleton;
+            tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:28px;" role="status">Đang tải danh mục dịch vụ…</td></tr>';
+            return;
+        }
+        if (PawpalServices.state.auxiliaryErrors?.catalog) {
+            delete tbody.dataset.loadingSkeleton;
+            tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:28px;"><p>Không thể tải danh mục dịch vụ. Vui lòng kiểm tra kết nối và thử lại.</p><button type="button" class="admin-btn admin-btn-secondary" id="btnRetryServiceCatalog">Thử lại</button></td></tr>';
+            document.getElementById('btnRetryServiceCatalog').addEventListener('click',async()=>{
+                if(PawpalServices.state.catalogLoading)return;
+                const request=PawpalServices.loadCatalogData({force:true});
+                renderCatalogTable();
+                await request;
+                renderCatalogTable();
+            });
             return;
         }
         delete tbody.dataset.loadingSkeleton;
@@ -413,7 +423,7 @@
 
     function configureCatalogForm() {
         const select=document.getElementById('formServiceStaffLevel');
-        select?.replaceChildren(new Option('Không yêu cầu cấp độ',''),...(PawpalServices.state.liveLevels||[]).map(l=>new Option(l.level_name,l.id)));
+        select?.replaceChildren(new Option('',''),...(PawpalServices.state.liveLevels||[]).map(l=>new Option(l.level_name,l.id)));
         availablePetSpecies=(PawpalServices.state.liveSpecies||[]).map(s=>s.species_name);
     }
     function openCreateServiceModal() {
@@ -435,7 +445,7 @@
         // Đặt mặc định theo group đang chọn
         const groupSelect = document.getElementById('formServiceGroup');
         if (groupSelect) {
-            groupSelect.value = currentCatalogGroup === 'hotel' ? 'Hotel' : (currentCatalogGroup === 'taxi' ? 'Taxi' : 'Spa');
+            groupSelect.value = '';
         }
 
         const idInput = document.getElementById('formServiceId');
@@ -534,6 +544,8 @@
             const code=input('formServiceId'),old=(PawpalServices.state.servicesData||[]).find(s=>s.code===input('editServiceCodeHidden'));
             const duration=input('formServiceDuration');if(!/^\d+\s*(phút)?$/i.test(duration))throw Error('Thời lượng phải là số phút nguyên dương.');
             const group=input('formServiceGroup');
+            if(!['Spa','Hotel','Taxi'].includes(group))throw Error('Vui lòng chọn nhóm dịch vụ.');
+            if(!['Đang phục vụ','Tạm ẩn'].includes(input('formServiceStatus')))throw Error('Vui lòng chọn trạng thái kinh doanh.');
             const details={service_code:code,service_name:input('formServiceName'),duration_minutes:parseInt(duration,10),category_code:group==='Hotel'?'pet_hotel':group==='Taxi'?'pet_taxi':'grooming_spa',description:input('formServiceDesc'),status:input('formServiceStatus')==='Đang phục vụ'?'active':'inactive',commission_rate:input('formServiceCommission')||null,staff_level_id:input('formServiceStaffLevel')||null,steps:currentEditingServiceSteps,species_ids:selectedPetTypes.map(name=>PawpalServices.state.liveSpecies.find(s=>s.species_name===name)?.id)};
             details.benefits=input('formServiceBenefits');details.amenities=input('formServiceAmenities');
             if(editingVariantRows.length){

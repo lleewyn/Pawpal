@@ -201,10 +201,10 @@ function renderPets(){
 function renderServices(){
  clearHold();
  const currentService=state.service;state.quote=null;
- el('step2').innerHTML=heading('Chọn dịch vụ')+`<div class="booking-form"><label for="bookingServiceSearch">Tìm dịch vụ cho ${escape(state.pet.name)}</label><input id="bookingServiceSearch" type="search" placeholder="Tên gói hoặc nhu cầu chăm sóc"><div class="booking-service-filters"><button type="button" data-category="all" class="active">Tất cả</button>${Object.entries(categories).map(([key,label])=>`<button type="button" data-category="${key}">${label}</button>`).join('')}</div><div id="bookingServiceCards" class="booking-service-cards" data-lenis-prevent></div><div id="bookingAddons"></div><p id="bookingServiceSelected" class="field-note"></p></div>`+navigation(2);
+ el('step2').innerHTML=heading('Chọn dịch vụ')+`<div class="booking-form"><label for="bookingServiceSearch">Tìm dịch vụ cho ${escape(state.pet.name)}</label><input id="bookingServiceSearch" type="search" placeholder="Tên gói hoặc nhu cầu chăm sóc"><div class="booking-service-filters"><button type="button" data-category="all" class="active">Tất cả</button>${Object.entries(categories).map(([key,label])=>`<button type="button" data-category="${key}">${label}</button>`).join('')}</div><div id="bookingServiceCards" class="booking-service-cards" data-lenis-prevent></div><div id="bookingAddons"></div></div>`+navigation(2);
  el('bookingServiceCards')?.addEventListener('wheel',e=>e.stopPropagation(),{passive:true});
  const choose=service=>{
-  state.service=service;state.quote=null;state.room=null;el('step2Next').disabled=!service;el('bookingServiceSelected').textContent=service?`${categories[service.category] || ''} · ${service.duration_label || service.duration+' phút'} · ${service.description || ''}`:'';
+  state.service=service;state.quote=null;state.room=null;el('step2Next').disabled=!service;
   el('bookingAddons').innerHTML=(service?.addons || []).map(a=>`<label class="d-block my-3"><input type="checkbox" class="booking-addon" value="${escape(a.id)}" ${a.required?'checked disabled':''}> ${escape(a.name)} · ${money(a.price)}${a.required?' <span class="required">*</span>':''}</label>`).join('');summary();
  };
  const supported=()=>state.catalog.services.filter(s=>(s.species_ids || []).includes(state.pet.species_id));

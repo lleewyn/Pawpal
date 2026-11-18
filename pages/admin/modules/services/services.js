@@ -1345,6 +1345,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         PawpalServices.state.liveCustomerDirectory=customers.map(c=>({...c,phone_main:primaryPhone(c),pet_profile:pets.filter(p=>p.customer_id===c.id)}));
         return data;
     };
+    let intakeMediaReader, handoverMediaReader, adjustmentMediaReader;
     async function fetchBookingsRaw({ force = false, forceDirectory = force, ids, id } = {}) {
         const adaptPet=p=>({...p,breed:one(p.breed)?.breed_name||'',species:one(one(p.breed)?.species)?.species_name||'',weight:p.weight??null});
         const fetcher=async()=>{
@@ -1508,6 +1509,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
     PawpalServices.fetchBookingCareLogs = fetchBookingCareLogs;
 
     async function loadCatalogData({ force = false } = {}) {
+        PawpalServices.state.catalogLoading = true;
         try {
             const { services, prices, priceError } = await fetchCatalogRaw({ force });
             PawpalServices.state.isLoaded=true;
@@ -1602,6 +1604,8 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
             PawpalServices.state.servicesData=[];
             console.error('[PawpalServices] Lỗi nạp danh mục dịch vụ:', err);
             return [];
+        } finally {
+            PawpalServices.state.catalogLoading = false;
         }
     }
     PawpalServices.loadCatalogData = loadCatalogData;
@@ -1858,6 +1862,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
     }
     PawpalServices.updateBreadcrumb = updateBreadcrumb;
 
+    let bookingDetailVersion = 0;
     function switchSubtab(subtabId, updateHistory = true) {
         if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Dịch vụ') return;
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
@@ -1870,6 +1875,8 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
 
         const root = document.getElementById('subtab-tab-service-bookings')?.closest('.admin-module-wrapper');
         if (!root || sessionStorage.getItem('pawpal_admin_active_module') !== 'Dịch vụ') return;
+        const detailVersion = ++bookingDetailVersion;
+        PawpalServices.state.detailLoadingId = null;
         root.querySelectorAll('.subtab-content').forEach(section => {
             section.classList.toggle('active', section.id === 'subtab-' + subtabId);
         });
@@ -1896,9 +1903,18 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
             updateBreadcrumb(bId);
             if (PawpalServices.subtabs.detail?.renderBookingDetail) {
                 PawpalServices.state.detailError=false;
-                if(PawpalServices.state.bookingsData.some(b=>b.id===bId||b.dbId===bId))PawpalServices.subtabs.detail.renderBookingDetail(bId);
-                else{const card=document.querySelector('#subtab-tab-service-detail .service-detail-card'),state=document.getElementById('serviceDetailState');if(card)card.style.display='none';if(state){state.style.display='block';state.textContent='Đang tải hồ sơ lịch hẹn…';}}
-                ensureBooking(bId).then(()=>{if(PawpalServices.state.selectedBookingId===bId)PawpalServices.subtabs.detail.renderBookingDetail(bId);}).catch(()=>{if(PawpalServices.state.selectedBookingId!==bId)return;PawpalServices.state.detailError=true;PawpalServices.subtabs.detail.renderBookingDetail(bId);});
+                PawpalServices.state.detailLoadingId=bId;
+                PawpalServices.subtabs.detail.renderBookingDetail(bId);
+                if(bId)ensureBooking(bId,{force:true}).then(()=>{
+                    if(detailVersion!==bookingDetailVersion||PawpalServices.state.selectedBookingId!==bId)return;
+                    PawpalServices.state.detailLoadingId=null;
+                    PawpalServices.subtabs.detail.renderBookingDetail(bId);
+                }).catch(()=>{
+                    if(detailVersion!==bookingDetailVersion||PawpalServices.state.selectedBookingId!==bId)return;
+                    PawpalServices.state.detailLoadingId=null;
+                    PawpalServices.state.detailError=true;
+                    PawpalServices.subtabs.detail.renderBookingDetail(bId);
+                });
             }
         } else {
             updateBreadcrumb(null);
@@ -1909,7 +1925,9 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
             PawpalServices.subtabs.bookings.renderUpcomingBar();
             PawpalServices.subtabs.bookings.updateKPIs();
         } else if (subtabId === 'tab-service-catalog' && PawpalServices.subtabs.catalog) {
-            loadCatalogData().then(() => PawpalServices.subtabs.catalog?.renderCatalogTable());
+            const catalogRequest=loadCatalogData();
+            PawpalServices.subtabs.catalog.renderCatalogTable();
+            catalogRequest.then(() => PawpalServices.subtabs.catalog?.renderCatalogTable());
         } else if (subtabId === 'tab-service-reviews' && PawpalServices.subtabs.reviews) {
             PawpalServices.subtabs.reviews.renderReviewsTable();
         }
