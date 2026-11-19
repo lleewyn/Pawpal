@@ -62,8 +62,10 @@
     // Hiển thị thanh thông báo khi đang lọc theo gói dịch vụ cụ thể
     function renderActiveFilterBanner() {
         let banner = document.getElementById('serviceReviewFilterBanner');
+        let insightsContainer = document.getElementById('serviceReviewInsightsContainer');
         if (!reviewFilterServiceId && !reviewFilterServiceCode) {
             if (banner) banner.remove();
+            if (insightsContainer) insightsContainer.remove();
             return;
         }
 
@@ -76,6 +78,12 @@
             banner.id = 'serviceReviewFilterBanner';
             banner.style.cssText = 'display: flex; align-items: center; justify-content: space-between; background: #EEF5F1; border-radius: 9px; padding: 10px 16px; margin-bottom: 14px; font-size: 13px; color: #236B48; border: 1px solid #C3DEC7;';
             masterCard.parentNode.insertBefore(banner, masterCard);
+        }
+
+        if (!insightsContainer) {
+            insightsContainer = document.createElement('div');
+            insightsContainer.id = 'serviceReviewInsightsContainer';
+            masterCard.parentNode.insertBefore(insightsContainer, masterCard);
         }
 
         const label = reviewFilterServiceName || reviewFilterServiceCode || 'Gói dịch vụ đã chọn';
@@ -218,6 +226,27 @@
                 openReplyReviewModal(rId);
             });
         });
+
+        // Hiển thị khối Kết luận chất lượng và khuyến nghị hành động khi lọc theo gói dịch vụ
+        const insightsContainer = document.getElementById('serviceReviewInsightsContainer');
+        if (insightsContainer && window.ReviewInsights) {
+            if (reviewFilterServiceId || reviewFilterServiceCode) {
+                const label = reviewFilterServiceName || reviewFilterServiceCode || 'Gói dịch vụ đã chọn';
+                const serviceReviews = (PawpalServices.state?.reviewsData || []).filter(r => {
+                    if (reviewFilterServiceId && r.serviceId && r.serviceId !== reviewFilterServiceId) return false;
+                    return true;
+                });
+                window.ReviewInsights.renderInsights({
+                    container: insightsContainer,
+                    reviews: serviceReviews,
+                    itemName: label,
+                    itemType: 'service',
+                    itemId: reviewFilterServiceId || reviewFilterServiceCode
+                });
+            } else {
+                insightsContainer.style.display = 'none';
+            }
+        }
 
         renderReviewsPagination(totalPages);
     }

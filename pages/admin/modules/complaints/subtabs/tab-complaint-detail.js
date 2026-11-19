@@ -53,6 +53,7 @@
     p_expected_updated_at:modal?.dataset.version || t.updated_at,p_action:action,p_details:details
    });
    if(error) throw error;
+   window.PawpalCustomers?.refreshCustomerData?.({directory:true,kind:'complaints',customerIds:t.customerId?[t.customerId]:[]});
    await mod.loadComplaintsModuleData({force:true});
    delete owner.dataset.requestId;
    modal?.classList.remove('active');
@@ -223,7 +224,7 @@
    input.oninput=render;input.onfocus=render;input.onblur=()=>setTimeout(()=>dropdown.style.display='none',150);
   } catch(error){text('assignHandlerError',mod.errorMessage(error));}finally{input.disabled=false;}
  }
- function openRequestMoreInfoModal(){if(captureModal('requestMoreInfoModalOverlay')){$('inputRequestMessage').value='';$('selectRequestChannel').value='portal';text('requestMoreInfoModalOverlayError','');}}
+ function openRequestMoreInfoModal(){if(captureModal('requestMoreInfoModalOverlay')){$('inputRequestMessage').value='';$('selectRequestChannel').value='';text('requestMoreInfoModalOverlayError','');}}
  function resolutionVisibility(){
   const option=$('selectResolveOption').value;
   show('complaintAmountGroup',hasAmount(option));
@@ -234,7 +235,16 @@
  function bindEvidence(prefix,rows,onSelect){
   const input=$(prefix+'Search'),selected=$(prefix+'Id'),dropdown=$(prefix+'Dropdown');
   input.value='';selected.value='';dropdown.style.display='none';
-  const render=()=>{dropdown.innerHTML=rows.filter(r=>r.label.toLocaleLowerCase().includes(input.value.toLocaleLowerCase())).slice(0,30).map(r=>`<button type="button" class="customer-autocomplete-item" data-id="${r.id}">${escapeHtml(r.label)}</button>`).join('') || 'Chưa có kết quả phù hợp.';dropdown.style.display='block';dropdown.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{selected.value=b.dataset.id;input.value=b.textContent;dropdown.style.display='none';onSelect?.(b.dataset.id);});};
+  let readVersion=0;
+  const request=$('resolveTicketModalOverlay')?.dataset.requestId;
+  const render=async()=>{
+   const version=++readVersion,scope=window.PawpalDataStore?.buildKey?.('complaint-source');
+   let matches;
+   try{if(typeof rows==='function'){await new Promise(resolve=>setTimeout(resolve,250));if(version!==readVersion)return;matches=await rows(input.value);}else matches=rows.filter(r=>r.label.toLocaleLowerCase().includes(input.value.toLocaleLowerCase())).slice(0,30);}
+   catch(e){if(version===readVersion){dropdown.textContent='Chưa tải được giao dịch. Vui lòng thử lại.';dropdown.style.display='block';}return;}
+   if(version!==readVersion||request!==$('resolveTicketModalOverlay')?.dataset.requestId||scope!==window.PawpalDataStore?.buildKey?.('complaint-source')||!$('resolveTicketModalOverlay')?.classList.contains('active'))return;
+   dropdown.innerHTML=matches.map(r=>`<button type="button" class="customer-autocomplete-item" data-id="${escapeHtml(r.id)}">${escapeHtml(r.label)}</button>`).join('')||'Chưa có kết quả phù hợp.';dropdown.style.display='block';dropdown.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{readVersion++;selected.value=b.dataset.id;input.value=b.textContent;dropdown.style.display='none';onSelect?.(b.dataset.id);});
+  };
   input.oninput=()=>{selected.value='';onSelect?.(null);render();};input.onfocus=render;input.onblur=()=>setTimeout(()=>dropdown.style.display='none',150);
  }
  async function openResolveModal(mode='resolve'){
@@ -246,7 +256,7 @@
   $('btnConfirmResolveTicket').disabled=false;
   $('complaintEvidenceSearch').disabled=false;
   $('complaintReplacementSearch').readOnly=mode==='complete' && t.resolution_type==='rma_exchange';
-  $('inputResolveNote').value='';$('inputResolveAmount').value='';$('selectResolveOption').value='explain';text('resolveTicketModalOverlayError','');
+  $('inputResolveNote').value='';$('inputResolveAmount').value='';$('selectResolveOption').value='';text('resolveTicketModalOverlayError','');
   if(mode==='resolve'&&t.proposal_rejected_at)$('selectResolveOption').value='reject';
   $('complaintVoucherGroup').hidden=true;$('complaintVoucherCode').value='';
   show('complaintOptionGroup',mode==='resolve');show('complaintEvidenceGroup',mode==='link_source'||(mode==='complete'&&!directAward(t.resolution_type)));show('complaintReplacementGroup',mode==='complete' && ['rma_exchange','rma_refund'].includes(t.resolution_type));
@@ -259,7 +269,7 @@
   if(mode==='start_resolution')text('complaintResolutionHint','Nhập phương án đã được duyệt để gửi cho khách trong mục Hỗ trợ. Xác nhận khi bắt đầu thực hiện phương án này.');
   if(mode==='link_source'){
    const isOrder=mod.state.orderComplaints.some(c=>c.rawId===t.rawId);modal.dataset.sourceKind=isOrder?'order':'service';
-   bindEvidence('complaintEvidence',(isOrder?mod.state.cachedOrders:mod.state.cachedAppointments).filter(r=>r.customer_id===t.customerId).map(r=>({id:r.id,label:r.order_code || r.appointment_code})));return;
+   bindEvidence('complaintEvidence',async query=>{const {data,error}=await client().rpc('admin_complaint_context',{p_kind:isOrder?'order':'service',p_query:query.trim().slice(0,200),p_owner:t.customerId,p_id:null});if(error)throw error;return data.refs.map(r=>({id:r.id,label:r.code}));});return;
   }
   if(mode!=='complete'||directAward(t.resolution_type))return;
   const requestId=modal.dataset.requestId;
@@ -316,6 +326,7 @@
   finally{if(isCurrent())$('complaintEvidenceSearch').disabled=false;}
  }
  function init(){
+  for(const id of ['selectRequestChannel','selectResolveOption']){const select=$(id);if(select&&![...select.options].some(option=>option.value===''))select.prepend(new Option('','',true,true));}
   const root=$('subtab-tab-complaint-detail');if(!root || root.dataset.v1Bound)return;root.dataset.v1Bound='true';
   const bind=(id,fn)=>{if($(id))$(id).onclick=fn;};
   bind('btnAssignHandler',openAssignHandlerModal);bind('btnRequestMoreInfo',openRequestMoreInfoModal);bind('btnOpenResolveModal',()=>openResolveModal());
@@ -333,6 +344,7 @@
   bind('btnConfirmResolveTicket',()=>{
    const modal=$('resolveTicketModalOverlay'),mode=modal.dataset.mode,note=$('inputResolveNote').value.trim(),option=$('selectResolveOption').value;
    const details={note};let action=mode;
+   if(mode==='resolve'&&!option){text('resolveTicketModalOverlayError','Chọn phương án xử lý.');return;}
    if(mode==='resolve'){action=['explain','reject'].includes(option)?'resolve':'propose';details.option=option;details.amount=hasAmount(option)?Number($('inputResolveAmount').value):0;if(option==='voucher')details.voucher_code=$('complaintVoucherCode').value.trim();}
    if(mode==='complete'&&!directAward(current().resolution_type)){
     const type=current().resolution_type;
@@ -354,6 +366,7 @@
   });
   bind('btnSendRequestInfo',()=>{
    const note=$('inputRequestMessage').value.trim();
+   if(!$('selectRequestChannel').value){text('requestMoreInfoModalOverlayError','Chọn kênh gửi yêu cầu.');return;}
    if(note.length<2){text('requestMoreInfoModalOverlayError','Nhập cụ thể thông tin hoặc hình ảnh khách cần bổ sung.');return;}
    return act('request_info',{note,channel:$('selectRequestChannel').value},$('btnSendRequestInfo'),$('requestMoreInfoModalOverlay'));
   });

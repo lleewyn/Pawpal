@@ -4577,3 +4577,17 @@
 .customers-module #customerDataTable .customer-ticket-subject {display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:normal;overflow-wrap:anywhere;}
 .customers-module #customerDataTable .customer-ticket-meta {display:block;margin-top:3px;font-size:11px;font-weight:400;white-space:normal;overflow-wrap:anywhere;}
 .customers-module #custEmergencyAlertText {min-width:0;white-space:normal;overflow-wrap:anywhere;}
+
+/* Pet catalog popovers belong to Customers too, independently of Pets styles. */
+.customers-module .pet-field-autocomplete-wrapper {position:relative;width:100%;min-width:0}
+.customers-module .pet-field-autocomplete-wrapper .autocomplete-dropdown {
+    position:absolute;top:calc(100% + 4px);left:0;right:0;
+    background:#FFFFFF;border:1px solid var(--border-neutral,#ECF2EE);
+    border-radius:var(--admin-radius,9px);box-shadow:0 10px 28px rgba(35,107,72,.14);
+    max-height:240px;overflow-y:auto;overscroll-behavior:contain;z-index:2500;
+}
+.customers-module .autocomplete-dropdown .autocomplete-item {padding:9px 14px;cursor:pointer;color:#203A2C;font-size:13px;line-height:1.5}
+.customers-module .autocomplete-dropdown .autocomplete-item-name {font-weight:600;overflow-wrap:anywhere}
+.customers-module .autocomplete-dropdown .autocomplete-item:hover,
+.customers-module .autocomplete-dropdown .autocomplete-item.active {background:#EEF5F1}
+.customers-module .autocomplete-dropdown .autocomplete-empty {padding:12px 14px;color:#4F7A65;font-size:12px;line-height:1.5}

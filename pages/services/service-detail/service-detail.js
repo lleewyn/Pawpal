@@ -569,8 +569,18 @@ async function setupReviews() {
 
     reviewsList = rawReviews.map(r => ({
         customerName:r.name, tier:'', tierName:'', rating:Number(r.rating), createdAt:r.date,
-        variant:'', content:r.text, media:r.images||[], hasMedia:Boolean(r.images?.length), shopReply:r.sellerReply || null
+        variant: r.variant || r.variant_name || 'Tiêu chuẩn', content:r.text, media:r.images||[], hasMedia:Boolean(r.images?.length), shopReply:r.sellerReply || null
     }));
+
+    const hlContainer = document.getElementById('serviceCustomerReviewHighlights');
+    if (hlContainer && window.ReviewInsights) {
+        window.ReviewInsights.renderCustomerHighlights({
+            container: hlContainer,
+            reviews: reviewsList,
+            itemName: serviceData.name || serviceData.service_name || 'Dịch vụ',
+            itemType: 'service'
+        });
+    }
 
     // Calculate rating statistics
     const totalCount = reviewsList.length;

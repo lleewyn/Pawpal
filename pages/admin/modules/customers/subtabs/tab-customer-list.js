@@ -268,6 +268,7 @@
             } else if (c.status === 'TEMP') {
                 statusBadgeHtml = '<span class="admin-badge badge-neutral">Vãng lai</span>';
             }
+            if(c.bookingRestriction?.locked)statusBadgeHtml+=`<div style="margin-top:4px"><span class="admin-badge badge-danger" title="${esc(c.bookingRestriction.reason)}">Bị khóa đặt lịch</span></div>`;
 
             const subCellHtml = esc(c.customerTypeLabel || 'Chưa xác định loại khách');
 
@@ -371,7 +372,7 @@
             overlay.querySelectorAll('[data-quick-tab]').forEach(button=>{const selected=button.dataset.quickTab===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;});
             const body=overlay.querySelector('#customerQuickBody');body.setAttribute('aria-labelledby','customerQuickTab-'+tab);
             let content='';
-            if(tab==='profile')content=`<h3>Thông tin khách hàng</h3><table>${pair('Mã KH',id)+pair('Số điện thoại',c.phone)+pair('Email',c.email||'Chưa cập nhật')+pair('Trạng thái',c.status==='LOCKED'?'Bị khóa':c.status==='TEMP'?'Vãng lai':'Đang hoạt động')+pair('Hạng',c.tierName||'Chưa có hạng')+pair('Pawpoint',Number(c.points||0).toLocaleString('vi-VN')+' điểm')}</table><div class="customer-quick-actions"><button type="button" data-quick-copy>Sao chép số</button><button type="button" data-quick-pets>Xem thú cưng</button></div>`;
+            if(tab==='profile')content=`<h3>Thông tin khách hàng</h3><table>${pair('Mã KH',id)+pair('Số điện thoại',c.phone)+pair('Email',c.email||'Chưa cập nhật')+pair('Trạng thái',c.status==='LOCKED'?'Bị khóa':c.status==='TEMP'?'Vãng lai':'Đang hoạt động')+pair('Đặt lịch trực tuyến',c.bookingRestriction?.locked?'Bị khóa — '+c.bookingRestriction.reason:'Được phép đặt lịch')+pair('Hạng',c.tierName||'Chưa có hạng')+pair('Pawpoint',Number(c.points||0).toLocaleString('vi-VN')+' điểm')}</table><div class="customer-quick-actions"><button type="button" data-quick-copy>Sao chép số</button><button type="button" data-quick-pets>Xem thú cưng</button></div>`;
             if(tab==='pets')content='<h3>Thú cưng</h3>'+((c.pets||[]).map(p=>`<section><strong>${esc(p.name)}</strong><table>${pair('Mã bé',p.id)+pair('Loài và giống',[p.species,p.breed].filter(Boolean).join(' · '))+pair('Cân nặng',Number(p.weight)>0?p.weight+' kg':'Chưa ghi nhận')}</table></section>`).join('')||'<p>Khách hàng chưa có thú cưng.</p>');
             if(tab==='points')content=`<h3>Pawpoint</h3><table>${pair('Hạng',c.tierName||'Chưa có hạng')+pair('Số dư hiện tại',Number(c.points||0).toLocaleString('vi-VN')+' điểm')}</table><p>Lịch sử và điều chỉnh điểm nằm trong phân hệ Pawpoint.</p><button type="button" data-quick-points>Mở Pawpoint</button>`;
             if(tab==='cases')content='<h3>Khiếu nại và hỗ trợ</h3>'+((c.complaints||[]).map(t=>`<section><strong>${esc(t.issue||'Khiếu nại')}</strong><table>${pair('Mã phiếu',t.id)+pair('Trạng thái',t.status||'Chưa cập nhật')}</table></section>`).join('')||'<p>Chưa ghi nhận khiếu nại.</p>');

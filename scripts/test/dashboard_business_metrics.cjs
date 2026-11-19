@@ -2,6 +2,26 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const M = require('../../pages/admin/modules/dashboard/subtabs/business-metrics.js');
 
+test('estimates require an explicit plan for the exact period and preserve negative receipts', () => {
+    const range = { from: '2026-11-01', to: '2026-11-07' };
+    const plan = { period_from: range.from, period_to: range.to, target_net_receipts: 1000, operating_expenses: 300, product_cost_percent: 50, service_cost_percent: 0 };
+    const cash = { collected: 100, refunded: 200, net: -100, undated: 0 };
+    const sources = { products: 100, services: 0, other: 0 };
+    assert.equal(M.estimate(cash, sources, null, range), null);
+    assert.equal(M.estimate(cash, sources, { ...plan, period_to: '2026-11-08' }, range), null);
+    const result = M.estimate(cash, sources, plan, range);
+    assert.equal(result.net, -100);
+    assert.equal(result.balance, -450);
+    assert.equal(result.progress, -10);
+    assert.equal(result.gap, 1100);
+    assert.equal(M.estimate(cash, sources, { ...plan, operating_expenses: 0, product_cost_percent: 0 }, range).balance, -100);
+    assert.equal(M.estimate(cash, null, plan, range), null);
+    assert.equal(M.estimate(cash, { products: 0, services: 0, other: 0 }, plan, range), null);
+    assert.equal(M.estimate({ ...cash, undated: 1 }, sources, plan, range), null);
+    assert.equal(M.estimate(cash, { products: 50, services: 0, other: 50 }, plan, range), null);
+    assert.throws(() => M.estimate(cash, sources, { ...plan, product_cost_percent: -1 }, range));
+});
+
 test('returning cohort combines order and appointment, deduplicates and excludes cancelled', () => {
     const order = { id: 'same-id', customer_id: 'a', order_status: 'completed' };
     assert.deepEqual(M.returningCustomers([order, order, { id: '2', customer_id: 'b', order_status: 'delivered' }, { id: '3', customer_id: 'b', order_status: 'cancelled' }], [

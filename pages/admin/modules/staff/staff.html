@@ -580,8 +580,8 @@
                             <input type="date" class="admin-input" id="staffInputDob">
                         </div>
                         <div class="form-group-item">
-                            <label class="form-label-clean">Ngày bắt đầu làm</label>
-                            <input type="date" class="admin-input" id="staffInputJoinDate">
+                            <label class="form-label-clean">Ngày bắt đầu làm <span style="color:#DC2626">*</span></label>
+                            <input type="date" class="admin-input" id="staffInputJoinDate" required>
                         </div>
                     </div>
 
@@ -589,7 +589,7 @@
                     <div class="form-row-2col">
                         <div class="form-group-item">
                             <label class="form-label-clean">Chức vụ <span style="color: #DC2626;">*</span></label>
-                            <input class="admin-input" id="staffInputPosition" maxlength="200">
+                            <select class="admin-select" id="staffInputPosition" required><option value="">Chọn chức vụ</option></select>
                         </div>
                         <div class="form-group-item" style="display:none"><input id="staffInputShift"></div>
                         <div class="form-group-item" style="grid-column: 1 / -1;">
@@ -651,14 +651,14 @@
                         </div>
                     </div>
 
-                    <div id="staffAccessDetails">
+                    <details id="staffAccessDetails"><summary>Vai trò và quyền riêng</summary>
                     <div class="form-group-item" id="staffAccessReasonGroup"><label class="form-label-clean" for="staffAccessReason">Lý do thay đổi vai trò <span style="color:#DC2626">*</span></label><input class="admin-input" id="staffAccessReason" maxlength="2000" aria-required="true"></div>
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnSaveStaffAccess">Lưu vai trò</button>
-                    </div>
+                    </details>
                     <p id="staffAccountError" style="color:#DC2626;background:transparent;border:none"></p>
 
                 <div class="form-row-2col">
-                    <div class="form-group-item"><label class="form-label-clean" for="staffEmploymentStatus">Trạng thái làm việc</label><select class="admin-select" id="staffEmploymentStatus"><option value="active">Đang làm việc</option><option value="leave">Nghỉ phép</option><option value="paused">Tạm nghỉ</option><option value="resigned">Ngừng việc</option></select></div>
+                    <div class="form-group-item"><label class="form-label-clean" for="staffEmploymentStatus">Trạng thái làm việc <span style="color:#DC2626">*</span></label><select class="admin-select" id="staffEmploymentStatus" required><option value="">Chọn trạng thái</option><option value="active">Đang làm việc</option><option value="leave">Nghỉ phép</option><option value="paused">Tạm nghỉ</option><option value="resigned">Ngừng việc</option></select></div>
                     <div class="form-group-item"><label class="form-label-clean" for="staffServiceLocked">Phân công dịch vụ</label><label><input type="checkbox" id="staffServiceLocked"> Tạm khóa nhận dịch vụ</label></div>
                 </div>
                 <div class="form-group-item"><label class="form-label-clean" for="staffChangeReason">Lý do thay đổi trạng thái</label><textarea class="admin-input" id="staffChangeReason" maxlength="2000"></textarea></div>

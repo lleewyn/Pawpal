@@ -145,6 +145,7 @@
                                 <span class="avatar-placeholder-text">Tải ảnh lên</span>
                             </div>
                             <button type="button" class="btn-change-avatar mt-2" id="btnTriggerAvatarInput">Chọn ảnh cho bé</button>
+                            <button type="button" class="btn-change-avatar mt-2 d-none" id="btnRemovePetAvatar">Gỡ ảnh đại diện</button>
                             <input type="file" id="avatar-input" accept="image/*" class="d-none">
                             <p class="avatar-hint mt-2">Hỗ trợ JPG, PNG, WEBP (tối đa 5MB)</p>
                         </div>
@@ -257,6 +258,7 @@
                                     <div style="display: flex; align-items: center; gap: 10px;">
                                         <img id="vaccineCardPreview" src="" alt="Sổ tiêm" style="display: none; width: 56px; height: 56px; object-fit: cover; border-radius: 9px; border: 1px solid #C3DEC7;">
                                         <button type="button" class="btn-change-avatar" id="btnTriggerVaccineCard" tabindex="-1" style="font-size: 12px; padding: 6px 12px;">Tải ảnh sổ tiêm</button>
+                                        <button type="button" class="btn-change-avatar d-none" id="btnRemovePetVaccine">Gỡ ảnh sổ tiêm</button>
                                         <input type="file" id="vaccine-card-input" accept="image/*" class="d-none">
                                     </div>
                                 </div>

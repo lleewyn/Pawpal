@@ -195,13 +195,10 @@
         document.getElementById('modalVoucherAction')?.classList.add('active');
     };
     window.PawpalOrdersModule.navigateToSettingsMarketing = function() {
-        sessionStorage.setItem('pawpal_admin_active_module', 'Cấu hình');
+        // The router owns active-module state, sidebar selection and module loading.
+        // Writing active_module here makes hashchange skip the destination load.
         sessionStorage.setItem('pawpal_admin_settings_subtab', 'tab-banner-promos');
         window.location.hash = '#tab-banner-promos';
-        const settingsBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b => b.getAttribute('data-title') === 'Cấu hình');
-        if (settingsBtn) {
-            settingsBtn.click();
-        }
     };
 
     // Khởi tạo sự kiện

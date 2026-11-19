@@ -63,8 +63,8 @@
 <select class="admin-select" id="custFilterStatus">
 <option value="ALL">Tất cả</option>
 <option value="ACTIVE">&Dstrok;ang hoạt &dstrok;ộng</option>
-<option value="MEMBER">Th?nh vi?n</option>
-<option value="TEMP">Kh?ch v?ng lai</option>
+<option value="MEMBER">Thành viên</option>
+<option value="TEMP">Khách vãng lai</option>
 <option value="LOCKED">Bị kh&oacute;a</option>
 </select>
 </div>
@@ -178,6 +178,7 @@
 <!-- BANNER CẢNH BÁO KHẨN CẤP -->
 <div class="emergency-alert-banner" id="custEmergencyBanner">
 <span class="alert-text" id="custEmergencyAlertText"></span>
+<button type="button" class="btn-emergency-action" id="btnGoToEmergencyTicket" style="margin-left: auto; background: #DC2626; color: #fff; border: none; border-radius: 6px; padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; display: none;">Xử lý ngay</button>
 </div>
 <!-- 5 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ -->
 <div class="drawer-subtabs-bar">
@@ -222,6 +223,10 @@
 <span class="data-val customer-profile-auth-value" id="profileValAuthStatus">
 <span class="admin-badge badge-success">&mdash;</span>
 </span>
+</div>
+<div class="data-pair-row" id="profileBookingRestrictionRow" hidden>
+<span class="data-key">Đặt lịch trực tuyến</span>
+<span class="data-val" id="profileBookingRestrictionValue"></span>
 </div>
 </div>
 </div>

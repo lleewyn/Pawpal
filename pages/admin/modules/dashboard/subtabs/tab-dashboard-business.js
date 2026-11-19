@@ -1,9 +1,10 @@
 (function () {
     'use strict';
     const M = window.PawpalBusinessMetrics;
-    const keys = ['cash', 'previous', 'sources', 'products', 'services', 'customers', 'membership', 'vouchers', 'points', 'returning'];
+    const keys = ['cash', 'previous', 'sources', 'products', 'services', 'customers', 'membership', 'vouchers', 'points', 'returning', 'plan'];
     const permissions = { cash: ['payment.read', 'refund_transaction.read'], previous: ['payment.read', 'refund_transaction.read'], sources: ['payment.read'], products: ['sales_order.read', 'sales_order_detail.read'], services: ['appointment.read', 'appointment_item.read'], customers: ['customer.read'], membership: ['customer_membership.read', 'membership_tier.read'], vouchers: ['voucher_redemption.read'], points: ['paw_point_transaction.read'] };
     permissions.returning = ['sales_order.read', 'appointment.read'];
+    permissions.plan = ['payment.read', 'refund_transaction.read'];
     const state = { root: null, range: null, data: {}, errors: {}, loading: new Set(), sort: 'value', bucket: 'day', generation: 0, updated: null, timer: null, pending: null, showCustom: false };
     const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const num = value => Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 1 });
@@ -12,6 +13,7 @@
     const $ = selector => state.root?.querySelector(selector);
     const visible = () => state.root?.isConnected && !!state.root.getClientRects().length && !document.hidden;
     let resizeObserver, observedWidth = 0;
+    let realtimeChannel;
 
     function getMetrics() {
         const d = state.data;
@@ -56,7 +58,7 @@
         <header class="ops-toolbar biz-toolbar">
           <div class="ops-toolbar-left biz-toolbar-left">
             <div class="ops-range-group biz-presets" role="group" aria-label="Khoảng thời gian">
-              ${[['today', 'Hôm nay'], ['7', '7 ngày'], ['30', '30 ngày'], ['90', '90 ngày'], ['custom', 'Tùy chọn']].map(([id, label]) => `<button type="button" class="ops-range biz-range" data-biz-preset="${id}" aria-pressed="false">${label}</button>`).join('')}
+              ${[['today', 'Hôm nay'], ['month', 'Tháng này'], ['lastMonth', 'Tháng trước'], ['7', '7 ngày'], ['30', '30 ngày'], ['90', '90 ngày'], ['custom', 'Tùy chọn']].map(([id, label]) => `<button type="button" class="ops-range biz-range" data-biz-preset="${id}" aria-pressed="false">${label}</button>`).join('')}
             </div>
             <span class="ops-period-label biz-period-label" data-biz-period></span>
             <div class="ops-custom-range biz-dates" data-biz-custom hidden>
@@ -77,6 +79,22 @@
         <div aria-label="Chỉ số kinh doanh" class="admin-kpi-grid biz-kpis" data-biz-kpis></div>
 
         <div class="biz-grid">
+          <section class="admin-card dash-panel biz-panel biz-wide" id="bizProfitPanel">
+            <header class="dash-panel-heading biz-panel-head biz-finance-head">
+              <h3 class="admin-card-title">Tình hình kinh doanh</h3>
+              <div class="biz-finance-actions">
+                <span id="bizProfitStatusBadge" class="biz-caption" role="status">Chưa đủ dữ liệu</span>
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnEditPlan">Kế hoạch thu và chi</button>
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnExportProfitReport" disabled>Xuất ước tính</button>
+              </div>
+            </header>
+            <div class="biz-panel-body biz-finance-body">
+              <div data-biz-reading></div>
+              <div id="bizTargetBody"></div>
+              <div data-biz-panel="profit"></div>
+            </div>
+          </section>
+
           <section class="admin-card dash-panel biz-panel biz-wide">
             <header class="dash-panel-heading biz-panel-head">
               <h3 class="admin-card-title">Tiền thu theo thời gian</h3>
@@ -207,6 +225,155 @@
           ${rows.filter((r, i) => i % Math.max(1, Math.ceil(rows.length / 6)) === 0 || i === rows.length - 1).map(r => `<text x="${x(rows.indexOf(r))}" y="250" text-anchor="middle">${esc(date(r.day))}</text>`).join('')}</svg></div>
           <details class="biz-details"><summary class="biz-summary">Xem bảng số liệu chi tiết</summary><div class="biz-table-wrap table-responsive-wrapper"><table class="admin-table"><thead><tr><th>Kỳ</th><th>Tiền thu</th><th>Hoàn tiền</th><th>Thu thuần</th></tr></thead><tbody>${rows.map(r => `<tr><td>${date(r.day)}</td><td>${money(r.collected)}</td><td>${money(r.refunded)}</td><td>${money(r.net)}</td></tr>`).join('')}</tbody></table></div></details>`;
     }
+    function showToast(msg, type = 'success') {
+        let container = document.getElementById('adminToastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'adminToastContainer';
+            container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = `admin-toast toast-${type}`;
+        toast.style.cssText = 'padding:10px 18px;border-radius:9px;background:#236B48;color:#fff;font-size:13px;font-weight:500;box-shadow:0 4px 14px rgba(0,0,0,0.15);pointer-events:auto;transition:opacity 0.2s;';
+        if (type === 'warning') toast.style.backgroundColor = '#B45309';
+        if (type === 'danger') toast.style.backgroundColor = '#DC2626';
+        toast.textContent = msg;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 250); }, 3000);
+    }
+
+    function canEditPlan() {
+        const list = window.PawpalAdminAccess?.state?.user?.permissions || [];
+        return ['pawpal_setting.write', 'audit_log.write'].every(code => list.includes(code));
+    }
+
+    function openPlanModal() {
+        if (!canEditPlan() || state.loading.has('plan') || state.errors.plan || !state.range) return;
+        document.getElementById('bizPlanModal')?.remove();
+        const range = { ...state.range }, expected = state.data.plan || null;
+        const fields = [
+            ['target_net_receipts', 'Mục tiêu thu thuần trong kỳ', 'đ', 0.01, 1000000000000],
+            ['operating_expenses', 'Chi phí vận hành dự kiến trong kỳ', 'đ', 0, 1000000000000],
+            ['product_cost_percent', 'Giá vốn sản phẩm dự kiến', '%', 0, 100],
+            ['service_cost_percent', 'Chi phí trực tiếp dịch vụ dự kiến', '%', 0, 100]
+        ];
+        const overlay = document.createElement('div');
+        overlay.id = 'bizPlanModal';
+        overlay.className = 'admin-modal-overlay admin-modal-standard active biz-plan-modal';
+        overlay.innerHTML = `<div class="admin-modal-card" role="dialog" aria-modal="true" aria-labelledby="bizPlanTitle" tabindex="-1">
+            <header class="biz-plan-header"><h3 id="bizPlanTitle" class="admin-modal-title">Kế hoạch thu và chi (${date(range.from)} – ${date(range.to)})</h3><button type="button" class="btn-modal-close" data-close-modal="bizPlanModal">Đóng</button></header>
+            <form onsubmit="return false;" class="biz-plan-form">
+                ${fields.map(([key, label, unit, min, max], i) => `<div><label class="form-label" for="plan-${key}">${label} (${unit}) ${i === 0 ? '<span class="biz-required">*</span>' : ''}</label><input id="plan-${key}" name="${key}" type="number" class="admin-input" min="${min}" max="${max}" step="${unit === '%' ? '0.0001' : '0.01'}" value="${expected?.[key] == null ? '' : esc(expected[key])}" ${i === 0 ? 'required' : ''}></div>`).join('')}
+                <p class="biz-caption">Có thể lưu riêng mục tiêu. Để tính ước tính, nhập đủ ba khoản chi phí; để trống cả ba khi chưa xác định. Các khoản chỉ áp dụng cho kỳ này.</p>
+                <p class="biz-error" data-plan-error role="alert" hidden></p>
+                <footer class="biz-plan-footer"><button type="button" class="admin-btn admin-btn-secondary" data-close-modal="bizPlanModal">Hủy</button><button type="button" class="admin-btn admin-btn-primary" data-plan-save>Lưu kế hoạch</button></footer>
+            </form></div>`;
+        document.body.appendChild(overlay);
+        const form = overlay.querySelector('form');
+        form.addEventListener('submit', event => event.preventDefault());
+        const save = overlay.querySelector('[data-plan-save]'), errorEl = overlay.querySelector('[data-plan-error]');
+        let request = null, requestValues = '';
+        save.addEventListener('click', async () => {
+            if (save.disabled || !form.reportValidity()) return;
+            const values = Object.fromEntries(fields.map(([key]) => [key, form.elements.namedItem(key).value === '' ? null : Number(form.elements.namedItem(key).value)]));
+            const costs = fields.slice(1).map(([key]) => values[key]);
+            if (costs.some(value => value === null) && costs.some(value => value !== null)) {
+                errorEl.textContent = 'Nhập đủ ba khoản chi phí hoặc để trống cả ba để lưu riêng mục tiêu.'; errorEl.hidden = false; return;
+            }
+            const signature = JSON.stringify(values);
+            if (requestValues !== signature) { request = crypto.randomUUID(); requestValues = signature; }
+            save.disabled = true; errorEl.hidden = true;
+            try {
+                const db = window.getSupabaseClient?.() || window.SupabaseClient;
+                const { error } = await db.rpc('save_admin_dashboard_plan', { p_request: request, p_from: range.from, p_to: range.to, p_expected: expected, p_values: values });
+                if (error) throw error;
+                overlay.remove();
+                await state.pending;
+                if (state.range?.from === range.from && state.range?.to === range.to) await reload(['plan']);
+                showToast('Đã lưu kế hoạch thu và chi.');
+            } catch (error) {
+                errorEl.textContent = error.code === 'PT409' ? 'Kế hoạch đã được thay đổi. Đóng cửa sổ và làm mới trước khi nhập lại.' : safeError(error);
+                errorEl.hidden = false;
+            } finally { save.disabled = false; }
+        });
+        overlay.querySelector('input').focus();
+    }
+
+    function financeEstimate() {
+        if (['cash', 'sources', 'plan'].some(key => state.loading.has(key) || state.errors[key])) return null;
+        try { return M.estimate(state.data.cash, state.data.sources, state.data.plan, state.range); } catch { return null; }
+    }
+
+    function renderBusinessReading() {
+        const body = $('[data-biz-reading]');
+        if (!body) return;
+        const d = state.data, notes = [];
+        if (d.cash && !state.errors.cash && !state.loading.has('cash')) {
+            if (d.cash.net < 0) notes.push(`Hoàn tiền vượt tiền thu ${money(-d.cash.net)} trong kỳ.`);
+            else if (d.cash.collected === 0) notes.push('Chưa ghi nhận tiền thu thành công trong kỳ.');
+            if (d.cash.refunded > 0 && d.cash.collected > 0) notes.push(`Hoàn tiền ${money(d.cash.refunded)}, tương đương ${num(d.cash.refunded / d.cash.collected * 100)}% tiền thu cùng kỳ. Giao dịch được hoàn có thể thuộc kỳ trước.`);
+        }
+        if (d.services && d.sources && !['services','sources'].some(key => state.errors[key] || state.loading.has(key)) && d.sources.services === 0) {
+            const value = M.rank(d.services, 'services').reduce((sum, row) => sum + row.value, 0);
+            if (value > 0) notes.push(`Các dịch vụ nổi bật có ${money(value)} giá trị giao dịch hoàn thành nhưng tiền thu dịch vụ trong kỳ bằng 0. Cần đối soát ngày ghi nhận và liên kết thanh toán.`);
+        }
+        body.innerHTML = notes.length ? `<ul class="biz-reading">${notes.map(note => `<li>${esc(note)}</li>`).join('')}</ul>` : '';
+    }
+
+    function renderRevenueTarget() {
+        const body = $('#bizTargetBody'), plan = state.data.plan;
+        if (!body) return;
+        if (!plan || plan.period_from !== state.range?.from || plan.period_to !== state.range?.to || ['cash', 'plan'].some(key => state.loading.has(key) || state.errors[key]) || !state.data.cash) { body.innerHTML = ''; return; }
+        const target = Number(plan.target_net_receipts), net = Number(state.data.cash.net);
+        if (!Number.isFinite(target) || target <= 0 || !Number.isFinite(net)) { body.innerHTML = ''; return; }
+        const percent = net / target * 100, gap = target - net;
+        body.innerHTML = `<div class="biz-target-heading"><span>Mục tiêu thu thuần <strong>${money(net)}</strong> / ${money(target)}</span><span>Đạt ${num(percent)}% · ${gap > 0 ? 'Còn thiếu ' + money(gap) : gap < 0 ? 'Vượt ' + money(-gap) : 'Đã đạt mục tiêu'}</span></div><div class="biz-target-track" role="progressbar" aria-label="Tiến độ mục tiêu thu thuần" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100, Math.max(0, percent))}" aria-valuetext="${num(percent)}%"><span style="width:${Math.min(100, Math.max(0, percent))}%"></span></div>`;
+    }
+
+    function renderProfitability() {
+        const body = $('[data-biz-panel="profit"]'), badge = $('#bizProfitStatusBadge');
+        if (!body) return;
+        const estimate = financeEstimate();
+        state.lastProfitCalc = estimate;
+        $('#btnExportProfitReport').disabled = !estimate;
+        const edit = $('#btnEditPlan');
+        edit.hidden = !canEditPlan();
+        edit.disabled = state.loading.has('plan') || !!state.errors.plan;
+        badge.className = 'biz-finance-status';
+        const pending = ['cash', 'sources', 'plan'].find(key => state.loading.has(key));
+        const failed = ['cash', 'sources', 'plan'].find(key => state.errors[key]);
+        body.setAttribute('aria-busy', String(!!pending));
+        if (pending || failed) {
+            badge.textContent = pending ? 'Đang cập nhật' : 'Chưa đủ dữ liệu';
+            body.innerHTML = pending ? '<p class="biz-caption">Đang tải dữ liệu thu và chi…</p>' : status(failed);
+            return;
+        }
+        if (!estimate) {
+            badge.textContent = 'Chưa đủ dữ liệu';
+            body.innerHTML = `<p class="biz-caption">${state.data.plan ? 'Chưa đủ chi phí dự kiến hoặc dữ liệu tiền thu để lập ước tính.' : 'Chưa có kế hoạch thu và chi cho kỳ này.'}</p><p class="biz-caption">Chưa đủ dữ liệu chi phí thực tế và số dư để kết luận lãi/lỗ hoặc khả năng chi trả.</p>`;
+            return;
+        }
+        badge.textContent = estimate.balance < 0 ? 'Ước tính thiếu hụt' : estimate.balance > 0 ? 'Ước tính thặng dư' : 'Cân bằng theo kế hoạch';
+        if (estimate.balance < 0) badge.classList.add('is-negative');
+        const items = [['Thu thuần thực ghi nhận', estimate.net], ['Giá vốn dự kiến', estimate.estimatedCosts], ['Chi phí vận hành dự kiến', estimate.expenses], ['Ước tính thu trừ chi', estimate.balance]];
+        body.innerHTML = `<dl class="biz-finance-values">${items.map(([label, value], i) => `<div><dt>${label}</dt><dd class="${i === 3 && value < 0 ? 'is-negative' : ''}">${money(value)}</dd></div>`).join('')}</dl><details class="biz-details"><summary class="biz-summary">Cách tính ước tính</summary><p class="biz-caption">Thu thuần trừ giá vốn dự kiến theo tiền thu sản phẩm (${num(Number(state.data.plan.product_cost_percent))}%), dịch vụ (${num(Number(state.data.plan.service_cost_percent))}%) và chi phí vận hành đã nhập cho đúng kỳ. Chưa đối soát giá vốn thực tế, công nợ và các khoản chi khác; chưa phải lợi nhuận thực tế.</p></details>`;
+    }
+
+    function exportProfitAndLoss() {
+        const calc = financeEstimate();
+        if (!calc || !window.XLSX) { showToast('Chưa thể xuất ước tính. Hãy kiểm tra dữ liệu và thử lại.', 'warning'); return; }
+        const rows = [
+            ['Từ ngày', state.range.from], ['Đến ngày', state.range.to],
+            ['Thu thuần thực ghi nhận', calc.net], ['Giá vốn dự kiến', calc.estimatedCosts],
+            ['Chi phí vận hành dự kiến', calc.expenses], ['Ước tính thu trừ chi', calc.balance],
+            ['Mục tiêu thu thuần', calc.target],
+            ['Cơ sở', 'Kế hoạch và tỷ lệ chi phí được nhập cho kỳ này; chưa phải lợi nhuận thực tế.']
+        ];
+        const book = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([['Chỉ tiêu', 'Giá trị'], ...rows]), 'Uoc_tinh_thu_chi');
+        XLSX.writeFile(book, `Uoc_tinh_thu_chi_${state.range.from}_${state.range.to}.xlsx`);
+    }
 
     function ranking(key) {
         const rows = M.rank(state.data[key], key, state.sort);
@@ -227,7 +394,7 @@
             ['Tiền thu sản phẩm', value('sources', d => d.products, money), 'Thu từ đơn bán lẻ phụ kiện'],
             ['Tiền thu dịch vụ', value('sources', d => d.services, money), 'Thu từ các ca dịch vụ'],
             ['Khách hàng mới', value('customers', d => M.customerCount(d)), 'Ghi nhận hồ sơ trong kỳ'],
-            ['Tỷ lệ khách quay lại', value('returning', d => d.rate, rate => rate === null ? '—' : num(rate) + '%'), 'Tần suất phục vụ khách thân thiết']
+            ['Khách giao dịch lặp lại', value('returning', d => d.rate, rate => rate === null ? '—' : num(rate) + '%'), d.returning ? `${num(d.returning.returning)} / ${num(d.returning.eligible)} khách giao dịch trong kỳ` : 'Khách có từ hai giao dịch hoàn thành trong kỳ']
         ];
         const metrics = getMetrics();
         const metricKeys = ['cash', 'cash', 'cash', 'previous', 'sources', 'sources', 'customers', 'returning'];
@@ -236,8 +403,9 @@
           const error = state.errors[key] || i === 3 && state.errors.cash;
           return `
           <div class="kpi-card biz-kpi" data-metric="${metrics[i].id}" data-status="${metrics[i].status}" aria-busy="${loading}"${error ? ` title="${esc(error)}"` : ''}>
-            <span class="kpi-label">${label}</span>
+            <span class="kpi-label" title="${esc(metrics[i].definition)}">${label}</span>
             <strong class="kpi-val">${loading ? '<span class="biz-kpi-skeleton" aria-hidden="true"></span><span class="ops-sr-only">Đang tải</span>' : error ? '<span class="biz-kpi-error">Chưa tải được</span>' : esc(val)}</strong>
+            ${i === 7 && !loading && !error ? `<span class="kpi-sub">${esc(sub)}</span>` : ''}
           </div>`;
         }).join('');
 
@@ -257,6 +425,9 @@
         }
         $('[data-biz-panel="insights"]').innerHTML = comparisonChart(percentage);
         $('[data-biz-panel="insights"]').setAttribute('aria-busy', String(state.loading.has('cash') || state.loading.has('previous')));
+        renderProfitability();
+        renderRevenueTarget();
+        renderBusinessReading();
         $('[data-biz-updated]').textContent = state.loading.size ? 'Đang cập nhật…' : state.updated ? `Cập nhật ${new Date(state.updated).toLocaleTimeString('vi-VN', { timeZone: M.zone })}${Object.keys(state.errors).length ? ' · Một số dữ liệu lỗi' : ''}` : 'Đã đồng bộ';
     }
 
@@ -290,6 +461,12 @@
         if (state.pending === job) state.pending = null;
     }
 
+    function monthRange(today, offset) {
+        const [year, month] = today.split('-').map(Number);
+        const from = new Date(Date.UTC(year, month - 1 + offset, 1)).toISOString().slice(0,10);
+        const to = new Date(Date.UTC(year, month + offset, 0)).toISOString().slice(0,10);
+        return { from, to };
+    }
     function apply(from, to, isCustom = false) {
         try {
             const range = M.period(from, to);
@@ -307,6 +484,9 @@
                 let active = false;
                 if (isCustom) {
                     active = (presetId === 'custom');
+                } else if (presetId === 'month' || presetId === 'lastMonth') {
+                    const month = monthRange(today, presetId === 'lastMonth' ? -1 : 0);
+                    active = from === month.from && to === month.to;
                 } else if (to === today) {
                     if (presetId === 'today' && isToday) active = true;
                     else if (presetId === String(daysLen)) active = true;
@@ -328,6 +508,8 @@
     function click(event) {
         const button = event.target.closest('button');
         if (!button) return;
+        if (button.id === 'btnEditPlan') { openPlanModal(); return; }
+        if (button.id === 'btnExportProfitReport' || button.closest('#btnExportProfitReport')) { exportProfitAndLoss(); return; }
         if (button.dataset.bizPreset) {
             if (button.dataset.bizPreset === 'custom') {
                 const customBox = $('[data-biz-custom]');
@@ -343,6 +525,10 @@
                 return;
             }
             const today = M.dayKey(new Date());
+            if (['month', 'lastMonth'].includes(button.dataset.bizPreset)) {
+                const range = monthRange(today, button.dataset.bizPreset === 'lastMonth' ? -1 : 0);
+                return apply(range.from, range.to, false);
+            }
             const days = button.dataset.bizPreset === 'today' ? 1 : Number(button.dataset.bizPreset);
             return apply(M.shift(today, -days + 1), today, false);
         }
@@ -373,6 +559,14 @@
         observedWidth = root.clientWidth;
         resizeObserver = new ResizeObserver(() => { const width = root.clientWidth; if (width !== observedWidth) { observedWidth = width; render(); } });
         resizeObserver.observe(root);
+        const client = window.getSupabaseClient?.() || window.SupabaseClient;
+        if (client?.channel) {
+            realtimeChannel = client.channel('admin-dashboard-live-sync');
+            for (const table of ['payment', 'refund_transaction', 'sales_order', 'sales_order_detail', 'appointment', 'appointment_item', 'customer', 'customer_membership', 'membership_tier', 'voucher_redemption', 'paw_point_transaction', 'admin_dashboard_plan']) {
+                realtimeChannel.on('postgres_changes', { event: '*', schema: 'public', table }, scheduleReload);
+            }
+            realtimeChannel.subscribe();
+        }
 
         let saved;
         try {
@@ -390,17 +584,28 @@
         document.body.classList.remove('business-dashboard-active');
         state.generation++;
         clearInterval(state.timer);
+        clearTimeout(invalidationTimer);
+        if (realtimeChannel) (window.getSupabaseClient?.() || window.SupabaseClient)?.removeChannel?.(realtimeChannel);
+        realtimeChannel = null;
         state.pending = null;
+        state.lastProfitCalc = null;
+        document.getElementById('bizPlanModal')?.remove();
         state.root?.removeEventListener('click', click);
         state.root?.removeEventListener('change', change);
         state.root = null;
     }
 
     let invalidationTimer;
-    window.addEventListener('pawpal:workspace-invalidated', () => {
+    function scheduleReload() {
         clearTimeout(invalidationTimer);
-        invalidationTimer = setTimeout(() => { state.updated = null; if (visible() && !state.pending) reload(); }, 500);
-    });
+        state.updated = null;
+        invalidationTimer = setTimeout(() => {
+            if (!visible()) return;
+            if (state.pending) { scheduleReload(); return; }
+            reload();
+        }, 500);
+    }
+    window.addEventListener('pawpal:workspace-invalidated', scheduleReload);
     window.addEventListener('pawpal:access-invalidated', () => { if (state.root) state.root.replaceChildren(); unmount(); state.data = {}; });
 
     const api = {

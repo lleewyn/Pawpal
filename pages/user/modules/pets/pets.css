@@ -946,8 +946,8 @@
 #deleteConfirmModal #petArchiveDescription{color:#637a69;font-size:13px;margin:0 0 22px}
 #deleteConfirmModal .btn-pet-action-delete-confirm{background:#214939;border:1px solid #214939;color:#fff;border-radius:9px;padding:10px 18px;font:600 13px/1.5 Inter,system-ui,sans-serif;cursor:pointer}
 body:has(#deleteConfirmModal[open]){overflow:hidden}
-.pet-archive-clock{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:18px;color:#4f7a65;font:12px/1.7 Inter,system-ui,sans-serif}
-.pet-archive-clock strong{font-weight:600;color:#236b48}
+.pet-archive-clock{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:18px;color:#4f7a65;font:12px/1.7 Inter,system-ui,sans-serif}
+.pet-archive-clock strong{display:inline-block;padding:5px 10px;border-radius:9px;background:#e5f2e8;font-weight:700;font-size:13px;color:#165335}
 .pet-archive-restore:disabled{opacity:.45;cursor:not-allowed;background:transparent;box-shadow:none}
 @media(max-width:576px){#deleteConfirmModal .pet-archive-dialog{padding:24px 20px}}
 .modal-overlay {

@@ -14,6 +14,45 @@
     let currentOrderQuickFilter = 'ALL';
     const ITEMS_PER_PAGE = 10;
     let lastFilteredOrders = [];
+    let closeOrderActionMenu = () => {};
+
+    function openOrderActionMenu(anchor, ticket) {
+        closeOrderActionMenu();
+        const menu=document.createElement('div');
+        menu.id='orderComplaintActionMenu';menu.setAttribute('role','menu');
+        menu.style.cssText='position:fixed;z-index:10000;min-width:190px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow-y:auto;overscroll-behavior:contain;background:#fff;border:1px solid #ECF2EE;border-radius:9px;padding:6px;box-shadow:0 10px 28px rgba(35,107,72,.14);';
+        const finished=['resolved','closed'].includes(ticket.status);
+        const actions=[['Xem hồ sơ',null]];
+        if(!finished){
+            actions.push([!ticket.staffAssigned||ticket.staffAssigned==='Chưa phân công'?'Nhận xử lý':'Đổi người xử lý','btnAssignHandler']);
+            if(ticket.customerId)actions.push(['Yêu cầu bổ sung thông tin','btnRequestMoreInfo']);
+            if(ticket.status!=='waiting_manager_approval'&&!ticket.resolved_by)actions.push(['Đề xuất phương án','btnOpenResolveModal']);
+            if(ticket.status==='waiting_manager_approval')actions.push(['Xem phương án chờ duyệt',null]);
+            if(ticket.status==='processing'&&ticket.resolved_by&&ticket.approved_amount!=null&&!ticket.resolution_started_at)actions.push(['Thực hiện phương án','btnStartComplaintResolution']);
+            if(ticket.status==='processing'&&ticket.resolved_by&&ticket.resolution_type&&ticket.resolution_started_at)actions.push([['points','voucher'].includes(ticket.resolution_type)?'Thực hiện bồi hoàn':'Liên kết kết quả thực hiện','btnCompleteComplaint']);
+        }
+        if(ticket.status==='resolved')actions.push(['Đóng phiếu','btnCloseComplaint']);
+        const expired=ticket.autoCloseReason==='resolved_expired'||(ticket.autoCloseReason==='no_customer_reply'&&Date.now()>=Date.parse(ticket.closedAtRaw)+7*86400000);
+        if(finished&&!expired)actions.push(['Mở lại phiếu','btnReopenTicket']);
+        anchor.setAttribute('aria-expanded','true');
+        const close=()=>{menu.remove();anchor.setAttribute('aria-expanded','false');document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',keyboard);window.removeEventListener('scroll',scroll,true);window.removeEventListener('resize',close);};
+        const outside=e=>{if(!menu.contains(e.target)&&!anchor.contains(e.target))close();};
+        const keyboard=e=>{if(e.key==='Escape'){close();anchor.focus();}};
+        const scroll=e=>{if(!menu.contains(e.target))close();};
+        closeOrderActionMenu=close;
+        for(const [label,action] of actions){
+            const button=document.createElement('button');button.type='button';button.setAttribute('role','menuitem');button.textContent=label;
+            button.style.cssText='display:block;width:100%;border:none;border-radius:9px;background:transparent;text-align:left;padding:10px;color:#236B48;cursor:pointer;';
+            button.onclick=async()=>{close();anchor.disabled=true;try{await PawpalComplaints.openTicketDetail(ticket.id);if(PawpalComplaints.state.currentTicketId!==ticket.id)return;const target=action&&document.getElementById(action);if(target&&!target.disabled&&target.getClientRects().length)target.click();}catch(error){PawpalComplaints.showToast('Không tải được hồ sơ khiếu nại. Vui lòng thử lại.','danger');}finally{anchor.disabled=false;}};
+            menu.append(button);
+        }
+        document.body.append(menu);
+        const a=anchor.getBoundingClientRect(),m=menu.getBoundingClientRect();
+        const top=a.bottom+4+m.height<=window.innerHeight-8?a.bottom+4:Math.max(8,a.top-m.height-4);
+        menu.style.top=top+'px';menu.style.left=Math.max(8,Math.min(a.right-m.width,window.innerWidth-m.width-8))+'px';
+        document.addEventListener('pointerdown',outside);document.addEventListener('keydown',keyboard);window.addEventListener('scroll',scroll,true);window.addEventListener('resize',close);
+        menu.querySelector('button')?.focus();
+    }
 
     function sanitizeCsvCell(val) {
         if (val === null || val === undefined) return '""';
@@ -245,7 +284,7 @@
                     <td style="white-space: nowrap; font-size: 12px; color: var(--text-muted);">${item.createdAt || '—'}</td>
                     <td style="text-align: center; white-space: nowrap;">${statusBadge}</td>
                     <td style="text-align: center; white-space: nowrap;">
-                        <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-order-complaint-detail" data-ticket-id="${item.id}">Xử lý</button>
+                        <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-order-complaint-actions" aria-label="Thao tác khiếu nại ${escapeHtml(item.id)}" aria-haspopup="menu" aria-expanded="false" data-ticket-id="${escapeHtml(item.id)}">•••</button>
                     </td>
                 </tr>
             `;
@@ -256,6 +295,11 @@
     }
 
     function attachOrderEvents() {
+        closeOrderActionMenu();
+        document.querySelectorAll('.btn-order-complaint-actions').forEach(button=>button.addEventListener('click',()=>{
+            const ticket=lastFilteredOrders.find(row=>row.id===button.dataset.ticketId);
+            if(ticket)openOrderActionMenu(button,ticket);
+        }));
         document.querySelectorAll('.btn-open-order-complaint-detail').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();

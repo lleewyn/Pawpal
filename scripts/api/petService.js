@@ -196,6 +196,8 @@ export async function savePets(pets) {
     if (weight !== null && (!Number.isFinite(weight) || weight <= 0)) throw new Error('Cân nặng không hợp lệ.');
     if(pet.avatarFile)values.avatar_media_asset_id=await uploadCustomerPetImage(db,pet.avatarFile,id,'avatar');
     if(pet.vaccineFile)values.vaccine_media_asset_id=await uploadCustomerPetImage(db,pet.vaccineFile,id,'vaccine');
+    if(pet.removeAvatar&&!pet.avatarFile){values.avatar_media_asset_id=null;values.avatar_url=null;}
+    if(pet.removeVaccine&&!pet.vaccineFile)values.vaccine_media_asset_id=null;
     if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== user.id) throw new Error('Phiên đăng nhập đã thay đổi.');
     const {error} = await db.rpc('save_own_pet', {p_id:id,p_expected:pet._updatedAt || null,p_values:values,p_weight:weight});
     if (error) throw error;

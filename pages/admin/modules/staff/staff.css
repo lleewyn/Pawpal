@@ -2612,3 +2612,8 @@
 .staff-module .staff-recurring-row p { margin: 4px 0; color: #4F7A65; font-size: 12px; }
 .staff-module .staff-recurring-feedback { color: #236B48; margin: 0; }
 @media(max-width:600px){.staff-module .staff-recurring-fields{grid-template-columns:1fr}.staff-module .staff-recurring-panel{padding:16px}.staff-module .staff-recurring-row{align-items:flex-start;flex-direction:column}}
+
+.staff-assessment-profile-link {padding:0;border:none;background:transparent;color:var(--text-heading,#236B48);font:inherit;font-weight:600;text-align:left;cursor:pointer}
+
+.staff-module #staffAccessDetails summary::after {content:" \2304";display:inline-block;margin-left:6px}
+.staff-module #staffAccessDetails[open] summary::after {content:" \2303"}

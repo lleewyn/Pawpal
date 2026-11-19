@@ -81,7 +81,7 @@ export async function initGuestCheckout(){
   result.querySelector('h1').focus();
   window.updateCartBadge?.();
  }
- function invalidateQuote(){quote=null;submit.disabled=true;get('guest-quote-total').textContent='';}
+ function invalidateQuote(){quote=null;submit.disabled=busy||!ready;get('guest-quote-total').textContent='';get('guest-quote-lines').replaceChildren();}
  form.addEventListener('submit',event=>event.preventDefault());
  form.addEventListener('input',invalidateQuote);form.addEventListener('change',invalidateQuote);
  for(const event of ['input','change'])form.addEventListener(event,({target})=>{if(get(target.id+'-error'))fieldError(target,'');});
@@ -90,17 +90,22 @@ export async function initGuestCheckout(){
   const delivery=!!get('guest-delivery').value;get('guest-address-fields').classList.toggle('d-none',!delivery);
   for(const id of addressIds){get(id).required=delivery;if(!delivery)fieldError(get(id),'');}
  };
- async function withBusy(operation){if(busy||!ready||!active())return;busy=true;fields.disabled=true;quoteButton.disabled=true;submit.disabled=true;try{await operation();}catch(error){if(active())say(error.message||'Chưa xử lý được yêu cầu.');}finally{busy=false;if(active()){fields.disabled=false;quoteButton.disabled=false;submit.disabled=!quote;}}}
+ async function withBusy(operation){if(busy||!ready||!active())return;busy=true;fields.disabled=true;quoteButton.disabled=true;submit.disabled=true;submit.textContent='Đang xử lý…';form.setAttribute('aria-busy','true');try{await operation();}catch(error){if(active())say(error.message||'Chưa xử lý được yêu cầu.');}finally{busy=false;form.setAttribute('aria-busy','false');if(active()){fields.disabled=false;quoteButton.disabled=false;submit.disabled=!ready;submit.textContent='Đặt hàng';}}}
+ async function refreshQuote(){
+  writeGuestCheckoutPreferences(sessionStorage,{mode,lines},get('guest-voucher').value);
+  const result=await guestCommerce.request('order-quote',{details:payload().details,lines});if(!active())return;
+  quote=result.quote;get('guest-quote-lines').replaceChildren(...quote.lines.map(line=>node('p',line.name+' × '+line.quantity+' — '+money(line.unitPrice*line.quantity))));
+  get('guest-quote-total').textContent='Tổng thanh toán: '+money(quote.total)+' (phí giao hàng '+money(quote.shipping_fee)+', giảm giá '+money(quote.voucher_discount)+')';
+ }
  quoteButton.onclick=()=>{if(busy||!ready||!validate())return;return withBusy(async()=>{
   writeGuestCheckoutPreferences(sessionStorage,{mode,lines},get('guest-voucher').value);
   if(journal){try{await showReceipt(await receipt());return;}catch(error){if(error.status!==404)throw error;}}
-  const result=await guestCommerce.request('order-quote',{details:payload().details,lines});if(!active())return;
-  quote=result.quote;get('guest-quote-lines').replaceChildren(...quote.lines.map(line=>node('p',line.name+' × '+line.quantity+' — '+money(line.unitPrice*line.quantity))));
-  get('guest-quote-total').textContent='Tổng thanh toán: '+money(quote.total)+' (phí giao hàng '+money(quote.shipping_fee)+', giảm giá '+money(quote.voucher_discount)+')';say('Vui lòng kiểm tra thông tin trước khi đặt hàng.');
+  await refreshQuote();say('Vui lòng kiểm tra thông tin trước khi đặt hàng.');
  });};
  submit.onclick=()=>{if(busy||!ready||!validate())return;return withBusy(async()=>{
-  if(!quote)return;
   if(journal){try{await showReceipt(await receipt());return;}catch(error){if(error.status!==404)throw error;}}
+  if(!quote)await refreshQuote();
+  if(!active()||!quote)return;
   const requestId=journal?.id||crypto.randomUUID();saveJournal({id:requestId,phase:'submitted',mode,lines});
   try{
    await guestCommerce.request('order-create',{...payload(),requestId,expectedQuote:quote.version});
@@ -132,8 +137,8 @@ export async function initGuestCheckout(){
   const context=await guestCommerce.request('context',{page:1});if(!active())return;
   if(context.contact){get('guest-name').value=context.contact.name||'';get('guest-phone').value=context.contact.phone||'';get('guest-name').readOnly=get('guest-phone').readOnly=true;
    const edit=node('button','Sửa liên hệ','btn btn-secondary'),editor=node('div',null,'checkout-section mt-3');edit.type='button';form.before(edit,editor);
-   edit.onclick=async()=>{if(busy)return;busy=true;fields.disabled=true;edit.disabled=quoteButton.disabled=submit.disabled=true;invalidateQuote();try{const fresh=await editGuestContact(editor);if(fresh){get('guest-name').value=fresh.contact.name;get('guest-phone').value=fresh.contact.phone;}}catch(error){say(error.message);}finally{busy=false;fields.disabled=false;edit.disabled=quoteButton.disabled=false;}};
+   edit.onclick=async()=>{if(busy)return;busy=true;fields.disabled=true;edit.disabled=quoteButton.disabled=submit.disabled=true;invalidateQuote();try{const fresh=await editGuestContact(editor);if(fresh){get('guest-name').value=fresh.contact.name;get('guest-phone').value=fresh.contact.phone;}}catch(error){say(error.message);}finally{busy=false;fields.disabled=false;edit.disabled=quoteButton.disabled=false;submit.disabled=!ready;}};
   }
-  ready=true;quoteButton.disabled=false;
+  ready=true;quoteButton.disabled=false;submit.disabled=false;
  }catch(error){say(error.message||'Không thể tải thông tin thanh toán.');quoteButton.disabled=true;submit.disabled=true;}
 }

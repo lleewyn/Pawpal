@@ -22,6 +22,13 @@ function plan(question,now=new Date(),readContext={}){
  const write=/\b(tu dong|hay|giup toi|thuc hien|tien hanh)\b.*\b(cong diem|tang diem|hoan tien|gui tin|xoa|sua don|dat lich|chuyen ca)\b/.test(q)||/^(cong diem|tang diem|hoan tien|gui tin|xoa|sua don|dat lich|chuyen ca)\b/.test(q);
  if(write&&/nhu the nao|lam sao/.test(q))return {intent:'workflow.guide'};
  if(write&&!/soan|huong dan|quy trinh|cach |mau |nhap/.test(q))return {intent:'refuse.write'};
+ // A target or forecast is not a request for today's recorded cashflow.
+ if(/doanh thu|doanh so|thuc thu|loi nhuan/.test(q) && /du bao|du doan|uoc tinh|muc tieu|ke hoach|co the dat|se dat|bao gio|tuong lai|nam toi|nam sau|nam nua/.test(q)){
+  return {intent:'clarify',answer:'Chưa đủ cơ sở để kết luận có đạt mục tiêu doanh thu bạn nêu hay không. Đây là câu hỏi dự báo; số tiền thu trong ngày không thể dùng làm kết luận. Cần doanh thu lịch sử, xu hướng tăng trưởng và giả định kinh doanh để đánh giá. Hiện trợ lý chưa hỗ trợ dự báo này.'};
+ }
+ if(/doanh thu|doanh so|thuc thu|loi nhuan/.test(q) && /(?:\d+|mot|hai|ba|bon|nam)\s+nam\b|nam (?:qua|truoc)|ca nam|hang nam/.test(q)){
+  return {intent:'clarify',answer:'Khoảng thời gian bạn hỏi chưa được hỗ trợ cho tra cứu tài chính. Hiện tôi tra cứu thực thu trong khoảng tối đa 31 ngày; vui lòng nêu ngày bắt đầu và ngày kết thúc. Tôi không dùng số thu hôm nay thay cho khoảng thời gian đó.'};
+ }
  if(/soan|viet.*(loi|tin|tra loi)/.test(q)||/ban nhap/.test(q)&&!/bai viet/.test(q))return {intent:'draft.reply'};
  if(/tom tat.*(hoi thoai|ca chat|cuoc chat)/.test(q))return {intent:'conversation.summary'};
  if(/quy trinh|huong dan|chinh sach|cach xu ly/.test(q))return {intent:'workflow.guide'};
@@ -29,6 +36,11 @@ function plan(question,now=new Date(),readContext={}){
  const customerCase=planCustomerCase(question,readContext);if(customerCase)return customerCase;
  const pending=planPending(question,now);if(pending)return pending;
  const comparison=planComparison(question,now);if(comparison)return comparison;
+ // Inventory scope mentions configured thresholds; it is not a settings lookup.
+ if(/ton kho|sku.*(nguong|thieu)|sap het hang|ton thap|ton.*duoi.*nguong/.test(q)){
+  if(/tren nguong|bang nguong|<=|lon hon/.test(q))return {intent:'clarify',answer:'Bạn cần điều kiện tồn kho nào? Hiện truy vấn đã hỗ trợ SKU có tồn kho nhỏ hơn tồn tối thiểu (không bao gồm bằng ngưỡng).'};
+  return {intent:'inventory.low_stock',filters:{}};
+ }
  const expanded=planStage3(question,now,readContext);if(expanded)return expanded;
  const local=new Date(now.getTime()+7*3600000).toISOString().slice(0,10);
  let date=local,hasDate=/hom nay|ngay mai|hom qua|\d{1,2}\/\d{1,2}/.test(q);
@@ -51,10 +63,7 @@ function plan(question,now=new Date(),readContext={}){
   if(/cho phuc vu|da xac nhan/.test(q))filters.status='confirmed';else if(/cho duyet|cho xac nhan/.test(q))filters.status='pending';else if(/dang (lam|thuc hien)/.test(q))filters.status='in_progress';else if(/hoan tat|hoan thanh/.test(q))filters.status='completed';
   return {intent:'appointment.list',filters};
  }
- if(/ton kho|sku.*(nguong|thieu)|sap het hang|ton thap|ton.*duoi.*nguong/.test(q)){
-  if(/tren nguong|bang nguong|<=|lon hon/.test(q))return {intent:'clarify',answer:'Bạn cần điều kiện tồn kho nào? Hiện truy vấn đã hỗ trợ SKU có tồn kho nhỏ hơn tồn tối thiểu (không bao gồm bằng ngưỡng).'};
-  return {intent:'inventory.low_stock',filters:{}};
- }
+
  if(/khieu nai|ticket|phieu ho tro/.test(q))return {intent:'ticket.open',filters:/24 gio/.test(q)?{start_at:new Date(now.getTime()-86400000).toISOString(),end_at:now.toISOString()}:hasDate?dates:{}};
  if(/khach hang|chu nuoi|\bCUS-/.test(question)||/khach hang|chu nuoi|\b0\d{8,10}\b/.test(q)){
   const query=question.match(/\bCUS-[\w-]+|\b0\d{8,10}\b/i)?.[0]||question.split(/[:：]/).slice(1).join(':').trim()||question.match(/(?:khách hàng|chủ nuôi|khach hang|chu nuoi)\s+(?:tên|ten|là|la)\s+(.+)$/iu)?.[1]?.trim();
@@ -68,6 +77,10 @@ function plan(question,now=new Date(),readContext={}){
   const filters={query:question.split(/[:：]/).slice(1).join(':').trim()};
   if(/taxi|dua don/.test(q))filters.category='pet_taxi';else if(/hotel|khach san/.test(q))filters.category='pet_hotel';else if(/spa|cat tia|tam/.test(q))filters.category='grooming_spa';
   return {intent:'catalog.service_price',filters};
+ }
+ // A yes/no service question needs its FAQ answer, not an unfiltered catalog.
+ if(/\b(?:co|cung cap|ho tro)\b.*\bdich vu\b.+\bkhong\b|\bdich vu\b.+\b(?:co khong|khong)\b/.test(q)){
+  return {intent:'knowledge.search',filters:{query:question.slice(0,120)}};
  }
  if(/san pham|hang hoa|dich vu|goi spa/.test(q)){
   const query=question.split(/[:：]/).slice(1).join(':').trim();
@@ -106,6 +119,11 @@ function formatFacts(data,{includeSource=true}={}){
  if(data.intent==='revenue.summary'&&(!['collected','refunded','net'].every(k=>numeric(data[k]))||Math.abs(Number(data.net)-(Number(data.collected)-Number(data.refunded)))>0.001))throw Error('invalid_copilot_facts');
  if(data.intent==='inventory.low_stock'&&data.items.some(r=>!numeric(r.stock)||!numeric(r.minimum)))throw Error('invalid_copilot_facts');
  if(data.intent==='hotel.availability'&&(!Number.isSafeInteger(data.available)||!Number.isSafeInteger(data.unavailable)||data.available<0||data.unavailable<0||data.available+data.unavailable!==n))throw Error('invalid_hotel_capacity');
+ if(data.intent==='knowledge.search'){
+  const match=data.items.find(row=>typeof row.answer==='string'&&row.answer.trim());
+  if(!match)return 'Chưa tìm thấy FAQ phù hợp đang bật. Bạn vui lòng nêu cụ thể dịch vụ hoặc nội dung cần hỏi.';
+  return [String(match.answer).trim(),includeSource?`*Nguồn FAQ: ${text(match.question)}*`:''].filter(Boolean).join('\n\n');
+ }
  const title=labels[data.intent]||'Kết quả';const scope=data.scope||{};
  const date=scope.start_at?new Date(scope.start_at).toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}):'';
  const category={grooming_spa:'Spa và cắt tỉa',pet_hotel:'Khách sạn thú cưng',pet_taxi:'Đưa đón thú cưng'}[scope.category];
@@ -133,7 +151,7 @@ function formatFacts(data,{includeSource=true}={}){
  if(data.intent==='appointment.search'&&scope.staff_name)heading+=` KTV: **${text(scope.staff_name)}**.`;
  const friendly=require('./chat_admin_presentation.js').present(data,{rows,text,includeSource});if(friendly)return friendly;
  if(n===0){
-  const empty={'knowledge.search':'Chưa tìm thấy thông tin phù hợp trong kho tri thức đang bật. Bạn vui lòng nêu cụ thể nội dung cần tra cứu.','catalog.service_price':'Chưa có dịch vụ đang hoạt động phù hợp để tra bảng giá.','catalog.service':'Không tìm thấy dịch vụ phù hợp.','catalog.product':'Không tìm thấy sản phẩm phù hợp.','customer.lookup':'Không tìm thấy khách hàng phù hợp.','order.lookup':'Không tìm thấy đơn hàng phù hợp.','ticket.open':'Hiện không có khiếu nại chưa kết thúc phù hợp với điều kiện tra cứu.'};
+  const empty={'staff.lookup':'Không tìm thấy nhân viên phù hợp với tên hoặc điều kiện bạn hỏi trong phạm vi dữ liệu được phép xem.','knowledge.search':'Chưa tìm thấy thông tin phù hợp trong kho tri thức đang bật. Bạn vui lòng nêu cụ thể nội dung cần tra cứu.','catalog.service_price':'Chưa có dịch vụ đang hoạt động phù hợp để tra bảng giá.','catalog.service':'Không tìm thấy dịch vụ phù hợp.','catalog.product':'Không tìm thấy sản phẩm phù hợp.','customer.lookup':'Không tìm thấy khách hàng phù hợp.','order.lookup':'Không tìm thấy đơn hàng phù hợp.','ticket.open':'Hiện không có khiếu nại chưa kết thúc phù hợp với điều kiện tra cứu.'};
   heading=empty[data.intent]||heading;
  }
  return [heading,...rows,...(data.guidance||[]).map(item=>`${text(item.question)}\n${String(item.answer||'')}`),Number(data.pages)>1?`Trang ${data.page}/${data.pages}.${data.page<data.pages?` Bạn có thể hỏi “trang ${data.page+1}” để xem tiếp.`:''}`:n>data.items.length&&data.intent!=='revenue.summary'?`Đang hiển thị ${data.items.length}/${n} kết quả.`:'',data.limitations?.length?'**Lưu ý**\n\n'+(Array.isArray(data.limitations)?data.limitations.join(' '):data.limitations):'',includeSource?`*Cập nhật lúc ${new Date(data.as_of).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})}.*`:''].filter(Boolean).join('\n\n');

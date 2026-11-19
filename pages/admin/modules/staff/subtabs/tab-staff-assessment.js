@@ -132,7 +132,7 @@
                     <td style="font-weight: 600;">${safeDate}</td>
                     <td style="font-weight: 600;">${safeStaffId}</td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-heading);">${safeName}</div>
+                        <button type="button" class="staff-assessment-profile-link" data-staff-id="${safeStaffId}">${safeName}</button>
                         <div style="font-size: 11.5px; color: var(--text-muted);">${safePosition}</div>
                     </td>
                     <td>${safeType}</td>
@@ -146,6 +146,10 @@
                 </tr>
             `;
         }).join('');
+
+        tbody.querySelectorAll('.staff-assessment-profile-link').forEach(button => {
+            button.addEventListener('click', () => PawpalStaff.openStaffProfile?.(button.dataset.staffId));
+        });
 
         tbody.querySelectorAll('.btn-reassess-trigger').forEach(btn => {
             btn.addEventListener('click', () => {

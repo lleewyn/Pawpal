@@ -1,14 +1,14 @@
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const weekdays=['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','Chủ nhật'];
 export async function mountRecurringSchedule(root,{staff,client,enhanceSelect=()=>{}}){
- let rows=[],editing=null,disposed=false,busy=false;
+ let rows=[],editing=null,disposed=false,busy=false,page=1,total=0,readVersion=0,refreshTimer;
  root.innerHTML=`<h3>Lịch làm việc định kỳ</h3><p class="staff-calendar-meta">Dùng để nhận yêu cầu đặt xa ngày. Ca phân theo ngày được ưu tiên; lịch hẹn chỉ xác nhận khi có ca cụ thể.</p>
  <form class="staff-recurring-form" onsubmit="return false;">
  <div class="form-group-item"><label class="form-label-clean">Nhân viên <span style="color:#DC2626">*</span></label><select class="admin-select" name="staff" required><option value="">Chọn nhân viên</option>${staff.filter(s=>s.status==='ACTIVE').map(s=>`<option value="${esc(s.rawId)}">${esc(s.name)}</option>`).join('')}</select></div>
  <div class="form-group-item"><label class="form-label-clean">Ngày trong tuần <span style="color:#DC2626">*</span></label><div class="staff-recurring-days">${weekdays.map((name,index)=>`<label><input type="checkbox" name="weekday" value="${index+1}"> ${name}</label>`).join('')}</div></div>
  <div class="staff-recurring-fields"><label>Bắt đầu <span style="color:#DC2626">*</span><input class="admin-input" name="start" type="time" required></label><label>Kết thúc <span style="color:#DC2626">*</span><input class="admin-input" name="end" type="time" required></label><label>Áp dụng từ <span style="color:#DC2626">*</span><input class="admin-input" name="from" type="date" required></label><label>Đến ngày<input class="admin-input" name="to" type="date"></label></div>
  <label><input type="checkbox" name="active" checked> Đang áp dụng</label>
- <p class="staff-recurring-feedback" role="status"></p><div class="staff-recurring-actions"><button type="button" class="admin-btn admin-btn-secondary" data-reset>Nhập lịch mới</button><button type="button" class="admin-btn admin-btn-primary" data-save>Lưu lịch định kỳ</button></div></form><div class="staff-recurring-list"></div>`;
+ <p class="staff-recurring-feedback" role="status"></p><div class="staff-recurring-actions"><button type="button" class="admin-btn admin-btn-secondary" data-reset>Nhập lịch mới</button><button type="button" class="admin-btn admin-btn-primary" data-save>Lưu lịch định kỳ</button></div></form><div class="staff-recurring-list"></div><div class="staff-recurring-pager"></div>`;
  const form=root.querySelector('form'),fields=form.elements,feedback=root.querySelector('[role="status"]'),list=root.querySelector('.staff-recurring-list');
  enhanceSelect(fields.staff);form.addEventListener('submit',event=>event.preventDefault());
  function reset(){editing=null;form.reset();fields.from.value=new Date(Date.now()+7*3600000).toISOString().slice(0,10);fields.staff.dispatchEvent(new Event('change'));feedback.textContent='';}
@@ -16,10 +16,17 @@ export async function mountRecurringSchedule(root,{staff,client,enhanceSelect=()
  function draw(){
   list.innerHTML=rows.length?rows.map((row,index)=>`<div class="staff-recurring-row"><div><strong>${esc(staff.find(s=>s.rawId===row.staff_id)?.name||'Nhân viên')}</strong><p>${row.weekdays.map(day=>weekdays[day-1]).join(', ')} · ${esc(row.start_time.slice(0,5))}–${esc(row.end_time.slice(0,5))} · ${row.is_active?'Đang áp dụng':'Ngừng áp dụng'}</p><p>Từ ${esc(row.valid_from)}${row.valid_to?' đến '+esc(row.valid_to):''}</p></div><button type="button" class="admin-btn admin-btn-secondary" data-edit="${index}">Sửa lịch</button></div>`).join(''):'<p class="staff-calendar-meta">Chưa có lịch làm việc định kỳ.</p>';
   list.querySelectorAll('[data-edit]').forEach(button=>button.onclick=()=>edit(rows[Number(button.dataset.edit)]));
+  const pager=root.querySelector('.staff-recurring-pager');pager.replaceChildren();pager.style.cssText='display:flex;justify-content:center;gap:4px;padding:2px 0;background:transparent;border:none;';
+  const pages=Math.ceil(total/10);
+  if(pages>1){const add=(label,target,disabled)=>{const b=document.createElement('button');b.type='button';b.className='admin-btn';b.textContent=label;b.disabled=disabled;b.style.cssText='border:none;background:transparent;border-radius:9px;padding:4px 9px;';if(label===String(page)){b.style.background='#236B48';b.style.color='#fff';}b.onclick=()=>load(target).catch(()=>feedback.textContent='Chưa tải được trang lịch. Vui lòng thử lại.');pager.append(b);};add('<',page-1,page===1);for(let i=Math.max(1,page-2);i<=Math.min(pages,page+2);i++)add(String(i),i,i===page);add('>',page+1,page===pages);}
+
  }
- async function load(){
-  const all=[];for(let offset=0;;offset+=500){const {data,error}=await client.from('staff_recurring_schedule').select('*').order('staff_id').order('id').range(offset,offset+499);if(error)throw error;all.push(...data);if(data.length<500)break;}
-  if(!disposed){rows=all;draw();}
+ async function load(target=page){
+  const version=++readVersion;
+  const {data,count,error}=await client.from('staff_recurring_schedule').select('*',{count:'exact'}).order('staff_id').order('id').range((target-1)*10,target*10-1);
+  if(error)throw error;if(disposed||version!==readVersion)return;
+  total=count??0;const last=Math.max(1,Math.ceil(total/10));if(target>last)return load(last);
+  rows=data;page=target;draw();
  }
  root.querySelector('[data-reset]').onclick=()=>{if(!busy)reset();};
  root.querySelector('[data-save]').onclick=async()=>{
@@ -33,6 +40,6 @@ export async function mountRecurringSchedule(root,{staff,client,enhanceSelect=()
   }catch(error){feedback.textContent=error.message==='staff_schedule_changed'?'Lịch đã thay đổi. Mở lại để cập nhật.':'Không thể lưu lịch định kỳ. Kiểm tra thông tin và quyền phân ca.';}finally{busy=false;button.disabled=false;}
  };
  reset();try{await load();}catch{feedback.textContent='Không tải được lịch định kỳ. Vui lòng thử lại.';}
- const channel=client.channel?.('admin-staff-recurring').on('postgres_changes',{event:'*',schema:'public',table:'staff_recurring_schedule'},()=>{if(!disposed&&!root.hidden)load().catch(()=>{feedback.textContent='Chưa cập nhật được danh sách lịch định kỳ.';});}).subscribe();
- return ()=>{disposed=true;if(channel)client.removeChannel(channel);};
+ const channel=client.channel?.('admin-staff-recurring').on('postgres_changes',{event:'*',schema:'public',table:'staff_recurring_schedule'},()=>{clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>{if(!disposed&&!root.hidden&&root.getClientRects().length)load().catch(()=>{feedback.textContent='Chưa cập nhật được danh sách lịch định kỳ.';});},250);}).subscribe();
+ return ()=>{disposed=true;readVersion++;clearTimeout(refreshTimer);if(channel)client.removeChannel(channel);};
 }

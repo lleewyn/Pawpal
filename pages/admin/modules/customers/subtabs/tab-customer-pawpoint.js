@@ -254,6 +254,10 @@
     }
 
     function openAdjustPointsModal(presetPhone = '') {
+        if (adjustmentSaving) return;
+        adjustmentCompleted = false;
+        const submit = document.getElementById('btnSubmitAdjustPoints');
+        if (submit) { submit.disabled = false; submit.textContent = 'Xác nhận điều chỉnh'; }
         const modal = getAdjustModal();
         if (modal) {
             modal.style.display = 'flex';
@@ -295,13 +299,14 @@
     }
 
     let adjustmentSaving=false;
+    let adjustmentCompleted=false;
     function adjustError(id,message){
         const input=document.getElementById(id);let error=document.getElementById(id+'Error');
         if(!error){error=document.createElement('div');error.id=id+'Error';error.style.cssText='color:#DC2626;font-size:12px;margin-top:4px';input.parentElement.appendChild(error);}
         error.textContent=message;input.setAttribute('aria-invalid',String(Boolean(message)));input.setAttribute('aria-describedby',error.id);
     }
     async function handleAdjustPointsSubmit(){
-        if(adjustmentSaving)return;
+        if(adjustmentSaving || adjustmentCompleted || !getAdjustModal() || getComputedStyle(getAdjustModal()).display === 'none')return;
         const customer=selectedAdjustCustomer;
         const points=Number(document.getElementById('adjustPointsVal').value);
         const reason=getAdjustReasonInput().value.trim();
@@ -317,19 +322,28 @@
         if(pending?.signature!==signature)pending={signature,id:crypto.randomUUID()};
         sessionStorage.setItem('pawpal_customer_point_request',JSON.stringify(pending));
         const button=document.getElementById('btnSubmitAdjustPoints');adjustmentSaving=true;button.disabled=true;button.textContent='Đang lưu';
+        let savedBalance = null;
         try{
             const {data,error}=await window.getSupabaseClient().rpc('adjust_customer_points',{p_customer_id:customer.dbId,p_points:signed,p_reason:reason,p_request_id:pending.id});
             if(error){
                 if(error.message?.includes('insufficient_points')){adjustError('adjustPointsVal','Số điểm trừ vượt quá số dư thực tế hiện tại.');return;}
                 throw error;
             }
+            if (!data?.id || !Number.isFinite(Number(data.balance))) throw Error('invalid_point_adjustment_result');
+            adjustmentCompleted = true;
+            savedBalance = Number(data.balance);
             sessionStorage.removeItem('pawpal_customer_point_request');
             closeAdjustModal();document.getElementById('formAdjustPoints').reset();clearAdjustCustomerSelection();
+        }catch(error){PawpalCustomers.showToast('Chưa xác nhận được điều chỉnh. Bạn có thể bấm lưu lại cùng nội dung để kiểm tra, hệ thống không ghi trùng.','warning');}
+        finally{adjustmentSaving=false;button.disabled=adjustmentCompleted;button.textContent='Xác nhận điều chỉnh';}
+        if (!adjustmentCompleted) return;
+        PawpalCustomers.showToast(`Đã lưu điều chỉnh. Số dư sau giao dịch: ${savedBalance.toLocaleString('vi-VN')} điểm.`,'success');
+        try {
             await PawpalCustomers.refreshCustomerData({ledger:true,customerIds:[customer.dbId]});
             renderPawpointHistory();
-            PawpalCustomers.showToast(`Đã lưu điều chỉnh. Số dư sau giao dịch: ${Number(data.balance).toLocaleString('vi-VN')} điểm.`,'success');
-        }catch(error){PawpalCustomers.showToast('Chưa xác nhận được điều chỉnh. Bạn có thể bấm lưu lại cùng nội dung để kiểm tra, hệ thống không ghi trùng.','warning');}
-        finally{adjustmentSaving=false;button.disabled=false;button.textContent='Xác nhận điều chỉnh';}
+        } catch (error) {
+            PawpalCustomers.showToast('Điểm đã lưu, chưa tải lại được lịch sử. Vui lòng làm mới danh sách.','warning');
+        }
     }
 
     let _hasAttachedPawpointDelegates = false;

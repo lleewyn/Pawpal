@@ -625,7 +625,7 @@
             const details=await window.PawpalOrderV1.customers({id:customer.id});
             if(version!==customerSearchVersion)return;
             customer=details[0];if(!customer)throw Error('sales_customer_not_found');
-        }catch(error){if(version===customerSearchVersion)document.getElementById('posPricingNotice').textContent='Không thể tải hồ sơ khách. Vui lòng chọn lại.';return;}
+        }catch(error){if(version===customerSearchVersion)document.getElementById('posPricingNotice').textContent='Không thể tải hồ sơ khách. Vui lòng chọn lại.';return false;}
 
         setPosFieldError('createOrderPhone','createOrderPhoneError');setPosFieldError('createOrderName','createOrderNameError');
         activePosCustomer=customer;document.getElementById('createOrderName').value=customer.rawName||'';document.getElementById('createOrderName').readOnly=true;document.getElementById('createOrderPhone').value=customer.phone;
@@ -641,6 +641,7 @@
             document.getElementById('posCustomerSelectedCard').style.display='none';updatePosLiveCalculation();
         };
         updatePosLiveCalculation();
+        return true;
     }
 
     function renderPosCartTable(){
@@ -729,6 +730,42 @@
         clearAllOrderFilters,
         loadPosCustomerDirectory
     };
+
+    async function openCreateOrderModal(preset = null) {
+            document.getElementById('formCreateOrder').reset();for(const [id,[errorId]] of Object.entries(posDeliveryErrors))setPosFieldError(id,errorId);setPosFieldError('createOrderPhone','createOrderPhoneError');setPosFieldError('createOrderName','createOrderNameError');posCartItems=[];activePosCustomer=null;state.posOrderId=crypto.randomUUID();state.posCartPage=1;document.getElementById('createOrderName').readOnly=false;
+            document.getElementById('posCustomerSelectedCard').style.display='none';document.getElementById('createOrderMemberBanner').style.display='none';document.getElementById('modalCreateOrder').classList.add('active');
+            const search=document.getElementById('createOrderProductSearchInput');
+            search.disabled=true;
+            try {
+                ++customerSearchVersion;++productSearchVersion;posProductChoices=[];
+                renderPosCartTable();
+                await posPricing.reset();
+                if (preset?.custId) return await selectPosCustomer({id: preset.custId});
+                return true;
+
+            } catch(error) {
+                document.getElementById('posPricingNotice').textContent='Không thể tải dữ liệu bán hàng. Đóng và mở lại để thử lại.';
+            } finally { search.disabled=false; }
+    }
+
+    let consumingOrderPreset = false;
+    async function consumeCustomerOrderPreset() {
+        if (consumingOrderPreset || sessionStorage.getItem('pawpal_admin_active_module') !== 'Bán hàng') return;
+        const raw = sessionStorage.getItem('pawpal_admin_order_preset');
+        if (!raw) return;
+        let preset;
+        try { preset = JSON.parse(raw); } catch { sessionStorage.removeItem('pawpal_admin_order_preset'); return; }
+        if (!preset?.custId) { sessionStorage.removeItem('pawpal_admin_order_preset'); return; }
+        consumingOrderPreset = true;
+        try {
+            if (await openCreateOrderModal(preset)) {
+                if (sessionStorage.getItem('pawpal_admin_order_preset') === raw) sessionStorage.removeItem('pawpal_admin_order_preset');
+            }
+        } finally { consumingOrderPreset = false; }
+    }
+    window.addEventListener('admin:module-show', event => {
+        if (event.detail?.module === 'Bán hàng') consumeCustomerOrderPreset();
+    });
 
     // Khởi tạo các sự kiện giao diện cho Subtab List
     let isListEventsInitialized = false;
@@ -855,20 +892,7 @@
         });
 
         // POS Listeners
-        document.getElementById('btnOpenCreateOrderModal')?.addEventListener('click',async()=>{
-            document.getElementById('formCreateOrder').reset();for(const [id,[errorId]] of Object.entries(posDeliveryErrors))setPosFieldError(id,errorId);setPosFieldError('createOrderPhone','createOrderPhoneError');setPosFieldError('createOrderName','createOrderNameError');posCartItems=[];activePosCustomer=null;state.posOrderId=crypto.randomUUID();state.posCartPage=1;document.getElementById('createOrderName').readOnly=false;
-            document.getElementById('posCustomerSelectedCard').style.display='none';document.getElementById('createOrderMemberBanner').style.display='none';document.getElementById('modalCreateOrder').classList.add('active');
-            const search=document.getElementById('createOrderProductSearchInput');
-            search.disabled=true;
-            try {
-                ++customerSearchVersion;++productSearchVersion;posProductChoices=[];
-                renderPosCartTable();
-                await posPricing.reset();
-
-            } catch(error) {
-                document.getElementById('posPricingNotice').textContent='Không thể tải dữ liệu bán hàng. Đóng và mở lại để thử lại.';
-            } finally { search.disabled=false; }
-        });
+        document.getElementById('btnOpenCreateOrderModal')?.addEventListener('click', () => openCreateOrderModal());
         document.getElementById('btnPosQuickCustomer')?.addEventListener('click',async event=>{
             const button=event.currentTarget;
             const name=document.getElementById('createOrderName').value.trim().replace(/\s+/g,' '),phone=document.getElementById('createOrderPhone').value.trim();
@@ -969,7 +993,10 @@
         const handleFinalizePosOrder=async()=>{
             if(isPosFinalizing||document.getElementById('modalCreateOrder').dataset.saving==='true')return;isPosFinalizing=true;setPosPending(true);const submit=document.getElementById('btnSubmitCreateOrder'),text=submit.textContent;submit.textContent='Đang tạo đơn…';
             try{
-                const id=await posPricing.save(state.posOrderId);document.getElementById('modalCreateOrder').classList.remove('active');
+                const customerId=activePosCustomer?.id;
+                const id=await posPricing.save(state.posOrderId);
+                window.PawpalCustomers?.refreshCustomerData?.({directory:false,kind:'orders',customerIds:customerId?[customerId]:[]});
+                document.getElementById('modalCreateOrder').classList.remove('active');
                 await syncOrdersAndProductsFromSupabase({force:true});const order=await PawpalOrders.ensureOrder(id,{force:true});
                 if(order){state.selectedOrderId=order.id;PawpalOrders.switchSubtab('tab-order-detail');PawpalOrders.renderOrderDetail(order.id);}
                 showToast('\u0110\u00e3 t\u1ea1o \u0111\u01a1n v\u00e0 gi\u1eef t\u1ed3n. Ch\u01b0a ghi nh\u1eadn thu ti\u1ec1n.');

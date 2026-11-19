@@ -16,6 +16,14 @@ function route(question,context={},now=new Date()){
   const query=raw.match(/\bCUS-[\w-]+|\b0\d{8,10}\b/i)?.[0]||raw.match(/(?:khách hàng|khach hang|khách|khach|chủ nuôi|chu nuoi)\s*:?\s+(.+?)[?.!]*$/iu)?.[1]?.trim()||context.customerQuery;
   if(query?.length>=3)return {intent:'points.lookup',filters:{query}};
  }
+ // Preserve a person name in natural staff-existence questions.
+ const staffName=raw.match(/^(?:(?:công ty|cong ty|cửa hàng|cua hang|pawpal)\s+)?có ai tên\s+(.+?)(?:\s+không)?[?.!]*$/iu)
+  ||raw.match(/^(?:(?:công ty|cong ty|cửa hàng|cua hang|pawpal)\s+)?co ai ten\s+(.+?)(?:\s+khong)?[?.!]*$/iu)
+  ||raw.match(/^(?:(?:tìm|tim|tra cứu|tra cuu|có|co)\s+)?(?:nhân viên|nhan vien|kỹ thuật viên|ky thuat vien)\s+(?:tên|ten|là|la)\s+(.+?)(?:\s+(?:không|khong))?[?.!]*$/iu);
+ if(staffName){
+  const query=staffName[1].trim();
+  return query.length>=2&&query.length<=120?{intent:'staff.lookup',filters:{query}}:{intent:'clarify',answer:'Bạn cho biết tên nhân viên cần tìm.'};
+ }
  if(raw.includes(':')||raw.includes('：'))return null;
  const rules=[[/^(?:tìm |tim |tra cứu |tra cuu |thông tin |thong tin )?(?:khách hàng|khach hang|chủ nuôi|chu nuoi)\s+(.+?)[?!.]*$/iu,'customer.lookup'],[/^(?:tìm |tim |tra cứu |tra cuu |thông tin |thong tin )?(?:thú cưng|thu cung|bé cưng|be cung)\s+(.+?)[?!.]*$/iu,'pet.lookup'],[/^(?:tìm |tim |tra cứu |tra cuu )?(?:sản phẩm|san pham|hàng hóa|hang hoa)\s+(.+?)[?!.]*$/iu,'catalog.product']];
  for(const [pattern,intent]of rules){const m=raw.match(pattern);if(!m)continue;const query=m[1].replace(/^(?:tên|ten|là|la)\s+/iu,'').trim(),f=fold(query);if(query.length<3||query.length>120||/hom nay|ngay mai|tuan|thang|tat ca|danh sach|sap het|ton kho|con lai|bao nhieu|^nay\b|^cua\b|^co\b|^nao\b|\b(?:hoat dong|bi khoa|da huy)\b/.test(f))return null;return {intent,filters:{query}};}

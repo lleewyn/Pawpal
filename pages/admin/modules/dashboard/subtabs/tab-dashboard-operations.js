@@ -66,6 +66,7 @@
         loading: new Set(),
         dirty: new Set(),
         alertsPage: 1,
+        alertsScope: 'all',
         lastUpdatedAt: null,
         channel: null,
         realtime: 'connecting',
@@ -357,7 +358,16 @@
         else if (target === 'return') config = { module: 'Khiếu nại', keys: { pawpal_admin_complaint_active_subtab: 'tab-complaint-orders' } };
         else if (target === 'appointment') config = NAV_TARGETS.appointments;
         else if (target === 'order') config = NAV_TARGETS.orders;
-        else if (target === 'ticket') config = NAV_TARGETS.tickets;
+        else if (target === 'ticket' || target === 'tickets') {
+            const openRet = rows('openReturns')?.length || 0;
+            const openT = rows('openTickets') || [];
+            const hasOrderTickets = openRet > 0 || openT.some(t => {
+                const s = String(t.subject || '').toLowerCase();
+                return s.includes('ord') || s.includes('đơn hàng') || s.includes('đổi trả') || s.includes('sản phẩm');
+            });
+            const targetSubtab = hasOrderTickets ? 'tab-complaint-orders' : 'tab-complaint-services';
+            config = { module: 'Khiếu nại', keys: { pawpal_admin_complaint_active_subtab: targetSubtab } };
+        }
         if (!config) return;
         Object.entries(config.keys).forEach(([key, value]) => sessionStorage.setItem(key, value));
         const button = [...document.querySelectorAll('.sidebar-menu-btn')].find(node => node.getAttribute('data-title') === config.module);
@@ -409,13 +419,15 @@
     }
 
     function currentAlerts() {
+        const available = name => !state.errors[name] && !!state.data[name];
+        const safeRows = name => available(name) ? rows(name) : [];
         return M().buildAlerts({
-            pendingAppointments: rows('backlogAppointments'),
-            activeOrders: rows('actionOrders'),
-            openReturns: rows('openReturns'),
-            openTickets: rows('openTickets'),
-            stockRisks: stockRisks(),
-            capacity: staffSummary().capacityRisks,
+            pendingAppointments: safeRows('backlogAppointments'),
+            activeOrders: safeRows('actionOrders'),
+            openReturns: safeRows('openReturns'),
+            openTickets: safeRows('openTickets'),
+            stockRisks: PANEL_RESOURCES.stock.every(available) ? stockRisks() : [],
+            capacity: PANEL_RESOURCES.staff.every(available) ? staffSummary().capacityRisks : null,
             now: new Date()
         });
     }
@@ -529,6 +541,9 @@
             const card = state.root.querySelector(`[data-kpi="${key}"]`);
             if (!card) return;
             card.querySelector('[data-kpi-value]').textContent = value;
+            let scope = card.querySelector('.ops-kpi-scope');
+            if (!scope) { scope = document.createElement('span'); scope.className = 'ops-kpi-scope'; card.append(scope); }
+            scope.textContent = key === 'staffOnShift' ? 'Trong kỳ đã chọn' : key === 'todayAppointments' ? 'Hôm nay' : 'Hiện tại';
             card.dataset.tip = tipText || '';
             card.setAttribute('aria-label', `${card.querySelector('.kpi-label').textContent}: ${value}. ${tipText || ''}`);
             card.classList.toggle('is-attention', attention);
@@ -583,16 +598,22 @@
         title.tabIndex = 0;
         const status = resourcesStatus(PANEL_RESOURCES.alerts);
         if (status.status !== 'ok') hidePagination();
-        guard('alerts', PANEL_RESOURCES.alerts, ({ refreshing }) => {
+        const missing = PANEL_RESOURCES.alerts.filter(name => state.errors[name] || !state.data[name]);
+        const warning = missing.length ? `<p class="ops-filter-error" role="alert">Chưa đủ nguồn dữ liệu; chỉ hiển thị các cảnh báo đã tải được. <button type="button" class="ops-link-btn" data-ops-retry="alerts">Thử lại</button></p>` : '';
+        if (missing.length === PANEL_RESOURCES.alerts.length) { setPanel('alerts', warning); return; }
+        (({ refreshing }) => {
             const metrics = M();
-            const alerts = currentAlerts();
-            if (!alerts.length) {
+            const allAlerts = currentAlerts();
+            if (!allAlerts.length) {
                 hidePagination();
-                return setPanel('alerts', '<p class="ops-empty">Không có việc quá hạn theo ngưỡng hiện tại.</p>', { tag: 'Hiện tại', refreshing });
+                return setPanel('alerts', warning + (missing.length ? '' : '<p class="ops-empty">Không có việc quá hạn theo ngưỡng hiện tại.</p>'), { tag: missing.length ? 'Chưa đầy đủ' : 'Hiện tại', refreshing });
             }
-            const urgentCount = alerts.filter(alert => alert.severity === 'urgent').length;
+            const longWaiting = allAlerts.filter(alert => alert.waitingHours !== null && alert.waitingHours > 168);
+            const alerts = state.alertsScope === 'older' ? longWaiting : state.alertsScope === 'recent' ? allAlerts.filter(alert => alert.waitingHours === null || alert.waitingHours <= 168) : allAlerts;
+            const urgentCount = allAlerts.filter(alert => alert.severity === 'urgent').length;
+            const filters = `<div class="ops-alert-filters" role="group" aria-label="Lọc công việc theo thời gian chờ">${[['all', 'Tất cả', allAlerts.length], ['recent', 'Chờ tối đa 7 ngày', allAlerts.length - longWaiting.length], ['older', 'Chờ trên 7 ngày', longWaiting.length]].map(([id,label,count]) => `<button type="button" class="ops-alert-filter${state.alertsScope === id ? ' active' : ''}" data-ops-alert-scope="${id}" aria-pressed="${state.alertsScope === id}">${label} (${num(count)})</button>`).join('')}</div>`;
             const byKind = new Map();
-            alerts.forEach(alert => {
+            allAlerts.forEach(alert => {
                 const entry = byKind.get(alert.kind) || { total: 0, urgent: 0 };
                 entry.total += 1;
                 if (alert.severity === 'urgent') entry.urgent += 1;
@@ -608,21 +629,27 @@
             const top = alerts.slice(0, 5).map(alert => `<li class="ops-task">${severityDot(alert)}<span class="ops-task-ref" title="${esc(`${KIND_LABELS[alert.kind]} ${alert.ref}`)}">${esc(alert.ref)}</span><span class="ops-task-reason" title="${esc(alert.reason)}">${esc(alert.reason)}</span><span class="ops-task-wait">${esc(waiting(alert))}</span>${openButton(alert)}</li>`).join('');
             const toggle = `<button class="ops-link-btn" data-ops-toggle-alerts type="button">${state.alertsExpanded ? 'Thu gọn' : `Xem tất cả ${num(alerts.length)} việc`}</button>`;
             let full = '';
-            if (state.alertsExpanded) {
+            if (state.alertsExpanded && alerts.length) {
                 const pages = Math.ceil(alerts.length / ALERTS_PER_PAGE);
                 state.alertsPage = Math.min(Math.max(1, state.alertsPage), pages);
                 const slice = alerts.slice((state.alertsPage - 1) * ALERTS_PER_PAGE, state.alertsPage * ALERTS_PER_PAGE);
                 full = `<div class="table-responsive-wrapper"><table class="admin-table"><thead><tr><th>Mức độ</th><th>Loại</th><th>Mã tham chiếu</th><th>Lý do</th><th class="num">Đã chờ</th><th>Thao tác</th></tr></thead><tbody>${slice.map(alert => `<tr class="${alert.severity === 'urgent' ? 'row-urgent' : 'row-warning'}"><td>${severityDot(alert)}</td><td>${esc(KIND_LABELS[alert.kind] || alert.kind)}</td><td>${esc(alert.ref)}</td><td>${esc(alert.reason)}</td><td class="num">${esc(waiting(alert) || '—')}</td><td>${openButton(alert)}</td></tr>`).join('')}</tbody></table></div>`;
                 if (pages > 1) {
                     const buttons = [`<button aria-label="Trang trước" data-ops-page="${state.alertsPage - 1}" type="button"${state.alertsPage === 1 ? ' disabled' : ''}>&lt;</button>`];
-                    for (let page = 1; page <= pages; page++) buttons.push(`<button class="${page === state.alertsPage ? 'active' : ''}" data-ops-page="${page}" type="button"${page === state.alertsPage ? ' aria-current="page"' : ''}>${page}</button>`);
+                    const visiblePages = [...new Set([1, pages, state.alertsPage - 1, state.alertsPage, state.alertsPage + 1])].filter(page => page >= 1 && page <= pages).sort((a,b) => a-b);
+                    visiblePages.forEach((page, index) => {
+                        if (index && page - visiblePages[index - 1] > 1) buttons.push('<span class="ops-page-gap" aria-hidden="true">…</span>');
+                        buttons.push(`<button class="${page === state.alertsPage ? 'active' : ''}" data-ops-page="${page}" type="button"${page === state.alertsPage ? ' aria-current="page"' : ''}>${page}</button>`);
+                    });
                     buttons.push(`<button aria-label="Trang sau" data-ops-page="${state.alertsPage + 1}" type="button"${state.alertsPage === pages ? ' disabled' : ''}>&gt;</button>`);
                     pagination.innerHTML = buttons.join('');
                     pagination.hidden = false;
                 } else hidePagination();
             } else hidePagination();
-            setPanel('alerts', `<div class="ops-alert-layout"><div><p class="ops-hero"><strong>${num(alerts.length)}</strong><span>việc, ${num(urgentCount)} khẩn cấp</span></p>${kindBars}</div><div><ul class="ops-tasks">${top}</ul><div class="ops-foot"><span></span>${toggle}</div></div></div>${full}`, { tag: 'Hiện tại', refreshing });
-        });
+            const list = alerts.length ? `<ul class="ops-tasks">${top}</ul><div class="ops-foot"><span></span>${toggle}</div>` : '<p class="ops-empty">Không có công việc trong nhóm thời gian chờ này.</p>';
+            const backlog = longWaiting.length ? `<p class="ops-caption">${num(longWaiting.length)} việc đã chờ trên 7 ngày, vẫn cần được xử lý.</p>` : '';
+            setPanel('alerts', `${warning}${filters}<div class="ops-alert-layout"><div><p class="ops-hero"><strong>${num(allAlerts.length)}</strong><span>việc${missing.length ? ' đã tải được' : ''}, ${num(urgentCount)} khẩn cấp</span></p>${kindBars}${backlog}</div><div>${list}</div></div>${full}`, { tag: missing.length ? 'Chưa đầy đủ' : 'Hiện tại', refreshing });
+        })({ refreshing: state.loading.size > 0 });
     }
 
     function renderStatusPanel(panelName, resource, breakdownFn, segments, unit, emptyText) {
@@ -862,6 +889,13 @@
             }
             if (event.target.closest('[data-ops-apply]')) {
                 applyPeriod('custom', { from: state.root.querySelector('[data-ops-from]').value, to: state.root.querySelector('[data-ops-to]').value });
+                return;
+            }
+            const scope = event.target.closest('[data-ops-alert-scope]');
+            if (scope) {
+                state.alertsScope = scope.dataset.opsAlertScope;
+                state.alertsPage = 1;
+                renderAlerts();
                 return;
             }
             if (event.target.closest('[data-ops-toggle-alerts]')) {

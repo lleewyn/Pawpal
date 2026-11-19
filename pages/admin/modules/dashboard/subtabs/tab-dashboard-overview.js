@@ -52,7 +52,7 @@
     // ====================================================================
     // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
     // ====================================================================
-    let liveSalesOrders = [];
+    let livePendingOrders=0,livePendingTickets=0;
     let liveAppointments = [];
     let liveTickets = [];
     let liveProducts = [];
@@ -81,6 +81,7 @@
     function invalidateDashboardResources(resources) {
         _dashLastFetchedAt = 0;
         _dashInvalidationVersion++;
+        if(resources.some(r=>['orders','tickets'].includes(r)))window.PawpalDataStore?.invalidate?.('dashboard:workload:*');
         for (const resource of resources) {
             window.PawpalDataStore?.invalidate?.(`dashboard:${resource}:*`);
         }
@@ -141,18 +142,16 @@
                 const fetchProducts = async () => {const result=await client.rpc('get_admin_dashboard_low_stock');if(result.error)throw result.error;return {data:result.data||[]};};
                 const fetchDashboardPayload = async () => {
                     const [
-                        ordersRes,
+                        workloadRes,
                         apptsRes,
-                        ticketsRes,
                         productsRes,
                         custCountRes,
                         petCountRes,
                         todayCountRes,
                         chatsRes
                     ] = await Promise.all([
-                        read('orders', () => readAll('sales_order','id,order_status','id',query=>query.in('order_status',['pending','confirmed','processing','cho_xac_nhan','dang_xu_ly','PENDING','CONFIRMED','PROCESSING','CHO_XAC_NHAN','DANG_XU_LY']))),
+                        read('workload',()=>client.rpc('admin_overview_workload')),
                         read('appointments', () => requestedRange?.all ? client.from('appointment').select('id,appointment_code,customer_id,pet_id,staff_id,scheduled_start_at,scheduled_end_at,appointment_status,note,items:appointment_item(id,service_id,name_snapshot,is_primary,staff_id,status)',{count:'exact'}).order('scheduled_start_at',{ascending:false}).order('id').range((requestedRange.page-1)*10,requestedRange.page*10-1) : readAll('appointment','id,appointment_code,customer_id,pet_id,staff_id,scheduled_start_at,scheduled_end_at,appointment_status,note,items:appointment_item(id,service_id,name_snapshot,is_primary,staff_id,status)','id',q=>q.gte('scheduled_start_at',requestedRange.from+'T00:00:00+07:00').lt('scheduled_start_at',requestedRange.to+'T00:00:00+07:00')),DASH_CACHE_TTL_MS,requestedRange),
-                        read('tickets', () => readAll('support_ticket','id,ticket_code,status,subject,priority,created_at','id',query=>query.not('status','in','(resolved,completed,closed,rejected,da_dong,da_giai_quyet,RESOLVED,COMPLETED,CLOSED,REJECTED,DA_DONG,DA_GIAI_QUYET)'))),
                         read('products', fetchProducts),
                         read('customer-count', () => client.from('customer').select('id', { count: 'exact', head: true }), store?.TTL.LIST || 120_000),
                         read('pet-count', () => client.from('pet_profile').select('id', { count: 'exact', head: true }), store?.TTL.LIST || 120_000),
@@ -191,9 +190,9 @@
                     return {
                         appointmentTotal:apptsRes.count||0,
                         todayCount:todayCountRes.count||0,
-                        orders: ordersRes.data || [],
+                        pendingOrders:workloadRes.data.orders,pendingTickets:workloadRes.data.tickets,
                         appts: (apptsRes.data || []).map(a=>({...a,service_id:((a.items||[]).find(i=>i.is_primary)||(a.items||[])[0])?.service_id,service_name:((a.items||[]).find(i=>i.is_primary)||(a.items||[])[0])?.name_snapshot,appointment_date:toDateKey(a.scheduled_start_at),appointment_time:new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(a.scheduled_start_at))})),
-                        tickets: (ticketsRes.data || []).map(t=>({...t,title:t.subject})),
+                        tickets:workloadRes.data.firstTicket?[{...workloadRes.data.firstTicket,title:workloadRes.data.firstTicket.subject}]:[],
                         products: productsRes.data || [],
                         custCount: custCountRes.count,
                         petCount: petCountRes.count,
@@ -208,7 +207,7 @@
                 const [data] = await Promise.all([fetchDashboardPayload(),loadCashflow(client,force)]);
 
                 _dashLastFetchedAt = loadVersion === _dashInvalidationVersion ? Date.now() : 0;
-                liveSalesOrders = data.orders || [];
+                livePendingOrders=data.pendingOrders;livePendingTickets=data.pendingTickets;
                 liveAppointments = data.appts || [];
                 loadedCalendarRange=JSON.stringify(requestedRange);
                 calendarAllTotal=data.appointmentTotal;
@@ -251,7 +250,7 @@
                 });
                 _dashLoadError = null;
             } catch (err) {
-                liveSalesOrders=[];liveAppointments=[];liveTickets=[];liveProducts=[];liveStaffList=[];liveChatCounts={total:0,handover:0};
+                livePendingOrders=0;livePendingTickets=0;liveAppointments=[];liveTickets=[];liveProducts=[];liveStaffList=[];liveChatCounts={total:0,handover:0};
                 liveProfilesMap.clear();livePetsMap.clear();cashflow=null;
                 console.error('[Dashboard] Lỗi nạp dữ liệu từ Supabase:', err);
                 _dashLoadError = err.message || 'Lỗi kết nối cơ sở dữ liệu';
@@ -277,16 +276,8 @@
         }).length;
 
         // 3. Đơn hàng mới cần duyệt (Chờ xác nhận / Đang xử lý)
-        const pendingOrders = liveSalesOrders.filter(o => {
-            const s = (o.order_status || '').toUpperCase();
-            return ['PENDING','CONFIRMED','PROCESSING','CHO_XAC_NHAN','DANG_XU_LY'].includes(s);
-        });
-
-        // 4. Khiếu nại chờ xử lý (hỗ trợ cả cột status và ticket_status từ Supabase support_ticket)
-        const pendingTickets = liveTickets.filter(t => {
-            const s = (t.status || t.ticket_status || '').toUpperCase();
-            return !['RESOLVED','COMPLETED','CLOSED','REJECTED','DA_DONG','DA_GIAI_QUYET'].includes(s);
-        });
+        const pendingOrdersCount=livePendingOrders,pendingTicketsCount=livePendingTickets;
+        const pendingTickets=liveTickets;
 
         // Render DOM 5 thẻ KPI (100% số liệu thực)
         // E2E-12D: Chốt chặn kiểm tra quyền hạn tài chính
@@ -301,7 +292,7 @@
         if (elBookings) elBookings.textContent = _dashLoadError ? '—' : todayAppointmentsCount;
 
         const elOrders = document.getElementById('dashboardOrders');
-        if (elOrders) elOrders.textContent = _dashLoadError ? '—' : pendingOrders.length;
+        if (elOrders) elOrders.textContent = _dashLoadError ? '—' : pendingOrdersCount;
 
         const elCust = document.getElementById('dashboardCustomers');
         if (elCust) elCust.textContent = _dashLoadError ? '—' : liveCustomersCount;
@@ -310,7 +301,7 @@
         if (elPets) elPets.textContent = _dashLoadError ? '—' : livePetsCount;
 
         // Render khối Ưu tiên xử lý
-        const totalPriority = pendingTickets.length + pendingOrders.length;
+        const totalPriority = pendingTicketsCount + pendingOrdersCount;
         const elPriorityCount = document.getElementById('dashboardPriorityCount');
         if (elPriorityCount) {
             elPriorityCount.textContent = _dashLoadError ? '—' : `${totalPriority} việc`;
@@ -319,22 +310,22 @@
 
         const elComplaintsBadge = document.getElementById('dashboardComplaintsBadge');
         if (elComplaintsBadge) {
-            elComplaintsBadge.textContent = _dashLoadError ? '—' : pendingTickets.length;
+            elComplaintsBadge.textContent = _dashLoadError ? '—' : pendingTicketsCount;
             elComplaintsBadge.className = 'dash-value-btn dash-urgent';
         }
 
         const elComplaintsSub = document.getElementById('dashboardComplaintsSub');
         if (elComplaintsSub) {
-            elComplaintsSub.textContent = _dashLoadError 
-                ? 'Không thể nạp dữ liệu khiếu nại' 
-                : (pendingTickets.length > 0 
-                    ? `${pendingTickets.length} ticket cần nhân viên tiếp nhận`
+            elComplaintsSub.textContent = _dashLoadError
+                ? 'Không thể nạp dữ liệu khiếu nại'
+                : (pendingTicketsCount > 0
+                    ? `${pendingTicketsCount} ticket cần nhân viên tiếp nhận`
                     : `Không có khiếu nại tồn đọng`);
         }
 
         const elOrdersBadge = document.getElementById('dashboardOrdersBadge');
         if (elOrdersBadge) {
-            elOrdersBadge.textContent = _dashLoadError ? '—' : pendingOrders.length;
+            elOrdersBadge.textContent = _dashLoadError ? '—' : pendingOrdersCount;
             elOrdersBadge.className = 'dash-value-btn';
         }
 
@@ -342,8 +333,8 @@
         if (elOrdersSub) {
             elOrdersSub.textContent = _dashLoadError
                 ? 'Không thể nạp dữ liệu đơn hàng'
-                : (pendingOrders.length > 0
-                    ? `${pendingOrders.length} đơn hàng mới cần xác nhận`
+                : (pendingOrdersCount > 0
+                    ? `${pendingOrdersCount} đơn hàng mới cần xác nhận`
                     : `Tất cả đơn hàng đã được duyệt`);
         }
 
@@ -361,11 +352,11 @@
                 alertText.textContent = `Cảnh báo hệ thống: ${_dashLoadError}. Đang tạm dừng hiển thị số liệu đồng bộ.`;
                 alertBtn.textContent = 'Thử lại';
                 alertBtn.onclick = () => window.PawpalDashboard?.refresh();
-            } else if (pendingTickets.length) {
+            } else if (pendingTicketsCount) {
                 alertBanner.style.display = 'flex';
                 alertText.replaceChildren();
                 const count=document.createElement('strong');
-                count.textContent=`${pendingTickets.length} khi\u1ebfu n\u1ea1i \u0111ang ch\u1edd`;
+                count.textContent=`${pendingTicketsCount} khi\u1ebfu n\u1ea1i \u0111ang ch\u1edd`;
                 const detail=document.createElement('span');
                 const ticket=urgentTicket || pendingTickets[0];
                 const code=ticket.ticket_code || (ticket.id||'').slice(0,8).toUpperCase();
@@ -399,7 +390,7 @@
         if (_dashLoadError) { container.textContent='Không tải được tồn kho. Vui lòng làm mới.'; return; }
 
         if (liveProducts.length === 0) {
-            container.innerHTML = '<div style="padding: 12px; font-size: 13px; color: var(--text-muted);">Kho hàng ổn định, chưa có sản phẩm.</div>';
+            container.innerHTML = '<div class="dash-stock-empty">Kho hàng ổn định, chưa có sản phẩm.</div>';
             return;
         }
 
@@ -417,15 +408,15 @@
                     return null;
                 }
 
-                const rawStock = inv?.quantity_in_stock !== undefined 
-                    ? inv.quantity_in_stock 
-                    : (inv?.quantity_on_hand !== undefined 
-                        ? inv.quantity_on_hand 
+                const rawStock = inv?.quantity_in_stock !== undefined
+                    ? inv.quantity_in_stock
+                    : (inv?.quantity_on_hand !== undefined
+                        ? inv.quantity_on_hand
                         : (inv?.stock_qty !== undefined ? inv.stock_qty : (prod.stock !== undefined ? prod.stock : 0)));
                 const stock = Math.max(0, parseInt(rawStock, 10) || 0);
 
-                const rawMinStock = inv?.minimum_stock !== undefined 
-                    ? inv.minimum_stock 
+                const rawMinStock = inv?.minimum_stock !== undefined
+                    ? inv.minimum_stock
                     : (inv?.safety_stock_level !== undefined ? inv.safety_stock_level : 5);
                 const minStock = Math.max(0, Number(rawMinStock) || 0);
 
@@ -470,7 +461,7 @@
             });
 
         if (lowStockItems.length === 0) {
-            container.innerHTML = '<div style="padding: 12px; font-size: 13px; color: var(--text-muted);">Kho hàng ổn định, không có sản phẩm sắp hết.</div>';
+            container.innerHTML = '<div class="dash-stock-empty">Kho hàng ổn định, không có sản phẩm sắp hết.</div>';
             return;
         }
 
@@ -737,15 +728,15 @@
                     const dayBookings = bookingsOnDate(date);
                     const selected = key === calendarKey(selectedDate);
                     const events = dayBookings.length
-                        ? dayBookings.map((booking) => `<span class="dashboard-week-event"><time>${booking.time}</time>${booking.pet}</span>`).join('')
+                        ? dayBookings.map((booking, idx) => `<button type="button" class="dashboard-week-event" data-week-booking-date="${key}" data-week-booking-index="${idx}"><time>${escapeHtml(booking.time)}</time>${escapeHtml(booking.pet)}</button>`).join('')
                         : '<span class="dashboard-week-empty">Không có lịch</span>';
-                    return `<button type="button" class="dashboard-calendar-day dashboard-week-day ${selected ? 'is-selected' : ''} ${key === calendarKey(today) ? 'is-today' : ''}" data-calendar-date="${key}" aria-label="${new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' }).format(date)}" aria-pressed="${selected}"><span class="dashboard-week-events">${events}</span></button>`;
+                    return `<div class="dashboard-calendar-day dashboard-week-day ${selected ? 'is-selected' : ''} ${key === calendarKey(today) ? 'is-today' : ''}" data-calendar-date="${key}" aria-label="${new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' }).format(date)}" aria-pressed="${selected}"><div class="dashboard-week-events">${events}</div></div>`;
                 }).join('');
             } else if (calendarView === 'day') {
                 const dayBookings = bookingsOnDate(selectedDate);
                 const startHour = 0;
                 const endHour = 23;
-                const slotHeight = 46;
+                const slotHeight = 76;
                 const timelineTopOffset = 16;
 
                 const timeSlotsMarkup = Array.from({ length: endHour - startHour + 1 }, (_, i) => {
@@ -782,7 +773,7 @@
                     const totalInCluster = cluster.length;
                     return cluster.map((b, idx) => {
                         const topPx = timelineTopOffset + (b.startMinutes / 60) * slotHeight;
-                        const heightPx = Math.max(38, (60 / 60) * slotHeight - 4);
+                        const heightPx = slotHeight - 4;
 
                         let styleAttrs = `top: ${topPx}px; height: ${heightPx}px;`;
                         const statusClass = b.statusCode === 'pending' ? 'status-pending' : (b.statusCode === 'cancelled' ? 'status-cancelled' : 'status-confirmed');
@@ -792,29 +783,27 @@
                             classes += ' is-single-event';
                             styleAttrs += ' left: 0; width: 96%; z-index: 1;';
                         } else {
-                            const widthPercent = Math.max(62, 94 - idx * 14);
-                            const leftPercent = idx * 16;
-                            const zIndex = idx + 2;
-
-                            classes += ` is-overlapped-layer layer-idx-${idx % 3}`;
-                            styleAttrs += ` left: ${leftPercent}%; width: ${widthPercent}%; z-index: ${zIndex};`;
+                            const widthPercent = 100 / totalInCluster;
+                            styleAttrs += ` left: ${idx * widthPercent}%; width: calc(${widthPercent}% - 6px); z-index: 1;`;
                         }
 
-                        return `<button type="button" class="${classes}" style="${styleAttrs}" data-dashboard-module="Dịch vụ" data-booking-id="${b.id || ''}">
+                        return `<button type="button" class="${classes}" style="${styleAttrs}" data-dashboard-module="Dịch vụ" data-booking-id="${escapeHtml(b.id || '')}">
                             <div class="dashboard-day-event-header">
-                                <strong>${b.time} · ${b.pet}</strong>
-                                <span class="dashboard-day-event-status">${b.status}</span>
+                                <strong>${escapeHtml(b.time)} · ${escapeHtml(b.pet)}</strong>
+                                <span class="dashboard-day-event-status">${escapeHtml(b.status)}</span>
                             </div>
-                            <div class="dashboard-day-event-body">${b.customer} · ${b.service}</div>
+                            <div class="dashboard-day-event-body">${escapeHtml(b.customer)} · ${escapeHtml(b.service)}</div>
                         </button>`;
                     });
                 }).join('');
 
-                const totalTimelineHeight = timelineTopOffset + (endHour - startHour + 1) * slotHeight + 16;
+                const totalTimelineHeight = timelineTopOffset + (endHour - startHour + 1) * slotHeight + slotHeight;
+                const timelineMinWidth = 58 + Math.max(1, ...clusters.map(cluster => cluster.length)) * 220;
                 daysGrid.innerHTML = `
                     <div class="dashboard-day-timeline-container" style="height: ${totalTimelineHeight}px;">
+                        <div class="dashboard-day-timeline-content" style="height: ${totalTimelineHeight}px; min-width: ${timelineMinWidth}px;">
                         <div class="dashboard-day-timeline-grid">${timeSlotsMarkup}</div>
-                        <div class="dashboard-day-timeline-events">${eventsMarkup || '<div style="padding: 24px; text-align: center; color: var(--text-muted);">Không có ca dịch vụ trong ngày này</div>'}</div>
+                        <div class="dashboard-day-timeline-events">${eventsMarkup || '<div style="padding: 24px; text-align: center; color: var(--text-muted);">Không có ca dịch vụ trong ngày này</div>'}</div></div>
                     </div>`;
 
                 const timelineContainer = daysGrid.querySelector('.dashboard-day-timeline-container');
@@ -832,7 +821,7 @@
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         const bId = btn.getAttribute('data-booking-id');
-                        const found = dayBookings.find(b => b.id === bId) || dayBookings[0];
+                        const found = dayBookings.find(b => String(b.id) === bId);
                         if (found) openBookingQuickModal(found);
                     });
                 });
@@ -864,6 +853,14 @@
             ['dashboardCalendarPrev','dashboardCalendarNext'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=calendarView==='all';});
             renderAgenda(selectedDate);
 
+            daysGrid.querySelectorAll('[data-week-booking-index]').forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const bookings = bookingsOnDate(dateFromKey(button.dataset.weekBookingDate));
+                    const booking = bookings[Number(button.dataset.weekBookingIndex)];
+                    if (booking) openBookingQuickModal(booking);
+                });
+            });
             daysGrid.querySelectorAll('[data-calendar-date]').forEach((button) => {
                 button.addEventListener('click', () => {
                     selectedDate = dateFromKey(button.dataset.calendarDate);
@@ -950,7 +947,7 @@
 
         const elPercentWrap = document.getElementById('dashboardChatbotPercentWrap');
         if (elPercentWrap) {
-            elPercentWrap.innerHTML = totalSessions > 0 
+            elPercentWrap.innerHTML = totalSessions > 0
                 ? `<strong>${aiPercent}%</strong><small>Chưa chuyển nhân viên</small>`
                 : `<strong>—</strong><small>Chưa có phiên</small>`;
         }
@@ -992,8 +989,8 @@
                 .filter(id => activeStaffList.some(s=>s.id===id))
         );
 
-        const utilPercent = totalActiveStaff > 0 
-            ? Math.min(100, Math.round((assignedStaffToday.size / totalActiveStaff) * 100)) 
+        const utilPercent = totalActiveStaff > 0
+            ? Math.min(100, Math.round((assignedStaffToday.size / totalActiveStaff) * 100))
             : 0;
 
         const elStaffPercent = document.getElementById('dashboardStaffUtilPercent');
@@ -1107,6 +1104,14 @@
     // -------------------------------------------------------------
     let currentSelectedQuickBooking = null;
 
+    function dashboardVisibleBookingNote(value) {
+        return String(value || '')
+            .replace(/\[Pawpal\s+[^\]]+\][\s\S]*?\[\/Pawpal\s+[^\]]+\]/gi, ' ')
+            .replace(/\[Pawpal\s+[^\]]+\][\s\S]*$/gi, ' ')
+            .replace(/[ \t]{2,}/g, ' ')
+            .trim();
+    }
+
     function openBookingQuickModal(booking) {
         currentSelectedQuickBooking = booking;
         const modal = document.getElementById('dashboardBookingQuickModal');
@@ -1148,7 +1153,7 @@
             badgeSpan.textContent = booking.status || 'Đã xác nhận';
             elStatus.appendChild(badgeSpan);
         }
-        if (elNotes) elNotes.textContent = booking.notes || 'Chăm sóc dịu nhẹ, đúng quy trình an toàn.';
+        if (elNotes) elNotes.textContent = dashboardVisibleBookingNote(booking.notes) || 'Không có lưu ý.';
 
         modal.style.display = 'flex';
     }

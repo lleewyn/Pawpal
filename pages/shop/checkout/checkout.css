@@ -923,6 +923,8 @@ body.checkout-public-page{background:#fff;color:#274b39;font-family:Inter,system
 .checkout-public-page .order-item-img{border:1px solid #e4eadd;border-radius:9px;background:#f5f8f1;object-fit:contain}
 .checkout-public-page .btn-primary{background:#214939;border:1px solid #214939;border-radius:9px;padding:12px 18px;font-family:Inter,system-ui,sans-serif;font-size:14px;font-weight:600;box-shadow:none;transform:none}
 .checkout-public-page .btn-primary:hover{background:#315d46;border-color:#315d46;box-shadow:none;transform:none}
+.checkout-public-page #guest-place-order{color:#fff;transition:none}
+.checkout-public-page #guest-place-order:not(:disabled){opacity:1;background:#214939;border-color:#214939}
 .checkout-public-page .btn-secondary,.checkout-public-page .btn-outline-primary,.checkout-public-page .btn-modal-cancel{background:#f1f5ed;border:1px solid #d5e0d0;border-radius:9px;color:#31553f;font-family:Inter,system-ui,sans-serif;font-size:13px;box-shadow:none}
 .checkout-public-page .form-check-input:checked{background-color:#315d46;border-color:#315d46}
 .checkout-public-page .grand-total,.checkout-public-page .total-amount{color:#315d46}

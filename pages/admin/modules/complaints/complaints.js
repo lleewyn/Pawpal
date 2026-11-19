@@ -412,54 +412,27 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
 
     // SLA Calculation
     function calculateSla(item) {
-        if (!item) return;
-        item.slaStatus = ['resolved','closed'].includes(item.status) ? 'DONE' : 'UNKNOWN';
-        item.slaRemainingText = item.slaStatus === 'DONE' ? 'Đã kết thúc' : 'Chưa cấu hình hạn xử lý';
+        if (['resolved','closed'].includes(item.status)) { item.slaStatus='DONE';item.slaRemainingText='Đã kết thúc';return; }
+        const due=Date.parse(item.slaDueAt || '');
+        if(!Number.isFinite(due)){item.slaStatus='UNKNOWN';item.slaRemainingText='Chưa cấu hình hạn xử lý';return;}
+        const remaining=due-Date.now(),minutes=Math.ceil(Math.abs(remaining)/60000);
+        const days=Math.floor(minutes/1440),hours=Math.floor((minutes%1440)/60),rest=minutes%60;
+        item.slaStatus=remaining<0?'OVERDUE':remaining<=4*3600000?'URGENT':'NORMAL';
+        item.slaRemainingText=(remaining<0?'Quá hạn ':'Còn ')+(days?days+' ngày '+hours+' giờ':(hours?hours+' giờ ':'')+rest+' phút');
     }
     PawpalComplaints.calculateSla = calculateSla;
 
     function sortComplaintsByUrgencyAndSla(a, b) {
-        calculateSla(a);
-        calculateSla(b);
-
-        const doneStatuses = ['resolved', 'closed', 'completed', 'da_giai_quyet', 'da_dong', 'tu_choi', 'rejected'];
-        const isDoneA = doneStatuses.includes(String(a.status || '').toLowerCase());
-        const isDoneB = doneStatuses.includes(String(b.status || '').toLowerCase());
-        if (isDoneA !== isDoneB) return isDoneA ? 1 : -1;
-
-        const slaRank = { 'OVERDUE': 1, 'URGENT': 2, 'NORMAL': 3, 'DONE': 4 };
-        const sRankA = slaRank[a.slaStatus] || 3;
-        const sRankB = slaRank[b.slaStatus] || 3;
-        if (sRankA !== sRankB) return sRankA - sRankB;
-
-        // F-010: Sắp xếp theo ưu tiên chuẩn: khan_cap (1) > cao (2) > trung_binh (3) > thap (4)
-        const priorityRank = {
-            'khan_cap': 1, 'urgent': 1,
-            'cao': 2, 'high': 2,
-            'trung_binh': 3, 'medium': 3, 'binh_thuong': 3,
-            'thap': 4, 'low': 4
-        };
-        const pA = priorityRank[String(a.priority || '').toLowerCase()] || 3;
-        const pB = priorityRank[String(b.priority || '').toLowerCase()] || 3;
-        if (pA !== pB) return pA - pB;
-
-        const statusRank = {
-            'mo': 1, 'new': 1, 'pending': 1,
-            'reprocessing': 2,
-            'waiting_manager_approval': 3,
-            'dang_xu_ly': 4, 'processing': 4, 'waiting_return': 4, 'refunding': 4,
-            'cho_khach_hang': 5, 'waiting_customer': 5,
-            'da_giai_quyet': 6, 'resolved': 6,
-            'da_dong': 7, 'closed': 7, 'completed': 7,
-            'tu_choi': 8, 'rejected': 8
-        };
-        const stA = statusRank[String(a.status || '').toLowerCase()] || 5;
-        const stB = statusRank[String(b.status || '').toLowerCase()] || 5;
-        if (stA !== stB) return stA - stB;
-
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return timeB - timeA;
+        const rank={khan_cap:1,urgent:1,cao:2,high:2,trung_binh:3,medium:3,binh_thuong:3,thap:4,low:4};
+        const priority=(rank[String(a.priority||'').toLowerCase()]||3)-(rank[String(b.priority||'').toLowerCase()]||3);
+        if(priority)return priority;
+        const done=t=>['resolved','closed','completed','da_giai_quyet','da_dong','tu_choi','rejected'].includes(String(t.status||'').toLowerCase());
+        if(done(a)!==done(b))return done(a)?1:-1;
+        const due=t=>{const value=Date.parse(t.slaDueAt||'');return Number.isFinite(value)?value:Infinity;};
+        if(due(a)!==due(b))return due(a)<due(b)?-1:1;
+        const time=t=>Date.parse(t.createdAtRaw||'')||0;
+        if(time(a)!==time(b))return time(b)-time(a);
+        return String(a.rawId||a.id||'').localeCompare(String(b.rawId||b.id||''));
     }
     PawpalComplaints.sortComplaintsByUrgencyAndSla = sortComplaintsByUrgencyAndSla;
 
@@ -493,8 +466,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
     // ====================================================================
     // DATA STORE 100% TRỰC TIẾP TỪ SUPABASE LIVE DATABASE (ZERO JSON MOCK)
     // ====================================================================
-    async function loadComplaintsModuleData({ force = false, resources = null, directoryFull = false, pageRequest = null } = {}) {
-        const fullDirectory = directoryFull || Boolean(PawpalComplaints.state.fullDirectoryLoaded);
+    async function loadComplaintsModuleData({ force = false, resources = null, pageRequest = null } = {}) {
         const defaultKind = sessionStorage.getItem('pawpal_admin_complaint_active_subtab') === 'tab-complaint-orders' ? 'order' : 'service';
         const request = pageRequest || PawpalComplaints.state.lastPageRequest || { kind: defaultKind, filters: {}, page: 1 };
         PawpalComplaints.state.lastPageRequest = request;
@@ -517,7 +489,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
 
             // Sử dụng cache nếu dữ liệu còn mới VÀ đã có dữ liệu thực tế
             const totalComplaintsCount = (PawpalComplaints.state.serviceComplaints?.length || 0) + (PawpalComplaints.state.orderComplaints?.length || 0);
-            if (!pageRequest && !force && (!fullDirectory || PawpalComplaints.state.fullDirectoryLoaded) && totalComplaintsCount > 0 && Date.now() - _complLastFetchedAt < COMPL_CACHE_TTL_MS) {
+            if (!pageRequest && !force && totalComplaintsCount > 0 && Date.now() - _complLastFetchedAt < COMPL_CACHE_TTL_MS) {
                 console.log('[Complaints] Dùng cache, bỏ qua fetch.');
                 updateComplaintsKpis();
                 PawpalComplaints.subtabs.services?.renderServiceComplaintsTable();
@@ -560,14 +532,14 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                 if (!pageMeta || !Array.isArray(pageMeta.tickets)) throw new Error('Invalid complaint page response');
                 const tickets = pageMeta.tickets;
                 const customerIds = [...new Set(tickets.map(ticket => ticket.customer_id).filter(Boolean))];
-                const scope = column => fullDirectory ? null : { column, ids: customerIds };
+                const scope = column => ({ column, ids: customerIds });
                 const [customers, phones, profiles, pets, appointments, orders, staffList] = await Promise.all([
                     readAll('customer', 'id,contact_email,customer_status', 'id', scope('id')),
                     readAll('customer_phone', 'id,customer_id,phone_number,is_primary', 'id', scope('customer_id')),
                     readAll('customer_profile', 'customer_id,full_name,gender', 'customer_id', scope('customer_id')),
-                    readAll('pet_profile', 'id,customer_id,pet_code,pet_name,avatar_url,routine,allergy,safety_note,breed:pet_breed(breed_name,species:pet_species(species_name))', 'id', scope('customer_id')),
-                    readAll('appointment', 'id,appointment_code,customer_id,pet_id,scheduled_start_at,scheduled_end_at,appointment_status,note,staff:staff_id(full_name),items:appointment_item(id,is_primary,name_snapshot,service:service_id(service_name,category:service_category(category_code)))', 'id', scope('customer_id')),
-                    readAll('sales_order', 'id,order_code,customer_id,order_status,shipping_status,tracking_code,created_at,carrier:shipping_provider(provider_name)', 'id', scope('customer_id')),
+                    readAll('pet_profile', 'id,customer_id,pet_code,pet_name,avatar_url,routine,allergy,safety_note,breed:pet_breed(breed_name,species:pet_species(species_name))', 'id', {column:'id',ids:tickets.map(t=>t.pet_id).filter(Boolean)}),
+                    Promise.resolve([]),
+                    Promise.resolve([]),
                     readAll('staff', 'id,full_name,job_title,employment_status,auth_user_id')
                 ]);
                 const sourceColumns = {
@@ -606,7 +578,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             };
 
             const cachedPayload = window.PawpalDataStore?.fetch
-                ? await window.PawpalDataStore.fetch('complaints:data:' + (fullDirectory ? 'full:' : 'related:') + window.PawpalDataStore.buildKey('page', { requestKey, context: PawpalComplaints.state.currentTicketId || '' }), fetchComplaintsData, {
+                ? await window.PawpalDataStore.fetch('complaints:data:related:' + window.PawpalDataStore.buildKey('page', { requestKey, context: PawpalComplaints.state.currentTicketId || '' }), fetchComplaintsData, {
                     ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
                     backgroundRevalidate: false,
                     force
@@ -620,7 +592,6 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             PawpalComplaints.state.loadError = null;
             PawpalComplaints.state.unclassifiedTickets = [];
 
-            PawpalComplaints.state.fullDirectoryLoaded = fullDirectory;
             PawpalComplaints.state.serverPages ||= {};
             PawpalComplaints.state.serverStats = cachedPayload.pageMeta.stats;
             PawpalComplaints.state.serverPages[request.kind] = { ...cachedPayload.pageMeta, requestKey, loadedAt: Date.now() };
@@ -847,6 +818,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                         customerId: t.customer_id,
                         updated_at: t.updated_at,
                         customerReplyDueAt: t.customer_reply_due_at,
+                        slaDueAt: t.sla_due_at,
                         rating: t.rating,
                         ratingComment: t.rating_comment,
                         autoCloseReason: t.auto_close_reason,
@@ -956,6 +928,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                         customerId: t.customer_id,
                         updated_at: t.updated_at,
                         customerReplyDueAt: t.customer_reply_due_at,
+                        slaDueAt: t.sla_due_at,
                         rating: t.rating,
                         ratingComment: t.rating_comment,
                         autoCloseReason: t.auto_close_reason,
@@ -1150,7 +1123,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         if (elSProc) elSProc.textContent = sProc;
         if (elSWait) elSWait.textContent = sWait;
         if (elSHigh) elSHigh.textContent = sHigh;
-        if (elSOver) elSOver.textContent = '—';
+        if (elSOver) elSOver.textContent = PawpalComplaints.state.serverStats?.overdueService ?? sOver;
 
         const oNew = PawpalComplaints.state.serverStats?.oNew ?? (orderComplaints.filter(i => i.status === 'new').length);
         const oProc = PawpalComplaints.state.serverStats?.oProc ?? (orderComplaints.filter(i => i.status === 'processing').length);
@@ -1171,11 +1144,12 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         if (elORma) elORma.textContent = oRma;
         if (elOWait) elOWait.textContent = oWait;
         if (elORef) elORef.textContent = oRef;
-        if (elOOver) elOOver.textContent = '—';
+        if (elOOver) elOOver.textContent = PawpalComplaints.state.serverStats?.overdueOrder ?? oOver;
 
         // Cập nhật huy hiệu số đếm đỏ trên Subtab Header
-        const servicePendingCount = sNew + sProc + sWait;
-        const orderPendingCount = oNew + oProc + oWait;
+        const isClosed = st => ['closed', 'resolved', 'completed', 'rejected', 'da_giai_quyet', 'huy'].includes(String(st || '').toLowerCase());
+        const servicePendingCount = serviceComplaints.filter(i => !isClosed(i.status)).length;
+        const orderPendingCount = orderComplaints.filter(i => !isClosed(i.status)).length;
 
         const badgeService = document.getElementById('badgeServiceComplaintsCount');
         const badgeOrder = document.getElementById('badgeOrderComplaintsCount');
@@ -1183,7 +1157,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         if (badgeService) {
             if (servicePendingCount > 0) {
                 badgeService.textContent = servicePendingCount;
-                badgeService.style.display = 'inline-block';
+                badgeService.style.display = 'inline-flex';
             } else {
                 badgeService.style.display = 'none';
             }
@@ -1192,7 +1166,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         if (badgeOrder) {
             if (orderPendingCount > 0) {
                 badgeOrder.textContent = orderPendingCount;
-                badgeOrder.style.display = 'inline-block';
+                badgeOrder.style.display = 'inline-flex';
             } else {
                 badgeOrder.style.display = 'none';
             }
@@ -1376,7 +1350,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         if (!ticketId) return;
         PawpalComplaints.state.currentTicketId = ticketId;
         sessionStorage.setItem('pawpal_admin_complaint_selected_id', ticketId);
-        await loadComplaintsModuleData({ pageRequest: PawpalComplaints.state.lastPageRequest || { kind: 'service', filters: {}, page: 1 } });
+        await loadComplaintsModuleData({ force: true, pageRequest: PawpalComplaints.state.lastPageRequest || { kind: 'service', filters: {}, page: 1 } });
         if (PawpalComplaints.state.currentTicketId !== ticketId) return;
         switchSubtab('tab-complaint-detail');
         if (PawpalComplaints.subtabs.detail?.renderTicketDetail) {
@@ -1654,18 +1628,47 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
     // MODAL 1: TIẾP NHẬN KHIẾU NẠI DỊCH VỤ / ĐƠN HÀNG (740px)
     // Custom Autocomplete Popover & Smart Entity Auto-Fill (AGENTS.md)
     // ====================================================================
-    async function openCreateTicketModal(type = 'service', presetRefId = null) {
-        if (!PawpalComplaints.state.fullDirectoryLoaded) {
-            await loadComplaintsModuleData({ directoryFull: true });
-            if (PawpalComplaints.state.loadError) {
-                PawpalComplaints.showToast('Không tải được danh sách để tạo phiếu. Vui lòng thử lại.', 'danger');
-                return;
+    PawpalComplaints.searchCreateContext=async function(kind,query='',owner=null,id=null,isCurrent=()=>true){
+        const modal=document.getElementById('createTicketModalOverlay'),request=modal?.dataset.requestId;
+        const scope=window.PawpalDataStore?.buildKey?.('complaint-context');
+        const search=String(query||'').trim().slice(0,200),store=window.PawpalDataStore;
+        const read=async()=>{const {data,error}=await getComplaintsDbClient().rpc('admin_complaint_context',{p_kind:kind,p_query:search,p_owner:owner,p_id:id});if(error)throw error;return data;};
+        const data=store?await store.fetch('complaints:context:'+scope+':'+JSON.stringify([kind,search,owner,id]),read,{ttlMs:store.TTL.OPERATIONAL,backgroundRevalidate:false}):await read();
+        if(!isCurrent()||scope!==window.PawpalDataStore?.buildKey?.('complaint-context')||request!==modal?.dataset.requestId)throw Error('Phiên tạo phiếu đã thay đổi.');
+        if(!data||!Array.isArray(data.refs)||!Array.isArray(data.customers))throw Error('Không xác nhận được dữ liệu tìm kiếm.');
+        const dir=PawpalComplaints.state.createDirectory;
+        if(!dir)throw Error('Biểu mẫu đã đóng.');
+        const merge=(a,b)=>[...new Map([...a,...b].map(r=>[r.id||r.customer_id,r])).values()];
+        dir.customers=merge(dir.customers,data.customers.map(c=>({...c,phone_main:c.phone})));
+        dir.profiles=merge(dir.profiles,data.customers.map(c=>({customer_id:c.id,full_name:c.name})));
+        dir.pets=merge(dir.pets,data.pets||[]);
+        const refs=data.refs.map(r=>({...r,[kind==='order'?'order_code':'appointment_code']:r.code,created_at:r.date,appointment_date:r.date,service:{service_name:r.name}}));
+        if(kind==='order')dir.orders=merge(dir.orders,refs);else if(kind==='service')dir.appointments=merge(dir.appointments,refs);
+        return data;
+    };
+    let consumingComplaintPreset = false;
+    window.addEventListener('admin:module-show', async event => {
+        if (event.detail?.module !== 'Khiếu nại' || consumingComplaintPreset) return;
+        const raw = sessionStorage.getItem('pawpal_admin_complaint_preset');
+        if (!raw) return;
+        consumingComplaintPreset = true;
+        try {
+            const preset = JSON.parse(raw);
+            if (!preset?.custId) { sessionStorage.removeItem('pawpal_admin_complaint_preset'); return; }
+            if (await openCreateTicketModal('service', null, preset.custId)) {
+                if (sessionStorage.getItem('pawpal_admin_complaint_preset') === raw) sessionStorage.removeItem('pawpal_admin_complaint_preset');
             }
-        }
+        } catch (error) {
+            PawpalComplaints.showToast('Không thể mở phiếu khiếu nại. Vui lòng thử lại.', 'warning');
+        } finally { consumingComplaintPreset = false; }
+    });
+
+    async function openCreateTicketModal(type = 'service', presetRefId = null, presetCustomerId = null) {
         const modal = document.getElementById('createTicketModalOverlay');
         if (!modal) return;
 
         modal.dataset.requestId = crypto.randomUUID();
+        PawpalComplaints.state.createDirectory={customers:[],profiles:[],pets:[],appointments:[],orders:[]};
         if (document.getElementById('inputTicketRefSearch')) document.getElementById('inputTicketRefSearch').disabled = false;
         PawpalComplaints.state.currentTicketType = type;
         PawpalComplaints.state.selectedCustomerId = null;
@@ -1721,7 +1724,10 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         // Reset form values
         if (phoneInput) phoneInput.value = '';
         if (nameInput) nameInput.value = '';
-        if (prioritySelect) prioritySelect.value = 'medium';
+        if (prioritySelect) {
+            if(![...prioritySelect.options].some(option=>option.value===''))prioritySelect.prepend(new Option('','',true,true));
+            prioritySelect.value = '';
+        }
         if (chkUnverified) chkUnverified.checked = false;
         if (titleInput) titleInput.value = '';
         if (contentInput) contentInput.value = '';
@@ -1731,10 +1737,13 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         // Tự động điền dữ liệu nếu có presetRefId từ phân hệ Dịch vụ hoặc Đơn hàng
         const targetRefId = presetRefId || (type === 'service' ? sessionStorage.getItem('pawpal_admin_complaint_from_booking') : sessionStorage.getItem('pawpal_admin_complaint_from_order'));
         if (targetRefId) {
+            const request=modal.dataset.requestId;
+            try{await PawpalComplaints.searchCreateContext(type,'',null,targetRefId);}catch(e){PawpalComplaints.showToast('Chưa tải được giao dịch liên quan. Vui lòng tìm lại.','danger');}
+            if(!modal.isConnected||request!==modal.dataset.requestId)return;
             sessionStorage.removeItem('pawpal_admin_complaint_from_booking');
             sessionStorage.removeItem('pawpal_admin_complaint_from_order');
             if (type === 'service') {
-                const appts = PawpalComplaints.state.cachedAppointments || [];
+                const appts = PawpalComplaints.state.createDirectory.appointments || [];
                 const appt = appts.find(a => String(a.id) === String(targetRefId) || String(a.appointment_code) === String(targetRefId));
                 if (appt) {
                     const code = appt.appointment_code || appt.id;
@@ -1747,9 +1756,9 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                     }
 
                     // Tự động tìm khách hàng tương ứng
-                    const customers = PawpalComplaints.state.cachedCustomers || [];
-                    const profiles = PawpalComplaints.state.cachedProfiles || [];
-                    const pets = PawpalComplaints.state.cachedPets || [];
+                    const customers = PawpalComplaints.state.createDirectory.customers || [];
+                    const profiles = PawpalComplaints.state.createDirectory.profiles || [];
+                    const pets = PawpalComplaints.state.createDirectory.pets || [];
                     const cust = customers.find(c => String(c.id) === String(appt.customer_id));
                     const prof = profiles.find(p => String(p.customer_id) === String(appt.customer_id));
                     const pet = pets.find(p => String(p.id) === String(appt.pet_id));
@@ -1774,7 +1783,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                     if (prioritySelect) prioritySelect.value = 'high';
                 }
             } else if (type === 'order') {
-                const orders = PawpalComplaints.state.cachedOrders || [];
+                const orders = PawpalComplaints.state.createDirectory.orders || [];
                 const order = orders.find(o => String(o.id) === String(targetRefId) || String(o.order_code) === String(targetRefId));
                 if (order) {
                     const code = order.order_code || order.id;
@@ -1788,8 +1797,8 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                     }
 
                     // Tự động tìm khách hàng tương ứng
-                    const customers = PawpalComplaints.state.cachedCustomers || [];
-                    const profiles = PawpalComplaints.state.cachedProfiles || [];
+                    const customers = PawpalComplaints.state.createDirectory.customers || [];
+                    const profiles = PawpalComplaints.state.createDirectory.profiles || [];
                     const cust = customers.find(c => String(c.id) === String(order.customer_id));
                     const prof = profiles.find(p => String(p.customer_id) === String(order.customer_id));
 
@@ -1814,6 +1823,21 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         }
 
         modal.classList.add('active');
+        if (presetCustomerId) {
+            const request = modal.dataset.requestId;
+            try {
+                const result = await PawpalComplaints.searchCreateContext('customers', '', presetCustomerId);
+                if (request !== modal.dataset.requestId || !modal.classList.contains('active')) return false;
+                const customer = result.customers.find(c => c.id === presetCustomerId);
+                if (!customer) throw Error('customer_not_found');
+                PawpalComplaints.selectCreateCustomer(customer);
+                searchRefInput?.focus();
+                return true;
+            } catch (error) {
+                PawpalComplaints.showToast('Không thể tải khách hàng từ hồ sơ. Vui lòng chọn lại.', 'warning');
+                return false;
+            }
+        }
         if (targetRefId && contentInput) {
             contentInput.focus();
         } else if (phoneInput) {
@@ -1857,30 +1881,22 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         // Helper lấy danh sách khách hàng hợp nhất từ nhiều nguồn
         function getUnifiedCustomerList() {
             const state = PawpalComplaints.state;
-            return state.cachedCustomers.map(c => ({ id: c.id,
-                name: state.cachedProfiles.find(p => p.customer_id === c.id)?.full_name || c.id,
+            return state.createDirectory.customers.map(c => ({ id: c.id,
+                name: state.createDirectory.profiles.find(p => p.customer_id === c.id)?.full_name || c.id,
                 phone: c.phone_main || '', email: c.email || '',
-                petCount: state.cachedPets.filter(p => p.customer_id === c.id).length
+                petCount:c.petCount??state.createDirectory.pets.filter(p => p.customer_id === c.id).length
             }));
         }
 
-        function renderCustomerDropdown(targetDropdown, query, isPhoneSearch = false) {
+        let customerReadVersion=0,refReadVersion=0;
+        async function renderCustomerDropdown(targetDropdown, query, isPhoneSearch = false) {
+            const version=++customerReadVersion,request=modal.dataset.requestId;
+            await new Promise(resolve=>setTimeout(resolve,250));if(version!==customerReadVersion||!modal.classList.contains('active'))return;
+            let result;try{result=await PawpalComplaints.searchCreateContext('customers',query,null,null,()=>version===customerReadVersion&&request===modal.dataset.requestId);}catch(e){if(version===customerReadVersion){targetDropdown.textContent='Chưa tìm được khách hàng. Vui lòng thử lại.';targetDropdown.style.display='block';}return;}
+            if(version!==customerReadVersion||request!==modal.dataset.requestId||document.activeElement!==(isPhoneSearch?phoneInput:nameInput)||!modal.classList.contains('active'))return;
             if (!targetDropdown) return;
-            const q = (query || '').toLowerCase().trim();
-            const customers = getUnifiedCustomerList();
 
-            let matches = customers.filter(c => {
-                if (!q) return true;
-                const phone = (c.phone || '').toLowerCase();
-                const name = (c.name || '').toLowerCase();
-                const cleanQ = q.replace(/[^0-9a-z]/g, '');
-                const cleanPhone = phone.replace(/[^0-9a-z]/g, '');
-
-                if (isPhoneSearch) {
-                    return cleanPhone.includes(cleanQ) || name.includes(q);
-                }
-                return name.includes(q) || cleanPhone.includes(cleanQ);
-            }).slice(0, 8);
+            const matches=result.customers;
 
             if (matches.length === 0) {
                 targetDropdown.innerHTML = `<div class="customer-autocomplete-empty">Không tìm thấy khách hàng phù hợp</div>`;
@@ -1917,6 +1933,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
 
         // Chọn khách hàng & tự động liên kết (Smart Entity Relations)
         function selectCustomer(cust, { keepRef = false } = {}) {
+            customerReadVersion++;refReadVersion++;
             PawpalComplaints.state.selectedCustomerId = cust.id;
             const name = cust.name || 'Khách hàng';
             const phone = cust.phone || '';
@@ -1937,8 +1954,11 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             }
         }
 
+        PawpalComplaints.selectCreateCustomer = selectCustomer;
+
         // Bỏ chọn khách hàng
         function clearCustomer() {
+            customerReadVersion++;refReadVersion++;
             PawpalComplaints.state.selectedCustomerId = null;
             if (phoneInput) phoneInput.value = '';
             if (nameInput) nameInput.value = '';
@@ -1957,20 +1977,16 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         }
 
         // Helper render Reference Transaction Dropdown (100% Flat Text-Only)
-        function renderRefDropdown(query, filterCustomerId = null) {
+        async function renderRefDropdown(query, filterCustomerId = null) {
+            const version=++refReadVersion,request=modal.dataset.requestId,kind=PawpalComplaints.state.currentTicketType||'service';
+            await new Promise(resolve=>setTimeout(resolve,250));if(version!==refReadVersion||!modal.classList.contains('active'))return;
+            let result;try{result=await PawpalComplaints.searchCreateContext(kind,query,filterCustomerId,null,()=>version===refReadVersion&&request===modal.dataset.requestId);}catch(e){if(version===refReadVersion){refDropdown.textContent='Chưa tìm được giao dịch. Vui lòng thử lại.';refDropdown.style.display='block';}return;}
+            if(document.activeElement!==searchRefInput||version!==refReadVersion||request!==modal.dataset.requestId||kind!==PawpalComplaints.state.currentTicketType||filterCustomerId!==PawpalComplaints.state.selectedCustomerId||!modal.classList.contains('active'))return;
             if (!refDropdown) return;
             const type = PawpalComplaints.state.currentTicketType || 'service';
-            const q = (query || '').toLowerCase().trim();
 
             if (type === 'order') {
-                let orders = PawpalComplaints.state.cachedOrders || [];
-                let filtered = orders.filter(o => {
-                    if (filterCustomerId && String(o.customer_id) !== String(filterCustomerId)) return false;
-                    if (!q) return true;
-                    const code = (o.order_code || o.id || '').toLowerCase();
-                    const cName = (o.customer_name || '').toLowerCase();
-                    return code.includes(q) || cName.includes(q);
-                }).slice(0, 8);
+                const filtered=result.refs.map(r=>PawpalComplaints.state.createDirectory.orders.find(o=>o.id===r.id));
 
                 if (filtered.length === 0) {
                     refDropdown.innerHTML = `<div class="customer-autocomplete-empty">Không có đơn hàng nào phù hợp</div>`;
@@ -1994,15 +2010,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                     `;
                 }).join('');
             } else {
-                let appts = PawpalComplaints.state.cachedAppointments || [];
-                let filtered = appts.filter(a => {
-                    if (filterCustomerId && String(a.customer_id) !== String(filterCustomerId)) return false;
-                    if (!q) return true;
-                    const code = (a.appointment_code || a.id || '').toLowerCase();
-                    const cName = (a.customer_name || '').toLowerCase();
-                    const sName = (a.service?.service_name || a.service_type || a.service_name || '').toLowerCase();
-                    return code.includes(q) || cName.includes(q) || sName.includes(q) || (q === 'apt' && (code.startsWith('app') || code.startsWith('bkg')));
-                }).slice(0, 8);
+                const filtered=result.refs.map(r=>PawpalComplaints.state.createDirectory.appointments.find(o=>o.id===r.id));
 
                 if (filtered.length === 0) {
                     refDropdown.innerHTML = `<div class="customer-autocomplete-empty">Không có lịch hẹn nào phù hợp</div>`;
@@ -2064,7 +2072,8 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             // Kiểm tra trùng lặp ticket (Duplicate ticket warning)
             if (warningBox) {
                 const allTickets = (PawpalComplaints.state.serviceComplaints || []).concat(PawpalComplaints.state.orderComplaints || []);
-                const duplicate = allTickets.find(t => (t.refId === refId || t.appointmentCode === refId || t.orderCode === refId) && t.status !== 'resolved' && t.status !== 'closed');
+                const source=[...PawpalComplaints.state.createDirectory.orders,...PawpalComplaints.state.createDirectory.appointments].find(r=>[r.id,r.order_code,r.appointment_code].includes(refId));
+                const duplicate = source?.duplicate?{id:source.duplicate}:allTickets.find(t => (t.refId === refId || t.appointmentCode === refId || t.orderCode === refId) && t.status !== 'resolved' && t.status !== 'closed');
                 if (duplicate) {
                     if (warningCode) warningCode.textContent = duplicate.id;
                     warningBox.style.display = 'block';
@@ -2076,6 +2085,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
 
         // Bỏ chọn giao dịch
         function clearRefTransaction() {
+            refReadVersion++;
             if (selectRefId) selectRefId.value = '';
             if (searchRefInput) searchRefInput.value = '';
             if (refSelectedCard) refSelectedCard.style.display = 'none';
@@ -2162,7 +2172,8 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                 const isUnverified = chkUnverified?.checked;
                 const title = (document.getElementById('inputTicketTitle')?.value || '').trim();
                 const content = (document.getElementById('inputTicketContent')?.value || '').trim();
-                const priority = document.getElementById('selectTicketPriority')?.value || 'medium';
+                const priority = document.getElementById('selectTicketPriority')?.value || '';
+                if(!priority){PawpalComplaints.showToast('Chọn mức độ ưu tiên.','warning');return;}
                 const type = PawpalComplaints.state.currentTicketType || 'service';
 
                 let hasError = false;
@@ -2209,7 +2220,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
 
                 let targetCustomerId = PawpalComplaints.state.selectedCustomerId || null;
                 if (!targetCustomerId && phone) {
-                    const foundCust = (PawpalComplaints.state.cachedCustomers || []).find(c => c.phone_main === phone || c.phone === phone);
+                    const foundCust = (PawpalComplaints.state.createDirectory.customers || []).find(c => c.phone_main === phone || c.phone === phone);
                     if (foundCust) targetCustomerId = foundCust.id;
                 }
 
@@ -2220,7 +2231,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                 if (btnSave.disabled) return;
                 const client = getComplaintsDbClient();
                 if (!client) return;
-                const refs = type === 'order' ? PawpalComplaints.state.cachedOrders : PawpalComplaints.state.cachedAppointments;
+                const refs = type === 'order' ? PawpalComplaints.state.createDirectory.orders : PawpalComplaints.state.createDirectory.appointments;
                 const ref = !isUnverified && refs.find(r => r.id === refId || r.order_code === refId || r.appointment_code === refId);
                 if (!isUnverified && (!ref || ref.customer_id !== targetCustomerId)) {
                     if (errRef) { errRef.textContent = 'Giao dịch không thuộc khách hàng đã chọn.'; errRef.style.display = 'block'; }
@@ -2237,6 +2248,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                         p_priority: priority === 'medium' ? 'normal' : priority
                     });
                     if (error) throw error;
+                    window.PawpalCustomers?.refreshCustomerData?.({directory:true,kind:'complaints',customerIds:[targetCustomerId]});
                     modal.classList.remove('active');
                     await loadComplaintsModuleData({ force: true });
                     PawpalComplaints.showToast('Đã tạo khiếu nại.', 'success');

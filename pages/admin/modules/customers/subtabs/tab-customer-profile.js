@@ -9,15 +9,9 @@
     let initialEditingAddressesSnapshot = '';
     let currentEditingPetCustId = null;
     let currentEditPetIndex = null;
-    let relatedDetailListener = null;
-
     function openRelatedHistory(moduleName, tabId, recordId) {
-        if (relatedDetailListener) window.removeEventListener('admin:module-show', relatedDetailListener);
-        const open = () => {
-            if (moduleName === 'Bán hàng') window.PawpalOrdersModule?.openOrderDetail?.(recordId);
-            else window.PawpalServices?.openBookingDetail?.(recordId);
-        };
-        sessionStorage.setItem('pawpal_admin_active_module', moduleName);
+        if (!recordId) return;
+        // Let hashchange activate the destination; do not mark it active early.
         if (moduleName === 'Bán hàng') {
             sessionStorage.setItem('pawpal_admin_order_selected_id', recordId);
             sessionStorage.setItem('pawpal_admin_order_subtab', tabId);
@@ -27,19 +21,7 @@
             sessionStorage.setItem('pawpal_admin_services_active_subtab', tabId);
             if (window.PawpalServices?.state) window.PawpalServices.state.selectedBookingId = recordId;
         }
-        const menu = document.querySelector(`.sidebar-menu-btn[data-title="${moduleName}"]`);
-        if (menu) {
-            relatedDetailListener = event => {
-                window.removeEventListener('admin:module-show', relatedDetailListener);
-                relatedDetailListener = null;
-                if (event.detail?.module === moduleName) open();
-            };
-            window.addEventListener('admin:module-show', relatedDetailListener);
-            menu.click();
-        } else {
-            open();
-            window.location.hash = '#' + tabId;
-        }
+        window.location.hash = '#' + tabId + '?id=' + encodeURIComponent(recordId);
     }
 
     function getCust(id) {
@@ -300,23 +282,36 @@
                 <td>${esc(c.issue)}</td>
                 <td><span class="admin-badge badge-danger">${esc(c.level)}</span></td>
                 <td><span class="admin-badge ${esc(c.statusClass)}">${esc(c.status)}</span></td>
-                <td><button type="button" class="admin-btn admin-btn-primary btn-sm btn-view-ticket-action" data-ticket-id="${esc(c.id)}">Mở phiếu xử lý</button></td>
+                <td><button type="button" class="admin-btn admin-btn-primary btn-sm btn-view-ticket-action" data-ticket-id="${esc(c.rawId || c.id)}">Mở phiếu xử lý</button></td>
             </tr>
         `).join('');
 
         tbody.querySelectorAll('.btn-view-ticket-action').forEach(btn => {
             btn.addEventListener('click', () => {
                 const tId = btn.getAttribute('data-ticket-id');
-                sessionStorage.setItem('pawpal_admin_ticket_id', tId);
                 sessionStorage.setItem('pawpal_admin_complaint_selected_id', tId);
-                PawpalCustomers.showToast(`Chuyển đến xử lý phiếu khiếu nại ${tId} tại phân hệ Khiếu nại!`);
-                const menuBtn = document.querySelector('.sidebar-menu-btn[data-title="Khiếu nại"]');
-                if (menuBtn) menuBtn.click();
+                sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-detail');
+                window.location.hash = '#tab-complaint-detail?id=' + encodeURIComponent(tId);
             });
         });
     }
 
     // Render toàn bộ Hồ sơ khách hàng trong Drawer
+    function openBookingUnlockDialog(customer,custId){
+        if(document.getElementById('customerBookingUnlockDialog'))return;
+        const modal=document.createElement('dialog');modal.id='customerBookingUnlockDialog';modal.style.cssText='position:fixed;inset:0;margin:auto;height:fit-content;max-height:90vh;overflow:auto;border:0;border-radius:9px;padding:26px 30px;width:520px;max-width:92vw;color:#203A2C;';
+        modal.innerHTML='<form onsubmit="return false;"><header style="display:flex;justify-content:space-between;align-items:center;gap:16px"><h3 style="color:#236B48">Mở khóa đặt lịch</h3><button type="button" class="admin-btn admin-btn-secondary" data-close-modal="customerBookingUnlockDialog">Đóng</button></header><p>Lịch sử hủy lịch được giữ nguyên. Khách có thể đặt lịch lại sau khi mở khóa.</p><label for="customerBookingUnlockReason">Lý do mở khóa <span style="color:#DC2626">*</span></label><textarea class="admin-input" id="customerBookingUnlockReason" rows="3" maxlength="1000" style="width:100%;margin:12px 0"></textarea><p id="customerBookingUnlockError" style="color:#DC2626" role="alert"></p><div style="display:flex;justify-content:flex-end;gap:12px"><button type="button" class="admin-btn admin-btn-secondary" data-close-modal="customerBookingUnlockDialog">Hủy</button><button type="button" class="admin-btn admin-btn-primary" id="customerBookingUnlockSave">Mở khóa</button></div></form>';
+        document.body.append(modal);modal.showModal();
+        modal.addEventListener('close',()=>modal.remove());modal.addEventListener('click',e=>{if(e.target===modal)modal.close();});modal.querySelectorAll('[data-close-modal]').forEach(button=>button.onclick=()=>modal.close());modal.querySelector('form').addEventListener('submit',e=>e.preventDefault());
+        const request=crypto.randomUUID(),save=modal.querySelector('#customerBookingUnlockSave'),input=modal.querySelector('textarea'),error=modal.querySelector('[role="alert"]');
+        save.onclick=async()=>{
+            if(save.disabled)return;
+            if(input.value.trim().length<5){error.textContent='Nhập lý do mở khóa ít nhất 5 ký tự.';input.focus();return;}
+            save.disabled=true;save.textContent='Đang mở khóa…';error.textContent='';
+            try{const {data,error:failure}=await window.getSupabaseClient().rpc('admin_unlock_customer_booking',{p_id:customer.dbId,p_request:request,p_reason:input.value.trim()});if(failure)throw failure;if(data?.locked!==false)throw Error('Không xác nhận được kết quả mở khóa.');customer.bookingRestriction=data;await PawpalCustomers.loadCustomersModuleData({force:true,refreshSelected:true});modal.close();renderDrawerCustomerProfile(custId);PawpalCustomers.subtabs.list?.renderCustomersTable?.();PawpalCustomers.showToast('Đã mở khóa đặt lịch cho khách hàng.');}
+            catch(failure){error.textContent='Không thể mở khóa. Vui lòng kiểm tra quyền và thử lại.';save.disabled=false;save.textContent='Mở khóa';}
+        };
+    }
     function renderDrawerCustomerProfile(custId) {
         const content = document.getElementById('customerProfileData');
         const placeholder = document.getElementById('customerProfilePlaceholder');
@@ -369,16 +364,32 @@
         // Banner cảnh báo khẩn cấp
         const banner = document.getElementById('custEmergencyBanner');
         const alertText = document.getElementById('custEmergencyAlertText');
+        const btnGoTicket = document.getElementById('btnGoToEmergencyTicket');
         if (data.emergencyAlert) {
             if (banner) banner.style.display = 'flex';
+            const ticket = data.complaints?.find(item => !item.isClosed);
+            const summary = ticket ? PawpalCustomers.ticketSummary(ticket) : null;
             if (alertText) {
-                const ticket=data.complaints?.find(item=>!item.isClosed);
-                const summary=ticket?PawpalCustomers.ticketSummary(ticket):null;
-                alertText.textContent=summary?'• '+summary.issue+' · '+summary.meta:data.emergencyAlert;
-                alertText.title=summary?.fullText||data.emergencyAlert;
+                alertText.textContent = summary ? '• ' + summary.issue + ' · ' + summary.meta : data.emergencyAlert;
+                alertText.title = summary?.fullText || data.emergencyAlert;
+            }
+            if (btnGoTicket) {
+                if (ticket) {
+                    btnGoTicket.style.display = 'inline-block';
+                    btnGoTicket.onclick = (e) => {
+                        e.stopPropagation();
+                        const tId = ticket.rawId || ticket.id;
+                        sessionStorage.setItem('pawpal_admin_complaint_selected_id', tId);
+                        sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-detail');
+                        window.location.hash = '#tab-complaint-detail?id=' + encodeURIComponent(tId);
+                    };
+                } else {
+                    btnGoTicket.style.display = 'none';
+                }
             }
         } else {
             if (banner) banner.style.display = 'none';
+            if (btnGoTicket) btnGoTicket.style.display = 'none';
         }
 
         // Tab 1: Cá nhân
@@ -403,6 +414,23 @@
         }
 
         // Sổ địa chỉ
+        const bookingLockRow=document.getElementById('profileBookingRestrictionRow');
+        const bookingLockValue=document.getElementById('profileBookingRestrictionValue');
+        if(bookingLockRow&&bookingLockValue){
+            const restriction=data.bookingRestriction;
+            bookingLockRow.hidden=!restriction?.locked;
+            bookingLockRow.style.display=restriction?.locked?'flex':'none';
+            bookingLockValue.replaceChildren();
+            if(restriction?.locked){
+                const details=document.createElement('span');details.style.cssText='color:#DC2626;margin-right:12px';
+                details.textContent=`Bị khóa — ${restriction.reason} (${restriction.cancel_count}/${restriction.limit} lần hủy)`;
+                bookingLockValue.append(details);
+                if(window.PawpalAdminAccess?.isAdmin?.()||window.PawpalAdminAccess?.state.user?.permissions?.includes('customer.write')){
+                    const button=document.createElement('button');button.type='button';button.className='admin-btn admin-btn-secondary';button.textContent='Mở khóa đặt lịch';
+                    button.onclick=()=>openBookingUnlockDialog(data,custId);bookingLockValue.append(button);
+                }
+            }
+        }
         renderDrawerAddresses(custId);
 
         if (document.getElementById('drawerCustNote')) document.getElementById('drawerCustNote').dataset.version = data.updatedAt;
@@ -729,7 +757,7 @@
             const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id') || document.getElementById('profileValCustId')?.textContent || 'CUST-001';
             const cust = PawpalCustomers.state.customerDatabase?.[currentCustId] || { name: document.getElementById('drawerCustomerName')?.textContent || 'Khách hàng' };
             const presetBooking = {
-                custId: cust.id || currentCustId,
+                custId: cust.dbId || cust.id || currentCustId,
                 custName: cust.name || '',
                 ownerName: cust.name || '',
                 custPhone: cust.phone || '',
@@ -739,45 +767,43 @@
             };
             sessionStorage.setItem('pawpal_admin_booking_preset', JSON.stringify(presetBooking));
             PawpalCustomers.showToast(`Đã thiết lập thông tin đặt lịch cho ${cust.name}, chuyển sang phân hệ Dịch vụ!`);
-            const btn = document.querySelector('.sidebar-menu-btn[data-title="Dịch vụ"]');
-            if (btn) btn.click();
+            sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-bookings');
+            window.location.hash = '#tab-service-bookings';
         });
 
         document.querySelector('.btn-link-order')?.addEventListener('click', () => {
-            const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id') || document.getElementById('profileValCustId')?.textContent || 'CUST-001';
-            const cust = PawpalCustomers.state.customerDatabase?.[currentCustId] || { name: document.getElementById('drawerCustomerName')?.textContent || 'Khách hàng' };
-            const defaultAddr = cust.addresses?.find(a => a.isDefault)?.address || cust.addresses?.[0]?.address || '';
-            const presetOrder = {
-                custId: cust.id || currentCustId,
-                custName: cust.name || '',
-                ownerName: cust.name || '',
-                custPhone: cust.phone || '',
-                ownerPhone: cust.phone || '',
-                address: defaultAddr
-            };
-            sessionStorage.setItem('pawpal_admin_order_preset', JSON.stringify(presetOrder));
+            const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id');
+            const cust = getCust(currentCustId);
+            const customerId = cust?.dbId || cust?.id;
+            if (!customerId) {
+                PawpalCustomers.showToast('Không xác định được khách hàng. Vui lòng mở lại hồ sơ.');
+                return;
+            }
+            sessionStorage.setItem('pawpal_admin_order_preset', JSON.stringify({ custId: customerId }));
             sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-list');
-            sessionStorage.setItem('pawpal_admin_active_module', 'Bán hàng');
-            PawpalCustomers.showToast(`Đã thiết lập thông tin lên đơn cho ${cust.name}, chuyển sang phân hệ Bán hàng!`);
-            const btn = document.querySelector('.sidebar-menu-btn[data-title="Bán hàng"]');
-            if (btn) btn.click();
-            else window.location.hash = '#tab-order-list';
+            window.location.hash = '#tab-order-list';
         });
 
         document.querySelector('.btn-link-complaint')?.addEventListener('click', () => {
-            const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id') || document.getElementById('profileValCustId')?.textContent || 'CUST-001';
-            const cust = PawpalCustomers.state.customerDatabase?.[currentCustId] || { name: document.getElementById('drawerCustomerName')?.textContent || 'Khách hàng' };
-            const presetComplaint = {
-                custId: cust.id || currentCustId,
-                custName: cust.name || '',
-                ownerName: cust.name || '',
-                custPhone: cust.phone || '',
-                ownerPhone: cust.phone || ''
-            };
-            sessionStorage.setItem('pawpal_admin_complaint_preset', JSON.stringify(presetComplaint));
-            PawpalCustomers.showToast(`Mở phiếu tiếp nhận khiếu nại cho ${cust.name} tại phân hệ Khiếu nại!`);
-            const btn = document.querySelector('.sidebar-menu-btn[data-title="Khiếu nại"]');
-            if (btn) btn.click();
+            const cust = getCust(sessionStorage.getItem('pawpal_admin_customer_id'));
+            const customerId = cust?.dbId || cust?.id;
+            if (!customerId) {
+                PawpalCustomers.showToast('Không xác định được khách hàng. Vui lòng mở lại hồ sơ.');
+                return;
+            }
+            const openTicket = cust.complaints?.find(c => !c.isClosed);
+            if (openTicket) {
+                const tId = openTicket.rawId || openTicket.id;
+                sessionStorage.setItem('pawpal_admin_complaint_selected_id', tId);
+                sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-detail');
+                window.location.hash = '#tab-complaint-detail?id=' + encodeURIComponent(tId);
+                return;
+            }
+            const isOrderRelated = cust.complaints?.some(c => c.orderCode || c.orderId || String(c.issue || '').toLowerCase().includes('đơn') || String(c.meta || '').toLowerCase().includes('đơn'));
+            const targetSubtab = isOrderRelated ? 'tab-complaint-orders' : 'tab-complaint-services';
+            sessionStorage.setItem('pawpal_admin_complaint_preset', JSON.stringify({custId: customerId}));
+            sessionStorage.setItem('pawpal_admin_complaint_active_subtab', targetSubtab);
+            window.location.hash = '#' + targetSubtab;
         });
     }
 

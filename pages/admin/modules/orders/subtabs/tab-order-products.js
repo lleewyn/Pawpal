@@ -1,5 +1,21 @@
 // tab-order-products.js - Subtab Quản lý Sản phẩm và Kho của Phân hệ Bán hàng Pawpal-er
 (function() {
+    function parseExpiryDate(str) {
+        if (!str || typeof str !== 'string') return null;
+        str = str.trim();
+        if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+            const d = new Date(str);
+            return isNaN(d.getTime()) ? null : d;
+        }
+        const dmy = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (dmy) {
+            const d = new Date(`${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`);
+            return isNaN(d.getTime()) ? null : d;
+        }
+        const d = new Date(str);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
     'use strict';
 
     const PawpalOrders = window.PawpalOrders;
@@ -125,6 +141,12 @@
                 if (stockStatusVal === 'low_stock' && (p.stock > p.minStock || p.stock === 0 || p.status === 'Tạm ngưng')) return false;
                 if (stockStatusVal === 'out_of_stock' && (p.stock !== 0 || p.status === 'Tạm ngưng')) return false;
                 if (stockStatusVal === 'suspended' && p.status !== 'Tạm ngưng') return false;
+                if (stockStatusVal === 'expiring_soon') {
+                    const exp = parseExpiryDate(p.expiry);
+                    if (!exp) return false;
+                    const diffDays = Math.ceil((exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                    if (diffDays > 60) return false;
+                }
             }
             if (searchVal) {
                 const matchSku = matchSearch(p.sku, searchVal);
@@ -196,6 +218,15 @@
                             <div class="prod-info-cell">
                                 <a href="javascript:void(0)" class="prod-title btn-open-edit-prod" data-sku="${esc(p.sku)}">${esc(p.name)}</a>
                                 <span class="prod-sku-tag">Quy cách: ${esc(p.spec || '—')}</span>
+                                ${(() => {
+                                    if (!p.expiry) return '';
+                                    const exp = parseExpiryDate(p.expiry);
+                                    if (!exp) return `<span class="prod-sku-tag" style="color:var(--text-muted);">HSD: ${esc(p.expiry)}</span>`;
+                                    const diff = Math.ceil((exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                    if (diff <= 0) return `<span class="prod-sku-tag" style="color:#DC2626; font-weight:600;">• Đã hết hạn (${esc(p.expiry)})</span>`;
+                                    if (diff <= 60) return `<span class="prod-sku-tag" style="color:#B47100; font-weight:600;">• Cận date còn ${diff} ngày (${esc(p.expiry)})</span>`;
+                                    return `<span class="prod-sku-tag" style="color:var(--text-muted);">HSD: ${esc(p.expiry)}</span>`;
+                                })()}
                             </div>
                         </div>
                     </td>
@@ -1324,9 +1355,23 @@
    if(current!==session||!el('modalProductReviews').classList.contains('active'))return;
    loaded=result.rows;page=result.meta.page;total=result.meta.total;render();
    el('prodReviewsScoreBig').textContent=result.meta.count?Number(result.meta.average).toFixed(1)+'/5':'—';el('prodReviewsScoreDesc').textContent=result.meta.count?'Điểm đánh giá':'Chưa có đánh giá';el('prodReviewsCountTotal').textContent=result.meta.count+' nhận xét';
+   const insightsContainer = el('productReviewInsightsContainer');
+   if (insightsContainer && window.ReviewInsights) {
+       if (result.rows && result.rows.length) {
+           window.ReviewInsights.renderInsights({
+               container: insightsContainer,
+               reviews: result.rows,
+               itemName: product.name,
+               itemType: 'product',
+               itemId: product.id
+           });
+       } else {
+           insightsContainer.style.display = 'none';
+       }
+   }
   }catch(error){if(current===session)el('productReviewsListContainer').textContent='Không thể tải đánh giá. Đóng và mở lại để thử lại.';}
  };
- api.openProductReviewsModal=async sku=>{const p=m.state.products.find(p=>p.sku===sku);if(!p)return;m.state.activeReviewsSku=sku;filter='ALL';page=1;el('productReviewsModalTitle').textContent='Đánh giá sản phẩm · '+p.name;el('prodReviewsScoreBig').textContent='—';el('prodReviewsCountTotal').textContent='';el('modalProductReviews').classList.add('active');await api.renderProductReviewsModalContent(sku);};
+ api.openProductReviewsModal=async sku=>{const p=m.state.products.find(p=>p.sku===sku);if(!p)return;m.state.activeReviewsSku=sku;filter='ALL';page=1;el('productReviewsModalTitle').textContent='Đánh giá sản phẩm · '+p.name;el('prodReviewsScoreBig').textContent='—';el('prodReviewsCountTotal').textContent='';const ins=el('productReviewInsightsContainer');if(ins)ins.style.display='none';el('modalProductReviews').classList.add('active');await api.renderProductReviewsModalContent(sku);};
 })();
 
 ;

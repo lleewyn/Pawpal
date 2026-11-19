@@ -651,24 +651,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }));
     });
 
-    window.addEventListener('admin:subtab-change', (e) => {
-        if (e.detail?.module === 'Dashboard' && e.detail.tabId === 'tab-dashboard-operations') {
-            const opsRoot = document.getElementById('subtab-tab-dashboard-operations');
-            if (opsRoot && window.PawpalOperationsDashboard?.mount) {
-                window.PawpalOperationsDashboard.mount(opsRoot);
-            }
-        }
-    });
 
     const MODULE_SUBTABS_MAP = {
         'Dashboard': {
             title: '',
-            defaultTab: 'tab-dashboard',
+            defaultTab: 'tab-dashboard-business',
             storageKey: 'pawpal_admin_dashboard_subtab',
             subtabs: [
-                { id: 'tab-dashboard', label: 'Tổng quan' },
-                { id: 'tab-dashboard-operations', label: 'Quản trị vận hành' },
-                { id: 'tab-dashboard-business', label: 'Kinh doanh và tăng trưởng' }
+                { id: 'tab-dashboard-business', label: 'Kinh doanh' },
+                { id: 'tab-dashboard-operations', label: 'Vận hành' }
             ]
         },
         'Khách hàng': {
@@ -730,8 +721,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             defaultTab: 'tab-complaint-services',
             storageKey: 'pawpal_admin_complaint_active_subtab',
             subtabs: [
-                { id: 'tab-complaint-services', label: 'Theo dịch vụ' },
-                { id: 'tab-complaint-orders', label: 'Theo đơn hàng' },
+                { id: 'tab-complaint-services', label: 'Theo dịch vụ', badgeId: 'badgeServiceComplaintsCount' },
+                { id: 'tab-complaint-orders', label: 'Theo đơn hàng', badgeId: 'badgeOrderComplaintsCount' },
                 { id: 'tab-complaint-detail', label: 'Hồ sơ' }
             ]
         },
@@ -794,8 +785,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         subtabsContainer.innerHTML = config.subtabs.map((s, idx) => {
             const isActive = s.id === activeTabId;
             const divider = idx < config.subtabs.length - 1 ? '<span class="subtab-divider">|</span>' : '';
-            return `<button type="button" class="header-subtab-btn ${isActive ? 'active' : ''}" data-subtab="${s.id}" data-tab="${s.id}">${s.label}</button>${divider}`;
+            const badgeHtml = s.badgeId ? `<span id="${s.badgeId}" class="header-subtab-badge" style="display:none"></span>` : '';
+            return `<button type="button" class="header-subtab-btn ${isActive ? 'active' : ''}" data-subtab="${s.id}" data-tab="${s.id}">${s.label}${badgeHtml}</button>${divider}`;
         }).join('');
+
+        if (moduleName === 'Khiếu nại' && window.PawpalComplaints?.updateComplaintsKpis) {
+            window.PawpalComplaints.updateComplaintsKpis();
+        }
 
         if (deepBreadcrumbEl && (!activeTabId.includes('profile') && !activeTabId.includes('detail'))) {
             deepBreadcrumbEl.innerHTML = '';
@@ -837,7 +833,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261118_catalog_retry';
+    const MODULE_SCRIPT_VERSION = '20261119_booking_staff_sync';
     let staffDomainScriptsReady;
     async function loadStaffDomainScripts() {
         if (!staffDomainScriptsReady) staffDomainScriptsReady = (async () => {
@@ -917,7 +913,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 'modules/dashboard/dashboard.js',
                 'modules/dashboard/subtabs/operations-metrics.js',
                 'modules/dashboard/subtabs/business-metrics.js',
-                'modules/dashboard/subtabs/tab-dashboard-overview.js',
                 'modules/dashboard/subtabs/tab-dashboard-operations.js',
                 'modules/dashboard/subtabs/tab-dashboard-business.js'
             ],
@@ -997,6 +992,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 window.PawpalComplaints?.subtabs?.services?.renderServiceComplaintsTable?.();
                 window.PawpalComplaints?.subtabs?.orders?.renderOrderComplaintsTable?.();
+                window.PawpalComplaints?.updateComplaintsKpis?.();
                 const selId = sessionStorage.getItem('pawpal_admin_complaint_selected_id');
                 if (selId) {
                     window.PawpalComplaints?.subtabs?.detail?.renderTicketDetail?.(selId);
@@ -1695,6 +1691,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     const ensureToolbarReset = (root = document) => {
         root.querySelectorAll('.search-box-wrapper').forEach(searchBox => {
+            if(searchBox.closest('#subtab-tab-complaint-orders, #subtab-tab-complaint-services'))return;
             const scope = searchBox.closest('section, .admin-card, .module-content') || searchBox.parentElement;
             if (!scope || scope.querySelector('.global-toolbar-reset, #btnServiceClearFilters')) return;
             const controls = scope.querySelectorAll('input[type="search"], input[type="text"], select');

@@ -20,6 +20,7 @@
     <script src="../../../scripts/api/supabase-client.js"></script>
     <script type="module" src="../../../scripts/api/api-global.js"></script>
     <script src="../../../scripts/shared/data-loader.js"></script>
+    <script src="/scripts/shared/review-insights.js?v=1"></script>
     <script src="../../../scripts/shared/components.js" defer></script>
     <script type="module" src="../../../scripts/shared/main.js"></script>
     <script type="module" src="/pages/services/service-detail/service-detail.js"></script>
@@ -552,6 +553,9 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- TÓM TẮT CẢM NHẬN KHÁCH HÀNG -->
+                <div id="serviceCustomerReviewHighlights" style="display:none;margin:16px 0;"></div>
 
                 <!-- Reviews List Container -->
                 <div class="reviews-list" id="reviewsContainer">

@@ -20,6 +20,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
                 rpc: async (name, args) => {
                     window.requests.push({ name, args });
                     const M = window.PawpalBusinessMetrics;
+                    if(name === 'get_admin_dashboard_plan') return {data: null};
                     if(name==='admin_business_metric'){
                         if(args.p_key==='vouchers'&&window.fixtureFailure==='voucher_redemption')return {error:{code:'42501'}};
                         const values={sources:{products:0,services:0,other:0},products:[],services:[],customers:[],membership:[],vouchers:{count:0,discount:0},points:{credited:0,debited:0},returning:{eligible:0,returning:0,rate:null}};
@@ -58,7 +59,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         assert.equal(await page.locator('[data-biz-panel="customers"]').getAttribute('aria-busy'), 'true');
         assert.equal(await page.locator('[data-biz-panel="membership"] .biz-empty').count(), 1);
         const groupSurface = await page.locator('[data-biz-panel="membership"]').evaluate(n => {const s=getComputedStyle(n.closest('.biz-group'));return {background:s.backgroundColor,blur:s.backdropFilter};});
-        assert.deepEqual(groupSurface, {background:'rgb(255, 255, 255)',blur:'none'});
+        assert.deepEqual(groupSurface, {background:'rgba(255, 255, 255, 0.7)',blur:'blur(10px)'});
         await page.evaluate(async () => {releaseCustomerLoad();await partialLoad;PawpalBusinessMetrics.load = originalMetricLoad;});
         await page.evaluate(async () => {PawpalBusinessMetrics.load = async (db,key,range) => {if(key==='cash')throw {code:'42501'};return originalMetricLoad(db,key,range);};await PawpalDashboardOverview.refresh();});
         assert.equal(await page.locator('[data-biz-panel="cash"] [role="alert"]').count(), 1);
@@ -132,7 +133,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
             window.dispatchEvent(new CustomEvent('admin:subtab-change', { detail: { module: 'Dashboard', tabId: 'tab-dashboard-operations' } }));
         });
         assert.equal(await page.evaluate(() => window.opsMounts), 1);
-        await page.evaluate(() => window.dispatchEvent(new CustomEvent('admin:subtab-change', { detail: { module: 'Dashboard', tabId: 'tab-dashboard' } })));
+        await page.evaluate(() => window.dispatchEvent(new CustomEvent('admin:subtab-change', { detail: { module: 'Dashboard', tabId: 'tab-dashboard-business' } })));
         await page.waitForFunction(() => !document.querySelector('[data-biz-updated]').textContent.includes('Đang'));
         assert.equal(await page.evaluate(() => PawpalDashboardOverview.getMetrics().length), 8);
         await page.evaluate(() => { PawpalAdminAccess.isAdmin = () => false; return PawpalDashboardOverview.refresh(); });

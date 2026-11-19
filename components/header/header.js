@@ -684,20 +684,64 @@
         const notice = popupNotices.find(row=>!isSiteNoticeDismissed('pawpal_notice_dismissed_'+row.id));
         if(!notice){if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});return;}
         const overlay=document.createElement('div');overlay.id='pawpal-site-popup';
-        overlay.style.cssText='position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.3);display:grid;place-items:center;padding:20px';
+        overlay.style.cssText='position:fixed;inset:0;z-index:3000;background:rgba(15,30,22,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px';
         const card=document.createElement('div');
-        card.style.cssText='background:white;border-radius:9px;padding:26px 30px;max-width:540px;width:100%;max-height:90vh;overflow:auto;overscroll-behavior:contain;color:#203A2C';
-        card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Thông báo');
-        const text=document.createElement('p');text.textContent=notice.content;
+        card.className='site-popup-card';
+        card.style.cssText='background:#ffffff;border-radius:9px;border:1px solid #ECF2EE;box-shadow:0 16px 36px rgba(35,107,72,0.14),0 4px 12px rgba(0,0,0,0.06);max-width:460px;width:100%;max-height:90vh;overflow:auto;overscroll-behavior:contain;color:#203A2C;padding:24px 26px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box;font-family:Inter,system-ui,-apple-system,sans-serif';
+        card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-labelledby','sitePopupTitle');
+
+        // Header: Tiêu đề phẳng, không icon
+        const header=document.createElement('div');
+        header.className='site-popup-header';
+        header.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px';
+
+        const title=document.createElement('h3');
+        title.id='sitePopupTitle';
+        title.className='site-popup-title';
+        title.style.cssText='margin:0;font-size:18px;font-weight:700;color:#236B48;line-height:1.3';
+        title.textContent='Thông báo';
+
+        const topCloseBtn=document.createElement('button');
+        topCloseBtn.type='button';
+        topCloseBtn.className='site-popup-close-icon';
+        topCloseBtn.setAttribute('aria-label','Đóng thông báo');
+        topCloseBtn.style.cssText='background:transparent;border:none;font-size:18px;line-height:1;color:#718476;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color .15s,background-color .15s';
+        topCloseBtn.textContent='✕';
+        topCloseBtn.onmouseenter = () => { topCloseBtn.style.color = '#236B48'; topCloseBtn.style.background = '#EEF5F1'; };
+        topCloseBtn.onmouseleave = () => { topCloseBtn.style.color = '#718476'; topCloseBtn.style.background = 'transparent'; };
+
+        header.append(title, topCloseBtn);
+        card.append(header);
+
+        // Nội dung thông báo màu vàng gold ấm áp nổi bật, đậm đà và rõ nét trên nền trắng
+        const text=document.createElement('p');
+        text.className='site-popup-body';
+        text.style.cssText='margin:0;color:#B47100;font-size:16.5px;font-weight:700;line-height:1.6;white-space:pre-wrap;word-break:break-word';
+        text.textContent=notice.content;
         card.append(text);
+
         const href=sanitizeHref(notice.link);
         const actions=document.createElement('div');
-        actions.style.cssText='display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:12px';
-        if(href!=='#'){
-            const link=document.createElement('a');link.href=href;link.textContent='Mở nội dung liên quan';
+        actions.className='site-popup-actions';
+        actions.style.cssText='display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:10px;margin-top:4px';
+        if(href!=='#' && href!==''){
+            const link=document.createElement('a');
+            link.href=href;
+            link.className='site-popup-link';
+            link.style.cssText='display:inline-flex;align-items:center;justify-content:center;padding:8px 16px;border-radius:9px;background:#EEF5F1;color:#236B48;font-size:13.5px;font-weight:600;text-decoration:none;transition:background-color .15s,color .15s';
+            link.textContent='Mở nội dung liên quan';
+            link.onmouseenter = () => { link.style.background = '#DCEEE2'; link.style.color = '#1B5338'; };
+            link.onmouseleave = () => { link.style.background = '#EEF5F1'; link.style.color = '#236B48'; };
             actions.append(link);
         }
-        const close=document.createElement('button');close.type='button';close.textContent='Đóng';
+        const close=document.createElement('button');
+        close.type='button';
+        close.className='site-popup-btn-close';
+        close.style.cssText='display:inline-flex;align-items:center;justify-content:center;padding:9px 24px;border-radius:9px;background:#236B48;color:#ffffff;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:background-color .15s,box-shadow .15s';
+        close.textContent='Đóng';
+        close.onmouseenter = () => { close.style.background = '#1B5338'; close.style.boxShadow = '0 2px 8px rgba(35,107,72,0.25)'; };
+        close.onmouseleave = () => { close.style.background = '#236B48'; close.style.boxShadow = 'none'; };
+
         const dismiss=()=>{
             dismissSiteNotice('pawpal_notice_dismissed_'+notice.id);
             overlay.remove();document.removeEventListener('keydown',key);
@@ -705,10 +749,12 @@
         };
         const key=event=>{if(event.key==='Escape')dismiss();};
         close.onclick=dismiss;
+        topCloseBtn.onclick=dismiss;
         overlay.onclick=event=>{if(event.target===overlay)dismiss();};
         document.addEventListener('keydown',key);
         actions.append(close);card.append(actions);overlay.append(card);document.body.append(overlay);close.focus();
     }
+
     function renderTopBarNotices(notices) {
         const active=notices.filter(row=>!isSiteNoticeDismissed('pawpal_topbar_dismissed_'+row.id));
         let topBar=document.getElementById('pawpal-public-topbar-notice');

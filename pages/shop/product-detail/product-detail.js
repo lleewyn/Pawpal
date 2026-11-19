@@ -927,8 +927,17 @@ async function loadPublicProductDetails(product){
     document.querySelectorAll('.product-detail-section .rating-text').forEach(el=>el.textContent=count?`${rating.toFixed(1)} / 5 · ${count} đánh giá`:'Chưa có đánh giá công bố');
     const summary=document.getElementById('productReviewSummary');summary.textContent=count?`${rating.toFixed(1)} / 5 từ ${count} đánh giá công bố`:'Chưa có đánh giá công bố';
     try{
-        const rows=await window.DataLoader.getProductReviews(product.id);let page=0,filter='all';
+        const rows=await window.DataLoader.getProductReviews(product.id);let page=0,filterStar='all',filterVariant='all';
         const total = rows.length;
+        const hlContainer = document.getElementById('productCustomerReviewHighlights');
+        if (hlContainer && window.ReviewInsights) {
+            window.ReviewInsights.renderCustomerHighlights({
+                container: hlContainer,
+                reviews: rows,
+                itemName: product.name,
+                itemType: 'product'
+            });
+        }
         document.getElementById('productReviewAverage').textContent = total ? (rows.reduce((sum,r)=>sum+Number(r.rating),0)/total).toFixed(1)+' / 5' : '— / 5';
         summary.textContent = total ? `Dựa trên ${total} đánh giá công bố` : 'Chưa có đánh giá công bố';
         document.getElementById('productReviewDistribution').innerHTML = [5,4,3,2,1].map(star=>{
@@ -937,9 +946,46 @@ async function loadPublicProductDetails(product){
         }).join('');
         const chips = document.getElementById('productReviewChips');
         chips.innerHTML = ['all',5,4,3,2,1].map(star=>`<button type="button" class="pd-review-chip${star==='all'?' active':''}" data-filter="${star}" aria-pressed="${star==='all'}">${star==='all'?'Tất cả':star+' sao'} (${star==='all'?total:rows.filter(r=>Number(r.rating)===star).length})</button>`).join('');
+
+        // Tách danh sách phân loại thực tế từ đánh giá
+        const variantCounts = {};
+        for (const r of rows) {
+            const v = (r.variantName || r.variant_name || '').trim();
+            if (v) variantCounts[v] = (variantCounts[v] || 0) + 1;
+        }
+        const distinctVariants = Object.keys(variantCounts);
+        const variantRow = document.getElementById('productReviewVariantFilterRow');
+        const variantChipsContainer = document.getElementById('productReviewVariantChips');
+
+        if (distinctVariants.length > 0 && variantRow && variantChipsContainer) {
+            variantRow.style.display = 'flex';
+            variantChipsContainer.innerHTML = `<button type="button" class="pd-review-chip active" data-variant="all" aria-pressed="true">Tất cả (${total})</button>` +
+                distinctVariants.map(v => `<button type="button" class="pd-review-chip" data-variant="${escapeHtml(v)}" aria-pressed="false">${escapeHtml(v)} (${variantCounts[v]})</button>`).join('');
+
+            variantChipsContainer.querySelectorAll('button').forEach(btn => {
+                btn.onclick = () => {
+                    filterVariant = btn.dataset.variant;
+                    page = 0;
+                    variantChipsContainer.querySelectorAll('button').forEach(b => {
+                        const active = b.dataset.variant === filterVariant;
+                        b.classList.toggle('active', active);
+                        b.setAttribute('aria-pressed', String(active));
+                    });
+                    render();
+                    syncPagination();
+                };
+            });
+        } else if (variantRow) {
+            variantRow.style.display = 'none';
+        }
+
         const render=()=>{
-            const selected=rows.filter(r=>filter==='all'||Number(r.rating)===Number(filter)),pages=Math.max(1,Math.ceil(selected.length/10));page=Math.min(page,pages-1);
-            document.getElementById('reviewsContainer').innerHTML=selected.slice(page*10,page*10+10).map(r=>`<article class="review-item"><p>Khách đã mua hàng · ${Number(r.rating)} / 5 · ${escapeHtml(new Date(r.createdAt).toLocaleDateString('vi-VN'))}</p><p>${escapeHtml(r.content)}</p><p>Phân loại ${escapeHtml(r.variantName || r.variant_name || '—')}</p>${r.shopReply?`<div class="seller-reply"><strong>Phản hồi cửa hàng</strong><p>${escapeHtml(r.shopReply)}</p></div>`:''}</article>`).join('') || '<p>Không có đánh giá phù hợp.</p>';
+            const selected=rows.filter(r=>{
+                const starMatch = filterStar === 'all' || Number(r.rating) === Number(filterStar);
+                const variantMatch = filterVariant === 'all' || (r.variantName || r.variant_name || '').trim() === filterVariant;
+                return starMatch && variantMatch;
+            }),pages=Math.max(1,Math.ceil(selected.length/10));page=Math.min(page,pages-1);
+            document.getElementById('reviewsContainer').innerHTML=selected.slice(page*10,page*10+10).map(r=>`<article class="review-item"><p>Khách đã mua hàng · ${Number(r.rating)} / 5 · ${escapeHtml(new Date(r.createdAt).toLocaleDateString('vi-VN'))}</p><p>${escapeHtml(r.content)}</p><p>Phân loại: <strong>${escapeHtml(r.variantName || r.variant_name || 'Tiêu chuẩn')}</strong></p>${r.shopReply?`<div class="seller-reply"><strong>Phản hồi cửa hàng</strong><p>${escapeHtml(r.shopReply)}</p></div>`:''}</article>`).join('') || '<p>Không có đánh giá phù hợp.</p>';
             document.querySelectorAll('#reviewsContainer article').forEach((article,index)=>{
                 const media=selected.slice(page*10,page*10+10)[index]?.media||[];if(!media.length)return;
                 const gallery=document.createElement('div');gallery.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
@@ -948,11 +994,18 @@ async function loadPublicProductDetails(product){
             });
             const nav=document.getElementById('productReviewPages');nav.innerHTML=`<button type="button" id="productReviewsPrev" ${page===0?'disabled':''}>&lt;</button><span>${page+1} / ${pages}</span><button type="button" id="productReviewsNext" ${page===pages-1?'disabled':''}>&gt;</button>`;nav.querySelector('#productReviewsPrev').onclick=()=>{page--;render();};nav.querySelector('#productReviewsNext').onclick=()=>{page++;render();};
         };
-        const changeFilter=value=>{filter=value;page=0;document.getElementById('productReviewFilter').value=value;chips.querySelectorAll('button').forEach(btn=>{const active=btn.dataset.filter===String(value);btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});render();};
-        document.getElementById('productReviewFilter').onchange=e=>changeFilter(e.target.value);
-        chips.querySelectorAll('button').forEach(btn=>btn.onclick=()=>changeFilter(btn.dataset.filter));render();
+        const changeStarFilter=value=>{filterStar=value;page=0;document.getElementById('productReviewFilter').value=value;chips.querySelectorAll('button').forEach(btn=>{const active=btn.dataset.filter===String(value);btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});render();syncPagination();};
+        document.getElementById('productReviewFilter').onchange=e=>changeStarFilter(e.target.value);
+        chips.querySelectorAll('button').forEach(btn=>btn.onclick=()=>changeStarFilter(btn.dataset.filter));render();
         const pagination=document.getElementById('productReviewPages');
-        const syncPagination=()=>{pagination.hidden=rows.filter(r=>filter==='all'||Number(r.rating)===Number(filter)).length<=10;pagination.style.display=pagination.hidden?'none':'flex';};
+        const syncPagination=()=>{
+            const count = rows.filter(r=>{
+                const starMatch = filterStar === 'all' || Number(r.rating) === Number(filterStar);
+                const variantMatch = filterVariant === 'all' || (r.variantName || r.variant_name || '').trim() === filterVariant;
+                return starMatch && variantMatch;
+            }).length;
+            pagination.hidden=count<=10;pagination.style.display=pagination.hidden?'none':'flex';
+        };
         syncPagination();chips.addEventListener('click',syncPagination);document.getElementById('productReviewFilter').addEventListener('change',syncPagination);
     }catch{document.getElementById('reviewsContainer').innerHTML='<p role="alert">Không thể tải đánh giá. Vui lòng tải lại trang.</p>';}
     finally{finishProductLoading('.product-reviews-section');}

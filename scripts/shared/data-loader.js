@@ -509,7 +509,8 @@ async function getServiceReviews(serviceId, { includeImages = true } = {}) {
     const reviewImages=includeImages ? await loadPublishedReviewImages(db,(data||[]).map(r=>r.id)) : new Map();
     return (data || []).map(r => ({
         id:r.id,name:'Khách đã sử dụng dịch vụ',rating:Number(r.rating),date:r.created_at,
-        text:r.review_content || '',images:reviewImages.get(r.id)||[],sellerReply:r.shop_reply || '',helpfulCount:0
+        text:r.review_content || '',images:reviewImages.get(r.id)||[],sellerReply:r.shop_reply || '',helpfulCount:0,
+        variant: r.variant_name || r.variant || 'Tiêu chuẩn'
     }));
 }
 

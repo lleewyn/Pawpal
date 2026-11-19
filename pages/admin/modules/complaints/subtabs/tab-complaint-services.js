@@ -50,16 +50,6 @@
             .replace(/'/g, '&#039;');
     }
 
-    function sortComplaintsByUrgencyAndSla(a, b) {
-        const priorityOrder = { 'khan_cap': 1, 'urgent': 1, 'cao': 2, 'high': 2, 'trung_binh': 3, 'medium': 3, 'binh_thuong': 3, 'thap': 4, 'low': 4 };
-        const pA = priorityOrder[String(a.priority || '').toLowerCase()] || 4;
-        const pB = priorityOrder[String(b.priority || '').toLowerCase()] || 4;
-        if (pA !== pB) return pA - pB;
-        if (a.slaStatus === 'OVERDUE' && b.slaStatus !== 'OVERDUE') return -1;
-        if (b.slaStatus === 'OVERDUE' && a.slaStatus !== 'OVERDUE') return 1;
-        return new Date(b.createdAtRaw || 0) - new Date(a.createdAtRaw || 0);
-    }
-
     function renderServicePagination(totalPages) {
         const pagContainer = document.getElementById('servicePagination');
         if (!pagContainer) return;

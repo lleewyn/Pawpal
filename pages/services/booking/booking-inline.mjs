@@ -83,25 +83,19 @@ export async function editBookingPet(host,db,pet,onSaved,onClose){
   const breeds=(catalog.data||[]).filter(b=>b.pet_species?.is_active&&b.breed_name?.trim()&&!/^\d+$|^(unknown|null|undefined|chưa rõ|chưa cập nhật)$/i.test(b.breed_name.trim()));
   const species=[...new Map(breeds.map(b=>[b.species_id,b.pet_species])).values()];
   let selectedBreed=breeds.find(b=>b.id===record.breed_id)||null,selectedSpecies=selectedBreed?.species_id||species[0]?.id;
-  get('bookingInlineFields').innerHTML=field('bookingPetName','Tên bé cưng',record.pet_name,'text',true)+`<div class="form-group"><label>Loài thú cưng <span class="required">*</span></label><div class="booking-inline-species">${species.map(s=>`<button type="button" data-species="${esc(s.id)}" class="${s.id===selectedSpecies?'selected':''}">${esc(s.species_name)}</button>`).join('')}</div></div><div class="form-group booking-entity-wrapper"><label for="bookingPetBreed">Giống <span class="required">*</span></label><input id="bookingPetBreed" value="${esc(selectedBreed?.breed_name||'')}" required autocomplete="off" role="combobox" aria-expanded="false" aria-controls="bookingPetBreedOptions"><div id="bookingPetBreedOptions" class="booking-entity-options" role="listbox" hidden></div></div>`+field('bookingPetWeight','Cân nặng (kg)',pet?.weight||'','number',true)+`<div class="form-group"><label for="bookingPetGender">Giới tính <span class="required">*</span></label><select id="bookingPetGender"><option value="nam" ${record.gender==='nam'?'selected':''}>Đực</option><option value="nu" ${record.gender==='nu'?'selected':''}>Cái</option></select></div>`+field('bookingPetBorn','Ngày sinh',record.date_of_birth||'','date')+field('bookingPetColor','Màu lông',record.color)+field('bookingPetAllergy','Dị ứng',record.allergy)+field('bookingPetSafety','Lưu ý an toàn',record.safety_note)+field('bookingPetRoutine','Thói quen chăm sóc',record.routine);
+  get('bookingInlineFields').innerHTML=field('bookingPetName','Tên bé cưng',record.pet_name,'text',true)+`<div class="form-group"><label>Loài thú cưng <span class="required">*</span></label><div class="booking-inline-species">${species.map(s=>`<button type="button" data-species="${esc(s.id)}" class="${s.id===selectedSpecies?'selected':''}">${esc(s.species_name)}</button>`).join('')}</div></div>`+field('bookingPetBreed','Giống',selectedBreed?.breed_name||record.breed_name||'','text',true)+field('bookingPetWeight','Cân nặng (kg)',pet?.weight||'','number',true)+`<div class="form-group"><label for="bookingPetGender">Giới tính <span class="required">*</span></label><select id="bookingPetGender"><option value="nam" ${record.gender==='nam'?'selected':''}>Đực</option><option value="nu" ${record.gender==='nu'?'selected':''}>Cái</option></select></div>`+field('bookingPetBorn','Ngày sinh',record.date_of_birth||'','date')+field('bookingPetColor','Màu lông',record.color)+field('bookingPetAllergy','Dị ứng',record.allergy)+field('bookingPetSafety','Lưu ý an toàn',record.safety_note)+field('bookingPetRoutine','Thói quen chăm sóc',record.routine);
   get('bookingPetName').maxLength=200;get('bookingPetWeight').min='0.01';get('bookingPetWeight').max='1000';get('bookingPetWeight').step='0.01';
   get('bookingPetBorn').max=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok'}).format(new Date());
   for(const key of ['Color','Allergy','Safety','Routine'])get('bookingPet'+key).maxLength=key==='Color'?200:2000;
-  const list=get('bookingPetBreedOptions'),input=get('bookingPetBreed');
-  const hide=()=>{list.hidden=true;input.setAttribute('aria-expanded','false');};
-  const render=()=>{
-   list.innerHTML=breeds.filter(b=>b.species_id===selectedSpecies&&b.breed_name.toLocaleLowerCase('vi').includes(input.value.toLocaleLowerCase('vi'))).map(b=>`<button type="button" class="booking-entity-option" data-breed="${esc(b.id)}" role="option">${esc(b.breed_name)}</button>`).join('')||'<p>Chưa có giống phù hợp.</p>';
-   list.hidden=false;input.setAttribute('aria-expanded','true');
-   list.querySelectorAll('[data-breed]').forEach(btn=>btn.onclick=()=>{selectedBreed=breeds.find(b=>b.id===btn.dataset.breed);input.value=selectedBreed.breed_name;hide();});
-  };
-  input.onfocus=render;input.oninput=()=>{selectedBreed=null;render();};input.onkeydown=e=>{if(e.key==='Escape')hide();if(e.key==='ArrowDown'){e.preventDefault();list.querySelector('button')?.focus();}};
-  content.addEventListener('focusout',()=>setTimeout(()=>{if(!input.parentElement.contains(document.activeElement))hide();},0));
-  content.querySelectorAll('[data-species]').forEach(btn=>btn.onclick=()=>{selectedSpecies=btn.dataset.species;selectedBreed=null;input.value='';hide();content.querySelectorAll('[data-species]').forEach(b=>b.classList.toggle('selected',b===btn));});
+  const input=get('bookingPetBreed');
+  content.querySelectorAll('[data-species]').forEach(btn=>btn.onclick=()=>{selectedSpecies=btn.dataset.species;selectedBreed=null;content.querySelectorAll('[data-species]').forEach(b=>b.classList.toggle('selected',b===btn));});
   get('bookingPetName').focus();
   get('bookingInlineSave').disabled=false;
   bindSave(get,async()=>{
-   if(!selectedBreed)throw Error('Vui lòng chọn giống từ danh sách.');
-   const values={pet_name:get('bookingPetName').value.trim(),breed_id:selectedBreed.id,gender:get('bookingPetGender').value,date_of_birth:get('bookingPetBorn').value||null,color:get('bookingPetColor').value.trim(),allergy:get('bookingPetAllergy').value.trim(),safety_note:get('bookingPetSafety').value.trim(),routine:get('bookingPetRoutine').value.trim()};
+   const breedName=input.value.trim();if(!breedName)throw Error('Nhập giống của bé.');
+   const speciesName=species.find(item=>item.id===selectedSpecies)?.species_name;
+   if(!speciesName)throw Error('Chọn loài thú cưng.');
+   const values={pet_name:get('bookingPetName').value.trim(),breed_name:breedName,species_name:speciesName,gender:get('bookingPetGender').value,date_of_birth:get('bookingPetBorn').value||null,color:get('bookingPetColor').value.trim(),allergy:get('bookingPetAllergy').value.trim(),safety_note:get('bookingPetSafety').value.trim(),routine:get('bookingPetRoutine').value};
    const result=await db.rpc('save_own_pet',{p_id:id,p_expected:record.updated_at||null,p_values:values,p_weight:Number(get('bookingPetWeight').value)});
    if(result.error)throw result.error;if(result.data!==id)throw Error('Chưa xác nhận được hồ sơ đã lưu.');
    await onSaved(id);

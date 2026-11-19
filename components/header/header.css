@@ -1116,3 +1116,117 @@ body:not(.admin-body) .main-header .notification-dropdown-footer{padding:8px 16p
 body:not(.admin-body) .main-header .notification-dropdown-footer a{padding:10px 14px;border-radius:9px;background:#eef4ed;color:#214939!important;font:600 12px/1.5 Inter,system-ui,sans-serif;text-decoration:none}
 @media(max-width:600px){body:not(.admin-body) .main-header .notification-dropdown{position:fixed;top:72px;right:16px;margin-top:0;width:calc(100vw - 32px)}}
 body:not(.admin-body) .main-header .notification-list .notification-item-dropdown{width:100%;text-align:left;margin:0 0 4px}
+
+
+/* ==========================================================================
+   PawPal — Public Site Modal Popup Notice (showNextSitePopup)
+   ========================================================================== */
+#pawpal-site-popup {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: rgba(15, 30, 22, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+#pawpal-site-popup .site-popup-card {
+    background: #ffffff;
+    border-radius: 9px;
+    border: 1px solid #ECF2EE;
+    box-shadow: 0 16px 36px rgba(35, 107, 72, 0.14), 0 4px 12px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    color: #203A2C;
+    box-sizing: border-box;
+}
+#pawpal-site-popup .site-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+#pawpal-site-popup .site-popup-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #236B48;
+    line-height: 1.4;
+}
+#pawpal-site-popup .site-popup-close-icon {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    color: #718476;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.15s, background-color 0.15s;
+}
+#pawpal-site-popup .site-popup-close-icon:hover {
+    color: #236B48;
+    background: #EEF5F1;
+}
+#pawpal-site-popup .site-popup-body {
+    color: #B47100;
+    font-size: 16.5px;
+    font-weight: 700;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+}
+#pawpal-site-popup .site-popup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 4px;
+}
+#pawpal-site-popup .site-popup-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 9px;
+    background: #EEF5F1;
+    color: #236B48;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.15s, color 0.15s;
+}
+#pawpal-site-popup .site-popup-link:hover {
+    background: #DCEEE2;
+    color: #1B5338;
+}
+#pawpal-site-popup .site-popup-btn-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 22px;
+    border-radius: 9px;
+    background: #236B48;
+    color: #FFFFFF;
+    font-size: 13.5px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+#pawpal-site-popup .site-popup-btn-close:hover {
+    background: #1B5338;
+}

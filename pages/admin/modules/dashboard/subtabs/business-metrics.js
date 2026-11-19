@@ -107,11 +107,30 @@
         const returning = [...counts.values()].filter(count => count >= 2).length;
         return { eligible, returning, rate: eligible ? returning / eligible * 100 : null };
     }
+    function estimate(cash, source, plan, range) {
+        if (plan && ['operating_expenses', 'product_cost_percent', 'service_cost_percent'].some(key => plan[key] == null)) return null;
+        if (!cash || !source || !plan || plan.period_from !== range.from || plan.period_to !== range.to) return null;
+        const fields = ['target_net_receipts', 'operating_expenses', 'product_cost_percent', 'service_cost_percent'];
+        const values = Object.fromEntries(fields.map(key => [key, number(plan[key])]));
+        if (values.target_net_receipts <= 0 || values.target_net_receipts > 1e12 || values.operating_expenses < 0 || values.operating_expenses > 1e12 ||
+            ['product_cost_percent', 'service_cost_percent'].some(key => values[key] < 0 || values[key] > 100)) throw Error('invalid_plan');
+        const collected = number(cash.collected), refunded = number(cash.refunded), net = number(cash.net);
+        const products = number(source.products), services = number(source.services), other = number(source.other);
+        if (cash.undated || other !== 0 || Math.abs(products + services - collected) > 0.01 || Math.abs(net - (collected - refunded)) > 0.01) return null;
+        const estimatedCosts = products * values.product_cost_percent / 100 + services * values.service_cost_percent / 100;
+        return { net, estimatedCosts, expenses: values.operating_expenses, balance: net - estimatedCosts - values.operating_expenses,
+            target: values.target_net_receipts, progress: net / values.target_net_receipts * 100, gap: values.target_net_receipts - net };
+    }
     async function load(db, key, range) {
         // Validate all ranges before starting a database request, including retry paths.
         range = period(range.from, range.to);
         if (key === 'cash') return cashflow(db, range);
         if (key === 'previous') return cashflow(db, period(range.previousFrom, range.previousTo));
+        if (key === 'plan') {
+            const { data, error } = await db.rpc('get_admin_dashboard_plan', { p_from: range.from, p_to: range.to });
+            if (error) throw error;
+            return data;
+        }
         if (!['sources','customers','returning','membership','vouchers','points','products','services'].includes(key))throw Error('unknown_resource');
         const {data,error}=await db.rpc('admin_business_metric',{p_key:key,p_from:range.from,p_to:range.to});
         if(error)throw error;
@@ -120,5 +139,5 @@
         throw Error('unknown_resource');
     }
     const customerCount=rows=>rows?.reduce((n,r)=>n+number(r.count??1),0);
-    return { customerCount, zone, dayKey, shift, period, totals, growth, sources, rank, bucket, readAll, cashflow, returningCustomers, load };
+    return { customerCount, zone, dayKey, shift, period, totals, growth, sources, rank, bucket, readAll, cashflow, returningCustomers, estimate, load };
 });

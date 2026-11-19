@@ -6,7 +6,7 @@
         const originalChannel=client.channel.bind(client),originalRemove=client.removeChannel.bind(client),originalRemoveAll=client.removeAllChannels.bind(client);
         const records=new Map();
         let channelSequence=0;
-        const owners={'admin_customers_realtime':'Khách hàng','admin-pets-live':'Thú cưng','admin-services-live-sync':'Dịch vụ','admin-orders-live-sync':'Bán hàng','admin-staff-live-sync':'Nhân sự','admin_complaints_live_sync':'Khiếu nại','admin-settings-global-sync':'Cấu hình','admin-chatbot-global-sync':'Chatbot','admin-chat-rules-v1':'Chatbot','admin-dashboard-live-sync':'Dashboard','admin-ops-dashboard-live':'Dashboard'};
+        const owners={'admin_customers_realtime':'Khách hàng','admin-pets-live':'Thú cưng','admin-services-live-sync':'Dịch vụ','admin-orders-live-sync':'Bán hàng','admin-staff-live-sync':'Nhân sự','admin-staff-recurring':'Nhân sự','admin_complaints_live_sync':'Khiếu nại','admin-settings-global-sync':'Cấu hình','admin-chatbot-global-sync':'Chatbot','admin-chat-rules-v1':'Chatbot','admin-dashboard-live-sync':'Dashboard','admin-ops-dashboard-live':'Dashboard'};
         const visible=record=>!document.hidden && sessionStorage.getItem('pawpal_admin_active_module')===record.module;
         function pause(record){
             const native=record.native;if(!native)return;

@@ -1,4 +1,4 @@
-
+﻿
 import { API } from '/scripts/api/api.js';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 import { parseVietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
@@ -465,7 +465,7 @@ async function renderServiceReviewSection(booking,valid=()=>true) {
           <input type="hidden" id="serviceRating${index}" data-service-rating="${line.id}" value="">
         </div>
         <label for="serviceContent${index}" style="margin-top:12px;font-weight:600;display:block;">Nhận xét <span style="color:#DC2626">*</span></label><textarea class="form-control" id="serviceContent${index}" data-service-content="${line.id}" maxlength="3000" rows="3" placeholder="Chia sẻ cảm nhận chân thật của bạn về dịch vụ..." required></textarea><div data-service-review-media="${line.id}"></div>`}</fieldset>`;
-    }).join('')}<p id="serviceReviewError" role="alert" style="color:#DC2626"></p>${pending.length ? '<p>Đánh giá sẽ được kiểm duyệt trước khi công bố.</p><button type="button" class="btn-detail-action btn-action-primary-green" id="btnSubmitServiceReview">Gửi đánh giá</button>' : ''}${!lines.length ? '<p>Chưa có dòng dịch vụ hoàn thành để đánh giá.</p>' : ''}</form>`;
+    }).join('')}<p id="serviceReviewError" role="alert" style="color:#DC2626"></p>${pending.length ? '<p style=\"color:#4F7A65;font-size:12.5px;margin:8px 0;\">Đánh giá của bạn sẽ được hiển thị công khai trên trang dịch vụ.</p><button type="button" class="btn-detail-action btn-action-primary-green" id="btnSubmitServiceReview">Gửi đánh giá</button>' : ''}${!lines.length ? '<p>Chưa có dòng dịch vụ hoàn thành để đánh giá.</p>' : ''}</form>`;
     const form = section.querySelector('form');
     form.addEventListener('submit', e => e.preventDefault());
     form.addEventListener('input', () => { section.querySelector('#serviceReviewError').textContent = ''; });

@@ -1,4 +1,4 @@
-(function(global){
+﻿(function(global){
  'use strict';
  const reviewedOrders=new Set();
  const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -44,7 +44,7 @@
          <input type="hidden" id="review-rating-${index}" data-review-rating="${p.lineId}" value="">
        </div>
        <label for="review-content-${index}" style="margin-top:12px;font-weight:600;display:block;">Nhận xét <span style="color:#DC2626">*</span></label><textarea class="form-control" id="review-content-${index}" data-review-content="${p.lineId}" maxlength="3000" rows="3" placeholder="Chia sẻ cảm nhận chân thật của bạn về sản phẩm..." required></textarea><div data-review-media="${p.lineId}"></div>`}</fieldset>`;
-    }).join('')}<p id="sales-review-error" role="alert" style="color:#DC2626"></p>${pending.length?'<p>Đánh giá sẽ được kiểm duyệt trước khi công bố.</p><button type="button" class="btn-cta" id="sales-review-submit">Gửi đánh giá</button>':''}</form>`;
+    }).join('')}<p id="sales-review-error" role="alert" style="color:#DC2626"></p>${pending.length?'<p style=\"color:#4F7A65;font-size:12.5px;margin:8px 0;\">Đánh giá của bạn sẽ được hiển thị công khai trên trang sản phẩm.</p><button type="button" class="btn-cta" id="sales-review-submit">Gửi đánh giá</button>':''}</form>`;
    section.querySelector('form').addEventListener('submit',e=>e.preventDefault());
    const [{createReviewMediaEditor},{createEvidenceGallery}]=await Promise.all([import('/scripts/shared/review-media.mjs'),import('/scripts/shared/evidence-gallery.mjs')]);
    if(version!==generation||!section.isConnected)return;

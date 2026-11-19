@@ -1047,7 +1047,7 @@
         }
 
         // Reset lý do
-        const reasonInp = document.getElementById('changeStaffReasonInput');
+        const reasonInp = document.getElementById('changeStaffReasonSelect');
         if (reasonInp) reasonInp.value = '';
 
         const hintEl = document.getElementById('changeStaffWorkloadHint');
@@ -1584,6 +1584,7 @@
                         }
                     }
                     if(!resData)throw Error('Không xác minh được lịch hẹn đã lưu.');
+                    window.PawpalCustomers?.refreshCustomerData?.({directory:false,kind:'bookings',customerIds:selectedCustomerObj?.id?[selectedCustomerObj.id]:[]});
                     newId='BKG-'+resData.replace(/-/g,'').toUpperCase();
                     delete modalCreateBooking.dataset.requestSignature;delete modalCreateBooking.dataset.requestId;
                     await PawpalServices.loadServicesData({force:true,forceStaff:false,prefetch:false});
@@ -1890,6 +1891,27 @@
             }
 
         }
+
+        let consumingBookingPreset = false;
+        window.addEventListener('admin:module-show', async event => {
+            if (event.detail?.module !== 'Dịch vụ' || consumingBookingPreset) return;
+            const raw = sessionStorage.getItem('pawpal_admin_booking_preset');
+            if (!raw) return;
+            consumingBookingPreset = true;
+            try {
+                const preset = JSON.parse(raw);
+                if (!preset.custId) { sessionStorage.removeItem('pawpal_admin_booking_preset'); return; }
+                btnOpenCreateBooking?.click();
+                await PawpalServices.searchBookingDirectory('customers', '', preset.custId);
+                const customer = getAllCustomersList().find(c => c.id === preset.custId);
+                if (!customer) throw Error('customer_not_found');
+                if (!modalCreateBooking.classList.contains('active') || sessionStorage.getItem('pawpal_admin_active_module') !== 'Dịch vụ') return;
+                selectCustomerItem(customer);
+                if (sessionStorage.getItem('pawpal_admin_booking_preset') === raw) sessionStorage.removeItem('pawpal_admin_booking_preset');
+            } catch (error) {
+                PawpalServices.showToast('Không thể tải khách hàng từ hồ sơ. Vui lòng chọn lại.', 'warning');
+            } finally { consumingBookingPreset = false; }
+        });
 
         PawpalServices.subtabs.bookings.openForPet = pet => {
             btnOpenCreateBooking?.click();
@@ -2225,25 +2247,13 @@
             });
         }
 
-        const reasonInput = document.getElementById('changeStaffReasonInput');
-
-        document.querySelectorAll('#quickChangeStaffChips .reason-quick-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                if (reasonInput) {
-                    reasonInput.value = chip.textContent.trim();
-                    reasonInput.focus();
-                }
-            });
-        });
-
-        // Xác nhận đổi KTV
         const btnSubmitChangeStaff = document.getElementById('btnSubmitChangeStaff');
         if (btnSubmitChangeStaff) {
             btnSubmitChangeStaff.addEventListener('click', async () => {
                 const modal = document.getElementById('modalChangeStaff');
                 const bookingId = modal?.getAttribute('data-booking-id');
                 const newStaff = document.getElementById('changeStaffSelect')?.value;
-                const reason = document.getElementById('changeStaffReasonInput')?.value?.trim();
+                const reason = document.getElementById('changeStaffReasonSelect')?.value?.trim();
 
                 if (!newStaff) {
                     PawpalServices.showToast('Vui lòng chọn KTV mới!', 'warning');
@@ -2267,40 +2277,19 @@
                         const scope = document.querySelector('input[name="changeStaffScope"]:checked')?.value || 'next_steps';
                         if (scope === 'all_steps' && booking.careLogs?.length) throw new Error('Chưa hỗ trợ đổi người thực hiện các nhật ký đã ghi.');
                         
-                        let rpcSuccess = false;
-                        if (client && booking.dbId) {
-                            try {
-                                const {data,error}=await client.rpc('update_admin_service_booking',{p_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_action:'assign',p_value:candidates[0].id,p_reason:reason});
-                                if(!error && data === booking.dbId) rpcSuccess = true;
-                            } catch (_) {}
-                            if (!rpcSuccess) {
-                                try {
-                                    const {error: directErr} = await client.from('appointment').update({
-                                        staff_id: candidates[0].id,
-                                        updated_at: new Date().toISOString()
-                                    }).eq('id', booking.dbId);
-                                    if (!directErr) {
-                                        rpcSuccess = true;
-                                        try {
-                                            await client.from('appointment_item').update({
-                                                staff_id: candidates[0].id
-                                            }).eq('appointment_id', booking.dbId);
-                                        } catch (_) {}
-                                    }
-                                } catch (_) {}
-                            }
+                        if (!client || !booking.dbId) throw new Error('Không xác định được lưu trữ của lịch hẹn.');
+                        if (newStaff === booking.staffId) throw new Error('Vui lòng chọn KTV khác với người đang phụ trách.');
+                        const bookingStatus = String(booking.status || '').toLowerCase();
+                        const alreadyInCare = ['checked_in','in_progress','da_check_in','da_tiep_nhan','dang_thuc_hien','accepted'].includes(bookingStatus);
+                        let customerApprovalRequired = false;
+                        if (booking.requestedStaffId && !alreadyInCare) {
+                            const {data,error}=await client.rpc('propose_booking_staff',{p_id:booking.dbId,p_revision:booking.updatedAt,p_staff:candidates[0].id,p_start:booking.scheduledStartAt,p_note:reason});
+                            if(error)throw error;if(data!==booking.dbId)throw new Error('Không xác nhận được đề xuất KTV.');
+                            customerApprovalRequired = true;
+                        } else {
+                            const {data,error}=await client.rpc('update_admin_service_booking',{p_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_action:'assign',p_value:candidates[0].id,p_reason:reason});
+                            if(error)throw error;if(data!==booking.dbId)throw new Error('Không xác nhận được phân công KTV.');
                         }
-                        booking.staff = candidates[0].full_name;
-                        booking.staffId = candidates[0].id;
-                        try {
-                            const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-                            const idx = localBookings.findIndex(b => String(b.id || b._id) === String(booking.id || booking.dbId));
-                            if (idx !== -1) {
-                                localBookings[idx].staff = candidates[0].full_name;
-                                localBookings[idx].staffId = candidates[0].id;
-                                localStorage.setItem('pawpal_bookings', JSON.stringify(localBookings));
-                            }
-                        } catch (_) {}
                         try {
                             await PawpalServices.loadServicesData({force:true,forceDirectory:false,forceStaff:false,prefetch:false});
                             if (booking.dbId) await PawpalServices.ensureBooking(booking.dbId,{force:true});
@@ -2315,7 +2304,7 @@
                         PawpalServices.subtabs.detail.renderBookingDetail(booking.id);
                     }
                     const chosenStaffName = (PawpalServices.state.liveStaffList || []).find(s => s.id === newStaff)?.full_name || newStaff;
-                    PawpalServices.showToast(`Đã điều phối KTV phụ trách sang ${chosenStaffName}!`);
+                    PawpalServices.showToast(customerApprovalRequired ? `Đã gửi đề xuất đổi KTV sang ${chosenStaffName}. Lịch chỉ thay đổi khi khách đồng ý.` : `Đã điều phối KTV phụ trách sang ${chosenStaffName}!`);
                     if (modal) modal.classList.remove('active');
                 }
             });

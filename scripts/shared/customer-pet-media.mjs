@@ -20,11 +20,14 @@ async function imageForUpload(file){
  validatePetImage(file);
  const bitmap=await createImageBitmap(file);
  try{
-  if(bitmap.width*bitmap.height>20000000)throw Error('Ảnh quá lớn. Vui lòng chọn ảnh dưới 20 triệu điểm ảnh.');
-  if(file.size<=3145728&&Math.max(bitmap.width,bitmap.height)<=8192)return file;
+  if(file.size<=3145728&&Math.max(bitmap.width,bitmap.height)<=2400)return file;
   const scale=Math.min(1,2400/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');
   canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);
-  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.92));
+  let blob;
+  for(const quality of [.9,.8,.7]){
+   blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));
+   if(blob&&blob.size<=3145728)break;
+  }
   if(!blob||blob.size>3145728)throw Error('Không thể xử lý ảnh. Vui lòng chọn ảnh nhỏ hơn.');
   return new File([blob],file.name.replace(/\.[^.]+$/,'')+'.webp',{type:blob.type});
  }finally{bitmap.close();}

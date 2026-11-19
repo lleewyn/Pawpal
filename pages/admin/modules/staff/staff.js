@@ -397,6 +397,7 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
                 p_query: query.trim(), p_type: type, p_result: result, p_page: requested, p_staff_id: staffId
             });
             if (error) throw error;
+            await PawpalStaff.ensureStaffDetails((data.rows || []).map(row => row.staff_id));
             return { rows: mapStaffAssessments(data.rows || []), total: data.total || 0, page: data.page || 1 };
         });
     };
@@ -470,7 +471,10 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
             if (version !== staffLoadSequence) return false;
             for (const entry of entries) {
                 const current = PawpalStaff.state.staff.find(person => person.rawId === entry.staff_record.id);
-                if (current) Object.assign(current, mapStaffEntry(entry, current.skillResult ? { score: current.skillScore, result: current.skillResult } : null));
+                const latest = PawpalStaff.state.assessments.find(item => item.raw.staff_id === entry.staff_record.id)?.raw;
+                const mapped = mapStaffEntry(entry, latest || (current?.skillResult ? { score: current.skillScore, result: current.skillResult } : null));
+                if (current) Object.assign(current, mapped);
+                else PawpalStaff.state.staff.push(mapped);
             }
             if (entries.length !== group.length) throw new Error('Không tải được đầy đủ hồ sơ nhân viên. Vui lòng làm mới.');
         }

@@ -75,10 +75,10 @@ function createStaffAuthHandlers(config){
   if(!roles||roles.length!==1||!['ADMIN','STAFF'].includes(roles[0])||!Array.isArray(permissions)||permissions.length!==0)return fail(res,400,'Chọn một vai trò Quản lý hoặc Nhân viên; không cấp quyền riêng.');
   if(!uuid(requestId)||!uuid(staffId)||!profile||typeof profile!=='object'||Array.isArray(profile)||typeof email!=='string'||email.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
    ||typeof password!=='string'||password.length<6||password.length>128||typeof enableLogin!=='boolean'||!roles||roles.length>30||!permissions||permissions.length>250||(enableLogin&&roles.length+permissions.length===0)||[...roles,...permissions].some(v=>typeof v!=='string'))return fail(res,400,'Nhập hồ sơ, email đăng nhập, mật khẩu từ 6 đến 128 ký tự và chọn quyền nếu cho phép đăng nhập.');
-  if(typeof profile.full_name!=='string'||[...profile.full_name.trim().normalize('NFC')].length<2||profile.full_name.length>200||/\p{N}/u.test(profile.full_name))return fail(res,400,'Họ và tên cần từ 2 đến 200 ký tự và không chứa số.');
+  if(typeof profile.full_name!=='string'||[...profile.full_name.trim().normalize('NFC')].length<2||profile.full_name.length>200||!/^[\p{L}\p{M} ]+$/u.test(profile.full_name.normalize('NFC')))return res.status(400).json({success:false,field:'staffInputName',message:'Họ và tên cần từ 2 đến 200 ký tự, chỉ gồm chữ cái và khoảng trắng.'});
   if(typeof profile.phone_number!=='string'||!profile.phone_number.trim())return fail(res,400,'Nhập số điện thoại nhân viên.');
   profile.phone_number=profile.phone_number.trim().replace(/^\+84(?=\d{9}$)/,'0');
-  if(!/^0\d{9}$/.test(profile.phone_number))return fail(res,400,'Số điện thoại cần đúng 10 chữ số và bắt đầu bằng 0.');
+  if(!/^0\d{9}$/.test(profile.phone_number))return fail(res,400,'Số điện thoại cần đúng 10 số và bắt đầu bằng 0.');
   if(profile.email&&(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(profile.email).trim())||String(profile.email).length>254))return fail(res,400,'Nhập email công việc hợp lệ.');
   const signature=fingerprint({requestId,staffId,profile,email:email.toLowerCase(),password,enableLogin,roles,permissions});
   try{

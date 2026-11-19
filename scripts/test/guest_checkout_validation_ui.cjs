@@ -8,7 +8,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   const {guestCommerce}=await import('/scripts/shared/guest-commerce-client.mjs');guestCommerce.request=async(action,body)=>{
    calls.push({action,body});if(action==='context')return {contact:null};
    if(action==='order-quote')return {quote:{version:'test-version',total:10000,shipping_fee:0,voucher_discount:0,lines:[{name:'Test product',quantity:1,unitPrice:10000}]}};
-   if(action==='order-create'){if(failCreate)throw Object.assign(Error('Test uncertain failure'),{uncertain:true});created=true;return {};}
+   if(action==='order-create'){if(failCreate)throw Object.assign(Error('Test uncertain failure'),{uncertain:true});if(window.holdCreate)await new Promise(resolve=>window.releaseCreate=resolve);created=true;return {};}
    if(action==='order-receipt'){if(!created)throw Object.assign(Error('Not found'),{status:404});return {order:{code:'TEST-ORDER',status:'pending',total:10000,paymentStatus:'pending',lines:[{name:'Test product',quantity:1}]}};}
    throw Error('Unexpected action');
   };
@@ -17,15 +17,24 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  });
  assert.equal(await page.isDisabled('#guest-quote-button'),true);assert.equal(await page.isDisabled('#guest-place-order'),true);await page.evaluate(async()=>{finishOptions();await started;});
  const check=async(id)=>{assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'true');assert.ok(await page.locator('#'+id+'-error').textContent());assert.equal(await page.getAttribute('#'+id,'aria-describedby'),id+'-error');};
- await page.click('#guest-quote-button');await check('guest-name');await check('guest-phone');assert.equal(await page.evaluate(()=>document.activeElement.id),'guest-name');
+ await page.click('#guest-place-order');await check('guest-name');await check('guest-phone');assert.equal(await page.evaluate(()=>document.activeElement.id),'guest-name');
  await page.fill('#guest-name','   ');await page.fill('#guest-phone','123');await page.click('#guest-quote-button');await check('guest-name');await check('guest-phone');assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-quote').length),0);
  await page.fill('#guest-name','Test owner');await page.fill('#guest-phone','+84 (912) 345-678');await page.selectOption('#guest-delivery','delivery');await page.fill('#guest-receiver','   ');await page.fill('#guest-receiver-phone','123');await page.fill('#guest-street','   ');await page.click('#guest-quote-button');for(const id of ['guest-receiver','guest-receiver-phone','guest-street','guest-province'])await check(id);
  await page.selectOption('#guest-delivery','');for(const id of ['guest-receiver','guest-receiver-phone','guest-street','guest-province'])assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'false');
  await page.evaluate(()=>{document.getElementById('guest-note').value='x'.repeat(4001);});await page.click('#guest-quote-button');await check('guest-note');assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-quote').length),0);await page.fill('#guest-note','Test note');
- await page.click('#guest-quote-button');await page.waitForFunction(()=>!document.getElementById('guest-place-order').disabled);await page.click('#guest-place-order');await page.waitForFunction(()=>document.getElementById('guest-checkout-feedback').textContent.includes('Chưa xác định'));
- assert.equal(await page.inputValue('#guest-name'),'Test owner');assert.equal(await page.inputValue('#guest-phone'),'+84 (912) 345-678');assert.equal(await page.inputValue('#guest-note'),'Test note');assert.equal(await page.isDisabled('#guest-place-order'),true);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('pawpal_guest_cart_v1'))[0].quantity),1);
+ await page.addStyleTag({content:fs.readFileSync('node_modules/bootstrap/dist/css/bootstrap.min.css','utf8')+fs.readFileSync('pages/shop/checkout/checkout.css','utf8')+fs.readFileSync('styles/transaction-receipt.css','utf8')});
+ await page.setViewportSize({width:1280,height:1000});
+ assert.equal(await page.isDisabled('#guest-place-order'),false);
+ await page.screenshot({path:'docs/verification/guest-checkout-order-enabled.png',fullPage:true});
+ await page.click('#guest-place-order');await page.waitForFunction(()=>document.getElementById('guest-checkout-feedback').textContent.includes('Chưa xác định'));
+ assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-quote').length),1,'placing directly checks the current price automatically');
+ assert.equal(await page.inputValue('#guest-name'),'Test owner');assert.equal(await page.inputValue('#guest-phone'),'+84 (912) 345-678');assert.equal(await page.inputValue('#guest-note'),'Test note');assert.equal(await page.isDisabled('#guest-place-order'),false);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('pawpal_guest_cart_v1'))[0].quantity),1);
  const request=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('pawpal_guest_order_request_v1')).id);assert.equal(await page.evaluate(()=>JSON.stringify(sessionStorage).includes('Test owner')),false);
- await page.evaluate(()=>{window.failCreate=false;});await page.click('#guest-quote-button');await page.waitForFunction(()=>!document.getElementById('guest-place-order').disabled);await page.click('#guest-place-order');await page.waitForFunction(()=>!document.getElementById('guest-order-result').classList.contains('d-none'));
+ await page.evaluate(()=>{window.failCreate=false;window.holdCreate=true;});await page.click('#guest-quote-button');await page.waitForFunction(()=>!document.getElementById('guest-place-order').disabled);await page.click('#guest-place-order');await page.waitForFunction(()=>Boolean(window.releaseCreate));
+ assert.equal(await page.isDisabled('#guest-place-order'),true);assert.equal(await page.locator('#guest-place-order').textContent(),'Đang xử lý…');
+ await page.screenshot({path:'docs/verification/guest-checkout-order-busy.png',fullPage:true});
+ await page.evaluate(()=>document.getElementById('guest-place-order').click());assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-create').length),2);
+ await page.evaluate(()=>{window.holdCreate=false;releaseCreate();});await page.waitForFunction(()=>!document.getElementById('guest-order-result').classList.contains('d-none'));
  assert.deepEqual(await page.evaluate(()=>calls.filter(c=>c.action==='order-create').map(c=>c.body.requestId)),[request,request]);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('pawpal_guest_cart_v1')).length),0);assert.match(await page.locator('#guest-order-result').textContent(),/TEST-ORDER/);assert.match(await page.getByRole('link',{name:'Tra cứu đơn hàng',exact:true}).getAttribute('href'),/return-guest\?order=/);
  const checkActivation=async()=>{
   const link=page.getByRole('link',{name:'Thiết lập mật khẩu',exact:true});assert.equal(await link.count(),1);assert.equal(await link.isVisible(),true);
@@ -36,7 +45,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  for(const width of [1280,390]){
   await page.setViewportSize({width,height:1000});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-  await page.screenshot({path:`docs/verification/sync/order-receipt-${width}.png`,fullPage:true});
+  await page.screenshot({path:`docs/verification/guest-checkout-receipt-${width}.png`,fullPage:true});
  }
  await page.evaluate(async()=>{delete document.querySelector('.checkout-page').dataset.guestReady;const {initGuestCheckout}=await import('/pages/shop/checkout/guest-checkout.mjs');await initGuestCheckout();});
  await checkActivation();assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-create').length),2);

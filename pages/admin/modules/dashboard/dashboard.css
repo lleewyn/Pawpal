@@ -1468,11 +1468,11 @@ button[disabled]{cursor:not-allowed}
 */
 .dashboard-module.dash-page:is(.ops-dash, .business-dash) {
     /* Match the existing Overview workspace; keep these values scoped to Operations. */
-    --ops-text: #283D31;
-    --ops-muted: #65776A;
-    --ops-heading: #28533E;
-    --ops-surface: #FFFFFF;
-    --ops-line: #DFE6DF;
+    --ops-text: #203A2C;
+    --ops-muted: #4F7A65;
+    --ops-heading: #236B48;
+    --ops-surface: rgba(255, 255, 255, 0.70);
+    --ops-line: #ECF2EE;
     --ops-track: #EEF5F1;
     --ops-ok: #236B48;
     --ops-warn: #D97706;
@@ -1668,8 +1668,10 @@ button[disabled]{cursor:not-allowed}
     display: grid !important;
     grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
     background: var(--ops-surface) !important;
-    border: 1px solid #DCE4DF !important;
-    border-radius: 5px !important;
+    border: 1px solid var(--ops-line) !important;
+    border-radius: var(--admin-radius, 9px) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     overflow: hidden !important;
     box-shadow: none !important;
     margin: 0 !important;
@@ -1681,7 +1683,7 @@ button[disabled]{cursor:not-allowed}
     min-height: 78px !important;
     background: transparent !important;
     border: none !important;
-    border-right: 1px solid #E5EAE6 !important;
+    border-right: 1px solid var(--ops-line) !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     display: flex !important;
@@ -1699,14 +1701,14 @@ button[disabled]{cursor:not-allowed}
 .ops-dash .ops-kpi .kpi-label {
     font-size: 12px !important;
     font-weight: 500 !important;
-    color: #62776A !important;
+    color: var(--ops-muted) !important;
     line-height: 1.3 !important;
 }
 .ops-dash .ops-kpi .kpi-val {
     font-size: 25px !important;
     font-weight: 700 !important;
     letter-spacing: -0.6px !important;
-    color: #285C43 !important;
+    color: var(--ops-heading) !important;
     line-height: 1.14 !important;
     font-variant-numeric: tabular-nums !important;
 }
@@ -1728,8 +1730,10 @@ button[disabled]{cursor:not-allowed}
     margin: 0;
     padding: 0;
     border: 1px solid var(--ops-line);
-    border-radius: 5px;
+    border-radius: var(--admin-radius, 9px);
     background: var(--ops-surface);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow: none;
 }
 .ops-dash .ops-panel[hidden] { display: none; }
@@ -2312,10 +2316,10 @@ button[disabled]{cursor:not-allowed}
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     background: var(--surface-white, rgba(255, 255, 255, 0.70)) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    border: 1px solid #DCE4DF !important;
-    border-radius: 5px !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid var(--border-neutral, #ECF2EE) !important;
+    border-radius: var(--admin-radius, 9px) !important;
     overflow: hidden !important;
     box-shadow: none !important;
     margin: 0 !important;
@@ -2326,8 +2330,8 @@ button[disabled]{cursor:not-allowed}
     min-height: 78px !important;
     background: transparent !important;
     border: none !important;
-    border-right: 1px solid #E5EAE6 !important;
-    border-bottom: 1px solid #E5EAE6 !important;
+    border-right: 1px solid var(--border-neutral, #ECF2EE) !important;
+    border-bottom: 1px solid var(--border-neutral, #ECF2EE) !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     display: flex !important;
@@ -2349,14 +2353,14 @@ button[disabled]{cursor:not-allowed}
 .business-dash .biz-kpi .kpi-label {
     font-size: 12px !important;
     font-weight: 500 !important;
-    color: #62776A !important;
+    color: var(--text-muted, #4F7A65) !important;
     line-height: 1.3 !important;
 }
 .business-dash .biz-kpi .kpi-val {
     font-size: 25px !important;
     font-weight: 700 !important;
     letter-spacing: -0.6px !important;
-    color: #285C43 !important;
+    color: var(--text-heading, #236B48) !important;
     line-height: 1.14 !important;
     font-variant-numeric: tabular-nums !important;
     margin: 0 !important;
@@ -2387,10 +2391,10 @@ button[disabled]{cursor:not-allowed}
     padding: 0;
     min-width: 0;
     border: 1px solid var(--border-neutral, #ECF2EE);
-    border-radius: 5px;
+    border-radius: var(--admin-radius, 9px);
     background: var(--surface-white, rgba(255,255,255,.70));
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow: none;
 }
 .business-dash .biz-group > .biz-panel {
@@ -2405,10 +2409,10 @@ button[disabled]{cursor:not-allowed}
 }
 .business-dash .biz-panel {
     background: var(--surface-white, rgba(255, 255, 255, 0.70)) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
     border: 1px solid var(--border-neutral, #ECF2EE) !important;
-    border-radius: 5px !important;
+    border-radius: var(--admin-radius, 9px) !important;
     overflow: hidden !important;
     padding: 0 !important;
     box-sizing: border-box;
@@ -2551,17 +2555,30 @@ button[disabled]{cursor:not-allowed}
 }
 
 /* Biểu đồ Donut */
+.business-dash .biz-panel:has(> [data-biz-panel="sources"]) {
+    display: flex;
+    flex-direction: column;
+}
+.business-dash [data-biz-panel="sources"] {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 .business-dash .biz-donut-layout {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 24px;
-    padding: 8px 0;
+    gap: 28px;
+    padding: 18px 0;
+    width: 100%;
+    max-width: 660px;
+    margin-inline: auto;
 }
 .business-dash .biz-donut {
     position: relative;
-    width: 164px;
+    width: clamp(210px, 18vw, 280px);
     max-width: 100%;
     flex-shrink: 0;
 }
@@ -2594,7 +2611,8 @@ button[disabled]{cursor:not-allowed}
     padding: 0;
     margin: 0;
     flex: 1;
-    min-width: 190px;
+    min-width: 150px;
+    max-width: 320px;
     display: grid;
     gap: 16px;
 }
@@ -2885,6 +2903,12 @@ button[disabled]{cursor:not-allowed}
 }
 @media (max-width: 900px) {
     .business-dash .biz-group {grid-template-columns: minmax(0, 1fr);}
+    .business-dash .biz-panel-body[data-biz-panel="sources"] {min-height:0;}
+}
+@media (max-width: 480px) {
+    .business-dash .biz-donut-layout {flex-direction:column;gap:20px;padding:12px 0;}
+    .business-dash .biz-donut {width:240px;}
+    .business-dash .biz-donut-legend {width:100%;min-width:0;flex:auto;}
 }
 @media (max-width: 640px) {
     .business-dash .biz-grid {
@@ -2904,4 +2928,93 @@ button[disabled]{cursor:not-allowed}
         flex-direction: column;
         margin-left: 0;
     }
+}
+
+/* Calendar appointments remain readable and independently selectable. */
+.dashboard-module .dashboard-week-event {width:100%;border:none;text-align:left;font-family:inherit;cursor:pointer}
+.dashboard-module .dashboard-week-event:hover {background:#E2ECE5}
+.dashboard-module .dashboard-week-event:focus-visible {outline:2px solid #236B48;outline-offset:2px}
+.dashboard-module .dashboard-day-timeline-container {overflow:auto}
+.dashboard-day-timeline-content {position:relative;width:100%}
+.dashboard-module .dashboard-day-event {overflow:hidden;min-width:0;padding:8px 10px}
+.dashboard-day-event-header {min-width:0}
+.dashboard-module .dashboard-day-event strong {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.5}
+.dashboard-day-event-status {flex-shrink:0}
+.dashboard-module .dashboard-day-event-body {width:100%;min-width:0;line-height:1.5}
+#dashboardBookingQuickModal .dashboard-modal-card {max-height:calc(100dvh - 32px);overflow:hidden}
+#dashboardBookingQuickModal .dashboard-modal-header,
+#dashboardBookingQuickModal .dashboard-modal-footer {flex-shrink:0}
+#dashboardBookingQuickModal .dashboard-modal-body {min-height:0;overflow-y:auto;overscroll-behavior:contain}
+#dashboardBookingQuickModal .dashboard-modal-row:last-child {flex-direction:column;gap:8px}
+#dashboardBookingQuickModal .dashboard-modal-row:last-child .modal-label {flex-basis:auto}
+#dashboardBookingQuickModal .dashboard-modal-row:last-child .modal-val {text-align:left;width:100%;font-weight:400}
+#dashboardBookingQuickModal .dashboard-modal-row {align-items:flex-start;gap:16px;border-bottom:none}
+#dashboardBookingQuickModal .modal-label {flex:0 0 110px}
+#dashboardBookingQuickModal .modal-val {min-width:0;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.5}
+#dashboardBookingQuickModal .dashboard-modal-footer {flex-wrap:wrap}
+@media(max-width:480px) {
+    #dashboardBookingQuickModal .dashboard-modal-card {padding:26px 20px}
+    #dashboardBookingQuickModal .modal-label {flex-basis:85px}
+}
+
+.dashboard-module .dash-stock-empty {padding:12px 17px;font-size:11px;color:#728377;font-weight:400;line-height:1.45}
+
+/* Dashboard controls share the quiet surfaces; financial readings remain flat. */
+body.admin-body.dashboard-active .admin-header {
+    background: rgba(255,255,255,.70);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-color: #ECF2EE;
+}
+body.admin-body.dashboard-active .btn-header-refresh {border-radius:9px;border-color:#ECF2EE;background:transparent;}
+body.admin-body.dashboard-active .header-user-tag {border-left:none;}
+body.admin-body.dashboard-active .header-subtab-btn.active {color:#236B48!important;border-color:#236B48!important;font-weight:700!important;}
+body.admin-body.dashboard-active .header-subtab-btn {color:#4F7A65;}
+body.admin-body.dashboard-active .header-subtab-divider {color:#AEC8B9;}
+.business-dash .biz-finance-head {flex-wrap:wrap;gap:12px;}
+.business-dash .biz-finance-actions {display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;}
+.business-dash .biz-finance-actions .admin-btn {padding:5px 10px;min-height:30px;}
+.business-dash .biz-finance-actions .admin-btn:disabled {opacity:.45;cursor:default;}
+.business-dash .biz-finance-status {font-size:12px;color:#4F7A65;}
+.business-dash .biz-finance-body {min-height:0;}
+.business-dash .biz-reading {list-style:none;margin:0 0 14px;padding:0;display:grid;gap:8px;font-size:12px;line-height:1.6;color:#203A2C;}
+.business-dash .biz-target-heading {display:flex;justify-content:space-between;gap:8px 20px;flex-wrap:wrap;font-size:12px;color:#4F7A65;line-height:1.6;}
+.business-dash .biz-target-heading strong {color:#236B48;white-space:nowrap;}
+.business-dash .biz-target-track {height:6px;background:#EEF5F1;border-radius:9px;overflow:hidden;margin:8px 0 18px;}
+.business-dash .biz-target-track > span {display:block;height:100%;background:#236B48;border-radius:9px;}
+.business-dash .biz-finance-values {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px 22px;margin:8px 0 14px;}
+.business-dash .biz-finance-values > div {min-width:0;background:transparent;border:none;}
+.business-dash .biz-finance-values dt {font-size:12px;color:#4F7A65;margin-bottom:6px;}
+.business-dash .biz-finance-values dd {font-size:20px;font-weight:650;color:#236B48;margin:0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+.business-dash .is-negative {color:#DC2626!important;}
+.business-dash .biz-kpi .kpi-sub {white-space:normal;}
+.business-dash .biz-kpi {justify-content:flex-start!important;gap:8px!important;}
+.ops-dash .ops-alert-filters {display:flex;flex-wrap:wrap;gap:8px 20px;margin:0 0 18px;}
+.ops-dash .ops-alert-filter {font:500 12px/1.5 Inter,sans-serif;color:#4F7A65;background:transparent;border:none;border-bottom:2px solid transparent;padding:4px 0;cursor:pointer;}
+.ops-dash .ops-alert-filter.active {color:#236B48;font-weight:700;border-bottom-color:#236B48;}
+.ops-dash .ops-alert-filter:hover {color:#236B48;}
+.ops-dash .ops-page-gap {display:grid;place-items:center;min-width:14px;color:#4F7A65;font-size:12px;}
+.ops-dash .ops-kpi-scope {font-size:11px;color:#4F7A65;font-weight:400;}
+.biz-plan-modal .admin-modal-card {width:600px;max-width:94vw;max-height:90dvh;overflow-y:auto;overscroll-behavior:contain;}
+.biz-plan-modal .biz-plan-header {display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;border:none;}
+.biz-plan-modal .biz-plan-header h3 {margin:0;color:#236B48;font-size:16px!important;}
+.biz-plan-modal .btn-modal-close {padding:2px 0;border:none;background:transparent;color:#4F7A65;font:500 12px Inter,sans-serif;cursor:pointer;}
+.biz-plan-modal .biz-plan-form {display:grid;gap:16px;}
+.biz-plan-modal .form-label {display:block;margin-bottom:6px;}
+.biz-plan-modal .biz-required {color:#DC2626;font-weight:700;}
+.biz-plan-modal .biz-caption {margin:0;font-size:12px;color:#4F7A65;line-height:1.6;}
+.biz-plan-modal .biz-error {color:#DC2626;font-size:12px;margin:0;background:transparent;border:none;}
+.biz-plan-modal .biz-plan-footer {display:flex;justify-content:flex-end;gap:10px;border:none;}
+@media(max-width:900px) {
+    .business-dash .biz-finance-values {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:560px) {
+    body.admin-body.dashboard-active .admin-header {height:auto;min-height:96px;flex-wrap:wrap;gap:4px;padding:8px 12px;}
+    body.admin-body.dashboard-active .admin-header-left {flex-basis:100%;overflow:visible;gap:12px;}
+    body.admin-body.dashboard-active .admin-header-right {width:100%;justify-content:flex-end;gap:8px;}
+    body.admin-body.dashboard-active .header-subtab-btn {padding:6px 0;}
+    .business-dash .biz-finance-actions {gap:8px;}
+    .business-dash .biz-finance-values {gap:16px 12px;}
+    .business-dash .biz-finance-values dd {font-size:18px;}
+    .biz-plan-modal .admin-modal-card {padding:26px 22px;}
 }

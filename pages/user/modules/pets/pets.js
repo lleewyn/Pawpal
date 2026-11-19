@@ -284,6 +284,10 @@ function populatePetForm(pet) {
     // File inputs belong to this editing session, never to a previously opened pet.
     setValue('avatar-input', '');
     setValue('vaccine-card-input', '');
+    document.getElementById('petForm').dataset.removeAvatar='false';
+    document.getElementById('petForm').dataset.removeVaccine='false';
+    document.getElementById('btnRemovePetAvatar')?.classList.toggle('d-none',!pet.avatarAssetId&&!pet.photo);
+    document.getElementById('btnRemovePetVaccine')?.classList.toggle('d-none',!pet.vaccineCardPhoto&&!pet.vaccineCard);
     document.querySelectorAll('#petForm .error-msg').forEach(error=>error.classList.add('d-none'));
     setValue('petName', pet.name || '');
     setChecked('input[name="species"]', pet.species || 'dog');
@@ -374,6 +378,8 @@ function populatePetForm(pet) {
 function resetPetForm() {
     const form = document.getElementById('petForm');
     if (form) form.reset();
+    if(form){delete form.dataset.removeAvatar;delete form.dataset.removeVaccine;}
+    for(const id of ['btnRemovePetAvatar','btnRemovePetVaccine'])document.getElementById(id)?.classList.add('d-none');
     editingPetId = null;
     const petIdInput = document.getElementById('petId');
     if (petIdInput) petIdInput.value = '';
@@ -731,6 +737,8 @@ function setupForm() {
                 color,
                 vaccinated: !!vaccinated,
                 avatarFile:avatarInput?.files?.[0] || null,
+                removeAvatar:form.dataset.removeAvatar==='true',
+                removeVaccine:form.dataset.removeVaccine==='true',
                 vaccineFile:vaccineInput?.files?.[0] || null,
                 vaccineCardPhoto: vaccineCardPhoto,
                 allergies,
@@ -763,6 +771,8 @@ function setupAvatar() {
     const input = document.getElementById('avatar-input');
     const preview = document.getElementById('avatarPreview');
     const circle = document.getElementById('avatarCircle');
+    const remove=document.getElementById('btnRemovePetAvatar');
+    if(remove)remove.onclick=()=>{input.value='';preview.removeAttribute('src');preview.style.display='none';circle?.classList.remove('has-image');document.getElementById('petForm').dataset.removeAvatar='true';remove.classList.add('d-none');};
     if (input && preview) {
         input.addEventListener('change', e => {
             const file = e.target.files[0];
@@ -774,6 +784,8 @@ function setupAvatar() {
                     preview.src = ev.target.result;
                     preview.style.display = 'block';
                     if (circle) circle.classList.add('has-image');
+                    document.getElementById('petForm').dataset.removeAvatar='false';
+                    remove?.classList.remove('d-none');
                 };
                 reader.readAsDataURL(file);
             }
@@ -785,6 +797,8 @@ function setupVaccineCardUploader() {
     const triggerBtn = document.getElementById('btnTriggerVaccineCard');
     const input = document.getElementById('vaccine-card-input');
     const preview = document.getElementById('vaccineCardPreview');
+    const remove=document.getElementById('btnRemovePetVaccine');
+    if(remove)remove.onclick=()=>{input.value='';preview.removeAttribute('src');preview.style.display='none';document.getElementById('petForm').dataset.removeVaccine='true';remove.classList.add('d-none');if(triggerBtn)triggerBtn.textContent='Tải ảnh sổ tiêm';};
     if (triggerBtn && input) {
         triggerBtn.addEventListener('click', () => input.click());
     }
@@ -799,6 +813,8 @@ function setupVaccineCardUploader() {
                     preview.src = ev.target.result;
                     preview.style.display = 'block';
                     if (triggerBtn) triggerBtn.textContent = 'Đổi ảnh sổ tiêm';
+                    document.getElementById('petForm').dataset.removeVaccine='false';
+                    remove?.classList.remove('d-none');
                 };
                 reader.readAsDataURL(file);
             }

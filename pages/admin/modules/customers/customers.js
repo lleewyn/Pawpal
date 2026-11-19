@@ -321,6 +321,9 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
     PawpalCustomers.state.pawpointLoadStatus = 'idle';
 
     // 1. FORMATTERS CHUẨN HÓA TOÀN HỆ THỐNG
+    PawpalCustomers.isTicketClosed = ticket => ['completed', 'resolved', 'closed', 'rejected', 'da_giai_quyet', 'da_dong', 'tu_choi']
+        .includes(String(ticket?.status || '').trim().toLowerCase());
+
     PawpalCustomers.ticketSummary = ticket => {
         const code=String(ticket?.id||'');
         const shortCode=code.length>15?code.slice(0,15)+'…':code;
@@ -666,7 +669,7 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
                     id: ticket.ticket_code, rawId: ticket.id, issue: ticket.subject,
                     level: window.PawpalEnum?.priority(ticket.priority)?.label || ticket.priority || '',
                     status: status?.label || ticket.status, statusClass: status?.badgeClass || 'badge-neutral',
-                    isClosed: ['resolved', 'closed', 'rejected', 'da_giai_quyet', 'da_dong', 'tu_choi'].includes(ticket.status)
+                    isClosed: PawpalCustomers.isTicketClosed(ticket)
                 });
             }
 
@@ -699,6 +702,7 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
             }
 
             if (unifiedCustomers.length > 0) {
+                const restrictionMap=new Map((data.bookingRestrictions||[]).map(row=>[row.customer_id,row]));
                 unifiedCustomers.forEach((c, idx) => {
                     const rawClean = (c.id || '').replace(/-/g, '').toUpperCase();
                     const shortCode = rawClean.length >= 12 
@@ -757,6 +761,7 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
                     freshDb[custKey] = {
                         id: custKey,
                         dbId: c.id,
+                        bookingRestriction: restrictionMap.get(c.id),
                         updatedAt: c.updated_at,
                         fullNameRaw: prof.full_name || '',
                         genderRaw: prof.gender || '',
@@ -824,6 +829,9 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
         if(directoryRequests.has(requestKey))return directoryRequests.get(requestKey);
         const task=(async()=>{const client=window.getSupabaseClient?.()||window.SupabaseClient;if(!client)throw Error('connection_unavailable');
             const {data,error}=await client.rpc('admin_customer_page',{p_query:request.query||'',p_tier:request.tier||'ALL',p_status:request.status||'ALL',p_category:request.category||'ALL',p_page:request.page||1,p_size:request.size||10,p_lookup:request.lookup||''});if(error)throw error;
+            const ids=[...new Set([...(data.pageIds||[]),...(data.custData||[]).map(c=>c.id)])];
+            data.bookingRestrictions=[];
+            for(let offset=0;offset<ids.length;offset+=100){const {data:rows,error:failure}=await client.rpc('admin_booking_restrictions',{p_ids:ids.slice(offset,offset+100)});if(failure)throw failure;data.bookingRestrictions.push(...rows);}
             if(generation===directoryGeneration){if(directoryCache.size>=20)directoryCache.delete(directoryCache.keys().next().value);directoryCache.set(key,{at:Date.now(),data});}return data;
         })().finally(()=>directoryRequests.delete(requestKey));directoryRequests.set(requestKey,task);return task;
     };
@@ -1058,7 +1066,7 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
                     issue: t.subject || 'Chưa ghi nhận',
                     level: priorityMeta.label,
                     status: ticketMeta.label,
-                    isClosed: ['resolved', 'closed', 'rejected', 'da_giai_quyet', 'da_dong', 'tu_choi'].includes(t.status),
+                    isClosed: PawpalCustomers.isTicketClosed(t),
                     statusClass: ticketMeta.badgeClass
                 };
             });
@@ -1308,7 +1316,7 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
                         ? [...new Set(ids)] : [];
                     window.PawpalDataStore?.recordMetric?.('realtime');
                     PawpalCustomers.refreshCustomerData({
-                        directory: directoryTables.has(table), ledger: ledgerTables.has(table),
+                        directory: directoryTables.has(table)||(table==='appointment'&&payload?.new?.appointment_status==='cancelled'), ledger: ledgerTables.has(table),
                         kind: kinds[table] || null, customerIds
                     });
                 });
@@ -1430,7 +1438,10 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
 
     window.addEventListener('admin:module-show', (e) => {
         if (e.detail?.module === 'Kh\u00e1ch h\u00e0ng') {
-            if (directoryDirty || ledgerDirty || profileDirty || historyDirty) scheduleCustomerSync();
+            if (document.getElementById('subtab-tab-profile')?.classList.contains('active')) {
+                const selected = PawpalCustomers.getCustomer(sessionStorage.getItem('pawpal_admin_customer_id'));
+                PawpalCustomers.refreshCustomerData({directory:true,kind:'complaints',customerIds:selected?.dbId?[selected.dbId]:[]});
+            } else if (directoryDirty || ledgerDirty || profileDirty || historyDirty) scheduleCustomerSync();
             if (document.getElementById('subtab-tab-list')?.classList.contains('active')) {
                 PawpalCustomers.subtabs.list?.renderCustomersTable();
                 PawpalCustomers.subtabs.list?.updateCustomerKPIs();

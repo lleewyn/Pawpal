@@ -58,7 +58,7 @@
         if(!requestPanel&&card){requestPanel=document.createElement('section');requestPanel.id='adminStaffRequestPanel';requestPanel.style.cssText='padding:16px 0;border:none;background:transparent';card.prepend(requestPanel);}
         if(requestPanel){
             requestPanel.dataset.bookingId=booking.dbId;
-            import('/pages/admin/modules/services/booking-staff-request.mjs').then(({mountAdminStaffRequest})=>{
+            import('/pages/admin/modules/services/booking-staff-request.mjs?v=20261119_booking_staff_sync').then(({mountAdminStaffRequest})=>{
                 if(!requestPanel.isConnected||requestPanel.dataset.bookingId!==booking.dbId)return;
                 mountAdminStaffRequest(requestPanel,booking,{client:window.getSupabaseClient(),staff:PawpalServices.state.liveStaffList||[],enhance:()=>PawpalServices.enhanceEntitySelects(),canWrite:window.PawpalAdminAccess?.state.user?.permissions?.includes('appointment.write'),errorMessage:PawpalServices.errorMessage,onSaved:async()=>{await PawpalServices.loadServicesData({force:true,forceDirectory:false,forceStaff:false,prefetch:false});await PawpalServices.ensureBooking(booking.dbId,{force:true});renderBookingDetail(booking.id);}});
             }).catch(()=>{requestPanel.textContent='Không tải được phần xác nhận nhân viên. Vui lòng thử lại.';});
