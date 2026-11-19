@@ -1,0 +1,12 @@
+const fs=require('fs'),assert=require('node:assert/strict');const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');const {infra}=require('../database/v1/cloud_connection.cjs');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{const page=await browser.newPage({viewport:{width:1400,height:1000},locale:'vi-VN'});const credentials=fs.readFileSync(infra+'/PAWPAL-ADMIN.private.txt','utf8');
+ await page.goto('http://localhost:4000/admin/login');await page.locator('#inputAdminEmail').fill(credentials.match(/^Email: (.+)$/m)[1].trim());await page.locator('#inputAdminPassword').fill(credentials.match(/^Password: (.+)$/m)[1].trim());await page.locator('#btnSubmitAdminLogin').click();await page.waitForURL(u=>!u.pathname.includes('/login'));
+ await page.evaluate(()=>{location.hash='tab-complaint-orders';});await page.waitForFunction(()=>Boolean(window.PawpalComplaints?.openTicketDetail),{timeout:30000});
+ await page.evaluate(()=>PawpalComplaints.openTicketDetail('7c55ce88-ed57-4a93-b09f-9b28ad2adadf'));
+ await page.locator('#btnCompleteComplaint').click();await page.locator('#complaintEvidenceSearch').fill('RP-7f53383');await page.locator('#complaintEvidenceDropdown button').first().click();
+ assert.equal(await page.locator('#complaintEvidenceId').inputValue(),'ab677a20-1b8e-4c4c-920b-ca0dd492c0c0');assert.equal(await page.locator('#complaintReplacementId').inputValue(),'7f53383f-65f5-49dc-a78a-79e6f26195cb');
+ await page.locator('#complaintReplacementSearch').click();assert.equal(await page.locator('#complaintReplacementDropdown').isVisible(),false);
+ await page.locator('#inputResolveNote').fill('Xử lý đổi sản phẩm lỗi cho khách có khiếu nại.');assert.equal(await page.locator('#btnConfirmResolveTicket').isEnabled(),true);
+ fs.mkdirSync('docs/verification',{recursive:true});await page.mouse.move(5,5);await page.locator('#resolveTicketModalOverlay .admin-modal-card').screenshot({path:'docs/verification/complaint-exchange-linked-result.png'});
+ console.log('PASS live exchange selection, correct return and replacement IDs, read-only auto-fill, confirmation enabled; no live complaint mutation');
+ }finally{await browser.close();}})().catch(e=>{console.error(e.message);process.exitCode=1;});

@@ -255,6 +255,7 @@
   }
   $('btnConfirmResolveTicket').disabled=false;
   $('complaintEvidenceSearch').disabled=false;
+  $('complaintEvidenceSearch').style.width=$('complaintReplacementSearch').style.width='100%';
   $('complaintReplacementSearch').readOnly=mode==='complete' && t.resolution_type==='rma_exchange';
   $('inputResolveNote').value='';$('inputResolveAmount').value='';$('selectResolveOption').value='';text('resolveTicketModalOverlayError','');
   if(mode==='resolve'&&t.proposal_rejected_at)$('selectResolveOption').value='reject';
@@ -279,6 +280,11 @@
   $('complaintEvidenceSearch').disabled=true;
   bindEvidence('complaintEvidence',[]);
   bindEvidence('complaintReplacement',[]);
+  if(t.resolution_type==='rma_exchange'){
+   const linked=$('complaintReplacementSearch');linked.onfocus=null;linked.oninput=null;linked.onblur=null;
+   linked.readOnly=true;linked.placeholder='Tự động điền theo kết quả đổi trả đã chọn';
+   $('complaintReplacementDropdown').style.display='none';
+  }
   try{
    let rows=[],replacementRows=[];
    const order=mod.state.cachedOrders.find(o=>o.order_code===t.orderId || o.id===t.orderId);
