@@ -149,18 +149,21 @@
         const prefix = 'pawpal_guest_support_claim:';
         const receipts = Object.keys(sessionStorage).filter(key => key.startsWith(prefix)).map(key => key.slice(prefix.length));
         const ids = preferred ? [preferred] : receipts;
+        let claimError=null;
         const validId = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i;
         for (const id of ids) {
             try {
                 const proof = sessionStorage.getItem(prefix + id);
-                if (!validId.test(id) || !validId.test(proof || '')) throw Object.assign(Error(), {reason:'guest_contact_claim_invalid'});
+                if (!validId.test(id) || (proof !== null && !validId.test(proof))) throw Object.assign(Error(), {reason:'guest_contact_claim_invalid'});
                 const saved = await rpc('claim_own_guest_contact_ticket', {p_ticket:id,p_proof:proof});
                 if (saved !== id) throw Error('claim_result_invalid');
                 sessionStorage.removeItem(prefix + id);
             } catch (error) {
                 if (preferred) throw error;
+                claimError??=error;
             }
         }
+        if(claimError)throw claimError;
     }
 
     window.PawPalSupport = {

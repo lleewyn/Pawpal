@@ -1,0 +1,25 @@
+const fs=require('fs'),assert=require('node:assert/strict'),{randomUUID}=require('crypto');const {connect}=require('../database/v1/service_import_connection.cjs');const {infra}=require('../database/v1/cloud_connection.cjs');const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+(async()=>{const db=await connect(),uid=randomUUID(),cid=randomUUID(),order=randomUUID(),voucher=randomUUID(),pointsTicket=randomUUID(),voucherTicket=randomUUID(),code='VERIFY-'+voucher.slice(0,8);let browser;
+try{
+ await db.query('BEGIN');const actor=(await db.query("select s.id from staff s join staff_role r on r.staff_id=s.id where r.role_code='ADMIN' and s.employment_status='active' and not s.must_change_password limit 1")).rows[0];
+ await db.query('insert into auth.users(id) values($1)',[uid]);await db.query('insert into customer(id,auth_user_id,customer_code) values($1,$2,$3)',[cid,uid,'VERIFY-'+cid]);await db.query("insert into customer_profile(customer_id,full_name) values($1,'Khách kiểm tra')",[cid]);
+ await db.query('insert into sales_order(id,order_code,customer_id) values($1,$2,$3)',[order,'VERIFY-'+order,cid]);
+ await db.query("insert into voucher(id,voucher_code,voucher_name,type,applicable_for,discount_value,start_date,end_date,is_active) values($1,$2,'Voucher xác minh','fixed','all',10000,current_date-1,current_date+7,true)",[voucher,code]);
+ for(const id of [pointsTicket,voucherTicket])await db.query("insert into support_ticket(id,ticket_code,customer_id,order_id,channel,type,priority,category,subject,description,status,assigned_staff_id) values($1,$2,$3,$4,'web','complaint','medium','order','Kiểm tra phương án bồi hoàn','Dữ liệu xác minh chức năng','new',$5)",[id,'VERIFY-'+id,cid,order,actor.id]);await db.query('COMMIT');
+ browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage({viewport:{width:1400,height:1000},locale:'vi-VN'});const credentials=fs.readFileSync(infra+'/PAWPAL-ADMIN.private.txt','utf8');
+ await page.goto('http://localhost:4000/admin/login');await page.locator('#inputAdminEmail').fill(credentials.match(/^Email: (.+)$/m)[1].trim());await page.locator('#inputAdminPassword').fill(credentials.match(/^Password: (.+)$/m)[1].trim());await page.locator('#btnSubmitAdminLogin').click();await page.waitForURL(u=>!u.pathname.includes('/login'));
+ await page.evaluate(()=>{location.hash='tab-complaint-orders';});await page.waitForFunction(()=>Boolean(window.PawpalComplaints?.openTicketDetail));
+ for(const [id,option]of [[pointsTicket,'points'],[voucherTicket,'voucher']]){
+  await page.evaluate(id=>PawpalComplaints.openTicketDetail(id),id);await page.locator('#btnOpenResolveModal').click();await page.locator('#selectResolveOption').selectOption(option);await page.locator('#inputResolveNote').fill('Bồi hoàn cho khách sau khi xác minh khiếu nại.');
+  if(option==='points')await page.locator('#inputResolveAmount').fill('10');else{
+   await page.locator('#complaintVoucherCode').fill('MISSING-VERIFY-CODE');await page.locator('#btnConfirmResolveTicket').click();await page.locator('#resolveTicketModalOverlayError').filter({hasText:'Không tìm thấy voucher'}).waitFor();
+   await page.locator('#resolveTicketModalOverlay .admin-modal-card').screenshot({path:'docs/verification/complaint-invalid-voucher-message.png'});await page.locator('#complaintVoucherCode').fill(code);
+  }
+  await page.locator('#btnConfirmResolveTicket').click();await page.locator('#resolveTicketModalOverlay').waitFor({state:'hidden'});
+  const t=(await db.query('select status,resolution_type from support_ticket where id=$1',[id])).rows[0];assert.equal(t.status,'waiting_manager_approval');assert.equal(t.resolution_type,option);
+  await page.mouse.move(5,5);await page.waitForTimeout(600);await page.screenshot({path:'docs/verification/complaint-'+option+'-pending-approval.png'});console.log('PASS '+option+' proposal saved and awaits manager approval');
+ }
+}catch(error){console.error('Verification:',error.message);throw error;}finally{
+ if(browser)await browser.close();await db.query('ROLLBACK').catch(()=>{});
+ await db.query('BEGIN');try{await db.query('delete from notification where support_ticket_id=any($1::uuid[]) or sales_order_id=$2',[[pointsTicket,voucherTicket],order]);await db.query('delete from support_ticket_message where ticket_id=any($1::uuid[])',[[pointsTicket,voucherTicket]]);await db.query('delete from support_ticket where id=any($1::uuid[])',[[pointsTicket,voucherTicket]]);await db.query('delete from sales_order where id=$1',[order]);await db.query('delete from voucher where id=$1',[voucher]);await db.query('delete from customer_profile where customer_id=$1',[cid]);await db.query('delete from customer where id=$1',[cid]);await db.query('delete from auth.users where id=$1',[uid]);await db.query('COMMIT');}catch(e){await db.query('ROLLBACK');throw e;}finally{await db.end();}
+}})().catch(e=>{console.error(e.message);process.exitCode=1;});

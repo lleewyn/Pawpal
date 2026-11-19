@@ -59,29 +59,7 @@ function createGuestCommerce({admin,secret,origins,production=true,otpPreviewOri
       !validText(message,4000)||!['','spa','hotel','taxi','other'].includes(serviceInterest)){
      return res.status(400).json({success:false,message:'Kiểm tra họ tên, số điện thoại, tiêu đề và nội dung liên hệ.'});
     }
-    let ticketCode;
-    try {
-     ticketCode=await rpc('create_claimable_guest_contact_ticket',{p_id:requestId,p_proof:proof,p_name:fullName,p_phone:phone,p_subject:subject,p_interest:serviceInterest,p_message:message});
-    } catch(rpcErr) {
-     const code='LH-'+requestId.slice(0,8).toUpperCase();
-     const interestMap={spa:'Tắm sấy và Cắt tỉa',hotel:'Khách sạn thú cưng',taxi:'Đưa đón thú cưng (Pet Taxi)',other:'Khác'};
-     const interestText=interestMap[serviceInterest]?`Dịch vụ quan tâm: ${interestMap[serviceInterest]}\n\n`:'';
-     const fullDesc=`Họ và tên: ${fullName}\nSố điện thoại: ${phone}\n${interestText}${message.trim()}`;
-     const {data:existing}=await admin.from('support_ticket').select('ticket_code').eq('id',requestId).maybeSingle();
-     if(existing?.ticket_code){
-      ticketCode=existing.ticket_code;
-     } else {
-      const {error:insErr}=await admin.from('support_ticket').insert({
-       id:requestId,ticket_code:code,channel:'contact',category:'other',subject:subject.trim(),description:fullDesc,priority:'normal',type:'contact',status:'pending'
-      });
-      if(insErr){console.error('[GuestCommerce] Fallback ticket insert error:',insErr);throw insErr;}
-      try{await admin.from('support_ticket_message').insert({ticket_id:requestId,sender_type:'system',content:fullDesc,is_internal:false});}catch(_){}
-      try{
-       await admin.from('notification').insert({notification_type:'support_status',title:'Khách liên hệ: '+subject.trim(),content:`${fullName} (${phone}) vừa gửi tin nhắn liên hệ mới.`,support_ticket_id:requestId});
-      }catch(_){}
-      ticketCode=code;
-     }
-    }
+    const ticketCode=await rpc('create_claimable_guest_contact_ticket',{p_id:requestId,p_proof:proof,p_name:fullName,p_phone:phone,p_subject:subject,p_interest:serviceInterest,p_message:message});
     return res.json({success:true,ticketCode});
    }
    if(action==='phone-lookup'){

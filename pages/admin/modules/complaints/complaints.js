@@ -384,7 +384,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             complaint_request_conflict:'Yêu cầu đã được lưu với nội dung khác. Đóng và mở lại để tạo thao tác mới.',
             complaint_approval_forbidden:'Chỉ tài khoản có vai trò quản trị mới được duyệt phương án.',
             complaint_forbidden:'Bạn không có quyền thực hiện thao tác này.',
-            complaint_voucher_unavailable:'Mã voucher giảm theo số tiền đã hết hiệu lực, hết lượt hoặc đã thay đổi. Kiểm tra và gửi lại đề xuất.',
+            complaint_voucher_unavailable:'Không tìm thấy voucher giảm theo số tiền còn hiệu lực, hoặc voucher đã hết lượt/thay đổi. Kiểm tra mã và điều kiện voucher rồi gửi lại đề xuất.',
             complaint_handler_unavailable:'Nhân viên chưa đủ điều kiện nhận xử lý. Chọn nhân viên khác.',
             complaint_note_required:'Vui lòng nhập nội dung từ 2 ký tự.',
             invalid_complaint_resolution:'Kiểm tra phương án, số tiền và giao dịch liên quan.',

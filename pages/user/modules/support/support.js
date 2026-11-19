@@ -342,7 +342,10 @@ export function initSupportTickets() {
                 ticketTimelineMessages.append(nav);
             }
 
-            const messages = ticket?.messages || [];
+            const messages = [...(ticket?.messages || [])];
+            if(ticket.description&&!messages.some(message=>message.text===ticket.description)){
+                messages.unshift({sender:'user',text:ticket.description,time:ticket.createdAt});
+            }
             if (messages.length === 0) {
                 ticketTimelineMessages.innerHTML = `
                     <div class="text-center text-muted small py-3">Chưa có tin nhắn trao đổi nào.</div>
@@ -429,7 +432,8 @@ export function initSupportTickets() {
                 statusClass = 'badge-status-completed';
             }
 
-            const canReopen = Boolean(ticket.reopenUntil) && Date.now() < Date.parse(ticket.reopenUntil);
+            const completedByCustomer = ['closed','completed'].includes(ticket.status) && Boolean(ticket.rating);
+            const canReopen = !completedByCustomer && Boolean(ticket.reopenUntil) && Date.now() < Date.parse(ticket.reopenUntil);
             const closedForMissingInfo = ticket.autoCloseReason === 'no_customer_reply';
             const waitingAlertEl = document.getElementById('detailWaitingCustomerAlert');
             if (waitingAlertEl) {
@@ -741,7 +745,7 @@ export function initSupportTickets() {
                 } catch (error) {
                     if (activeTicketId !== targetTicketId || !textarea.isConnected) return;
                     console.error('[Support] Không thể gửi phản hồi:', error);
-                    const message = {support_reply_expired:'Đã hết hạn bổ sung. Vui lòng tải lại phiếu để kiểm tra thời hạn mở lại.',support_reply_closed:'Đã hết hạn mở lại. Vui lòng tạo yêu cầu mới.'};
+                    const message = {support_reply_expired:'Đã hết hạn bổ sung. Vui lòng tải lại phiếu để kiểm tra thời hạn mở lại.',support_reply_closed:'Phiếu đã hoàn tất và khóa phản hồi. Vui lòng tạo yêu cầu mới nếu cần hỗ trợ thêm.'};
                     window.alert(message[error.reason || error.message] || error.message || 'Không thể gửi phản hồi. Vui lòng thử lại.');
                 } finally {
                     replySaving=false;textarea.disabled=false;const mediaRoot=document.getElementById('supportReplyMedia');if(mediaRoot)mediaRoot.inert=false;
@@ -857,7 +861,7 @@ export function initSupportTickets() {
                 history.replaceState(history.state, '', '#support?id=' + encodeURIComponent(claim));
             }
         } catch (error) {
-            if (claim && ticketsTableArea?.isConnected) {
+            if (ticketsTableArea?.isConnected) {
                 const feedback = document.createElement('p');
                 feedback.setAttribute('role','alert');
                 feedback.textContent = error.reason === 'guest_contact_claim_phone_mismatch'
