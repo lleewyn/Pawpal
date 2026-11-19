@@ -1,0 +1,87 @@
+const fs=require('fs');
+let source=fs.readFileSync(require.resolve('./customer_booking_cloud_read.cjs'),'utf8');
+source=source.slice(0,source.indexOf('  browser=await chromium.launch'))+`
+  browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1366,height:1000},locale:'vi-VN'});
+  await page.addLocatorHandler(page.locator('#pawpal-site-popup'),async()=>{await page.locator('#pawpal-site-popup .site-popup-btn-close').click();},{noWaitAfter:true});
+  await page.goto('http://localhost:4000/login');await page.locator('#loginPhone').fill(phone);await page.locator('#btnLoginContinue').click();
+  for(let i=0;i<8;i++){const close=page.locator('#pawpal-site-popup button').filter({hasText:/Đóng|Bỏ qua/}).first();if(await close.isVisible())await close.click();else break;}
+  await page.locator('#loginPassword').fill(password);await page.locator('#btnLoginSubmit').click();await page.waitForURL(/\\/user\\/?/,{timeout:45000});
+  await page.waitForFunction(()=>Boolean(window.API?.getUserBookings),{timeout:30000});
+  await page.evaluate(()=>{location.hash='bookings';});
+  await page.locator('.btn-change-schedule').first().waitFor({timeout:30000});await page.locator('.btn-change-schedule').first().click();
+  await page.locator('#bookingMoveService option').nth(1).waitFor({state:'attached'});
+  await page.locator('#bookingMoveService').selectOption(upgradeService);
+  const day=new Date(Date.now()+3*86400000).toISOString().slice(0,10);
+  await page.locator('#bookingMoveStart').fill(day+'T10:00');await page.locator('#bookingMoveReason').selectOption({label:'Thay đổi gói dịch vụ'});
+  await page.locator('#bookingMoveQuote').click();
+  await page.waitForFunction(()=>!document.getElementById('bookingMovePreview').hidden||!document.getElementById('bookingMoveError').hidden);
+  assert.equal(await page.locator('#bookingMoveError').isVisible(),false,await page.locator('#bookingMoveError').textContent());
+  assert.match(await page.locator('#bookingMoveTotal').textContent(),/70[.,]000/);
+  fs.mkdirSync('docs/verification',{recursive:true});
+  await page.mouse.move(5,5);
+  await page.waitForTimeout(300);
+  await page.screenshot({path:'docs/verification/booking-move-price-difference-desktop.png'});
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:'docs/verification/booking-move-price-difference-mobile.png'});
+  if(process.argv.includes('--status')){
+   const hotelCategory=await ok(service.from('service_category').select('id').eq('category_code','pet_hotel').single());
+   const hotel=(await ok(service.from('service').select('id').eq('category_id',hotelCategory.id).eq('status','active').limit(1)))[0];
+   assert.ok(hotel,'Live Hotel service required');
+   const rejected=await page.evaluate(async({id,hotel,start})=>{const r=await window.getSupabaseClient().rpc('quote_own_booking_service',{p_id:id,p_start:start,p_end:null,p_service:hotel});return r.error?.message;},{id:ids[0],hotel:hotel.id,start:new Date(Date.now()+3*86400000).toISOString()});
+   assert.equal(rejected,'service_change_not_supported');
+   await page.locator('#quickRescheduleBookingModal').evaluate(el=>el.close());
+   const worker=(await ok(service.from('staff').select('id').eq('employment_status','active').limit(1)))[0];
+   await ok(service.from('appointment').update({appointment_status:'checked_in',requested_staff_id:worker.id,staff_confirmation_status:'pending'}).eq('id',ids[0]));
+   await page.setViewportSize({width:1366,height:1000});await page.reload();
+   await page.waitForFunction(()=>Boolean(window.API?.getUserBookings));
+   await page.evaluate(()=>{location.hash='bookings';});
+   await page.getByText('Đã tiếp nhận',{exact:true}).waitFor();
+   const rows=await page.evaluate(async()=>window.API.getUserBookings(JSON.parse(localStorage.getItem('pawpal_current_user'))));
+   const accepted=rows.find(b=>b._supabaseId===ids[0]);assert.equal(accepted.status,'accepted');assert.equal(accepted.staffRequest,null);
+   await page.locator('.booking-card').filter({hasText:'Đã tiếp nhận'}).evaluate(el=>el.scrollIntoView({block:'start'}));
+   await page.waitForTimeout(1000);await page.mouse.move(5,5);
+   await page.locator('.booking-card').filter({hasText:'Đã tiếp nhận'}).screenshot({path:'docs/verification/booking-accepted-correct-status.png'});
+   console.log('PASS Spa to Hotel rejected by server; checked-in booking displays accepted despite stale staff request');
+  }
+  if(process.argv.includes('--boundary')){
+   await page.setViewportSize({width:1366,height:1000});
+   await page.locator('#quickConfirmRescheduleBtn').click();
+   await page.locator('#quickRescheduleBookingModal').waitFor({state:'detached'});
+   await page.getByText('Đã đổi lịch: 1/2 lần',{exact:true}).waitFor();
+   await page.waitForTimeout(5000);
+   await page.mouse.move(5,5);await page.screenshot({path:'docs/verification/booking-move-first-of-two.png'});
+   const changed=page.locator('.booking-card').filter({hasText:'Đã đổi lịch: 1/2 lần'});
+   await changed.locator('.btn-change-schedule').click();
+   await page.locator('#bookingMoveStart').fill(new Date(Date.now()+4*86400000).toISOString().slice(0,10)+'T10:00');
+   await page.locator('#bookingMoveReason').selectOption({label:'Bận việc đột xuất'});
+   await page.locator('#bookingMoveQuote').click();await page.locator('#quickConfirmRescheduleBtn').waitFor({state:'visible'});
+   await page.waitForFunction(()=>!document.getElementById('quickConfirmRescheduleBtn').disabled);
+   await page.locator('#quickConfirmRescheduleBtn').click();await page.locator('#quickRescheduleBookingModal').waitFor({state:'detached'});
+   await page.getByText(/Đã đổi lịch: 2\\/2 lần/).waitFor();
+   await page.waitForTimeout(5000);
+   assert.equal(await page.locator('.booking-card').filter({hasText:'Đã đổi lịch: 2/2 lần'}).locator('.btn-change-schedule').count(),0);
+   await page.mouse.move(5,5);await page.screenshot({path:'docs/verification/booking-move-second-of-two.png'});
+   const saved=await ok(service.from('appointment').select('id,change_count,scheduled_start_at').in('id',ids).eq('change_count',2).single());
+   assert.equal(saved.change_count,2);
+   const third=await page.evaluate(async({id,start})=>{const db=window.getSupabaseClient();const r=await db.rpc('quote_own_booking_service',{p_id:id,p_start:start,p_end:null,p_service:null});return r.error?.message;},{id:saved.id,start:new Date(Date.now()+5*86400000).toISOString()});
+   assert.equal(third,'booking_change_window_closed');
+   console.log('PASS persisted moves 1/2 and 2/2; third move blocked by server');
+  }
+  console.log('PASS live database price preview; desktop and mobile evidence saved');
+`+source.slice(source.indexOf(' }catch(error){'));
+source=source.replaceAll('700','220000').replaceAll('unit_price:100,','unit_price:150000,');
+source=source.replaceAll('price===100','price===150000').replaceAll('Move verification service','Gói chăm sóc nâng cao').replaceAll('Booking pet verification','Miu Miu');
+source=source.replace('let uid,cid,pet,browser,page,moveService;','let uid,cid,pet,browser,page,moveService,upgradeService;');
+source=source.replace('  browser=await chromium.launch',`
+  await ok(service.from('service').update({service_name:'Tắm cơ bản'}).eq('id',moveService));
+  await ok(service.from('appointment_item').update({name_snapshot:'Tắm cơ bản'}).in('appointment_id',ids));
+  upgradeService=crypto.randomUUID();
+  const original=await ok(service.from('service').select('category_id').eq('id',moveService).single());
+  await ok(service.from('service').insert({id:upgradeService,service_code:'TEST-'+upgradeService,service_name:'Gói chăm sóc nâng cao',estimated_duration:90,status:'active',category_id:original.category_id}));
+  await ok(service.from('service_supported_species').insert({service_id:upgradeService,species_id:breed.species_id}));
+  await ok(service.from('service_price_matrix').insert({service_id:upgradeService,weight_from:0,weight_to:null,unit_price:220000,effective_from:new Date(Date.now()-86400000).toISOString(),status:'active'}));
+  browser=await chromium.launch`);
+source=source.replace('  if(moveService){',"  if(upgradeService){for(const table of ['service_supported_species','service_price_matrix'])await ok(service.from(table).delete().eq('service_id',upgradeService));await ok(service.from('service').delete().eq('id',upgradeService));}\n  if(moveService){");
+process.argv.push('--move');
+source=source.replace("await ok(service.from('customer').delete().eq('id',cid));","await ok(service.from('customer').update({auth_user_id:null,customer_status:'inactive'}).eq('id',cid));");
+eval(source);

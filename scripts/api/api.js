@@ -137,7 +137,7 @@ export const API = {
                 .from('appointment')
                 .select(`
                     id, appointment_code, scheduled_start_at, scheduled_end_at, check_in_time, check_out_time,
-                    appointment_status, note, change_count, updated_at, staff_id,
+                    appointment_status, note, change_count, updated_at, staff_id, staff_confirmation_status,
                     staff:staff_id ( id, full_name ),
                     appointment_item (
                         id, service_id, name_snapshot, quantity, unit_price, discount_amount, duration_minutes, is_primary, status,
@@ -173,7 +173,7 @@ export const API = {
                 const s = String(status).toLowerCase().trim();
                 if (['dang_giu_cho', 'tam_giu', 'cho_xac_nhan', 'pending'].includes(s)) return 'pending';
                 if (['da_xac_nhan', 'confirmed', 'upcoming'].includes(s)) return 'confirmed';
-                if (['da_check_in', 'accepted', 'checked_in'].includes(s)) return 'accepted';
+                if (['da_check_in', 'da_tiep_nhan', 'accepted', 'checked_in'].includes(s)) return 'accepted';
                 if (['dang_thuc_hien', 'in_progress', 'in-progress', 'ready_for_pickup'].includes(s)) return 'in-progress';
                 if (['da_hoan_tat', 'completed', 'done'].includes(s)) return 'completed';
                 if (['da_huy', 'cancelled', 'da_het_han', 'expired', 'vang_mat', 'no_show'].includes(s)) return 'cancelled';
@@ -213,7 +213,7 @@ export const API = {
                     reviewedItemIds: summary.reviewed_item_ids || [],
                     status:          mapAppointmentStatus(b.appointment_status),
                     bookingStatus:   b.appointment_status,
-                    staffRequest:    summary.staff_request || null,
+                    staffRequest:    ['accepted','in-progress','completed','cancelled'].includes(mapAppointmentStatus(b.appointment_status)) ? null : summary.staff_request ? { ...summary.staff_request, status: b.staff_confirmation_status || summary.staff_request.status } : null,
                     contactPhone:    summary.contact_phone || null,
                     staff:           b.staff?.full_name || summary.staff_request?.requested_staff_name || summary.logistics?.staff_name || '',
                     staffId:         b.staff_id || summary.staff_request?.requested_staff_id || null,
@@ -221,7 +221,7 @@ export const API = {
                     service:         primaryItem?.name_snapshot || primaryItem?.service?.service_name || 'Dịch vụ PawPal',
                     serviceName:     primaryItem?.name_snapshot || primaryItem?.service?.service_name || 'Dịch vụ PawPal',
                     serviceCategory: primaryItem?.service?.category_id || '',
-                    isHotel:         /pet[-_ ]?hotel|khách\s*sạn|lưu\s*trú|suite|condo|villa/i.test(primaryItem?.name_snapshot || primaryItem?.service?.service_name || ''),
+                    isHotel:         summary.logistics?.kind === 'pet_hotel' || /pet[-_ ]?hotel|khách\s*sạn|lưu\s*trú|suite|condo|villa/i.test(primaryItem?.name_snapshot || primaryItem?.service?.service_name || ''),
                     items:           items.map(itm => ({
                         id: itm.id,
                         status: itm.status,

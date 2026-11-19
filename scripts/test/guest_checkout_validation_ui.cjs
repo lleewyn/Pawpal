@@ -16,11 +16,14 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   const {initGuestCheckout}=await import('/pages/shop/checkout/guest-checkout.mjs');window.started=initGuestCheckout();
  });
  assert.equal(await page.isDisabled('#guest-quote-button'),true);assert.equal(await page.isDisabled('#guest-place-order'),true);await page.evaluate(async()=>{finishOptions();await started;});
+ assert.equal(await page.inputValue('#guest-delivery'),'');assert.equal(await page.inputValue('#guest-payment'),'');
+ assert.equal(await page.getAttribute('#guest-delivery','required'),'');
  const check=async(id)=>{assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'true');assert.ok(await page.locator('#'+id+'-error').textContent());assert.equal(await page.getAttribute('#'+id,'aria-describedby'),id+'-error');};
- await page.click('#guest-place-order');await check('guest-name');await check('guest-phone');assert.equal(await page.evaluate(()=>document.activeElement.id),'guest-name');
+ await page.click('#guest-place-order');await check('guest-name');await check('guest-phone');await check('guest-delivery');await check('guest-payment');assert.equal(await page.evaluate(()=>document.activeElement.id),'guest-name');
+ await page.selectOption('#guest-payment','payment');
  await page.fill('#guest-name','   ');await page.fill('#guest-phone','123');await page.click('#guest-quote-button');await check('guest-name');await check('guest-phone');assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-quote').length),0);
  await page.fill('#guest-name','Test owner');await page.fill('#guest-phone','+84 (912) 345-678');await page.selectOption('#guest-delivery','delivery');await page.fill('#guest-receiver','   ');await page.fill('#guest-receiver-phone','123');await page.fill('#guest-street','   ');await page.click('#guest-quote-button');for(const id of ['guest-receiver','guest-receiver-phone','guest-street','guest-province'])await check(id);
- await page.selectOption('#guest-delivery','');for(const id of ['guest-receiver','guest-receiver-phone','guest-street','guest-province'])assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'false');
+ await page.selectOption('#guest-delivery','pickup');for(const id of ['guest-receiver','guest-receiver-phone','guest-street','guest-province'])assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'false');
  await page.evaluate(()=>{document.getElementById('guest-note').value='x'.repeat(4001);});await page.click('#guest-quote-button');await check('guest-note');assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-quote').length),0);await page.fill('#guest-note','Test note');
  await page.addStyleTag({content:fs.readFileSync('node_modules/bootstrap/dist/css/bootstrap.min.css','utf8')+fs.readFileSync('pages/shop/checkout/checkout.css','utf8')+fs.readFileSync('styles/transaction-receipt.css','utf8')});
  await page.setViewportSize({width:1280,height:1000});

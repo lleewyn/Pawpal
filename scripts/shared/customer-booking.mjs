@@ -4,6 +4,7 @@ function bookingMoveError(error) {
     const messages={booking_change_window_closed:'Lịch không còn trong thời gian hoặc số lần được tự đổi. Vui lòng liên hệ cửa hàng.',
         booking_requires_staff_reconciliation:'Lịch có thanh toán, ưu đãi hoặc điều chỉnh cần đối soát. Vui lòng liên hệ cửa hàng để đổi lịch.',
         booking_quote_changed_reload_required:'Lịch hoặc bảng giá đã thay đổi. Vui lòng xem lại giá trước khi xác nhận.',
+        service_change_not_supported:'Không hỗ trợ đổi từ Spa sang Hotel. Vui lòng hủy lịch hiện tại và đặt lịch mới nếu muốn đổi loại hình dịch vụ.',
         staff_schedule_conflict:'Nhân viên đang có lịch hoặc không khả dụng ở thời gian này. Vui lòng chọn thời gian khác.',
         hotel_room_conflict:'Phòng đã có lịch ở thời gian này. Vui lòng chọn thời gian khác.',
         ambiguous_service_price:'Chưa xác định được bảng giá phù hợp. Vui lòng liên hệ cửa hàng.',
@@ -18,62 +19,20 @@ function bookingMoveError(error) {
     return new Error(messages[error?.message] || 'Không thể đổi lịch. Vui lòng tải lại hoặc liên hệ cửa hàng.');
 }
 
-export async function quoteCustomerBookingMove(client,user,booking,start,end) {
+export async function quoteCustomerBookingMove(client,user,booking,start,end,serviceId=null) {
     await resolveAuthenticatedCustomerId(client,user);
-    if(!booking?._supabaseId || !start)throw new Error('Vui lòng chọn thời gian mới.');
-    let res = null;
-    if (end) {
-        res = await client.rpc('quote_own_booking_move',{p_id:booking._supabaseId,p_start:start,p_end:end});
-        if (res.error && (res.error.code === 'PGRST202' || String(res.error.message || '').includes('p_end') || String(res.error.message || '').includes('Could not find the function'))) {
-            res = null;
-        }
-    }
-    if (!res) {
-        res = await client.rpc('quote_own_booking_move',{p_id:booking._supabaseId,p_start:start});
-    }
-    const {data,error}=res;
+    const {data,error}=await client.rpc('quote_own_booking_service',{p_id:booking._supabaseId,p_start:start,p_end:end||null,p_service:serviceId});
     if(error)throw bookingMoveError(error);
-    if(!data?.version || data.id!==booking._supabaseId || !Number.isFinite(Number(data.total)))throw new Error('Chưa nhận được giá mới. Vui lòng thử lại.');
-    if (end && data.end_at !== end) {
-        data.end_at = end;
-        if (data.logistics?.kind === 'pet_hotel' && data.logistics.daily_price) {
-            const startMs = new Date(data.start_at).getTime();
-            const endMs = new Date(end).getTime();
-            const days = Math.max(1, Math.ceil((endMs - startMs) / 86400000));
-            data.total = days * Number(data.logistics.daily_price);
-            data.hotel_days = days;
-        }
-    }
-    return data;
+    if(!data?.version||data.id!==booking._supabaseId||!Number.isFinite(Number(data.total)))throw new Error('Chưa nhận được giá mới. Vui lòng thử lại.');
+    return {...data,serviceId};
 }
 
 export async function moveCustomerBooking(client,user,booking,quote,reason,requestId,end) {
     await resolveAuthenticatedCustomerId(client,user);
-    if(!quote?.version || quote.id!==booking?._supabaseId || !requestId || !String(reason || '').trim())throw new Error('Vui lòng xem giá mới và nhập lý do đổi lịch.');
-    const targetEnd = end;
-    let res = null;
-    if (targetEnd) {
-        res = await client.rpc('reschedule_own_service_booking',{
-            p_request_id:requestId,p_id:booking._supabaseId,p_start:quote.start_at,p_expected_quote:quote.version,p_reason:reason.trim(),p_end:targetEnd
-        });
-        if (res.error && (res.error.code === 'PGRST202' || String(res.error.message || '').includes('p_end') || String(res.error.message || '').includes('Could not find the function'))) {
-            res = null;
-        }
-    }
-    if (!res) {
-        res = await client.rpc('reschedule_own_service_booking',{
-            p_request_id:requestId,p_id:booking._supabaseId,p_start:quote.start_at,p_expected_quote:quote.version,p_reason:reason.trim()
-        });
-    }
-    const {data,error}=res;
+    if(!quote?.version||!String(reason||'').trim())throw new Error('Vui lòng xem giá mới và chọn lý do.');
+    const {data,error}=await client.rpc('reschedule_own_booking_service',{p_request_id:requestId,p_id:booking._supabaseId,p_start:quote.start_at,p_expected_quote:quote.version,p_reason:reason.trim(),p_end:end||null,p_service:quote.serviceId||null});
     if(error)throw bookingMoveError(error);
-    if(data!==booking._supabaseId)throw new Error('Chưa nhận được xác nhận đổi lịch. Vui lòng tải lại.');
-    if (targetEnd) {
-        try {
-            await client.from('appointment').update({ scheduled_end_at: targetEnd }).eq('id', booking._supabaseId);
-            await client.from('hotel_booking').update({ check_out_at: targetEnd }).eq('appointment_id', booking._supabaseId);
-        } catch (_) {}
-    }
+    if(data!==booking._supabaseId)throw new Error('Chưa nhận được xác nhận đổi lịch.');
     return data;
 }
 

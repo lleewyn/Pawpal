@@ -12,7 +12,9 @@ export function watchCustomerTables(client, customerId, tables, refresh, {filter
         dirty = true; clearTimeout(timer);
         if (!disposed && !doc?.hidden) timer = setTimeout(flush, 300);
     }
-    const visible = () => { if (!doc?.hidden && dirty) schedule(); };
+    const visible = () => { if (!doc?.hidden) schedule(); };
+    const win = typeof window === 'undefined' ? null : window;
+    win?.addEventListener('focus', visible);
     const channel = client.channel(`customer-view-${customerId}-${Math.random().toString(36).slice(2)}`);
     for (const table of tables) {
         // Child tables derive ownership through order/line RLS; they have no
@@ -24,5 +26,5 @@ export function watchCustomerTables(client, customerId, tables, refresh, {filter
     let subscribed = false;
     channel.subscribe(status => { if (status === 'SUBSCRIBED') { if (subscribed) schedule(); subscribed = true; } });
     doc?.addEventListener('visibilitychange', visible);
-    return () => { disposed = true; clearTimeout(timer); doc?.removeEventListener('visibilitychange', visible); client.removeChannel(channel); };
+    return () => { disposed = true; clearTimeout(timer); doc?.removeEventListener('visibilitychange', visible); win?.removeEventListener('focus', visible); client.removeChannel(channel); };
 }

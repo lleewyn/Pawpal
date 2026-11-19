@@ -258,7 +258,7 @@ function createBookingCard(booking) {
     const isChangeLimited = changeCount >= 2;
 
     // 1. Quy trình 3.1.5: Chỉ cho phép đổi lịch khi trạng thái là "confirmed" (Đã xác nhận)
-    const canModify = (normalizedStatus === 'confirmed') && !isChangeLimited;
+    const canModify = (normalizedStatus === 'confirmed' || (normalizedStatus === 'pending' && changeCount > 0)) && !isChangeLimited;
 
     // 2. Nghiệp vụ Hủy lịch: Chỉ cho phép hủy khi pending hoặc confirmed. Khóa hoàn toàn khi in-progress, accepted, completed, cancelled.
     const canCancel = ['pending', 'confirmed'].includes(normalizedStatus);
@@ -375,7 +375,7 @@ function createBookingCard(booking) {
                     ${booking.staff ? `<span class="booking-meta-item">• Nhân viên: ${escapeHtml(booking.staff)}</span>` : ''}
                     ${booking.branch ? `<span class="booking-meta-item">• Chi nhánh: ${escapeHtml(booking.branch)}</span>` : ''}
                 </div>
-                ${changeCount > 0 ? `<div class="booking-alert-note ${isChangeLimited ? 'limit-reached' : ''}">Đã đổi lịch: ${changeCount} lần${isChangeLimited ? ' (Đã hết lượt đổi)' : ''}</div>` : ''}
+                <div class="booking-alert-note ${isChangeLimited ? 'limit-reached' : ''}">Đã đổi lịch: ${changeCount}/2 lần${isChangeLimited ? ' — Đã dùng lần đổi trực tuyến cuối cùng. Vui lòng liên hệ cửa hàng nếu cần đổi thêm.' : ''}</div>
             </div>
             <div class="booking-status-price-col">
                 <span class="booking-badge-status status-${normalizedStatus}">${escapeHtml(staffRequestLabel(booking.staffRequest,statusLabels[normalizedStatus] || normalizedStatus))}</span>
@@ -611,6 +611,10 @@ export function openBookingMoveModal(booking,onSaved) {
         <button type="button" class="btn-green-outline" data-close-modal="quickRescheduleBookingModal">Đóng</button>
       </div>
       <p style="margin:0;"><strong>${escapeHtml(booking.serviceName || booking.service)}</strong> của <strong>${escapeHtml(booking.petName)}</strong></p>
+      <div><label for="bookingMoveService" class="form-label">Gói dịch vụ mới</label>
+        <select id="bookingMoveService" class="form-control"><option value="">Giữ gói dịch vụ hiện tại</option></select>
+        <p style="margin:8px 0 0;color:#4F7A65;font-size:13px;">Không hỗ trợ đổi từ Spa sang Hotel. Vui lòng hủy lịch hiện tại và đặt lịch mới nếu muốn đổi loại hình dịch vụ.</p>
+      </div>
       <div><label for="bookingMoveStart" class="form-label">Thời gian bắt đầu mới <span style="color:#DC2626;">*</span></label>
         <input type="datetime-local" id="bookingMoveStart" class="form-control" required style="border-radius:9px;">
       </div>
@@ -618,7 +622,9 @@ export function openBookingMoveModal(booking,onSaved) {
         <input type="datetime-local" id="bookingMoveEndInput" class="form-control" required style="border-radius:9px;">
       </div>` : ''}
       <div><label for="bookingMoveReason" class="form-label">Lý do đổi lịch <span style="color:#DC2626;">*</span></label>
-        <textarea id="bookingMoveReason" class="form-control" rows="2" maxlength="2000" required style="border-radius:9px;"></textarea>
+        <select id="bookingMoveReason" class="form-control" required style="border-radius:9px;">
+          <option value="">Chọn lý do đổi lịch</option><option>Bận việc đột xuất</option><option>Bé cưng không khỏe</option><option>Thay đổi gói dịch vụ</option><option>Thay đổi thời gian chăm sóc</option><option>Thời tiết không thuận lợi</option>
+        </select>
       </div>
       <button type="button" class="btn-green-outline" id="bookingMoveQuote">Xem giá và lịch mới</button>
       <div id="bookingMovePreview" role="status" hidden>
@@ -637,7 +643,18 @@ export function openBookingMoveModal(booking,onSaved) {
     const user=window.getCurrentUser?.() || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const db=window.getSupabaseClient?.() || window.SupabaseClient;
     const requestId=crypto.randomUUID();let quote=null,version=0;
+    const serviceInput=modal.querySelector('#bookingMoveService');
     const invalidate=()=>{++version;quote=null;save.disabled=true;preview.hidden=true;error.hidden=true;};
+    serviceInput.addEventListener('change',invalidate);
+    if(isHotel || booking.logistics?.kind==='pet_taxi')serviceInput.disabled=true;
+    else db.rpc('customer_service_catalog').then(({data,error:failure})=>{
+        if(failure){error.textContent='Chưa tải được danh sách gói dịch vụ.';error.hidden=false;return;}
+        for(const service of data?.services||[]){
+            if(service.category!=='grooming_spa')continue;
+            const option=document.createElement('option');option.value=service.id;option.textContent=service.name||service.service_name;serviceInput.append(option);
+        }
+    }).catch(()=>{error.textContent='Chưa tải được danh sách gói dịch vụ.';error.hidden=false;});
+    start.min=vietnamDateTimeInput(new Date(Date.now()+2*3600000));
     if(booking?.scheduledStartAt){
         try{start.value=vietnamDateTimeInput(new Date(booking.scheduledStartAt));}catch(_){}
     }
@@ -674,23 +691,30 @@ export function openBookingMoveModal(booking,onSaved) {
         }
         invalidate();const current=version;quoteButton.disabled=true;
         try{
-            const result=await quoteCustomerBookingMove(db,user,booking,parsed.toISOString(),parsedEnd?parsedEnd.toISOString():null);
+            const result=await quoteCustomerBookingMove(db,user,booking,parsed.toISOString(),parsedEnd?parsedEnd.toISOString():null,serviceInput.value||null);
             if(!modal.isConnected || current!==version)return;
             quote=result;preview.hidden=false;
             modal.querySelector('#bookingMoveEnd').textContent='Kết thúc dự kiến: '+new Date(result.end_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-            modal.querySelector('#bookingMoveTotal').textContent='Tổng tiền mới: '+formatPrice(Number(result.total));save.disabled=false;
+            const oldTotal=Number(booking.price||0),newTotal=Number(result.total),difference=newTotal-oldTotal;
+            const financials=modal.querySelector('#bookingMoveTotal');financials.replaceChildren();
+            for(const text of ['Giá gói cũ: '+formatPrice(oldTotal),'Giá gói mới: '+formatPrice(newTotal),difference>0?'Cần bù: '+formatPrice(difference)+' (thanh toán tại quầy)':difference<0?'Dư: '+formatPrice(-difference)+' (cửa hàng đối soát)':'Không chênh lệch']){const line=document.createElement('span');line.style.display='block';line.textContent=text;financials.append(line);}save.disabled=false;
         }catch(err){if(modal.isConnected&&current===version){error.textContent=err.message;error.hidden=false;}}
         finally{quoteButton.disabled=false;}
     });
     save.addEventListener('click',async()=>{
         if(save.disabled || !quote)return;
         error.hidden=true;if(!reason.value.trim()){error.textContent='Vui lòng nhập lý do đổi lịch.';error.hidden=false;reason.focus();return;}
-        save.disabled=true;quoteButton.disabled=true;start.disabled=true;if(endInput)endInput.disabled=true;reason.disabled=true;
+        save.disabled=true;quoteButton.disabled=true;serviceInput.disabled=true;start.disabled=true;if(endInput)endInput.disabled=true;reason.disabled=true;
         try{
             await moveCustomerBooking(db,user,booking,quote,reason.value,requestId,isHotel&&quote.end_at?quote.end_at:null);
             modal.close();showToast('Đã đổi lịch. Lịch đang chờ cửa hàng xác nhận lại.','success');await onSaved?.();
         }catch(err){if(modal.isConnected){invalidate();error.textContent=err.message;error.hidden=false;}}
-        finally{quoteButton.disabled=false;start.disabled=false;if(endInput)endInput.disabled=false;reason.disabled=false;}
+        finally{quoteButton.disabled=false;serviceInput.disabled=isHotel||booking.logistics?.kind==='pet_taxi';start.disabled=false;if(endInput)endInput.disabled=false;reason.disabled=false;}
     });
+    const oldStart=booking.scheduledStartAt?new Date(booking.scheduledStartAt):parseVietnamDateTimeInput(`${booking.date}T${booking.timeStart||booking.time||'09:00'}`);
+    const eligibilityError=oldStart&&oldStart.getTime()<Date.now()+2*3600000
+        ? 'Lịch hẹn đã qua giờ hoặc còn dưới 2 tiếng, không thể tự đổi lịch. Vui lòng liên hệ cửa hàng.'
+        : Number(booking.changeCount||0)>=2?'Lịch hẹn đã dùng hết 2 lần đổi. Vui lòng liên hệ cửa hàng.':'';
+    if(eligibilityError){error.textContent=eligibilityError;error.hidden=false;quoteButton.disabled=true;start.disabled=true;serviceInput.disabled=true;reason.disabled=true;if(endInput)endInput.disabled=true;}
     modal.showModal();
 }

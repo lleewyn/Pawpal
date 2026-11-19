@@ -545,9 +545,13 @@ function checkBookingModifiability(booking) {
 
     // 1. Nghiệp vụ Thay đổi lịch hẹn (Quy trình 3.1.5):
     // Chỉ kích hoạt khi ca hẹn ở trạng thái "Đã xác nhận" (confirmed)
-    const isConfirmed = currentStatus === 'confirmed';
     const changeCount = Number(booking.changeCount || 0);
+    const isConfirmed = currentStatus === 'confirmed' || (currentStatus === 'pending' && changeCount > 0);
     const changeLimitReached = changeCount >= 2;
+    let changeCounter=document.getElementById('bookingChangeCounter');
+    if(!changeCounter){changeCounter=document.createElement('p');changeCounter.id='bookingChangeCounter';btnChange.parentElement.after(changeCounter);}
+    changeCounter.style.cssText='color:#236B48;margin:12px 0;';
+    changeCounter.textContent=`Đã đổi lịch: ${changeCount}/2 lần${changeLimitReached?' — Đã dùng lần đổi trực tuyến cuối cùng. Vui lòng liên hệ cửa hàng nếu cần đổi thêm.':''}`;
 
     if (!isConfirmed || changeLimitReached || !scheduledAt) {
         btnChange.classList.add('d-none');

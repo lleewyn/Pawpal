@@ -26,7 +26,7 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
  const signHistory=value=>crypto.createHmac('sha256',secret).update('guest-history-page:v1\0'+value).digest('base64url');
  function historyGrant(c,phone){const payload=Buffer.from(JSON.stringify({id:c.id,phone,snapshotOnly:!!c.snapshotOnly,expires:Math.floor(now()/1000)+900})).toString('base64url');return payload+'.'+signHistory(payload);}
  async function historyRows(c,phone,page){
-    let bookingQuery=admin.from('appointment').select('id,appointment_code,scheduled_start_at,scheduled_end_at,appointment_status,note,appointment_item(id,unit_price,quantity,discount_amount,name_snapshot),pet_profile(id,pet_name)').eq('customer_id',c.id);
+    let bookingQuery=admin.from('appointment').select('id,appointment_code,scheduled_start_at,scheduled_end_at,appointment_status,note,change_count,updated_at,appointment_item(id,unit_price,quantity,discount_amount,name_snapshot),pet_profile(id,pet_name)').eq('customer_id',c.id);
     let orderQuery=admin.from('sales_order').select('id,order_code,order_status,cancel_reason,shipping_fee_snapshot,receiver_name_snapshot,receiver_phone_snapshot,street_address_snapshot,province_snapshot,created_at,updated_at,delivered_at,note,sales_order_detail(id,quantity,unit_price,discount_amount,product_name_snapshot,sku_snapshot,product_variant(id,product(id,product_media(image_url,is_thumbnail))))').eq('customer_id',c.id);
     if(c.snapshotOnly){bookingQuery=bookingQuery.eq('booking_contact_phone',phone);orderQuery=orderQuery.eq('receiver_phone_snapshot',phone);}
     const [bookings,orders,profile]=await Promise.all([
@@ -75,9 +75,26 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
   const mockOtp=previewDemo || (demo&&!production&&/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(req.headers.origin||''));
   const mode=mockOtp?'preview':'supabase';
   try{
-   if(Object.keys(body).some(k=>!['phone','challengeId','code','returnRequest','cancelRequest','historyPage'].includes(k)))throw Error('Yêu cầu tra cứu không hợp lệ.');
+   if(Object.keys(body).some(k=>!['phone','challengeId','code','returnRequest','cancelRequest','historyPage','moveRequest'].includes(k)))throw Error('Yêu cầu tra cứu không hợp lệ.');
    const phone=normalizeVietnamPhone(body.phone);
    if(previewDemo&&!otpTestPhones.includes(phone))throw Error('Số điện thoại này chưa được cấu hình để thử OTP giả lập.');
+   if(body.moveRequest){
+    const m=body.moveRequest;
+    if(!m||typeof m.grant!=='string'||m.grant.length>1500||typeof m.start!=='string'||!Number.isFinite(Date.parse(m.start))||typeof m.confirm!=='boolean'||(m.end!=null&&!Number.isFinite(Date.parse(m.end))))throw Error('Th?ng tin ??i l?ch kh?ng h?p l?.');
+    const parts=m.grant.split('.');
+    if(parts.length!==2||!/^[A-Za-z0-9_-]{43}$/.test(parts[1])||!crypto.timingSafeEqual(Buffer.from(signHistory(parts[0])),Buffer.from(parts[1])))throw Error('Phi?n tra c?u kh?ng h?p l?.');
+    const proof=JSON.parse(Buffer.from(parts[0],'base64url').toString('utf8'));
+    if(proof.phone!==phone||!Number.isFinite(proof.expires)||proof.expires<=now()/1000||proof.expires>now()/1000+901)throw Error('Vui l?ng x?c th?c OTP l?i.');
+    const c=await customer(phone);
+    if(c.id!==proof.id||!!c.snapshotOnly!==proof.snapshotOnly)throw Error('Ch? s? h?u ?? thay ??i.');
+    let q=admin.from('appointment').select('id').eq('id',m.bookingId).eq('customer_id',c.id);
+    if(c.snapshotOnly)q=q.eq('booking_contact_phone',phone);
+    const owned=await q.maybeSingle();if(owned.error||!owned.data)throw Error('Kh?ng c? quy?n ??i l?ch n?y.');
+    const args={p_customer:c.id,p_id:m.bookingId,p_start:m.start,p_end:m.end||null};
+    const result=m.confirm?await admin.rpc('reschedule_verified_guest_booking',{...args,p_request_id:m.id,p_expected_quote:m.version,p_reason:m.reason}):await admin.rpc('quote_verified_guest_booking',args);
+    if(result.error)throw Error('Kh?ng th? ??i l?ch: '+result.error.message);
+    return res.json({success:true,...(m.confirm?{bookingId:result.data}:{quote:result.data})});
+   }
    if(body.historyPage){
     if(body.challengeId!=null||body.code!=null||body.returnRequest||body.cancelRequest)throw Error('invalid_body');
     const {grant,page}=body.historyPage;

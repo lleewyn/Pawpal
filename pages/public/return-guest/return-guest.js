@@ -240,7 +240,8 @@ function mapSupabaseBookingRow(row) {
         id: row.appointment_code || row.id,
         _supabaseId: row.id,                  
         serviceName: primaryItem.name_snapshot || 'Dịch vụ PawPal',
-        date: d ? d.toLocaleDateString('vi-VN') : '',
+        date: d ? d.toLocaleDateString('sv-SE',{timeZone:'Asia/Ho_Chi_Minh'}) : '',
+        changeCount: row.change_count || 0,
         time: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
         timeStart: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
         scheduledEndAt: row.scheduled_end_at || null,
@@ -1473,250 +1474,27 @@ function normalizeOrderStatus(status) {
     return s || 'pending';
 }
 
-function showChangeScheduleModal(bookingId, phone) {
-    const existing = document.getElementById('rg-change-modal');
-    if (existing) existing.remove();
-
-    const slots = (window.PawPalBookingConfig?.slots) || [
-        '08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'
-    ];
-    const staffs = (window.PawPalBookingConfig?.staffs) || [
-        { name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn nhân viên trống lịch', id: 'random' },
-        { name: 'Nguyễn Minh An',     desc: 'Chuyên viên Spa • 3 năm kinh nghiệm',      id: 'staff1' },
-        { name: 'Trần An Nhiên',      desc: 'Bảo mẫu Hotel • Cực kỳ nhẹ nhàng',         id: 'staff2' },
-        { name: 'Lê Hoàng Tiến',     desc: 'Chuyên viên cắt tỉa Grooming',              id: 'staff3' }
-    ];
-
-    const slotsHtml = slots.map(s =>
-        `<button class="rg-slot-time" data-time="${s}" disabled class="rg-slot-disabled">${s}</button>`
-    ).join('');
-
-    const staffHtml = staffs.map(s => {
-        const initials = s.name === 'Phân bổ ngẫu nhiên' ? '🎲' : s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-        return `
-            <div class="rg-staff-card" data-name="${s.name}" tabindex="-1" role="button"
-                class="rg-staff-slot-disabled">
-                <div class="rg-staff-avatar">${initials}</div>
-                <div>
-                    <div class="rg-staff-name">${s.name}</div>
-                    <div class="rg-staff-desc">${s.desc}</div>
-                </div>
-            </div>`;
-    }).join('');
-
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const minDate = tomorrow.toISOString().split('T')[0];
-
-    const el = document.createElement('div');
-    el.id = 'rg-change-modal';
-    el.className = 'modal fade';
-    el.tabIndex = -1;
-    el.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Chọn lịch mới — ${esc(bookingId)}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted small mb-3">Chọn ngày trước, sau đó chọn giờ và nhân viên.</p>
-
-                    <div class="mb-1 fw-semibold" class="rg-label-sm">Chọn ngày</div>
-                    <input type="date" id="rg-date-picker" class="form-control mb-4" min="${minDate}" class="rg-date-input">
-
-                    <div class="mb-1 fw-semibold" class="rg-label-sm">Chọn giờ</div>
-                    <div class="rg-time-grid mb-3" id="rg-slot-grid">${slotsHtml}</div>
-                    <div id="rg-hold-banner" class="d-none mb-3" class="rg-hold-banner">
-                        ⏳ <strong>Giữ chỗ tạm thời:</strong> Giờ <strong id="rg-hold-label"></strong> được giữ riêng cho bạn trong <strong id="rg-hold-countdown"></strong>
-                    </div>
-
-                    <div class="mb-1 fw-semibold" class="rg-label-sm">Chọn nhân viên</div>
-                    <div id="rg-staff-list" class="rg-staff-grid">${staffHtml}</div>
-
-                    <div class="mt-3 mb-2">
-                        <label class="mb-1 fw-semibold rg-label-sm" for="rg-change-reason">Lý do đổi lịch <span style="color: #DC2626;">*</span></label>
-                        <input type="text" id="rg-change-reason" class="form-control" placeholder="Nhập lý do đổi lịch..." value="Bận việc đột xuất">
-                    </div>
-
-                    <div class="rg-slot-selected mt-2 d-none" id="rg-slot-info" class="rg-slot-info-box">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                        Đã chọn: <strong id="rg-slot-text"></strong>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Huỷ</button>
-                    <button type="button" class="btn-cta" id="rg-change-confirm" disabled>Xác nhận thay đổi</button>
-                </div>
-            </div>
-        </div>`;
-    document.body.appendChild(el);
-
-    const modal = new bootstrap.Modal(el);
-    modal.show();
-
-    let selDate = '', selTime = null, selStaff = null;
-    let holdInterval = null;
-
-    function clearHoldTimer() {
-        if (holdInterval) { clearInterval(holdInterval); holdInterval = null; }
-        document.getElementById('rg-hold-banner').classList.add('d-none');
-    }
-
-    function startHoldTimer(slot) {
-        clearHoldTimer();
-        let remaining = 15 * 60;
-        const banner    = document.getElementById('rg-hold-banner');
-        const label     = document.getElementById('rg-hold-label');
-        const countdown = document.getElementById('rg-hold-countdown');
-        label.textContent = slot;
-        banner.classList.add('rg-banner-hold');
-        banner.classList.remove('rg-banner-expired', 'd-none');
-
-        function tick() {
-            const m = Math.floor(remaining / 60).toString().padStart(2, '0');
-            const s = (remaining % 60).toString().padStart(2, '0');
-            countdown.textContent = `${m}:${s}`;
-            if (remaining <= 0) {
-                clearHoldTimer();
-                selTime = null;
-                el.querySelectorAll('.rg-slot-time').forEach(b => b.classList.remove('active'));
-                banner.innerHTML = `⚠️ <strong>Hết thời gian giữ chỗ!</strong> Vui lòng chọn lại giờ.`;
-                banner.classList.remove('rg-banner-hold');
-                banner.classList.add('rg-banner-expired');
-                banner.classList.remove('d-none');
-                refresh();
-            }
-            remaining--;
-        }
-        tick();
-        holdInterval = setInterval(tick, 1000);
-    }
-
-    el.addEventListener('hidden.bs.modal', () => clearHoldTimer());
-
-    function enableTimeAndStaff() {
-        el.querySelectorAll('.rg-slot-time').forEach(b => {
-            b.disabled = false;
-        });
-        el.querySelectorAll('.rg-staff-card').forEach(c => {
-            c.classList.remove('rg-staff-slot-disabled');
-            c.tabIndex = 0;
-        });
-    }
-
-    function refresh() {
-        const info = document.getElementById('rg-slot-info');
-        const txt  = document.getElementById('rg-slot-text');
-        const btn  = document.getElementById('rg-change-confirm');
-        if (selDate && selTime && selStaff) {
-            const d = new Date(selDate + 'T00:00:00');
-            txt.textContent = `${d.toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' })} lúc ${selTime} • ${selStaff}`;
-            info.classList.remove('d-none');
-            btn.disabled = false;
-        } else {
-            info.classList.add('d-none');
-            btn.disabled = true;
-        }
-    }
-
-    document.getElementById('rg-date-picker').addEventListener('change', (e) => {
-        selDate = e.target.value;
-        selTime = null;
-        clearHoldTimer();
-        el.querySelectorAll('.rg-slot-time').forEach(b => b.classList.remove('active'));
-        enableTimeAndStaff();
-        refresh();
-    });
-
-    el.querySelectorAll('.rg-slot-time').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (!selDate) return;
-            el.querySelectorAll('.rg-slot-time').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            selTime = btn.dataset.time;
-            startHoldTimer(selTime);
-            refresh();
-        });
-    });
-
-    el.querySelectorAll('.rg-staff-card').forEach(card => {
-        card.addEventListener('click', () => {
-            if (!selDate) return;
-            el.querySelectorAll('.rg-staff-card').forEach(c => {
-                c.classList.remove('active');
-            });
-            card.classList.add('active');
-            selStaff = card.dataset.name;
-            refresh();
-        });
-    });
-
-    document.getElementById('rg-change-confirm').addEventListener('click', () => {
-        if (!selDate || !selTime || !selStaff) return;
-        const reason = document.getElementById('rg-change-reason')?.value?.trim() || 'Bận việc đột xuất';
-        clearHoldTimer();
-        modal.hide();
-
-        // Kích hoạt bước bảo mật OTP xác thực thay đổi lịch hẹn theo quy trình 3.1.5
-        showOTPModal(phone, () => {
-            const booking = rgLastSearchState.bookings.find(b => String(b.id || b._supabaseId) === String(bookingId));
-            if (booking) {
-                booking.changeCount = (booking.changeCount || 0) + 1;
-                booking.date = selDate;
-                booking.time = selTime;
-                booking.staff = selStaff;
-                booking.note = reason;
-            }
-
-            // Cập nhật pawpal_bookings
-            try {
-                const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-                const idx = localBookings.findIndex(b => String(b.id || b._id) === String(bookingId));
-                if (idx !== -1) {
-                    localBookings[idx].date = selDate;
-                    localBookings[idx].time = selTime;
-                    localBookings[idx].staff = selStaff;
-                    localBookings[idx].changeCount = (localBookings[idx].changeCount || 0) + 1;
-                    localStorage.setItem('pawpal_bookings', JSON.stringify(localBookings));
-                }
-            } catch (_) {}
-
-            // Gửi thông báo đến Admin
-            try {
-                const adminNotifs = JSON.parse(localStorage.getItem('pawpal_admin_notifications') || '[]');
-                adminNotifs.unshift({
-                    id: `admin-notif-${Date.now()}`,
-                    type: 'booking_rescheduled',
-                    title: 'Khách vãng lai đổi lịch hẹn',
-                    content: `Khách hàng vãng lai (${rgLastSearchState.phone}) vừa đổi ca hẹn #${bookingId} sang ngày ${selDate} lúc ${selTime}.`,
-                    createdAt: new Date().toISOString(),
-                    read: false
-                });
-                localStorage.setItem('pawpal_admin_notifications', JSON.stringify(adminNotifs));
-            } catch (_) {}
-
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (db) {
-                const isUUID = typeof bookingId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId);
-                const cleanTime = selTime.length === 5 ? selTime : selTime.slice(0, 5);
-                const startIso = new Date(`${selDate}T${cleanTime}:00+07:00`).toISOString();
-                const endIso = new Date(new Date(startIso).getTime() + 60 * 60 * 1000).toISOString();
-                let query = db.from('appointment').update({ 
-                    scheduled_start_at: startIso,
-                    scheduled_end_at: endIso,
-                    appointment_status: 'cho_xac_nhan', 
-                    updated_at: new Date().toISOString() 
-                });
-                query = isUUID ? query.eq('id', bookingId) : query.eq('appointment_code', bookingId);
-                query.then(({error}) => { if (error) console.warn('[ReturnGuest] Change booking sync error:', error); });
-            }
-
-            showToast('Đã đổi lịch hẹn thành công!', 'success');
-            showUpsellModal(phone);
-            setTimeout(() => document.getElementById('rg-form').dispatchEvent(new Event('submit')), 1200);
-        }, 'xác thực thay đổi lịch hẹn');
-    });
+async function showChangeScheduleModal(bookingId, phone) {
+ const booking=rgLastSearchState.bookings.find(b=>b.id===bookingId);
+ if(!booking?.moveGrant){showToast('Vui l?ng tra c?u v? x?c th?c OTP l?i tr??c khi ??i l?ch.','warning');return;}
+ const dialog=document.createElement('dialog');dialog.style.cssText='width:540px;max-width:92vw;border:1px solid #ECF2EE;border-radius:9px;padding:26px 30px';
+ dialog.innerHTML=`<h3>Ch?n l?ch m?i</h3><label>Th?i gian b?t ??u m?i *</label><input type="datetime-local" class="form-control" id="guestMoveStart"><label>Th?i gian k?t th?c m?i (l?u tr?)</label><input type="datetime-local" class="form-control" id="guestMoveEnd"><label>L? do *</label><textarea class="form-control" id="guestMoveReason"></textarea><p role="status"></p><button type="button" id="guestMoveClose">??ng</button> <button type="button" id="guestMoveSave">Xem gi? v? l?ch m?i</button>`;
+ document.body.append(dialog);dialog.showModal();
+ const start=dialog.querySelector('#guestMoveStart'),end=dialog.querySelector('#guestMoveEnd'),reason=dialog.querySelector('textarea'),feedback=dialog.querySelector('p'),save=dialog.querySelector('#guestMoveSave');let quote=null;
+ dialog.querySelector('#guestMoveClose').onclick=()=>{dialog.close();dialog.remove();};
+ for(const input of [start,end,reason])input.oninput=()=>{quote=null;save.textContent='Xem gi? v? l?ch m?i';};
+ const id=crypto.randomUUID();
+ save.onclick=async()=>{
+  if(save.disabled)return;
+  if(!start.value||!reason.value.trim()){feedback.textContent='Vui l?ng ch?n gi? m?i v? nh?p l? do.';return;}
+  save.disabled=true;
+  try{
+   const {guestCommerce}=await import('/scripts/shared/guest-commerce-client.mjs');
+   const result=await guestCommerce.request('phone-lookup',{phone,moveRequest:{id,bookingId:booking._supabaseId,grant:booking.moveGrant,start:new Date(start.value+':00+07:00').toISOString(),end:end.value?new Date(end.value+':00+07:00').toISOString():null,reason:reason.value.trim(),confirm:!!quote,version:quote?.version}});
+   if(quote){dialog.close();dialog.remove();showToast('Thay ??i l?ch h?n th?nh c?ng. C?a h?ng s? x?c nh?n l?i l?ch m?i.','success');document.getElementById('rg-results')?.classList.add('d-none');showUpsellModal(phone);}
+   else{quote=result.quote;feedback.textContent='K?t th?c: '+new Date(quote.end_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})+' ? T?ng ti?n: '+Number(quote.total).toLocaleString('vi-VN')+' ?';save.textContent='X?c nh?n thay ??i';}
+  }catch(error){feedback.textContent=error.message;quote=null;save.textContent='Xem gi? v? l?ch m?i';}finally{save.disabled=false;}
+ };
 }
 
 function showUpsellModal(phone) {

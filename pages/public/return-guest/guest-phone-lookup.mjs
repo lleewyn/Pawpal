@@ -1,5 +1,4 @@
 import {guestCommerce} from '../../../scripts/shared/guest-commerce-client.mjs';
-import {mountGuestBookingLookup,mountGuestOrderLookup} from './guest-booking-lookup.mjs';
 import {verifyGuestHistoryPhone} from './guest-history-otp.mjs';
 
 function normalizeVietnamPhone(value){
@@ -59,7 +58,9 @@ export function mapGuestReceipts(data){
 
 export function mountGuestPhoneLookup(form,{loadMember,renderMember,clearMember,mapHistory}){
     const input=form.querySelector('#rg-phone'),button=form.querySelector('[type="submit"]'),error=form.querySelector('#rg-error');
-    mountGuestBookingLookup(form);mountGuestOrderLookup(form);
+    // Lookup results are shown only after phone verification, never from receipt sessions.
+    document.getElementById('guest-booking-lookup')?.remove();
+    document.getElementById('guest-order-lookup')?.remove();
     error.setAttribute('role','status');error.setAttribute('aria-live','polite');
     let generation=0,busy=false,verification,continuation=null,loaded=null;
     const clear=()=>{generation++;continuation=null;loaded=null;document.getElementById('rg-history-more')?.remove();verification?.abort();clearMember();document.getElementById('rg-results')?.classList.add('d-none');error.classList.add('d-none');};
@@ -81,15 +82,12 @@ export function mountGuestPhoneLookup(form,{loadMember,renderMember,clearMember,
                 return;
             }
             let results,raw,source;
-            try{raw=await guestCommerce.request('lookup',{phone});source='session';if(expected!==generation)return;results=mapGuestReceipts(raw);}
-            catch(failure){
-                if(expected!==generation)return;
                 const challenge=await guestCommerce.request('phone-lookup',{phone});
                 if(expected!==generation)return;
                 if(!challenge?.requiresOtp||!challenge?.challengeId)throw Error('Chưa khởi tạo được xác thực. Vui lòng thử lại.');
                 const rows=await verifyGuestHistoryPhone(phone,challenge,verification.signal);if(expected!==generation)return;
                 raw=rows;source='phone';results=mapHistory(rows);
-            }
+                results.bookings.forEach(b=>{b.moveGrant=rows.pagination?.grant;});
             if(!results.bookings.length&&!results.orders.length){error.textContent='Chưa tìm thấy đơn hàng hoặc lịch hẹn với số điện thoại này.';error.classList.remove('d-none');return;}
             loaded=results;continuation={...raw.pagination,source,phone};
             renderMember(results.bookings,results.orders,phone,results.customer);
