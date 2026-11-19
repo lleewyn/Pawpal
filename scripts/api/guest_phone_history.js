@@ -24,10 +24,10 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
   return digest(value);
  }
  const signHistory=value=>crypto.createHmac('sha256',secret).update('guest-history-page:v1\0'+value).digest('base64url');
- function historyGrant(c,phone){const payload=Buffer.from(JSON.stringify({id:c.id,phone,snapshotOnly:!!c.snapshotOnly,expires:Math.floor(now()/1000)+900})).toString('base64url');return payload+'.'+signHistory(payload);}
+ function historyGrant(c,phone){const payload=Buffer.from(JSON.stringify({id:c.id,scope:digest(c.ids.join(',')),phone,snapshotOnly:!!c.snapshotOnly,expires:Math.floor(now()/1000)+900})).toString('base64url');return payload+'.'+signHistory(payload);}
  async function historyRows(c,phone,page){
-    let bookingQuery=admin.from('appointment').select('id,appointment_code,scheduled_start_at,scheduled_end_at,appointment_status,note,change_count,updated_at,appointment_item(id,unit_price,quantity,discount_amount,name_snapshot),pet_profile(id,pet_name)').eq('customer_id',c.id);
-    let orderQuery=admin.from('sales_order').select('id,order_code,order_status,cancel_reason,shipping_fee_snapshot,receiver_name_snapshot,receiver_phone_snapshot,street_address_snapshot,province_snapshot,created_at,updated_at,delivered_at,note,sales_order_detail(id,quantity,unit_price,discount_amount,product_name_snapshot,sku_snapshot,product_variant(id,product(id,product_media(image_url,is_thumbnail))))').eq('customer_id',c.id);
+    let bookingQuery=admin.from('appointment').select('id,appointment_code,scheduled_start_at,scheduled_end_at,appointment_status,note,change_count,updated_at,appointment_item(id,unit_price,quantity,discount_amount,name_snapshot),pet_profile(id,pet_name)').in('customer_id',c.ids);
+    let orderQuery=admin.from('sales_order').select('id,order_code,order_status,cancel_reason,shipping_fee_snapshot,receiver_name_snapshot,receiver_phone_snapshot,street_address_snapshot,province_snapshot,created_at,updated_at,delivered_at,note,sales_order_detail(id,quantity,unit_price,discount_amount,product_name_snapshot,sku_snapshot,product_variant(id,product(id,product_media(image_url,is_thumbnail))))').in('customer_id',c.ids);
     if(c.snapshotOnly){bookingQuery=bookingQuery.eq('booking_contact_phone',phone);orderQuery=orderQuery.eq('receiver_phone_snapshot',phone);}
     const [bookings,orders,profile]=await Promise.all([
      bookingQuery.order('scheduled_start_at',{ascending:false}).order('id',{ascending:false}).range(page*10,page*10+10),
@@ -40,39 +40,35 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
     return {success:true,customer:{name:profile.data?.full_name||'',phone},bookings:(bookings.data||[]).slice(0,10),orders:verifiedOrders,pagination:{page,hasMore:(bookings.data||[]).length>10||(orders.data||[]).length>10,grant:historyGrant(c,phone)}};
  }
  async function customer(phone){
-  const result=await admin.from('customer_phone').select('customer_id').eq('phone_number',phone).limit(2);
-  if(result.error)throw Error('Chưa kiểm tra được số điện thoại. Vui lòng thử lại.');
-  if(result.data?.length>1)throw Error('Không xác minh được thông tin tra cứu. Vui lòng kiểm tra và thử lại.');
-  let customerId=result.data?.[0]?.customer_id;
+  const [verified,unverified]=await Promise.all([
+   admin.from('customer_phone').select('customer_id').eq('phone_number',phone).limit(101),
+   admin.from('customer').select('id').eq('unverified_contact_phone',phone).limit(101)
+  ]);
+  if(verified.error||unverified.error)throw Error('Chưa kiểm tra được thông tin tra cứu. Vui lòng thử lại.');
+  let ids=[...new Set([...(verified.data||[]).map(r=>r.customer_id),...(unverified.data||[]).map(r=>r.id)])].filter(Boolean).sort();
   let snapshotOnly=false;
-  if(!customerId){
-   const byUnverified=await admin.from('customer').select('id').eq('unverified_contact_phone',phone).limit(2);
-   if(byUnverified.data?.length===1)customerId=byUnverified.data[0].id;
-  }
-  if(!customerId){
-   const [byAppt,byOrder]=await Promise.all([
-    admin.from('appointment').select('customer_id').eq('booking_contact_phone',phone).limit(2),
-    admin.from('sales_order').select('customer_id').eq('receiver_phone_snapshot',phone).limit(2)
+  if(!ids.length){
+   const [bookings,orders]=await Promise.all([
+    admin.from('appointment').select('customer_id').eq('booking_contact_phone',phone).limit(101),
+    admin.from('sales_order').select('customer_id').eq('receiver_phone_snapshot',phone).limit(101)
    ]);
-   if(byAppt.error||byOrder.error)throw Error('Chưa kiểm tra được số điện thoại. Vui lòng thử lại.');
-   const ids=new Set([...(byAppt.data||[]),...(byOrder.data||[])].map(row=>row.customer_id).filter(Boolean));
-   if(ids.size===1){customerId=[...ids][0];snapshotOnly=true;}
+   if(bookings.error||orders.error)throw Error('Chưa kiểm tra được thông tin tra cứu. Vui lòng thử lại.');
+   ids=[...new Set([...(bookings.data||[]),...(orders.data||[])].map(r=>r.customer_id).filter(Boolean))].sort();snapshotOnly=true;
   }
-  if(!customerId)throw Error('Chưa tìm thấy hồ sơ vãng lai duy nhất cho số điện thoại này. Vui lòng liên hệ PawPal.');
-  const row=await admin.from('customer').select('id,auth_user_id,customer_status').eq('id',customerId).maybeSingle();
-  if(row.error)throw Error('Chưa kiểm tra được hồ sơ. Vui lòng thử lại.');
-  const c=row.data;
-  if(!c||!['active','ACTIVE','dang_hoat_dong'].includes(c.customer_status))throw Error('Hồ sơ không hoạt động. Vui lòng liên hệ PawPal.');
-  if(c.auth_user_id)throw Error('Số điện thoại này đã có tài khoản. Vui lòng đăng nhập để xem lịch sử.');
-  const staff=await admin.from('staff').select('id,auth_user_id').eq('phone_number',phone).limit(1);
-  if(!staff.error&&staff.data?.length&&staff.data[0].auth_user_id)throw Error('Số điện thoại này không thuộc luồng tra cứu khách vãng lai.');
-  return {...c,snapshotOnly};
+  if(!ids.length||ids.length>100)throw Error('Chưa tìm thấy hồ sơ khách vãng lai phù hợp. Vui lòng liên hệ PawPal.');
+  const rows=await admin.from('customer').select('id,auth_user_id,customer_status').in('id',ids);
+  if(rows.error||rows.data?.length!==ids.length)throw Error('Chưa kiểm tra được thông tin tra cứu. Vui lòng thử lại.');
+  if(rows.data.some(c=>c.auth_user_id))throw Error('Số điện thoại này đã có tài khoản. Vui lòng đăng nhập để xem lịch sử.');
+  if(rows.data.some(c=>!['active','ACTIVE','dang_hoat_dong'].includes(c.customer_status)))throw Error('Hồ sơ không hoạt động. Vui lòng liên hệ PawPal.');
+  // OTP grants guest transaction access only; employee identities and login sessions remain separate.
+  return {id:ids[0],ids,snapshotOnly};
  }
+
  return async function handle(req,res){
   res.setHeader('Cache-Control','no-store');res.setHeader('Vary','Cookie, Origin');
   const body=req.body||{};
   const previewDemo=otpPreviewOrigin && req.headers.origin===otpPreviewOrigin;
-  const mockOtp=previewDemo || (demo&&!production&&/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(req.headers.origin||''));
+  const mockOtp=previewDemo || demo;
   const mode=mockOtp?'preview':'supabase';
   try{
    if(Object.keys(body).some(k=>!['phone','challengeId','code','returnRequest','cancelRequest','historyPage','moveRequest'].includes(k)))throw Error('Yêu cầu tra cứu không hợp lệ.');
@@ -86,11 +82,11 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
     const proof=JSON.parse(Buffer.from(parts[0],'base64url').toString('utf8'));
     if(proof.phone!==phone||!Number.isFinite(proof.expires)||proof.expires<=now()/1000||proof.expires>now()/1000+901)throw Error('Vui l?ng x?c th?c OTP l?i.');
     const c=await customer(phone);
-    if(c.id!==proof.id||!!c.snapshotOnly!==proof.snapshotOnly)throw Error('Ch? s? h?u ?? thay ??i.');
-    let q=admin.from('appointment').select('id').eq('id',m.bookingId).eq('customer_id',c.id);
+    if(c.id!==proof.id||proof.scope!==digest(c.ids.join(','))||!!c.snapshotOnly!==proof.snapshotOnly)throw Error('Ch? s? h?u ?? thay ??i.');
+    let q=admin.from('appointment').select('id,customer_id').eq('id',m.bookingId).in('customer_id',c.ids);
     if(c.snapshotOnly)q=q.eq('booking_contact_phone',phone);
     const owned=await q.maybeSingle();if(owned.error||!owned.data)throw Error('Kh?ng c? quy?n ??i l?ch n?y.');
-    const args={p_customer:c.id,p_id:m.bookingId,p_start:m.start,p_end:m.end||null};
+    const args={p_customer:owned.data.customer_id,p_id:m.bookingId,p_start:m.start,p_end:m.end||null};
     const result=m.confirm?await admin.rpc('reschedule_verified_guest_booking',{...args,p_request_id:m.id,p_expected_quote:m.version,p_reason:m.reason}):await admin.rpc('quote_verified_guest_booking',args);
     if(result.error)throw Error('Kh?ng th? ??i l?ch: '+result.error.message);
     return res.json({success:true,...(m.confirm?{bookingId:result.data}:{quote:result.data})});
@@ -105,7 +101,7 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
     if(proof.phone!==phone||!Number.isFinite(proof.expires)||proof.expires<=now()/1000||proof.expires>now()/1000+901)throw Error('Phiên tra cứu đã hết hạn. Vui lòng xác thực lại.');
     await store.limit('guest-history:page:'+String(req.socket?.remoteAddress||req.ip),60,600000);
     const c=await customer(phone);
-    if(c.id!==proof.id||!!c.snapshotOnly!==proof.snapshotOnly)throw Error('Chủ sở hữu đã thay đổi. Vui lòng xác thực lại.');
+    if(c.id!==proof.id||proof.scope!==digest(c.ids.join(','))||!!c.snapshotOnly!==proof.snapshotOnly)throw Error('Chủ sở hữu đã thay đổi. Vui lòng xác thực lại.');
     const result=await historyRows(c,phone,page);result.pagination.grant=grant;
     return res.json(result);
    }
@@ -149,27 +145,18 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
     await customer(phone);
     const id=crypto.randomUUID(),nonce=crypto.randomBytes(32).toString('base64url');
     const payload=[id,Math.floor(now()/1000)+300,nonce].join('.'),cookieValue=payload+'.'+sign(payload);
-    let isFallbackDemo = mockOtp;
-    let code = mockOtp ? '555666' : null;
-    let challengeHash = code ? hashOtp(id, 'guest-history:' + digest(cookieValue) + ':' + code) : null;
-    await store.issue({id, phone, purpose: 'activate', mode, hash: challengeHash});
+    const code=mockOtp?'555666':null;
+    const challengeHash=code?hashOtp(id,'guest-history:'+digest(cookieValue)+':'+code):null;
+    await store.issue({id,phone,purpose:'activate',mode,hash:challengeHash});
     try{
      if(!mockOtp){
-      try {
-       const sent=await clientFactory().auth.signInWithOtp({phone:'+84'+phone.slice(1),options:{shouldCreateUser:true}});
-       if(sent.error)throw sent.error;
-      } catch(error) {
-       console.warn('[GuestPhoneHistory] SMS delivery failed, falling back to demo testCode 555666', {code:error.code||'provider_unavailable'});
-       isFallbackDemo = true;
-       code = '555666';
-       challengeHash = hashOtp(id, 'guest-history:' + digest(cookieValue) + ':' + code);
-       await store.issue({id, phone, purpose: 'activate', mode: 'preview', hash: challengeHash});
-      }
+      const sent=await clientFactory().auth.signInWithOtp({phone:'+84'+phone.slice(1),options:{shouldCreateUser:true}});
+      if(sent.error)throw Object.assign(Error('Chưa gửi được mã SMS. Vui lòng thử lại sau.'),{smsUnavailable:true});
      }
      await store.activate(id,true);
     }catch(error){await store.activate(id,false);throw error;}
     setCookie(res,cookieValue);
-    return res.json({success:true,requiresOtp:true,challengeId:id,expiresIn:300,...(isFallbackDemo?{testMode:true,testCode:code}:{})});
+    return res.json({success:true,requiresOtp:true,challengeId:id,expiresIn:300,...(mockOtp?{testMode:true,testCode:code}:{})});
    }
    if(!/^[0-9a-f-]{36}$/i.test(String(body.challengeId||''))||!/^\d{6}$/.test(String(body.code||'')))throw Error('Vui lòng nhập mã xác thực gồm 6 chữ số.');
    await store.limit('guest-history:verify:'+String(req.socket?.remoteAddress||req.ip),30,600000);

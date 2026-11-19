@@ -15,17 +15,17 @@ test('verified history pages return 10/10/3 and reject altered or cross-phone gr
  for(const body of [{phone:'0908887766',historyPage:{grant:grant+'x',page:1}},{phone:'0908887765',historyPage:{grant,page:1}},{phone:'0908887766',historyPage:{grant,page:-1}}])assert.equal((await f.send(body)).code,400);
  assert.equal(f.reads.length,before);
 });
-function fixture({production=false,demo=true,member=false,locked=false,verifyFails=false,otpPreviewOrigin=null,otpTestPhones=[],rowCount=1}={}){
+function fixture({production=false,demo=true,member=false,locked=false,verifyFails=false,smsFails=false,otpPreviewOrigin=null,otpTestPhones=[],rowCount=1}={}){
  const challenges=new Map(),reads=[],sms=[],authChecks=[],writes=[];
- const store={async limit(){},async issue(value){challenges.set(value.id,{...value,status:'pending',attempts:0})},async activate(id,ok){challenges.get(id).status=ok?'active':'failed'},
+ const store={async limit(){},async issue(value){assert.equal(challenges.has(value.id),false,'challenge IDs cannot be issued twice');challenges.set(value.id,{...value,status:'pending',attempts:0})},async activate(id,ok){challenges.get(id).status=ok?'active':'failed'},
   async claim(id,mode,hash,claimId){const c=challenges.get(id);if(!c||c.mode!==mode||c.status!=='active'||c.attempts>=5)throw Error('Expired challenge');c.attempts++;if(c.hash&&hash!==c.hash)throw Error('Wrong code');c.status='claimed';c.claimId=claimId;return c},
   async finish(id,claimId,ok){const c=challenges.get(id);assert.equal(c.claimId,claimId);c.status=ok?'consumed':'active'}};
- const admin={from(table){const read={table,filters:[]};reads.push(read);const q={select(){return q},eq(key,value){read.filters.push([key,value]);return q},order(){return q},
+ const admin={from(table){const read={table,filters:[]};reads.push(read);const q={select(){return q},eq(key,value){read.filters.push([key,value]);return q},in(key,value){read.filters.push([key,value]);read.ids=value;return q},order(){return q},
   async maybeSingle(){return {data:table==='customer_profile'?{full_name:'Khách thử nghiệm'}:{id:'customer-id',auth_user_id:member?'member-id':null,customer_status:locked?'locked':'active'}}},
-  range(start,end){read.range=[start,end];return q;},limit(count,opts){(read.limits??=[]).push({count,opts});return q;},then(resolve){return Promise.resolve({data:table==='customer_phone'?[{customer_id:'customer-id'}]:table==='staff'?[]:Array.from({length:rowCount},(_,i)=>({id:table==='sales_order'?(i===0?orderId:'00000000-0000-0000-0000-'+String(i+11).padStart(12,'0')):table+'-'+i})).slice(read.range?.[0]||0,(read.range?.[1]??(rowCount-1))+1)}).then(resolve)}};return q},
+  range(start,end){read.range=[start,end];return q;},limit(count,opts){(read.limits??=[]).push({count,opts});return q;},then(resolve){return Promise.resolve({data:table==='customer'?(read.ids?read.ids.map(id=>({id,auth_user_id:member?'member-id':null,customer_status:locked?'locked':'active'})):[]):table==='customer_phone'?[{customer_id:'customer-id'}]:table==='staff'?[]:Array.from({length:rowCount},(_,i)=>({id:table==='sales_order'?(i===0?orderId:'00000000-0000-0000-0000-'+String(i+11).padStart(12,'0')):table+'-'+i})).slice(read.range?.[0]||0,(read.range?.[1]??(rowCount-1))+1)}).then(resolve)}};return q},
   async rpc(name,args){writes.push({name,args});return {data:args.p_id};}};
  const clientFactory=()=>({auth:{
-  async signInWithOtp(value){sms.push(value);return {}},
+  async signInWithOtp(value){sms.push(value);return smsFails?{error:Error('provider unavailable')}:{}},
   async verifyOtp(value){authChecks.push(value);return verifyFails?{error:Error('wrong')}:{data:{user:{phone:'+84908887766'}}};}
  }});
  const handle=createGuestPhoneHistory({admin,secret:'test-secret-with-at-least-32-bytes-long',production,demo,store,clientFactory,otpPreviewOrigin,otpTestPhones});
@@ -41,7 +41,7 @@ test('valid local OTP returns only the legacy phone owner history and consumes t
  assert.equal(res.code,200);assert.equal(res.data.bookings.length,1);assert.equal(res.data.orders.length,1);assert.ok(f.reads.find(r=>r.table==='sales_order').limits.some(l=>l.count===1&&l.opts?.referencedTable?.endsWith('product_media')));
  assert.deepEqual(res.data.customer,{name:'Khách thử nghiệm',phone:'0908887766'});
  assert.deepEqual(f.reads.find(r=>r.table==='customer_profile').filters,[['customer_id','customer-id']]);
- for(const r of f.reads.filter(r=>['appointment','sales_order'].includes(r.table)))assert.deepEqual(r.filters,[['customer_id','customer-id']]);
+ for(const r of f.reads.filter(r=>['appointment','sales_order'].includes(r.table)))assert.deepEqual(r.filters,[['customer_id',['customer-id']]]);
  assert.equal((await f.send({phone:'0908887766',challengeId,code:'555666'},cookie)).code,400);
 });
 test('wrong OTP, missing/tampered cookie, cross-phone and registration OTP hashes cannot disclose history',async()=>{
@@ -55,13 +55,13 @@ test('wrong OTP, missing/tampered cookie, cross-phone and registration OTP hashe
 test('locked and member profiles do not issue guest history challenges',async()=>{
  for(const config of [{locked:true},{member:true}]){const f=fixture(config),res=await f.send({phone:'0908887766'});assert.equal(res.code,400);assert.equal(f.challenges.size,0);}
 });
-test('production uses real SMS verification even if demonstration mode is configured',async()=>{
- const f=fixture({production:true,demo:true}),{cookie,challengeId,res}=await f.begin();assert.equal(res.data.testCode,undefined);assert.equal(f.sms.length,1);
+test('explicit SMS mode uses real verification',async()=>{
+ const f=fixture({production:true,demo:false}),{cookie,challengeId,res}=await f.begin();assert.equal(res.data.testCode,undefined);assert.equal(f.sms.length,1);
  assert.equal((await f.send({phone:'0908887766',challengeId,code:'123456'},cookie)).code,200);assert.equal(f.authChecks.length,1);
  assert.match(res.headers['Set-Cookie'],/; Secure/);
 });
 test('Preview mocks OTP only for configured test phones on the preview origin',async()=>{
- const f=fixture({production:true,otpPreviewOrigin:'https://preview.pawpal.test',otpTestPhones:['0908887766']});
+ const f=fixture({production:true,demo:false,otpPreviewOrigin:'https://preview.pawpal.test',otpTestPhones:['0908887766']});
  assert.equal((await f.send({phone:'0901234567'})).code,400);
  const {res,challengeId,cookie}=await f.begin();
  assert.equal(res.data.testCode,'555666');assert.equal(f.sms.length,0);
@@ -71,7 +71,14 @@ test('Preview mocks OTP only for configured test phones on the preview origin',a
  assert.equal(outside.data.testCode,undefined);assert.equal(f.sms.length,1);
 });
 test('failed SMS verification cannot read history',async()=>{
- const f=fixture({production:true,verifyFails:true}),{cookie,challengeId}=await f.begin();assert.equal((await f.send({phone:'0908887766',challengeId,code:'123456'},cookie)).code,400);assert.ok(!f.reads.some(r=>['appointment','sales_order'].includes(r.table)));
+ const f=fixture({production:true,demo:false,verifyFails:true}),{cookie,challengeId}=await f.begin();assert.equal((await f.send({phone:'0908887766',challengeId,code:'123456'},cookie)).code,400);assert.ok(!f.reads.some(r=>['appointment','sales_order'].includes(r.table)));
+});
+test('configured demo OTP works with secure production cookies without contacting SMS',async()=>{
+ const f=fixture({production:true,demo:true,smsFails:true}),{cookie,challengeId,res}=await f.begin();assert.equal(res.data.testCode,'555666');assert.equal(f.sms.length,0);
+ assert.equal((await f.send({phone:'0908887766',challengeId,code:'555666'},cookie)).code,200);assert.equal(f.challenges.size,1);
+});
+test('SMS outage fails one challenge without duplicating or silently switching OTP mode',async()=>{
+ const f=fixture({production:true,demo:false,smsFails:true}),res=await f.send({phone:'0908887766'});assert.equal(res.code,503);assert.equal(f.challenges.size,1);assert.equal([...f.challenges.values()][0].status,'failed');assert.equal(res.data.testCode,undefined);
 });
 test('a guest return grant is issued only after verification and is bound to the verified phone and order',async()=>{
  const f=fixture(),{cookie,challengeId}=await f.begin();

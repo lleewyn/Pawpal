@@ -833,7 +833,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261119_booking_staff_sync';
+    const MODULE_SCRIPT_VERSION = '20261119_booking_reviews';
     let staffDomainScriptsReady;
     async function loadStaffDomainScripts() {
         if (!staffDomainScriptsReady) staffDomainScriptsReady = (async () => {

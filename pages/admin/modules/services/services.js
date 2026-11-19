@@ -1900,17 +1900,18 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
 
         if (subtabId === 'tab-service-detail') {
             const bId = PawpalServices.state.selectedBookingId || null;
+            const sameBooking=()=>PawpalServices.state.selectedBookingId===bId||PawpalServices.state.bookingsData.some(b=>b.dbId===bId&&b.id===PawpalServices.state.selectedBookingId);
             updateBreadcrumb(bId);
             if (PawpalServices.subtabs.detail?.renderBookingDetail) {
                 PawpalServices.state.detailError=false;
                 PawpalServices.state.detailLoadingId=bId;
                 PawpalServices.subtabs.detail.renderBookingDetail(bId);
                 if(bId)ensureBooking(bId,{force:true}).then(()=>{
-                    if(detailVersion!==bookingDetailVersion||PawpalServices.state.selectedBookingId!==bId)return;
+                    if(detailVersion!==bookingDetailVersion||!sameBooking())return;
                     PawpalServices.state.detailLoadingId=null;
                     PawpalServices.subtabs.detail.renderBookingDetail(bId);
                 }).catch(()=>{
-                    if(detailVersion!==bookingDetailVersion||PawpalServices.state.selectedBookingId!==bId)return;
+                    if(detailVersion!==bookingDetailVersion||!sameBooking())return;
                     PawpalServices.state.detailLoadingId=null;
                     PawpalServices.state.detailError=true;
                     PawpalServices.subtabs.detail.renderBookingDetail(bId);
@@ -2051,6 +2052,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 }finally{refreshRunning=false;if(dirty.size){clearTimeout(fallbackTimer);fallbackTimer=setTimeout(flush,400);}}
             };
             const triggerServiceSync=pattern=>{
+                if(pattern.startsWith('services:reviews'))document.dispatchEvent(new Event('service-reviews-updated'));
                 for(const group of ['bookings','catalog','reviews'])if(pattern==='services:*'||pattern.startsWith('services:'+group))dirty.add(group);
                 if(window.PawpalDataStore?.handleRealtimeChange)window.PawpalDataStore.handleRealtimeChange({moduleName:'Dịch vụ',invalidatePattern:pattern,onActiveRefresh:flush,debounceMs:400});
                 else if(sessionStorage.getItem('pawpal_admin_active_module')==='Dịch vụ'&&!document.hidden){clearTimeout(fallbackTimer);fallbackTimer=setTimeout(flush,400);}

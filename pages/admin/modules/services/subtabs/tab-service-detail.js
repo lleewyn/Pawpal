@@ -54,6 +54,9 @@
             return;
         }
         if (card) card.style.display = '';
+        let reviewPanel=card?.querySelector('#bookingDetailReviews');
+        if(!reviewPanel&&card){reviewPanel=document.createElement('section');reviewPanel.id='bookingDetailReviews';reviewPanel.style.cssText='padding:16px 0;background:transparent;border:none';card.append(reviewPanel);}
+        if(reviewPanel){reviewPanel.dataset.bookingId=booking.dbId;import('/pages/admin/modules/services/booking-reviews.mjs').then(({mountBookingReviews})=>{if(reviewPanel.isConnected&&reviewPanel.dataset.bookingId===booking.dbId)mountBookingReviews(reviewPanel,booking,{db:window.getSupabaseClient()});});}
         let requestPanel=card?.querySelector('#adminStaffRequestPanel');
         if(!requestPanel&&card){requestPanel=document.createElement('section');requestPanel.id='adminStaffRequestPanel';requestPanel.style.cssText='padding:16px 0;border:none;background:transparent';card.prepend(requestPanel);}
         if(requestPanel){
@@ -703,7 +706,10 @@
             finally { logButton.disabled=false;fields.forEach(input=>input.disabled=false); }
         });
         const initialBookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || null;
-        renderBookingDetail(initialBookingId);
+        if(initialBookingId&&location.hash==='#tab-service-detail'){
+            PawpalServices.state.selectedBookingId=initialBookingId;
+            PawpalServices.switchSubtab('tab-service-detail',false);
+        }else renderBookingDetail(initialBookingId);
 
         // Nút mở Modal 5 (Thêm phụ phí)
         const btnAddSurcharge = document.getElementById('btnOpenAddSurchargeModal');

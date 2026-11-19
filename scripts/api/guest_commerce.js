@@ -87,7 +87,7 @@ function createGuestCommerce({admin,secret,origins,production=true,otpPreviewOri
    if(action==='phone-lookup'){
     if(!phoneHistory)phoneHistory=require('./guest_phone_history').createGuestPhoneHistory({
      admin,secret,production,now,otpPreviewOrigin,otpTestPhones,
-     demo:!process.env.PAWPAL_SMS_MODE||['demo','preview'].includes(process.env.PAWPAL_SMS_MODE)
+     demo:!process.env.PAWPAL_SMS_MODE||process.env.PAWPAL_SMS_MODE==='demo'
     });
     return phoneHistory(req,res);
    }
