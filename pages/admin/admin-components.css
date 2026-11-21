@@ -151,6 +151,119 @@
     border: 0;
 }
 
+/* Customer directory reference, opt-in only. The approved Customer page remains
+   untouched. Reuse this foundation instead of restyling shared controls in modules. */
+.admin-ui-standard.admin-ui-customer-reference {
+    --admin-ui-font: Inter, "Segoe UI", sans-serif;
+    --admin-ui-control-height: 37px;
+    --admin-ui-cell-x: 12px;
+    --admin-ui-cell-y: 16px;
+    --admin-ui-heading: #263d30;
+    --admin-ui-card-line: #d9e0db;
+    --admin-ui-kpi-text: #263d31;
+    --admin-ui-kpi-label: #596c5e;
+    --text-main: #24382f;
+    --text-dark: #24382f;
+    --text-muted: var(--admin-ui-muted);
+    --text-heading: var(--admin-ui-brand);
+    --border-neutral: #e3e9e4;
+    --surface-white: #fff;
+    font: 400 14px/1.5 var(--admin-ui-font);
+    color: var(--text-main);
+}
+.admin-ui-customer-reference .admin-workspace-card {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--admin-ui-card-line);
+    border-radius: 0;
+    background: #fff;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+.admin-ui-customer-reference .admin-workspace-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    min-height: 52px;
+    margin: 0;
+    padding: 10px 14px;
+    border: 0;
+}
+.admin-ui-customer-reference .admin-card-title {
+    margin: 0;
+    color: var(--admin-ui-heading);
+}
+.admin-ui-customer-reference .admin-workspace-body { padding: 0 14px 14px; }
+.admin-ui-customer-reference .admin-workspace-table-body { padding: 0; }
+.admin-ui-customer-reference .admin-workspace-table-body > :is(.ops-empty,.ops-error,.ops-caption) { margin: 8px 14px 14px; }
+.admin-ui-customer-reference .admin-workspace-section {
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+.admin-ui-customer-reference .admin-kpi-grid .kpi-card { font: inherit; color: inherit; }
+.admin-ui-customer-reference .admin-kpi-grid .kpi-label { color: var(--admin-ui-kpi-label); }
+.admin-ui-customer-reference .admin-kpi-grid .kpi-val { color: var(--admin-ui-kpi-text); }
+.admin-ui-customer-reference .admin-kpi-grid .kpi-card:hover { background: #f4f7f4; }
+.admin-ui-customer-reference .admin-kpi-grid .kpi-card:is(.is-attention,[data-status="error"]) .kpi-val { color: var(--admin-ui-kpi-text); }
+.admin-ui-customer-reference .admin-input,
+.admin-ui-customer-reference .admin-select {
+    padding: 0 12px;
+    border: 1px solid #e2e8e2;
+    background-color: #fff;
+    color: #24382f;
+}
+.admin-ui-customer-reference .admin-select { padding-right: 28px; }
+.admin-ui-customer-reference .admin-btn {
+    height: auto;
+    min-height: 32px;
+    padding: 7px 11px;
+    border: 1px solid #dce4dd;
+}
+.admin-ui-customer-reference .admin-btn-primary { border-color: var(--admin-ui-brand); }
+.admin-ui-customer-reference .admin-control-label {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font: 500 11px/1.5 var(--admin-ui-font);
+    color: var(--admin-ui-muted);
+}
+body.admin-body .admin-ui-standard.admin-ui-customer-reference :is(.admin-btn,.admin-input,.admin-select,.kpi-label,.admin-card-title) {
+    font-family: var(--admin-ui-font) !important;
+}
+.admin-ui-customer-reference .admin-table th { padding-top: 10px; padding-bottom: 10px; }
+.admin-ui-customer-reference .admin-table th:first-child,
+.admin-ui-customer-reference .admin-table td:first-child { padding-left: 12px; }
+.admin-ui-customer-reference .admin-table th:first-child { border-left: 3px solid var(--admin-ui-header-bg); }
+.admin-ui-customer-reference .admin-table td:first-child { border-left: 3px solid transparent; }
+.admin-ui-customer-reference .admin-table tr:last-child td { border-bottom: 0; }
+.admin-ui-customer-reference .admin-table .admin-table__secondary { margin-top: 3px; }
+.admin-ui-customer-reference .admin-table :is(.row-urgent,.row-warning) td:first-child { border-left-color: #d97706; }
+.admin-ui-customer-reference .admin-table .row-urgent td:first-child { border-left-color: #dc2626; }
+.admin-ui-customer-reference .admin-filter-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+.admin-ui-customer-reference .admin-filter-tab {
+    padding: 4px 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--admin-ui-muted);
+    font: 500 12px/1.5 var(--admin-ui-font);
+    box-shadow: none;
+    cursor: pointer;
+}
+.admin-ui-customer-reference .admin-filter-tab:is(.active,[aria-pressed="true"]) { color: var(--admin-ui-brand); border-bottom-color: var(--admin-ui-brand); font-weight: 650; }
+.admin-ui-customer-reference .admin-text-action { padding: 0; border: 0; background: transparent; color: var(--admin-ui-brand); font: 600 12px/1.4 var(--admin-ui-font); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.admin-ui-customer-reference :is(.admin-filter-tab,.admin-text-action):focus-visible { outline: 2px solid var(--admin-ui-brand); outline-offset: 2px; }
+
 /* Opt-in modal foundation measured against Customer forms. Other modals remain unchanged. */
 .admin-modal-standard { --admin-modal-font: Inter, "Segoe UI", Arial, sans-serif; --admin-modal-wide: 760px; --admin-modal-gap: 16px; }
 .admin-modal-standard .admin-modal-card { display: flex; flex-direction: column; max-width: 95vw; max-height: 90dvh; padding: 26px 30px; overflow: hidden; font: 13px/1.5 var(--admin-modal-font); border-radius: var(--admin-radius); background: #fff; }

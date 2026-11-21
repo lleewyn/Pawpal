@@ -10,8 +10,9 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         page.on('pageerror', error => errors.push(error.message));
         await page.route('**/*', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><head></head><body></body></html>' }));
         await page.goto('http://dashboard.test');
-        await page.setContent('<style>body{margin:16px}*{box-sizing:border-box}</style><section class="dashboard-module dash-page business-dash" data-business-root></section>');
+        await page.setContent('<style>body{margin:16px}*{box-sizing:border-box}</style><section class="dashboard-module dash-page admin-ui-standard admin-ui-customer-reference business-dash" data-business-root></section>');
         await page.addStyleTag({ content: fs.readFileSync('pages/admin/modules/dashboard/dashboard.css', 'utf8') });
+        await page.addStyleTag({ content: fs.readFileSync('pages/admin/admin-components.css', 'utf8') });
         await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/subtabs/business-metrics.js', 'utf8') });
         await page.evaluate(() => {
             window.requests = []; window.fixtureFailure = null;
@@ -59,7 +60,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         assert.equal(await page.locator('[data-biz-panel="customers"]').getAttribute('aria-busy'), 'true');
         assert.equal(await page.locator('[data-biz-panel="membership"] .biz-empty').count(), 1);
         const groupSurface = await page.locator('[data-biz-panel="membership"]').evaluate(n => {const s=getComputedStyle(n.closest('.biz-group'));return {background:s.backgroundColor,blur:s.backdropFilter};});
-        assert.deepEqual(groupSurface, {background:'rgba(255, 255, 255, 0.7)',blur:'blur(10px)'});
+        assert.deepEqual(groupSurface, {background:'rgb(255, 255, 255)',blur:'none'});
         await page.evaluate(async () => {releaseCustomerLoad();await partialLoad;PawpalBusinessMetrics.load = originalMetricLoad;});
         await page.evaluate(async () => {PawpalBusinessMetrics.load = async (db,key,range) => {if(key==='cash')throw {code:'42501'};return originalMetricLoad(db,key,range);};await PawpalDashboardOverview.refresh();});
         assert.equal(await page.locator('[data-biz-panel="cash"] [role="alert"]').count(), 1);
@@ -67,17 +68,8 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         assert.equal(await page.locator('.biz-kpi-error').count(), 4);
         await page.evaluate(async () => {PawpalBusinessMetrics.load = originalMetricLoad;await PawpalDashboardOverview.refresh();});
         assert.equal(await page.locator('.biz-kpi').count(), 8);
-        const styleDifferences = await page.evaluate(() => {
-            const reference = document.createElement('section');
-            reference.className = 'dashboard-module dash-page ops-dash';
-            reference.style.cssText = 'position:fixed;left:-10000px;width:1200px;visibility:hidden';
-            reference.innerHTML = '<div class="ops-kpis"><div class="ops-kpi"><span class="kpi-label">Chỉ số</span><strong class="kpi-val">123</strong></div></div><section class="ops-panel"><header class="ops-panel-head"><h3 class="admin-card-title">Tiêu đề</h3></header></section>';
-            document.body.append(reference);
-            const pairs = [['.ops-kpis', '.biz-kpis', ['backgroundColor', 'borderRadius', 'borderColor']], ['.ops-kpi .kpi-label', '.biz-kpi .kpi-label', ['fontSize', 'fontWeight', 'color']], ['.ops-kpi .kpi-val', '.biz-kpi .kpi-val', ['fontSize', 'fontWeight', 'color', 'lineHeight', 'letterSpacing']], ['.ops-panel-head .admin-card-title', '.biz-panel-head .admin-card-title', ['fontSize', 'fontWeight', 'color']]];
-            const differences = pairs.flatMap(([a, b, props]) => {const x = getComputedStyle(reference.querySelector(a)), y = getComputedStyle(document.querySelector(b));return props.filter(p => x[p] !== y[p]).map(p => `${b}: ${p} ${y[p]} != ${x[p]}`);});
-            reference.remove();return differences;
-        });
-        assert.deepEqual(styleDifferences, [], 'Business must match Operations workspace styles');
+        // Customer-reference style parity is verified with the full production cascade
+        // in dashboard_admin_style_ui.cjs, not against another Dashboard implementation.
         assert.match(await page.locator('.biz-kpi').nth(2).innerText(), /2\.250 đ/);
         assert.equal(await page.locator('.biz-chart').count(), 1);
         assert.equal(await page.locator('.biz-donut-legend li').count(), 3);

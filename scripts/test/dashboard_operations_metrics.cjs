@@ -253,4 +253,40 @@ test('Định dạng thời gian chờ', () => {
     assert.equal(M.formatWaiting(null), '—');
 });
 
+test('Một lịch trễ và chưa phân công giữ đủ lý do nhưng chỉ đếm một việc', () => {
+    const row = appt('old', 'confirmed', '2026-11-01T08:00:00');
+    const alerts = M.buildAlerts({ pendingAppointments: [row], now: NOW });
+    assert.equal(alerts.length, 2);
+    const tasks = M.taskBoard(alerts, { appointments: [row] });
+    assert.equal(tasks.length, 1);
+    assert.equal(tasks[0].reasons.length, 2);
+    assert.equal(tasks[0].id, 'appointment:old');
+    assert.equal(tasks[0].unassigned, true);
+    assert.equal(tasks[0].severity, 'urgent');
+});
+test('Hỗ trợ quá hạn phản hồi và giải quyết vẫn là một việc', () => {
+    const ticket = { id: 'support', status: 'pending', priority: 'normal', created_at: iso('2026-11-01T08:00:00'), assigned_staff_id: 's1' };
+    const alerts = M.buildAlerts({ openTickets: [ticket], now: NOW });
+    const task = M.taskBoard([...alerts, ...alerts], { tickets: [ticket], staff: [{ id: 's1', full_name: 'Nhân viên phụ trách' }] })[0];
+    assert.equal(task.reasons.length, 2);
+    assert.equal(task.unassigned, false);
+    assert.equal(task.ownerLabel, 'Nhân viên phụ trách');
+});
+test('Không suy đoán chưa phân công từ thiếu tên hoặc nguồn không có quan hệ giao việc', () => {
+    const rows = [appt('a', 'confirmed', '2026-11-09T09:00:00', { items: [{ staff_id: 's1', status: 'pending' }, { staff_id: 's2', status: 'cancelled' }] })];
+    const tasks = M.taskBoard([{ kind: 'appointment', recordId: 'a', reason: 'A' }, { kind: 'order', recordId: 'o', reason: 'B' }], { appointments: rows, staffAvailable: false });
+    const appointment = tasks.find(t => t.kind === 'appointment');
+    assert.equal(appointment.unassigned, false);
+    assert.deepEqual(appointment.ownerIds, ['s1']);
+    assert.match(appointment.ownerLabel, /Đã phân công/);
+    assert.equal(tasks.find(t => t.kind === 'order').unassigned, false);
+    assert.equal(tasks.find(t => t.kind === 'order').ownerLabel, 'Chưa có dữ liệu phân công');
+});
+test('Lịch hôm nay ưu tiên đang phục vụ, bỏ lịch đóng và không nhân dòng dịch vụ', () => {
+    const waiting = appt('waiting', 'confirmed', '2026-11-09T08:00:00');
+    const serving = appt('serving', 'in_progress', '2026-11-09T09:00:00');
+    const result = M.dailyAgenda([waiting, serving, serving, appt('done', 'completed', '2026-11-09T07:00:00'), appt('absent', 'no_show', '2026-11-09T07:00:00'), appt('tomorrow', 'pending', '2026-11-10T08:00:00')], '2026-11-09');
+    assert.deepEqual(result.map(row => row.id), ['serving', 'waiting']);
+});
+
 console.log(`\nTất cả ${passed} kiểm thử đạt.`);

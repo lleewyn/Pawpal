@@ -612,7 +612,8 @@
                 }
             } else if (group === 'confirmed' && untilStartHours !== null && -untilStartHours * 60 >= THRESHOLDS.appointmentLateMinutes) {
                 push({ ...base, severity: 'warning', reason: `Quá giờ hẹn ${THRESHOLDS.appointmentLateMinutes} phút khách chưa đến`, waitingHours: -untilStartHours });
-            } else if ((group === 'confirmed' || group === 'checked_in') && !hasAssignedStaff(appointment) && untilStartHours !== null && untilStartHours <= THRESHOLDS.appointmentUnassignedHours) {
+            }
+            if ((group === 'confirmed' || group === 'checked_in') && !hasAssignedStaff(appointment) && untilStartHours !== null && untilStartHours <= THRESHOLDS.appointmentUnassignedHours) {
                 push({ ...base, severity: untilStartHours <= THRESHOLDS.appointmentStartSoonHours ? 'urgent' : 'warning', reason: 'Lịch đã xác nhận nhưng chưa phân công KTV', waitingHours: untilStartHours < 0 ? -untilStartHours : null });
             } else if (group === 'in_progress' && end && nowMs > end.getTime()) {
                 // Như services.js: quá hạn khi vượt giờ kết thúc dự kiến (giờ bắt đầu + thời lượng).
@@ -647,7 +648,8 @@
             const resolveLimit = isUrgentPriority(ticket.priority) ? THRESHOLDS.ticketResolveUrgentHours : THRESHOLDS.ticketResolveHours;
             if (!ticket.first_response_at && waited >= THRESHOLDS.ticketFirstResponseHours) {
                 push({ severity: isUrgentPriority(ticket.priority) ? 'urgent' : 'warning', kind: 'ticket', ref, recordId: ticket.id, reason: `Chưa phản hồi khách quá ${THRESHOLDS.ticketFirstResponseHours} giờ`, waitingHours: waited });
-            } else if (waited >= resolveLimit) {
+            }
+            if (waited >= resolveLimit) {
                 push({ severity: isUrgentPriority(ticket.priority) ? 'urgent' : 'warning', kind: 'ticket', ref, recordId: ticket.id, reason: `Chưa giải quyết quá ${resolveLimit} giờ`, waitingHours: waited });
             }
         }
@@ -664,6 +666,49 @@
 
         const rank = { urgent: 0, warning: 1 };
         return alerts.sort((a, b) => rank[a.severity] - rank[b.severity] || (b.waitingHours ?? -1) - (a.waitingHours ?? -1));
+    }
+
+    // Một hồ sơ là một việc; giữ mọi lý do và không suy ra người phụ trách từ người tạo/chốt.
+    function taskBoard(alerts, { appointments = [], tickets = [], staff = [], staffAvailable = true } = {}) {
+        const appointmentById = new Map(appointments.map(row => [row.id, row]));
+        const ticketById = new Map(tickets.map(row => [row.id, row]));
+        const staffById = new Map(staff.map(row => [row.id, row.full_name]));
+        const grouped = new Map();
+        for (const alert of alerts || []) {
+            const id = `${alert.kind}:${alert.recordId || alert.ref}`;
+            let task = grouped.get(id);
+            if (!task) {
+                const source = alert.kind === 'appointment' ? appointmentById.get(alert.recordId) : alert.kind === 'ticket' ? ticketById.get(alert.recordId) : null;
+                const ownerIds = alert.kind === 'appointment' && source
+                    ? [...new Set([source.staff_id, ...activeItems(source).map(item => item.staff_id)].filter(Boolean))]
+                    : alert.kind === 'ticket' && source ? [source.assigned_staff_id].filter(Boolean) : [];
+                const assignmentKnown = !!source;
+                task = { ...alert, id, reasons: [], ownerIds, unassigned: assignmentKnown && !ownerIds.length,
+                    ownerLabel: !assignmentKnown ? 'Chưa có dữ liệu phân công' : !ownerIds.length ? 'Chưa phân công'
+                        : ownerIds.map(id => staffAvailable && staffById.get(id) || 'Đã phân công, chưa tải được tên').join(', '),
+                    scheduledAt: alert.kind === 'appointment' ? source?.scheduled_start_at : null };
+                grouped.set(id, task);
+            }
+            if (!task.reasons.includes(alert.reason)) task.reasons.push(alert.reason);
+            if (alert.severity === 'urgent') task.severity = 'urgent';
+            task.waitingHours = Math.max(task.waitingHours ?? -1, alert.waitingHours ?? -1);
+            if (task.waitingHours < 0) task.waitingHours = null;
+        }
+        return [...grouped.values()].sort((a, b) => (a.severity === 'urgent' ? 0 : 1) - (b.severity === 'urgent' ? 0 : 1)
+            || (b.waitingHours ?? -1) - (a.waitingHours ?? -1) || a.id.localeCompare(b.id));
+    }
+
+    // Đây là lịch bắt đầu trong ngày, không thay thế lịch trả phòng/đưa đón nhiều ngày.
+    function dailyAgenda(appointments, today) {
+        const seen = new Set();
+        return (appointments || []).filter(row => {
+            if (!row?.id || seen.has(row.id) || vnDateKey(row.scheduled_start_at) !== today) return false;
+            seen.add(row.id);
+            return !['cancelled', 'expired', 'no_show', 'completed'].includes(classifyAppointment(row.appointment_status));
+        }).sort((a, b) => {
+            const rank = row => ['checked_in', 'in_progress'].includes(classifyAppointment(row.appointment_status)) ? 0 : 1;
+            return rank(a) - rank(b) || new Date(a.scheduled_start_at) - new Date(b.scheduled_start_at) || a.id.localeCompare(b.id);
+        });
     }
 
     // ------------------------------------------------------------------
@@ -709,7 +754,7 @@
         appointmentStatusBreakdown, orderStatusBreakdown,
         topServices, appointmentHeatmap,
         staffAllocation, capacityRisks,
-        inventoryRisks, serviceQuality, buildAlerts,
+        inventoryRisks, serviceQuality, buildAlerts, taskBoard, dailyAgenda,
         countPendingAppointments, countActionOrders, formatWaiting, median
     };
 });

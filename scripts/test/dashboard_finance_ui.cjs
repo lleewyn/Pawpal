@@ -9,7 +9,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'D:/Aboutme/Pawpal
         page.on('pageerror', e => errors.push(e.message));
         await page.route('**/*', r => r.fulfill({ contentType: 'text/html', body: '<!doctype html><body class="admin-body dashboard-active"></body>' }));
         await page.goto('http://localhost:3000/dashboard-finance-test');
-        await page.setContent('<body class="admin-body dashboard-active"><div style="height:100vh;overflow:auto"><section class="dashboard-module dash-page business-dash" data-business-root></section></div></body>');
+        await page.setContent('<body class="admin-body dashboard-active"><div style="height:100vh;overflow:auto"><section class="dashboard-module dash-page admin-ui-standard admin-ui-customer-reference business-dash" data-business-root></section></div></body>');
         for (const file of ['pages/admin/admin.css', 'pages/admin/modules/dashboard/dashboard.css', 'pages/admin/admin-shell-v7.css', 'pages/admin/admin-components.css', 'pages/admin/admin-typography.css']) await page.addStyleTag({ content: fs.readFileSync(file, 'utf8') });
         await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/subtabs/business-metrics.js', 'utf8') });
         await page.evaluate(() => {
@@ -65,7 +65,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'D:/Aboutme/Pawpal
         assert.match(await page.locator('#bizTargetBody').innerText(), /-300%/);
         assert.equal(await page.locator('#bizProfitStatusBadge').innerText(), 'Ước tính thiếu hụt');
         const style = await page.locator('.biz-panel').first().evaluate(e => {const s=getComputedStyle(e);return [s.borderRadius,s.backgroundColor,s.backdropFilter,s.borderTopColor];});
-        assert.deepEqual(style, ['9px','rgba(255, 255, 255, 0.7)','blur(10px)','rgb(236, 242, 238)']);
+        assert.deepEqual(style, ['0px','rgb(255, 255, 255)','none','rgb(217, 224, 219)']);
         await page.locator('[data-biz-preset="7"]').click();
         await page.waitForFunction(() => !document.querySelector('[data-biz-updated]').textContent.includes('Đang'));
         assert.equal(await page.locator('.biz-finance-values').count(), 0, 'a different period must not reuse the old plan');

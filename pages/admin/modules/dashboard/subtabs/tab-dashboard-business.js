@@ -45,20 +45,20 @@
     }
 
     const panel = (key, title, wide = false, extra = '') => `
-    <section class="admin-card dash-panel biz-panel ${wide ? 'biz-wide' : ''}">
-      <header class="dash-panel-heading biz-panel-head">
+    <section class="admin-workspace-section dash-panel biz-panel ${wide ? 'biz-wide' : ''}">
+      <header class="dash-panel-heading admin-workspace-heading biz-panel-head">
         <h3 class="admin-card-title">${title}</h3>
         ${extra}
       </header>
-      <div class="biz-panel-body" data-biz-panel="${key}"></div>
+      <div class="admin-workspace-body biz-panel-body" data-biz-panel="${key}"></div>
     </section>`;
 
     function shell() {
         state.root.innerHTML = `
         <header class="ops-toolbar biz-toolbar">
           <div class="ops-toolbar-left biz-toolbar-left">
-            <div class="ops-range-group biz-presets" role="group" aria-label="Khoảng thời gian">
-              ${[['today', 'Hôm nay'], ['month', 'Tháng này'], ['lastMonth', 'Tháng trước'], ['7', '7 ngày'], ['30', '30 ngày'], ['90', '90 ngày'], ['custom', 'Tùy chọn']].map(([id, label]) => `<button type="button" class="ops-range biz-range" data-biz-preset="${id}" aria-pressed="false">${label}</button>`).join('')}
+            <div class="ops-range-group admin-filter-tabs biz-presets" role="group" aria-label="Khoảng thời gian">
+              ${[['today', 'Hôm nay'], ['month', 'Tháng này'], ['lastMonth', 'Tháng trước'], ['7', '7 ngày'], ['30', '30 ngày'], ['90', '90 ngày'], ['custom', 'Tùy chọn']].map(([id, label]) => `<button type="button" class="ops-range admin-filter-tab biz-range" data-biz-preset="${id}" aria-pressed="false">${label}</button>`).join('')}
             </div>
             <span class="ops-period-label biz-period-label" data-biz-period></span>
             <div class="ops-custom-range biz-dates" data-biz-custom hidden>
@@ -79,8 +79,8 @@
         <div aria-label="Chỉ số kinh doanh" class="admin-kpi-grid biz-kpis" data-biz-kpis></div>
 
         <div class="biz-grid">
-          <section class="admin-card dash-panel biz-panel biz-wide" id="bizProfitPanel">
-            <header class="dash-panel-heading biz-panel-head biz-finance-head">
+          <section class="admin-card admin-workspace-card dash-panel biz-panel biz-wide" id="bizProfitPanel">
+            <header class="dash-panel-heading admin-workspace-heading biz-panel-head biz-finance-head">
               <h3 class="admin-card-title">Tình hình kinh doanh</h3>
               <div class="biz-finance-actions">
                 <span id="bizProfitStatusBadge" class="biz-caption" role="status">Chưa đủ dữ liệu</span>
@@ -88,36 +88,36 @@
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnExportProfitReport" disabled>Xuất ước tính</button>
               </div>
             </header>
-            <div class="biz-panel-body biz-finance-body">
+            <div class="admin-workspace-body biz-panel-body biz-finance-body">
               <div data-biz-reading></div>
               <div id="bizTargetBody"></div>
               <div data-biz-panel="profit"></div>
             </div>
           </section>
 
-          <section class="admin-card dash-panel biz-panel biz-wide">
-            <header class="dash-panel-heading biz-panel-head">
+          <section class="admin-card admin-workspace-card dash-panel biz-panel biz-wide">
+            <header class="dash-panel-heading admin-workspace-heading biz-panel-head">
               <h3 class="admin-card-title">Tiền thu theo thời gian</h3>
-              <label class="biz-panel-control">Gộp theo <select class="admin-select" data-biz-bucket><option value="day">Ngày</option><option value="week">Tuần</option><option value="month">Tháng</option></select></label>
+              <label class="biz-panel-control admin-control-label">Gộp theo <select class="admin-select" data-biz-bucket><option value="day">Ngày</option><option value="week">Tuần</option><option value="month">Tháng</option></select></label>
             </header>
-            <div class="biz-panel-body" data-biz-panel="cash"></div>
+            <div class="admin-workspace-body biz-panel-body" data-biz-panel="cash"></div>
           </section>
-          <div class="admin-card biz-group biz-wide">
+          <div class="admin-card admin-workspace-card biz-group biz-wide">
             ${panel('sources', 'Cơ cấu tiền thu')}
             ${panel('insights', 'So với kỳ trước')}
           </div>
-          <div class="admin-card biz-group biz-wide">
+          <div class="admin-card admin-workspace-card biz-group biz-wide">
           <div class="biz-wide biz-ranking-filter">
-            <label class="biz-panel-control">Xếp hạng theo <select class="admin-select" data-biz-sort><option value="value">Giá trị dòng giao dịch</option><option value="quantity">Số lượng</option></select></label>
+            <label class="biz-panel-control admin-control-label">Xếp hạng theo <select class="admin-select" data-biz-sort><option value="value">Giá trị dòng giao dịch</option><option value="quantity">Số lượng</option></select></label>
           </div>
           ${panel('products', 'Sản phẩm nổi bật')}
           ${panel('services', 'Dịch vụ nổi bật')}
           </div>
-          <div class="admin-card biz-group biz-wide">
+          <div class="admin-card admin-workspace-card biz-group biz-wide">
           ${panel('customers', 'Khách hàng mới')}
           ${panel('membership', 'Hạng thành viên hiện tại')}
           </div>
-          <div class="admin-card biz-group biz-wide">
+          <div class="admin-card admin-workspace-card biz-group biz-wide">
           ${panel('vouchers', 'Sử dụng voucher')}
           ${panel('points', 'Biến động điểm thưởng')}
           </div>
@@ -131,7 +131,7 @@
 
     function status(key) {
         if (state.loading.has(key)) return '<div class="biz-skeleton" role="status"><span class="ops-sr-only">Đang tải dữ liệu…</span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span></div>';
-        if (state.errors[key]) return `<div class="biz-panel-error" role="alert"><p class="biz-error">${esc(state.errors[key])}</p><button class="biz-text-button" type="button" data-biz-retry="${key}">Thử lại</button></div>`;
+        if (state.errors[key]) return `<div class="biz-panel-error" role="alert"><p class="biz-error">${esc(state.errors[key])}</p><button class="biz-text-button admin-text-action" type="button" data-biz-retry="${key}">Thử lại</button></div>`;
         return '';
     }
 
@@ -262,12 +262,12 @@
         overlay.id = 'bizPlanModal';
         overlay.className = 'admin-modal-overlay admin-modal-standard active biz-plan-modal';
         overlay.innerHTML = `<div class="admin-modal-card" role="dialog" aria-modal="true" aria-labelledby="bizPlanTitle" tabindex="-1">
-            <header class="biz-plan-header"><h3 id="bizPlanTitle" class="admin-modal-title">Kế hoạch thu và chi (${date(range.from)} – ${date(range.to)})</h3><button type="button" class="btn-modal-close" data-close-modal="bizPlanModal">Đóng</button></header>
+            <header class="admin-modal__header biz-plan-header"><h3 id="bizPlanTitle" class="admin-modal-title">Kế hoạch thu và chi (${date(range.from)} – ${date(range.to)})</h3><button type="button" class="btn-modal-close" data-close-modal="bizPlanModal">Đóng</button></header>
             <form onsubmit="return false;" class="biz-plan-form">
                 ${fields.map(([key, label, unit, min, max], i) => `<div><label class="form-label" for="plan-${key}">${label} (${unit}) ${i === 0 ? '<span class="biz-required">*</span>' : ''}</label><input id="plan-${key}" name="${key}" type="number" class="admin-input" min="${min}" max="${max}" step="${unit === '%' ? '0.0001' : '0.01'}" value="${expected?.[key] == null ? '' : esc(expected[key])}" ${i === 0 ? 'required' : ''}></div>`).join('')}
                 <p class="biz-caption">Có thể lưu riêng mục tiêu. Để tính ước tính, nhập đủ ba khoản chi phí; để trống cả ba khi chưa xác định. Các khoản chỉ áp dụng cho kỳ này.</p>
                 <p class="biz-error" data-plan-error role="alert" hidden></p>
-                <footer class="biz-plan-footer"><button type="button" class="admin-btn admin-btn-secondary" data-close-modal="bizPlanModal">Hủy</button><button type="button" class="admin-btn admin-btn-primary" data-plan-save>Lưu kế hoạch</button></footer>
+                <footer class="admin-modal__footer biz-plan-footer"><button type="button" class="admin-btn admin-btn-secondary" data-close-modal="bizPlanModal">Hủy</button><button type="button" class="admin-btn admin-btn-primary" data-plan-save>Lưu kế hoạch</button></footer>
             </form></div>`;
         document.body.appendChild(overlay);
         const form = overlay.querySelector('form');

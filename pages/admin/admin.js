@@ -655,7 +655,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const MODULE_SUBTABS_MAP = {
         'Dashboard': {
             title: '',
-            defaultTab: 'tab-dashboard-business',
+            defaultTab: 'tab-dashboard-operations',
             storageKey: 'pawpal_admin_dashboard_subtab',
             subtabs: [
                 { id: 'tab-dashboard-business', label: 'Kinh doanh' },
@@ -833,7 +833,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261119_complaint_compensation';
+    const MODULE_SCRIPT_VERSION = '20261121_dashboard_customer_reference';
     let staffDomainScriptsReady;
     async function loadStaffDomainScripts() {
         if (!staffDomainScriptsReady) staffDomainScriptsReady = (async () => {

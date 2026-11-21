@@ -20,7 +20,8 @@
     // Bảng CSDL -> nhóm dữ liệu cần tải lại khi bảng thay đổi
     const TABLE_RESOURCES = {
         appointment: ['periodAppointments', 'todayAppointments', 'backlogAppointments'],
-        appointment_item: ['periodAppointments', 'backlogAppointments'],
+        appointment_item: ['periodAppointments', 'todayAppointments', 'backlogAppointments'],
+        pet_profile: ['todayAppointments'],
         sales_order: ['periodOrders', 'actionOrders', 'openReturns', 'salesVelocity'],
         sales_order_detail: ['salesVelocity'],
         return_request: ['openReturns'],
@@ -36,6 +37,7 @@
 
     // Khối hiển thị -> nhóm dữ liệu phụ thuộc
     const PANEL_RESOURCES = {
+        agenda: ['todayAppointments'],
         appointmentStatus: ['periodAppointments'],
         orderStatus: ['periodOrders'],
         topServices: ['periodAppointments'],
@@ -53,6 +55,16 @@
         lowStock: ['inventory', 'reservations', 'salesVelocity'],
         openTickets: ['openTickets']
     };
+    const RESOURCE_PERMISSIONS = {
+        periodAppointments: ['appointment', 'appointment_item'],
+        todayAppointments: ['appointment', 'appointment_item', 'pet_profile'],
+        backlogAppointments: ['appointment', 'appointment_item'],
+        periodOrders: ['sales_order'], actionOrders: ['sales_order'],
+        openReturns: ['return_request', 'sales_order'], staff: ['staff'], schedules: ['staff_schedule'],
+        inventory: ['inventory', 'product_variant', 'product'], reservations: ['stock_reservation'],
+        salesVelocity: ['sales_order_detail', 'sales_order'],
+        openTickets: ['support_ticket'], periodTickets: ['support_ticket'], periodReviews: ['review']
+    };
 
     const M = () => window.PawpalOpsMetrics;
 
@@ -67,11 +79,14 @@
         dirty: new Set(),
         alertsPage: 1,
         alertsScope: 'all',
+        alertsKind: 'all',
+        agendaPage: 1,
         lastUpdatedAt: null,
         channel: null,
         realtime: 'connecting',
         debounceTimer: null,
         pollTimer: null,
+        clockTimer: null,
         inFlight: null,
         generation: 0,
         listeners: []
@@ -143,19 +158,20 @@
             const metrics = M();
             const startIso = `${period.today}T00:00:00+07:00`;
             const endIso = `${metrics.shiftDateKey(period.today, 1)}T00:00:00+07:00`;
-            return readPaged(() => client.from('appointment').select('id,appointment_status')
+            return readPaged(() => client.from('appointment').select(`${APPOINTMENT_COLUMNS},pet:pet_id(pet_name)`)
                 .gte('scheduled_start_at', startIso).lt('scheduled_start_at', endIso));
         },
         async backlogAppointments(client) {
             const groups = M().STATUS_GROUPS.appointment;
-            const now = Date.now();
+            // Cache tomorrow too: records can enter the 24-hour alert horizon without a DB event.
+            // The local rule still filters to <=24h; midnight refresh advances this bound.
+            const horizonEnd = `${M().shiftDateKey(M().vnDateKey(new Date()), 2)}T00:00:00+07:00`;
             const [pending, active] = await Promise.all([
                 readPaged(() => client.from('appointment').select(APPOINTMENT_COLUMNS).in('appointment_status', variants(groups.pending))),
-                // Lịch đã xác nhận/đang làm quanh thời điểm hiện tại: phát hiện trễ hẹn, chưa có KTV, quá giờ.
+                // Giữ mọi lịch cũ còn mở; không loại việc chưa xử lý chỉ vì đã qua nhiều ngày.
                 readPaged(() => client.from('appointment').select(APPOINTMENT_COLUMNS)
                     .in('appointment_status', variants([...groups.confirmed, ...groups.checked_in, ...groups.in_progress]))
-                    .gte('scheduled_start_at', new Date(now - 2 * 86_400_000).toISOString())
-                    .lt('scheduled_start_at', new Date(now + M().THRESHOLDS.appointmentUnassignedHours * 3_600_000).toISOString()))
+                    .lt('scheduled_start_at', horizonEnd))
             ]);
             return { rows: [...pending.rows, ...active.rows], truncated: pending.truncated || active.truncated };
         },
@@ -217,7 +233,7 @@
                 .not('so.order_status', 'in', inList(excluded)));
         },
         async openTickets(client) {
-            return readPaged(() => client.from('support_ticket').select('id,ticket_code,subject,status,priority,created_at,first_response_at')
+            return readPaged(() => client.from('support_ticket').select('id,ticket_code,subject,status,priority,created_at,first_response_at,assigned_staff_id')
                 .not('status', 'in', inList(M().STATUS_GROUPS.ticket.closed)));
         },
         async periodTickets(client, period) {
@@ -253,6 +269,10 @@
         };
         await Promise.all(list.map(name => withSlot(async () => {
             try {
+                const access = window.PawpalAdminAccess;
+                if (access && (!access.isAdmin() || RESOURCE_PERMISSIONS[name].some(table => !access.state.user?.permissions?.includes(`${table}.read`)))) {
+                    throw { code: '42501' };
+                }
                 const result = await LOADERS[name](client, period);
                 if (generation !== state.generation) return;
                 state.data[name] = result;
@@ -355,7 +375,11 @@
         if (target === 'appointment' && recordId) config = { module: 'Dịch vụ', keys: { pawpal_admin_services_active_subtab: 'tab-service-detail', pawpal_admin_service_selected_id: recordId } };
         else if (target === 'order' && recordId) config = { module: 'Bán hàng', keys: { pawpal_admin_order_subtab: 'tab-order-detail', pawpal_admin_order_selected_id: recordId } };
         else if (target === 'ticket' && recordId) config = { module: 'Khiếu nại', keys: { pawpal_admin_complaint_active_subtab: 'tab-complaint-detail', pawpal_admin_complaint_selected_id: recordId } };
-        else if (target === 'return') config = { module: 'Khiếu nại', keys: { pawpal_admin_complaint_active_subtab: 'tab-complaint-orders' } };
+        else if (target === 'return' && recordId) {
+            const orderId = rows('openReturns').find(row => row.id === recordId)?.sales_order_id;
+            config = orderId ? { module: 'Bán hàng', keys: { pawpal_admin_order_subtab: 'tab-order-detail', pawpal_admin_order_selected_id: orderId } }
+                : { module: 'Khiếu nại', keys: { pawpal_admin_complaint_active_subtab: 'tab-complaint-orders' } };
+        }
         else if (target === 'appointment') config = NAV_TARGETS.appointments;
         else if (target === 'order') config = NAV_TARGETS.orders;
         else if (target === 'ticket' || target === 'tickets') {
@@ -370,7 +394,24 @@
         }
         if (!config) return;
         Object.entries(config.keys).forEach(([key, value]) => sessionStorage.setItem(key, value));
+        // Cached modules retain their selected ID in memory as well as sessionStorage.
+        if (config.keys.pawpal_admin_service_selected_id && window.PawpalServices?.state) {
+            window.PawpalServices.state.selectedBookingId = config.keys.pawpal_admin_service_selected_id;
+        }
+        if (config.keys.pawpal_admin_order_selected_id && window.PawpalOrders?.state) {
+            window.PawpalOrders.state.selectedOrderId = config.keys.pawpal_admin_order_selected_id;
+        }
+        if (config.keys.pawpal_admin_complaint_selected_id && window.PawpalComplaints?.state) {
+            window.PawpalComplaints.state.currentTicketId = config.keys.pawpal_admin_complaint_selected_id;
+            window.PawpalComplaints.state.currentActiveTicket = null;
+        }
         const button = [...document.querySelectorAll('.sidebar-menu-btn')].find(node => node.getAttribute('data-title') === config.module);
+        // Existing router deep-link loader calls openTicketDetail after destination readiness,
+        // including when this ticket is absent from the cached complaint page.
+        if (target === 'ticket' && recordId && button) {
+            window.location.hash = `tab-complaint-detail?id=${encodeURIComponent(recordId)}`;
+            return;
+        }
         if (button) button.click();
         else window.location.href = '/admin';
     }
@@ -426,10 +467,38 @@
             activeOrders: safeRows('actionOrders'),
             openReturns: safeRows('openReturns'),
             openTickets: safeRows('openTickets'),
-            stockRisks: PANEL_RESOURCES.stock.every(available) ? stockRisks() : [],
+            stockRisks: PANEL_RESOURCES.stock.every(name => available(name) && !state.data[name].truncated) ? stockRisks() : [],
             capacity: PANEL_RESOURCES.staff.every(available) ? staffSummary().capacityRisks : null,
             now: new Date()
         });
+    }
+
+    function currentTasks() {
+        return M().taskBoard(currentAlerts(), {
+            appointments: state.errors.backlogAppointments ? [] : rows('backlogAppointments'),
+            tickets: state.errors.openTickets ? [] : rows('openTickets'),
+            staff: rows('staff'), staffAvailable: !state.errors.staff && !!state.data.staff
+        });
+    }
+
+    function saveTaskFilters() {
+        try { sessionStorage.setItem('pawpal_admin_ops_dashboard_tasks', JSON.stringify({ scope: state.alertsScope, kind: state.alertsKind })); } catch (_) { /* storage unavailable */ }
+    }
+
+    function renderPagination(node, total, page, attribute) {
+        const pages = Math.ceil(total / ALERTS_PER_PAGE);
+        node.hidden = pages <= 1;
+        if (node.hidden) { node.innerHTML = ''; return; }
+        const button = (value, label, disabled, active = false) => `<button class="pagination-btn${active ? ' active' : ''}" type="button" ${attribute}="${value}"${disabled ? ' disabled' : ''}${active ? ' aria-current="page"' : ''}>${label}</button>`;
+        const visible = [...new Set([1, pages, page - 1, page, page + 1])].filter(n => n > 0 && n <= pages).sort((a, b) => a - b);
+        node.innerHTML = button(page - 1, '&lt;', page === 1) + visible.map((n, i) => `${i && n - visible[i - 1] > 1 ? '<span aria-hidden="true">…</span>' : ''}${button(n, n, false, n === page)}`).join('') + button(page + 1, '&gt;', page === pages);
+        node.firstElementChild.setAttribute('aria-label', 'Trang trước');
+        node.lastElementChild.setAttribute('aria-label', 'Trang sau');
+    }
+
+    function appointmentTime(value) {
+        const date = new Date(value);
+        return value && Number.isFinite(+date) ? new Intl.DateTimeFormat('vi-VN', { timeZone: M().TIME_ZONE, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(date) : 'Chưa có mốc thời gian';
     }
 
     // ------------------------------------------------------------------
@@ -516,7 +585,7 @@
     }
 
     function errorBlock(message, panelName) {
-        return `<p class="ops-error">${esc(message)} <button class="ops-link-btn" data-ops-retry="${esc(panelName)}" type="button">Thử lại</button></p>`;
+        return `<p class="ops-error">${esc(message)} <button class="ops-link-btn admin-text-action" data-ops-retry="${esc(panelName)}" type="button">Thử lại</button></p>`;
     }
 
     function truncatedNote(truncated) {
@@ -553,6 +622,7 @@
             const status = resourcesStatus(KPI_RESOURCES[key]);
             if (status.status === 'loading') return set(key, '…', 'Đang tải');
             if (status.status === 'error') return set(key, '—', status.message, { error: true });
+            if (status.truncated) return set(key, '—', 'Nguồn vượt giới hạn đọc. Chưa xác định được tổng đầy đủ.', { error: true });
             const [value, tipText, attention] = compute();
             set(key, value, tipText, { attention });
         };
@@ -592,65 +662,63 @@
 
     function renderAlerts() {
         const pagination = state.root.querySelector('[data-ops-pagination]');
-        const hidePagination = () => { pagination.hidden = true; pagination.innerHTML = ''; };
+        const dependencies = PANEL_RESOURCES.alerts;
+        const missing = dependencies.filter(name => state.errors[name] || !state.data[name] || state.data[name].truncated);
+        const loading = dependencies.some(name => state.loading.has(name));
         const title = panel('alerts').querySelector('[data-ops-title]');
         title.dataset.tip = thresholdsTip();
         title.tabIndex = 0;
-        const status = resourcesStatus(PANEL_RESOURCES.alerts);
-        if (status.status !== 'ok') hidePagination();
-        const missing = PANEL_RESOURCES.alerts.filter(name => state.errors[name] || !state.data[name]);
-        const warning = missing.length ? `<p class="ops-filter-error" role="alert">Chưa đủ nguồn dữ liệu; chỉ hiển thị các cảnh báo đã tải được. <button type="button" class="ops-link-btn" data-ops-retry="alerts">Thử lại</button></p>` : '';
-        if (missing.length === PANEL_RESOURCES.alerts.length) { setPanel('alerts', warning); return; }
-        (({ refreshing }) => {
-            const metrics = M();
-            const allAlerts = currentAlerts();
-            if (!allAlerts.length) {
-                hidePagination();
-                return setPanel('alerts', warning + (missing.length ? '' : '<p class="ops-empty">Không có việc quá hạn theo ngưỡng hiện tại.</p>'), { tag: missing.length ? 'Chưa đầy đủ' : 'Hiện tại', refreshing });
-            }
-            const longWaiting = allAlerts.filter(alert => alert.waitingHours !== null && alert.waitingHours > 168);
-            const alerts = state.alertsScope === 'older' ? longWaiting : state.alertsScope === 'recent' ? allAlerts.filter(alert => alert.waitingHours === null || alert.waitingHours <= 168) : allAlerts;
-            const urgentCount = allAlerts.filter(alert => alert.severity === 'urgent').length;
-            const filters = `<div class="ops-alert-filters" role="group" aria-label="Lọc công việc theo thời gian chờ">${[['all', 'Tất cả', allAlerts.length], ['recent', 'Chờ tối đa 7 ngày', allAlerts.length - longWaiting.length], ['older', 'Chờ trên 7 ngày', longWaiting.length]].map(([id,label,count]) => `<button type="button" class="ops-alert-filter${state.alertsScope === id ? ' active' : ''}" data-ops-alert-scope="${id}" aria-pressed="${state.alertsScope === id}">${label} (${num(count)})</button>`).join('')}</div>`;
-            const byKind = new Map();
-            allAlerts.forEach(alert => {
-                const entry = byKind.get(alert.kind) || { total: 0, urgent: 0 };
-                entry.total += 1;
-                if (alert.severity === 'urgent') entry.urgent += 1;
-                byKind.set(alert.kind, entry);
-            });
-            const kindBars = rankedBars([...byKind.entries()]
-                .sort((a, b) => b[1].total - a[1].total)
-                .map(([kind, entry]) => ({ label: KIND_LABELS[kind] || kind, value: entry.total, tone: entry.urgent ? 'bad' : 'warn', tip: `${KIND_LABELS[kind] || kind}: ${num(entry.total)} việc\nKhẩn cấp: ${num(entry.urgent)}` })));
-            const navOf = alert => (alert.kind === 'stock' ? 'stock' : alert.kind === 'staff' ? 'staff' : alert.kind);
-            const severityDot = alert => (alert.severity === 'urgent' ? '<span class="ops-dot is-urgent">• Khẩn cấp</span>' : '<span class="ops-dot is-warning">• Cần xử lý</span>');
-            const waiting = alert => (alert.waitingHours === null ? '' : metrics.formatWaiting(alert.waitingHours));
-            const openButton = alert => `<button class="ops-link-btn" data-ops-nav="${esc(navOf(alert))}" data-ops-record="${esc(alert.recordId || '')}" type="button">Mở</button>`;
-            const top = alerts.slice(0, 5).map(alert => `<li class="ops-task">${severityDot(alert)}<span class="ops-task-ref" title="${esc(`${KIND_LABELS[alert.kind]} ${alert.ref}`)}">${esc(alert.ref)}</span><span class="ops-task-reason" title="${esc(alert.reason)}">${esc(alert.reason)}</span><span class="ops-task-wait">${esc(waiting(alert))}</span>${openButton(alert)}</li>`).join('');
-            const toggle = `<button class="ops-link-btn" data-ops-toggle-alerts type="button">${state.alertsExpanded ? 'Thu gọn' : `Xem tất cả ${num(alerts.length)} việc`}</button>`;
-            let full = '';
-            if (state.alertsExpanded && alerts.length) {
-                const pages = Math.ceil(alerts.length / ALERTS_PER_PAGE);
-                state.alertsPage = Math.min(Math.max(1, state.alertsPage), pages);
-                const slice = alerts.slice((state.alertsPage - 1) * ALERTS_PER_PAGE, state.alertsPage * ALERTS_PER_PAGE);
-                full = `<div class="table-responsive-wrapper"><table class="admin-table"><thead><tr><th>Mức độ</th><th>Loại</th><th>Mã tham chiếu</th><th>Lý do</th><th class="num">Đã chờ</th><th>Thao tác</th></tr></thead><tbody>${slice.map(alert => `<tr class="${alert.severity === 'urgent' ? 'row-urgent' : 'row-warning'}"><td>${severityDot(alert)}</td><td>${esc(KIND_LABELS[alert.kind] || alert.kind)}</td><td>${esc(alert.ref)}</td><td>${esc(alert.reason)}</td><td class="num">${esc(waiting(alert) || '—')}</td><td>${openButton(alert)}</td></tr>`).join('')}</tbody></table></div>`;
-                if (pages > 1) {
-                    const buttons = [`<button aria-label="Trang trước" data-ops-page="${state.alertsPage - 1}" type="button"${state.alertsPage === 1 ? ' disabled' : ''}>&lt;</button>`];
-                    const visiblePages = [...new Set([1, pages, state.alertsPage - 1, state.alertsPage, state.alertsPage + 1])].filter(page => page >= 1 && page <= pages).sort((a,b) => a-b);
-                    visiblePages.forEach((page, index) => {
-                        if (index && page - visiblePages[index - 1] > 1) buttons.push('<span class="ops-page-gap" aria-hidden="true">…</span>');
-                        buttons.push(`<button class="${page === state.alertsPage ? 'active' : ''}" data-ops-page="${page}" type="button"${page === state.alertsPage ? ' aria-current="page"' : ''}>${page}</button>`);
-                    });
-                    buttons.push(`<button aria-label="Trang sau" data-ops-page="${state.alertsPage + 1}" type="button"${state.alertsPage === pages ? ' disabled' : ''}>&gt;</button>`);
-                    pagination.innerHTML = buttons.join('');
-                    pagination.hidden = false;
-                } else hidePagination();
-            } else hidePagination();
-            const list = alerts.length ? `<ul class="ops-tasks">${top}</ul><div class="ops-foot"><span></span>${toggle}</div>` : '<p class="ops-empty">Không có công việc trong nhóm thời gian chờ này.</p>';
-            const backlog = longWaiting.length ? `<p class="ops-caption">${num(longWaiting.length)} việc đã chờ trên 7 ngày, vẫn cần được xử lý.</p>` : '';
-            setPanel('alerts', `${warning}${filters}<div class="ops-alert-layout"><div><p class="ops-hero"><strong>${num(allAlerts.length)}</strong><span>việc${missing.length ? ' đã tải được' : ''}, ${num(urgentCount)} khẩn cấp</span></p>${kindBars}${backlog}</div><div>${list}</div></div>${full}`, { tag: missing.length ? 'Chưa đầy đủ' : 'Hiện tại', refreshing });
-        })({ refreshing: state.loading.size > 0 });
+        if (dependencies.every(name => !state.data[name] && !state.errors[name])) {
+            pagination.hidden = true;
+            return setPanel('alerts', skeleton());
+        }
+        const tasks = currentTasks();
+        const byKind = state.alertsKind === 'all' ? tasks : tasks.filter(task => task.kind === state.alertsKind);
+        const matches = (task, scope) => scope === 'urgent' ? task.severity === 'urgent'
+            : scope === 'unassigned' ? task.unassigned
+            : scope === 'older' ? task.waitingHours !== null && task.waitingHours > 168
+            : scope === 'recent' ? task.waitingHours === null || task.waitingHours <= 168 : true;
+        const filtered = byKind.filter(task => matches(task, state.alertsScope));
+        const scopes = [['all', 'Tất cả'], ['urgent', 'Khẩn cấp'], ['unassigned', 'Chưa phân công'], ['older', 'Chờ trên 7 ngày']];
+        const filters = `<div class="ops-work-filters"><div class="admin-filter-tab ops-alert-filters admin-filter-tabs" role="group" aria-label="Lọc công việc">${scopes.map(([id, label]) =>
+            `<button type="button" class="admin-filter-tab ops-alert-filter${state.alertsScope === id ? ' active' : ''}" data-ops-alert-scope="${id}" aria-pressed="${state.alertsScope === id}">${label} (${num(byKind.filter(task => matches(task, id)).length)})</button>`).join('')}</div>
+            <label class="ops-kind-label admin-control-label">Nhóm công việc <select class="admin-select" data-ops-task-kind><option value="all">Tất cả nhóm</option>${Object.entries(KIND_LABELS).map(([kind, label]) => `<option value="${kind}"${state.alertsKind === kind ? ' selected' : ''}>${label}</option>`).join('')}</select></label></div>`;
+        const warning = missing.length ? `<p class="ops-error" role="status">${loading ? 'Đang tải các nguồn còn lại.' : 'Một số nguồn bị lỗi hoặc vượt giới hạn đọc.'} Danh sách hiện có chưa đầy đủ.${!loading ? ' <button type="button" class="ops-link-btn admin-text-action" data-ops-retry="alerts">Thử lại</button>' : ''}</p>` : '';
+        const ownerWarning = state.errors.staff ? '<p class="ops-error">Chưa tải được tên nhân viên. Thông tin phân công vẫn dựa trên hồ sơ gốc. <button type="button" class="ops-link-btn admin-text-action" data-ops-retry="staff">Thử lại</button></p>' : '';
+        state.alertsPage = Math.min(Math.max(1, state.alertsPage), Math.max(1, Math.ceil(filtered.length / ALERTS_PER_PAGE)));
+        const slice = filtered.slice((state.alertsPage - 1) * ALERTS_PER_PAGE, state.alertsPage * ALERTS_PER_PAGE);
+        const actionLabels = { appointment: 'Mở lịch hẹn', order: 'Mở đơn hàng', ticket: 'Mở hỗ trợ', return: 'Mở đơn gốc', stock: 'Mở kho hàng', staff: 'Mở lịch làm việc' };
+        const table = slice.length ? `<div class="table-responsive-wrapper"><table class="admin-table ops-work-table"><thead><tr><th>Công việc</th><th>Lý do cần xử lý</th><th>Người phụ trách</th><th>Mốc thời gian</th><th>Thao tác</th></tr></thead><tbody>${slice.map(task =>
+            `<tr class="${task.severity === 'urgent' ? 'row-urgent' : 'row-warning'}" data-ops-task-id="${esc(task.id)}"><td><strong class="ops-record-name admin-table__primary">${esc(task.ref)}</strong><span class="ops-cell-meta admin-table__secondary">${esc(KIND_LABELS[task.kind])}</span></td>
+            <td><span class="ops-dot ${task.severity === 'urgent' ? 'is-urgent' : 'is-warning'}">• ${task.severity === 'urgent' ? 'Khẩn cấp' : 'Cần xử lý'}</span>${task.reasons.map(reason => `<span class="ops-reason">${esc(reason)}</span>`).join('')}</td>
+            <td>${esc(task.ownerLabel)}</td><td>${task.scheduledAt ? `Giờ hẹn ${esc(appointmentTime(task.scheduledAt))}` : 'Chưa có hạn xử lý được xác nhận'}${task.waitingHours !== null ? `<span class="ops-cell-meta admin-table__secondary">Đã chờ ${esc(M().formatWaiting(task.waitingHours))}</span>` : ''}</td>
+            <td><button class="ops-link-btn admin-text-action" data-ops-nav="${esc(task.kind)}" data-ops-record="${esc(task.recordId || '')}" type="button">${actionLabels[task.kind]}</button></td></tr>`).join('')}</tbody></table></div>`
+            : `<p class="ops-empty">${missing.length ? 'Chưa có công việc phù hợp trong phần dữ liệu đã tải.' : tasks.length ? 'Không có công việc phù hợp bộ lọc.' : 'Không có việc cần xử lý theo ngưỡng hiện tại.'}</p>`;
+        setPanel('alerts', `${filters}${warning}${ownerWarning}${table}`, { tag: missing.length ? 'Hiện tại · Chưa đầy đủ' : 'Hiện tại', refreshing: loading });
+        renderPagination(pagination, filtered.length, state.alertsPage, 'data-ops-page');
     }
+
+    function renderAgenda() {
+        const pagination = state.root.querySelector('[data-ops-agenda-pagination]');
+        const status = resourcesStatus(PANEL_RESOURCES.agenda);
+        pagination.hidden = true;
+        if (status.status === 'loading') return setPanel('agenda', skeleton());
+        if (status.status === 'error') return setPanel('agenda', errorBlock(status.message, 'agenda'));
+        const appointments = M().dailyAgenda(rows('todayAppointments'), state.period.today);
+        state.agendaPage = Math.min(Math.max(1, state.agendaPage), Math.max(1, Math.ceil(appointments.length / ALERTS_PER_PAGE)));
+        const slice = appointments.slice((state.agendaPage - 1) * ALERTS_PER_PAGE, state.agendaPage * ALERTS_PER_PAGE);
+        panel('agenda').querySelector('[data-ops-title]').textContent = `Lịch bắt đầu hôm nay (${M().formatDateKey(state.period.today)})`;
+        const table = slice.length ? `<div class="table-responsive-wrapper"><table class="admin-table ops-agenda-table"><thead><tr><th>Giờ hẹn</th><th>Bé cưng và lịch hẹn</th><th>Dịch vụ</th><th>Người phụ trách</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>${slice.map(row => {
+            const group = M().classifyAppointment(row.appointment_status);
+            const task = M().taskBoard([{ kind: 'appointment', recordId: row.id, ref: row.appointment_code, severity: 'warning', reason: '' }], { appointments: [row], staff: rows('staff'), staffAvailable: !state.errors.staff && !!state.data.staff })[0];
+            const services = (row.items || []).filter(item => !M().isItemCancelled(item.status)).map(item => item.name_snapshot).filter(Boolean);
+            const pet = Array.isArray(row.pet) ? row.pet[0] : row.pet;
+            return `<tr><td>${esc(appointmentTime(row.scheduled_start_at))}</td><td><strong class="ops-record-name admin-table__primary">${esc(pet?.pet_name || 'Chưa tải được tên bé')}</strong><span class="ops-cell-meta admin-table__secondary">${esc(row.appointment_code || row.id)}</span></td><td>${esc([...new Set(services)].join(', ') || 'Chưa có dòng dịch vụ')}</td><td>${esc(task.ownerLabel)}</td><td>${esc(M().APPOINTMENT_LABELS[group] || 'Chưa phân loại')}</td><td><button type="button" class="ops-link-btn admin-text-action" data-ops-nav="appointment" data-ops-record="${esc(row.id)}">Mở lịch hẹn</button></td></tr>`;
+        }).join('')}</tbody></table></div>` : '<p class="ops-empty">Không còn lịch bắt đầu hôm nay đang chờ hoặc đang phục vụ.</p>';
+        setPanel('agenda', truncatedNote(status.truncated) + table, { tag: status.truncated ? 'Chưa đầy đủ' : 'Hôm nay', refreshing: status.refreshing });
+        renderPagination(pagination, appointments.length, state.agendaPage, 'data-ops-agenda-page');
+    }
+
 
     function renderStatusPanel(panelName, resource, breakdownFn, segments, unit, emptyText) {
         guard(panelName, PANEL_RESOURCES[panelName], ({ refreshing, truncated }) => {
@@ -736,7 +804,7 @@
                 });
             }).join('');
             const more = risks.length > 6 ? `Và ${num(risks.length - 6)} SKU khác` : '';
-            setPanel('stock', `<ul class="ops-meters">${meters}</ul><div class="ops-foot"><span>${more}</span><button class="ops-link-btn" data-ops-nav="stock" type="button">Xem kho hàng</button></div>`, { tag: 'Khả dụng / tối thiểu', refreshing });
+            setPanel('stock', `<ul class="ops-meters">${meters}</ul><div class="ops-foot"><span>${more}</span><button class="ops-link-btn admin-text-action" data-ops-nav="stock" type="button">Xem kho hàng</button></div>`, { tag: 'Khả dụng / tối thiểu', refreshing });
         });
     }
 
@@ -766,7 +834,7 @@
         if (empty) {
             const next = { today: ['7d', '7 ngày'], '7d': ['30d', '30 ngày'], '30d': ['90d', '90 ngày'] }[state.preset];
             const label = state.preset === 'today' ? 'Hôm nay' : 'Kỳ này';
-            node.innerHTML = `<span>${label} chưa có lịch hẹn và đơn hàng.</span>${next ? `<button class="ops-link-btn" data-ops-range="${next[0]}" type="button">Xem ${next[1]}</button>` : ''}`;
+            node.innerHTML = `<span>${label} chưa có lịch hẹn và đơn hàng.</span>${next ? `<button class="ops-link-btn admin-text-action" data-ops-range="${next[0]}" type="button">Xem ${next[1]}</button>` : ''}`;
         }
     }
 
@@ -802,6 +870,7 @@
         renderToolbar();
         renderKpis();
         renderAlerts();
+        renderAgenda();
         renderStatusPanel('appointmentStatus', 'periodAppointments', M().appointmentStatusBreakdown, APPOINTMENT_SEGMENTS, 'lịch hẹn', 'Chưa có lịch hẹn.');
         renderStatusPanel('orderStatus', 'periodOrders', M().orderStatusBreakdown, ORDER_SEGMENTS, 'đơn hàng', 'Chưa có đơn hàng.');
         renderTopServices();
@@ -851,6 +920,8 @@
 
     // Đổi kỳ hoặc làm mới: tải lại toàn bộ, giữ khung cũ làm mờ trong lúc tải.
     function reloadAll() {
+        const period = M().resolvePeriod(state.preset, new Date(), state.custom);
+        if (period.ok) state.period = period;
         state.generation++;
         state.loading.clear();
         state.dirty.clear();
@@ -863,6 +934,7 @@
         if (!period.ok) { showFilterError(period.error); return; }
         showFilterError('');
         state.preset = preset;
+        state.custom = custom || {};
         state.period = period;
         state.alertsPage = 1;
         try { sessionStorage.setItem('pawpal_admin_ops_dashboard_range', JSON.stringify({ preset, custom: preset === 'custom' ? custom : null })); } catch (_) { /* bỏ qua */ }
@@ -870,7 +942,15 @@
     }
 
     function bindEvents() {
+        on(state.root, 'change', event => {
+            if (!event.target.matches('[data-ops-task-kind]')) return;
+            state.alertsKind = event.target.value;
+            state.alertsPage = 1;
+            saveTaskFilters();
+            renderAlerts();
+        });
         on(state.root, 'click', event => {
+            if (event.target.closest('[data-ops-refresh]')) { reloadAll(); return; }
             const range = event.target.closest('[data-ops-range]');
             if (range) {
                 const preset = range.dataset.opsRange;
@@ -895,12 +975,7 @@
             if (scope) {
                 state.alertsScope = scope.dataset.opsAlertScope;
                 state.alertsPage = 1;
-                renderAlerts();
-                return;
-            }
-            if (event.target.closest('[data-ops-toggle-alerts]')) {
-                state.alertsExpanded = !state.alertsExpanded;
-                state.alertsPage = 1;
+                saveTaskFilters();
                 renderAlerts();
                 return;
             }
@@ -915,6 +990,12 @@
             if (page && !page.disabled) {
                 state.alertsPage = Number(page.dataset.opsPage) || 1;
                 renderAlerts();
+                return;
+            }
+            const agendaPage = event.target.closest('[data-ops-agenda-page]');
+            if (agendaPage && !agendaPage.disabled) {
+                state.agendaPage = Number(agendaPage.dataset.opsAgendaPage) || 1;
+                renderAgenda();
                 return;
             }
             const nav = event.target.closest('[data-ops-nav]');
@@ -934,11 +1015,22 @@
             if (TABLE_RESOURCES[table]) requestReload(TABLE_RESOURCES[table]);
         });
         on(document, 'visibilitychange', () => {
+            if (!document.hidden) refreshClock();
             if (!document.hidden && state.dirty.size) flushReload();
         });
         on(window, 'admin:module-show', () => { if(state.dirty.size) flushReload(); });
         on(window, 'admin:subtab-change', () => { if(state.dirty.size) flushReload(); });
         bindTooltip();
+    }
+
+    function refreshClock() {
+        if (!state.root?.isConnected || document.hidden || !state.root.getClientRects().length || !state.period) return;
+        if (M().vnDateKey(new Date()) !== state.period.today) {
+            reloadAll();
+        } else {
+            // Age-based alerts must advance even when Realtime receives no database event.
+            renderAll();
+        }
     }
 
     // ------------------------------------------------------------------
@@ -960,7 +1052,13 @@
         state.errors = {};
         state.loading.clear();
         state.dirty.clear();
-        state.alertsExpanded = false;
+        state.alertsPage = state.agendaPage = 1;
+        state.alertsScope = state.alertsKind = 'all';
+        try {
+            const filters = JSON.parse(sessionStorage.getItem('pawpal_admin_ops_dashboard_tasks') || 'null');
+            if (['all', 'urgent', 'unassigned', 'older', 'recent'].includes(filters?.scope)) state.alertsScope = filters.scope;
+            if (filters?.kind === 'all' || Object.hasOwn(KIND_LABELS, filters?.kind)) state.alertsKind = filters.kind;
+        } catch (_) { /* invalid saved filters */ }
         state.realtime = 'connecting';
         bindEvents();
         let saved = null;
@@ -973,10 +1071,12 @@
         const preset = saved?.preset && ['today', '7d', '30d', '90d', 'custom'].includes(saved.preset) ? saved.preset : 'today';
         const period = M().resolvePeriod(preset, new Date(), saved?.custom || {});
         applyPeriod(period.ok ? preset : 'today', saved?.custom || {});
+        state.clockTimer = setInterval(refreshClock, 60_000);
     }
 
     function unmount() {
         clearTimeout(state.debounceTimer);
+        clearInterval(state.clockTimer);
         stopPolling();
         unsubscribeRealtime();
         state.listeners.splice(0).forEach(remove => remove());

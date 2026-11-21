@@ -12,9 +12,16 @@
     window.PawpalDashboard = window.PawpalDashboard || {};
     const subtabs = window.PawpalDashboard.subtabs = window.PawpalDashboard.subtabs || {};
 
+    function activeTab() {
+        const hash = window.location.hash.slice(1).split('?')[0];
+        const saved = sessionStorage.getItem('pawpal_admin_dashboard_subtab');
+        const valid = value => ['tab-dashboard-business', 'tab-dashboard-operations'].includes(value);
+        return valid(hash) ? hash : valid(saved) ? saved : 'tab-dashboard-operations';
+    }
+
     async function initDashboard(options = {}) {
         document.body.classList.add('dashboard-active');
-        const activeSubtab = sessionStorage.getItem('pawpal_admin_dashboard_subtab') || 'tab-dashboard-business';
+        const activeSubtab = activeTab();
         if (activeSubtab === 'tab-dashboard-operations') {
             subtabs.business?.unmount?.();
             const opsRoot = document.getElementById('subtab-tab-dashboard-operations');
@@ -31,7 +38,7 @@
     }
 
     async function refreshDashboard(options = {}) {
-        const activeSubtab = sessionStorage.getItem('pawpal_admin_dashboard_subtab') || 'tab-dashboard-business';
+        const activeSubtab = activeTab();
         if (activeSubtab === 'tab-dashboard-operations') {
             const ops = subtabs.operations || window.PawpalOperationsDashboard;
             if (ops?.refresh) {
