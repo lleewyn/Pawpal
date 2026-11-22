@@ -696,7 +696,7 @@ function buildOrderCard(o) {
                     Đã nhận được hàng
                 </button>` : ''}
                 ${canReturnOrder(o) ? `
-                <button class="btn-track-order" onclick="handleGuestReturnOrder('${esc(o.id)}')">
+                <button type="button" class="btn-track-order" onclick="handleGuestReturnRequest('${esc(o.id)}')">
                     Yêu cầu đổi trả
                 </button>` : ''}
                 ${o.status === 'return_pending' ? `
@@ -870,7 +870,7 @@ function openVerifiedGuestReturn(order) {
     const verifiedPhone = rgVerifiedPhone;
     const dialog = document.createElement('dialog');
     dialog.id = 'verifiedGuestReturn';
-    dialog.style.cssText = 'width:min(540px,92vw);padding:24px;border:1px solid #dce6db;border-radius:9px;max-height:90vh;box-shadow:0 12px 32px rgba(35,107,72,0.12)';
+    dialog.style.cssText = 'width:min(540px,92vw);margin:auto;padding:24px;border:1px solid #dce6db;border-radius:9px;max-height:90vh;overscroll-behavior:contain;box-shadow:0 12px 32px rgba(35,107,72,0.12)';
     dialog.innerHTML = `<form>
         <h3 style="font-family:Lora,serif;color:#214939;font-size:20px;margin-bottom:4px;">Yêu cầu trả hàng</h3>
         <p style="font-size:12.5px;color:#526d5b;margin-bottom:14px;">Đơn hàng <strong>${esc(order.id)}</strong> · SĐT <strong>${esc(verifiedPhone)}</strong></p>
@@ -879,7 +879,7 @@ function openVerifiedGuestReturn(order) {
             ${order.products.map((item,index)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #edf2eb;">
                 <span style="font-size:13px;color:#203a2c;font-weight:500;">${esc(item.name)}</span>
                 <div style="display:flex;align-items:center;gap:6px;">
-                    <span style="font-size:11.5px;color:#718476;">Tối đa ${Number(item.quantity)}:</span>
+                    <span style="font-size:11.5px;color:#718476;white-space:nowrap;">Tối đa ${Number(item.quantity)}:</span>
                     <input data-line="${index}" class="form-control" type="number" min="0" max="${Number(item.quantity)}" step="1" value="0" style="width:70px;height:32px;padding:2px 8px;font-size:13px;border-radius:6px;border:1px solid #d1decf;">
                 </div>
             </div>`).join('')}
@@ -898,7 +898,7 @@ function openVerifiedGuestReturn(order) {
         <textarea id="verifiedGuestReturnReason" class="form-control" rows="3" minlength="2" maxlength="2000" placeholder="Chọn gợi ý ở trên hoặc nhập chi tiết tình trạng sản phẩm..." required style="border:1px solid #d1decf;border-radius:9px;font-size:13px;line-height:1.5;padding:10px;resize:vertical;"></textarea>
         <p role="alert" style="color:#dc2626;font-size:12px;margin:6px 0 0;"></p>
         <div class="d-flex gap-2 justify-content-end mt-3">
-            <button type="button" class="btn-track-order" style="min-height:34px;padding:6px 16px;">Hủy bỏ</button>
+            <button type="button" id="verifiedGuestReturnCancel" class="btn-track-order" style="min-height:34px;padding:6px 16px;">Hủy bỏ</button>
             <button type="submit" class="btn-track-order btn-track-primary" style="min-height:34px;padding:6px 18px;font-weight:600;">Gửi yêu cầu</button>
         </div>
     </form>`;
@@ -923,7 +923,7 @@ function openVerifiedGuestReturn(order) {
 
     const errorText = form.querySelector('[role=alert]');
     let pending;
-    form.querySelector('[type=button]').onclick = () => { if (!submit.disabled) dialog.close(); };
+    form.querySelector('#verifiedGuestReturnCancel').onclick = () => { if (!submit.disabled) dialog.close(); };
     dialog.addEventListener('cancel', event => { if (submit.disabled) event.preventDefault(); });
     dialog.addEventListener('close', () => dialog.remove(), {once:true});
     form.onsubmit = async event => {
