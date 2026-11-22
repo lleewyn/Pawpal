@@ -824,6 +824,9 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         const messages = {
             service_ticket_forbidden:'Bạn chưa có quyền tạo phiếu phản ánh dịch vụ.',
             requested_staff_schedule_required:'Cần phân ca cụ thể cho đúng nhân viên khách yêu cầu trước khi xác nhận.',
+            proposal_staff_unavailable:'Nhân viên đề xuất không còn trống hoặc chưa đủ điều kiện nhận lịch. Vui lòng chọn nhân viên hoặc giờ khác.',
+            staff_schedule_forbidden:'Bạn chưa có quyền bổ sung ca làm cho nhân viên đề xuất.',
+            booking_shift_overlap:'Giờ đề xuất giao với nhiều ca đang có. Vui lòng chọn giờ khác.',
             requested_staff_customer_consent_required:'Khách đã chọn nhân viên yêu thích. Mở hồ sơ để gửi đề xuất và chờ khách đồng ý thay đổi.',
             booking_price_changed_requires_review:'Giá hoặc thời lượng đã thay đổi. Cần đối soát trước khi đề xuất giờ mới.',
             invalid_service_ticket:'Nhập nội dung phản ánh từ 2 đến 4.000 ký tự.',

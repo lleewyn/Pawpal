@@ -1001,14 +1001,25 @@
 
         const bookingsData = PawpalServices.state?.bookingsData || [];
         const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
+        if(!booking)return;
         modal.setAttribute('data-booking-id', bookingId);
-
-        const currentStaffName = booking?.staff || 'Chưa phân công';
+        const proposal=!!booking.requestedStaffId&&['pending','confirmed','cho_xac_nhan','da_xac_nhan'].includes(booking.status);
+        modal.dataset.staffMode=proposal?'proposal':'assignment';
+        modal.querySelector('.modal-title-clean').textContent=proposal?'Đề xuất đổi nhân viên':'Điều phối kỹ thuật viên phụ trách';
+        document.getElementById('changeStaffCurrentLabel').textContent=proposal?'Nhân viên khách yêu cầu':'Kỹ thuật viên hiện tại';
+        document.getElementById('btnSubmitChangeStaff').textContent=proposal?'Gửi đề xuất cho khách':'Xác nhận điều chuyển KTV';
+        document.getElementById('changeStaffProposalFields').hidden=!proposal;
+        document.getElementById('changeStaffReasonSelect').closest('.form-group-item').hidden=proposal;
+        document.querySelector('input[name="changeStaffScope"]').closest('.form-group-item').hidden=proposal;
+        document.getElementById('changeStaffProposalStart').value=new Date(Date.parse(booking.scheduledStartAt)+7*3600000).toISOString().slice(0,16);
+        document.getElementById('changeStaffProposalReason').value='';
+        clearModalErrors(modal);
+        const currentStaffName = proposal?(booking.requestedStaffName||booking.staff||'Đang cập nhật'):booking.staff || 'Chưa phân công';
 
         // Meta thông tin ca
         const metaEl = document.getElementById('changeStaffBookingMeta');
         if (metaEl) {
-            metaEl.textContent = `Mã ca: ${booking?.id || bookingId} (${booking?.petName || 'Bé cưng'}) • KTV hiện tại: ${currentStaffName}`;
+            metaEl.textContent = proposal?`${booking.petName||'Bé cưng'} · ${new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',dateStyle:'short',timeStyle:'short'}).format(new Date(booking.scheduledStartAt))}`:`Mã ca: ${booking.id} (${booking.petName || 'Bé cưng'}) • KTV hiện tại: ${currentStaffName}`;
         }
 
         const currentNameEl = document.getElementById('changeStaffCurrentName');
@@ -1023,24 +1034,23 @@
             const populateOptions = (list) => {
                 staffSelect.innerHTML = '<option value="">-- Chọn KTV mới --</option>';
                 list.forEach(s => {
-                    if (s.id !== booking?.staffId && !s.service_locked) {
+                    if (s.id !== (proposal?booking.requestedStaffId:booking.staffId) && !s.service_locked && s.employment_status!=='inactive') {
                         const opt = document.createElement('option');
                         opt.value = s.id;
-                        opt.textContent = `${s.full_name} (${s.specialization || s.job_title || 'KTV'})`;
+                        opt.textContent = s.full_name;
                         staffSelect.appendChild(opt);
                     }
                 });
                 PawpalServices.enhanceEntitySelects?.();
             };
             if (!staffList.length) {
-                fetch('/data/staff.json').then(r => r.ok ? r.json() : []).then(json => {
-                    const raw = Array.isArray(json) ? json : json.staff || json.staffs || [];
-                    const mapped = raw.map(s => ({ id: s.id || s.code, full_name: s.name || s.full_name, job_title: s.position || s.role || 'KTV', specialization: s.bio || s.specialization || 'Chăm sóc thú cưng', service_locked: false }));
-                    if (mapped.length) {
-                        PawpalServices.state.liveStaffList = mapped;
-                        populateOptions(mapped);
-                    }
-                }).catch(() => {});
+                populateOptions([]);
+                const client=window.getSupabaseClient?.()||window.SupabaseClient;
+                client.rpc('admin_service_staff_candidates').then(({data,error})=>{
+                    if(error)throw error;
+                    if(modal.getAttribute('data-booking-id')!==bookingId||!modal.classList.contains('active'))return;
+                    PawpalServices.state.liveStaffList=data||[];populateOptions(data||[]);
+                }).catch(error=>{if(modal.classList.contains('active')&&modal.getAttribute('data-booking-id')===bookingId)modalError(modal,PawpalServices.errorMessage(error));});
             } else {
                 populateOptions(staffList);
             }
@@ -2240,8 +2250,9 @@
                     changeStaffHint.style.display = 'none';
                     return;
                 }
-                changeStaffHint.style.display = 'block';
-                changeStaffHint.style.background = '#EEF5F1';
+                changeStaffHint.style.display = changeStaffSelect.closest('.admin-modal-overlay')?.dataset.staffMode==='proposal'?'none':'block';
+                changeStaffHint.style.background = 'transparent';
+                changeStaffHint.style.padding = '0';
                 changeStaffHint.style.color = '#236B48';
                 changeStaffHint.textContent = 'Lịch trùng và điều kiện nhận ca được kiểm tra khi lưu.';
             });
@@ -2253,7 +2264,10 @@
                 const modal = document.getElementById('modalChangeStaff');
                 const bookingId = modal?.getAttribute('data-booking-id');
                 const newStaff = document.getElementById('changeStaffSelect')?.value;
-                const reason = document.getElementById('changeStaffReasonSelect')?.value?.trim();
+                const proposal=modal?.dataset.staffMode==='proposal';
+                const reason = (proposal?document.getElementById('changeStaffProposalReason'):document.getElementById('changeStaffReasonSelect'))?.value?.trim();
+                const startField=document.getElementById('changeStaffProposalStart');
+                if(proposal&&(!startField.reportValidity()||!document.getElementById('changeStaffProposalReason').reportValidity()))return;
 
                 if (!newStaff) {
                     PawpalServices.showToast('Vui lòng chọn KTV mới!', 'warning');
@@ -2269,6 +2283,7 @@
                 if (booking) {
                     if (btnSubmitChangeStaff.disabled) return;
                     btnSubmitChangeStaff.disabled = true;
+                    let customerApprovalRequired = false;
                     try {
                         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
                         const candidates = (PawpalServices.state.liveStaffList || []).filter(s => s.id === newStaff);
@@ -2281,11 +2296,12 @@
                         if (newStaff === booking.staffId) throw new Error('Vui lòng chọn KTV khác với người đang phụ trách.');
                         const bookingStatus = String(booking.status || '').toLowerCase();
                         const alreadyInCare = ['checked_in','in_progress','da_check_in','da_tiep_nhan','dang_thuc_hien','accepted'].includes(bookingStatus);
-                        let customerApprovalRequired = false;
                         if (booking.requestedStaffId && !alreadyInCare) {
-                            const {data,error}=await client.rpc('propose_booking_staff',{p_id:booking.dbId,p_revision:booking.updatedAt,p_staff:candidates[0].id,p_start:booking.scheduledStartAt,p_note:reason});
+                            const proposedStart=proposal?new Date(startField.value+':00+07:00').toISOString():booking.scheduledStartAt;
+                            const {data,error}=await client.rpc('propose_booking_staff',{p_id:booking.dbId,p_revision:booking.updatedAt,p_staff:candidates[0].id,p_start:proposedStart,p_note:reason});
                             if(error)throw error;if(data!==booking.dbId)throw new Error('Không xác nhận được đề xuất KTV.');
                             customerApprovalRequired = true;
+                            window.PawpalDataStore?.invalidate('staff:schedules*');
                         } else {
                             const {data,error}=await client.rpc('update_admin_service_booking',{p_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_action:'assign',p_value:candidates[0].id,p_reason:reason});
                             if(error)throw error;if(data!==booking.dbId)throw new Error('Không xác nhận được phân công KTV.');

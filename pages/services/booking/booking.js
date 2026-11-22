@@ -8,6 +8,7 @@ import {GUEST_IDENTITY_EPOCH} from '/scripts/shared/guest-session-boundary.mjs';
 import {verifyCustomerSession} from '/scripts/shared/customer-session.mjs';
 import {renderStaffSlots} from './booking-staff-slots.mjs?v=2.5';
 import {staffRequestLabel,renderBookingStaffRequest} from '/scripts/shared/booking-staff-request.mjs';
+import {loadBookingRead} from './booking-loading.mjs';
 const toSentenceCase=str=>{if(!str)return '';return str.charAt(0).toUpperCase()+str.slice(1).toLocaleLowerCase('vi').replace(/\b(spa|ktv|vip|pos|daycare)\b/gi,m=>m.toUpperCase());};
 async function loadPriceEstimates(database){
  try{
@@ -96,6 +97,7 @@ const date=value=>{
 };
 const categories={grooming_spa:'Tắm và cắt tỉa',pet_hotel:'Khách sạn thú cưng',pet_taxi:'Đưa đón thú cưng'};
 async function rpc(name,args){const r=await db.rpc(name,args);if(r.error)throw r.error;return r.data;}
+const startupRead=read=>loadBookingRead(read,{isDisposed:()=>!!state.disposed});
 function message(error){if(state.guest && (error instanceof GuestCommerceError || error?.name === 'GuestCommerceError'))return error.message;return ({booking_account_restricted:'Tài khoản đang bị khóa đặt lịch. Vui lòng liên hệ cửa hàng để mở khóa.',outside_operating_hours:'Giờ đã chọn nằm ngoài giờ phục vụ hoặc không đủ thời gian hoàn thành dịch vụ.',booking_slot_full:'Khung giờ này đã đủ lịch. Vui lòng chọn giờ khác.',no_scheduled_staff:'Chưa có nhân viên đủ điều kiện được phân ca trống trong thời gian này. Vui lòng chọn giờ khác.',preferred_staff_unavailable:'Nhân viên ưu tiên không còn trống. Vui lòng kiểm tra lại giờ.',booking_hours_unconfigured:'Cửa hàng chưa cấu hình giờ phục vụ. Vui lòng liên hệ hỗ trợ.',booking_capacity_unconfigured:'Chưa cấu hình số lịch có thể tiếp nhận. Vui lòng liên hệ hỗ trợ.',service_species_not_supported:'Gói dịch vụ chưa được cấu hình hỗ trợ loài của bé. Vui lòng liên hệ cửa hàng.',
  pet_weight_required:'Vui lòng cập nhật cân nặng trong hồ sơ bé cưng trước khi xem giá.',pet_owner_mismatch:'Hồ sơ bé cưng không thuộc tài khoản đang đăng nhập.',
  invalid_booking_contact_phone:'Số điện thoại liên hệ không hợp lệ.',booking_hold_expired:'Đã hết thời gian giữ chỗ. Vui lòng quay lại chọn giờ và nhân viên.',booking_lead_time_required:'Thời gian không hợp lệ',booking_staff_required:'Vui lòng chọn nhân viên chăm sóc.',
@@ -493,7 +495,7 @@ async function init(){
  window.addEventListener('pageshow',event=>{if(event.persisted)accountChanged();});
  try{
   db=window.getSupabaseClient?.() || window.SupabaseClient;if(!db)throw Error('no_database');
-  const auth={data:{user:await verifyCustomerSession(db)}};
+  const auth={data:{user:await startupRead(()=>verifyCustomerSession(db))}};
   // Notify the header after verification, without treating stale display data as an account switch.
   document.dispatchEvent(new CustomEvent('customer_session_verified'));
   if(state.disposed)return;state.authId=auth.data?.user?.id||null;
@@ -514,7 +516,7 @@ async function init(){
    state.guest=true;const firstStepLabel=document.querySelector('#bookingStepper [data-step="1"] .step-label');if(firstStepLabel)firstStepLabel.textContent='Thông tin đặt lịch';journalKey='pawpal_guest_booking_request_v1';const saved=sessionStorage.getItem(journalKey);requestId=/^[0-9a-f-]{36}$/i.test(saved||'')?saved:crypto.randomUUID();
    const receiptId=new URLSearchParams(location.search).get('bookingSuccess')||saved;
    if(receiptId){try{await renderBookingReceipt(root,receiptId);return;}catch(error){if(error.status!==404)throw error;}}
-   const data=await loadGuestBookingContext(db);if(state.disposed)return;state.catalog=data.catalog;state.breeds=data.breeds;state.species=data.species;state.guestContext=data.context;state.profile=data.context.contact;
+   const data=await startupRead(()=>loadGuestBookingContext(db));if(state.disposed)return;state.catalog=data.catalog;state.breeds=data.breeds;state.species=data.species;state.guestContext=data.context;state.profile=data.context.contact;
    state.priceEstimates=await loadPriceEstimates(db);
    presetServiceFromUrl();
    renderPets();show(1);bindStepper();return;
@@ -523,13 +525,13 @@ async function init(){
   journalKey='pawpal_booking_request:'+auth.data.user.id;const saved=sessionStorage.getItem(journalKey);requestId=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(saved || '')?saved:crypto.randomUUID();sessionStorage.setItem(journalKey,requestId);
   const receiptId=new URLSearchParams(location.search).get('bookingSuccess');
   if(receiptId){try{await renderBookingReceipt(root,receiptId);}catch(error){root.innerHTML='<section class="booking-receipt"><h1>Chưa xác minh được lịch hẹn</h1><p>Vui lòng kiểm tra danh sách lịch hẹn trước khi gửi lại yêu cầu.</p><div class="booking-receipt-actions"><button type="button" class="btn-cta" id="bookingReceiptRetry">Thử lại</button><a class="btn-green-outline" href="/user#bookings">Lịch hẹn của bé</a></div></section>';el('bookingReceiptRetry').onclick=()=>location.reload();}return;}
-  const prior=await db.from('appointment').select('id').eq('id',requestId).maybeSingle();if(state.disposed)return;if(prior.error)throw prior.error;
+  const prior=await startupRead(async()=>{const result=await db.from('appointment').select('id').eq('id',requestId).maybeSingle();if(result.error)throw result.error;return result;});if(state.disposed)return;
   if(prior.data){sessionStorage.removeItem(journalKey);el('step1').innerHTML=heading('Yêu cầu đã được tiếp nhận')+'<p>Lịch hẹn đã có trên hệ thống. Bạn không cần gửi lại yêu cầu.</p><a class="btn-cta" id="bookingRecovered" href="/user#booking-detail?id='+encodeURIComponent(prior.data.id)+'">Xem lịch hẹn</a>';show(1);return;}
-  const [catalog,pets,profile]=await Promise.all([rpc('customer_service_catalog'),rpc('own_booking_pets'),rpc('customer_profile_snapshot')]);if(state.disposed)return;state.catalog=catalog;state.pets=pets;state.profile=profile;
+  const [catalog,pets,profile]=await Promise.all(['customer_service_catalog','own_booking_pets','customer_profile_snapshot'].map(name=>startupRead(()=>rpc(name))));if(state.disposed)return;state.catalog=catalog;state.pets=pets;state.profile=profile;
   state.priceEstimates=await loadPriceEstimates(db);
   presetServiceFromUrl();
 
-  const restriction=await rpc('own_booking_restriction');
+  const restriction=await startupRead(()=>rpc('own_booking_restriction'));if(state.disposed)return;
   if (restriction.locked) {
       el('step1').innerHTML = heading('Tài khoản tạm khóa đặt lịch trực tuyến') + 
           '<div class="booking-lock-notice p-4 my-3" style="background:#FFF5F5;border:1px solid #FED7D7;border-radius:9px;color:#C53030;">' +
@@ -546,7 +548,7 @@ async function init(){
   renderPets();show(1);
   if(!pets.length)el('bookingPetSelected').textContent='Bạn chưa có hồ sơ bé cưng đang hoạt động. Hãy thêm hồ sơ trước khi đặt lịch.';
   document.querySelectorAll('#bookingStepper .step').forEach(node=>{const navigate=()=>{const n=Number(node.dataset.step);if(n<state.step&&!state.busy)show(n);};node.onclick=navigate;node.onkeydown=e=>{if(e.key==='Enter')navigate();};});
- }catch(error){if(state.disposed)return;el('step1').innerHTML=heading('Chưa tải được thông tin đặt lịch')+'<p role="alert" class="field-error">'+escape(message(error))+'</p><button type="button" class="btn-green-outline" id="bookingReload">Thử lại</button>';el('bookingReload').onclick=()=>location.reload();show(1);}
+ }catch(error){if(state.disposed)return;console.error('[Booking] Không tải được thông tin đặt lịch:',error);el('step1').innerHTML=heading('Chưa tải được thông tin đặt lịch')+'<p role="alert" class="field-error">'+escape(message(error))+'</p><button type="button" class="btn-green-outline" id="bookingReload">Thử lại</button>';el('bookingReload').onclick=()=>location.reload();show(1);}
  finally{root.classList.remove('booking-loading');root.setAttribute('aria-busy','false');root.querySelector('.booking-skeleton')?.remove();}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
