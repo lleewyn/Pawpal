@@ -17,7 +17,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  let core=fs.readFileSync('pages/admin/modules/services/services.js','utf8');core=core.slice(0,core.lastIndexOf("    if (document.readyState === 'loading')"))+'})();})();';await page.addScriptTag({content:core});
  await page.evaluate(()=>{
   window.calls=[];window.toasts=[];window.invalidations=[];window.PawpalDataStore={invalidate:key=>invalidations.push(key)};
-  window.getSupabaseClient=()=>({rpc:async(name,args)=>{calls.push({name,args});if(name==='admin_service_staff_candidates')return {data:[{id:'new-worker',full_name:'Nhân viên thay thế',employment_status:'active'}]};return {data:'booking-id'};}});
+  window.getSupabaseClient=()=>({rpc:async(name,args)=>{calls.push({name,args});if(['admin_service_staff_candidates','admin_service_booking_staff_choices'].includes(name))return {data:[{id:'new-worker',full_name:'Nhân viên thay thế',employment_status:'active'}]};return {data:'booking-id'};}});
   PawpalServices.state.isLoaded=true;PawpalServices.state.serverBookingPagination=false;
   PawpalServices.state.bookingsData=[{id:'BKG-TEST',dbId:'booking-id',status:'pending',requestedStaffId:'original',requestedStaffName:'Nhân viên khách yêu cầu',staffConfirmationStatus:'pending',scheduledStartAt:'2026-12-24T01:30:00Z',scheduledEndAt:'2026-12-24T02:30:00Z',updatedAt:'revision',petName:'Bé cưng',customerName:'Chủ nuôi',serviceName:'Tắm cơ bản',category:'Spa',date:'2026-12-24',time:'08:30',total:100000,totalPrice:100000,charges:[],allItems:[],surcharges:[],careLogs:[]}];
   PawpalServices.state.liveStaffList=[];PawpalServices.showToast=(text,type)=>toasts.push({text,type});
@@ -27,27 +27,35 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  await page.evaluate(()=>PawpalServices.subtabs.bookings.openChangeStaffModal('BKG-TEST'));
  const modal=page.locator('#modalChangeStaff');
  await page.waitForFunction(()=>document.getElementById('changeStaffSelect').options.length>1);
- assert.equal(await modal.locator('.modal-title-clean').innerText(),'Đề xuất đổi nhân viên');
- assert.equal(await modal.locator('#changeStaffCurrentName').innerText(),'Nhân viên khách yêu cầu');
- assert.equal(await modal.locator('#changeStaffReasonSelect').isVisible(),false);
+ assert.equal(await modal.locator('.modal-title-clean').innerText(),'Điều phối kỹ thuật viên phụ trách');
+ assert.equal(await modal.locator('#changeStaffCurrentName').innerText(),'Chưa phân công');
+ assert.equal(await modal.locator('#changeStaffReasonSelect').isVisible(),true);
  assert.equal(await modal.locator('input[name=changeStaffScope]').isVisible(),false);
- assert.equal(await modal.locator('#changeStaffProposalStart').inputValue(),'2026-12-24T08:30');
+ assert.equal(await modal.locator('#changeStaffProposalStart').count(),0);
  await modal.locator('#changeStaffSelect').evaluate(select=>{select._entityInput.focus();select._entityInput.value='Nhân viên thay thế';select._entityInput.dispatchEvent(new Event('input',{bubbles:true}));});
  await modal.locator('#changeStaffSelect').locator('..').getByRole('button',{name:'Nhân viên thay thế',exact:true}).click();
- await modal.locator('#changeStaffProposalStart').fill('2026-12-24T09:30');
- await modal.locator('#changeStaffProposalReason').fill('Nhân viên được yêu cầu không thể nhận lịch');
- await modal.getByRole('button',{name:'Gửi đề xuất cho khách',exact:true}).click();
- await page.waitForFunction(()=>toasts.some(t=>t.type==='success'||t.text.includes('Đã gửi đề xuất')));
+ await modal.locator('#changeStaffReasonSelect').selectOption('KTV bận ca khẩn cấp');
+ await modal.getByRole('button',{name:'Xác nhận điều chuyển KTV',exact:true}).click();
+ await page.waitForFunction(()=>toasts.some(t=>t.type==='success'||t.text.includes('Đã điều phối')));
  const calls=await page.evaluate(()=>window.calls);
- assert.equal(calls.filter(c=>c.name==='propose_booking_staff').length,1);
- assert.equal(calls.find(c=>c.name==='propose_booking_staff').args.p_start,'2026-12-24T02:30:00.000Z');
- assert.ok(!calls.some(c=>['update_admin_service_booking','confirm_booking_staff_with_schedule','save_admin_staff_schedule'].includes(c.name)),'never confirms or rosters the original worker');
+ assert.equal(calls.filter(c=>c.name==='update_admin_service_booking').length,1);
+ assert.equal(calls.find(c=>c.name==='update_admin_service_booking').args.p_value,'new-worker');
+ assert.ok(!calls.some(c=>['propose_booking_staff','confirm_booking_staff_with_schedule','save_admin_staff_schedule'].includes(c.name)),'never confirms or rosters the original worker');
  assert.equal(await modal.isVisible(),false);
+ // A previously confirmed preference uses the same direct assignment endpoint.
+ await page.evaluate(()=>{PawpalServices.state.bookingsData[0].status='confirmed';PawpalServices.state.bookingsData[0].staffConfirmationStatus='confirmed';PawpalServices.subtabs.bookings.openChangeStaffModal('BKG-TEST');});
+ await page.waitForFunction(()=>!document.getElementById('changeStaffSelect').disabled);
+ await modal.locator('#changeStaffSelect').evaluate(select=>{select._entityInput.focus();select._entityInput.value='Nhân viên thay thế';select._entityInput.dispatchEvent(new Event('input',{bubbles:true}));});
+ await modal.locator('#changeStaffSelect').locator('..').getByRole('button',{name:'Nhân viên thay thế',exact:true}).click();
+ await modal.locator('#changeStaffReasonSelect').selectOption('KTV bận ca khẩn cấp');
+ await modal.getByRole('button',{name:'Xác nhận điều chuyển KTV',exact:true}).click();
+ await page.waitForFunction(()=>calls.filter(call=>call.name==='update_admin_service_booking').length===2&&!document.getElementById('modalChangeStaff').classList.contains('active'));
+ assert.equal(await page.evaluate(()=>calls.some(call=>call.name==='propose_booking_staff')),false);
  // In-care reassignment keeps its direct handover flow.
  await page.evaluate(()=>{PawpalServices.state.bookingsData[0].status='in_progress';PawpalServices.state.bookingsData[0].staff='Nhân viên hiện tại';PawpalServices.state.bookingsData[0].staffId='original';PawpalServices.subtabs.bookings.openChangeStaffModal('BKG-TEST');});
  assert.equal(await modal.locator('.modal-title-clean').innerText(),'Điều phối kỹ thuật viên phụ trách');
- assert.equal(await modal.locator('#changeStaffProposalFields').isVisible(),false);
+ assert.equal(await modal.locator('#changeStaffProposalFields').count(),0);
  assert.equal(await modal.locator('#changeStaffReasonSelect').isVisible(),true);
  assert.deepEqual(errors,[]);
- console.log('PASS actual reassignment modal: pending request opens alternative proposal, live staff loading, proposed time, no original assignment, successful close/toast; in-care handover retained. Isolated transport only.');
+ console.log('PASS actual reassignment modal: legacy pending request uses direct assignment, scheduled staff loading, no proposal or original roster creation, successful close/toast; in-care handover retained. Isolated transport only.');
 }finally{await browser.close();}})().catch(error=>{console.error(error);process.exitCode=1;});

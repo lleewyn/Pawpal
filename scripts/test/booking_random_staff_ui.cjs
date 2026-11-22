@@ -20,11 +20,15 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  await page.locator('[data-slot="1"]').click();
  assert.equal(await page.evaluate(()=>chosen.at(-1).id),'b','choose staff available at the new time');
  assert.match(await page.locator('#bookingStaffChoice').innerText(),/Hệ thống phân bổ: KTV B/);
+ assert.equal(await page.locator('[data-staff="a"]').count(),0,'a worker unavailable in the selected slot is not offered');
+ await page.locator('[data-slot="0"]').click();
  await page.locator('[data-staff="a"]').click();assert.equal(await page.locator('[data-slot]').count(),1);
  assert.equal(await page.locator('[data-random-staff]').getAttribute('aria-pressed'),'false');
  await page.evaluate(()=>mount([{start_at:'2030-01-01T07:00:00Z',available:true,staff:[{id:'future',name:'KTV dự kiến',requires_confirmation:true}]}]));
- await page.locator('[data-random-staff]').click();await page.locator('[data-slot]').click();
- assert.match(await page.locator('#bookingStaffChoice').innerText(),/cần cửa hàng xác nhận/);
+ assert.equal(await page.locator('[data-staff="future"]').count(),0);
+ assert.equal(await page.locator('[data-random-staff]').isDisabled(),true);
+ assert.equal(await page.locator('[data-slot]').count(),0);
+ assert.match(await page.locator('#bookingStaffChoice').innerText(),/Không có nhân viên phù hợp/);
  await page.evaluate(()=>mount([]));assert.equal(await page.locator('[data-random-staff]').isDisabled(),true);
- console.log('PASS random staff chosen for selected time, scheduled staff priority, changing time reallocates, explicit choice retained, future confirmation and empty states. Isolated component only.');
+ console.log('PASS scheduled-only choices, selected-time staff filtering, random allocation, changing time, explicit choice and no-roster empty states. Isolated component only.');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

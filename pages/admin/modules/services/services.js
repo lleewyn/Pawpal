@@ -823,7 +823,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
     PawpalServices.errorMessage = function(error) {
         const messages = {
             service_ticket_forbidden:'Bạn chưa có quyền tạo phiếu phản ánh dịch vụ.',
-            requested_staff_schedule_required:'Cần phân ca cụ thể cho đúng nhân viên khách yêu cầu trước khi xác nhận.',
+            requested_staff_schedule_required:'Ca làm của lịch hẹn đã thay đổi. Vui lòng tải lại và chọn KTV có ca phù hợp.',
             proposal_staff_unavailable:'Nhân viên đề xuất không còn trống hoặc chưa đủ điều kiện nhận lịch. Vui lòng chọn nhân viên hoặc giờ khác.',
             staff_schedule_forbidden:'Bạn chưa có quyền bổ sung ca làm cho nhân viên đề xuất.',
             booking_shift_overlap:'Giờ đề xuất giao với nhiều ca đang có. Vui lòng chọn giờ khác.',
@@ -832,7 +832,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
             invalid_service_ticket:'Nhập nội dung phản ánh từ 2 đến 4.000 ký tự.',
             service_ticket_review_mismatch:'Đánh giá không thuộc ca dịch vụ đã chọn.',
             service_cashier_forbidden:'Bạn chưa có quyền xem hoặc ghi thu/hoàn tiền dịch vụ.',
-            staff_not_available:'Nhân viên có lịch nghỉ hoặc không khả dụng trong thời gian đã chọn.',
+            staff_not_available:'KTV được chọn chưa có ca phù hợp, đang nghỉ hoặc không còn trống trong giờ hẹn. Vui lòng chọn người khác.',
             invalid_service_money:'Nhập số tiền nguyên dương, lý do và xác nhận đã thực nhận hoặc thực hoàn.',
             service_money_method_invalid:'Phương thức không còn khả dụng hoặc chưa được hỗ trợ tại quầy.',
             service_money_reference_required:'Cần mã giao dịch ngân hàng đã đối soát.',

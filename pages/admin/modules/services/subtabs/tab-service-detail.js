@@ -56,16 +56,7 @@
         let reviewPanel=card?.querySelector('#bookingDetailReviews');
         if(!reviewPanel&&card){reviewPanel=document.createElement('section');reviewPanel.id='bookingDetailReviews';reviewPanel.style.cssText='padding:16px 0;background:transparent;border:none';card.append(reviewPanel);}
         if(reviewPanel){reviewPanel.dataset.bookingId=booking.dbId;import('/pages/admin/modules/services/booking-reviews.mjs').then(({mountBookingReviews})=>{if(reviewPanel.isConnected&&reviewPanel.dataset.bookingId===booking.dbId)mountBookingReviews(reviewPanel,booking,{db:window.getSupabaseClient()});});}
-        let requestPanel=card?.querySelector('#adminStaffRequestPanel');
-        if(!requestPanel&&card){requestPanel=document.createElement('section');requestPanel.id='adminStaffRequestPanel';requestPanel.style.cssText='padding:16px 0;border:none;background:transparent';}
-        if(requestPanel&&card){const header=card.querySelector('.service-detail-header-bar');if(header)header.after(requestPanel);else card.prepend(requestPanel);}
-        if(requestPanel){
-            requestPanel.dataset.bookingId=booking.dbId;
-            import('/pages/admin/modules/services/booking-staff-request.mjs?v=20261122_staff_proposal').then(({mountAdminStaffRequest})=>{
-                if(!requestPanel.isConnected||requestPanel.dataset.bookingId!==booking.dbId)return;
-                mountAdminStaffRequest(requestPanel,booking,{client:window.getSupabaseClient(),staff:PawpalServices.state.liveStaffList||[],enhance:()=>PawpalServices.enhanceEntitySelects(),canWrite:window.PawpalAdminAccess?.state.user?.permissions?.includes('appointment.write'),canSchedule:window.PawpalAdminAccess?.state.user?.permissions?.includes('staff_schedule.write'),canViewSchedule:window.PawpalAdminAccess?.state.user?.permissions?.includes('staff_schedule.read'),errorMessage:PawpalServices.errorMessage,onSaved:async()=>{await PawpalServices.loadServicesData({force:true,forceDirectory:false,forceStaff:false,prefetch:false});await PawpalServices.ensureBooking(booking.dbId,{force:true});renderBookingDetail(booking.id);}});
-            }).catch(()=>{requestPanel.textContent='Không tải được phần xác nhận nhân viên. Vui lòng thử lại.';});
-        }
+        card?.querySelector('#adminStaffRequestPanel')?.remove();
         if (state) state.style.display = 'none';
         PawpalServices.updateBreadcrumb?.(booking.id);
 
@@ -129,7 +120,7 @@
             actionButtonsContainer.innerHTML = '';
             if (['pending', 'cho_xac_nhan'].includes(booking.status)) {
                 actionButtonsContainer.innerHTML = `
-                    ${booking.requestedStaffId?'':`<button type="button" class="admin-btn admin-btn-primary btn-action-confirm" data-booking-id="${booking.id}">Xác nhận lịch</button>`}
+                    ${booking.requestedStaffId&&['pending','awaiting_customer'].includes(booking.staffConfirmationStatus)?`<button type="button" class="admin-btn admin-btn-primary btn-action-change" data-booking-id="${booking.id}">Phân công KTV</button>`:`<button type="button" class="admin-btn admin-btn-primary btn-action-confirm" data-booking-id="${booking.id}">Xác nhận lịch</button>`}
                     <button type="button" class="admin-btn admin-btn-danger btn-action-cancel" data-booking-id="${booking.id}">Hủy lịch hẹn</button>
                 `;
             } else if (['confirmed', 'da_xac_nhan'].includes(booking.status)) {
@@ -230,7 +221,6 @@
                 });
             }
             if (btnChange) {
-                btnChange.hidden=!!booking.requestedStaffId&&['pending','confirmed'].includes(booking.status);
                 btnChange.addEventListener('click', () => {
                     if (PawpalServices.subtabs.bookings?.openChangeStaffModal) {
                         PawpalServices.subtabs.bookings.openChangeStaffModal(booking.id);
@@ -247,7 +237,7 @@
         // Gắn nút đổi KTV cạnh dòng thông tin KTV
         const btnQuickChangeStaff = document.getElementById('btnDetailQuickChangeStaff');
         if (btnQuickChangeStaff) {
-            btnQuickChangeStaff.hidden=!!booking.requestedStaffId&&['pending','confirmed'].includes(booking.status);
+            btnQuickChangeStaff.hidden=false;
             btnQuickChangeStaff.disabled = !['pending', 'confirmed', 'checked_in', 'in_progress', 'da_xac_nhan', 'da_check_in', 'dang_thuc_hien'].includes(booking.status);
             btnQuickChangeStaff.onclick = () => {
                 if (PawpalServices.subtabs.bookings?.openChangeStaffModal) {
@@ -266,7 +256,7 @@
         const customerNote = document.getElementById('detailBookingCustomerNote');
 
         if (statusText) statusText.innerHTML = getStatusBadge(booking.status);
-        if (staffText) staffText.textContent = booking.staff || (booking.requestedStaffName?'Yêu cầu: '+booking.requestedStaffName:'Chưa phân công');
+        if (staffText) staffText.textContent = booking.staff || 'Chưa phân công';
         if (serviceText) serviceText.textContent = booking.serviceName;
         if (durationText) durationText.textContent = booking.duration;
         if (categoryText) categoryText.textContent = booking.categoryName;

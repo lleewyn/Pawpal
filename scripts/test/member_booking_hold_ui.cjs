@@ -20,11 +20,17 @@ const holdRetry=process.argv.includes('--hold-retry');
  window.fixture={state,renderPets,renderSchedule,renderConfirmation,renderHold,show,details};
  state.pet={id:'pet',name:'Bé kiểm thử',weight:4.5,species:'Mèo'};state.service={id:'svc',name:'Tắm spa vệ sinh toàn diện',category:'grooming_spa'};
  state.profile={name:'Chủ nuôi',phone:'0900000000'};state.guest=${guest};
- const starts=new Date(Date.now()+86400000).toISOString();
- db={rpc:async name=>({data:name==='own_booking_day_slots'?{open:'08:00',close:'20:00',slots:[{start_at:starts,available:true,staff:[{id:'worker',name:'Nguyễn Văn A',source:'recurring',requires_confirmation:${future}}]},{start_at:new Date(Date.now()+90000000).toISOString(),available:true,staff:[{id:'worker-b',name:'Nhân viên B'}]}]}:name==='hold_own_service_booking'?{id:'held',expires_at:new Date(Date.now()+900000).toISOString(),server_now:new Date().toISOString()}:null})};
+ const slotDate=new Date(Date.now()+86400000);slotDate.setUTCHours(2,0,0,0);const starts=slotDate.toISOString();
+ db={rpc:async name=>({data:name==='own_booking_day_slots'?{open:'08:00',close:'20:00',slots:[{start_at:starts,available:true,staff:[{id:'worker',name:'Nguyễn Văn A',source:'scheduled',requires_confirmation:${future}}]},{start_at:new Date(Date.parse(starts)+3600000).toISOString(),available:true,staff:[{id:'worker-b',name:'Nhân viên B'}]}]}:name==='hold_own_service_booking'?{id:'held',expires_at:new Date(Date.now()+900000).toISOString(),server_now:new Date().toISOString()}:null})};
  const guestCommerce={request:async(action)=>action==='booking-slots'?{availability:(await db.rpc('own_booking_day_slots')).data}:action==='booking-hold'?{hold:(await db.rpc('hold_own_service_booking')).data}:{success:true}};
  document.querySelector('.booking-main').classList.remove('booking-loading');document.querySelector('.booking-main').classList.add('booking-live-form');renderSchedule();show(3);`});
  await p.waitForSelector('#bookingDaySlots button');
+ if(future){
+  assert.equal(await p.locator('[data-staff="worker"]').count(),0);
+  assert.equal(await p.locator('[data-slot="0"]').count(),0);
+  assert.equal(await p.locator('[data-staff="worker-b"]').count(),1);
+  console.log('PASS unrostered future staff is hidden while concretely available staff remains selectable.');return;
+ }
  if(holdRetry){
   await p.evaluate(()=>{const original=db.rpc;window.holdAttempts=0;db.rpc=async(name,args)=>{if(name==='hold_own_service_booking'&&++holdAttempts===1)throw Error('preferred_staff_unavailable');return original(name,args);};});
   await p.evaluate(()=>document.querySelector('[data-slot="0"]').onclick());
@@ -103,8 +109,12 @@ const holdRetry=process.argv.includes('--hold-retry');
  }
  assert.match(await p.locator('[data-booking-hold]').innerText(),/14:59|15:00/);
  assert.equal(await p.locator('[data-staff="worker"]').getAttribute('aria-pressed'),'true');
+ if(process.argv.includes('--scheduled-only-capture')){
+  await p.evaluate(()=>{document.getElementById('bookingDay').value=document.getElementById('bookingStart').value.slice(0,10);});
+  for(const width of [1280,390]){await p.setViewportSize({width,height:1000});await p.locator('.booking-main').screenshot({path:`docs/verification/booking-scheduled-only-customer-${width}.png`});}
+ }
  await p.evaluate(()=>{
-  const f=fixture;f.state.quote={start_at:new Date(Date.now()+86400000).toISOString(),end_at:new Date(Date.now()+90000000).toISOString(),quantity:1,unit_price:150000,total:150000,addons:[]};f.state.details={...f.details(),hold_id:'held'};f.renderConfirmation();f.show(4);
+  const f=fixture;f.state.quote={start_at:new Date(Date.now()+86400000).toISOString(),end_at:new Date(Date.parse(starts)+3600000).toISOString(),quantity:1,unit_price:150000,total:150000,addons:[]};f.state.details={...f.details(),hold_id:'held'};f.renderConfirmation();f.show(4);
  });
  assert.match(await p.locator('#step4').innerText(),/Đặt cọc\s+0 VNĐ/);assert.equal(await p.locator('#confirmBookingBtn').innerText(),future?'Gửi yêu cầu đặt lịch':'Xác nhận đặt lịch');
  assert.equal(await p.locator('[data-booking-hold]').isVisible(),true,'countdown remains visible at confirmation');
@@ -114,5 +124,11 @@ const holdRetry=process.argv.includes('--hold-retry');
  for(const width of [1280,390]){await p.setViewportSize({width,height:1000});assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await p.locator('.booking-main').screenshot({path:`docs/verification/sync/${guest?'guest':'member'}-booking-hold-${width}.png`});}
  await p.evaluate(()=>{fixture.state.hold.deadline=Date.now()-1000;fixture.renderHold();});
  assert.equal(await p.locator('#confirmBookingBtn').isDisabled(),true);assert.match(await p.locator('[data-booking-hold]').innerText(),/Đã hết/);
+ if(process.argv.includes('--scheduled-only-capture')){
+  await p.evaluate(()=>{db.rpc=async name=>({data:name==='own_booking_day_slots'?{open:'08:00',close:'20:00',slots:[{start_at:new Date(Date.now()+86400000).toISOString(),available:true,staff:[{id:'unrostered',name:'Chưa có ca làm',source:'recurring',requires_confirmation:true}]}]}:null});fixture.renderSchedule();fixture.show(3);});
+  await p.waitForFunction(()=>document.getElementById('bookingStaffChoice')?.textContent.includes('Không có nhân viên phù hợp'));
+  assert.equal(await p.locator('[data-staff="unrostered"]').count(),0);
+  for(const width of [1280,390]){await p.setViewportSize({width,height:1000});await p.locator('.booking-main').screenshot({path:`docs/verification/booking-scheduled-only-empty-${width}.png`});}
+ }
  console.log('PASS single date/slot selector, staff choice, actual lease countdown, zero deposit, confirmation button, expiry guard, desktop/mobile layout. Isolated component checks; no live appointments created.');
 }finally{await browser.close();}})().catch(e=>{console.error(e.stack);process.exitCode=1;});

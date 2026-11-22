@@ -6,7 +6,7 @@ import {renderGuestPets,loadGuestBookingContext} from './booking-guest-pets.mjs'
 import {renderTransactionReceipt} from '/scripts/shared/transaction-receipt.mjs';
 import {GUEST_IDENTITY_EPOCH} from '/scripts/shared/guest-session-boundary.mjs';
 import {verifyCustomerSession} from '/scripts/shared/customer-session.mjs';
-import {renderStaffSlots} from './booking-staff-slots.mjs?v=2.5';
+import {renderStaffSlots} from './booking-staff-slots.mjs?v=20261122_scheduled_only';
 import {staffRequestLabel,renderBookingStaffRequest} from '/scripts/shared/booking-staff-request.mjs';
 import {loadBookingRead} from './booking-loading.mjs';
 const toSentenceCase=str=>{if(!str)return '';return str.charAt(0).toUpperCase()+str.slice(1).toLocaleLowerCase('vi').replace(/\b(spa|ktv|vip|pos|daycare)\b/gi,m=>m.toUpperCase());};
@@ -78,7 +78,7 @@ function renderHold(){
  placeHoldBanner(banner);
  const tick=()=>{
   const seconds=Math.max(0,Math.ceil((state.hold.deadline-Date.now())/1000));
-  banner.textContent=seconds?`${state.preferredStaff?.requires_confirmation?'Giữ yêu cầu':'Giữ chỗ'} còn ${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`:'Đã hết 15 phút giữ chỗ. Vui lòng quay lại chọn giờ và nhân viên.';
+  banner.textContent=seconds?`Giữ chỗ còn ${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`:'Đã hết 15 phút giữ chỗ. Vui lòng quay lại chọn giờ và nhân viên.';
   if(!seconds){
    clearInterval(holdTimer);state.hold=null;state.quote=null;state.details=null;
    if(el('confirmBookingBtn'))el('confirmBookingBtn').disabled=true;if(el('step3Next'))el('step3Next').disabled=true;
@@ -134,9 +134,9 @@ function summary(){
  ${row('Dịch vụ',state.service?.name ? (state.step===1 ? `${escape(toSentenceCase(state.service.name))} (Đã chọn)` : escape(toSentenceCase(state.service.name))) : 'Chưa chọn',!state.service)}
  ${selectedStart?row('Lịch hẹn',date(selectedStart)):''}
  ${state.quote?row('Kết thúc dự kiến',date(state.quote.end_at)):''}
- ${state.service?.category==='grooming_spa'?row('Nhân viên',state.preferredStaff?.name||'PawPal tự sắp xếp'):''}
+ ${state.service?.category==='grooming_spa'?row('Nhân viên',state.preferredStaff?.name||'Chưa chọn'):''}
  </dl><div class="booking-recap-total"><span>Tổng tiền dự kiến</span><strong>${state.quote?money(state.quote.total):'Chưa có báo giá'}</strong>${!state.quote?'<small>Chọn ngày giờ để xem giá chính xác.</small>':''}</div>
- <p class="booking-recap-notice">Chưa thu tiền khi gửi yêu cầu. Cửa hàng sẽ xác nhận lịch${state.preferredStaff?' và nhân viên phụ trách':''}.</p></div></div>`;
+ <p class="booking-recap-notice">${state.service?.category==='grooming_spa'?'Chưa thu tiền khi đặt lịch. Lịch hẹn và nhân viên được xác nhận khi bạn hoàn tất đặt lịch.':`Chưa thu tiền khi gửi yêu cầu. Cửa hàng sẽ xác nhận lịch${state.preferredStaff?' và nhân viên phụ trách':''}.`}</p></div></div>`;
 }
 function autocomplete(id,rows,label,onSelect){
  const input=el(id),list=el(id+'Options');let matches=[];
@@ -291,11 +291,11 @@ function renderSchedule(){
    const day=el('bookingDay').value;
    const result=state.guest?(await guestCommerce.request('booking-slots',{details:payload,day})).availability:await rpc('own_booking_day_slots',{p_details:payload,p_day:day});
    if(request!==version)return;
-   if(spaSlots)result.slots=(result.slots||[]).filter(slot=>new Date(slot.start_at).getTime()>Date.now()+7200000).map(slot=>({...slot,available:slot.available&&Boolean(slot.staff?.length)}));
+   if(spaSlots)result.slots=(result.slots||[]).filter(slot=>new Date(slot.start_at).getTime()>Date.now()+7200000).map(slot=>{const staff=(slot.staff||[]).filter(person=>person.requires_confirmation!==true&&(!person.source||person.source==='scheduled'));return {...slot,staff,available:slot.available&&staff.length>0};});
    const slots=result.slots||[],availableCount=slots.filter(slot=>slot.available).length;
-   const noStaff=slots.some(slot=>slot.reason==='no_scheduled_staff'),hasRequests=slots.some(slot=>slot.staff?.some(person=>person.requires_confirmation));
+   const noStaff=slots.some(slot=>slot.reason==='no_scheduled_staff');
    el('bookingAvailabilityMessage').textContent=availableCount
-    ?`Giờ phục vụ ${result.open}–${result.close}. ${hasRequests?'Có giờ nhận yêu cầu; các giờ chưa phân ca cần cửa hàng xác nhận nhân viên.':`Có ${availableCount} khung giờ khả dụng; lịch sẽ được kiểm tra lại khi xác nhận.`}`
+    ?`Giờ phục vụ ${result.open}–${result.close}. Có ${availableCount} khung giờ khả dụng; lịch sẽ được kiểm tra lại khi xác nhận.`
     :noStaff?'Ngày này chưa có nhân viên được phân ca phù hợp với dịch vụ. Vui lòng chọn ngày khác hoặc liên hệ cửa hàng để được sắp xếp.':`Ngày này không còn khung giờ phù hợp với thời lượng dịch vụ trong giờ phục vụ ${result.open}–${result.close}. Vui lòng chọn ngày khác.`;
    if(spaSlots){
     const staffRoot=el('bookingStaffPreferences'),slotsRoot=el('bookingDaySlots');
@@ -404,7 +404,7 @@ async function loadQuote(){
 }
 function renderConfirmation(){
  const q=state.quote,p=state.pet,d=state.details||{};
- const instant=Boolean(d.hold_id&&!state.preferredStaff?.requires_confirmation);
+ const instant=Boolean(d.hold_id);
  const info=(label,value)=>`<div><dt>${label}</dt><dd>${escape(value||'Chưa cập nhật')}</dd></div>`;
  el('step4').innerHTML=heading('Xác nhận đặt lịch')+`<div class="booking-confirmation">
  <div class="booking-confirm-intro"><span>Đặt lịch cho</span><h3>${escape(p.name)}</h3><p>${escape([p.species,p.breed,Number(p.weight)>0?p.weight+' kg':null].filter(Boolean).join(' · '))}</p></div>
@@ -413,7 +413,6 @@ function renderConfirmation(){
  ${info('Chủ nuôi',state.profile?.name)}${info('Số điện thoại liên hệ',d.contact_phone||state.profile?.phone)}
  ${p.allergy?info('Dị ứng',p.allergy):''}${p.safety_note?info('Lưu ý về bé',p.safety_note):''}${d.note?info('Ghi chú của bạn',d.note):''}
  </dl>
- ${state.preferredStaff?.requires_confirmation?'<p class="field-note"><strong>Chờ xác nhận nhân viên</strong> · Đây là yêu cầu đặt trước. Cửa hàng chưa cam kết nhân viên và giờ hẹn cho đến khi phân ca cụ thể.</p>':''}
  <div class="booking-confirm-cost"><h4>Chi phí dự kiến</h4><div class="booking-confirm-price"><span>${escape(state.service.name)}<small>${escape(q.quantity)} × ${money(q.unit_price)}</small></span><strong>${money(Number(q.quantity)*Number(q.unit_price))}</strong></div>${q.addons.map(a=>`<div class="booking-confirm-price"><span>${escape(a.name)}</span><strong>${money(a.price)}</strong></div>`).join('')}<div class="booking-confirm-price"><span>Đặt cọc</span><strong>0 VNĐ</strong></div><div class="booking-confirm-total"><span>Tổng dự kiến</span><strong>${money(q.total)}</strong></div></div>
  <div class="booking-confirm-notice"><h4>Lưu ý về giá và tình trạng bé</h4><p>Giá dự kiến được tính theo dịch vụ, cân nặng và thông tin hồ sơ hiện tại. Khi tiếp nhận, cửa hàng sẽ cân và kiểm tra trực tiếp tình trạng lông, da, sức khỏe, tập tính cùng các đặc điểm cần chăm sóc của bé.</p><p>Nếu có chênh lệch cân nặng hoặc cần xử lý thêm, cửa hàng sẽ thông báo chi phí để bạn xác nhận trước khi thực hiện.</p><p>${instant?'Không thu tiền đặt cọc. Lịch hẹn và nhân viên được xác nhận khi bạn hoàn tất đặt lịch.':'Gửi yêu cầu chưa thu tiền và chưa phải lịch đã được duyệt. Cửa hàng sẽ liên hệ xác nhận lịch và phân nhân viên.'}</p></div>
  <label class="policy-checkbox"><input id="policyCheck" type="checkbox"><span>Tôi đã kiểm tra thông tin đặt lịch và đọc lưu ý về giá dự kiến.</span></label><p class="field-error" role="alert" id="bookingSubmitError"></p></div><div class="step-actions booking-confirm-actions"><button type="button" class="btn-step-back btn-green-outline" id="step4Back">Quay lại</button><button type="button" class="btn-cta" id="confirmBookingBtn" disabled>${instant?'Xác nhận đặt lịch':'Gửi yêu cầu đặt lịch'}</button></div>`;
