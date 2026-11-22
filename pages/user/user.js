@@ -134,7 +134,7 @@
     const moduleHtmlCache = new Map();
     const routePreviewCache = new Map();
     let displayedRouteKey = null;
-    const assetVersion = 'account-20261023';
+    const assetVersion = 'account-20261122-booking-move-slots';
     function routeCacheKey(routeKey) {
         const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         return `${user?.id || ''}:${routeKey}:${window.location.hash.split('?')[1] || ''}`;

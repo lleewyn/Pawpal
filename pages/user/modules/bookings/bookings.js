@@ -5,6 +5,7 @@ import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 import { parseVietnamDateTimeInput, vietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
 import {staffRequestLabel} from '/scripts/shared/booking-staff-request.mjs';
 import {mountBookingCancellationReasons} from '/scripts/shared/booking-cancellation.mjs';
+import {openBookingMoveSlots} from './booking-move-slots.mjs?v=20261122_move_slots';
 
 
 
@@ -598,6 +599,12 @@ export function openBookingMoveModal(booking,onSaved) {
         (Array.isArray(booking?.items) && booking.items.some(i => /hotel|suite|condo|villa|lưu\s*trú|khách\s*sạn/i.test(i.name || i.serviceName || '')))
     );
 
+    const isTaxi=booking.logistics?.kind==='pet_taxi'||/taxi|đưa\s*đón/i.test([booking.serviceCategory,booking.category,booking.categoryCode,booking.serviceName,booking.service,booking.type].filter(Boolean).join(' '));
+    if(!isHotel&&!isTaxi){
+        const db=window.getSupabaseClient?.()||window.SupabaseClient;
+        const user=window.getCurrentUser?.()||JSON.parse(localStorage.getItem('pawpal_current_user')||'null');
+        return openBookingMoveSlots(booking,onSaved,{db,user,onSuccess:()=>showToast('Đã đổi lịch. Lịch đang chờ cửa hàng xác nhận lại.','success')});
+    }
     const prevDurationMs = (booking?.scheduledStartAt && booking?.scheduledEndAt)
         ? (new Date(booking.scheduledEndAt).getTime() - new Date(booking.scheduledStartAt).getTime())
         : (24 * 3600 * 1000);
@@ -613,7 +620,6 @@ export function openBookingMoveModal(booking,onSaved) {
       <p style="margin:0;"><strong>${escapeHtml(booking.serviceName || booking.service)}</strong> của <strong>${escapeHtml(booking.petName)}</strong></p>
       <div><label for="bookingMoveService" class="form-label">Gói dịch vụ mới</label>
         <select id="bookingMoveService" class="form-control"><option value="">Giữ gói dịch vụ hiện tại</option></select>
-        <p style="margin:8px 0 0;color:#4F7A65;font-size:13px;">Không hỗ trợ đổi từ Spa sang Hotel. Vui lòng hủy lịch hiện tại và đặt lịch mới nếu muốn đổi loại hình dịch vụ.</p>
       </div>
       <div><label for="bookingMoveStart" class="form-label">Thời gian bắt đầu mới <span style="color:#DC2626;">*</span></label>
         <input type="datetime-local" id="bookingMoveStart" class="form-control" required style="border-radius:9px;">
@@ -646,7 +652,7 @@ export function openBookingMoveModal(booking,onSaved) {
     const serviceInput=modal.querySelector('#bookingMoveService');
     const invalidate=()=>{++version;quote=null;save.disabled=true;preview.hidden=true;error.hidden=true;};
     serviceInput.addEventListener('change',invalidate);
-    if(isHotel || booking.logistics?.kind==='pet_taxi')serviceInput.disabled=true;
+    if(isHotel || isTaxi)serviceInput.disabled=true;
     else db.rpc('customer_service_catalog').then(({data,error:failure})=>{
         if(failure){error.textContent='Chưa tải được danh sách gói dịch vụ.';error.hidden=false;return;}
         for(const service of data?.services||[]){
@@ -709,7 +715,7 @@ export function openBookingMoveModal(booking,onSaved) {
             await moveCustomerBooking(db,user,booking,quote,reason.value,requestId,isHotel&&quote.end_at?quote.end_at:null);
             modal.close();showToast('Đã đổi lịch. Lịch đang chờ cửa hàng xác nhận lại.','success');await onSaved?.();
         }catch(err){if(modal.isConnected){invalidate();error.textContent=err.message;error.hidden=false;}}
-        finally{quoteButton.disabled=false;serviceInput.disabled=isHotel||booking.logistics?.kind==='pet_taxi';start.disabled=false;if(endInput)endInput.disabled=false;reason.disabled=false;}
+        finally{quoteButton.disabled=false;serviceInput.disabled=isHotel||isTaxi;start.disabled=false;if(endInput)endInput.disabled=false;reason.disabled=false;}
     });
     const oldStart=booking.scheduledStartAt?new Date(booking.scheduledStartAt):parseVietnamDateTimeInput(`${booking.date}T${booking.timeStart||booking.time||'09:00'}`);
     const eligibilityError=oldStart&&oldStart.getTime()<Date.now()+2*3600000

@@ -1475,26 +1475,18 @@ function normalizeOrderStatus(status) {
 }
 
 async function showChangeScheduleModal(bookingId, phone) {
- const booking=rgLastSearchState.bookings.find(b=>b.id===bookingId);
- if(!booking?.moveGrant){showToast('Vui l?ng tra c?u v? x?c th?c OTP l?i tr??c khi ??i l?ch.','warning');return;}
- const dialog=document.createElement('dialog');dialog.style.cssText='width:540px;max-width:92vw;border:1px solid #ECF2EE;border-radius:9px;padding:26px 30px';
- dialog.innerHTML=`<h3>Ch?n l?ch m?i</h3><label>Th?i gian b?t ??u m?i *</label><input type="datetime-local" class="form-control" id="guestMoveStart"><label>Th?i gian k?t th?c m?i (l?u tr?)</label><input type="datetime-local" class="form-control" id="guestMoveEnd"><label>L? do *</label><textarea class="form-control" id="guestMoveReason"></textarea><p role="status"></p><button type="button" id="guestMoveClose">??ng</button> <button type="button" id="guestMoveSave">Xem gi? v? l?ch m?i</button>`;
- document.body.append(dialog);dialog.showModal();
- const start=dialog.querySelector('#guestMoveStart'),end=dialog.querySelector('#guestMoveEnd'),reason=dialog.querySelector('textarea'),feedback=dialog.querySelector('p'),save=dialog.querySelector('#guestMoveSave');let quote=null;
- dialog.querySelector('#guestMoveClose').onclick=()=>{dialog.close();dialog.remove();};
- for(const input of [start,end,reason])input.oninput=()=>{quote=null;save.textContent='Xem gi? v? l?ch m?i';};
- const id=crypto.randomUUID();
- save.onclick=async()=>{
-  if(save.disabled)return;
-  if(!start.value||!reason.value.trim()){feedback.textContent='Vui l?ng ch?n gi? m?i v? nh?p l? do.';return;}
-  save.disabled=true;
-  try{
-   const {guestCommerce}=await import('/scripts/shared/guest-commerce-client.mjs');
-   const result=await guestCommerce.request('phone-lookup',{phone,moveRequest:{id,bookingId:booking._supabaseId,grant:booking.moveGrant,start:new Date(start.value+':00+07:00').toISOString(),end:end.value?new Date(end.value+':00+07:00').toISOString():null,reason:reason.value.trim(),confirm:!!quote,version:quote?.version}});
-   if(quote){dialog.close();dialog.remove();showToast('Thay ??i l?ch h?n th?nh c?ng. C?a h?ng s? x?c nh?n l?i l?ch m?i.','success');document.getElementById('rg-results')?.classList.add('d-none');showUpsellModal(phone);}
-   else{quote=result.quote;feedback.textContent='K?t th?c: '+new Date(quote.end_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'})+' ? T?ng ti?n: '+Number(quote.total).toLocaleString('vi-VN')+' ?';save.textContent='X?c nh?n thay ??i';}
-  }catch(error){feedback.textContent=error.message;quote=null;save.textContent='Xem gi? v? l?ch m?i';}finally{save.disabled=false;}
- };
+    const booking=rgLastSearchState.bookings.find(b=>b.id===bookingId);
+    if(!booking?.moveGrant){showToast('Vui lòng tra cứu và xác thực OTP lại trước khi đổi lịch.','warning');return;}
+    try{
+        const [{openGuestBookingMoveDialog},{guestCommerce}]=await Promise.all([
+            import('./guest-booking-move-dialog.mjs?v=20261123_guest_move_dialog'),
+            import('/scripts/shared/guest-commerce-client.mjs')
+        ]);
+        return openGuestBookingMoveDialog(booking,phone,{request:(...args)=>guestCommerce.request(...args),onSaved:()=>{
+            showToast('Đã đổi lịch hẹn. Cửa hàng sẽ xác nhận lại lịch mới.','success');
+            document.getElementById('rg-results')?.classList.add('d-none');showUpsellModal(phone);
+        }});
+    }catch(error){showToast(error.message||'Không mở được phần đổi lịch. Vui lòng tải lại trang.','warning');}
 }
 
 function showUpsellModal(phone) {

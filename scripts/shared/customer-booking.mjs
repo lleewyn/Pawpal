@@ -2,9 +2,19 @@ import { resolveAuthenticatedCustomerId } from './customer-identity.mjs';
 
 function bookingMoveError(error) {
     const messages={booking_change_window_closed:'Lịch không còn trong thời gian hoặc số lần được tự đổi. Vui lòng liên hệ cửa hàng.',
+        booking_move_status_not_allowed:'Lịch hẹn ở trạng thái hiện tại không cho phép tự đổi. Vui lòng liên hệ cửa hàng.',
+        booking_move_limit_reached:'Lịch hẹn đã dùng hết 2 lần đổi trực tuyến. Vui lòng liên hệ cửa hàng.',
+        booking_move_original_too_close:'Lịch hẹn hiện tại đã qua giờ hoặc còn dưới 2 tiếng. Vui lòng liên hệ cửa hàng để đổi.',
+        booking_move_new_time_too_close:'Giờ mới phải cách hiện tại ít nhất 2 tiếng. Vui lòng chọn giờ khác.',
+        booking_move_unchanged:'Gói dịch vụ và giờ hẹn chưa thay đổi. Vui lòng chọn lịch mới.',
+        no_scheduled_staff:'Không có KTV đã được phân ca và còn trống cho khung giờ này. Vui lòng chọn giờ khác.',
+        staff_not_eligible:'KTV phụ trách chưa đủ điều kiện nhận gói dịch vụ mới. Vui lòng liên hệ cửa hàng.',
+        invalid_slot_day:'Vui lòng chọn ngày trong khoảng từ hôm nay đến 90 ngày tới.',
+        booking_hours_unconfigured:'Cửa hàng chưa cấu hình giờ phục vụ. Vui lòng liên hệ cửa hàng.',
+        outside_operating_hours:'Giờ mới nằm ngoài giờ phục vụ hoặc không đủ thời gian hoàn thành dịch vụ. Vui lòng chọn giờ khác.',
         booking_requires_staff_reconciliation:'Lịch có thanh toán, ưu đãi hoặc điều chỉnh cần đối soát. Vui lòng liên hệ cửa hàng để đổi lịch.',
         booking_quote_changed_reload_required:'Lịch hoặc bảng giá đã thay đổi. Vui lòng xem lại giá trước khi xác nhận.',
-        service_change_not_supported:'Không hỗ trợ đổi từ Spa sang Hotel. Vui lòng hủy lịch hiện tại và đặt lịch mới nếu muốn đổi loại hình dịch vụ.',
+        service_change_not_supported:'Chỉ có thể đổi giữa các gói cùng loại dịch vụ. Vui lòng liên hệ cửa hàng nếu muốn đổi loại hình.',
         staff_schedule_conflict:'Nhân viên đang có lịch hoặc không khả dụng ở thời gian này. Vui lòng chọn thời gian khác.',
         hotel_room_conflict:'Phòng đã có lịch ở thời gian này. Vui lòng chọn thời gian khác.',
         ambiguous_service_price:'Chưa xác định được bảng giá phù hợp. Vui lòng liên hệ cửa hàng.',
@@ -17,6 +27,22 @@ function bookingMoveError(error) {
         hotel_room_unavailable:'Phòng hiện không còn khả dụng. Vui lòng liên hệ cửa hàng.',
         hotel_requires_staff:'Lịch lưu trú cần nhân viên kiểm tra trước khi đổi.',taxi_requires_staff:'Lịch xe cần nhân viên kiểm tra trước khi đổi.'};
     return new Error(messages[error?.message] || 'Không thể đổi lịch. Vui lòng tải lại hoặc liên hệ cửa hàng.');
+}
+
+export async function loadCustomerBookingMoveServices(client,user,booking){
+    await resolveAuthenticatedCustomerId(client,user);
+    const {data,error}=await client.rpc('own_booking_move_services',{p_id:booking._supabaseId});
+    if(error)throw bookingMoveError(error);
+    if(!Array.isArray(data?.services))throw new Error('Chưa tải được danh sách gói dịch vụ. Vui lòng thử lại.');
+    return data;
+}
+
+export async function loadCustomerBookingMoveDaySlots(client,user,booking,day,serviceId){
+    await resolveAuthenticatedCustomerId(client,user);
+    const {data,error}=await client.rpc('own_booking_move_day_slots',{p_id:booking._supabaseId,p_day:day,p_service:serviceId||null});
+    if(error)throw bookingMoveError(error);
+    if(!Array.isArray(data?.slots))throw new Error('Chưa tải được khung giờ mới. Vui lòng thử lại.');
+    return {...data,slots:data.slots.map(quote=>({...quote,serviceId:serviceId||null}))};
 }
 
 export async function quoteCustomerBookingMove(client,user,booking,start,end,serviceId=null) {

@@ -912,3 +912,21 @@ body.lookup-public-page{background:#fff;font-family:Inter,system-ui,sans-serif;c
 .rg-session-booking-details dd{font-size:14px;color:#203a2c;margin:0;overflow-wrap:anywhere}
 @media(max-width:600px){.rg-session-booking-details{grid-template-columns:1fr}}
 @media(max-width:760px){.lookup-public-page .rg-item{padding:14px}.lookup-public-page .rg-summary{grid-template-columns:1fr;gap:10px}.lookup-public-page .rg-item-header{flex-direction:column;align-items:flex-start}.lookup-public-page .rg-item-header .text-end{text-align:left!important}.lookup-public-page .rg-actions{justify-content:flex-start;margin-left:0;margin-top:6px}.lookup-public-page .rg-tabs{gap:18px}}
+.rg-booking-move-dialog{position:fixed;inset:0;margin:auto;width:600px;max-width:min(94vw,calc(100% - 24px));max-height:92vh;overflow:auto;overscroll-behavior:contain;padding:26px 30px;border:1px solid #ECF2EE;border-radius:9px;background:#fff;color:#203A2C;font-family:Inter,system-ui,sans-serif;box-sizing:border-box}
+.rg-booking-move-dialog::backdrop{background:rgba(15,35,25,.35)}
+.rg-booking-move-form{display:grid;gap:16px}
+.rg-booking-move-heading{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.rg-booking-move-heading h3{margin:0;color:#236B48;font-family:Lora,Georgia,serif;font-size:20px;line-height:1.4}
+.rg-booking-move-dialog p{margin:0;line-height:1.65}
+.rg-booking-move-dialog label{display:block;margin-bottom:7px;font-size:14px;font-weight:500}
+.rg-booking-move-dialog .required{color:#DC2626;font-weight:700}
+.rg-booking-move-dialog .form-control{width:100%;min-width:0;border:1px solid #ECF2EE;border-radius:9px;padding:10px 12px;font:inherit;color:#203A2C;box-sizing:border-box}
+.rg-booking-move-dialog textarea{resize:vertical;min-height:88px}
+.rg-booking-move-dialog #guestMovePreview{color:#236B48}
+.rg-booking-move-dialog #guestMoveTotal{font-weight:600}
+.rg-booking-move-dialog #guestMoveFeedback{color:#DC2626}
+.rg-booking-move-actions{display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+.rg-booking-move-dialog button{border-radius:9px;font-family:inherit}
+.rg-booking-move-dialog button:disabled{opacity:.5;cursor:not-allowed}
+.rg-booking-move-dialog [hidden]{display:none!important}
+@media(max-width:480px){.rg-booking-move-dialog{padding:22px 20px}.rg-booking-move-actions{gap:8px}.rg-booking-move-actions button{padding:9px 12px}}

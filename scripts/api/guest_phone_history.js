@@ -76,19 +76,19 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
    if(previewDemo&&!otpTestPhones.includes(phone))throw Error('Số điện thoại này chưa được cấu hình để thử OTP giả lập.');
    if(body.moveRequest){
     const m=body.moveRequest;
-    if(!m||typeof m.grant!=='string'||m.grant.length>1500||typeof m.start!=='string'||!Number.isFinite(Date.parse(m.start))||typeof m.confirm!=='boolean'||(m.end!=null&&!Number.isFinite(Date.parse(m.end))))throw Error('Th?ng tin ??i l?ch kh?ng h?p l?.');
+    if(!m||typeof m.grant!=='string'||m.grant.length>1500||typeof m.start!=='string'||!Number.isFinite(Date.parse(m.start))||typeof m.confirm!=='boolean'||(m.end!=null&&!Number.isFinite(Date.parse(m.end))))throw Error('Thông tin đổi lịch không hợp lệ.');
     const parts=m.grant.split('.');
-    if(parts.length!==2||!/^[A-Za-z0-9_-]{43}$/.test(parts[1])||!crypto.timingSafeEqual(Buffer.from(signHistory(parts[0])),Buffer.from(parts[1])))throw Error('Phi?n tra c?u kh?ng h?p l?.');
+    if(parts.length!==2||!/^[A-Za-z0-9_-]{43}$/.test(parts[1])||!crypto.timingSafeEqual(Buffer.from(signHistory(parts[0])),Buffer.from(parts[1])))throw Error('Phiên tra cứu không hợp lệ.');
     const proof=JSON.parse(Buffer.from(parts[0],'base64url').toString('utf8'));
-    if(proof.phone!==phone||!Number.isFinite(proof.expires)||proof.expires<=now()/1000||proof.expires>now()/1000+901)throw Error('Vui l?ng x?c th?c OTP l?i.');
+    if(proof.phone!==phone||!Number.isFinite(proof.expires)||proof.expires<=now()/1000||proof.expires>now()/1000+901)throw Error('Vui lòng xác thực OTP lại.');
     const c=await customer(phone);
-    if(c.id!==proof.id||proof.scope!==digest(c.ids.join(','))||!!c.snapshotOnly!==proof.snapshotOnly)throw Error('Ch? s? h?u ?? thay ??i.');
+    if(c.id!==proof.id||proof.scope!==digest(c.ids.join(','))||!!c.snapshotOnly!==proof.snapshotOnly)throw Error('Chủ sở hữu đã thay đổi. Vui lòng tra cứu lại.');
     let q=admin.from('appointment').select('id,customer_id').eq('id',m.bookingId).in('customer_id',c.ids);
     if(c.snapshotOnly)q=q.eq('booking_contact_phone',phone);
-    const owned=await q.maybeSingle();if(owned.error||!owned.data)throw Error('Kh?ng c? quy?n ??i l?ch n?y.');
+    const owned=await q.maybeSingle();if(owned.error||!owned.data)throw Error('Không có quyền đổi lịch hẹn này.');
     const args={p_customer:owned.data.customer_id,p_id:m.bookingId,p_start:m.start,p_end:m.end||null};
     const result=m.confirm?await admin.rpc('reschedule_verified_guest_booking',{...args,p_request_id:m.id,p_expected_quote:m.version,p_reason:m.reason}):await admin.rpc('quote_verified_guest_booking',args);
-    if(result.error)throw Error('Kh?ng th? ??i l?ch: '+result.error.message);
+    if(result.error)throw Error('Không thể đổi lịch: '+result.error.message);
     return res.json({success:true,...(m.confirm?{bookingId:result.data}:{quote:result.data})});
    }
    if(body.historyPage){
