@@ -1,6 +1,20 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const config=JSON.parse(fs.readFileSync('vercel.json','utf8')),source=fs.readFileSync('server.js','utf8');
 const byPath=new Map(config.rewrites.map(r=>[r.source,r.destination]));
+
+test('Vercel forwards member history lookup to the same authenticated handler as local',async()=>{
+ const vm=require('node:vm'),calls=[];
+ const context={module:{exports:{}},URL,process:{env:{}},require:name=>{
+  assert.equal(name,'../scripts/api/customer_auth');
+  return {guestRecords:(req,res)=>{calls.push(req);return res.json({success:true});}};
+ }};
+ vm.createContext(context);vm.runInContext(fs.readFileSync('api/customer-auth.js','utf8'),context);
+ const request={method:'POST',url:'/api/customer-auth?action=guest-records',body:JSON.stringify({phone:'0901234567'}),headers:{authorization:'Bearer verified-by-handler'},socket:{remoteAddress:'127.0.0.1'}};
+ const response={setHeader(){},status(code){this.code=code;return this;},json(body){this.body=body;return this;}};
+ await context.module.exports(request,response);
+ assert.equal(calls.length,1);assert.equal(calls[0].body.phone,'0901234567');assert.equal(calls[0].headers.authorization,'Bearer verified-by-handler');assert.equal(response.body.success,true);
+ assert.match(source,/app\.post\('\/api\/customer\/auth\/guest-records',\s*\(req, res\) => customerAuth\.guestRecords\(req, res\)\)/);
+});
 test('Vercel clean page/asset routes match local sendFile routes and files exist',()=>{
  const routes=[...source.matchAll(/app\.get\('([^']+)',\s*\(req,\s*res\)\s*=>\s*res\.sendFile\(path\.join\(__dirname,\s*'([^']+)'\)\)\)/g)];
  assert.ok(routes.length>40);

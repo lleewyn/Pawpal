@@ -1,7 +1,7 @@
 const auth = require('../scripts/api/customer_auth');
 
 const actions = Object.freeze({
-    guest: 'guest', lookup: 'lookup', login: 'login',
+    guest: 'guest', lookup: 'lookup', login: 'login', 'guest-records': 'guestRecords',
     'otp/request': 'requestOtp', 'otp/complete': 'completeOtp',
     me: 'me', 'change-password': 'changePassword'
 });
