@@ -1,0 +1,8 @@
+{
+  "checkedAt": "2026-11-22T18:11:16.281Z",
+  "origin": "https://pawpalgr3.vercel.app",
+  "script": "/pages/public/return-guest/return-guest.js?v=20261123_return_request_click",
+  "commit": "d721f17a",
+  "buttonCallsCorrectHandler": true,
+  "status": "DEPLOYED_AND_LIVE_BROWSER_PASS"
+}

@@ -241,6 +241,11 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
                 }
             }
             if (error || data?.user?.id !== c.auth_user_id) throw new Error('Thông tin đăng nhập không đúng.');
+            const guestProof = await guestLink?.discover?.(req, phone);
+            if (guestProof) {
+                await guestLink.complete(guestProof, { authId: data.user.id, phone, name: null });
+                guestLink.clear(res);
+            }
             res.json({ success: true, user: await identity(data.user.id), session: data.session });
         }),
         requestOtp: wrap(async (req, res) => {
@@ -250,10 +255,10 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             if (req.body.linkGuest != null && typeof req.body.linkGuest !== 'boolean') throw new Error('Yêu cầu liên kết không hợp lệ.');
             let guestProof = null;
             if (req.body.linkGuest === true) {
-                if (!guestLink || purpose === 'reset') throw new Error('Yêu cầu liên kết hồ sơ không hợp lệ.');
+                if (!guestLink) throw new Error('Yêu cầu liên kết hồ sơ không hợp lệ.');
                 guestProof = guestLink.prepare(req);
                 await guestLink.validate(guestProof, phone);
-            } else if (req.body.linkGuest == null && purpose !== 'reset' && guestLink?.discover) {
+            } else if (req.body.linkGuest == null && guestLink?.discover) {
                 guestProof = await guestLink.discover(req, phone);
             }
             await limit('sms-ip:' + req.ip, 10, 600000);
@@ -292,7 +297,6 @@ function createCustomerAuth({ admin, clientFactory, store = createSupabaseAuthSt
             const challenge = await store.claim(challengeId, storeMode, hashOtp(challengeId, code + (guestProof ? ':' + guestProof.hash : '')), claimId);
             let consumed = false;
             try {
-                if (wantsGuestLink && challenge.purpose === 'reset') throw new Error('Không liên kết hồ sơ trong yêu cầu khôi phục mật khẩu.');
                 if (wantsGuestLink) await guestLink.validate(guestProof, challenge.phone);
                 const c = await customer(challenge.phone);
                 if (challenge.purpose !== 'reset' && c && !c.is_temporary) throw new Error('Số điện thoại đã tồn tại. Vui lòng đăng nhập hoặc khôi phục mật khẩu!');

@@ -1,0 +1,95 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-11-22T17:52:22.447Z",
+  "migrationSha256": "efbbc80b336a17cd79d15ae5f8435da6ea23e5aa021a696abe8fa9b06fb2e53e",
+  "originalSha256": "3109f3f8000d44a02b09aeedc13b9466429512bf0bcaae7de63b4eb9a537a915",
+  "paymentGuardSha256": "73c7d2fda5a7fae4adf6a3764401344d8214006b44d3a2f90c065e764d9e96d2",
+  "beforeSha256": "a8276eff018b146eee0476eb3b7f396e7286e27f018e3a9a1440763a98190364",
+  "beforeCounts": {
+    "pet_profile": [
+      {
+        "customer_id": "f6429361-2394-49ff-aa9a-ff60784a16c3",
+        "count": 1
+      }
+    ],
+    "appointment": [
+      {
+        "customer_id": "f6429361-2394-49ff-aa9a-ff60784a16c3",
+        "count": 1
+      }
+    ],
+    "sales_order": [
+      {
+        "customer_id": "11f261a4-a46c-4aa1-b28c-de595964db10",
+        "count": 2
+      },
+      {
+        "customer_id": "f6429361-2394-49ff-aa9a-ff60784a16c3",
+        "count": 3
+      }
+    ],
+    "payment": [
+      {
+        "customer_id": "11f261a4-a46c-4aa1-b28c-de595964db10",
+        "count": 2
+      },
+      {
+        "customer_id": "f6429361-2394-49ff-aa9a-ff60784a16c3",
+        "count": 3
+      }
+    ],
+    "support_ticket": [
+      {
+        "customer_id": "11f261a4-a46c-4aa1-b28c-de595964db10",
+        "count": 2
+      }
+    ]
+  },
+  "afterCounts": {
+    "pet_profile": [
+      {
+        "customer_id": "11f261a4-a46c-4aa1-b28c-de595964db10",
+        "count": 1
+      }
+    ],
+    "appointment": [
+      {
+        "customer_id": "11f261a4-a46c-4aa1-b28c-de595964db10",
+        "count": 1
+      }
+    ],
+    "sales_order": [
+      {
+        "customer_id": "11f261a4-a46c-4aa1-b28c-de595964db10",
+        "count": 5
+      }
+    ],
+    "payment": [
+      {
+        "customer_id": "11f261a4-a46c-4aa1-b28c-de595964db10",
+        "count": 5
+      }
+    ],
+    "support_ticket": [
+      {
+        "customer_id": "11f261a4-a46c-4aa1-b28c-de595964db10",
+        "count": 2
+      }
+    ]
+  },
+  "checks": [
+    "Direct payment reassignment remains forbidden outside approved history migration",
+    "Wrong Auth identity cannot move history",
+    "Phone and verified identity without guest cookie cannot claim a profile",
+    "Public callers cannot invoke server linking RPC",
+    "Existing IDs, details, amounts, statuses and timestamps except updated_at retained",
+    "Real phone history is unified under existing member, including all payments",
+    "Old guest sessions revoked",
+    "Retry does not duplicate records",
+    "Actual member RLS can read Đậu, one appointment and five orders",
+    "Fresh activation keeps guest ID, all histories and one welcome award",
+    "Existing member claims only the proven guest and retry is safe",
+    "All deferred constraints pass"
+  ],
+  "scope": "Cloud SQL rollback tests, actual business history and member RLS; no Auth sessions/password changes or committed data"
+}

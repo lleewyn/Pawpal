@@ -26,3 +26,12 @@ test('Account linker reports expired cookie and cross-profile conflict without l
  assert.throws(()=>linker.prepare({headers:{origin:'https://pawpal.test',cookie:'__Host-pawpal_guest=invalid'}}),/Phiên khách vãng lai/);
  await assert.rejects(()=>linker.complete({hash:'a'.repeat(64)},{authId:'fixture',phone:'0912345678',name:'Test'}),error=>error.message.includes('đối soát')&&!error.message.includes('private'));
 });
+
+test('Automatic discovery ignores expired/revoked guest cookies without blocking member login',async()=>{
+ const configuration={secret:'cookie-test-secret-with-at-least-32-characters',origins:['https://pawpal.test'],production:true};
+ const linker=createGuestAccountLink({...configuration,admin:{rpc:async()=>({error:{code:'42501'}})}});
+ assert.equal(await linker.discover({headers:{origin:'https://pawpal.test',cookie:'__Host-pawpal_guest=invalid'}},'0912345678'),null);
+ const handler=createGuestCommerce({...configuration,admin:{},limit:async()=>{}}),res={headers:{},setHeader(k,v){this.headers[k]=v;},json(){},status(){return this;}};
+ await handler({method:'POST',headers:{origin:'https://pawpal.test','content-type':'application/json'},body:{}},res,'session');
+ assert.equal(await linker.discover({headers:{origin:'https://pawpal.test',cookie:res.headers['Set-Cookie'].split(';')[0]}},'0912345678'),null);
+});

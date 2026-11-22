@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "origin": "https://pawpalgr3.vercel.app",
+  "timestamp": "2026-11-22T18:10:43.030Z",
+  "checks": [
+    "Actual phone lookup and selected SO-A277E button",
+    "Real member API and return-request reads",
+    "Drawer opens with original product",
+    "Close, reopen, Escape and mobile"
+  ],
+  "scope": "Live Supabase data. No return submission, uploaded files, password changes or messages sent."
+}

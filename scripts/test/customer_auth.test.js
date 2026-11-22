@@ -264,3 +264,21 @@ test('Password setup failure after linking directs recovery without pretending t
  const r=await f.call('requestOtp',{phone:'0912345678',purpose:'register',linkGuest:true});f.rejectUpdate();
  const response=await f.call('completeOtp',{challengeId:r.body.challengeId,code:'123456',password:'NewPass123!',name:'Test',linkGuest:true});assert.equal(response.code,400);assert.match(response.body.message,/Quên mật khẩu/);assert.equal(linked,true);assert.equal(cleared,false);
 });
+
+test('Password login links the matching guest cookie only after credentials succeed',async()=>{
+ const calls=[],proof={hash:'a'.repeat(64)};
+ const f=fixture({guestLink:{discover:async(req,phone)=>{calls.push(['discover',phone]);return proof;},complete:async(p,identity)=>calls.push(['complete',p,identity]),clear:()=>calls.push(['clear'])}});
+ assert.equal((await f.call('login',{phone:'0912345678',password:'wrong'})).code,400);
+ assert.equal(calls.length,0);
+ assert.equal((await f.call('login',{phone:'0912345678',password:'OldPass123!',customerId:'ignored'})).code,200);
+ assert.deepEqual(calls,[['discover','0912345678'],['complete',proof,{authId:'auth-1',phone:'0912345678',name:null}],['clear']]);
+});
+
+test('Reset OTP preserves and links the guest proof before setting the member password',async()=>{
+ let linked=0,cleared=0;const proof={hash:'a'.repeat(64)};
+ const f=fixture({simulated:false,guestLink:{discover:async()=>proof,prepare:()=>proof,validate:async()=>{},complete:async()=>{linked++;},clear:()=>{cleared++;}}});
+ const r=await f.request();assert.equal(r.code,200);assert.equal(r.body.linkGuest,true);
+ const result=await f.call('completeOtp',{challengeId:r.body.challengeId,code:'123456',password:'NewPass123!',linkGuest:true});
+ assert.equal(result.code,200);assert.equal(linked,1);assert.equal(cleared,1);
+ assert.deepEqual(f.writes,[{password:'NewPass123!'}]);
+});

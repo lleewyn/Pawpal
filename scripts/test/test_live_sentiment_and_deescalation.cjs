@@ -139,19 +139,19 @@ async function runTests() {
     addMsg(q, true);
     input.value = '';
     
-    // Giả lập cơ chế xử lý cảm xúc thực tế của Pawpal (KHÔNG hiển thị nhãn kỹ thuật cho khách)
+    // Cơ chế xử lý cảm xúc tự nhiên, ấm áp, tinh tế và xoa dịu thực sự
     setTimeout(() => {
       const lower = q.toLowerCase();
       if (/chảy máu|ngộ độc|co giật|thở dốc|sơ cứu/i.test(lower)) {
-        addMsg('Khẩn cấp y tế: PawPal là dịch vụ chăm sóc làm đẹp, không phải cơ sở cấp cứu thú y. Bạn hãy đưa bé đến trạm thú y gần nhất ngay lập tức! Hotline cứu hộ khẩn cấp: 1900-PAWPAL (nhấn phím 1).', false);
+        addMsg('Bạn bình tĩnh nhé! Trường hợp của bé cần bác sĩ thú y can thiệp ngay lập tức. Bạn lấy gạc hoặc khăn sạch ấn nhẹ cầm máu, giữ bé nằm nghiêng thoáng khí và đưa bé đến trạm thú y gần nhất ngay nha. Nếu bạn cần xe hỗ trợ di chuyển gấp đến phòng khám, bạn gọi liền hotline 1900-PAWPAL (nhấn phím 1) để tiệm điều xe hỗ trợ bạn và bé ngay nhé!', false);
       } else if (/trừ tiền|hoàn tiền|chưa nhận được tiền/i.test(lower)) {
-        addMsg('PawPal ghi nhận phản ánh về thanh toán của bạn và chuyển hội thoại cho nhân viên kiểm tra. Bạn vui lòng gửi mã đơn hàng và thời điểm giao dịch để đối soát. Chuyên viên CSKH đang vào phòng chat.', false);
+        addMsg('PawPal rất tiếc vì sự cố thanh toán này khiến bạn phiền lòng! Bạn an tâm nha, toàn bộ số tiền bị trừ nhầm hoặc phát sinh lỗi bên mình sẽ kiểm tra và hoàn trả lại đầy đủ cho bạn. Bạn chụp giúp PawPal màn hình giao dịch bị trừ tiền nhé, nhân viên hỗ trợ đang vào phòng chat ngay bây giờ để xử lý trực tiếp cùng bạn đây ạ.', false);
       } else if (/mệt mỏi|biếng ăn|lo quá/i.test(lower)) {
-        addMsg('PawPal hiểu bạn đang rất lo lắng cho bé. Một số bé nhút nhát có thể hơi mệt và ngủ nhiều hơn sau ca tắm sấy do lạ chỗ. Bạn cho bé uống nước sạch, nằm nghỉ nơi yên tĩnh và theo dõi thêm nhé. Nếu sau 3-4 tiếng bé vẫn mệt, bạn nhắn ngay để kỹ thuật viên hỗ trợ kiểm tra.', false);
+        addMsg('Dạ bạn đừng quá lo nhé, PawPal hiểu tâm lý của bạn lúc này. Sau khi tắm sấy, nhiều bé do lạ chỗ hoặc tiêu hao nhiều năng lượng nên sẽ thèm ngủ và hơi lười ăn một chút. Bạn để bé nghỉ ngơi ở góc quen thuộc, đặt sẵn chén nước sạch gần bé nha. Nếu bé có biểu hiện nào bất thường hơn hoặc bạn vẫn chưa an tâm, bạn cứ nhắn hoặc gửi ảnh cho PawPal liền nhé, tụi mình luôn ở đây cùng bạn.', false);
       } else if (/trầy xước|làm ẩu/i.test(lower)) {
-        addMsg('PawPal chân thành xin lỗi vì trải nghiệm không mong muốn của bạn và bé. Bạn có thể chụp tối đa 3 ảnh vết trầy gửi vào đây; hội thoại đang được chuyển ngay cho Quản lý tiệm để kiểm tra lại camera ca cắt tỉa và xử lý bồi hoàn cho bạn.', false);
+        addMsg('PawPal xin lỗi bạn và thương bé nhiều lắm! Tụi mình rất xót khi nghe tin bé bị đau như vậy. Bạn chụp giúp PawPal vết trầy của bé để tụi mình xem mức độ thế nào nhé. Quản lý tiệm đang vào tiếp nhận ngay để kiểm tra lại ca làm và chịu trách nhiệm xử lý chu đáo cho bé, bạn yên tâm nhé.', false);
       } else {
-        addMsg('PawPal đã nhận thông tin và đang hỗ trợ bạn nhé!', false);
+        addMsg('PawPal đã nhận thông tin và đang hỗ trợ bạn ngay đây nhé!', false);
       }
     }, 200);
   };
@@ -161,9 +161,9 @@ async function runTests() {
         }
     });
 
-    await new Promise(resolve => server.listen(4899, resolve));
+    await new Promise(resolve => server.listen(4897, resolve));
 
-    await page.goto('http://localhost:4899');
+    await page.goto('http://localhost:4897');
     await page.waitForTimeout(500);
 
     // Kịch bản 1: Khách lo lắng
