@@ -29,8 +29,6 @@
         orderProcessingHours: 4,             // đơn đã xác nhận từ 4 giờ chưa giao (như orders.js)
         returnPendingHours: 48,              // yêu cầu đổi trả chờ xử lý quá 48 giờ
         ticketFirstResponseHours: 4,         // yêu cầu hỗ trợ chưa phản hồi lần đầu quá 4 giờ
-        ticketResolveHours: 48,              // chưa giải quyết quá 48 giờ
-        ticketResolveUrgentHours: 24,        // mức ưu tiên cao hoặc khẩn: quá 24 giờ
         stockCoverHighDays: 7,               // đủ hàng dưới 7 ngày: ưu tiên cao
         stockCoverWatchDays: 14,             // đủ hàng dưới 14 ngày: cần theo dõi
         staffUtilizationHigh: 0.9,           // giờ phục vụ dự kiến vượt 90% giờ ca
@@ -435,7 +433,7 @@
             rows: list,
             staffWithShift: staffWithShift.size,
             onShiftNow: onShiftNow.size,
-            capacityRisks: capacityRisks(appointments, activeSchedules, period)
+            capacityRisks: capacityRisks(appointments, activeSchedules.filter(schedule => workingStaff(schedule.staff_id)), period)
         };
     }
 
@@ -629,8 +627,9 @@
                 if (waitedMinutes > THRESHOLDS.orderPendingUrgentMinutes) push({ ...base, severity: 'urgent', reason: `Đơn chờ xác nhận quá ${THRESHOLDS.orderPendingUrgentMinutes} phút`, waitingHours: waitedMinutes / 60 });
                 else if (waitedMinutes >= THRESHOLDS.orderPendingWarnMinutes) push({ ...base, severity: 'warning', reason: `Đơn chờ xác nhận từ ${THRESHOLDS.orderPendingWarnMinutes} phút`, waitingHours: waitedMinutes / 60 });
             } else if (group === 'processing') {
-                const waited = hoursSince(order.updated_at || order.created_at, nowMs);
-                if (waited !== null && waited >= THRESHOLDS.orderProcessingHours) push({ ...base, severity: 'warning', reason: `Đơn đã xác nhận từ ${THRESHOLDS.orderProcessingHours} giờ chưa giao`, waitingHours: waited });
+                const waited = hoursSince(order.status_started_at, nowMs);
+                if (waited === null) push({ ...base, severity: 'warning', reason: 'Đơn đang chuẩn bị, chưa có mốc xác nhận để xác định thời gian chờ' });
+                else if (waited >= THRESHOLDS.orderProcessingHours) push({ ...base, severity: 'warning', reason: `Đơn đang chuẩn bị từ ${THRESHOLDS.orderProcessingHours} giờ chưa giao`, waitingHours: waited });
             }
         }
 
@@ -645,12 +644,14 @@
             const waited = hoursSince(ticket.created_at, nowMs);
             if (waited === null) continue;
             const ref = ticket.ticket_code || ticket.id;
-            const resolveLimit = isUrgentPriority(ticket.priority) ? THRESHOLDS.ticketResolveUrgentHours : THRESHOLDS.ticketResolveHours;
+            const deadline = toDate(ticket.sla_due_at);
             if (!ticket.first_response_at && waited >= THRESHOLDS.ticketFirstResponseHours) {
                 push({ severity: isUrgentPriority(ticket.priority) ? 'urgent' : 'warning', kind: 'ticket', ref, recordId: ticket.id, reason: `Chưa phản hồi khách quá ${THRESHOLDS.ticketFirstResponseHours} giờ`, waitingHours: waited });
             }
-            if (waited >= resolveLimit) {
-                push({ severity: isUrgentPriority(ticket.priority) ? 'urgent' : 'warning', kind: 'ticket', ref, recordId: ticket.id, reason: `Chưa giải quyết quá ${resolveLimit} giờ`, waitingHours: waited });
+            if (deadline && nowMs >= deadline.getTime()) {
+                push({ severity: 'urgent', kind: 'ticket', ref, recordId: ticket.id, reason: 'Đã quá hạn giải quyết theo SLA của phiếu', waitingHours: waited, dueAt: deadline.toISOString() });
+            } else if (!deadline) {
+                push({ severity: 'warning', kind: 'ticket', ref, recordId: ticket.id, reason: 'Phiếu chưa có hạn giải quyết, cần kiểm tra SLA', waitingHours: waited });
             }
         }
 
@@ -686,11 +687,13 @@
                 task = { ...alert, id, reasons: [], ownerIds, unassigned: assignmentKnown && !ownerIds.length,
                     ownerLabel: !assignmentKnown ? 'Chưa có dữ liệu phân công' : !ownerIds.length ? 'Chưa phân công'
                         : ownerIds.map(id => staffAvailable && staffById.get(id) || 'Đã phân công, chưa tải được tên').join(', '),
-                    scheduledAt: alert.kind === 'appointment' ? source?.scheduled_start_at : null };
+                    scheduledAt: alert.kind === 'appointment' ? source?.scheduled_start_at : null,
+                    dueAt: alert.dueAt || (alert.kind === 'ticket' ? source?.sla_due_at : null) };
                 grouped.set(id, task);
             }
             if (!task.reasons.includes(alert.reason)) task.reasons.push(alert.reason);
             if (alert.severity === 'urgent') task.severity = 'urgent';
+            if (alert.dueAt) task.dueAt = alert.dueAt;
             task.waitingHours = Math.max(task.waitingHours ?? -1, alert.waitingHours ?? -1);
             if (task.waitingHours < 0) task.waitingHours = null;
         }

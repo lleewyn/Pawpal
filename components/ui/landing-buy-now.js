@@ -25,7 +25,7 @@
             return;
         }
         close();
-        window.location.href = '/pages/shop/checkout/checkout.html?buynow=true';
+        window.location.href = '/checkout?buynow=true';
     }
     function ensureModal() {
         if (modal?.isConnected) return;

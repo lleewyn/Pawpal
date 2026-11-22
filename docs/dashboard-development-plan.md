@@ -1,6 +1,6 @@
 # Kế hoạch phát triển Dashboard quản trị Pawpal
 
-Ngày lập và cập nhật: 19/11/2026. Mục tiêu đã thống nhất: phục vụ người chủ kinh doanh dịch vụ thú cưng và sản phẩm. Chi tiết triển khai bên dưới là kế hoạch; chưa thay đổi ứng dụng hoặc CSDL.
+Ngày lập: 19/11/2026. Cập nhật tiến độ: 22/11/2026. Mục tiêu đã thống nhất: phục vụ người chủ kinh doanh dịch vụ thú cưng và sản phẩm. Các mốc dưới đây là phạm vi nghiệm thu; phần đã triển khai trong mã và CSDL được ghi tại mục 15.
 
 ## 1. Mục tiêu
 
@@ -37,7 +37,7 @@ Mỗi khối phải nêu được quyết định mà nó hỗ trợ. Khối kh�
 
 ## 2. Hiện trạng đã đối chiếu
 
-Đánh giá dựa trên mã và migrations trong repository. Chưa đối chiếu schema, dữ liệu và quyền của phiên bản Supabase Cloud đang chạy trong lần lập kế hoạch này. Không sử dụng số liệu nghiệm thu cũ để mô tả tình hình kinh doanh hiện tại.
+Đây là hiện trạng khi lập kế hoạch ngày 19/11, dựa trên mã và migrations trong repository. Khi đó chưa đối chiếu schema, dữ liệu và quyền của phiên bản Supabase Cloud đang chạy. Xem mục 15 và biên bản kiểm tra phát hành để biết kết quả triển khai tiếp theo; không dùng hiện trạng ban đầu hoặc số liệu kiểm thử để mô tả tình hình kinh doanh hiện tại.
 
 ### 2.1. Tab Kinh doanh
 
@@ -397,3 +397,55 @@ Thiếu thông tin tài chính chỉ chặn phần tài chính phụ thuộc; v�
 - [x] Kiểm tra bằng tài khoản Admin thật với mã Dashboard local: các nguồn vận hành đọc thành công, quan hệ tên bé và cột phân công dùng được; số lịch hôm nay khớp truy vấn độc lập. Chặn mọi ghi nghiệp vụ; không truy vấn Supabase Logs.
 
 Đây là phần đầu P02/P03, chưa phải hoàn thành toàn bộ M0/M1. Không thay đổi schema. M0 còn cần xác nhận định nghĩa/ngưỡng, đối chiếu nguồn chuyên biệt và kiểm tra quyền theo từng vai trò. P04 còn lịch sử xử lý, phân công đầy đủ, năng lực theo chuyên môn, lịch trả phòng và các chặng đưa đón. Các ngưỡng cũ trên Dashboard được giữ nguyên; chưa gọi chúng là SLA đã được chốt, chưa bổ sung kết luận tài chính. Phạm vi đóng gói và việc còn thiếu được cập nhật tại [kiểm tra phát hành Dashboard](verification/dashboard-release-check.md).
+
+### Tiếp tục phần bị gián đoạn — 21/11/2026
+
+**Mã đã vượt bản P02/P03 đầu tiên, đã triển khai một phần P04 và phần cốt lõi P05. Chưa đánh dấu hoàn thành toàn bộ M0–M5 hoặc P04/P05 vì còn các điều kiện nghiệm thu bên dưới.**
+
+- [x] Xác minh migration `259_dashboard_completion.sql` đã có trên Cloud từ lượt làm trước; lịch sử bắt đầu lúc **12:33:21 ngày 21/11/2026, giờ Việt Nam**. Bản ghi khởi tạo chỉ là số tồn tại mốc bắt đầu, không phải lịch sử hoàn tất trong quá khứ.
+- [x] Danh sách việc dùng RPC tổng hợp và phân trang 10 dòng tại server, giữ bộ lọc, phân biệt nguồn thiếu quyền; các KPI/biểu đồ khác vẫn có nguồn đọc phân trang với giới hạn riêng.
+- [x] Cảnh báo hỗ trợ dùng `support_ticket.sla_due_at`; bản ghi thiếu hạn được báo cần kiểm tra. Tuổi đơn đang chuẩn bị dùng sự kiện chuyển trạng thái đã quan sát; hồ sơ cũ chưa có sự kiện được báo thiếu mốc, không suy từ `updated_at`.
+- [x] Ghi nhận chuyển trạng thái và đổi người phụ trách cấp hồ sơ cho lịch hẹn/hỗ trợ; ghi nhận tạo, chuyển trạng thái và xóa của bốn nhóm lịch hẹn, đơn hàng, hỗ trợ, đổi trả. Bảng biến động đối chiếu tồn đầu + mới mở + mở lại − kết thúc − đã xóa = tồn cuối. Đây là số hồ sơ nghiệp vụ đang mở, không phải vòng đời từng lý do cảnh báo.
+- [x] Thêm hàng đợi lưu trú, nhận/trả phòng và chặng đưa đón dự kiến; phân trang 10 dòng. Cập nhật lại tên bé/nhân viên qua Realtime; khi danh sách thu ngắn, quay về trang cuối hợp lệ thay vì hiển thị trang rỗng.
+- [x] Phân tích riêng đơn bán hàng và ca dịch vụ hoàn thành theo ngày hoàn tất: số giao dịch, giá trị dòng, giá trị bình quân và phần biến động do số lượng/bình quân. Tách khỏi tiền thu; giá trị dòng chưa trừ voucher/hoàn tiền, không gọi là doanh thu ghi nhận hoặc lợi nhuận.
+- [x] Bổ sung khách giao dịch lần đầu trong lịch sử quan sát, khách đã giao dịch trước kỳ nay quay lại; so sánh kỳ trước cùng thời lượng đã trôi qua. Hiện tỷ lệ hủy/vắng theo nhóm hồ sơ tạo trong kỳ, kèm mẫu số và giới hạn định nghĩa.
+- [x] Mở danh sách chứng minh cho giao dịch hoàn thành, khoản thu và khoản hoàn; phân trang phía server, chặn phản hồi cũ khi đổi kỳ, không mở nhầm hồ sơ khi khoản thu thiếu liên kết rõ ràng.
+- [x] Kiểm tra với tài khoản Admin thật và mã local: các nguồn mới đọc được; mở hồ sơ đơn hàng/dịch vụ và quay lại Dashboard. Sửa lỗi render đơn hàng sau khi router đã gỡ DOM; kiểm tra lại việc khởi tạo tab chi tiết Dịch vụ khi dùng module đã cache.
+- [x] Bổ sung và áp dụng migration `260_dashboard_workboard_waiting.sql`: ca quá giờ tính thời gian chờ từ giờ kết thúc dự kiến, đồng nhất SQL và lớp tính toán giao diện. Không sửa migration 259 đã triển khai; không thay đổi hồ sơ nghiệp vụ gốc.
+- [x] Kiểm tra tính toán, giao diện 1440/820/390/320px, quyền RPC, công thức tồn, truy vấn nguồn độc lập và tính lặp an toàn của migration. Chi tiết bằng chứng tại [kiểm tra phát hành](verification/dashboard-release-check.md).
+
+**Còn lại của P04/M1:** phân công và hạn xử lý đầy đủ cho đơn hàng/đổi trả/tồn kho; người thực hiện và thời gian nhận/xử lý từng việc cảnh báo; lịch sử phân công cấp dòng dịch vụ; đo đúng hạn theo loại việc; ảnh hưởng và năng lực theo chuyên môn/phòng/tài xế. Chặng đưa đón hiện là lịch dự kiến, chưa chứng minh trạng thái hoàn tất từng chặng.
+
+**Còn lại của P05/M2:** nghiệm thu định nghĩa cùng người quản lý; đối chiếu đầy đủ giao dịch thiếu ngày hoàn tất/dòng chi tiết và lịch sử khách; chốt định nghĩa tỷ lệ giao dịch hoàn tiền. Danh sách chứng minh nhóm khách và tỷ lệ hủy/vắng đã bổ sung ở lượt ngày 22/11 bên dưới. Giá trị dòng dùng đúng tập giao dịch hoàn thành, còn bảng xếp hạng cũ giữ cơ sở ngày riêng và không dùng để tự giải thích tiền thu.
+
+**Còn lại của M0/M5:** chốt ngưỡng/quyền theo vai trò, kiểm tra Realtime với biến động nghiệp vụ thật ở môi trường tách biệt, đo hiệu năng theo quy mô dữ liệu phù hợp và nghiệm thu quản lý. M3/M4 chưa có nền tài chính thực tế đủ đối soát. Mã giao diện giữ local, chưa push hoặc xác minh phát hành frontend trong lượt tiếp tục này.
+
+### Rà soát thay đổi và bổ sung chứng minh — 22/11/2026
+
+- [x] Giữ các sửa đổi về phản hồi muộn ở Bán hàng, khôi phục trang lưu trú, Realtime tên bé/nhân viên, cách tính quá giờ ở migration 260 và vùng cuộn bảng phân tích. Kiểm tra lại cùng toàn bộ Dashboard hiện tại.
+- [x] Bổ sung và áp dụng migration `261_dashboard_analysis_evidence.sql`, không sửa các migration 259/260 đã triển khai. RPC đọc cung cấp chín nhóm chứng minh: bốn nhóm khách, hồ sơ tạo trong kỳ và hồ sơ hủy/vắng ở cả tử số/mẫu số. Mỗi khách/hồ sơ xuất hiện một dòng, tối đa 10 dòng/trang tại server, tự trở về trang cuối hợp lệ khi số lượng giảm.
+- [x] Khách quay lại và giao dịch lặp dùng `customer_id`, hợp nhất đơn hàng/dịch vụ hoàn thành; kiểm tra số tổng bằng truy vấn độc lập từ hai nguồn gốc. Quyền xem tên hồ sơ được kiểm tra riêng; không có quyền tên thì chỉ trả mã khách, thiếu quyền danh sách thì báo lỗi thay vì trả số 0.
+- [x] Thêm liên kết mở hồ sơ khách qua router, xóa tên cũ đã lưu để tránh breadcrumb nhầm. Các danh sách theo trạng thái ghi rõ ngày tạo và trạng thái hiện tại; không đổi nghĩa thành sự kiện hủy trong kỳ.
+- [x] Kiểm tra Admin thật: năm hồ sơ đích của đơn hàng/dịch vụ/khách hàng hiển thị đúng khi quay lại Dashboard; 38 đường dẫn API đọc, không yêu cầu ghi nghiệp vụ. Kiểm tra lỗi/quyền/thử lại/đổi kỳ và giao diện 1440/820/390/320px; giữ style chung theo Khách hàng.
+- [x] Tăng phiên bản nạp mã và CSS Dashboard thành `20261122_dashboard_evidence`. Frontend còn ở local, chưa push. M3/M4 và các điều kiện nghiệm thu còn lại không được đánh dấu hoàn thành.
+
+### Số tổng vận hành và hướng dữ liệu tài chính — 22/11/2026
+
+- [x] Bổ sung và áp dụng migration `262_dashboard_operation_totals.sql`. Sáu KPI vận hành dùng tổng hợp tại server, không còn lấy số tổng từ danh sách trình duyệt giới hạn 5.000 dòng. Quyền được kiểm tra riêng theo nguồn; thiếu quyền không trả số 0. Bỏ sản phẩm/SKU ngừng bán khỏi rủi ro tồn; đếm nhân viên có ca theo người, không nhân theo số ca.
+- [x] Cập nhật có chọn lọc theo Realtime và mỗi phút khi Dashboard hiển thị, cùng bộ tải lại có gộp sự kiện. Lỗi số tổng có nút thử lại riêng; bảng việc vẫn hoạt động nếu KPI lỗi. Kiểm tra 5.001 lịch xác minh số tổng vẫn đủ trong khi bảng chi tiết báo giới hạn.
+- [x] Kiểm tra sáu KPI với nguồn độc lập, quyền Admin/anon/chưa đăng nhập, kỳ không hợp lệ và khả năng áp dụng lặp an toàn. Không thay đổi hồ sơ nghiệp vụ gốc. Mã nạp JavaScript dùng phiên bản `20261122_dashboard_totals`.
+- [ ] Biểu đồ và một số danh sách chi tiết vận hành vẫn dùng đọc phân trang tối đa 5.000 dòng, có báo giới hạn. Việc hoàn thành KPI không được ghi thành hoàn thành tối ưu toàn bộ Dashboard.
+- [x] Sau khi người dùng đồng ý, bổ sung nguồn ghi nhận chi phí, giá vốn, số dư và công nợ ngay trong Dashboard → Kinh doanh. Chi tiết triển khai ở mục bên dưới; dữ liệu cũ chưa đủ căn cứ vẫn chưa đối soát, không dựng số lãi/lỗ.
+
+### Sổ tài chính thực tế trong tab Kinh doanh — 22/11/2026
+
+- [x] Migrations 263–266 đã áp dụng lên Supabase, không sửa các migrations đã phát hành. Có quyền đọc/ghi riêng, RLS, RPC kiểm tra quyền nguồn, lưu người ghi/căn cứ và chống gửi trùng. Kiểm thử nghiệp vụ được hoàn tác; không để lại số dư hoặc tiền thử.
+- [x] Sổ chi phí tách ghi nhận và thanh toán một phần; quỹ tiền/số dư đầu, ghép thu/hoàn, xác nhận khoản nằm trong số dư đầu, chuyển quỹ và đối soát khóa kỳ.
+- [x] Công nợ bổ sung liên kết khách/nhà cung cấp/phiếu nhập; công nợ hóa đơn hoàn tất tính trực tiếp từ nguồn, đặt hạn và mở hồ sơ gốc. Hoàn/đổi trả cần phân loại, tránh tính trùng giảm trừ và bồi thường.
+- [x] Giá vốn được chụp tại xuất kho từ chi phí nhập thật, hoàn kho theo vốn gốc; tồn cũ và dòng bán cũ chỉ xác nhận khi có chứng từ. Điều chỉnh lưu dấu vết và yêu cầu kiểm tra lại vốn tồn liên quan. Thu sự kiện tài chính bắt đầu 21:24:30 ngày 22/11/2026, giờ Việt Nam.
+- [x] Kết quả hoạt động chỉ mở khi đủ nguồn và xác nhận đủ chi phí; xác nhận hết hiệu lực khi số liệu đổi. Lịch thu chi 7/30/60/90 ngày theo phạm vi đã khai báo, mặc định không giả định thu công nợ; CSV thể hiện dữ liệu thiếu và mốc số dư.
+- [x] Giữ hai tab Dashboard; bốn góc nhìn tài chính nội bộ trong Kinh doanh, biểu mẫu nội tuyến và style Khách hàng. Tìm kiếm/phân trang 10 dòng tại server, lưu vị trí sổ, không nạp lại báo cáo tổng chỉ để đổi trang/tìm kiếm.
+- [x] SQL hoàn tác, biểu mẫu trình duyệt và 40 ca tính toán đạt; các bộ kinh doanh, kế hoạch, bằng chứng, bảng việc và style vẫn đạt. Xem [biên bản kiểm tra](verification/dashboard-release-check.md) để biết phạm vi, mốc và giới hạn.
+- [x] Migration 267 chặn xung đột khi cùng phân loại hoàn và ghi giảm trừ đổi trả, khóa theo hóa đơn và giới hạn tổng giảm trừ. Kiểm tra khóa bằng hai kết nối, toàn bộ số tiền thử hoàn tác. Admin thật đọc báo cáo/sổ/tra cứu và mở năm hồ sơ nguồn đạt, 42 đường dẫn API đọc, không ghi nghiệp vụ.
+- [ ] Nhập và đối soát số dư đầu, vốn tồn/vốn lịch sử, chi phí và công nợ thực tế; người quản lý nghiệm thu phạm vi/chứng từ. Tính năng đã có không đồng nghĩa đã đủ số liệu tài chính hoặc hoàn thành toàn M3/M4.
+- [ ] Những phần M1/M2/M0/M5 còn mở ở các mục trước vẫn giữ nguyên. Giao diện local dùng cache `20261122_dashboard_finance_v1`, chưa push hoặc xác minh phát hành frontend.

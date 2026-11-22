@@ -211,7 +211,7 @@ test('Ngưỡng 15/30 phút cho lịch và đơn chờ xác nhận, khẩn cấp
         activeOrders: [
             { id: 'o1', order_code: 'DH1', order_status: 'pending', created_at: iso('2026-11-09T09:50:00') },
             { id: 'o2', order_code: 'DH2', order_status: 'pending', created_at: iso('2026-11-09T09:20:00') },
-            { id: 'o3', order_code: 'DH3', order_status: 'confirmed', created_at: iso('2026-11-09T01:00:00'), updated_at: iso('2026-11-09T05:00:00') }
+            { id: 'o3', order_code: 'DH3', order_status: 'confirmed', created_at: iso('2026-11-09T01:00:00'), status_started_at: iso('2026-11-09T05:00:00') }
         ],
         openReturns: [], openTickets: [], stockRisks: [], capacity: { items: [] }
     });
@@ -230,8 +230,8 @@ test('Hỗ trợ: chưa phản hồi quá 4 giờ, ưu tiên khẩn thành khẩ
     const alerts = M.buildAlerts({
         now: NOW,
         openTickets: [
-            { id: 't1', ticket_code: 'HT1', status: 'pending', priority: 'normal', created_at: iso('2026-11-09T05:00:00'), first_response_at: null },
-            { id: 't2', ticket_code: 'HT2', status: 'processing', priority: 'urgent', created_at: iso('2026-11-08T05:00:00'), first_response_at: iso('2026-11-08T06:00:00') },
+            { id: 't1', ticket_code: 'HT1', status: 'pending', priority: 'normal', created_at: iso('2026-11-09T05:00:00'), first_response_at: null, sla_due_at: iso('2026-11-10T05:00:00') },
+            { id: 't2', ticket_code: 'HT2', status: 'processing', priority: 'urgent', created_at: iso('2026-11-08T05:00:00'), first_response_at: iso('2026-11-08T06:00:00'), sla_due_at: iso('2026-11-08T09:00:00') },
             { id: 't3', ticket_code: 'HT3', status: 'closed', priority: 'urgent', created_at: iso('2026-11-01T05:00:00'), first_response_at: null }
         ],
         pendingAppointments: [], activeOrders: [], openReturns: [], stockRisks: [], capacity: { items: [] }
@@ -265,7 +265,7 @@ test('Một lịch trễ và chưa phân công giữ đủ lý do nhưng chỉ �
     assert.equal(tasks[0].severity, 'urgent');
 });
 test('Hỗ trợ quá hạn phản hồi và giải quyết vẫn là một việc', () => {
-    const ticket = { id: 'support', status: 'pending', priority: 'normal', created_at: iso('2026-11-01T08:00:00'), assigned_staff_id: 's1' };
+    const ticket = { id: 'support', status: 'pending', priority: 'normal', created_at: iso('2026-11-01T08:00:00'), assigned_staff_id: 's1', sla_due_at: iso('2026-11-03T08:00:00') };
     const alerts = M.buildAlerts({ openTickets: [ticket], now: NOW });
     const task = M.taskBoard([...alerts, ...alerts], { tickets: [ticket], staff: [{ id: 's1', full_name: 'Nhân viên phụ trách' }] })[0];
     assert.equal(task.reasons.length, 2);

@@ -12,6 +12,6 @@
             return;
         }
         const origin = window.location.origin || '';
-        window.location.href = origin + '/pages/public/login/login.html?action=register&phone=' + encodeURIComponent(phone);
+        window.location.href = origin + '/login?action=register&phone=' + encodeURIComponent(phone);
     });
 })();

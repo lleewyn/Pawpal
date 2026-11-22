@@ -844,7 +844,24 @@ function buildCareLogShowcaseHtml(session) {
     `;
 }
 
-window.submitCareLogReview = function() { window.location.hash = '#bookings'; };
+window.submitCareLogReview = function(sessionId) {
+    const textarea = document.getElementById('txtUserReview');
+    const content = textarea ? textarea.value.trim() : '';
+    if (content) {
+        try { sessionStorage.setItem('pawpal_draft_service_review', content); } catch (_) {}
+    }
+    const petSessions = currentPetId ? liveDiaryState[currentPetId] : null;
+    const session = petSessions ? ((petSessions.history || []).find(s => s.id === sessionId) || petSessions.currentSession) : null;
+    const apptId = session?.appointmentId || session?.appointment_id || sessionId;
+    showToast('Chuyển đến chi tiết lịch hẹn để hoàn tất đánh giá ca chăm sóc...', 'info');
+    setTimeout(() => {
+        if (apptId) {
+            window.location.hash = `#booking-detail?id=${encodeURIComponent(apptId)}&section=service-review`;
+        } else {
+            window.location.hash = '#bookings';
+        }
+    }, 600);
+};
 
 function renderTimeline(timeline, activeSession = null) {
     const wrapper = document.getElementById('timelineWrapper');
@@ -1150,7 +1167,17 @@ function bindChatInputEvents(noteId) {
     };
 }
 
-function sendChatMessage() { window.location.hash = '#support'; }
+function sendChatMessage(noteId) {
+    const input = document.getElementById(`chatInput-${noteId}`);
+    const text = input ? input.value.trim() : '';
+    if (text) {
+        try { sessionStorage.setItem('pawpal_draft_support_message', text); } catch (_) {}
+    }
+    showToast('Đang kết nối đến trung tâm Hỗ trợ trực tuyến...', 'info');
+    setTimeout(() => {
+        window.location.hash = '#support';
+    }, 600);
+}
 
 function appendChatMessage(noteId, msg) {
     const container = document.getElementById(`chatMessages-${noteId}`);

@@ -378,6 +378,14 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         }, 3000);
     }
     PawpalComplaints.showToast = showToast;
+    PawpalComplaints.validateCompensation = function(ticket, details) {
+        if (!['points','voucher'].includes(details.option)) return null;
+        if (!ticket.customerId) return 'complaint_compensation_customer_required';
+        if (details.option === 'points' && (!Number.isInteger(details.amount) || details.amount < 1 || details.amount > 2147483647)) return 'complaint_points_invalid';
+        if (details.option === 'voucher' && !details.voucher_code?.trim()) return 'complaint_voucher_code_required';
+        return null;
+    };
+
     PawpalComplaints.errorMessage = function(error) {
         const messages = {
             complaint_changed:'Phiếu đã thay đổi. Tải lại trước khi thao tác.',
@@ -387,7 +395,10 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             complaint_voucher_unavailable:'Không tìm thấy voucher giảm theo số tiền còn hiệu lực, hoặc voucher đã hết lượt/thay đổi. Kiểm tra mã và điều kiện voucher rồi gửi lại đề xuất.',
             complaint_handler_unavailable:'Nhân viên chưa đủ điều kiện nhận xử lý. Chọn nhân viên khác.',
             complaint_note_required:'Vui lòng nhập nội dung từ 2 ký tự.',
-            invalid_complaint_resolution:'Kiểm tra phương án, số tiền và giao dịch liên quan.',
+            complaint_compensation_customer_required:'Phiếu chưa gắn tài khoản khách hàng nên chưa thể cộng điểm hoặc tặng voucher. Cần xác minh khách hàng nhận bồi hoàn trước khi lập phương án.',
+            complaint_points_invalid:'Nhập số điểm nguyên từ 1 đến 2.147.483.647.',
+            complaint_voucher_code_required:'Nhập mã voucher muốn tặng cho khách hàng.',
+            invalid_complaint_resolution:'Phương án chưa phù hợp với giao dịch của phiếu. Hoàn tiền cần có đơn hàng hoặc lịch hẹn; đổi/trả cần có đơn hàng; làm lại dịch vụ hoặc đổi kỹ thuật viên cần có lịch hẹn.',
             complaint_refund_mismatch:'Chọn giao dịch hoàn tiền thành công, đúng khách và đúng đơn hoặc lịch hẹn.',
             complaint_return_mismatch:'Chọn yêu cầu trả hàng đã nhận, thuộc đúng đơn hàng.',
             complaint_replacement_order_required:'Chọn đơn đổi mới của khách đã giao thành công.',

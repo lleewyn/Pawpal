@@ -497,12 +497,18 @@ async function init(){
   // Notify the header after verification, without treating stale display data as an account switch.
   document.dispatchEvent(new CustomEvent('customer_session_verified'));
   if(state.disposed)return;state.authId=auth.data?.user?.id||null;
+  let availabilityDebounceTimer;
   if(state.authId&&db.channel){
    bookingChannel=db.channel('member-booking-availability').on('postgres_changes',{event:'*',schema:'public',table:'appointment'},()=>{
-    if(!state.disposed&&state.step===3&&!state.hold)el('bookingCheckSlots')?.click();
+    if(!state.disposed&&state.step===3&&!state.hold&&!document.hidden){
+     clearTimeout(availabilityDebounceTimer);
+     availabilityDebounceTimer=setTimeout(()=>{
+      if(!state.disposed&&state.step===3&&!state.hold&&!document.hidden)el('bookingCheckSlots')?.click();
+     },2000);
+    }
    }).subscribe();
   }
-  window.addEventListener('pagehide',()=>{clearInterval(holdTimer);clearInterval(availabilityPollTimer);if(bookingChannel)db.removeChannel(bookingChannel);},{once:true});
+  window.addEventListener('pagehide',()=>{clearTimeout(availabilityDebounceTimer);clearInterval(holdTimer);clearInterval(availabilityPollTimer);if(bookingChannel)db.removeChannel(bookingChannel);},{once:true});
   db.auth.onAuthStateChange?.((event,session)=>{if((event==='SIGNED_OUT'&&state.authId)||(event==='SIGNED_IN'&&session?.user?.id!==state.authId))discard(false);});
   if((auth.error||!auth.data?.user)&&isGuestShopper()){
    state.guest=true;const firstStepLabel=document.querySelector('#bookingStepper [data-step="1"] .step-label');if(firstStepLabel)firstStepLabel.textContent='Thông tin đặt lịch';journalKey='pawpal_guest_booking_request_v1';const saved=sessionStorage.getItem(journalKey);requestId=/^[0-9a-f-]{36}$/i.test(saved||'')?saved:crypto.randomUUID();

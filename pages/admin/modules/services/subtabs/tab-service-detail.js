@@ -46,7 +46,6 @@
                 state.setAttribute('aria-live','polite');
                 state.textContent = loading ? 'Đang tải hồ sơ lịch hẹn…' : PawpalServices.state.loadError || PawpalServices.state.detailError
                     ? 'Không thể tải hồ sơ lịch hẹn. Vui lòng tải lại trang.'
-                    : !PawpalServices.state.isLoaded ? 'Đang tải hồ sơ lịch hẹn…'
                     : !bookingId ? 'Chọn một lịch hẹn từ danh sách để xem hồ sơ.'
                     : 'Không tìm thấy lịch hẹn đã chọn hoặc bạn chưa có quyền xem.';
             }

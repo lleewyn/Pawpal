@@ -315,7 +315,7 @@ async function confirmBuyNowFromModal() {
     sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
     sessionStorage.setItem('pawpal_is_buynow', 'true');
     closeBuyNowModal();
-    window.location.href = '/pages/shop/checkout/checkout.html?buynow=true';
+    window.location.href = '/checkout?buynow=true';
 }
 
 function initResponsiveCategorySection() {

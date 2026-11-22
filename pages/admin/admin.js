@@ -833,7 +833,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261121_dashboard_customer_reference';
+    const MODULE_SCRIPT_VERSION = '20261122_dashboard_panels_v3';
     let staffDomainScriptsReady;
     async function loadStaffDomainScripts() {
         if (!staffDomainScriptsReady) staffDomainScriptsReady = (async () => {
@@ -913,6 +913,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 'modules/dashboard/dashboard.js',
                 'modules/dashboard/subtabs/operations-metrics.js',
                 'modules/dashboard/subtabs/business-metrics.js',
+                'modules/dashboard/subtabs/dashboard-finance.js',
                 'modules/dashboard/subtabs/tab-dashboard-operations.js',
                 'modules/dashboard/subtabs/tab-dashboard-business.js'
             ],
@@ -956,9 +957,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             html: 'modules/services/services.html',
             scripts: ['modules/services/services.js', 'modules/services/subtabs/tab-service-bookings.js', 'modules/services/subtabs/tab-service-detail.js', 'modules/services/subtabs/tab-service-catalog.js', 'modules/services/subtabs/tab-service-reviews.js', 'modules/services/subtabs/tab-service-cashier.js', 'modules/services/subtabs/tab-service-support.js'],
             postLoad: async () => {
-                if (sessionStorage.getItem('pawpal_admin_services_open_booking_modal') === 'true') {
-                    await window.PawpalServices?.init?.();
-                }
+                await window.PawpalServices?.init?.();
                 if (window.PawpalServices?.subtabs?.bookings?.renderBookingsTable) {
                     window.PawpalServices.subtabs.bookings.renderBookingsTable();
                     window.PawpalServices.subtabs.bookings.updateKPIs();

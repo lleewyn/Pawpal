@@ -231,6 +231,7 @@
   text('complaintAmountLabel',option==='points'?'Số Paw Points đề xuất':'Số tiền đề xuất');
   $('complaintVoucherGroup').hidden=option!=='voucher';
   text('complaintResolutionHint',['explain','reject'].includes(option)?'Lưu kết quả giải quyết kèm lý do.':'Quản lý phải duyệt phương án trước khi thực hiện.');
+  text('resolveTicketModalOverlayError',directAward(option)&&!current()?.customerId?mod.errorMessage({message:'complaint_compensation_customer_required'}):'');
  }
  function bindEvidence(prefix,rows,onSelect){
   const input=$(prefix+'Search'),selected=$(prefix+'Id'),dropdown=$(prefix+'Dropdown');
@@ -352,6 +353,10 @@
    const details={note};let action=mode;
    if(mode==='resolve'&&!option){text('resolveTicketModalOverlayError','Chọn phương án xử lý.');return;}
    if(mode==='resolve'){action=['explain','reject'].includes(option)?'resolve':'propose';details.option=option;details.amount=hasAmount(option)?Number($('inputResolveAmount').value):0;if(option==='voucher')details.voucher_code=$('complaintVoucherCode').value.trim();}
+   if(mode==='resolve'){
+    const error=mod.validateCompensation(current(),details);
+    if(error){text('resolveTicketModalOverlayError',mod.errorMessage({message:error}));return;}
+   }
    if(mode==='complete'&&!directAward(current().resolution_type)){
     const type=current().resolution_type;
     details.evidence_id=$('complaintEvidenceId').value || null;

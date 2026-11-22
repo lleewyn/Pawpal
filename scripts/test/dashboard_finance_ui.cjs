@@ -12,6 +12,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'D:/Aboutme/Pawpal
         await page.setContent('<body class="admin-body dashboard-active"><div style="height:100vh;overflow:auto"><section class="dashboard-module dash-page admin-ui-standard admin-ui-customer-reference business-dash" data-business-root></section></div></body>');
         for (const file of ['pages/admin/admin.css', 'pages/admin/modules/dashboard/dashboard.css', 'pages/admin/admin-shell-v7.css', 'pages/admin/admin-components.css', 'pages/admin/admin-typography.css']) await page.addStyleTag({ content: fs.readFileSync(file, 'utf8') });
         await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/subtabs/business-metrics.js', 'utf8') });
+        await page.addScriptTag({ content: 'window.dashboardTestAnalysis = ' + require('./dashboard_completion_fixture.cjs').toString() });
         await page.evaluate(() => {
             window.fixturePlan = null; window.fixtureError = null; window.fixtureNegative = false; window.saves = [];
             localStorage.setItem('pawpal_admin_opex_config', JSON.stringify({ rent: 20000000, utilities: 5000000, payroll: 20000000, cogsRate: 55 }));
@@ -19,6 +20,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'D:/Aboutme/Pawpal
             window.getSupabaseClient = () => ({ rpc: async (name, args) => {
                 const M = PawpalBusinessMetrics;
                 if (name === 'save_admin_dashboard_plan') { saves.push(args); fixturePlan = { ...args.p_values, period_from: args.p_from, period_to: args.p_to }; return {data: fixturePlan}; }
+                if (name === 'admin_dashboard_business_analysis') return { data: dashboardTestAnalysis(args) };
                 if (name === 'get_admin_dashboard_plan') return {data: fixturePlan};
                 if (name === 'get_admin_dashboard_cashflow') {
                     if (fixtureError === 'cash') return {error:{code:'42501'}};

@@ -14,6 +14,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         await page.addStyleTag({ content: fs.readFileSync('pages/admin/modules/dashboard/dashboard.css', 'utf8') });
         await page.addStyleTag({ content: fs.readFileSync('pages/admin/admin-components.css', 'utf8') });
         await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/subtabs/business-metrics.js', 'utf8') });
+        await page.addScriptTag({ content: 'window.dashboardTestAnalysis = ' + require('./dashboard_completion_fixture.cjs').toString() });
         await page.evaluate(() => {
             window.requests = []; window.fixtureFailure = null;
             window.PawpalAdminAccess = { ready: Promise.resolve(), isAdmin: () => true, state: { user: { permissions: ['payment', 'refund_transaction', 'sales_order', 'sales_order_detail', 'appointment', 'appointment_item', 'customer', 'customer_membership', 'membership_tier', 'voucher_redemption', 'paw_point_transaction'].map(t => t + '.read') } } };
@@ -21,6 +22,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
                 rpc: async (name, args) => {
                     window.requests.push({ name, args });
                     const M = window.PawpalBusinessMetrics;
+                    if (name === 'admin_dashboard_business_analysis') return { data: dashboardTestAnalysis(args) };
                     if(name === 'get_admin_dashboard_plan') return {data: null};
                     if(name==='admin_business_metric'){
                         if(args.p_key==='vouchers'&&window.fixtureFailure==='voucher_redemption')return {error:{code:'42501'}};
@@ -64,8 +66,8 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         await page.evaluate(async () => {releaseCustomerLoad();await partialLoad;PawpalBusinessMetrics.load = originalMetricLoad;});
         await page.evaluate(async () => {PawpalBusinessMetrics.load = async (db,key,range) => {if(key==='cash')throw {code:'42501'};return originalMetricLoad(db,key,range);};await PawpalDashboardOverview.refresh();});
         assert.equal(await page.locator('[data-biz-panel="cash"] [role="alert"]').count(), 1);
-        assert.equal(await page.locator('[data-biz-panel="insights"] [role="alert"]').count(), 1);
-        assert.equal(await page.locator('.biz-kpi-error').count(), 4);
+        assert.equal(await page.locator('[data-biz-panel="insights"] [role="alert"]').count(), 0);
+        assert.equal(await page.locator('.biz-kpi-error').count(), 3);
         await page.evaluate(async () => {PawpalBusinessMetrics.load = originalMetricLoad;await PawpalDashboardOverview.refresh();});
         assert.equal(await page.locator('.biz-kpi').count(), 8);
         // Customer-reference style parity is verified with the full production cascade
@@ -80,7 +82,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
             PawpalBusinessMetrics.load = async (db, key, range) => {
                 if (key === 'sources') return { products: 1797000, services: 0, other: 0 };
                 const result = await original(db, key, range);
-                if (key === 'previous') result.net = 0;
+                if (key === 'analysis') result.cash.previous.net = 0;
                 return result;
             };
             await PawpalDashboardOverview.refresh();

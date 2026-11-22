@@ -11,6 +11,15 @@ const assert=require('node:assert/strict'),{randomUUID}=require('crypto');const 
   await asUser(actor.auth_user_id);
   const row=async()=>{await db.query('RESET ROLE');const r=(await db.query('select *,updated_at::text expected from support_ticket where id=$1',[id])).rows[0];await asUser(actor.auth_user_id);return r;};
   const act=async(action,details,request=randomUUID(),expected)=>{const t=await row();await db.query('select act_admin_complaint($1,$2,$3,$4,$5)',[request,id,expected||t.expected,action,{note:'Verification rollback',...details}]);};
+  for(const value of [0,-1,1.5,2147483648]){
+   await db.query('SAVEPOINT invalid_points');await assert.rejects(()=>act('propose',{option:'points',amount:value}),e=>e.message==='complaint_points_invalid');await db.query('ROLLBACK TO invalid_points');
+  }
+  await db.query('SAVEPOINT missing_voucher');await assert.rejects(()=>act('propose',{option:'voucher',amount:0,voucher_code:'  '}),e=>e.message==='complaint_voucher_code_required');await db.query('ROLLBACK TO missing_voucher');
+  await db.query('SAVEPOINT guest_award');await db.query('RESET ROLE');await db.query('update support_ticket set customer_id=null where id=$1',[id]);await asUser(actor.auth_user_id);
+  for(const type of ['points','voucher']){
+   await db.query('SAVEPOINT guest_attempt');await assert.rejects(()=>act('propose',{option:type,amount:type==='points'?10:0,...(type==='voucher'?{voucher_code:code}:{})}),e=>e.message==='complaint_compensation_customer_required');await db.query('ROLLBACK TO guest_attempt');
+  }
+  await db.query('ROLLBACK TO guest_award');
   if(option==='voucher'){await db.query('SAVEPOINT invalid_voucher');await assert.rejects(()=>act('propose',{option,amount:0,voucher_code:'MISSING-VERIFY-CODE'}),e=>e.message==='complaint_voucher_unavailable');await db.query('ROLLBACK TO invalid_voucher');}
   await act('propose',{option,amount:option==='points'?10:0,...(option==='voucher'?{voucher_code:code}:{})});assert.equal((await row()).status,'waiting_manager_approval');
   await db.query('SAVEPOINT unapproved');await assert.rejects(()=>act('complete',{}));await db.query('ROLLBACK TO unapproved');

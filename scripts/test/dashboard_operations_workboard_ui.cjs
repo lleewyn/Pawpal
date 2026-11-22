@@ -18,7 +18,7 @@ const root = 'pages/admin/modules/dashboard/';
         await page.addStyleTag({ content: fs.readFileSync('pages/admin/admin-components.css', 'utf8') });
         await page.addScriptTag({ content: fs.readFileSync(root + 'subtabs/operations-metrics.js', 'utf8') });
         await page.evaluate(() => {
-            window.reads = []; window.failedTable = null; window.removedChannels = 0;
+            window.reads = []; window.failedTable = null; window.removedChannels = 0; window.realtimeHandlers = {};
             const old = '2026-11-01T01:00:00Z', today = '2026-11-21T02:00:00Z';
             window.fixtures = {
                 appointment: Array.from({ length: 14 }, (_, i) => ({ id: 'a' + i, appointment_code: 'LH-' + i, appointment_status: i === 0 ? 'confirmed' : 'pending', scheduled_start_at: i === 0 ? old : today, scheduled_end_at: '2026-11-21T04:00:00Z', created_at: old, staff_id: i === 1 ? 's1' : null, pet: { pet_name: 'Bé kiểm thử ' + i }, items: [{ name_snapshot: 'Tắm vệ sinh', status: 'pending', staff_id: i === 2 ? 's1' : null }] })),
@@ -28,6 +28,46 @@ const root = 'pages/admin/modules/dashboard/';
                 staff: [{ id: 's1', full_name: 'Nhân viên kiểm thử', employment_status: 'active' }]
             };
             const client = {
+                async rpc(name, args) {
+                    if (name === 'admin_dashboard_operation_totals') {
+                        if(window.failKpis)return {error:{code:'42501'}};
+                        const M=PawpalOpsMetrics,now=new Date(),period=M.resolvePeriod('custom',now,{from:args.p_from,to:args.p_to});
+                        const allowed=(...tables)=>tables.every(table=>failedTable!==table&&(!window.PawpalAdminAccess||PawpalAdminAccess.state.user.permissions.includes(table+'.read')));
+                        const all=table=>fixtures[table]||[],today=M.vnDateKey(now),count=M.countPendingAppointments(all('appointment'),now);
+                        const staff=M.staffAllocation({appointments:[],staff:all('staff'),schedules:all('staff_schedule'),period,now});
+                        const open=all('support_ticket').filter(row=>M.isTicketOpen(row.status));
+                        const reserved=new Map(),sold=new Map();
+                        all('stock_reservation').filter(row=>M.norm(row.status)==='active'&&Date.parse(row.expires_at)>+now).forEach(row=>reserved.set(row.product_variant_id,(reserved.get(row.product_variant_id)||0)+row.quantity));
+                        all('sales_order_detail').forEach(row=>sold.set(row.product_variant_id,(sold.get(row.product_variant_id)||0)+row.quantity));
+                        const risks=M.inventoryRisks(all('inventory').filter(row=>!M.STATUS_GROUPS.productInactive.includes(M.norm(row.variant_status))&&!M.STATUS_GROUPS.productInactive.includes(M.norm(row.product_status))),{reservedByVariant:reserved,soldByVariant:sold});
+                        const metric=(can,value,extra={})=>can?{available:true,value,...extra}:{available:false};
+                        return {data:{as_of:now.toISOString(),metrics:{
+                            todayAppointments:metric(allowed('appointment'),all('appointment').filter(row=>M.vnDateKey(row.scheduled_start_at)===today&&M.isValidAppointment(row)).length),
+                            pendingAppointments:metric(allowed('appointment','appointment_item'),count.total,{pending:count.pending,unassigned:count.unassigned}),
+                            pendingOrders:metric(allowed('sales_order'),M.countActionOrders(all('sales_order'))),
+                            staffOnShift:metric(allowed('staff','staff_schedule'),staff.staffWithShift,{on_shift_now:staff.onShiftNow}),
+                            lowStock:metric(allowed('inventory','product','product_variant','stock_reservation','sales_order','sales_order_detail'),risks.filter(row=>row.level!=='watch').length,{out:risks.filter(row=>row.level==='out').length,high:risks.filter(row=>row.level==='high').length}),
+                            openTickets:metric(allowed('support_ticket'),open.length,{waiting:open.filter(row=>!row.first_response_at).length})
+                        }}};
+                    }
+                    if (name === 'admin_dashboard_work_page') {
+                        const M = PawpalOpsMetrics;
+                        const safe = table => failedTable === table ? [] : fixtures[table] || [];
+                        const all = M.taskBoard(M.buildAlerts({ pendingAppointments: safe('appointment'), activeOrders: safe('sales_order'), openReturns: safe('return_request'), openTickets: safe('support_ticket'), now: new Date() }), { appointments: safe('appointment'), tickets: safe('support_ticket'), staff: safe('staff'), staffAvailable: failedTable !== 'staff' });
+                        all.forEach(row=>{if(row.kind==='return')row.parentId=window.serverReturnParent||safe('return_request').find(source=>source.id===row.recordId)?.sales_order_id;});
+                        const byKind = args.p_kind === 'all' ? all : all.filter(row => row.kind === args.p_kind);
+                        const match = (row, scope) => scope === 'urgent' ? row.severity === 'urgent' : scope === 'unassigned' ? row.unassigned : scope === 'older' ? row.waitingHours > 168 : scope === 'recent' ? row.waitingHours === null || row.waitingHours <= 168 : true;
+                        const filtered = byKind.filter(row => match(row, args.p_scope)), page = Math.min(args.p_page, Math.max(1, Math.ceil(filtered.length / 10)));
+                        return { data: { total: filtered.length, page, counts: Object.fromEntries(['all','urgent','unassigned','older','recent'].map(scope => [scope, byKind.filter(row => match(row, scope)).length])), rows: filtered.slice((page - 1) * 10, page * 10), missing_sources: failedTable && failedTable !== 'staff' ? [failedTable] : [] } };
+                    }
+                    if (name === 'admin_dashboard_order_clocks') return { data: [] };
+                    if (name === 'admin_dashboard_work_history') return { data: window.historyFixture || { available: false, tracked_from: '2026-11-21T03:00:00Z', rows: [] } };
+                    if (name === 'admin_dashboard_logistics_page') {
+                        const all = window.logisticsFixture || [];
+                        return { data: { total: all.length, page: args.p_page, rows: all.slice((args.p_page-1)*10,args.p_page*10), unassigned: all.filter(row=>!row.owner_id).length, rooms_in_use: 2 } };
+                    }
+                    throw Error('Unexpected fixture RPC');
+                },
                 from(table) {
                     const filters = []; let columns = '';
                     const q = {
@@ -45,7 +85,7 @@ const root = 'pages/admin/modules/dashboard/';
                         }
                     }; return q;
                 },
-                channel() { const c = { on() { return c; }, subscribe(cb) { queueMicrotask(() => cb('SUBSCRIBED')); return c; } }; return c; },
+                channel() { const c = { on(_type, filter, handler) { realtimeHandlers[filter.table] = handler; return c; }, subscribe(cb) { queueMicrotask(() => cb('SUBSCRIBED')); return c; } }; return c; },
                 removeChannel() { removedChannels++; }
             };
             window.getSupabaseClient = () => client;
@@ -84,6 +124,11 @@ const root = 'pages/admin/modules/dashboard/';
         assert.equal(await page.evaluate(() => sessionStorage.getItem('pawpal_admin_order_selected_id')), 'o1');
         assert.equal(await page.evaluate(() => sessionStorage.getItem('pawpal_admin_order_subtab')), 'tab-order-detail');
         assert.equal(await page.evaluate(() => PawpalOrders.state.selectedOrderId), 'o1');
+        await page.evaluate(()=>{serverReturnParent='outside-direct-read';PawpalOperationsDashboard.refresh();});
+        await page.waitForSelector('[data-ops-nav="return"][data-ops-parent="outside-direct-read"]');
+        await page.locator('[data-ops-nav="return"]').click();
+        assert.equal(await page.evaluate(()=>PawpalOrders.state.selectedOrderId),'outside-direct-read','Server parent link works outside the bounded browser snapshot');
+        await page.evaluate(()=>{delete window.serverReturnParent;});
         await page.locator('[data-ops-task-kind]').selectOption('appointment');
         await page.evaluate(() => { window.PawpalServices = { state: { selectedBookingId: 'previous' } }; });
         const appointmentId = await tasks.first().getAttribute('data-ops-task-id');
@@ -133,6 +178,36 @@ const root = 'pages/admin/modules/dashboard/';
         await page.waitForFunction(() => Object.keys(PawpalOperationsDashboard.getState().errors).length === 0 && document.querySelectorAll('[data-ops-task-id]').length === 0);
         assert.match(await page.locator('[data-ops-panel="alerts"]').innerText(), /Không có việc cần xử lý/);
         await page.evaluate(() => {
+            logisticsFixture = Array.from({length:12},(_,i)=>({kind:i%2?'taxi_return':'hotel_checkout',id:'log'+i,appointment_id:'a'+i,code:'LH-'+i,pet_name:'Bé kiểm thử',at:'2026-11-21T05:00:00Z',detail:i%2?'Chặng về':'101',owner_id:null}));
+            historyFixture = {available:true,tracked_from:'2026-11-21T03:00:00Z',from:'2026-11-21T03:00:00Z',to:'2026-11-21T04:00:00Z',rows:[{kind:'order',opening:10,opened:3,reopened:1,closed:4,removed:1,closing:9}]};
+            PawpalOperationsDashboard.refresh();
+        });
+        await page.waitForFunction(()=>document.querySelectorAll('[data-ops-panel="logistics"] tbody tr').length===10);
+        assert.match(await page.locator('[data-ops-panel="logistics"]').innerText(),/Trả phòng/);
+        assert.match(await page.locator('[data-ops-panel="logistics"]').innerText(),/Chặng về/);
+        assert.equal(await page.locator('[data-ops-panel="history"] tbody tr').count(),1);
+        for(const width of [1440,390]) {
+            await page.setViewportSize({width,height:1000});
+            for(const panel of ['logistics','history']) await page.locator(`[data-ops-panel="${panel}"]`).screenshot({path:path.join(out,`${panel}-${width}.png`)});
+        }
+        await page.locator('[data-ops-logistics-pagination]').getByRole('button',{name:'2',exact:true}).click();
+        await page.waitForFunction(()=>document.querySelectorAll('[data-ops-panel="logistics"] tbody tr').length===2);
+        await page.evaluate(()=>{logisticsFixture=logisticsFixture.slice(0,3);realtimeHandlers.hotel_booking();});
+        await page.clock.runFor(1000);
+        await page.waitForFunction(()=>document.querySelectorAll('[data-ops-panel="logistics"] tbody tr').length===3);
+        assert.equal(await page.locator('[data-ops-logistics-pagination]').isVisible(),false,'A shrinking queue returns to its last valid page');
+        await page.evaluate(()=>{logisticsFixture[0].pet_name='Tên bé đã cập nhật';realtimeHandlers.pet_profile();});
+        await page.clock.runFor(1000);
+        await page.waitForFunction(()=>document.querySelector('[data-ops-panel="logistics"]').textContent.includes('Tên bé đã cập nhật'));
+        await page.evaluate(()=>{logisticsFixture[0].owner_id='s1';logisticsFixture[0].owner_name='Nhân viên đã cập nhật';realtimeHandlers.staff();});
+        await page.clock.runFor(1000);
+        await page.waitForFunction(()=>document.querySelector('[data-ops-panel="logistics"]').textContent.includes('Nhân viên đã cập nhật'));
+        await page.evaluate(()=>{historyFixture.rows[0].closing=99;PawpalOperationsDashboard.refresh();});
+        await page.waitForFunction(()=>document.querySelector('[data-ops-panel="history"] [data-ops-retry="history"]'));
+        assert.equal(await page.locator('[data-ops-panel="history"] tbody').count(),0,'Invalid workflow equation cannot be displayed as a valid total');
+        await page.evaluate(()=>{delete window.historyFixture;delete window.logisticsFixture;PawpalOperationsDashboard.refresh();});
+        await page.waitForFunction(()=>document.querySelectorAll('[data-ops-panel="logistics"] tbody tr').length===0);
+        await page.evaluate(() => {
             fixtures.appointment = [{ id: 'age', appointment_code: 'LH-age', appointment_status: 'pending', created_at: '2026-11-21T02:50:00Z', scheduled_start_at: '2026-11-22T03:00:00Z', items: [] }];
             PawpalOperationsDashboard.refresh();
         });
@@ -140,6 +215,7 @@ const root = 'pages/admin/modules/dashboard/';
         assert.equal(await tasks.count(), 0);
         const ageReads = await page.evaluate(() => reads.length);
         await page.clock.fastForward(6 * 60_000);
+        await page.clock.runFor(1000);
         assert.equal(await tasks.count(), 1, 'Pending record crosses threshold without a DB event');
         assert.equal(await page.evaluate(() => reads.length), ageReads);
         await page.evaluate(() => {
@@ -150,16 +226,25 @@ const root = 'pages/admin/modules/dashboard/';
         assert.equal(await tasks.count(), 0, 'Beyond 24h is cached but not actionable');
         const horizonReads = await page.evaluate(() => reads.length);
         await page.clock.fastForward(60 * 60_000);
+        await page.clock.runFor(1000);
         assert.equal(await tasks.count(), 1, 'Record enters 24h horizon without DB mutation or refetch');
         assert.equal(await page.evaluate(() => reads.length), horizonReads);
-        // Capped results must not advertise a complete KPI or a healthy work queue.
+        // Bounded detail reads cannot truncate independently aggregated server KPI totals.
         await page.evaluate(() => {
             fixtures.appointment = Array.from({ length: 5001 }, (_, i) => ({ id: 'cap' + i, appointment_code: 'LH-cap' + i, appointment_status: 'pending', created_at: '2026-11-01T01:00:00Z', scheduled_start_at: '2026-11-21T02:00:00Z', items: [] }));
             PawpalOperationsDashboard.refresh();
         });
         await page.waitForFunction(() => !document.querySelector('.is-refreshing') && document.querySelectorAll('[data-ops-task-id]').length === 10);
-        assert.equal(await page.locator('[data-kpi="todayAppointments"] [data-kpi-value]').innerText(), '—');
-        assert.match(await page.locator('[data-ops-panel="alerts"] [data-ops-tag]').innerText(), /Chưa đầy đủ/);
+        assert.equal(await page.locator('[data-kpi="todayAppointments"] [data-kpi-value]').innerText(), (5001).toLocaleString('vi-VN'));
+        assert.match(await page.locator('[data-ops-panel="alerts"] [data-ops-tag]').innerText(), /Hiện tại/);
+        await page.evaluate(()=>{failKpis=true;PawpalOperationsDashboard.refresh();});
+        await page.waitForFunction(()=>PawpalOperationsDashboard.getState().errors.kpis);
+        assert.equal(await page.locator('[data-kpi="todayAppointments"] [data-kpi-value]').innerText(),'—','KPI failure cannot reuse old totals or become zero');
+        assert.equal(await tasks.count(),10,'Independent work feed survives KPI failure');
+        await page.evaluate(()=>{failKpis=false;});
+        await page.locator('[data-ops-retry="kpis"]').click();
+        await page.waitForFunction(()=>!PawpalOperationsDashboard.getState().errors.kpis);
+        assert.equal(await page.locator('[data-kpi="todayAppointments"] [data-kpi-value]').innerText(),(5001).toLocaleString('vi-VN'));
         // Explicit permissions prevent RLS-denied empty responses appearing as healthy zeroes.
         await page.evaluate(() => { window.PawpalAdminAccess = { isAdmin: () => true, state: { user: { permissions: [] } } }; PawpalOperationsDashboard.refresh(); });
         await page.waitForFunction(() => PawpalOperationsDashboard.getState().errors.todayAppointments);

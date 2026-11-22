@@ -161,7 +161,6 @@ function initContactForm() {
     const form = document.getElementById('contactForm');
     if (!form || form.dataset.contactReady) return;
     form.dataset.contactReady = 'true';
-    form.onsubmit = handleSubmit;
     form.addEventListener('submit', handleSubmit);
 }
 

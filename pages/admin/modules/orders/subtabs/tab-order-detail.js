@@ -16,6 +16,8 @@
     function renderOrderDetail(orderId) {
         const loading = document.getElementById('orderDetailLoading');
         const content = document.getElementById('orderDetailData');
+        // A pending read can finish after the router has detached this module.
+        if (!content) return;
         if (!state.ordersLoaded || state.ordersError) {
             if (content) content.style.display = 'none';
             if (loading) { loading.style.display = ''; if (state.ordersError) loading.textContent = 'Không thể tải hồ sơ đơn hàng. Vui lòng tải lại trang.'; }

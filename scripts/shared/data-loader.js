@@ -9,7 +9,7 @@ const dataCache = {
 // Only published, account-independent presentation data belongs in this cache.
 // Checkout, stock checks and customer/admin records continue to read live data.
 const publicReadCache = new Map(), publicReadPending = new Map();
-const PUBLIC_READ_TTL = { services: 60000, homeBanners: 30000, membershipTiers: 120000 };
+const PUBLIC_READ_TTL = { services: 60000, products: 60000, homeBanners: 30000, membershipTiers: 120000 };
 async function cachedPublicRead(name, loader) {
     const ttl = PUBLIC_READ_TTL[name];
     if (!ttl) throw new Error('Unsupported public cache');
@@ -206,7 +206,12 @@ async function loadProducts() {
     if (dataCache.products) {
         return dataCache.products;
     }
-    
+    const products = await cachedPublicRead('products', loadProductsUncached);
+    dataCache.products = products;
+    return products;
+}
+
+async function loadProductsUncached() {
     try {
         const db = window.SupabaseClient;
         if (!db) {
@@ -311,7 +316,6 @@ async function loadProducts() {
             };
         });
         
-        dataCache.products = products;
         return products;
     } catch (error) {
         console.error('Error loading products from Supabase:', error);

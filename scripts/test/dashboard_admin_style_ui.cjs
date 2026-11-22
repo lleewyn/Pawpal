@@ -18,10 +18,12 @@ const dashboard = 'pages/admin/modules/dashboard/';
         await page.setContent(`<body class="admin-body"><div class="admin-layout sidebar-collapsed"><main class="admin-main"><header class="admin-header"><div class="admin-header-left"><div class="header-subtabs-group"><button class="header-subtab-btn active">Khách hàng</button></div></div><div class="admin-header-right"><button class="btn-header-refresh">Làm mới</button><span class="header-user-tag">Quản trị viên</span></div></header><div class="admin-preview-content" id="contentArea"><div class="admin-module-wrapper" data-customer-reference>${customerHtml}</div><div class="admin-module-wrapper" data-dashboard-reference hidden>${read(dashboard + 'dashboard.html')}</div></div></main></div></body>`);
         const styles = [...read('pages/admin/index.html').matchAll(/<link[^>]+href="(\/pages\/admin\/[^"?]+\.css)(?:\?[^" ]*)?"/g)].map(match => match[1]);
         for (const file of styles) await page.addStyleTag({ content: read('.' + file) });
+        await page.addScriptTag({ content: 'window.dashboardTestAnalysis = ' + require('./dashboard_completion_fixture.cjs').toString() });
         await page.evaluate(() => {
             document.querySelectorAll('[data-customer-reference] .kpi-val').forEach(el => { el.textContent = '12'; });
             window.PawpalAdminAccess = { ready: Promise.resolve(), isAdmin: () => true, state: { user: { permissions: ['payment', 'refund_transaction', 'sales_order', 'sales_order_detail', 'appointment', 'appointment_item', 'customer', 'customer_membership', 'membership_tier', 'voucher_redemption', 'paw_point_transaction'].map(t => t + '.read').concat(['pawpal_setting.write','audit_log.write']) } } };
             window.getSupabaseClient = () => ({ rpc: async (name, args) => {
+                if (name === 'admin_dashboard_business_analysis') return { data: dashboardTestAnalysis(args) };
                 if (name === 'get_admin_dashboard_plan') return { data: null };
                 if (name === 'admin_business_metric') return { data: ({ sources: { products: 100, services: 0, other: 0 }, products: [], services: [], customers: [], membership: [], vouchers: { count: 0, discount: 0 }, points: { credited: 0, debited: 0 }, returning: { eligible: 0, returning: 0, rate: null } })[args.p_key] };
                 const M = PawpalBusinessMetrics;

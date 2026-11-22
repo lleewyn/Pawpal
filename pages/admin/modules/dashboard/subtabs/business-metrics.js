@@ -126,6 +126,12 @@
         range = period(range.from, range.to);
         if (key === 'cash') return cashflow(db, range);
         if (key === 'previous') return cashflow(db, period(range.previousFrom, range.previousTo));
+        if (key === 'analysis') {
+            const { data, error } = await db.rpc('admin_dashboard_business_analysis', { p_from: range.from, p_to: range.to });
+            if (error) throw error;
+            if (!data?.cash?.current || !data.cash.previous || !Array.isArray(data.transactions) || !data.customers || !data.outcomes) throw Error('invalid_response');
+            return data;
+        }
         if (key === 'plan') {
             const { data, error } = await db.rpc('get_admin_dashboard_plan', { p_from: range.from, p_to: range.to });
             if (error) throw error;
@@ -139,5 +145,12 @@
         throw Error('unknown_resource');
     }
     const customerCount=rows=>rows?.reduce((n,r)=>n+number(r.count??1),0);
-    return { customerCount, zone, dayKey, shift, period, totals, growth, sources, rank, bucket, readAll, cashflow, returningCustomers, estimate, load };
+    function decompose(current, previous) {
+        if (!current.count || !previous.count) return null;
+        const currentAverage = number(current.value) / number(current.count), previousAverage = number(previous.value) / number(previous.count);
+        return { volume: (current.count - previous.count) * (currentAverage + previousAverage) / 2,
+            average: (currentAverage - previousAverage) * (current.count + previous.count) / 2,
+            difference: current.value - previous.value };
+    }
+    return { customerCount, zone, dayKey, shift, period, totals, growth, sources, rank, bucket, readAll, cashflow, returningCustomers, estimate, load, decompose };
 });

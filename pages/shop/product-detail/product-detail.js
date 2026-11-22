@@ -65,7 +65,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showToast('Vui lòng đăng nhập để gửi đánh giá sản phẩm!', 'warning');
                 return;
             }
-            window.location.href='/user#orders';
+            showToast('Chuyển đến đơn hàng đã mua để gửi đánh giá sản phẩm...', 'info');
+            setTimeout(() => {
+                window.location.href = '/user#orders';
+            }, 800);
         });
     }
 
@@ -466,7 +469,7 @@ function handleBuyNow() {
         
         sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
         sessionStorage.setItem('pawpal_is_buynow', 'true');
-        window.location.href = '/pages/shop/checkout/checkout.html?buynow=true';
+        window.location.href = '/checkout?buynow=true';
     }, 500);
 }
 
@@ -511,7 +514,7 @@ function handleCardBuyNow(product) {
 
     sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
     sessionStorage.setItem('pawpal_is_buynow', 'true');
-    window.location.href = '/pages/shop/checkout/checkout.html?buynow=true';
+    window.location.href = '/checkout?buynow=true';
 }
 
 function getCurrentProduct(){return currentLoadedProduct;}
