@@ -251,6 +251,9 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
       if(requestedStaff)reply+=' Yêu cầu vừa nhận: '+Array.from(evaluation.maskedText||question).slice(0,300).join('')+'. Nhân viên sẽ xem nội dung hội thoại để tiếp tục hỗ trợ; chưa xác nhận đã có người nhận ca.';
       if(assets.length)reply='PawPal đã nhận ảnh và chuyển hội thoại sang chờ nhân viên xem. Trợ lý tự động chưa phân tích nội dung ảnh.';
       if(membershipRequired){reply=membershipMessage;evaluation.shouldHandover=false;}
+     }else if(evaluation.riskType==='special_care'||evaluation.detectedLevel===3||/mệt mỏi|biếng ăn|bỏ ăn|uể oải|nằm li bì|ngủ nhiều|lo quá|bị đau|sợ hãi/i.test(question)){
+      reply='Dạ bạn đừng quá lo nhé, PawPal hiểu tâm lý của bạn lúc này. Sau khi tắm sấy, nhiều bé do lạ chỗ hoặc tiêu hao nhiều năng lượng nên sẽ thèm ngủ và hơi lười ăn một chút. Bạn để bé nghỉ ngơi ở góc quen thuộc, đặt sẵn chén nước sạch gần bé nha. Nếu bé có biểu hiện nào bất thường hơn hoặc bạn vẫn chưa an tâm, bạn cứ nhắn hoặc gửi ảnh cho PawPal liền nhé, tụi mình luôn ở đây cùng bạn.';
+      understood=true;
      }else if(understanding.isUnclearInput(question)){
       reply=understanding.clarification;understood=false;
      }else{

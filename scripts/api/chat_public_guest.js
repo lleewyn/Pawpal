@@ -1,7 +1,10 @@
 'use strict';
 const catalog=require('./chat_public_catalog.js');
 const fold=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().replace(/\bhotle\b|\bhottel\b/g,'hotel').replace(/\bdatlich\b/g,'dat lich').replace(/\bpawpoints?\b/g,'paw points').replace(/\bbao nhiu\b|\bbn\b/g,'bao nhieu').replace(/\s+/g,' ').trim();
-const group=q=>/hotel|khach san|luu tru|gui be|qua dem/.test(q)?'hotel':/taxi|dua don|dua ruoc/.test(q)?'taxi':/\btam\b|cat tia|grooming|\bspa\b/.test(q)?'grooming':null;
+const group=q=>{
+ if(/sau khi (?:tam|cat tia|lam)|sau (?:tam|cat tia)|met moi|bieng an|bo an|ue oai|nam li bi|ngu nhieu|lo qua|non |sot |chay mau|vet thuong|gay chan|co giat|bi dau/.test(q))return null;
+ return /hotel|khach san|luu tru|gui be|qua dem/.test(q)?'hotel':/taxi|dua don|dua ruoc/.test(q)?'taxi':/\btam\b|cat tia|grooming|\bspa\b/.test(q)?'grooming':null;
+};
 const faq=(question,topic,notice)=>({faq:question,topic,...(notice?{notice}:{})});
 const link=(label,path)=>`[${label}](${path})`;
 const booking=link('Chọn dịch vụ và thời gian','/booking');

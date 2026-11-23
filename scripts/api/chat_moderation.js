@@ -91,7 +91,7 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
     if (/chảy máu|ngộ độc|co giật|hấp hối|thở dốc|tai nạn|gãy chân|nuốt dị vật|sơ cứu/i.test(lower)) {
         riskType = 'medical_emergency';
         detectedLevel = 6; // Cấp 6: Khẩn cấp theo thang đo chatbot_sentiment_tier (1 - 6)
-    } else if (/mang thai|có bầu|chửa|sinh con/i.test(lower)) {
+    } else if (/mang thai|có bầu|chửa|sinh con|mệt mỏi|biếng ăn|bỏ ăn|uể oải|nằm li bì|ngủ nhiều|lo quá|sợ hãi|run rẩy/i.test(lower)) {
         riskType = 'special_care';
         detectedLevel = Math.max(detectedLevel, 3);
     } else if (/tiêm phòng|vắc xin|vacxin|xổ giun|sổ tiêm|lịch tiêm/i.test(lower)) {

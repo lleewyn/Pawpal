@@ -2,6 +2,7 @@
 const fold=v=>String(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase().replace(/[?!.,]/g,'').replace(/\s+/g,' ').trim();
 function plan(question){
  const q=fold(question);
+ if(/sau khi (?:tam|cat tia|lam)|sau (?:tam|cat tia)|met moi|bieng an|bo an|ue oai|nam li bi|ngu nhieu|lo qua|non |sot |chay mau|vet thuong|gay chan|co giat|bi dau/.test(q))return null;
  const explanation=/la gi|dung de|huong dan|(?:^| )cach |o dau|chinh sach|quy dinh|dieu kien|dang ky|tham gia|doi thuong/.test(q);
  const record=/\b(?:ord|cus|apt)-[a-z0-9-]+/.test(q);
  const privateData=/doanh thu|loi nhuan|luong nhan vien|gia von|danh sach khach|ho so khach|so dien thoai.*khach|lich su (chat|giao dich)|don (hang )?cua|lich hen cua|(?:paw ?points?|diem|hang) cua|(?:so du|bao nhieu|con).*paw ?points?|so du diem|bao nhieu diem|diem con/.test(q);
