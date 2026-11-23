@@ -231,29 +231,32 @@
     // ------------------------------------------------------------------
     // Biểu đồ trạng thái (VH-C01, VH-C02)
     // ------------------------------------------------------------------
-    function statusBreakdown(rows, statusKey, classifier, labels) {
+    function statusBreakdown(rows, statusKey, classifier, labels, grouped = false) {
         const counts = new Map();
         const unknown = new Map();
         const seen = new Set();
+        let total = 0;
         for (const row of rows || []) {
-            if (!row || seen.has(row.id)) continue;
+            if (!row || !grouped && seen.has(row.id)) continue;
             seen.add(row.id);
+            const count = grouped ? row.count : 1;
+            total += count;
             const group = classifier(row[statusKey]);
-            counts.set(group, (counts.get(group) || 0) + 1);
+            counts.set(group, (counts.get(group) || 0) + count);
             if (group === 'other') {
                 const raw = String(row[statusKey] ?? '(trống)');
-                unknown.set(raw, (unknown.get(raw) || 0) + 1);
+                unknown.set(raw, (unknown.get(raw) || 0) + count);
             }
         }
         const order = Object.keys(labels);
         const items = order
             .filter(group => counts.get(group))
             .map(group => ({ key: group, label: labels[group], value: counts.get(group), tone: TONES[group] || 'neutral' }));
-        return { total: seen.size, items, unknownStatuses: [...unknown.entries()].map(([status, count]) => ({ status, count })) };
+        return { total, items, unknownStatuses: [...unknown.entries()].map(([status, count]) => ({ status, count })) };
     }
 
     const appointmentStatusBreakdown = rows => statusBreakdown(rows, 'appointment_status', classifyAppointment, APPOINTMENT_LABELS);
-    const orderStatusBreakdown = rows => statusBreakdown(rows, 'order_status', classifyOrder, ORDER_LABELS);
+    const orderStatusBreakdown = (rows, grouped) => statusBreakdown(rows, 'order_status', classifyOrder, ORDER_LABELS, grouped);
 
     // ------------------------------------------------------------------
     // Nhu cầu dịch vụ (VH-C03) và mật độ lịch (VH-C04)

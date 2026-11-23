@@ -51,6 +51,7 @@ const root = 'pages/admin/modules/dashboard/';
                         }}};
                     }
                     if (name === 'admin_dashboard_work_page') {
+                        if (window.failWorkboard) return { error: { code: '42501' } };
                         const M = PawpalOpsMetrics;
                         const safe = table => failedTable === table ? [] : fixtures[table] || [];
                         const all = M.taskBoard(M.buildAlerts({ pendingAppointments: safe('appointment'), activeOrders: safe('sales_order'), openReturns: safe('return_request'), openTickets: safe('support_ticket'), now: new Date() }), { appointments: safe('appointment'), tickets: safe('support_ticket'), staff: safe('staff'), staffAvailable: failedTable !== 'staff' });
@@ -60,7 +61,16 @@ const root = 'pages/admin/modules/dashboard/';
                         const filtered = byKind.filter(row => match(row, args.p_scope)), page = Math.min(args.p_page, Math.max(1, Math.ceil(filtered.length / 10)));
                         return { data: { total: filtered.length, page, counts: Object.fromEntries(['all','urgent','unassigned','older','recent'].map(scope => [scope, byKind.filter(row => match(row, scope)).length])), rows: filtered.slice((page - 1) * 10, page * 10), missing_sources: failedTable && failedTable !== 'staff' ? [failedTable] : [] } };
                     }
-                    if (name === 'admin_dashboard_order_clocks') return { data: [] };
+                    if (name === 'admin_dashboard_order_status_counts') {
+                        const counts = new Map();
+                        for (const order of fixtures.sales_order || []) {
+                            const day = PawpalOpsMetrics.vnDateKey(order.created_at);
+                            if (day < args.p_from || day > args.p_to) continue;
+                            counts.set(order.order_status, (counts.get(order.order_status) || 0) + 1);
+                        }
+                        return { data: [...counts].map(([order_status, count]) => ({ order_status, count })) };
+                    }
+                    if (name === 'admin_dashboard_order_clocks') { window.orderClockReads = (window.orderClockReads || 0) + 1; return { data: [] }; }
                     if (name === 'admin_dashboard_work_history') return { data: window.historyFixture || { available: false, tracked_from: '2026-11-21T03:00:00Z', rows: [] } };
                     if (name === 'admin_dashboard_logistics_page') {
                         const all = window.logisticsFixture || [];
@@ -104,6 +114,7 @@ const root = 'pages/admin/modules/dashboard/';
         assert.equal(await page.locator('[data-ops-panel="agenda"] tbody tr').count(), 10);
         assert.equal(await page.locator('.ops-work-table').evaluate(table => !!table.closest('.admin-card')?.querySelector('[data-ops-pagination]')), false);
         await page.locator('[data-ops-pagination]').getByRole('button', { name: '2', exact: true }).click();
+        await page.waitForFunction(() => document.querySelectorAll('[data-ops-task-id]').length === 7);
         assert.equal(await tasks.count(), 7, '17 distinct records, not 19 alert reasons');
         await page.locator('[data-ops-agenda-pagination]').getByRole('button', { name: '2', exact: true }).click();
         assert.equal(await page.locator('[data-ops-panel="agenda"] tbody tr').count(), 3);
@@ -160,6 +171,17 @@ const root = 'pages/admin/modules/dashboard/';
         await page.evaluate(() => { failedTable = null; PawpalOperationsDashboard.refresh(); });
         await page.waitForFunction(() => !PawpalOperationsDashboard.getState().errors.staff);
         await page.locator('[data-ops-task-kind]').selectOption('all');
+        const directBacklogReads = () => page.evaluate(() => reads.filter(read => read.table === 'sales_order' && read.columns === 'id,order_code,order_status,created_at,updated_at').length);
+        const beforeFallback = await directBacklogReads();
+        assert.equal(await page.evaluate(() => window.orderClockReads || 0), 0);
+        await page.evaluate(() => { window.failWorkboard = true; realtimeHandlers.sales_order(); });
+        await page.clock.runFor(1000);
+        await page.waitForFunction(() => PawpalOperationsDashboard.getState().errors.workboard && !document.querySelector('.is-refreshing'));
+        assert.equal(await tasks.count(), 10);
+        assert.ok(await directBacklogReads() > beforeFallback);
+        assert.equal(await page.evaluate(() => window.orderClockReads), 1);
+        await page.evaluate(() => { window.failWorkboard = false; PawpalOperationsDashboard.refresh(); });
+        await page.waitForFunction(() => !PawpalOperationsDashboard.getState().errors.workboard && !document.querySelector('.is-refreshing'));
         const todayCodes = await page.locator('[data-ops-panel="agenda"] tbody').innerText();
         await page.locator('[data-ops-range="30d"]').click();
         await page.waitForFunction(() => PawpalOperationsDashboard.getState().preset === '30d' && !document.querySelector('.is-refreshing'));
@@ -172,7 +194,7 @@ const root = 'pages/admin/modules/dashboard/';
         }
         // A source error must remove old tasks rather than present stale records as current.
         await page.evaluate(() => { failedTable = 'appointment'; PawpalOperationsDashboard.refresh(); });
-        await page.waitForFunction(() => PawpalOperationsDashboard.getState().errors.backlogAppointments);
+        await page.waitForFunction(() => PawpalOperationsDashboard.getState().errors.periodAppointments);
         assert.equal(await page.locator('[data-ops-task-id^="appointment:"]').count(), 0);
         await page.evaluate(() => { failedTable = null; fixtures = {}; PawpalOperationsDashboard.refresh(); });
         await page.waitForFunction(() => Object.keys(PawpalOperationsDashboard.getState().errors).length === 0 && document.querySelectorAll('[data-ops-task-id]').length === 0);
@@ -255,6 +277,18 @@ const root = 'pages/admin/modules/dashboard/';
         await page.locator('[data-ops-retry="kpis"]').click();
         await page.waitForFunction(()=>!PawpalOperationsDashboard.getState().errors.kpis);
         assert.equal(await page.locator('[data-kpi="todayAppointments"] [data-kpi-value]').innerText(),(5001).toLocaleString('vi-VN'));
+        await page.evaluate(() => {
+            const createdAt = new Date().toISOString();
+            fixtures.sales_order = Array.from({ length: 5001 }, (_, i) => ({
+                id: 'aggregate-order-' + i, order_status: i === 0 ? 'new_legacy_status' : 'delivered', created_at: createdAt
+            }));
+            realtimeHandlers.sales_order();
+        });
+        await page.clock.runFor(1000);
+        await page.waitForFunction(() => document.querySelector('[data-ops-panel="orderStatus"] .ops-hero strong')?.textContent === (5001).toLocaleString('vi-VN'));
+        const orderStatus = page.locator('[data-ops-panel="orderStatus"]');
+        assert.match(await orderStatus.innerText(), /Có 1 đơn hàng trạng thái chưa phân loại/);
+        assert.doesNotMatch(await orderStatus.innerText(), /Dữ liệu vượt/);
         // Explicit permissions prevent RLS-denied empty responses appearing as healthy zeroes.
         await page.evaluate(() => { window.PawpalAdminAccess = { isAdmin: () => true, state: { user: { permissions: [] } } }; PawpalOperationsDashboard.refresh(); });
         await page.waitForFunction(() => PawpalOperationsDashboard.getState().errors.todayAppointments);

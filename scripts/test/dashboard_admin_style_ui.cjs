@@ -94,6 +94,25 @@ const dashboard = 'pages/admin/modules/dashboard/';
                 if ([1440, 390].includes(width)) await page.screenshot({ path: path.join(output, `${tab}-${width}.png`) });
             }
         }
+        await page.setViewportSize({ width: 1440, height: 600 });
+        for (const tab of ['business', 'operations']) {
+            await page.evaluate(tab => {
+                for (const name of ['business', 'operations']) {
+                    document.querySelector('#subtab-tab-dashboard-' + name).classList.toggle('active', name === tab);
+                }
+                document.querySelector('.admin-preview-content').scrollTop = 0;
+            }, tab);
+            const region = page.locator(tab === 'business' ? '.biz-chart-scroll' : '.ops-dash .table-responsive-wrapper:visible').first();
+            await region.scrollIntoViewIfNeeded();
+            await region.hover();
+            const before = await page.locator('.admin-preview-content').evaluate(el => el.scrollTop);
+            await page.mouse.wheel(0, 180);
+            await page.waitForFunction(previous => document.querySelector('.admin-preview-content').scrollTop > previous, before);
+        }
+        await page.evaluate(() => {
+            document.querySelector('#subtab-tab-dashboard-operations').classList.remove('active');
+            document.querySelector('#subtab-tab-dashboard-business').classList.add('active');
+        });
         // All sections inside grouped panels must remain transparent, with a single surface.
         assert(await page.locator('.biz-group > .biz-panel').evaluateAll(nodes => nodes.every(node => {
             const s = getComputedStyle(node); return s.backgroundColor === 'rgba(0, 0, 0, 0)' && s.borderTopWidth === '0px' && s.backdropFilter === 'none';

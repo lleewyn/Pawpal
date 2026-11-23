@@ -1,10 +1,11 @@
-// Smoke test local Dashboard assets against the existing Admin session/RLS.
+// Smoke test Dashboard against the existing Admin session/RLS.
 // All business mutations are blocked. Never print credentials or record contents.
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async () => {
+    const useProductionAssets = process.argv.includes('--production');
     const credentialPath = process.env.PAWPAL_ADMIN_TEST_CREDENTIALS || 'D:/Aboutme/Pawpal-infra/supabase-local/PAWPAL-ADMIN.private.txt';
     const secret = fs.readFileSync(credentialPath, 'utf8');
     const email = secret.match(/^Email: (.+)$/m)?.[1].trim(), password = secret.match(/^Password: (.+)$/m)?.[1].trim();
@@ -81,6 +82,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'D:/Aboutme/Pawpal
         const readRpcs = new Set(['get_staff_login_context', 'admin_customer_page', 'get_admin_dashboard_cashflow', 'admin_business_metric', 'get_admin_dashboard_plan', 'own_complaint_reply_notices', 'admin_booking_restrictions', 'admin_dashboard_business_analysis', 'admin_dashboard_transaction_page', 'admin_dashboard_work_history', 'admin_dashboard_logistics_page', 'admin_dashboard_order_clocks', 'admin_dashboard_work_page', 'admin_dashboard_cash_page']);
         readRpcs.add('admin_dashboard_analysis_page');
         readRpcs.add('admin_dashboard_operation_totals');
+        readRpcs.add('admin_dashboard_order_status_counts');
         ['admin_finance_report','admin_finance_page','admin_finance_lookup'].forEach(name=>readRpcs.add(name));
         ['get_admin_sales_order_page','get_admin_sales_product_page','get_admin_sales_order_history','get_admin_service_booking_page','admin_service_catalog_summary','admin_service_review_page','admin_service_review_summary','get_staff_workspace','admin_booking_directory','admin_service_staff_candidates','get_staff_booking_catalog','list_intake_media','list_handover_media'].forEach(name=>readRpcs.add(name));
         await page.route('**/rest/v1/**', route => {
@@ -91,7 +93,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'D:/Aboutme/Pawpal
             }
             reads.add(url.pathname); return route.continue();
         });
-        await page.route('**/pages/admin/**', route => {
+        if (!useProductionAssets) await page.route('**/pages/admin/**', route => {
             const pathname = new URL(route.request().url()).pathname;
             if (pathname !== '/pages/admin/admin.js' && !pathname.startsWith('/pages/admin/modules/dashboard/') && !pathname.startsWith('/pages/admin/modules/services/') && !pathname.startsWith('/pages/admin/modules/orders/') && !pathname.endsWith('.css')) return route.continue();
             const local = path.resolve('.' + pathname);
@@ -138,7 +140,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'D:/Aboutme/Pawpal
             };
             return { card: snapshot('.ops-panel'), kpis: snapshot('.ops-kpis'), header: snapshot('.admin-header') };
         });
-        assert.deepEqual(actual, reference, 'Local Dashboard uses the Customer surface and unchanged Admin header');
+        assert.deepEqual(actual, reference, 'Dashboard uses the Customer surface and unchanged Admin header');
         await captureAudit('operations');
         await page.locator('[data-subtab="tab-dashboard-business"]').click();
         await page.waitForFunction(() => {
@@ -235,6 +237,6 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'D:/Aboutme/Pawpal
         }
         assert.deepEqual(writes, [], 'No business mutation attempted');
         assert.deepEqual(errors, []);
-        console.log('PASS local Dashboard / current Cloud: operations, logistics/history/work pages, analysis/comparison, financial report/registers/entity lookup, cohort/outcome/receipt/refund evidence, independent today count, Customer style; rendered source records: '+opened+'; no business mutations. Read endpoints: ' + reads.size);
+        console.log('PASS ' + (useProductionAssets ? 'Vercel' : 'local') + ' Dashboard / current Cloud: operations, logistics/history/work pages, analysis/comparison, financial report/registers/entity lookup, cohort/outcome/receipt/refund evidence, independent today count, Customer style; rendered source records: '+opened+'; no business mutations. Read endpoints: ' + reads.size);
     } finally { await browser.close(); }
 })().catch(error => { console.error(error.message); process.exitCode = 1; });

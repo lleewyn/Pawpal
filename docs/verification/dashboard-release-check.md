@@ -116,3 +116,17 @@ Các phần điều phối/lịch sử còn thiếu ở mục 2, nghiệm thu P0
 - Điều hành kiểm tra thêm dòng 5.001 trong lượt đọc cuối để xác định dữ liệu bị cắt. Bài kiểm thử trình duyệt xác nhận đúng 5.000 dòng không báo thiếu, 5.001 dòng có báo thiếu ở danh sách và KPI tổng hợp tại máy chủ vẫn giữ tổng đầy đủ. Các truy vấn còn chờ trong hàng đợi được bỏ qua nếu yêu cầu đã lỗi thời.
 - Bảng việc dùng phân công từ hồ sơ lịch hẹn và hỗ trợ. Đơn hàng, việc tồn kho và đổi trả vẫn cần nguồn giao việc phù hợp với quy trình. Ngưỡng SLA nghiệp vụ cần người phụ trách xác nhận. Kiểm thử Realtime với nghiệp vụ thật cần môi trường thử nghiệm cho phép ghi dữ liệu.
 - Chuyển các biểu đồ còn tổng hợp từ danh sách giới hạn ở trình duyệt sang nguồn tổng hợp tại máy chủ và đo độ trễ trên tập dữ liệu đại diện vẫn là đầu việc mở.
+
+
+### Kiểm tra phát hành và giảm truy vấn bảng việc
+
+- Vercel đã phục vụ Sổ tài chính thu gọn và bản sửa mốc 5.000 dòng. Bài kiểm thử chạy trực tiếp trên Vercel với tài khoản Admin đạt, gồm mở năm hồ sơ nguồn. Chạy lại bằng mã workspace cũng đạt. Cả hai lượt đều chỉ đọc.
+- Bảng việc trong workspace dùng kết quả phân trang từ máy chủ và chỉ đọc lại lịch chờ, đơn đang xử lý khi truy vấn bảng việc lỗi. Kiểm thử trình duyệt xác nhận phân trang, quá trình chuyển sang dữ liệu dự phòng và làm mới sau tín hiệu Realtime giả lập. Thay đổi giảm truy vấn còn ở workspace.
+
+
+### Tổng hợp trạng thái đơn và rà soát phân công
+
+- Migration 286 chuyển biểu đồ trạng thái đơn sang đếm nhóm ở PostgreSQL theo ngày tạo đơn tại Việt Nam. Kiểm thử PostgreSQL cô lập với bảng thử 60.002 dòng xác nhận 60.000 dòng thuộc kỳ, 4 nhóm trả về, hai mốc ngoài kỳ bị loại, giới hạn khoảng ngày và đường gọi kiểm tra quyền. Ba lượt SQL mất khoảng 11,6–12,8 ms trong container thử nghiệm. Đây là độ trễ SQL trên dữ liệu tổng hợp thử, chưa đo qua mạng hoặc với dữ liệu vận hành. Migration chưa phát hành.
+- Kiểm thử trình duyệt nhận tín hiệu Realtime giả lập cho đơn hàng và hiển thị đủ 5.001 đơn từ kết quả tổng hợp, bao gồm nhóm trạng thái chưa nhận diện. PostgreSQL local đã chạy và công bố bảng lịch hẹn, đơn hàng và thanh toán qua Realtime. Chưa chạy luồng ghi đầu cuối trên bản sao có đủ schema Dashboard và quyền nghiệp vụ.
+- Đối chiếu schema cho thấy đơn hàng và tồn kho thiếu trường giao việc. Đổi trả có người chốt kết quả qua resolved_by. Đề xuất phân công riêng theo đơn hàng, biến thể hàng hóa và phiếu đổi trả cho các nhóm bán hàng, kho và hậu mãi. Cần xác nhận nhóm nhận việc thực tế trước khi dùng làm dữ liệu giao việc.
+- Ngưỡng hiện có để xác nhận nghiệp vụ gồm chờ xác nhận lịch và đơn từ 15 phút hoặc khẩn cấp khi quá 30 phút, chuẩn bị đơn từ 4 giờ, phản hồi hỗ trợ 4 giờ, đổi trả 48 giờ và hạn giải quyết theo từng phiếu. Các ngưỡng hiện tại tiếp tục áp dụng. Chỉ số mật độ lịch, dịch vụ nổi bật và tải nhân sự còn xử lý từ danh sách ở trình duyệt.

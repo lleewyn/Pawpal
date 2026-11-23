@@ -1,5 +1,5 @@
 <!-- PawPal Admin / Khách hàng: HTML fragment. Stylesheet external nằm cạnh file này. -->
-<link rel="stylesheet" href="/pages/admin/modules/customers/customers.css?v=20261024_1" data-pawpal-module-stylesheet="customers">
+<link rel="stylesheet" href="/pages/admin/modules/customers/customers.css?v=20261124_customer_profile_avatar" data-pawpal-module-stylesheet="customers">
 <div class="customers-module">
 <!-- ====================================================================
          SUB-TAB 1: KHÁCH HÀNG (DANH SÁCH và TIẾP NHẬN TẠI QUẦY)
@@ -163,6 +163,7 @@
 <!-- THANH THAO TÁC MỘT CHẠM TRÊN ĐẦU DRAWER -->
 <div class="profile-quick-actions-bar">
 <div class="drawer-user-headline">
+<span class="customer-profile-avatar" id="drawerCustomerAvatar" aria-hidden="true"></span>
 <span class="headline-name" id="drawerCustomerName">&mdash;</span>
 <span class="admin-badge badge-tier-gold" id="drawerCustomerTier">&mdash;</span>
 <span class="admin-badge badge-success">&mdash;</span>
@@ -321,13 +322,13 @@
 </div>
 </div>
 <div class="pawpoint-toolbar">
-<input aria-label="T&igrave;m lịch sử Pawpoint" autocomplete="off" class="admin-input" id="pawpointSearchInput" placeholder="T&igrave;m theo t&ecirc;n hoặc S&Dstrok;T..." type="text">
+<input aria-label="T&igrave;m lịch sử Pawpoint" autocomplete="off" class="admin-input" id="pawpointSearchInput" placeholder="T&igrave;m theo t&ecirc;n hoặc số điện thoại" type="text"/>
 <label for="pawpointFilterType">Loại giao dịch</label><select class="admin-select" id="pawpointFilterType">
 <option value="ALL">Tất cả giao dịch</option>
 <option value="ADD">Cộng &dstrok;iểm</option>
 <option value="SUB">Trừ &dstrok;iểm</option>
 </select>
-<span aria-live="polite" id="pawpointResultCount"></span></input></div>
+<span aria-live="polite" id="pawpointResultCount"></span></div>
 <div aria-label="Lịch sử Pawpoint c&oacute; cuộn" class="v7-points-scroll" role="region" tabindex="0"><table class="admin-table">
 <thead>
 <tr>
@@ -343,10 +344,7 @@
 </table></div>
 </div>
 <div class="admin-pagination-bar pawpoint-pagination-outside" id="pawpointPaginationBar"><div class="pagination-controls" id="pawpointPaginationControls"></div></div>
-<details class="v7-tier-policy"><summary>Ch&iacute;nh s&aacute;ch hạng thẻ</summary><div class="admin-card">
-<div class="admin-card-header">
-<span class="admin-card-title">Ch&iacute;nh s&aacute;ch hạng thẻ</span>
-</div>
+<details class="v7-tier-policy"><summary>Ch&iacute;nh s&aacute;ch hạng thẻ</summary><div class="customer-tier-policy-scroll" role="region" aria-label="Bảng chính sách hạng thẻ" tabindex="0">
 <table class="admin-table">
 <thead>
 <tr>
@@ -372,16 +370,17 @@
 <form id="formAddCustomerQuick" onsubmit="return false;">
 <div class="form-group mb-3">
 <label class="form-label" for="quickAddName">Họ v&agrave; t&ecirc;n kh&aacute;ch h&agrave;ng <span class="required-mark">*</span></label>
-<input class="admin-input" id="quickAddName" placeholder="Nhập họ t&ecirc;n..." required="" type="text">
-</input></div>
+<input class="admin-input" id="quickAddName" placeholder="Nhập họ t&ecirc;n" required="" type="text"/>
+</div>
 <div class="form-group mb-3">
 <label class="form-label" for="quickAddPhone">Số &dstrok;iện thoại <span class="required-mark">*</span></label>
-<input class="admin-input" id="quickAddPhone" placeholder="0901234567 (Bắt buộc 10 số)" required="" type="tel"/>
+<input class="admin-input" id="quickAddPhone" placeholder="Số điện thoại gồm 10 chữ số" required="" type="tel"/>
 <div class="customer-phone-alert" id="quickAddPhoneAlert">
                         Số &dstrok;iện thoại n&agrave;y &dstrok;&atilde; thuộc về kh&aacute;ch h&agrave;ng <strong id="quickAddDupName"></strong> (<span id="quickAddDupId"></span>).
                         <a class="customer-open-duplicate-link" href="javascript:void(0)" id="btnOpenDupCustomer">Mở hồ sơ ngay</a>
 </div>
 </div>
+<details class="quick-add-optional"><summary>Th&ocirc;ng tin b&eacute; cưng</summary><div class="quick-add-optional-fields">
 <div class="form-group mb-3">
 <label class="form-label" for="quickAddPetName">T&ecirc;n b&eacute; cưng</label>
 <input class="admin-input" id="quickAddPetName" placeholder="V&iacute; dụ: B&eacute; Lu, B&eacute; Miu..." type="text"/>
@@ -406,14 +405,17 @@
 <div class="autocomplete-dropdown" id="quickAddPetBreedDropdown"></div>
 </div>
 </div>
+</div></details>
+<details class="quick-add-optional"><summary>&Dstrok;ịa chỉ nhận h&agrave;ng</summary><div class="quick-add-optional-fields">
 <div class="form-group mb-3">
-<label class="form-label" for="quickAddAddress">&Dstrok;ịa chỉ nhận h&agrave;ng ban &dstrok;ầu</label>
-<input class="admin-input" id="quickAddAddress" placeholder="V&iacute; dụ: 120 Nguyễn Thị Minh Khai, Phường 6, Quận 3..." type="text"/>
+<label class="form-label" for="quickAddAddress">&Dstrok;ịa chỉ nhận h&agrave;ng</label>
+<input class="admin-input" id="quickAddAddress" placeholder="Số nhà, tên đường và phường hoặc xã" type="text"/>
 </div>
 <div class="form-group mb-3">
 <label class="form-label" for="quickAddProvince">Tỉnh hoặc th&agrave;nh phố</label>
 <input class="admin-input" id="quickAddProvince" placeholder="Nhập khi c&oacute; &dstrok;ịa chỉ nhận h&agrave;ng" type="text"/>
 </div>
+</div></details>
 <div class="modal-actions-footer">
 <button class="admin-btn admin-btn-secondary" data-close-modal="modalAddCustomer" id="btnCancelAddCustomer" type="button">Hủy</button>
 <button class="admin-btn admin-btn-primary" id="btnSubmitAddCustomer" type="button">Lưu kh&aacute;ch h&agrave;ng</button>

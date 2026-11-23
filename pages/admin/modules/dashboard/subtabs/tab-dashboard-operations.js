@@ -220,6 +220,16 @@
             return { rows: [...pending.rows, ...active.rows], truncated: pending.truncated || active.truncated };
         },
         async periodOrders(client, period) {
+            const { data, error } = await client.rpc('admin_dashboard_order_status_counts', { p_from: period.from, p_to: period.to });
+            if (!error) {
+                if (!Array.isArray(data) || data.some(row => !row || (row.order_status !== null && typeof row.order_status !== 'string') || !Number.isSafeInteger(row.count) || row.count <= 0)) {
+                    throw new Error('invalid_dashboard_order_status_counts');
+                }
+                return { rows: data, grouped: true, truncated: false };
+            }
+            // Allow the previous frontend data source during a staggered database rollout.
+            if (error.code !== 'PGRST202') throw error;
+
             return readPaged(() => client.from('sales_order').select('id,order_code,order_status,created_at,updated_at')
                 .gte('created_at', period.startIso).lt('created_at', period.endIso));
         },
@@ -300,11 +310,13 @@
     // Nhóm không phụ thuộc bộ lọc thời gian (ảnh chụp trạng thái hiện tại)
     const SNAPSHOT_RESOURCES = new Set(['todayAppointments', 'backlogAppointments', 'actionOrders', 'openReturns', 'staff', 'inventory', 'reservations', 'salesVelocity', 'openTickets']);
 
-    async function loadResources(names) {
+    async function loadResources(names, workboardFallback = false) {
         const client = getClient();
         const generation = state.generation;
         const period = state.period;
-        const list = [...new Set(names)];
+        // The server work page already reads pending appointments and active orders.
+        const fallbackNames = ['backlogAppointments', 'actionOrders'];
+        const list = [...new Set(names)].filter(name => workboardFallback || !fallbackNames.includes(name));
         const versions = new Map(list.map(name => { const version = (requestVersions.get(name) || 0) + 1; requestVersions.set(name, version); return [name, version]; }));
         list.forEach(name => state.loading.add(name));
         renderAll();
@@ -339,6 +351,10 @@
             }
         })));
         if (generation !== state.generation) return;
+        if (list.includes('workboard') && state.errors.workboard && !workboardFallback) {
+            await loadResources(fallbackNames, true);
+            if (generation !== state.generation) return;
+        }
         state.lastUpdatedAt = new Date();
         renderAll();
     }
@@ -716,7 +732,7 @@
         const title = panel('alerts').querySelector('[data-ops-title]');
         title.dataset.tip = thresholdsTip();
         title.tabIndex = 0;
-        if (dependencies.every(name => !state.data[name] && !state.errors[name])) {
+        if ((!server && state.loading.has('workboard')) || dependencies.every(name => !state.data[name] && !state.errors[name])) {
             pagination.hidden = true;
             return setPanel('alerts', skeleton());
         }
@@ -795,7 +811,7 @@
 
     function renderStatusPanel(panelName, resource, breakdownFn, segments, unit, emptyText) {
         guard(panelName, PANEL_RESOURCES[panelName], ({ refreshing, truncated }) => {
-            const breakdown = breakdownFn(rows(resource));
+            const breakdown = breakdownFn(rows(resource), state.data[resource]?.grouped);
             if (!breakdown.total) return setPanel(panelName, `<p class="ops-empty">${emptyText}</p>`, { refreshing });
             const unknown = breakdown.unknownStatuses?.length ? `<p class="ops-caption"${tip(`Trạng thái chưa phân loại: ${breakdown.unknownStatuses.map(item => `${item.status} (${item.count})`).join(', ')}`)} tabindex="0">Có ${num(breakdown.unknownStatuses.reduce((sum, item) => sum + item.count, 0))} ${unit} trạng thái chưa phân loại, đang tính vào "Khác".</p>` : '';
             setPanel(panelName, `<p class="ops-hero"><strong>${num(breakdown.total)}</strong><span>${unit}</span></p>${segmentedBar(breakdown, segments, unit)}${unknown}${truncatedNote(truncated)}`, { refreshing });
@@ -1024,7 +1040,6 @@
             state.alertsPage = 1;
             saveTaskFilters();
             delete state.data.workboard;
-            renderAlerts();
             loadResources(['workboard']);
         });
         on(state.root, 'click', event => {
@@ -1055,7 +1070,6 @@
                 state.alertsPage = 1;
                 saveTaskFilters();
                 delete state.data.workboard;
-                renderAlerts();
                 loadResources(['workboard']);
                 return;
             }

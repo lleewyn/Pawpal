@@ -658,7 +658,7 @@
         modalAdd?.addEventListener('click',event=>{if(event.target===modalAdd)closeAddModal();});
         modalAdd?.addEventListener('keydown',event=>{
             if(event.key==='Escape'){event.stopPropagation();closeAddModal();}
-            if(event.key==='Tab'){const items=[...modalAdd.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]')].filter(item=>item.getClientRects().length);const first=items[0],last=items.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
+            if(event.key==='Tab'){const items=[...modalAdd.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],summary')].filter(item=>item.getClientRects().length);const first=items[0],last=items.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
         });
 
         // Taxonomy comes exclusively from the V1 catalog.
@@ -776,7 +776,13 @@
                 if (address && !province) errors.quickAddProvince = 'Nhập tỉnh hoặc thành phố của địa chỉ.';
                 if (province && !address) errors.quickAddAddress = 'Nhập địa chỉ nhận hàng hoặc để trống cả hai trường.';
                 fields.forEach(id => fieldError(id, errors[id] || ''));
-                if (Object.keys(errors).length) { document.getElementById(Object.keys(errors)[0]).focus(); return; }
+                if (Object.keys(errors).length) {
+                    const input = document.getElementById(Object.keys(errors)[0]);
+                    const group = input.closest('details');
+                    if (group) group.open = true;
+                    input.focus();
+                    return;
+                }
                 saving = true; saveButton.disabled = true; saveButton.textContent = 'Đang lưu';
                 try {
                     const { error } = await window.getSupabaseClient().rpc('create_customer_quick', {
@@ -789,6 +795,7 @@
                         throw error;
                     }
                     formAdd.reset(); resetSelection(speciesInput); resetSelection(breedInput);
+                    formAdd.querySelectorAll('details[open]').forEach(group => { group.open = false; });
                     closeAddModal();
                     await PawpalCustomers.refreshCustomerData();
                     PawpalCustomers.showToast('Đã lưu hồ sơ khách hàng.', 'success');

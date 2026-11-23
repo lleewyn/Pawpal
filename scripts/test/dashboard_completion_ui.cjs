@@ -49,22 +49,21 @@ const root = 'pages/admin/modules/dashboard/';
   await page.addScriptTag({ content: fs.readFileSync(root+'subtabs/tab-dashboard-business.js','utf8') });
   await page.evaluate(() => PawpalBusinessDashboard.init());
   const analysis = page.locator('[data-biz-analysis]');
-  assert.match(await analysis.innerText(), /do số giao dịch 500 đ; do giá trị bình quân 1\.100 đ/);
   assert.equal(await analysis.locator('.biz-evidence-stats [data-biz-drill="returned_from_before"]').innerText(), '6');
   await analysis.locator('summary').filter({hasText:'Cơ sở đối chiếu'}).click();
+  assert.match(await analysis.innerText(), /do số giao dịch 500 đ; do giá trị bình quân 1\.100 đ/);
   assert.match(await analysis.innerText(), /không khẳng định lịch sử trước hệ thống/);
   fs.mkdirSync('artifacts/dashboard-completion', { recursive: true });
   for (const width of [1440, 820, 390, 320]) {
    await page.setViewportSize({ width, height: 1000 });
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No outer overflow in business analysis at '+width);
-   await page.waitForFunction(()=>{
-    const cell=document.querySelector('.biz-analysis-table td:nth-child(4)');
-    return cell?.isConnected&&getComputedStyle(cell).whiteSpace==='nowrap';
-   });
-   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No outer overflow after analysis resize at '+width);
-   if(width<760) {
-    const size=await page.evaluate(()=>{const el=document.querySelector('[data-biz-analysis] .table-responsive-wrapper');return {scroll:el.scrollWidth,client:el.clientWidth};});
-    assert(size.scroll>size.client,'Wide analysis stays inside a horizontal scroll area: '+JSON.stringify(size));
+   if (width <= 640) {
+    const sizing = await page.evaluate(() => {
+     const table = document.querySelector('[data-biz-analysis] .table-responsive-wrapper');
+     const chart = document.querySelector('.biz-chart-scroll');
+     return { table: table.scrollWidth <= table.clientWidth, chart: chart.scrollWidth <= chart.clientWidth };
+    });
+    assert.deepEqual(sizing, { table: true, chart: true }, 'Summary and chart fit at ' + width);
    }
    if ([1440,390].includes(width)) await analysis.screenshot({ path: 'artifacts/dashboard-completion/analysis-'+width+'.png' });
   }

@@ -69,9 +69,11 @@
         const container = document.getElementById('profileValAddressContainer');
         if (!container) return;
         const cust = getCust(custId);
-        const list = cust?.addresses || [
-            { address: 'Tiếp nhận trực tiếp tại quầy Pawpal Pet Center', isDefault: true }
-        ];
+        const list = cust?.addresses || [];
+        if (!list.length) {
+            container.innerHTML = '<span class="text-muted">Chưa có địa chỉ</span>';
+            return;
+        }
 
         container.innerHTML = list.map(item => `
             <div class="drawer-address-row" style="${!item.isDefault ? 'color: var(--text-muted);' : ''}">
@@ -337,9 +339,15 @@
         if (content) content.hidden = false;
 
         // Headline
+        const avatar = document.getElementById('drawerCustomerAvatar');
         const headlineName = document.getElementById('drawerCustomerName');
         const headlineTier = document.getElementById('drawerCustomerTier');
         const headlinePhoneBadge = document.querySelector('.drawer-user-headline .badge-success');
+        if (avatar) {
+            const words = String(data.name || '').trim().split(/\s+/).filter(Boolean);
+            const initials = words.length > 1 ? [words[0], words.at(-1)] : words;
+            avatar.textContent = initials.map(word => Array.from(word)[0]).join('').toLocaleUpperCase('vi-VN') || '?';
+        }
         if (headlineName) headlineName.textContent = data.name;
         if (headlineTier) {
             headlineTier.textContent = data.tierName;

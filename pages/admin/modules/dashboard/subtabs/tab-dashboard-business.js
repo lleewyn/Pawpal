@@ -48,12 +48,13 @@
         return 'Không tải được dữ liệu. Vui lòng thử lại.';
     }
 
-    const panel = (key, title, wide = false, extra = '') => `
+    const panel = (key, title, wide = false, extra = '', beforeChart = '') => `
     <section class="admin-workspace-section dash-panel biz-panel ${wide ? 'biz-wide' : ''}">
       <header class="dash-panel-heading admin-workspace-heading biz-panel-head">
         <h3 class="admin-card-title">${title}</h3>
         ${extra}
       </header>
+      ${beforeChart}
       <div class="admin-workspace-body biz-panel-body" data-biz-panel="${key}"></div>
     </section>`;
 
@@ -75,47 +76,35 @@
             </div>
           </div>
           <div class="ops-sync biz-sync">
-            <span aria-live="polite" class="ops-sync-status biz-sync-status is-live" data-biz-updated>Đã đồng bộ</span>
+            <span aria-live="polite" class="ops-sync-status biz-sync-status" data-biz-updated>Đang tải</span>
+            <button class="admin-btn admin-btn-secondary" type="button" data-biz-refresh>Làm mới</button>
           </div>
         </header>
         <p class="ops-filter-error biz-error" data-biz-error role="alert" hidden></p>
 
-        <div aria-label="Chỉ số kinh doanh" class="admin-kpi-grid biz-kpis" data-biz-kpis></div>
+        <div role="group" aria-label="Chỉ số thu và hoàn" class="admin-kpi-grid biz-kpis" data-biz-kpis></div>
 
         <div class="biz-grid">
+          <section class="admin-card admin-workspace-card dash-panel biz-panel biz-wide">
+            <header class="dash-panel-heading admin-workspace-heading biz-panel-head">
+              <h3 class="admin-card-title">Thu và hoàn theo thời gian</h3>
+              <label class="biz-panel-control admin-control-label">Gộp theo <select class="admin-select" data-biz-bucket><option value="day">Ngày</option><option value="week">Tuần</option><option value="month">Tháng</option></select></label>
+            </header>
+            <div class="admin-workspace-body biz-panel-body">
+              <div data-biz-panel="cash"></div>
+              <details class="biz-details biz-reading-details" data-biz-reading-details hidden><summary class="biz-summary">Lưu ý đối soát</summary><div data-biz-reading></div></details>
+            </div>
+          </section>
+          <div class="admin-card admin-workspace-card biz-group biz-wide">
+            ${panel('sources', 'Cơ cấu tiền thu')}
+            ${panel('insights', 'So với kỳ trước')}
+          </div>
           <section class="admin-card admin-workspace-card biz-panel biz-wide">
             <header class="admin-workspace-heading"><h3 class="admin-card-title">Giao dịch hoàn thành và khách quay lại</h3></header>
             <div class="admin-workspace-body" data-biz-analysis></div>
             <div class="admin-workspace-body admin-workspace-table-body" data-biz-transactions hidden></div>
           </section>
           <nav class="admin-pagination-bar biz-wide" data-biz-transactions-pagination hidden aria-label="Phân trang giao dịch"></nav>
-          <section class="admin-card admin-workspace-card dash-panel biz-panel biz-wide" id="bizProfitPanel">
-            <header class="dash-panel-heading admin-workspace-heading biz-panel-head biz-finance-head">
-              <h3 class="admin-card-title">Kế hoạch thu và chi</h3>
-              <div class="biz-finance-actions">
-                <span id="bizProfitStatusBadge" class="biz-caption" role="status">Chưa đủ dữ liệu</span>
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnEditPlan">Chỉnh kế hoạch</button>
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnExportProfitReport" disabled>Xuất ước tính</button>
-              </div>
-            </header>
-            <div class="admin-workspace-body biz-panel-body biz-finance-body">
-              <div data-biz-reading></div>
-              <div id="bizTargetBody"></div>
-              <div data-biz-panel="profit"></div>
-            </div>
-          </section>
-
-          <section class="admin-card admin-workspace-card dash-panel biz-panel biz-wide">
-            <header class="dash-panel-heading admin-workspace-heading biz-panel-head">
-              <h3 class="admin-card-title">Tiền thu theo thời gian</h3>
-              <label class="biz-panel-control admin-control-label">Gộp theo <select class="admin-select" data-biz-bucket><option value="day">Ngày</option><option value="week">Tuần</option><option value="month">Tháng</option></select></label>
-            </header>
-            <div class="admin-workspace-body biz-panel-body" data-biz-panel="cash"></div>
-          </section>
-          <div class="admin-card admin-workspace-card biz-group biz-wide">
-            ${panel('sources', 'Cơ cấu tiền thu')}
-            ${panel('insights', 'So với kỳ trước')}
-          </div>
           <div class="admin-card admin-workspace-card biz-group biz-wide">
           <div class="biz-wide biz-ranking-filter">
             <label class="biz-panel-control admin-control-label">Xếp hạng theo <select class="admin-select" data-biz-sort><option value="value">Giá trị dòng giao dịch</option><option value="quantity">Số lượng</option></select></label>
@@ -124,15 +113,30 @@
           ${panel('services', 'Dịch vụ nổi bật')}
           </div>
           <div class="admin-card admin-workspace-card biz-group biz-wide">
-          ${panel('customers', 'Khách hàng mới')}
+          ${panel('customers', 'Khách hàng', false, '', '<div class="biz-customer-metrics admin-workspace-body" role="group" aria-label="Chỉ số khách hàng" data-biz-customer-kpis></div>')}
           ${panel('membership', 'Hạng thành viên hiện tại')}
           </div>
           <div class="admin-card admin-workspace-card biz-group biz-wide">
           ${panel('vouchers', 'Sử dụng voucher')}
           ${panel('points', 'Biến động điểm thưởng')}
           </div>
+          <section class="admin-card admin-workspace-card dash-panel biz-panel biz-wide" id="bizProfitPanel">
+            <header class="dash-panel-heading admin-workspace-heading biz-panel-head biz-finance-head">
+              <h3 class="admin-card-title">Kế hoạch thu và chi</h3>
+              <div class="biz-finance-actions">
+                <span id="bizProfitStatusBadge" class="biz-caption" role="status"></span>
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnEditPlan">Chỉnh kế hoạch</button>
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnExportProfitReport" disabled hidden>Xuất ước tính</button>
+              </div>
+            </header>
+            <div class="admin-workspace-body biz-panel-body biz-finance-body">
+              <div id="bizTargetBody"></div>
+              <div data-biz-panel="profit"></div>
+            </div>
+          </section>
+
           <details class="admin-card admin-workspace-card biz-wide biz-finance-details" data-biz-finance hidden>
-            <summary class="admin-card-title">Sổ tài chính</summary>
+            <summary class="admin-card-title">Sổ tài chính <span class="biz-finance-toggle" aria-hidden="true"><span>Mở sổ</span><span>Thu gọn</span></span></summary>
             <div>
               <section class="biz-panel" data-finance-root></section>
             </div>
@@ -222,14 +226,14 @@
         let html = `<div class="biz-comparison-total"><span>Thu thuần kỳ này</span><strong>${money(current)}</strong></div>`;
         if (!previousReady) return html + status('previous');
         const previous = state.data.analysis.cash.previous.net;
-        html += percentage === null ? '<p class="biz-caption">Không tính tỷ lệ tăng trưởng vì thu thuần kỳ trước bằng 0.</p>' : `<span class="biz-comparison-badge ${percentage < 0 ? 'is-down' : ''}">${percentage > 0 ? '↑ Tăng' : percentage < 0 ? '↓ Giảm' : 'Không đổi'}${percentage !== 0 ? ' ' + num(Math.abs(percentage)) + '%' : ''} so với kỳ trước</span>`;
+        html += percentage === null ? '<p class="biz-caption">Không tính tỷ lệ tăng trưởng vì thu thuần kỳ trước bằng 0.</p>' : `<span class="biz-comparison-badge ${percentage > 0 ? 'is-up' : percentage < 0 ? 'is-down' : ''}">${percentage > 0 ? '↑ Tăng' : percentage < 0 ? '↓ Giảm' : 'Không đổi'}${percentage !== 0 ? ' ' + num(Math.abs(percentage)) + '%' : ''} so với kỳ trước</span>`;
         const min = Math.min(0, previous, current), max = Math.max(0, previous, current);
         const scale = Math.max(max - min, 1);
         const y = value => 35 + (max - value) / scale * 135;
         const zero = y(0);
         const periods = [
             { x: 110, value: previous, color: '#AEC8B9', label: 'Kỳ trước', from: M.dayKey(state.data.analysis.previous_from), to: M.dayKey(new Date(Math.max(Date.parse(state.data.analysis.previous_from), Date.parse(state.data.analysis.previous_to) - 1))) },
-            { x: 310, value: current, color: '#236B48', label: 'Kỳ này', from: M.dayKey(state.data.analysis.from), to: M.dayKey(new Date(Math.max(Date.parse(state.data.analysis.from), Date.parse(state.data.analysis.to) - 1))) }
+            { x: 310, value: current, color: current < 0 ? 'var(--ops-bad)' : current < previous ? 'var(--ops-warn)' : 'var(--ops-ok)', label: 'Kỳ này', from: M.dayKey(state.data.analysis.from), to: M.dayKey(new Date(Math.max(Date.parse(state.data.analysis.from), Date.parse(state.data.analysis.to) - 1))) }
         ];
         html += `<svg class="biz-comparison-chart" viewBox="0 0 440 240" role="img" aria-label="So sánh thu thuần: kỳ trước ${money(previous)}, kỳ này ${money(current)}"><text x="12" y="16">VNĐ</text><line x1="35" x2="415" y1="${zero}" y2="${zero}" stroke="#ECF2EE"/><text x="25" y="${zero + 4}" text-anchor="end">0</text>${periods.map(p => `<rect x="${p.x - 35}" y="${Math.min(zero, y(p.value))}" width="70" height="${Math.abs(y(p.value) - zero)}" fill="${p.color}"><title>${p.label}: ${money(p.value)}</title></rect><text x="${p.x}" y="${p.value >= 0 ? y(p.value) - 8 : y(p.value) + 15}" text-anchor="middle" class="biz-comparison-value">${money(p.value)}</text><text x="${p.x}" y="205" text-anchor="middle">${p.label}</text><text x="${p.x}" y="225" text-anchor="middle">${date(p.from)} – ${date(p.to)}</text>`).join('')}</svg>`;
         const difference = current - previous;
@@ -241,10 +245,12 @@
         const target = $('[data-biz-analysis]'), message = status('analysis'), data = state.data.analysis;
         if (message || !data) { target.innerHTML = message; return; }
         const summary = (kind, period) => data.transactions.find(row => row.kind === kind && row.period === period) || { count: 0, value: 0, average: null, missing_lines: 0 };
+        const changes = [];
         const rows = [['order', 'Đơn bán hàng'], ['appointment', 'Ca dịch vụ']].map(([kind, label]) => {
             const current = summary(kind, 'current'), previous = summary(kind, 'previous'), complete = !current.missing_lines && !previous.missing_lines;
             const parts = complete ? M.decompose(current, previous) : null;
-            return `<tr><td>${label}</td><td>${num(current.count)}</td><td>${current.count && !current.missing_lines ? money(current.value / current.count) : '—'}</td><td>${current.missing_lines ? 'Chưa đủ dữ liệu' : money(current.value)}</td><td>${complete ? money(current.value - previous.value) : '—'}</td><td><button class="admin-text-action" type="button" data-biz-drill="${kind}">Xem giao dịch</button></td></tr><tr><td colspan="6"><span class="admin-table__secondary">${parts ? `Chênh lệch do số giao dịch ${money(parts.volume)}; do giá trị bình quân ${money(parts.average)}.` : 'Chưa đủ giao dịch ở cả hai kỳ để tách phần do số giao dịch và giá trị bình quân.'}${current.missing_lines || previous.missing_lines ? ` Có hồ sơ thiếu dòng chi tiết trong kỳ này hoặc kỳ trước, cần đối soát.` : ''}</span></td></tr>`;
+            changes.push(`<p class="biz-caption"><strong>${label}</strong> · ${parts ? `Chênh lệch do số giao dịch ${money(parts.volume)}; do giá trị bình quân ${money(parts.average)}.` : 'Chưa đủ giao dịch ở cả hai kỳ để tách phần do số giao dịch và giá trị bình quân.'}${current.missing_lines || previous.missing_lines ? ` Có hồ sơ thiếu dòng chi tiết trong kỳ này hoặc kỳ trước, cần đối soát.` : ''}</p>`);
+            return `<tr role="row"><th scope="row" role="rowheader">${label}</th><td role="cell" data-label="Đã hoàn thành">${num(current.count)}</td><td role="cell" data-label="Bình quân">${current.count && !current.missing_lines ? money(current.value / current.count) : '—'}</td><td role="cell" data-label="Giá trị dòng">${current.missing_lines ? 'Chưa đủ dữ liệu' : money(current.value)}</td><td role="cell" data-label="Chênh lệch">${complete ? money(current.value - previous.value) : '—'}</td><td role="cell" data-label=""><button class="admin-text-action" type="button" data-biz-drill="${kind}">Xem giao dịch</button></td></tr>`;
         }).join('');
         const customers = data.customers, o = data.outcomes;
         const proof = (kind, label) => `<button class="admin-text-action" type="button" data-biz-drill="${kind}" aria-label="Xem ${drillLabels[kind].toLocaleLowerCase('vi-VN')}">${label}</button>`;
@@ -252,11 +258,13 @@
         const missingDates = (data.missing_completion_dates?.orders || 0) + (data.missing_completion_dates?.appointments || 0);
         const figure = (label, value) => `<div><dt>${label}</dt><dd>${value}</dd></div>`;
         target.innerHTML = `<div class="biz-analysis-tools"><span class="biz-caption">Giá trị dòng trước voucher và hoàn tiền.</span><div><button class="admin-text-action" type="button" data-biz-drill="receipt">Xem khoản thu</button><button class="admin-text-action" type="button" data-biz-drill="refund">Xem khoản hoàn</button></div></div>
-            <div class="table-responsive-wrapper"><table class="admin-table biz-analysis-table"><thead><tr><th>Nhóm</th><th>Đã hoàn thành</th><th>Bình quân</th><th>Giá trị dòng</th><th>Chênh lệch</th><th>Đối chiếu</th></tr></thead><tbody>${rows}</tbody></table></div>
-            <dl class="biz-evidence-stats">${figure('Khách có giao dịch hoàn thành', proof('customers', num(customers.eligible)))}${figure('Lần đầu trong lịch sử quan sát', proof('first_observed', num(customers.first_observed)))}${figure('Khách trước kỳ quay lại', proof('returned_from_before', num(customers.returned_from_before)))}${figure('Khách giao dịch từ hai lần trong kỳ', proof('repeated_in_period', num(customers.repeated_in_period)))}</dl>
-            <dl class="biz-evidence-stats biz-outcome-stats">${figure('Đơn tạo trong kỳ hiện đã hủy', proportion('orders_cancelled', 'orders_created', o.orders_cancelled, o.orders_created))}${figure('Lịch tạo trong kỳ hiện đã hủy', proportion('appointments_cancelled', 'appointments_created', o.appointments_cancelled, o.appointments_created))}${figure('Lịch tạo trong kỳ có khách vắng', proportion('appointments_no_show', 'appointments_created', o.appointments_no_show, o.appointments_created))}</dl>
-            <details class="biz-details"><summary class="biz-summary">Cơ sở đối chiếu</summary><p class="biz-caption">${Date.parse(data.from) > Date.now() ? 'Kỳ chưa bắt đầu.' : data.partial ? 'Kỳ đang chạy, so sánh tới cùng thời điểm.' : 'Kỳ đã kết thúc.'} ${esc(at(data.from))} – ${esc(at(data.to))}. Giá trị dòng hàng/dịch vụ hoàn thành theo ngày giao/bàn giao, chưa trừ voucher và hoàn tiền; không phải tiền thực thu.</p><p class="biz-caption">Lịch sử quan sát từ ${data.history_from ? esc(at(data.history_from)) : 'chưa có giao dịch'}; không khẳng định lịch sử trước hệ thống. Tỷ lệ hủy và vắng dùng hồ sơ tạo trong kỳ, theo trạng thái hiện tại; không phải số lần hủy phát sinh trong kỳ. Bấm số để xem hồ sơ ở tử số hoặc mẫu số.</p></details>
-            ${missingDates ? `<p class="biz-error">${num(missingDates)} hồ sơ hoàn thành thiếu ngày hoàn tất, chưa thể đưa vào kỳ; cần đối soát tại phân hệ gốc.</p>` : ''}`;
+            <div class="table-responsive-wrapper"><table class="admin-table biz-analysis-table" role="table"><thead><tr><th>Nhóm</th><th>Đã hoàn thành</th><th>Bình quân</th><th>Giá trị dòng</th><th>Chênh lệch</th><th>Đối chiếu</th></tr></thead><tbody role="rowgroup">${rows}</tbody></table></div>
+            <div class="biz-evidence-groups">
+              <section><h4 class="biz-evidence-heading">Khách hàng</h4><dl class="biz-evidence-stats">${figure('Khách có giao dịch hoàn thành', proof('customers', num(customers.eligible)))}${figure('Lần đầu trong lịch sử quan sát', proof('first_observed', num(customers.first_observed)))}${figure('Khách trước kỳ quay lại', proof('returned_from_before', num(customers.returned_from_before)))}${figure('Khách giao dịch từ hai lần trong kỳ', proof('repeated_in_period', num(customers.repeated_in_period)))}</dl></section>
+              <section><h4 class="biz-evidence-heading">Hủy và vắng</h4><dl class="biz-evidence-stats">${figure('Đơn tạo trong kỳ hiện đã hủy', proportion('orders_cancelled', 'orders_created', o.orders_cancelled, o.orders_created))}${figure('Lịch tạo trong kỳ hiện đã hủy', proportion('appointments_cancelled', 'appointments_created', o.appointments_cancelled, o.appointments_created))}${figure('Lịch tạo trong kỳ có khách vắng', proportion('appointments_no_show', 'appointments_created', o.appointments_no_show, o.appointments_created))}</dl></section>
+            </div>
+            <details class="biz-details"><summary class="biz-summary">Cơ sở đối chiếu</summary>${changes.join('')}<p class="biz-caption">${Date.parse(data.from) > Date.now() ? 'Kỳ chưa bắt đầu.' : data.partial ? 'Kỳ đang chạy, so sánh tới cùng thời điểm.' : 'Kỳ đã kết thúc.'} ${esc(at(data.from))} – ${esc(at(data.to))}. Giá trị dòng hàng/dịch vụ hoàn thành theo ngày giao/bàn giao, chưa trừ voucher và hoàn tiền; không phải tiền thực thu.</p><p class="biz-caption">Lịch sử quan sát từ ${data.history_from ? esc(at(data.history_from)) : 'chưa có giao dịch'}; không khẳng định lịch sử trước hệ thống. Tỷ lệ hủy và vắng dùng hồ sơ tạo trong kỳ, theo trạng thái hiện tại; không phải số lần hủy phát sinh trong kỳ. Bấm số để xem hồ sơ ở tử số hoặc mẫu số.</p></details>
+            ${missingDates ? `<p class="biz-caption biz-reconcile-note">${num(missingDates)} hồ sơ hoàn thành thiếu ngày hoàn tất, chưa thể đưa vào kỳ; cần đối soát tại phân hệ gốc.</p>` : ''}`;
     }
 
     async function loadTransactionPage(kind, page = 1) {
@@ -297,14 +305,18 @@
         const series = [['collected', 'Tiền thu', '#236B48', ''], ['refunded', 'Hoàn tiền', '#729BB1', '6 3'], ['net', 'Thu thuần', '#4F7A65', '2 3']];
         const values = rows.flatMap(r => series.map(([key]) => Number(r[key])));
         const min = Math.min(0, ...values), max = Math.max(1, ...values), span = max - min;
-        const width = Math.max(600, Math.round(state.root.clientWidth - 38));
-        const right = width - 48;
-        const x = i => 90 + i / Math.max(1, rows.length - 1) * (right - 90);
-        const y = value => 225 - (value - min) / span * 195;
-        return `<div class="biz-chart-legend">${series.map(([, name, color, dash]) => `<span><i style="border-color:${color};border-top-style:${dash ? 'dashed' : 'solid'}"></i>${name}</span>`).join('')}</div><div class="biz-chart-scroll"><svg class="biz-chart" viewBox="0 0 ${width} 270" role="img" aria-label="Tiền thu, hoàn tiền và thu thuần, đơn vị VNĐ"><text x="12" y="15">VNĐ</text>
-          ${[0, 1, 2, 3].map(i => { const v = min + span * i / 3; return `<line x1="90" x2="${right}" y1="${y(v)}" y2="${y(v)}" stroke="#ECF2EE"/><text x="80" y="${y(v) + 4}" text-anchor="end">${num(Math.round(v))}</text>`; }).join('')}
+        const width = Math.max(240, Math.round(state.root.clientWidth - 30));
+        const compact = width < 560;
+        const left = compact ? 64 : 90;
+        const height = compact ? 216 : 270;
+        const right = width - (compact ? 22 : 48);
+        const x = i => rows.length === 1 ? (left + right) / 2 : left + i / (rows.length - 1) * (right - left);
+        const y = value => height - 45 - (value - min) / span * (height - 75);
+        const labelIndices = [...new Set(Array.from({ length: compact ? 4 : 7 }, (_, i) => Math.round(i * (rows.length - 1) / (compact ? 3 : 6))))];
+        return `<div class="biz-chart-legend">${series.map(([, name, color, dash]) => `<span><i style="border-color:${color};border-top-style:${dash ? 'dashed' : 'solid'}"></i>${name}</span>`).join('')}</div><div class="biz-chart-scroll"><svg class="biz-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Tiền thu, hoàn tiền và thu thuần, đơn vị VNĐ"><text x="12" y="15">VNĐ</text>
+          ${[0, 1, 2, 3].map(i => { const v = min + span * i / 3; return `<line x1="${left}" x2="${right}" y1="${y(v)}" y2="${y(v)}" stroke="#ECF2EE"/><text x="${left - 8}" y="${y(v) + 4}" text-anchor="end">${num(Math.round(v))}</text>`; }).join('')}
           ${series.map(([key, label, color, dash]) => `<polyline fill="none" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-dasharray="${dash}" points="${rows.map((r, i) => `${x(i)},${y(r[key])}`).join(' ')}"/>${rows.map((r, i) => Number(r[key]) !== 0 ? `<circle tabindex="0" cx="${x(i)}" cy="${y(r[key])}" r="2.5" fill="${color}"><title>${esc(date(r.day))} · ${label}: ${money(r[key])}</title></circle>` : '').join('')}`).join('')}
-          ${rows.filter((r, i) => i % Math.max(1, Math.ceil(rows.length / 6)) === 0 || i === rows.length - 1).map(r => `<text x="${x(rows.indexOf(r))}" y="250" text-anchor="middle">${esc(date(r.day))}</text>`).join('')}</svg></div>
+          ${labelIndices.map(i => `<text x="${x(i)}" y="${height - 20}" text-anchor="middle">${esc(compact ? date(rows[i].day).slice(0, 5) : date(rows[i].day))}</text>`).join('')}</svg></div>
           <details class="biz-details"><summary class="biz-summary">Xem bảng số liệu chi tiết</summary><div class="biz-table-wrap table-responsive-wrapper"><table class="admin-table"><thead><tr><th>Kỳ</th><th>Tiền thu</th><th>Hoàn tiền</th><th>Thu thuần</th></tr></thead><tbody>${rows.map(r => `<tr><td>${date(r.day)}</td><td>${money(r.collected)}</td><td>${money(r.refunded)}</td><td>${money(r.net)}</td></tr>`).join('')}</tbody></table></div></details>`;
     }
     function showToast(msg, type = 'success') {
@@ -400,6 +412,7 @@
             const value = M.rank(d.services, 'services').reduce((sum, row) => sum + row.value, 0);
             if (value > 0) notes.push(`Các dịch vụ nổi bật có ${money(value)} giá trị giao dịch hoàn thành nhưng tiền thu dịch vụ trong kỳ bằng 0. Cần đối soát ngày ghi nhận và liên kết thanh toán.`);
         }
+        body.closest('[data-biz-reading-details]').hidden = notes.length === 0;
         body.innerHTML = notes.length ? `<ul class="biz-reading">${notes.map(note => `<li>${esc(note)}</li>`).join('')}</ul>` : '';
     }
 
@@ -410,7 +423,8 @@
         const target = Number(plan.target_net_receipts), net = Number(state.data.cash.net);
         if (!Number.isFinite(target) || target <= 0 || !Number.isFinite(net)) { body.innerHTML = ''; return; }
         const percent = net / target * 100, gap = target - net;
-        body.innerHTML = `<div class="biz-target-heading"><span>Mục tiêu thu thuần <strong>${money(net)}</strong> / ${money(target)}</span><span>Đạt ${num(percent)}% · ${gap > 0 ? 'Còn thiếu ' + money(gap) : gap < 0 ? 'Vượt ' + money(-gap) : 'Đã đạt mục tiêu'}</span></div><div class="biz-target-track" role="progressbar" aria-label="Tiến độ mục tiêu thu thuần" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100, Math.max(0, percent))}" aria-valuetext="${num(percent)}%"><span style="width:${Math.min(100, Math.max(0, percent))}%"></span></div>`;
+        const missed = gap > 0 && state.range.to < M.dayKey(new Date());
+        body.innerHTML = `<div class="biz-target-heading${missed ? ' is-attention' : ''}"><span>Mục tiêu thu thuần <strong>${money(net)}</strong> / ${money(target)}</span><span>Đạt ${num(percent)}% · ${gap > 0 ? 'Còn thiếu ' + money(gap) : gap < 0 ? 'Vượt ' + money(-gap) : 'Đã đạt mục tiêu'}</span></div><div class="biz-target-track${missed ? ' is-attention' : ''}" role="progressbar" aria-label="Tiến độ mục tiêu thu thuần" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100, Math.max(0, percent))}" aria-valuetext="${num(percent)}%"><span style="width:${Math.min(100, Math.max(0, percent))}%"></span></div>`;
     }
 
     function renderProfitability() {
@@ -418,10 +432,13 @@
         if (!body) return;
         const estimate = financeEstimate();
         state.lastProfitCalc = estimate;
-        $('#btnExportProfitReport').disabled = !estimate;
+        const exportButton = $('#btnExportProfitReport');
+        exportButton.disabled = !estimate;
+        exportButton.hidden = !estimate;
         const edit = $('#btnEditPlan');
         edit.hidden = !canEditPlan();
         edit.disabled = state.loading.has('plan') || !!state.errors.plan;
+        edit.textContent = state.data.plan ? 'Chỉnh kế hoạch' : 'Lập kế hoạch';
         badge.className = 'biz-finance-status';
         const pending = ['cash', 'sources', 'plan'].find(key => state.loading.has(key));
         const failed = ['cash', 'sources', 'plan'].find(key => state.errors[key]);
@@ -432,8 +449,8 @@
             return;
         }
         if (!estimate) {
-            badge.textContent = 'Chưa đủ dữ liệu';
-            body.innerHTML = `<p class="biz-caption">${state.data.plan ? 'Chưa đủ chi phí dự kiến hoặc dữ liệu tiền thu để lập ước tính.' : 'Chưa có kế hoạch thu và chi cho kỳ này.'}</p><p class="biz-caption">Ước tính dựa trên kế hoạch đã nhập. Xem số thực và tình trạng đối soát ở phần Tài chính thực tế.</p>`;
+            badge.textContent = '';
+            body.innerHTML = `<p class="biz-caption">${state.data.plan ? 'Chưa đủ chi phí dự kiến hoặc dữ liệu tiền thu để lập ước tính.' : 'Chưa có kế hoạch thu và chi cho kỳ này.'}</p>`;
             return;
         }
         badge.textContent = estimate.balance < 0 ? 'Ước tính thiếu hụt' : estimate.balance > 0 ? 'Ước tính thặng dư' : 'Cân bằng theo kế hoạch';
@@ -469,27 +486,30 @@
         const value = (key, fn, unit = num) => state.loading.has(key) || state.errors[key] || !d[key] ? '—' : unit(fn(d[key]));
         const percentage = d.analysis && !state.errors.analysis && !state.loading.has('analysis') ? M.growth(d.analysis.cash.current.net, d.analysis.cash.previous.net) : null;
         const cards = [
-            ['Tiền thu thành công', value('cash', d => d.collected, money), 'Giao dịch theo ngày thu tiền'],
-            ['Hoàn tiền thành công', value('cash', d => d.refunded, money), 'Bao gồm hoàn tiền một phần'],
-            ['Tiền thu thuần', value('cash', d => d.net, money), 'Tiền thu trừ tổng hoàn tiền'],
-            ['Tăng trưởng thu thuần', percentage === null ? '—' : (percentage > 0 ? '+' : '') + num(percentage) + '%', percentage !== null ? (percentage >= 0 ? 'Tăng so với kỳ trước' : 'Giảm so với kỳ trước') : 'Chưa đủ dữ liệu so sánh'],
-            ['Tiền thu sản phẩm', value('sources', d => d.products, money), 'Thu từ đơn bán lẻ phụ kiện'],
-            ['Tiền thu dịch vụ', value('sources', d => d.services, money), 'Thu từ các ca dịch vụ'],
-            ['Khách hàng mới', value('customers', d => M.customerCount(d)), 'Ghi nhận hồ sơ trong kỳ'],
-            ['Khách giao dịch lặp lại', value('returning', d => d.rate, rate => rate === null ? '—' : num(rate) + '%'), d.returning ? `${num(d.returning.returning)} / ${num(d.returning.eligible)} khách giao dịch trong kỳ` : 'Khách có từ hai giao dịch hoàn thành trong kỳ']
+            ['Tiền thu', value('cash', d => d.collected, money), 'Trong kỳ đã chọn'],
+            ['Tiền hoàn', value('cash', d => d.refunded, money), 'Trong kỳ đã chọn'],
+            ['Thực thu ròng', value('cash', d => d.net, money), 'Trong kỳ đã chọn'],
+            ['Biến động thực thu', percentage === null ? '—' : (percentage > 0 ? '+' : '') + num(percentage) + '%', 'So với kỳ trước']
         ];
         const metrics = getMetrics();
-        const metricKeys = ['cash', 'cash', 'cash', 'analysis', 'sources', 'sources', 'customers', 'returning'];
-        $('[data-biz-kpis]').innerHTML = cards.map(([label, val, sub], i) => {
-          const key = metricKeys[i], loading = state.loading.has(key);
+        const renderMetric = (label, val, metric, key, sub = '', scope = '', trend = '') => {
+          const loading = state.loading.has(key);
           const error = state.errors[key];
           return `
-          <div class="kpi-card biz-kpi" data-metric="${metrics[i].id}" data-status="${metrics[i].status}" aria-busy="${loading}"${error ? ` title="${esc(error)}"` : ''}>
-            <span class="kpi-label" title="${esc(metrics[i].definition)}">${label}</span>
-            <strong class="kpi-val">${loading ? '<span class="biz-kpi-skeleton" aria-hidden="true"></span><span class="ops-sr-only">Đang tải</span>' : error ? '<span class="biz-kpi-error">Chưa tải được</span>' : esc(val)}</strong>
-            ${i === 7 && !loading && !error ? `<span class="kpi-sub">${esc(sub)}</span>` : ''}
+          <div class="kpi-card biz-kpi" data-metric="${metric.id}" data-status="${metric.status}" aria-busy="${loading}"${error ? ` title="${esc(error)}"` : ''}>
+            <span class="kpi-label" title="${esc(metric.definition)}">${label}</span>
+            <strong class="kpi-val ${trend}">${loading ? '<span class="biz-kpi-skeleton" aria-hidden="true"></span><span class="ops-sr-only">Đang tải</span>' : error ? '<span class="biz-kpi-error">Chưa tải được</span>' : esc(val)}</strong>
+            ${scope ? `<span class="ops-kpi-scope">${scope}</span>` : ''}
+            ${sub && !loading && !error ? `<span class="kpi-sub">${esc(sub)}</span>` : ''}
           </div>`;
-        }).join('');
+        };
+        const trend = percentage > 0 ? 'is-up' : percentage < 0 ? 'is-down' : '';
+        const netTone = cashReady && d.cash.net < 0 ? 'is-loss' : '';
+        $('[data-biz-kpis]').innerHTML = cards.map(([label, val, scope], i) => renderMetric(label, val, metrics[i], i === 3 ? 'analysis' : 'cash', '', scope, i === 3 ? trend : i === 2 ? netTone : '')).join('');
+        const repeated = value('returning', d => d.rate, rate => rate === null ? '—' : num(rate) + '%');
+        const returningCaption = d.returning ? `${num(d.returning.returning)} / ${num(d.returning.eligible)} khách giao dịch trong kỳ` : '';
+        $('[data-biz-customer-kpis]').innerHTML = renderMetric('Khách hàng mới', value('customers', d => M.customerCount(d)), metrics[6], 'customers')
+            + renderMetric('Khách giao dịch lặp lại', repeated, metrics[7], 'returning', returningCaption);
 
         for (const key of keys.filter(k => !['previous', 'returning'].includes(k))) {
             const target = $(`[data-biz-panel="${key}"]`);
@@ -497,7 +517,7 @@
             const message = status(key);
             target.setAttribute('aria-busy', String(state.loading.has(key)));
             if (message || !d[key]) { target.innerHTML = message; continue; }
-            if (key === 'cash') target.innerHTML = lineChart(M.bucket(d.cash.days, state.bucket)) + (d.cash.undated ? '<p class="biz-error">Có giao dịch thiếu ngày ghi nhận, chưa được tính vào biểu đồ.</p>' : '');
+            if (key === 'cash') target.innerHTML = lineChart(M.bucket(d.cash.days, state.bucket)) + (d.cash.undated ? '<p class="biz-caption biz-reconcile-note">Có giao dịch thiếu ngày ghi nhận, chưa được tính vào biểu đồ.</p>' : '');
             if (key === 'sources') target.innerHTML = sourceDonut(d.sources);
             if (key === 'products' || key === 'services') target.innerHTML = ranking(key);
             if (key === 'customers') target.innerHTML = customerColumns(customersByDay(d.customers));
@@ -511,7 +531,12 @@
         renderAnalysis();
         renderRevenueTarget();
         renderBusinessReading();
-        $('[data-biz-updated]').textContent = state.loading.size ? 'Đang cập nhật…' : state.updated ? `Cập nhật ${new Date(state.updated).toLocaleTimeString('vi-VN', { timeZone: M.zone })}${Object.keys(state.errors).length ? ' · Một số dữ liệu lỗi' : ''}` : 'Đã đồng bộ';
+        const syncStatus = $('[data-biz-updated]');
+        const hasErrors = Object.keys(state.errors).length > 0;
+        const updatedAt = state.updated && new Date(state.updated).toLocaleTimeString('vi-VN', { timeZone: M.zone, hour: '2-digit', minute: '2-digit' });
+        syncStatus.textContent = state.loading.size ? 'Đang cập nhật…' : hasErrors ? 'Chưa đồng bộ đủ' : updatedAt ? `Đã cập nhật · ${updatedAt}` : 'Đang tải';
+        syncStatus.classList.toggle('is-live', !!updatedAt && !state.loading.size && !hasErrors);
+        $('[data-biz-refresh]').disabled = state.loading.size > 0;
     }
 
     async function reload(requested = keys) {
@@ -599,6 +624,10 @@
     function click(event) {
         const button = event.target.closest('button');
         if (!button) return;
+        if (button.hasAttribute('data-biz-refresh')) {
+            if (!state.pending) return reload();
+            return;
+        }
         if (button.dataset.bizDrill) return loadTransactionPage(button.dataset.bizDrill);
         if (button.dataset.bizDrillPage && state.drill) return loadTransactionPage(state.drill.kind, Number(button.dataset.bizDrillPage));
         if (button.hasAttribute('data-biz-close-drill')) {

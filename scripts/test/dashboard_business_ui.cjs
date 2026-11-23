@@ -54,8 +54,9 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
             PawpalBusinessMetrics.load = async (...args) => {await gate;return window.originalMetricLoad(...args);};
             window.initialLoad = PawpalDashboardOverview.init();
         });
-        assert.equal(await page.locator('.biz-kpi[aria-busy="true"]').count(), 8);
-        assert.equal(await page.locator('.biz-kpi-skeleton').count(), 8);
+        assert.equal(await page.locator('[data-biz-kpis] .biz-kpi[aria-busy="true"]').count(), 4);
+        assert.equal(await page.locator('[data-biz-customer-kpis] .biz-kpi[aria-busy="true"]').count(), 2);
+        assert.equal(await page.locator('.biz-kpi-skeleton').count(), 6);
         assert.equal(await page.locator('[data-biz-panel="customers"] .biz-skeleton').count(), 1);
         assert.equal(await page.locator('[data-biz-panel="membership"] .biz-skeleton').count(), 1);
         assert.equal(await page.locator('[data-biz-panel="insights"] .biz-skeleton').count(), 1);
@@ -88,7 +89,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         assert.equal(await page.locator('[data-biz-panel="insights"] [role="alert"]').count(), 0);
         assert.equal(await page.locator('.biz-kpi-error').count(), 3);
         await page.evaluate(async () => {PawpalBusinessMetrics.load = originalMetricLoad;await PawpalDashboardOverview.refresh();});
-        assert.equal(await page.locator('.biz-kpi').count(), 8);
+        assert.equal(await page.locator('.biz-kpi').count(), 6);
         // Customer-reference style parity is verified with the full production cascade
         // in dashboard_admin_style_ui.cjs, not against another Dashboard implementation.
         assert.match(await page.locator('.biz-kpi').nth(2).innerText(), /2\.250 đ/);

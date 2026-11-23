@@ -4204,22 +4204,44 @@
 
 .customers-module #subtab-tab-profile .profile-quick-actions-bar {
     border: none;
+    padding-bottom: 8px;
+}
+
+.customers-module #subtab-tab-profile .drawer-user-headline { align-items: center; }
+.customers-module .customer-profile-avatar {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #eef5f1;
+    color: #236b48;
+    font-size: 13px;
+    font-weight: 700;
 }
 
 .customers-module #subtab-tab-profile .drawer-subtabs-bar {
     border: none;
+    min-height: 0;
+    margin-top: 4px;
 }
 
 .customers-module #subtab-tab-profile .drawer-tab-btn {
-    padding-right: 0;
-    padding-left: 0;
+    padding: 8px 0;
 }
 
 .customers-module #subtab-tab-profile .v7-customer-profile-columns {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
     gap: 24px;
     padding-top: 12px;
+}
+
+.customers-module #subtab-tab-profile .v7-customer-profile-columns:has(#dtab-personal.active) {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    column-gap: clamp(24px, 4vw, 56px);
+    max-width: 1100px;
 }
 
 .customers-module #subtab-tab-profile .v7-customer-notes {
@@ -4232,8 +4254,28 @@
 }
 
 .customers-module #subtab-tab-profile .data-pair-row {
-    grid-template-columns: minmax(100px, 32%) minmax(0, 1fr);
+    grid-template-columns: clamp(95px, 24%, 140px) minmax(0, 1fr);
     column-gap: 12px;
+}
+
+.customers-module #subtab-tab-profile #dtab-personal .data-pair-row {
+    padding: 7px 0 !important;
+}
+
+.customers-module #subtab-tab-profile #dtab-personal { padding-top: 0; }
+
+.customers-module #subtab-tab-profile :is(#dtab-personal, .v7-customer-notes) .detail-box-title {
+    margin: 0 0 8px;
+}
+
+.customers-module #subtab-tab-profile .customer-profile-section-header {
+    margin-bottom: 0;
+}
+
+@media (max-width: 760px) {
+    .customers-module #subtab-tab-profile .v7-customer-profile-columns:has(#dtab-personal.active) {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 @media (max-width: 480px) {
@@ -4591,3 +4633,172 @@
 .customers-module .autocomplete-dropdown .autocomplete-item:hover,
 .customers-module .autocomplete-dropdown .autocomplete-item.active {background:#EEF5F1}
 .customers-module .autocomplete-dropdown .autocomplete-empty {padding:12px 14px;color:#4F7A65;font-size:12px;line-height:1.5}
+
+
+/* Customer directory and Pawpoint share the same workspace structure. */
+.customers-module #subtab-tab-pawpoint .v7-points-ledger {
+    border: 1px solid #d9e0db;
+    background: #fff;
+}
+.customers-module #subtab-tab-pawpoint .v7-points-ledger > .admin-card-header {
+    padding: 10px 14px;
+    border: 0;
+}
+.customers-module #subtab-tab-pawpoint .admin-card-title {
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: 0;
+}
+.customers-module #subtab-tab-pawpoint .pawpoint-toolbar { padding: 1px 14px 8px; }
+.customers-module #subtab-tab-pawpoint .pawpoint-toolbar :is(input, select) {
+    border-radius: var(--admin-radius, 9px);
+    font-size: 12px;
+}
+.customers-module #subtab-tab-pawpoint .v7-points-scroll {
+    border: 0;
+    background: transparent;
+    overscroll-behavior: contain auto;
+}
+.customers-module #subtab-tab-list .table-responsive-wrapper { overscroll-behavior: contain auto; }
+.customers-module .v7-tier-policy,
+.customers-module .customer-tier-policy-scroll {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+.customers-module .customer-tier-policy-scroll {
+    display: block;
+    overflow-x: auto;
+    overscroll-behavior: contain auto;
+}
+.customers-module #subtab-tab-pawpoint .customer-tier-policy-scroll .admin-table { min-width: 560px; }
+.customers-module .pawpoint-grid-layout > * { min-width: 0; }
+
+#modalAddCustomer .quick-add-optional > summary {
+    width: fit-content;
+    cursor: pointer;
+    color: var(--text-heading, #236B48);
+    font-weight: 600;
+}
+#modalAddCustomer .quick-add-optional-fields {
+    display: grid;
+    gap: 16px;
+    padding-top: 12px;
+}
+
+@media (max-width: 600px) {
+    .customers-module #subtab-tab-list .filter-row-top { gap: 8px; }
+    .customers-module #subtab-tab-list .filter-actions-right { margin-left: 0; }
+    .customers-module #subtab-tab-list .filter-row-bottom {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 10px;
+    }
+    .customers-module #subtab-tab-list .search-box-wrapper {
+        grid-column: 1 / -1;
+        max-width: none;
+        min-width: 0;
+    }
+    .customers-module #subtab-tab-list .filter-dropdown-group {
+        display: grid;
+        gap: 3px;
+        min-width: 0;
+    }
+    .customers-module #subtab-tab-list .filter-dropdown-group .admin-select {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+    .customers-module #subtab-tab-list #btnCustClearFilters:disabled { display: none !important; }
+
+    .customers-module #subtab-tab-profile .drawer-action-buttons { justify-content: flex-start; gap: 6px; }
+    .customers-module #subtab-tab-profile .drawer-action-buttons :is(.action-btn-pill, .admin-btn) {
+        padding: 5px 9px;
+        min-height: 32px;
+        font-size: 12px;
+    }
+    .customers-module #subtab-tab-profile .drawer-subtabs-bar {
+        min-height: 0;
+        margin-top: 4px;
+        flex-wrap: wrap;
+        column-gap: 14px;
+        row-gap: 4px;
+        overflow: visible;
+    }
+    .customers-module #subtab-tab-profile .drawer-tab-btn { padding-block: 8px; font-size: 12px; }
+
+    .customers-module #subtab-tab-list .table-responsive-wrapper,
+    .customers-module #subtab-tab-pawpoint .v7-points-scroll {
+        max-height: none;
+        min-height: 0;
+        overflow: visible;
+        scrollbar-gutter: auto;
+    }
+    .customers-module #subtab-tab-list #customerDataTable,
+    .customers-module #subtab-tab-pawpoint :is(.v7-points-scroll, .customer-tier-policy-scroll) > .admin-table { min-width: 0; }
+    .customers-module :is(#customerDataTable, .v7-points-scroll > .admin-table, .customer-tier-policy-scroll > .admin-table) thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+    .customers-module #customerTableTbody,
+    .customers-module #pawpointHistoryTbody,
+    .customers-module #membershipTierPolicyTbody { display: block; }
+    .customers-module #customerTableTbody tr[data-id],
+    .customers-module #pawpointHistoryTbody tr:has(td:nth-child(5)),
+    .customers-module #membershipTierPolicyTbody tr:has(td:nth-child(4)) {
+        display: grid;
+        align-items: start;
+        gap: 5px 12px;
+        padding: 10px 14px;
+        border-bottom: 1px solid #e6ece7;
+    }
+    .customers-module #customerTableTbody tr[data-id] {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    }
+    .customers-module #pawpointHistoryTbody tr:has(td:nth-child(5)) {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .customers-module #membershipTierPolicyTbody tr:has(td:nth-child(4)) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding-inline: 0;
+    }
+    .customers-module #subtab-tab-list #customerTableTbody tr[data-id] > td,
+    .customers-module #subtab-tab-pawpoint #pawpointHistoryTbody tr:has(td:nth-child(5)) > td,
+    .customers-module #subtab-tab-pawpoint #membershipTierPolicyTbody tr:has(td:nth-child(4)) > td {
+        display: block;
+        min-width: 0;
+        width: auto;
+        max-width: none;
+        padding: 0;
+        border: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    .customers-module #subtab-tab-list #customerTableTbody tr[data-id] > td:first-child {
+        border-inline-start: 0 !important;
+        grid-area: 4 / 1 / auto / 3;
+    }
+    .customers-module #customerTableTbody tr[data-id] > td:nth-child(2) { grid-area: 1 / 1 / auto / 3; }
+    .customers-module #customerTableTbody tr[data-id] > td:nth-child(3) { grid-area: 2 / 1; }
+    .customers-module #customerTableTbody tr[data-id] > td:nth-child(4) { grid-area: 2 / 2 / auto / 4; }
+    .customers-module #customerTableTbody tr[data-id] > td:nth-child(5) { grid-area: 3 / 1 / auto / 3; }
+    .customers-module #customerTableTbody tr[data-id] > td:nth-child(6) { grid-column: 1 / -1; }
+    .customers-module #subtab-tab-list #customerTableTbody tr[data-id] > td:nth-child(6):not(:has(.alert-indicator)) { display: none; }
+    .customers-module #customerTableTbody tr[data-id] > td:nth-child(7) { grid-area: 3 / 3; text-align: right; }
+    .customers-module #customerTableTbody tr[data-id] > td:nth-child(8) { grid-area: 1 / 3; justify-self: end; }
+    .customers-module #pawpointHistoryTbody tr:has(td:nth-child(5)) > td:nth-child(1) { grid-area: 2 / 1; color: var(--text-muted); font-size: 11px; }
+    .customers-module #pawpointHistoryTbody tr:has(td:nth-child(5)) > td:nth-child(2) { grid-area: 1 / 1; }
+    .customers-module #pawpointHistoryTbody tr:has(td:nth-child(5)) > td:nth-child(3) { grid-area: 1 / 2; text-align: right; }
+    .customers-module #pawpointHistoryTbody tr:has(td:nth-child(5)) > td:nth-child(4) { grid-area: 2 / 2; text-align: right; font-size: 11px; }
+    .customers-module #pawpointHistoryTbody tr:has(td:nth-child(5)) > td:nth-child(4)::before { content: "Số dư "; }
+    .customers-module #pawpointHistoryTbody tr:has(td:nth-child(5)) > td:nth-child(5) { grid-column: 1 / -1; color: var(--text-muted); }
+    .customers-module #pawpointHistoryTbody tr:has(td[colspan]) { display: block; }
+    .customers-module #pawpointHistoryTbody td[colspan] { display: block; }
+    .customers-module #membershipTierPolicyTbody tr:has(td:nth-child(4)) > td:is(:first-child, :last-child) { grid-column: 1 / -1; }
+    .customers-module #membershipTierPolicyTbody tr:has(td:nth-child(4)) > td:first-child { font-weight: 650; }
+    .customers-module #membershipTierPolicyTbody td:nth-child(2)::before { content: "Chi tiêu "; color: var(--text-muted); }
+    .customers-module #membershipTierPolicyTbody td:nth-child(3)::before { content: "Chiết khấu "; color: var(--text-muted); }
+}
