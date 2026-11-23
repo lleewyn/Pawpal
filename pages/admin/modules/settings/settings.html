@@ -664,12 +664,8 @@
                         </div>
                         <div class="form-group-item">
                             <label class="form-label-clean">Hạng thành viên</label>
-                            <select class="admin-select" id="inputVoucherTier" disabled title="Chưa áp dụng giới hạn voucher theo hạng trong phạm vi hiện tại">
-                                <option value="all">Tất cả khách hàng</option>
-                                <option value="Silver">Hạng Bạc trở lên</option>
-                                <option value="Gold">Hạng Vàng trở lên</option>
-                                <option value="VIP">Hạng Kim Cương (VIP)</option>
-                            </select>
+                            <select class="admin-select" id="inputVoucherTier"><option value="">Tất cả khách hàng</option></select>
+                            <p id="voucherTierError" class="settings-tier-error" role="alert"></p>
                         </div>
                     </div>
                     <div class="form-row-2col">

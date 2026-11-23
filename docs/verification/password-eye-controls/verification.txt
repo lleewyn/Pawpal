@@ -1,0 +1,3 @@
+PASS: Actual staff account form and personal password modal, eye controls inside all four inputs on desktop/mobile; show/hide retains field value; labels and pressed state update; no separate text button row.
+PASS: Personal password close/reopen clears values and returns to hidden state. Temporary visibility input never persisted to localStorage/sessionStorage.
+No password submitted, account created, role or password changed. No QA password included in screenshots or report.

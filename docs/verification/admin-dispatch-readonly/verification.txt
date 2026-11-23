@@ -1,0 +1,5 @@
+READ-ONLY CONFIRMATION
+Actual reported appointment: BKG-B7CA348564A14998AB71EA393BCCDFE8
+Khanh: Trùng lịch BKG-2D41B195C96B48569CA9F24AFBAB5F12 từ 09:00 23/11/2026 đến 17:40 24/11/2026.
+Current local source already contains migration 278 and precise diagnostics; no new assignment-eligibility defect established.
+Actual modal shows the reason and blocks conflicting assignment. No writes, no testcase replay, no new deployment.

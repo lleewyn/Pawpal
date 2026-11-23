@@ -2594,6 +2594,9 @@
 .staff-module #staffAccessDetails .admin-btn { justify-self: start; }
 .staff-module #staffModalForm .form-group-item { min-width: 0; }
 .staff-module #staffModalForm .admin-input, .staff-module #staffModalForm .admin-select { min-width: 0; max-width: 100%; }
+.staff-module #staffInputPosition + .admin-input { width: 100%; }
+.staff-module .staff-job-title-label { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.staff-module .staff-job-title-label .text-btn { padding: 0; border: none; background: transparent; color: #236B48; font: inherit; font-size: 12px; cursor: pointer; }
 @media (max-width: 600px) {
     .staff-module #staffModalForm .form-row-2col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
     .staff-module #staffModalForm .account-toggle-row { flex-direction: column; align-items: flex-start; gap: 12px; }
@@ -2603,15 +2606,29 @@
 }
 .staff-module .staff-recurring-panel { padding: 20px 24px; border: none; background: transparent; }
 .staff-module .staff-recurring-panel[hidden] { display: none !important; }
+.staff-module .staff-recurring-panel > h3 { margin: 0 0 8px; color: #236B48; font-size: 16px; }
+.staff-module .staff-recurring-form input[type="checkbox"] { accent-color: #236B48; }
 .staff-module .staff-recurring-form { display: grid; gap: 16px; }
-.staff-module .staff-recurring-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.staff-module .staff-recurring-form > .form-group-item:first-child { width: 100%; max-width: 320px; }
+.staff-module .staff-recurring-form > .form-group-item:first-child :is(.admin-input,.admin-select) { width: 100%; }
+.staff-module .staff-recurring-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; width: 100%; max-width: 600px; }
 .staff-module .staff-recurring-fields label { display: block; color: #236B48; }
-.staff-module .staff-recurring-fields input { display: block; margin-top: 6px; }
+.staff-module .staff-recurring-fields input { display: block; width: 100%; min-width: 0; margin-top: 6px; }
 .staff-module .staff-recurring-days,.staff-module .staff-recurring-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.staff-module .staff-recurring-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; border: none; background: transparent; }
-.staff-module .staff-recurring-row p { margin: 4px 0; color: #4F7A65; font-size: 12px; }
+.staff-module .staff-recurring-list { min-width: 0; margin-top: 24px; padding: 0; overflow: hidden; border: 1px solid #ECF2EE; border-radius: 9px; background: rgba(255,255,255,.70); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.staff-module .staff-recurring-list .admin-card-title { margin: 0; padding: 18px 20px; color: #236B48; font-size: 16px; }
+.staff-module .staff-recurring-list .table-responsive-wrapper { width: 100%; overflow-x: auto; overscroll-behavior: contain; background: transparent; }
+.staff-module .staff-recurring-table { width: 100%; min-width: 1000px; border-collapse: collapse; background: transparent; }
+.staff-module .staff-recurring-table th,.staff-module .staff-recurring-table td { padding: 12px 16px; text-align: left; vertical-align: middle; line-height: 1.5; }
+.staff-module .staff-recurring-table th { color: #236B48; background: rgba(238,245,241,.75); text-transform: none; }
+.staff-module .staff-recurring-table th:first-child { border-left: 3px solid var(--table-header-bg,rgba(238,245,241,.75)); }
+.staff-module .staff-recurring-table tbody,.staff-module .staff-recurring-table tr,.staff-module .staff-recurring-table td { background: transparent; }
+.staff-module .staff-recurring-table td:first-child { border-left: 3px solid transparent; }
+.staff-module .staff-recurring-nowrap { white-space: nowrap; }
+.staff-module .staff-recurring-edit { padding: 6px 8px; border: none; border-radius: 9px; background: transparent; color: #236B48; font: inherit; cursor: pointer; }
+.staff-module .staff-recurring-empty { color: #4F7A65; }
 .staff-module .staff-recurring-feedback { color: #236B48; margin: 0; }
-@media(max-width:600px){.staff-module .staff-recurring-fields{grid-template-columns:1fr}.staff-module .staff-recurring-panel{padding:16px}.staff-module .staff-recurring-row{align-items:flex-start;flex-direction:column}}
+@media(max-width:600px){.staff-module .staff-recurring-fields{grid-template-columns:1fr}.staff-module .staff-recurring-panel{padding:16px}}
 
 .staff-assessment-profile-link {padding:0;border:none;background:transparent;color:var(--text-heading,#236B48);font:inherit;font-weight:600;text-align:left;cursor:pointer}
 

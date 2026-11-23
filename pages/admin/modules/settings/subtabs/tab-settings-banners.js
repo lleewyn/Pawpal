@@ -744,6 +744,20 @@
         });
     }
 
+    let voucherTierVersion=0;
+    async function loadVoucherTiers(selected=''){
+        const select=document.getElementById('inputVoucherTier'),errorNode=document.getElementById('voucherTierError'),version=++voucherTierVersion;
+        select.disabled=true;select.dataset.loaded='false';select.replaceChildren(new Option('Đang tải hạng thành viên',''));errorNode.textContent='';
+        try{
+            const {data,error}=await getSupabaseClient().from('membership_tier').select('id,tier_name,minimum_expenditure').eq('is_active',true).order('minimum_expenditure').order('id');if(error)throw error;
+            if(version!==voucherTierVersion)return;
+            select.replaceChildren(new Option('Tất cả khách hàng',''),...(data||[]).map(tier=>new Option('Hạng '+tier.tier_name+' trở lên',tier.id)));
+            const unavailable=selected&&!(data||[]).some(tier=>tier.id===selected);
+            if(unavailable){select.prepend(new Option('Chọn lại hạng thành viên','unavailable'));errorNode.textContent='Hạng đang áp dụng đã ngừng hoạt động. Chọn lại hạng trước khi lưu.';}
+            select.value=unavailable?'unavailable':selected||'';select.disabled=false;select.dataset.loaded='true';updateVoucherLivePreview();
+        }catch{if(version!==voucherTierVersion)return;select.replaceChildren(new Option('Chưa tải được hạng thành viên',''));errorNode.textContent='Không tải được hạng thành viên. Đóng và mở lại để thử.';
+        }
+    }
     function updateVoucherLivePreview() {
         const code = document.getElementById('inputVoucherCode')?.value.trim().toUpperCase() || 'PAWPAL30K';
         const name = document.getElementById('inputVoucherName')?.value.trim() || 'Tên chương trình ưu đãi';
@@ -751,6 +765,7 @@
         const val = parseFloat(document.getElementById('inputVoucherValue')?.value) || 0;
         const minOrder = parseFloat(document.getElementById('inputVoucherMinOrder')?.value) || 0;
         const target = document.getElementById('inputVoucherTarget')?.value || 'System';
+        if(document.getElementById('inputVoucherTier')?.value!=='unavailable'&&document.getElementById('inputVoucherTier')?.dataset.loaded==='true')document.getElementById('voucherTierError').textContent='';
 
         const prevCodeEl = document.getElementById('prevCode');
         const prevNameEl = document.getElementById('prevName');
@@ -777,7 +792,8 @@
             prevTargetEl.textContent = targetMap[target] || target;
         }
         if (prevCondEl) {
-            prevCondEl.textContent = `Đơn tối thiểu: ${minOrder.toLocaleString('vi-VN')} VNĐ`;
+            const tier=document.getElementById('inputVoucherTier'),tierLabel=tier?.value?tier.selectedOptions[0]?.textContent:'';
+            prevCondEl.textContent = `Đơn tối thiểu: ${minOrder.toLocaleString('vi-VN')} VNĐ${tierLabel?' · '+tierLabel:''}`;
         }
     }
 
@@ -892,6 +908,7 @@
             editingVoucherId=null;
             document.getElementById('btnSaveVoucher').textContent='Tạo voucher';
             PawpalSettings.openModal?.('voucherModalOverlay');
+            void loadVoucherTiers();
             updateVoucherLivePreview();
         };
         document.getElementById('btnOpenVoucherModal')?.addEventListener('click', openVoucherHandler);
@@ -905,7 +922,7 @@
             const target={all:'System',shop:'Shop',care:'Spa',services:'Services',hotel:'Hotel',taxi:'Taxi'}[row.applicable_for]||'System';
             const fields={inputVoucherCode:row.voucher_code,inputVoucherName:row.voucher_name,inputVoucherType:row.type==='percentage'?'percent':row.type,inputVoucherValue:row.discount_value,inputVoucherMinOrder:row.minimum_order_amount,inputVoucherLimit:row.max_usage??'',inputVoucherTarget:target,inputVoucherStart:row.start_date,inputVoucherEnd:row.end_date};
             for(const [id,value]of Object.entries(fields))document.getElementById(id).value=value;
-            document.getElementById('btnSaveVoucher').textContent='Lưu voucher';closeVoucherActionMenu();PawpalSettings.openModal('voucherModalOverlay');updateVoucherLivePreview();
+            document.getElementById('btnSaveVoucher').textContent='Lưu voucher';closeVoucherActionMenu();PawpalSettings.openModal('voucherModalOverlay');void loadVoucherTiers(row.minimum_membership_tier_id||'');updateVoucherLivePreview();
         });
 
         // Tự động sinh mã voucher
@@ -923,7 +940,7 @@
             }
         });
 
-        ['inputVoucherCode', 'inputVoucherName', 'inputVoucherType', 'inputVoucherValue', 'inputVoucherMinOrder', 'inputVoucherTarget'].forEach(id => {
+        ['inputVoucherCode', 'inputVoucherName', 'inputVoucherType', 'inputVoucherValue', 'inputVoucherMinOrder', 'inputVoucherTarget','inputVoucherTier'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('input', updateVoucherLivePreview);
@@ -932,6 +949,8 @@
         });
 
         document.getElementById('btnSaveVoucher')?.addEventListener('click', async () => {
+            if(document.getElementById('inputVoucherTier').dataset.loaded!=='true'){showToast('Chưa tải được hạng thành viên. Đóng và mở lại để thử.','warning');return;}
+            if(document.getElementById('inputVoucherTier').value==='unavailable'){showToast('Chọn lại hạng thành viên trước khi lưu.','warning');return;}
             const code = document.getElementById('inputVoucherCode')?.value.trim().toUpperCase();
             const name = document.getElementById('inputVoucherName')?.value.trim();
             const val = parseFloat(document.getElementById('inputVoucherValue')?.value) || 0;
@@ -975,6 +994,7 @@
                     required_points: existing?.required_points??0,
                     is_active: existing?.is_active??true,
                     applicable_for: appFor,
+                    minimum_membership_tier_id: document.getElementById('inputVoucherTier').value||null,
                     start_date: startDate,
                     end_date: endDate
                 });

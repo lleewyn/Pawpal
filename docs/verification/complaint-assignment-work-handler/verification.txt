@@ -1,0 +1,5 @@
+PASS: Recipient Nguyễn Thị Test has fixed STAFF work.complaint.handle, without support_ticket.write.
+Before: complaint_handler_unavailable
+After: Actual management modal saves assignment; staff reads assigned ticket; staff cannot assign; inactive recipient rejected; ticket fields, resolution and approval unchanged.
+Priorities checked: high, normal
+Business writes rolled back; original tickets verified unchanged. Only migration committed: true. No role/permission grants or chat changes; no full testcase replay.

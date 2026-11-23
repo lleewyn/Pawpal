@@ -1,0 +1,5 @@
+PASS: 12 focused session-retry and fixed-role security checks (separate node test run).
+PASS: Actual Add staff modal loads two fixed roles and selects STAFF without personal permission selection.
+PASS: Isolated first 401 triggers real Supabase refreshSession; second request verified through actual backend verifyAdminCaller using live Auth and login context. Same body/request ID; caller remains ADMIN.
+No provisioning request sent to account mutation endpoint. No account/permission/audit mutations. Screenshots show form only, not successful account creation.
+Original screenshot error not reproduced with a fresh Admin session; stale-session recovery is now implemented.

@@ -1,0 +1,3 @@
+PASS: Actual Settings UI loads active membership tiers from live DB, enables selector, shows selected minimum tier in preview, resets on new voucher; actual save handler includes minimum_membership_tier_id (captured before any write).
+PASS: Voucher/article filter selected text fits desktop width; mobile has no outer horizontal overflow.
+Backend verification separately confirms real save and Silver/Gold/Diamond enforcement with all fixture changes rolled back. No voucher published.

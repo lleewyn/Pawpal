@@ -59,23 +59,33 @@
         function picker(key,kind,titleOf,subtitleOf,onChoose,minimum=0){
             const input=fields[key],group=groups[key],menu=el('div',null,'autocomplete-dropdown workspace-autocomplete-menu'),selected=el('div',null,'workspace-selected-entity');menu.id=input.id+'Options';menu.hidden=selected.hidden=true;menu.setAttribute('role','listbox');group.classList.add('workspace-autocomplete');group.append(menu,selected);
             input.autocomplete='off';input.setAttribute('role','combobox');input.setAttribute('aria-controls',menu.id);input.setAttribute('aria-expanded','false');
-            let turn=0,timer,active=-1,buttons=[],page=1;
+            let turn=0,timer,active=-1,buttons=[],page=1,restoringFocus=false;
+            function restoreInputFocus(){restoringFocus=true;try{input.focus();}finally{restoringFocus=false;}}
             function hide(){turn++;clearTimeout(timer);menu.hidden=true;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');active=-1;}
             async function search(nextPage=1){
                 if(state.saving||input.readOnly)return;hide();page=nextPage;const current=turn,generation=state.generation,query=input.value.trim();if(query.length<minimum)return;
                 menu.replaceChildren(el('p','Đang tìm'));menu.hidden=false;input.setAttribute('aria-expanded','true');buttons=[];
                 try{const data=await rpc('get_staff_workspace',{p_kind:kind,p_query:query,p_id:null,p_page:page});if(current!==turn||generation!==state.generation)return;menu.replaceChildren();
                     for(const row of data.items){const text=String(titleOf(row)||'').trim();if(!text||/^\d+$/.test(text)||/^(unknown|null|undefined|chưa rõ|chưa cập nhật)$/i.test(text))continue;
-                        const button=el('button',null,'workspace-autocomplete-option');button.type='button';button.id=menu.id+buttons.length;button.setAttribute('role','option');button.setAttribute('aria-selected','false');button.append(el('strong',text),el('small',subtitleOf(row)));button.onclick=()=>{hide();onChoose(row);if(key==='customer'){input.readOnly=true;input.value=text;selected.replaceChildren(el('span',text));const clear=el('button','✕ Bỏ chọn','workspace-text-button');clear.type='button';clear.onclick=()=>{if(state.saving)return;reset();state.customer=null;fields.phone.value='';update();input.focus();};selected.append(clear);selected.hidden=false;}else input.value='';input.focus();};menu.append(button);buttons.push(button);
+                        const button=el('button',null,'workspace-autocomplete-option');button.type='button';button.id=menu.id+buttons.length;button.setAttribute('role','option');button.setAttribute('aria-selected','false');button.append(el('strong',text),el('small',subtitleOf(row)));button.onclick=()=>{hide();onChoose(row);if(key==='customer'){input.readOnly=true;input.value=text;selected.replaceChildren(el('span',text));const clear=el('button','✕ Bỏ chọn','workspace-text-button');clear.type='button';clear.onclick=()=>{if(state.saving)return;reset();state.customer=null;fields.phone.value='';update();input.focus();};selected.append(clear);selected.hidden=false;}else input.value='';restoreInputFocus();};menu.append(button);buttons.push(button);
                     }
                     if(!buttons.length)menu.append(el('p','Chưa có kết quả.'));
-                    for(const[label,next]of [['Trang trước',page-1],['Trang sau',page+1]]){if(next<1||next>page&&data.items.length<10)continue;const button=el('button',label,'workspace-autocomplete-option');button.type='button';button.onclick=()=>search(next);menu.append(button);}
+                    if(page>1||data.items.length===10){
+                        const pager=el('div',null,'workspace-pager workspace-autocomplete-pager');pager.setAttribute('role','group');pager.setAttribute('aria-label','Phân trang gợi ý');
+                        const previous=el('button','<'),currentPage=el('button',String(page),'active'),next=el('button','>');
+                        currentPage.setAttribute('aria-current','page');currentPage.setAttribute('aria-label','Trang '+page);
+                        previous.type=currentPage.type=next.type='button';previous.setAttribute('aria-label','Trang trước');next.setAttribute('aria-label','Trang sau');
+                        previous.disabled=page===1;next.disabled=data.items.length<10;previous.onclick=()=>search(page-1);next.onclick=()=>search(page+1);
+                        pager.append(previous,currentPage,next);menu.append(pager);
+                    }
                 }catch{if(current===turn)menu.replaceChildren(el('p','Không tải được gợi ý. Bấm lại ô để thử.'));}
             }
             function reset(){hide();input.value='';input.readOnly=false;selected.hidden=true;selected.replaceChildren();}
-            input.addEventListener('focus',()=>search());input.addEventListener('click',()=>search());input.addEventListener('input',()=>{hide();timer=setTimeout(()=>search(),200);});
+            input.addEventListener('focus',()=>{if(!restoringFocus)search();});input.addEventListener('click',()=>search());input.addEventListener('input',()=>{hide();timer=setTimeout(()=>search(),200);});
             input.addEventListener('keydown',event=>{if(event.key==='Escape'&&!menu.hidden){event.preventDefault();event.stopPropagation();hide();}else if(['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();if(menu.hidden){search();return;}active=(active+(event.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length;buttons.forEach((button,index)=>button.setAttribute('aria-selected',String(index===active)));if(buttons[active]){input.setAttribute('aria-activedescendant',buttons[active].id);buttons[active].scrollIntoView({block:'nearest'});}}else if(event.key==='Enter'){event.preventDefault();buttons[active]?.click();}});
-            overlay.addEventListener('click',event=>{if(!group.contains(event.target))hide();});pickers.push({hide,reset});
+            // Paging replaces the clicked button before this click reaches the overlay.
+            // Its original event path still identifies the click as inside this picker.
+            overlay.addEventListener('click',event=>{if(!event.composedPath().includes(group))hide();});pickers.push({hide,reset});
         }
         picker('customer','customers',row=>row.full_name,row=>[row.phone_number,row.customer_code].filter(Boolean).join(' · '),row=>{state.customer=row;fields.phone.value=row.phone_number||'';update();},3);
         picker('product','stock',row=>row.product_name,row=>row.sku_variant+' · '+money(row.sale_price),row=>{const existing=state.cart.find(item=>item.id===row.id);if(existing)existing.quantity=Number(existing.quantity)+1;else if(state.cart.length<100)state.cart.push({...row,quantity:1});paintLines();update();});
@@ -230,15 +240,21 @@
 targets:{"orders":"tab-order-detail"},
 profiles:{"order-profile":{read:"orders",render:async(ctx)=>{const {el,date,money,status,read,table,card,facts,go,root,kind,id,row,target,turn}=ctx;
             const details = facts(root, row.order_code, [['Trạng thái', status(row.order_status)]]);
-            if(PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle')){const complaint=el('button','Tạo khiếu nại','admin-btn admin-btn-secondary');complaint.type='button';complaint.onclick=()=>PawpalStaffComplaintCreate.open({orderId:id});details.append(complaint);}
+            details.classList.add('workspace-order-summary');
+            const actions = el('div', null, 'workspace-order-actions');
+            if(PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle')){const complaint=el('button','Tạo khiếu nại','admin-btn admin-btn-secondary');complaint.type='button';complaint.onclick=()=>PawpalStaffComplaintCreate.open({orderId:id});actions.append(complaint);}
             if (window.PawpalAdminAccess.state.user.permissions.includes('work.cashier.collect')) {
-                const receipt=el('button','Phiếu bán hàng','admin-btn admin-btn-secondary');receipt.type='button';receipt.onclick=()=>window.PawpalStaffSalesReceipt.open({orderId:id});details.append(receipt);
+                const receipt=el('button','Phiếu bán hàng','admin-btn admin-btn-secondary');receipt.type='button';receipt.onclick=()=>window.PawpalStaffSalesReceipt.open({orderId:id});actions.append(receipt);
             }
             if (!['cancelled','returned'].includes(row.order_status) && window.PawpalAdminAccess.state.user.permissions.includes('work.cashier.collect')) {
                 const collect = el('button', 'Thu tiền', 'admin-btn admin-btn-primary'); collect.type = 'button';
-                collect.onclick = () => window.PawpalStaffCashier.open({ orderId: id, onSaved: () => ctx.refresh() }); details.append(collect);
+                collect.onclick = () => window.PawpalStaffCashier.open({ orderId: id, onSaved: () => ctx.refresh() }); actions.append(collect);
             }
-            const rows = await read('order_lines', { id }); if (ctx.isCurrent()) table('order_lines', rows, card(root, 'Sản phẩm trong đơn'));
+            if (actions.childElementCount) details.append(actions);
+            const rows = await read('order_lines', { id }); if (ctx.isCurrent()) {
+                const items = card(root, 'Sản phẩm trong đơn'); items.classList.add('workspace-order-items');
+                table('order_lines', rows, items);
+            }
 }}},
 toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
                 const create = el('button', 'Tạo đơn tại quầy', 'admin-btn admin-btn-primary'); create.type = 'button';

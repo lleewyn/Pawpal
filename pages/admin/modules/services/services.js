@@ -306,12 +306,44 @@
         const form = el('form'); form.noValidate = true; form.setAttribute('onsubmit', 'return false;');
         const header = el('div', null, 'workspace-modal-header'), title = el('h2', 'Biên bản tiếp nhận'), close = el('button', 'Đóng', 'btn-modal-close'); title.id = 'staffIntakeTitle'; close.type = 'button'; close.dataset.closeModal = overlay.id; header.append(title, close);
         const summary = el('dl', null, 'workspace-intake-summary'), grid = el('div', null, 'workspace-pet-grid'), fields = {};
-        for (const [key, text, type, required] of [['weight','Cân nặng thực tế (kg)','number',true],['staff','Nhân viên tiếp nhận','text',false],['skin','Da và lông','textarea',true],['eyes','Mắt và tai','textarea',true],['wounds','Vết thương','textarea',true],['temperament','Tập tính','textarea',true],['belongings','Tư trang nhận kèm','textarea',false],['note','Ghi chú tư trang','textarea',false]]) {
+        for (const [key, text, type, required] of [['weight','Cân nặng thực tế (kg)','number',true],['staff','Nhân viên tiếp nhận','text',false]]) {
             const group = el('div', null, 'workspace-form-field'), label = el('label', text + (required ? ' ' : '')), input = el(type === 'textarea' ? 'textarea' : 'input', null, 'admin-input'); input.id = 'staffIntake' + key;
             if (type !== 'textarea') input.type = type; else { input.rows = 2; input.maxLength = 1200; }
             if (type === 'number') { input.min = '.01'; input.max = '1000'; input.step = '.01'; }
             if (key === 'staff') input.readOnly = true; input.required = required; label.htmlFor = input.id; if (required) label.append(el('span', '*', 'workspace-required')); group.append(label, input); grid.append(group); fields[key] = input;
         }
+        const choices = [
+            ['skin','Da và lông', 'checkbox', [['Sạch sẽ','Da lông sạch sẽ'],['Có ve rận','Có ve rận hoặc bọ chét'],['Mảng nấm','Có mảng nấm hoặc viêm đỏ'],['Lông bết rối','Lông bết rối nhiều']]],
+            ['eyes','Mắt, mũi và tai', 'checkbox', [['Bình thường','Mắt tai bình thường'],['Đỏ mắt/ghèn','Đỏ mắt hoặc nhiều rỉ ghèn'],['Viêm tai','Sáp tai đen hoặc viêm tai'],['Chảy nước mũi','Chảy nước mũi hoặc hắt hơi']]],
+            ['wounds','Vết trầy xước hoặc sẹo có sẵn', 'radio', [['Không có vết thương cũ','Không có vết thương cũ'],['Có vết trầy xước hoặc sẹo cũ','Có vết trầy xước hoặc sẹo cũ']]],
+            ['temperament','Tâm lý và tính khí', 'radio', [['Ngoan hiền','Ngoan hiền và thân thiện'],['Nhút nhát','Nhút nhát hoặc sợ nước'],['Dữ dằn','Bồn chồn hoặc cần rọ mõm an toàn']]],
+            ['belongings','Đồ dùng và phụ kiện gửi lại quầy', 'checkbox', [['Dây dắt','Dây dắt'],['Lồng hoặc túi vận chuyển','Lồng hoặc túi xách'],['Quần áo hoặc yếm','Quần áo hoặc yếm'],['Thức ăn hoặc thuốc riêng','Thức ăn hoặc thuốc riêng']]]
+        ];
+        for (const [key, text, type, options] of choices) {
+            const group = el('fieldset', null, 'workspace-form-field workspace-intake-choices'), legend = el('legend', text + (key !== 'belongings' ? ' ' : ''));
+            group.id = 'staffIntake' + key;
+            if (key === 'belongings') group.classList.add('workspace-field-wide', 'workspace-intake-belongings');
+            if (key !== 'belongings') legend.append(el('span', '*', 'workspace-required'));
+            group.append(legend);
+            for (const [value, caption] of options) {
+                const label = el('label'), input = el('input'); input.type = type; input.name = group.id; input.value = value;
+                label.append(input, el('span', caption)); group.append(label);
+            }
+            // A normal observation must not coexist with an abnormal observation.
+            if (key === 'skin' || key === 'eyes') group.addEventListener('change', event => {
+                const inputs = [...group.querySelectorAll('input')];
+                if (!event.target.checked) return;
+                if (event.target === inputs[0]) inputs.slice(1).forEach(input => input.checked = false);
+                else inputs[0].checked = false;
+            });
+            grid.append(group); fields[key] = group;
+            if (key === 'wounds' || key === 'belongings') {
+                const noteKey = key === 'wounds' ? 'woundNote' : 'note', label = el('label', key === 'wounds' ? 'Ghi chú vị trí vết xước' : 'Ghi chú tư trang'), input = el('textarea', null, 'admin-input');
+                input.id = 'staffIntake' + noteKey; input.rows = 2; input.maxLength = 1200; label.htmlFor = input.id;
+                const noteGroup = el('div', null, 'workspace-form-field'); noteGroup.append(label, input); group.append(noteGroup); fields[noteKey] = input;
+            }
+        }
+        const selectedValues = key => [...fields[key].querySelectorAll('input:checked')].map(input => input.value).join(', ');
         const confirmation = el('label', null, 'workspace-intake-confirmation'), checkbox = el('input'); checkbox.type = 'checkbox'; checkbox.id = 'staffIntakeConfirmed'; confirmation.htmlFor = checkbox.id; confirmation.append(checkbox, el('span','Khách đã xác nhận thông tin tiếp nhận'));
         const prior = el('p', '', 'workspace-intake-prior'), errorText = el('p', '', 'workspace-error'); errorText.setAttribute('role','alert');
         const mediaRoot=el('div');mediaRoot.id='staffIntakeMedia';
@@ -331,12 +363,13 @@
         save.onclick=async()=>{
             if(state.loading||state.saving||!state.row)return;
             errorText.textContent='';Object.values(fields).forEach(input=>input.removeAttribute('aria-invalid'));
-            const invalid=(key,text)=>{fields[key].setAttribute('aria-invalid','true');errorText.textContent=text;fields[key].focus();};
+            const invalid=(key,text)=>{fields[key].setAttribute('aria-invalid','true');errorText.textContent=text;(fields[key].querySelector('input') || fields[key]).focus();};
             const weight=Number(fields.weight.value);
             if(!Number.isFinite(weight)||weight<=0||weight>1000||fields.weight.validity.badInput)return invalid('weight','Nhập cân nặng lớn hơn 0 và không quá 1000 kg.');
-            for(const key of ['skin','eyes','wounds','temperament'])if(!fields[key].value.trim())return invalid(key,'Ghi đầy đủ tình trạng da và lông, mắt và tai, vết thương và tập tính.');
+            for(const key of ['skin','eyes','wounds','temperament'])if(!selectedValues(key))return invalid(key,'Chọn đầy đủ tình trạng da và lông, mắt, mũi và tai, vết thương và tập tính.');
             if(!allowed()){errorText.textContent='Bạn không có quyền tiếp nhận ca dịch vụ.';return;}
-            const details={actualWeight:weight,staffId:PawpalAdminAccess.state.user.id,customerConfirmed:checkbox.checked,skinCoat:fields.skin.value.trim(),eyesEars:fields.eyes.value.trim(),wounds:fields.wounds.value.trim(),temperament:fields.temperament.value.trim(),belongings:fields.belongings.value.trim(),belongingsNote:fields.note.value.trim()};
+            const woundNote = selectedValues('wounds') === 'Không có vết thương cũ' ? '' : fields.woundNote.value.trim();
+            const details={actualWeight:weight,staffId:PawpalAdminAccess.state.user.id,customerConfirmed:checkbox.checked,skinCoat:selectedValues('skin'),eyesEars:selectedValues('eyes'),wounds:woundNote ? `Có vết thương cũ: ${woundNote}` : selectedValues('wounds'),woundNote,temperament:selectedValues('temperament'),belongings:selectedValues('belongings'),belongingsNote:fields.note.value.trim()};
             if(JSON.stringify(details).length>10000){errorText.textContent='Nội dung tiếp nhận quá dài. Rút gọn các ghi nhận trước khi lưu.';return;}
             const generation=state.generation,appointment=state.row;
             state.saving=true;save.disabled=true;save.textContent='Đang lưu';Object.values(fields).forEach(input=>input.disabled=true);checkbox.disabled=true;

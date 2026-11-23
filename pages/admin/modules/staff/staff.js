@@ -267,6 +267,17 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
     }
     const client=()=>window.getSupabaseClient();
     PawpalStaff.readRows=readRows;
+    PawpalStaff.formatJobTitle=value=>{
+        const title=String(value||'').trim(),legacy={ADMIN:'Quản lý',STAFF:'Nhân viên',cham_soc_thu_cung:'Chăm sóc thú cưng',Groomer:'Kỹ thuật viên cắt tỉa','Kỹ thuật viên grooming':'Kỹ thuật viên cắt tỉa',Driver:'Tài xế đưa đón thú cưng',Caregiver:'Nhân viên chăm sóc lưu trú',Receptionist:'Lễ tân',CSKH:'Nhân viên chăm sóc khách hàng'};
+        return (PawpalStaff.state.jobTitles||[]).find(row=>row.code===title||row.title===title||row.aliases?.includes(title))?.title||legacy[title]||title;
+    };
+    PawpalStaff.loadJobTitleOptions=async({force=false}={})=>{
+        const rows=await readStaffResource('job-titles',async()=>{
+            const {data,error}=await client().rpc('admin_staff_job_title_catalog');if(error)throw error;
+            return data||[];
+        },{force});
+        PawpalStaff.state.jobTitles=rows;return rows;
+    };
     PawpalStaff.getStaffWorkingSchedules=id=>(PawpalStaff.state.schedules||[]).filter(s=>s.staff_id===id&&s.schedule_status==='active'&&s.availability_status==='available').sort((a,b)=>Date.parse(a.start_at)-Date.parse(b.start_at));
     PawpalStaff.getNearestStaffSchedule=id=>{const rows=PawpalStaff.getStaffWorkingSchedules(id);return rows.find(s=>Date.parse(s.end_at)>Date.now())||rows[rows.length-1]||null;};
     PawpalStaff.formatStaffSchedule=schedule=>schedule?new Date(schedule.start_at).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})+' – '+new Date(schedule.end_at).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'Chưa có lịch';
@@ -277,7 +288,8 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
         const popover=document.createElement('div');popover.className='customer-autocomplete-popover';popover.style.cssText='display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:240px;overflow:auto;overscroll-behavior:contain;z-index:2500;background:#fff;border:1px solid #ECF2EE;border-radius:9px;box-shadow:0 10px 28px rgba(35,107,72,.14)';
         wrapper.append(select,input,popover);const host=select.closest('.admin-modal-card');if(host){host.style.position='relative';host.append(popover);}select._entityPopover=popover;select.hidden=true;select.style.display='none';select._entityInput=input;
         const render=()=>{if(host){const a=input.getBoundingClientRect(),b=host.getBoundingClientRect(),height=Math.min(240,Math.max(a.top-b.top,b.bottom-a.bottom)-8);popover.style.left=(a.left-b.left)+'px';popover.style.right='auto';popover.style.width=a.width+'px';popover.style.maxHeight=height+'px';popover.style.top=(b.bottom-a.bottom<160?a.top-b.top-height-4:a.bottom-b.top+4)+'px';}popover.replaceChildren();for(const option of [...select.options].filter(o=>o.value&&!o.disabled&&PawpalStaff.matchSearch(o.textContent,input.value))){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.style.cssText='display:block;width:100%;text-align:left;border:none;background:transparent';button.textContent=option.textContent;button.dataset.value=option.value;button.onclick=()=>{select.value=option.value;input.value=option.textContent;popover.style.display='none';select.dispatchEvent(new Event('change',{bubbles:true}));};popover.append(button);}popover.style.display=popover.childElementCount?'block':'none';};
-        input.onfocus=render;input.oninput=()=>{select.value='';select.dispatchEvent(new Event('change',{bubbles:true}));render();};input.onblur=()=>setTimeout(()=>popover.style.display='none',120);input.onkeydown=e=>{if(e.key==='Escape')popover.style.display='none';};
+        let blurTimer;
+        input.onfocus=()=>{clearTimeout(blurTimer);render();};input.oninput=()=>{clearTimeout(blurTimer);select.value='';select.dispatchEvent(new Event('change',{bubbles:true}));render();};input.onblur=()=>{clearTimeout(blurTimer);blurTimer=setTimeout(()=>popover.style.display='none',120);};input.onkeydown=e=>{if(e.key==='Escape')popover.style.display='none';};
         select.addEventListener('change',()=>{if(document.activeElement!==input)input.value=select.value?select.selectedOptions[0]?.textContent||'':'';});input.value=select.value?select.selectedOptions[0]?.textContent||'':'';
     };
     function readStaffResource(name, fetcher, { force = false } = {}) {
@@ -498,7 +510,7 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
             window.PawpalDataStore?.invalidate('staff:schedules*');
         }
         try {
-            const staffData = await fetchStaffRaw(refresh('list'));
+            const [staffData] = await Promise.all([fetchStaffRaw(refresh('list')),PawpalStaff.loadJobTitleOptions(refresh('list'))]);
             const [schedules, requests, assessments] = await Promise.all([
                 fetchSchedulesRaw(refresh('schedules')),
                 fetchShiftRequestsRaw(refresh('shift_requests')),
@@ -785,6 +797,7 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_shift_request' }, () => triggerStaffSync('staff:shift_requests*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_assessment' }, () => triggerStaffSync('staff:assessments*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_role' }, () => triggerStaffSync('staff:list*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_job_title' }, () => triggerStaffSync('staff:job-titles*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_permission' }, () => triggerStaffSync('staff:list*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'access_role' }, () => triggerStaffSync('staff:list*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'role_permission' }, () => triggerStaffSync('staff:list*'))

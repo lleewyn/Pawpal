@@ -1,0 +1,6 @@
+PASS: focused live STAFF search RPC and actual search form.
+Before: 2df=false; SO-2df944938dde44a0b740324bbc99=false; SO-2df944938dde44a0b740324bbc993085=true; 2df94493-8dde-44a0-b740-324bbc993085=false; phuong test=false
+After: partial code (3 characters), longer code, full code, UUID and customer name find reported order; missing query empty; short query rejected; ID detail lookup preserved; at most 10 rows.
+UI: search button, result, opening profile; 3 staff actions; no price/refund management buttons; no JavaScript errors.
+No order/payment writes; no full testcase replay.
+Migration applied: true

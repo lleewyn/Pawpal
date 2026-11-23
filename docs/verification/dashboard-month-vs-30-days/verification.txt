@@ -1,0 +1,5 @@
+PASS: Actual shell, click handler, monthRange, apply, and BusinessMetrics date functions.
+Clock fixed to 23/11/2026 in UTC+7 to match reported screenshot.
+Tháng này: 01/11/2026–30/11/2026 (calendar month).
+30 ngày: 25/10/2026–23/11/2026 (rolling 30 days, includes today).
+Periods differ; each selects only its own filter. No application source changed, no database queries, no metrics mock data.

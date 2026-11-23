@@ -116,6 +116,7 @@
             if (kind.endsWith('-profile')) { await profile(kind, id, root, turn,target); return; }
             if(screens[currentModule]&&await screens[currentModule](context(root,target,turn,{kind,id})))return;
             const main = card(root), tools = el('form', null, 'workspace-toolbar'); tools.setAttribute('onsubmit', 'return false;');
+            if (kind === 'orders') main.classList.add('workspace-order-list');
             const heading = el('h2', currentModule === 'Dashboard' ? 'Lịch công việc' : title, 'admin-card-title'); tools.append(heading); main.append(tools);
             toolbars[kind]?.({el,go,tools});
             const searchable = ['customers', 'pets', 'stock', 'orders'].includes(kind), requiredSearch = ['customers', 'pets', 'orders'].includes(kind);
@@ -135,7 +136,7 @@
                 } catch (error) { if (turn === revision) { content.replaceChildren(); errorText.textContent = error.message; } }
             }
             if (searchable) {
-                input = el('input', null, 'admin-input'); input.type = 'search'; input.placeholder = kind === 'orders' ? 'Nhập mã đơn hàng' : 'Nhập tên hoặc mã để tìm'; input.setAttribute('aria-label', input.placeholder); input.value = query; input.maxLength = 120;
+                input = el('input', null, 'admin-input'); input.type = 'search'; input.placeholder = kind === 'orders' ? 'Tìm mã đơn hoặc tên khách hàng' : 'Nhập tên hoặc mã để tìm'; input.setAttribute('aria-label', input.placeholder); input.value = query; input.maxLength = 120;
                 const search = el('button', 'Tìm kiếm', 'admin-btn admin-btn-secondary'); search.type = 'button';
                 const submit = () => { query = input.value.trim(); const p = new URLSearchParams(); if (query) p.set('q', query); go(currentTab(currentModule)[0] + (p.size ? '?' + p : '')); };
                 search.onclick = submit; tools.addEventListener('submit', event => { event.preventDefault(); submit(); }); tools.append(input, search);
