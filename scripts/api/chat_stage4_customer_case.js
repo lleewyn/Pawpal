@@ -5,6 +5,11 @@ const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}
 const fail=()=>Object.assign(Error('invalid_customer_case_result'),{code:'XX000'});
 function planCustomerCase(question,context={}){
  const raw=String(question),head=normalize(raw.split(/[:：]/)[0]);
+ const is360=/^(?:xem )?ho so(?: 360)?(?: do)?(?: khach(?: hang)?| chu nuoi)?|^(?:tra cuu|thong tin)(?: 360)?(?: khach(?: hang)?| chu nuoi)/.test(head)||/ho so(?: 360)?/.test(head);
+ if(is360){
+  const explicit=raw.split(/[:：]/).slice(1).join(':').trim(),query=raw.match(/\bCUS-[\w-]+|\b0\d{8,10}\b/i)?.[0]||explicit||(uuid(context.customerId)?context.customerId:context.customerQuery);
+  if(query&&query.trim().length>=3)return {intent:'customer.case',filters:{query:query.trim(),kind:'pets_orders'}};
+ }
  const commerce=/khach|chu nuoi/.test(head)&&/thu cung|be cung/.test(head)&&/\bdon\b/.test(head);
  if(!commerce&&(!/khach|chu nuoi/.test(head)||!/lich/.test(head)||!/khieu nai|phieu ho tro/.test(head)))return null;
  const clarify=answer=>({intent:'clarify',answer});
@@ -58,12 +63,12 @@ async function answerCustomerCase({route,caller,staff,budget,text,status}){
  if(commerce){
   const [pets,order]=results,partial=results.some(r=>r.status!=='ok');
   const limitations=['Các nguồn được đọc riêng theo cùng mã khách đã xác định, dữ liệu có thể thay đổi giữa các lần đọc.','Thú cưng gồm các trạng thái hồ sơ, không khẳng định mọi hồ sơ đều đang hoạt động.','Đơn mới nhất tính theo thời điểm tạo và mã định danh khi trùng thời điểm, gồm cả bản nháp hoặc đã hủy. Không suy ra thanh toán, hoàn tiền hoặc giao hàng từ trạng thái đơn.'];
-  const lines=[`**${text(customer.name)} — ${text(customer.code)}**`,'**Thú cưng trong hồ sơ**'];
+  const lines=[`**Hồ sơ khách hàng 360°: ${text(customer.name)} — ${text(customer.code)}**`,...(customer.phone?[`• **Số điện thoại:** ${text(customer.phone)} · **Trạng thái:** ${customer.status==='active'?'Hoạt động':'Không hoạt động'}`]:[]),'**Thú cưng trong hồ sơ**'];
   const when=v=>new Date(v).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}),unavailable=r=>r.status==='forbidden'?'Chưa có quyền hoặc không còn truy cập được nguồn này.':'Chưa đọc được nguồn này; không coi là không có dữ liệu.';
   const petStates={active:'Hoạt động',inactive:'Không hoạt động',deceased:'Đã mất',archived:'Đã lưu trữ'};
   if(pets.status==='ok'){
    lines.push(`Có **${pets.data.total}** hồ sơ thú cưng.`);
-   lines.push(...pets.data.items.map(item=>{const info=[text(item.species||''),text(item.breed||'')].filter(Boolean).join(', '),label=Object.hasOwn(petStates,item.status)?petStates[item.status]:'Chưa có nhãn trạng thái';return `- ${text(item.code)} — ${text(item.name)}${info?'; '+info:''}; ${label}.`;}));
+   lines.push(...pets.data.items.map(item=>{const info=[text(item.species||''),text(item.breed||'')].filter(Boolean).join(', '),label=Object.hasOwn(petStates,item.status)?petStates[item.status]:'Chưa có nhãn trạng thái';const notes=[item.routine?'Tập tính: '+text(item.routine):'',item.allergy&&item.allergy!=='Không'?'Dị ứng: '+text(item.allergy):''].filter(Boolean).join('; ');return `- **${text(item.name)}** (${text(item.code)})${info?'; '+info:''}; ${label}.${notes?' — Lưu ý: '+notes:''}`;}));
    if(pets.data.total>pets.data.items.length)limitations.push(`Đang hiển thị ${pets.data.items.length}/${pets.data.total} hồ sơ mới nhất; mở phân hệ để kiểm tra thêm.`);
    lines.push('Dữ liệu thú cưng đọc lúc '+when(pets.data.as_of)+'.');
   }else lines.push(unavailable(pets));
