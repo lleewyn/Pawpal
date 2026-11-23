@@ -108,7 +108,7 @@
         if (petAlertBanner) {
             if (booking.petAlert) {
                 petAlertBanner.style.display = 'block';
-                petAlertBanner.textContent = `CẢNH BÁO AN TOÀN CHO BÉ: ${booking.petAlert}`;
+                petAlertBanner.textContent = `Cảnh báo an toàn cho bé: ${booking.petAlert}`;
             } else {
                 petAlertBanner.style.display = 'none';
             }
@@ -148,6 +148,13 @@
             }
 
             const btnConfirm = actionButtonsContainer.querySelector('.btn-action-confirm');
+            try{
+                const redo=JSON.parse(sessionStorage.getItem('pawpal_admin_complaint_redo_return')||'null');
+                if(redo?.appointmentId===booking.dbId&&redo.ticketId){
+                    const back=document.createElement('button');back.type='button';back.className='admin-btn admin-btn-secondary';back.textContent='Về phiếu khiếu nại';
+                    back.onclick=()=>{location.hash='#tab-complaint-detail?id='+encodeURIComponent(redo.ticketId);};actionButtonsContainer.append(back);
+                }
+            }catch{}
             const btnCheckin = actionButtonsContainer.querySelector('.btn-action-checkin');
             const btnIntake = actionButtonsContainer.querySelector('.btn-action-intake');
             const btnComplete = actionButtonsContainer.querySelector('.btn-action-complete');

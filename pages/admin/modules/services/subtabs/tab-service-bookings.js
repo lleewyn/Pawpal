@@ -1045,12 +1045,20 @@
                 populateOptions([]);
                 const client=window.getSupabaseClient?.()||window.SupabaseClient;
                 const scheduledOnly=['pending','confirmed','cho_xac_nhan','da_xac_nhan'].includes(booking.status);
-                client.rpc(scheduledOnly?'admin_service_booking_staff_choices':'admin_service_staff_candidates',scheduledOnly?{p_id:booking.dbId}:undefined).then(({data,error})=>{
+                client.rpc(scheduledOnly?'admin_service_booking_staff_choices':'admin_service_staff_candidates',scheduledOnly?{p_id:booking.dbId}:undefined).then(async({data,error})=>{
                     if(error)throw error;
                     if(modal.getAttribute('data-booking-id')!==bookingId||!modal.classList.contains('active'))return;
                     PawpalServices.state.liveStaffList||=[];
                     for(const person of data||[]){const index=PawpalServices.state.liveStaffList.findIndex(old=>old.id===person.id);if(index<0)PawpalServices.state.liveStaffList.push(person);else PawpalServices.state.liveStaffList[index]=person;}populateOptions(data||[]);
-                    if(!data?.length)modalError(modal,'Không có KTV đang có ca phù hợp và còn trống trong giờ hẹn.');
+                    if(!data?.length){
+                        modalError(modal,'Chưa có kỹ thuật viên đủ điều kiện và còn trống trong toàn bộ giờ hẹn.');
+                        if(scheduledOnly){
+                            const {data:reasons,error:reasonError}=await client.rpc('admin_service_booking_staff_diagnostics',{p_id:booking.dbId});
+                            if(modal.getAttribute('data-booking-id')!==bookingId||!modal.classList.contains('active'))return;
+                            if(!reasonError)modalError(modal,reasons?.length?reasons.map(row=>row.staff_name+': '+row.reason).join('\n'):'Chưa có ca được phân bao phủ toàn bộ giờ hẹn. Kiểm tra ngày, giờ và khoảng nghỉ trong Nhân sự.');
+                            const summary=modal.querySelector('[data-service-summary-error]');if(summary)summary.style.whiteSpace='pre-line';
+                        }
+                    }
                 }).catch(error=>{if(modal.classList.contains('active')&&modal.getAttribute('data-booking-id')===bookingId)modalError(modal,PawpalServices.errorMessage(error));});
             } else {
                 populateOptions(staffList);
@@ -1407,6 +1415,8 @@
             modalCreateBooking._weightRequests=new Map();
             clearModalErrors(modalCreateBooking);
             delete modalCreateBooking.dataset.requestSignature;delete modalCreateBooking.dataset.requestId;
+            delete modalCreateBooking.dataset.redoTicketId;
+            modalCreateBooking.querySelector('.modal-title-clean').textContent='Thêm lịch hẹn';
             for(const id of ['newBookingCustomer','newBookingPetName','newBookingServiceInput'])document.getElementById(id).style.display='';
             delete document.getElementById('newBookingServiceSelect').dataset.serviceId;
             const hotelF = document.getElementById('createBookingHotelFields');
@@ -1595,6 +1605,7 @@
                         }
                     }
                     if(!resData)throw Error('Không xác minh được lịch hẹn đã lưu.');
+                    if(modalCreateBooking.dataset.redoTicketId)sessionStorage.setItem('pawpal_admin_complaint_redo_return',JSON.stringify({appointmentId:resData,ticketId:modalCreateBooking.dataset.redoTicketId}));
                     window.PawpalCustomers?.refreshCustomerData?.({directory:false,kind:'bookings',customerIds:selectedCustomerObj?.id?[selectedCustomerObj.id]:[]});
                     newId='BKG-'+resData.replace(/-/g,'').toUpperCase();
                     delete modalCreateBooking.dataset.requestSignature;delete modalCreateBooking.dataset.requestId;
@@ -1913,14 +1924,36 @@
                 const preset = JSON.parse(raw);
                 if (!preset.custId) { sessionStorage.removeItem('pawpal_admin_booking_preset'); return; }
                 btnOpenCreateBooking?.click();
-                await PawpalServices.searchBookingDirectory('customers', '', preset.custId);
-                const customer = getAllCustomersList().find(c => c.id === preset.custId);
+                const ownerDirectory=await PawpalServices.searchBookingDirectory('customers', '', preset.custId);
+                const owner=ownerDirectory.customers?.find(c=>c.id===preset.custId);
+                const profile=Array.isArray(owner?.customer_profile)?owner.customer_profile[0]:owner?.customer_profile;
+                const customer=owner?{id:owner.id,name:profile?.full_name||owner.full_name||'',phone:owner.customer_phone?.find(p=>p.is_primary)?.phone_number||owner.customer_phone?.[0]?.phone_number||owner.unverified_contact_phone||''}:null;
                 if (!customer) throw Error('customer_not_found');
                 if (!modalCreateBooking.classList.contains('active') || sessionStorage.getItem('pawpal_admin_active_module') !== 'Dịch vụ') return;
-                selectCustomerItem(customer);
+                selectCustomerItem({...customer,_fromPet:Boolean(preset.appointmentId)});
+                if(preset.appointmentId){
+                    const {data:source,error}=await window.getSupabaseClient().from('appointment').select('id,appointment_code,customer_id,pet_id,items:appointment_item(service_id,is_primary,status)').eq('id',preset.appointmentId).single();
+                    if(error)throw error;
+                    if(source.customer_id!==customer.id)throw Error('customer_mismatch');
+                    const [directory]=await Promise.all([PawpalServices.searchBookingDirectory('pets','',customer.id),loadBookingCatalog()]);
+                    if(!modalCreateBooking.classList.contains('active')||!customerInput.isConnected||selectedCustomerObj?.id!==customer.id)return;
+                    const pet=(directory.pets||[]).find(p=>p.id===source.pet_id);
+                    const item=source.items.find(i=>i.is_primary&&i.status!=='cancelled')||source.items.find(i=>i.status!=='cancelled');
+                    const service=PawpalServices.state.servicesData.find(s=>s.dbId===item?.service_id);
+                    if(!pet||!service)throw Error('redo_source_unavailable');
+                    selectPetItem(pet);
+                    catSelect.value=({spa:'Spa',hotel:'Hotel',taxi:'Taxi'})[service.group||service.category]||'';catSelect.dispatchEvent(new Event('change',{bubbles:true}));
+                    const option=getServicesForCategory(catSelect.value).find(s=>s.dbId===service.dbId);
+                    if(!option)throw Error('redo_service_unavailable');
+                    selectServiceItem(option);
+                    modalCreateBooking.dataset.redoTicketId=preset.ticketId||'';
+                    modalCreateBooking.querySelector('.modal-title-clean').textContent='Tạo lịch làm lại';
+                    document.getElementById('newBookingNotes').value='Làm lại dịch vụ cho phiếu '+preset.ticketCode+' · Lịch gốc '+source.appointment_code;
+                }
                 if (sessionStorage.getItem('pawpal_admin_booking_preset') === raw) sessionStorage.removeItem('pawpal_admin_booking_preset');
             } catch (error) {
-                PawpalServices.showToast('Không thể tải khách hàng từ hồ sơ. Vui lòng chọn lại.', 'warning');
+                console.warn('[Booking preset]',error.message);
+                PawpalServices.showToast('Không thể điền đủ thông tin từ hồ sơ gốc. Vui lòng kiểm tra khách hàng, bé cưng và gói dịch vụ.', 'warning');
             } finally { consumingBookingPreset = false; }
         });
 

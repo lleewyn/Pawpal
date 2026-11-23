@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-11-23T03:41:13.539Z",
+  "checks": [
+    "Cached services navigation opens Thi original APP-1792228688726, not Khanh previous appointment",
+    "Reload retains the correct source appointment",
+    "Existing redo shows precise package mismatch and cannot be selected",
+    "Create redo automatically selects Thi, her phone, High and original specialized spa package",
+    "UI links completed Vietnamese-status redo and real database resolves complaint",
+    "Test appointment, complaint completion and history rolled back",
+    "No browser JavaScript errors"
+  ],
+  "scope": "Live HTTP navigation/prefill; real transaction-bound Supabase RPC completion; synthetic completed redo fixture rolled back; original mismatched BKG unchanged"
+}

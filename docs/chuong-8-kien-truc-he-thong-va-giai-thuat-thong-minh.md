@@ -146,7 +146,7 @@ Hệ thống phân luồng trải nghiệm dựa trên trạng thái tài khoả
 
 > **Hình 8.4: Lưu đồ quy trình xử lý hội thoại và phân luồng trải nghiệm của Trợ lý Pawpal Chatbot**  
 > *(Lưu đồ thể hiện các bước: Tiếp nhận tin nhắn, lọc từ ngữ, phân loại khách hàng, gọi dữ liệu tương ứng và truyền phát câu trả lời về màn hình)*.  
-> **Hình 8.5: Giao diện tương tác thực tế của Trợ lý Pawpal Chatbot trên kênh người dùng công chúng**  
+> **[Hình 8.5: Giao diện tương tác thực tế của Trợ lý Pawpal Chatbot trên kênh người dùng công chúng](file:///C:/Users/QUYEN/.gemini/antigravity-cli/brain/7a76c9d1-504b-4a2d-877e-c42a3920b2f8/hinh_8_5_giao_dien_chatbot_cong_chung.png)**  
 > *(Ảnh chụp màn hình thực tế thể hiện tư vấn giá làm đẹp theo cân nặng, liên kết đặt lịch và cơ chế phản hồi truyền phát)*.
 
 **Bảng 8.3: Bảng ánh xạ các ý định người dùng và mẫu câu hỏi phổ biến trong Trợ lý Pawpal Chatbot**
@@ -191,7 +191,7 @@ Khi có ca chat chuyển tiếp từ khách hàng, nhân viên sẽ thấy bản
 
 > **Hình 8.6: Lưu đồ quy trình xử lý tác vụ thông minh và kiểm soát thẩm quyền của Trợ lý Pawpal Copilot**  
 > *(Lưu đồ thể hiện các bước: Tiếp nhận câu lệnh nhân viên, xác thực quyền công việc, truy vấn dữ liệu an toàn chỉ đọc, tổng hợp kết quả và trả về giao diện)*.  
-> **Hình 8.7: Giao diện phân hệ làm việc Trợ lý Pawpal Copilot trong không gian quản trị**  
+> **[Hình 8.7: Giao diện phân hệ làm việc Trợ lý Pawpal Copilot trong không gian quản trị](file:///C:/Users/QUYEN/.gemini/antigravity-cli/brain/7a76c9d1-504b-4a2d-877e-c42a3920b2f8/hinh_8_7_giao_dien_copilot_quan_tri.png)**  
 > *(Ảnh chụp màn hình phân hệ Copilot thể hiện tra cứu hồ sơ 360 độ, cảnh báo tồn kho và thông báo từ chối truy cập doanh thu)*.
 
 ---

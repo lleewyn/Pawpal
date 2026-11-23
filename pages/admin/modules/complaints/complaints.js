@@ -1316,6 +1316,9 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
 
     // Điều phối Subtab
     function switchSubtab(targetSubtab) {
+        const moduleRoot = document.querySelector('.complaints-module') || document.getElementById('complaintsModuleWrapper');
+        const activeModule=sessionStorage.getItem('pawpal_admin_active_module');
+        if(!moduleRoot || (activeModule && activeModule!=='Khiếu nại'))return;
         sessionStorage.setItem('pawpal_admin_active_module', 'Khiếu nại');
         const headerSubtabBtns = document.querySelectorAll('#headerSubtabsGroup .header-subtab-btn');
         headerSubtabBtns.forEach(btn => {
@@ -1326,7 +1329,6 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             }
         });
 
-        const moduleRoot = document.querySelector('.complaints-module') || document.getElementById('complaintsModuleWrapper') || document;
         const sections = moduleRoot.querySelectorAll('.subtab-content');
         sections.forEach(sec => {
             if (sec.id === `subtab-${targetSubtab}`) {
@@ -1362,7 +1364,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         PawpalComplaints.state.currentTicketId = ticketId;
         sessionStorage.setItem('pawpal_admin_complaint_selected_id', ticketId);
         await loadComplaintsModuleData({ force: true, pageRequest: PawpalComplaints.state.lastPageRequest || { kind: 'service', filters: {}, page: 1 } });
-        if (PawpalComplaints.state.currentTicketId !== ticketId) return;
+        if (PawpalComplaints.state.currentTicketId !== ticketId || sessionStorage.getItem('pawpal_admin_active_module') !== 'Khiếu nại') return;
         switchSubtab('tab-complaint-detail');
         if (PawpalComplaints.subtabs.detail?.renderTicketDetail) {
             PawpalComplaints.subtabs.detail.renderTicketDetail(ticketId);

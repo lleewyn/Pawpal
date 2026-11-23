@@ -112,46 +112,57 @@
         }
         field('customer', 'Khách hàng', 'text', true); field('phone', 'Số điện thoại', 'text').readOnly = true;
         field('pet', 'Bé cưng', 'text', true); field('weight', 'Cân nặng đã lưu (kg)', 'text', true).readOnly = true;
+        field('category','Nhóm dịch vụ','select',true,grid,true);
+        for(const [value,label]of [['grooming_spa','Spa và Grooming'],['pet_hotel','Pet Hotel'],['pet_taxi','Pet Taxi']])fields.category.append(new Option(label,value));
         field('service', 'Gói dịch vụ', 'text', true, grid, true); field('start', 'Ngày và giờ hẹn', 'datetime-local', true);
+        field('day','Ngày hẹn','date',true);field('slot','Khung giờ trống','select',true);
+        fields.slot.append(new Option('Chọn ngày để xem giờ trống',''));groups.day.hidden=groups.slot.hidden=true;
+        const slotStatus=el('p','','workspace-booking-slot-status');slotStatus.setAttribute('role','status');slotStatus.style.cssText='margin:4px 0 0;color:#4F7A65;font-size:12px;';groups.slot.append(slotStatus);
         field('health', 'Lưu ý sức khỏe', 'textarea'); field('style', 'Yêu cầu tạo kiểu', 'textarea', false, grid, true);
         const hotel = el('div', null, 'workspace-pet-grid workspace-field-wide workspace-booking-conditional'); grid.append(hotel); hotel.hidden = true;
         field('checkout', 'Ngày và giờ trả phòng', 'datetime-local', true, hotel); field('room', 'Phòng', 'text', true, hotel);
         field('diet', 'Chế độ ăn', 'textarea', false, hotel); field('care', 'Lưu ý chăm sóc', 'textarea', false, hotel);
         const taxi = el('div', null, 'workspace-pet-grid workspace-field-wide workspace-booking-conditional'); grid.append(taxi); taxi.hidden = true;
         field('pickup', 'Địa chỉ đón', 'text', true, taxi); field('dropoff', 'Địa chỉ trả', 'text', true, taxi);
-        const distance = field('distance', 'Cự ly mỗi lượt (km)', 'number', true, taxi); distance.min = '.01'; distance.step = '.01';
+        const distance = field('distance', 'Cự ly ước tính mỗi lượt (km)', 'number', true, taxi); distance.min = '.01'; distance.step = '.01';distance.readOnly=true;
+        const distanceNote=el('p','Nhập địa chỉ đón và trả để tính cự ly ước tính.');distanceNote.setAttribute('role','status');distanceNote.style.cssText='margin:4px 0 0;color:#4F7A65;font-size:12px;';groups.distance.append(distanceNote);
+        let taxiEstimator=null;
         const trip = field('trip', 'Hành trình', 'select', true, taxi); for (const [value, text] of [['one_way', 'Một chiều'], ['round_trip', 'Khứ hồi']]) { const option = el('option', text); option.value = value; trip.append(option); }
         field('return', 'Ngày và giờ lượt về', 'datetime-local', true, taxi); field('note', 'Ghi chú', 'textarea', false, grid, true);
         const quoteText = el('p', '', 'workspace-booking-quote'), message = el('p', '', 'workspace-error'); message.setAttribute('role', 'alert');
         const success = el('p', '', 'workspace-booking-success'); success.setAttribute('role', 'status');
         const footer = el('div', null, 'workspace-modal-footer'), cancel = el('button', 'Hủy', 'admin-btn admin-btn-secondary'), save = el('button', 'Tạo lịch hẹn', 'admin-btn admin-btn-primary'); cancel.type = save.type = 'button'; cancel.dataset.closeModal = id; footer.append(cancel, save);
         form.append(header, grid, quoteText, message, success, footer); card.append(form); overlay.append(card); document.body.append(overlay);
-        const state = { overlay, form, fields, generation: 0, customer: null, pet: null, service: null, room: null, prices: [], rooms: [], loading: false, saving: false, done: false, pending: null, returnFocus: null };
+        const state = { overlay, form, fields, generation: 0, customer: null, pet: null, service: null, room: null, prices: [], rooms: [], slots:[],slotLoading:false,loading: false, saving: false, done: false, pending: null, returnFocus: null };
         const pickers = [];
         function picker(key, fetchRows, titleOf, subtitleOf, select) {
             const input = fields[key], group = groups[key], menu = el('div', null, 'autocomplete-dropdown workspace-autocomplete-menu'), summary = el('div', null, 'workspace-selected-entity');
             group.classList.add('workspace-autocomplete'); menu.id = input.id + 'Options'; menu.hidden = summary.hidden = true; menu.setAttribute('role', 'listbox'); group.append(menu, summary);
             input.autocomplete = 'off'; input.setAttribute('role', 'combobox'); input.setAttribute('aria-controls', menu.id); input.setAttribute('aria-expanded', 'false'); input.setAttribute('aria-autocomplete', 'list');
-            let version = 0, timer, buttons = [], active = -1;
+            let version = 0, timer, buttons = [], active = -1, skipFocusSearch=false;
             const hide = () => { version++; clearTimeout(timer); menu.hidden = true; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); active = -1; };
-            function reset(notify = true) { hide(); state[key] = null; input.readOnly = false; input.value = ''; summary.replaceChildren(); summary.hidden = true; if (notify) select?.(null); }
+            function reset(notify = true) { hide(); state[key] = null; input.readOnly = false; input.value = ''; input.removeAttribute('aria-invalid');summary.replaceChildren(); summary.hidden = true; if (notify) select?.(null); }
             function choose(row) {
                 hide(); state[key] = row; input.readOnly = true; input.value = titleOf(row); input.removeAttribute('aria-invalid'); summary.replaceChildren(el('span', titleOf(row)));
                 const clear = el('button', '✕ Bỏ chọn', 'workspace-text-button'); clear.type = 'button'; clear.onclick = () => { if (state.saving || state.done) return; reset(); input.focus(); }; summary.append(clear); summary.hidden = false; select?.(row);
             }
-            async function search() {
-                if (input.readOnly || state.saving || state.done) return;
+            async function search(page=1) {
+                if(!Number.isInteger(page))page=1;
+                if ((input.readOnly&&key!=='pet') || state.saving || state.done) return;
                 hide(); const turn = version; menu.hidden = false; input.setAttribute('aria-expanded', 'true'); menu.replaceChildren(el('p', 'Đang tìm...')); buttons = [];
                 try {
-                    const rows = await fetchRows(input.value.trim()); if (turn !== version || !overlay.classList.contains('active')) return;
+                    const query=key==='pet'&&input.readOnly?'':input.value.trim();
+                    const rows = await fetchRows(query,page); if (turn !== version || !overlay.classList.contains('active')) return;
                     menu.replaceChildren();
                     rows.filter(row => { const text = String(titleOf(row) || '').trim(); return text && !/^\d+$/.test(text) && !/^(unknown|null|undefined|chưa rõ|chưa cập nhật)$/i.test(text); }).slice(0,10).forEach((row, index) => {
-                        const button = el('button', null, 'workspace-autocomplete-option'); button.type = 'button'; button.id = menu.id + index; button.setAttribute('role', 'option'); button.setAttribute('aria-selected', 'false'); button.append(el('strong', titleOf(row)), el('small', subtitleOf(row))); button.onclick = () => { choose(row); input.focus(); }; buttons.push(button); menu.append(button);
+                        const button = el('button', null, 'workspace-autocomplete-option'); button.type = 'button'; button.id = menu.id + index; button.setAttribute('role', 'option'); button.setAttribute('aria-selected', 'false'); button.append(el('strong', titleOf(row)), el('small', subtitleOf(row))); button.onclick = () => { choose(row); if(key!=='pet')input.focus(); }; buttons.push(button); menu.append(button);
                     });
+                    const paging=el('div',null,'workspace-pager');
+                    for(const [label,next]of [['<',page-1],['>',page+1]]){if(next<1||(next>page&&rows.length<10))continue;const button=el('button',label,'workspace-text-button');button.type='button';button.setAttribute('aria-label',next<page?'Trang trước':'Trang sau');button.onmousedown=event=>event.preventDefault();button.onclick=event=>{event.stopPropagation();skipFocusSearch=true;input.focus();skipFocusSearch=false;search(next);};paging.append(button);}if(paging.childElementCount)menu.append(paging);
                     if (!buttons.length) menu.append(el('p', 'Chưa có kết quả. Nhập tên, mã hoặc số điện thoại để tìm.'));
                 } catch { if (turn === version) menu.replaceChildren(el('p', 'Không tải được gợi ý. Bấm lại ô để thử.')); }
             }
-            input.addEventListener('input', () => { hide(); timer = setTimeout(search, 250); }); input.addEventListener('focus', search); input.addEventListener('click', () => { if (menu.hidden) search(); });
+            input.addEventListener('input', () => { hide(); timer = setTimeout(search, 250); }); input.addEventListener('focus', ()=>{if(!skipFocusSearch)search();}); input.addEventListener('click', () => { if (menu.hidden) search(); });
             input.addEventListener('keydown', event => {
                 if (event.key === 'Escape' && !menu.hidden) { event.preventDefault(); event.stopPropagation(); hide(); return; }
                 if (event.key === 'ArrowDown' && menu.hidden) { event.preventDefault(); search(); return; }
@@ -163,30 +174,44 @@
         }
         let customerPicker, petPicker, servicePicker, roomPicker;
         let petLoadVersion = 0, customerLoadVersion = 0, serviceLoadVersion = 0;
-        customerPicker = picker('customer', query => query.length < 3 ? [] : workspace('customers', query), row => row.full_name, row => row.phone_number || row.customer_code, row => {
+        customerPicker = picker('customer', (query,page) => query.length < 3 ? [] : workspace('customers', query,null,page), row => row.full_name, row => row.phone_number || row.customer_code, row => {
+            state.serviceRejected=false;message.textContent='';
             petLoadVersion++; petPicker.reset(false); fields.phone.value = row?.phone_number || ''; fields.weight.value = fields.health.value = ''; state.pets = []; updateQuote();
-            if (!row) return;
+            checkSpecies();refreshSlots();if (!row) return;
             const turn = ++customerLoadVersion, generation = state.generation;
             all(page => workspace('pets', '', row.id, page)).then(rows => { if (turn !== customerLoadVersion || generation !== state.generation || state.customer?.id !== row.id) return; state.pets = rows; if (rows.length && !state.pet) petPicker.choose(rows[0]); }).catch(() => { if (generation === state.generation && state.customer?.id === row.id) message.textContent = 'Không tải được thú cưng của khách. Bỏ chọn khách rồi chọn lại.'; });
         });
-        petPicker = picker('pet', query => state.customer ? (state.pets || []).filter(row => (row.pet_name + ' ' + row.pet_code).toLowerCase().includes(query.toLowerCase())) : query.length < 3 ? [] : workspace('pets', query), row => row.pet_name, row => row.pet_code, async row => {
+        petPicker = picker('pet', (query,page) => state.customer ? (state.pets || []).filter(row => (row.pet_name + ' ' + row.pet_code).toLowerCase().includes(query.toLowerCase())).slice((page-1)*10,page*10) : query.length < 3 ? [] : workspace('pets', query,null,page), row => row.pet_name, row => row.pet_code, async row => {
+            state.serviceRejected=false;message.textContent='';
             const turn = ++petLoadVersion, generation = state.generation; fields.weight.value = row?.current_weight ?? ''; fields.health.value = row ? [row.safety_note,row.allergy,row.routine].filter(Boolean).join('\n') : ''; updateQuote();
+            checkSpecies();refreshSlots();
             if (row && !state.customer) {
                 try { const owners = await workspace('customers', '', row.customer_id); if (turn !== petLoadVersion || generation !== state.generation) return; if (!owners[0]) throw Error('owner_missing'); customerPicker.choose(owners[0]); petPicker.choose(row); }
                 catch { if (generation === state.generation) { petPicker.reset(false); fields.weight.value = fields.health.value = ''; message.textContent = 'Không tải được chủ nuôi. Chọn khách rồi chọn lại bé cưng.'; } }
             }
         });
-        roomPicker = picker('room', async query => state.rooms.filter(row => (row.room_number + ' ' + row.room_type).toLowerCase().includes(query.toLowerCase())), row => row.room_number + ' · ' + row.room_type, row => money(row.daily_price) + ' / ' + row.billing_minutes + ' phút', updateQuote);
-        servicePicker = picker('service', query => catalog('services', null, query), row => row.service_name, row => row.estimated_duration + ' phút' + (row.description ? ' · ' + row.description : ''), async row => {
+        roomPicker = picker('room', async (query,page) => state.rooms.filter(row => (row.room_number + ' ' + row.room_type).toLowerCase().includes(query.toLowerCase())).slice((page-1)*10,page*10), row => row.room_number + ' · ' + row.room_type, row => money(row.daily_price) + ' / ' + row.billing_minutes + ' phút', updateQuote);
+        servicePicker = picker('service', async(query,page) => (await rpc('get_staff_booking_services',{p_category:fields.category.value,p_pet_id:state.pet?.id||null,p_query:query,p_page:page})).items, row => row.service_name, row => row.estimated_duration + ' phút' + (row.description ? ' · ' + row.description : ''), async row => {
+            state.serviceRejected=false;
             const turn = ++serviceLoadVersion, generation = state.generation; state.prices = []; state.rooms = []; roomPicker.reset(false);
+            message.textContent='';checkSpecies();
             for (const key of ['style','checkout','diet','care','pickup','dropoff','distance','return']) fields[key].value = '';
             trip.value = row?.trip_type || 'one_way'; trip.disabled = Boolean(row?.trip_type); [...trip.options].forEach(option => option.hidden = Boolean(row?.trip_type && option.value !== row.trip_type));
             hotel.hidden = row?.category_code !== 'pet_hotel'; taxi.hidden = row?.category_code !== 'pet_taxi'; groups.style.hidden = !(row?.category_code === 'grooming_spa' && /grooming|cắt\s*tỉa|tạo\s*kiểu|style/i.test(row.service_name)); groups.return.hidden = trip.value !== 'round_trip';
+            groups.start.hidden=row?.category_code==='grooming_spa';groups.day.hidden=groups.slot.hidden=!groups.start.hidden;
+            refreshSlots();
             state.loading = Boolean(row); save.disabled = state.loading; updateQuote(); if (!row) return;
-            try { const kind = row.category_code === 'pet_hotel' ? 'rooms' : row.category_code === 'pet_taxi' ? 'taxi_prices' : 'prices'; const rows = await all(page => catalog(kind, row.id, '', page)); if (turn !== serviceLoadVersion || generation !== state.generation) return; if (kind === 'rooms') state.rooms = rows; else state.prices = rows; state.loading = false; save.disabled = false; updateQuote(); }
+            try { if(row.category_code==='pet_taxi'){({estimatedTaxiDistance:taxiEstimator}=await import('/scripts/shared/taxi-distance.mjs'));if(turn!==serviceLoadVersion||generation!==state.generation)return;updateTaxiDistance();}const kind = row.category_code === 'pet_hotel' ? 'rooms' : row.category_code === 'pet_taxi' ? 'taxi_prices' : 'prices'; const rows = await all(page => catalog(kind, row.id, '', page)); if (turn !== serviceLoadVersion || generation !== state.generation) return; if (kind === 'rooms') state.rooms = rows; else state.prices = rows; state.loading = false; save.disabled = false; updateQuote(); }
             catch { if (turn === serviceLoadVersion && generation === state.generation) { quoteText.textContent = ''; message.textContent = 'Không tải đủ bảng giá. Bỏ chọn dịch vụ rồi chọn lại.'; } }
         });
         function inRange(value, from, to, inclusive) { return value >= Number(from) && (to == null || value < Number(to) || inclusive && value === Number(to)); }
+        function updateTaxiDistance(){
+            const km=taxiEstimator?taxiEstimator(fields.pickup.value,fields.dropoff.value):null;
+            distance.value=km>0?String(km):'';distanceNote.style.color=km===0?'#DC2626':'#4F7A65';
+            distanceNote.textContent=km===0?'Địa chỉ đón và trả cần khác nhau.':km>0?'Ước tính giả lập. Cửa hàng xác nhận quãng đường và chi phí trước khi thực hiện.':'Nhập địa chỉ đón và trả để tính cự ly ước tính.';
+            if(distance.hasAttribute('aria-invalid')){distance.removeAttribute('aria-invalid');message.textContent='';}updateQuote();
+        }
+        fields.pickup.addEventListener('input',updateTaxiDistance);fields.dropoff.addEventListener('input',updateTaxiDistance);
         function effective(row, at) { return Date.parse(row.effective_from) <= at && (row.effective_to == null || Date.parse(row.effective_to) > at); }
         function amount() {
             const svc = state.service, at = instant(fields.start.value), weight = Number(fields.weight.value); if (!svc || !Number.isFinite(at) || !(weight > 0) || state.loading) return null;
@@ -199,11 +224,35 @@
             if (matches.length !== 1) return null; const row = matches[0]; if (svc.category_code !== 'pet_taxi') return Number(row.unit_price);
             let total = Number(row.base_price)+Number(row.surcharge); if (trip.value === 'round_trip' && !svc.trip_type) { const back = instant(fields.return.value), rows = state.prices.filter(row => effective(row,back) && inRange(weight,row.weight_from,row.weight_to,row.weight_to_inclusive) && inRange(Number(fields.distance.value),row.distance_from,row.distance_to,row.distance_to_inclusive)); if (rows.length !== 1) return null; total += Number(rows[0].base_price)+Number(rows[0].surcharge); } return total;
         }
-        function updateQuote() { const value = amount(); quoteText.textContent = state.loading ? 'Đang tải bảng giá...' : state.service ? value == null ? 'Chọn đủ thời gian, cân nặng và thông tin dịch vụ để xác định giá.' : 'Tạm tính ' + money(value) : ''; }
+        function speciesCompatible(){return !state.serviceRejected&&(!state.pet||!state.service||Boolean(state.pet.pet_species_id)&&Array.isArray(state.service.species_ids)&&state.service.species_ids.includes(state.pet.pet_species_id));}
+        function checkSpecies(){
+            if(!speciesCompatible()){fields.service.setAttribute('aria-invalid','true');message.textContent='Gói dịch vụ không hỗ trợ loài của bé đã chọn. Chọn gói khác hoặc đổi bé cưng.';}
+            else if(fields.service.getAttribute('aria-invalid')==='true'){fields.service.removeAttribute('aria-invalid');message.textContent='';}
+        }
+        function updateQuote() { const value = amount(); quoteText.textContent = state.loading ? 'Đang tải bảng giá...' : state.service ? value == null ? 'Chọn đủ thời gian, cân nặng và thông tin dịch vụ để xác định giá.' : 'Tạm tính ' + money(value) : '';save.disabled=state.loading||state.slotLoading||state.saving||state.done||!speciesCompatible()||(state.service?.category_code==='pet_taxi'&&!(Number(distance.value)>0)); }
+        fields.category.addEventListener('change',()=>{message.textContent='';servicePicker.reset();updateQuote();});
+        let slotVersion=0;
+        async function refreshSlots(){
+            const turn=++slotVersion,generation=state.generation;state.slots=[];state.slotLoading=false;fields.slot.replaceChildren(new Option('Chọn khung giờ',''));fields.slot.disabled=true;slotStatus.textContent='';
+            if(state.service?.category_code!=='grooming_spa'){updateQuote();return;}
+            fields.start.value='';updateQuote();
+            if(!state.customer||!state.pet||!fields.day.value)return;
+            state.slotLoading=true;slotStatus.textContent='Đang tải khung giờ trống…';updateQuote();
+            try{
+                const result=await rpc('get_staff_booking_slots',{p_customer_id:state.customer.id,p_pet_id:state.pet.id,p_service_id:state.service.id,p_day:fields.day.value});
+                if(turn!==slotVersion||generation!==state.generation)return;
+                if(!Array.isArray(result?.slots))throw Error('invalid_booking_slots');
+                state.slots=result.slots;fields.slot.replaceChildren(new Option('Chọn khung giờ',''),...result.slots.map(slot=>new Option(slot.label,slot.start_at)));fields.slot.disabled=!result.slots.length;
+                slotStatus.textContent=result.slots.length?'':'Ngày này chưa có khung giờ phù hợp. Chọn ngày khác hoặc kiểm tra ca làm.';
+            }catch(error){if(turn===slotVersion&&generation===state.generation)slotStatus.textContent=({service_species_not_supported:'Gói dịch vụ không hỗ trợ loài của bé đã chọn. Chọn gói khác.',invalid_slot_day:'Chọn ngày từ hôm nay đến 90 ngày tới.',pet_owner_mismatch:'Chọn lại bé cưng đang hoạt động của đúng khách hàng.'})[error.message]||'Không tải được khung giờ. Chọn lại ngày để thử lại.';}
+            finally{if(turn===slotVersion&&generation===state.generation){state.slotLoading=false;updateQuote();}}
+        }
+        fields.day.addEventListener('change',()=>{message.textContent='';refreshSlots();});
+        fields.slot.addEventListener('change',()=>{const slot=state.slots.find(slot=>slot.start_at===fields.slot.value);fields.start.value=slot?fields.day.value+'T'+slot.label:'';if(slot)message.textContent='';updateQuote();});
         ['start','checkout','distance','return'].forEach(key => fields[key].addEventListener('input', updateQuote));
         trip.addEventListener('change', () => { groups.return.hidden = trip.value !== 'round_trip'; if (groups.return.hidden) fields.return.value = ''; updateQuote(); });
         Object.values(fields).forEach(input => input.addEventListener('input', () => { if (input.getAttribute('aria-invalid') === 'true') { input.removeAttribute('aria-invalid'); message.textContent = ''; } }));
-        function closeDialog() { state.generation++; petLoadVersion++; serviceLoadVersion++; pickers.forEach(p=>p.hide()); overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
+        function closeDialog() { state.generation++;slotVersion++; petLoadVersion++; serviceLoadVersion++; pickers.forEach(p=>p.hide()); overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
         overlay.addEventListener('click', event => { pickers.forEach(p => { if (!p.group.contains(event.target)) p.hide(); }); if (event.target === overlay || event.target.closest('[data-close-modal="'+id+'"]')) closeDialog(); });
         overlay.addEventListener('keydown', event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDialog(); return; } if (event.key !== 'Tab') return; const nodes = [...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])')].filter(n=>n.offsetParent!==null), first=nodes[0],last=nodes.at(-1); if (event.shiftKey && document.activeElement===first) {event.preventDefault();last.focus();} else if (!event.shiftKey && document.activeElement===last) {event.preventDefault();first.focus();} });
         form.addEventListener('submit',event=>event.preventDefault());
@@ -212,21 +261,29 @@
             const invalid = (key,text)=>{fields[key].setAttribute('aria-invalid','true');message.textContent=text;fields[key].focus();};
             if (!state.customer) return invalid('customer','Chọn khách hàng từ danh sách gợi ý.'); if (!state.pet || state.pet.customer_id !== state.customer.id) return invalid('pet','Chọn bé cưng của đúng khách hàng.');
             if (!(Number(fields.weight.value)>0)) return invalid('weight','Cần ghi nhận cân nặng trong hồ sơ bé cưng trước khi đặt lịch.'); if (!state.service) return invalid('service','Chọn gói dịch vụ từ danh sách gợi ý.');
+            if(!speciesCompatible()){checkSpecies();updateQuote();return;}
+            if(state.service.category_code==='grooming_spa'&&!state.slots.some(slot=>slot.start_at===fields.slot.value))return invalid('slot','Chọn ngày và một khung giờ còn trống.');
             const at=instant(fields.start.value); if (!(at>Date.now())) return invalid('start','Thời gian hẹn phải ở tương lai.');
             const svc=state.service, details={customer_id:state.customer.id,pet_id:state.pet.id,service_id:svc.id,staff_id:null,scheduled_start_at:new Date(at).toISOString(),note:[fields.note.value.trim(),fields.health.value.trim(),!groups.style.hidden&&fields.style.value.trim()?'Yêu cầu tạo kiểu: '+fields.style.value.trim():''].filter(Boolean).join('\n')};
             if(details.note.length>4000)return invalid('note','Tổng ghi chú và lưu ý không được quá 4000 ký tự.');
             if(svc.category_code==='pet_hotel'){const end=instant(fields.checkout.value);if(!(end>at))return invalid('checkout','Giờ trả phòng phải sau giờ nhận phòng.');if(!state.room)return invalid('room','Chọn phòng trong danh sách gợi ý.');Object.assign(details,{room_id:state.room.id,check_out_at:new Date(end).toISOString(),diet_notes:fields.diet.value.trim(),care_notes:fields.care.value.trim()});}
-            if(svc.category_code==='pet_taxi'){if(!fields.pickup.value.trim())return invalid('pickup','Nhập địa chỉ đón.');if(!fields.dropoff.value.trim())return invalid('dropoff','Nhập địa chỉ trả.');const km=Number(fields.distance.value);if(!Number.isFinite(km)||km<=0)return invalid('distance','Nhập cự ly mỗi lượt lớn hơn 0.');const back=instant(fields.return.value);if(trip.value==='round_trip'&&!(back>=at+Number(svc.estimated_duration)*60000))return invalid('return','Lượt về phải sau khi hoàn thành lượt đi.');Object.assign(details,{pickup_address:fields.pickup.value.trim(),dropoff_address:fields.dropoff.value.trim(),distance_km:km,trip_type:trip.value,return_at:trip.value==='round_trip'?new Date(back).toISOString():null});}
+            if(svc.category_code==='pet_taxi'){if(!fields.pickup.value.trim())return invalid('pickup','Nhập địa chỉ đón.');if(!fields.dropoff.value.trim())return invalid('dropoff','Nhập địa chỉ trả.');const km=Number(fields.distance.value);if(!Number.isFinite(km)||km<=0)return invalid('distance','Nhập hai địa chỉ đón và trả khác nhau để tính cự ly.');const back=instant(fields.return.value);if(trip.value==='round_trip'&&!(back>=at+Number(svc.estimated_duration)*60000))return invalid('return','Lượt về phải sau khi hoàn thành lượt đi.');Object.assign(details,{pickup_address:fields.pickup.value.trim(),dropoff_address:fields.dropoff.value.trim(),distance_km:km,trip_type:trip.value,return_at:trip.value==='round_trip'?new Date(back).toISOString():null});}
             if(amount()==null)return invalid('service','Chưa có đúng một mức giá phù hợp. Kiểm tra ngày hẹn, cân nặng và thông tin dịch vụ.');
             if(!window.PawpalAdminAccess?.state.user?.permissions.includes('work.booking.create')){message.textContent='Bạn không có quyền tạo lịch hẹn.';return;}
             const name=['pet_hotel','pet_taxi'].includes(svc.category_code)?'create_admin_logistics_booking':'create_admin_service_booking',signature=JSON.stringify({name,details});if(!state.pending||state.pending.signature!==signature)state.pending={signature,id:crypto.randomUUID()};const requestId=state.pending.id,generation=state.generation;
             state.saving=true;save.disabled=true;save.textContent='Đang tạo';const controls=[...grid.querySelectorAll('input,select,textarea,button')],disabled=controls.map(n=>n.disabled);controls.forEach(n=>n.disabled=true);
             try {const data=await rpc(name,{p_id:requestId,p_details:details});if(data!==requestId)throw Error('invalid_booking_result');if(generation===state.generation){state.done=true;success.textContent='Đã tạo lịch BKG-'+data.replaceAll('-','').toUpperCase()+'. Chờ Quản lý phân công.';save.textContent='Đã tạo lịch';state.pending=null;}}
-            catch(error){if(generation===state.generation){const messages={pet_owner_mismatch:'Bé cưng không thuộc khách hàng đã chọn. Chọn lại hồ sơ.',service_species_not_supported:'Dịch vụ không hỗ trợ loài thú cưng này.',hotel_room_conflict:'Phòng đã có lịch trong khoảng thời gian này. Chọn phòng hoặc thời gian khác.',hotel_room_unavailable:'Phòng không phù hợp cân nặng hoặc không còn nhận đặt. Chọn phòng khác.',ambiguous_service_price:'Bảng giá đã thay đổi hoặc chưa có đúng một mức giá. Chọn lại dịch vụ.',ambiguous_taxi_price:'Chưa có đúng một giá xe phù hợp. Chọn lại dịch vụ và cự ly.',ambiguous_taxi_return_price:'Chưa có giá phù hợp cho lượt về.',taxi_service_trip_mismatch:'Hành trình không phù hợp gói xe đã chọn.',active_customer_required:'Khách hàng không còn hoạt động. Kiểm tra lại hồ sơ.',pet_weight_required:'Cần ghi nhận cân nặng trong hồ sơ bé cưng.',future_booking_required:'Thời gian hẹn phải ở tương lai.'};message.textContent=messages[error.message]||(error.code==='42501'?'Bạn không có quyền tạo lịch hẹn.':'Chưa xác nhận tạo lịch thành công. Giữ nguyên thông tin và thử lại.');save.textContent='Tạo lịch hẹn';}}
-            finally{state.saving=false;if(!state.done){controls.forEach((n,i)=>n.disabled=disabled[i]);save.disabled=false;}}
+            catch(error){if(generation===state.generation){if(error.message==='service_species_not_supported'){state.serviceRejected=true;fields.service.setAttribute('aria-invalid','true');}const messages={pet_owner_mismatch:'Bé cưng không thuộc khách hàng đã chọn. Chọn lại hồ sơ.',service_species_not_supported:'Dịch vụ không hỗ trợ loài thú cưng này.',hotel_room_conflict:'Phòng đã có lịch trong khoảng thời gian này. Chọn phòng hoặc thời gian khác.',hotel_room_unavailable:'Phòng không phù hợp cân nặng hoặc không còn nhận đặt. Chọn phòng khác.',ambiguous_service_price:'Bảng giá đã thay đổi hoặc chưa có đúng một mức giá. Chọn lại dịch vụ.',ambiguous_taxi_price:'Chưa có đúng một giá xe phù hợp. Chọn lại dịch vụ và cự ly.',ambiguous_taxi_return_price:'Chưa có giá phù hợp cho lượt về.',taxi_service_trip_mismatch:'Hành trình không phù hợp gói xe đã chọn.',active_customer_required:'Khách hàng không còn hoạt động. Kiểm tra lại hồ sơ.',pet_weight_required:'Cần ghi nhận cân nặng trong hồ sơ bé cưng.',future_booking_required:'Thời gian hẹn phải ở tương lai.',outside_operating_hours:'Khung giờ nằm ngoài giờ mở cửa hoặc không đủ thời gian hoàn thành dịch vụ.',invalid_booking_slot:'Chọn một khung giờ trong danh sách giờ trống.',booking_slot_full:'Khung giờ vừa hết chỗ. Chọn khung giờ khác.',no_scheduled_staff:'Khung giờ không còn kỹ thuật viên có ca phù hợp. Chọn giờ khác.',invalid_slot_day:'Chọn ngày từ hôm nay đến 90 ngày tới.',booking_hours_unconfigured:'Chưa có cấu hình giờ mở cửa.',booking_capacity_unconfigured:'Chưa có cấu hình sức chứa lịch hẹn.'};message.textContent=messages[error.message]||(error.code==='42501'?'Bạn không có quyền tạo lịch hẹn.':'Chưa xác nhận tạo lịch thành công. Giữ nguyên thông tin và thử lại.');save.textContent='Tạo lịch hẹn';if(['outside_operating_hours','invalid_booking_slot','booking_slot_full','no_scheduled_staff'].includes(error.message))await refreshSlots();}}
+            finally{state.saving=false;if(!state.done){controls.forEach((n,i)=>n.disabled=disabled[i]);if(state.service?.category_code==='grooming_spa')fields.slot.disabled=!state.slots.length;}updateQuote();}
         };
-        state.open=()=>{if(state.saving)return;state.generation++;state.done=false;state.pending=null;state.service=null;state.customer=null;state.pet=null;state.room=null;state.pets=[];state.prices=[];state.rooms=[];state.loading=false;form.reset();grid.querySelectorAll('input,select,textarea,button').forEach(n=>n.disabled=false);pickers.forEach(p=>p.reset(false));fields.phone.value=fields.weight.value=fields.health.value='';hotel.hidden=taxi.hidden=groups.style.hidden=groups.return.hidden=true;state.returnFocus=document.activeElement;message.textContent=success.textContent=quoteText.textContent='';save.disabled=false;save.textContent='Tạo lịch hẹn';overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');fields.customer.focus();};
-        state.close=closeDialog;state.clear=()=>{closeDialog();form.reset();state.customer=state.pet=state.service=state.room=null;state.pending=null;pickers.forEach(p=>p.reset(false));};dialog=state;return state;
+        state.open=()=>{
+            if(state.saving)return;state.generation++;slotVersion++;petLoadVersion++;serviceLoadVersion++;state.done=false;state.serviceRejected=false;state.pending=null;state.service=null;state.customer=null;state.pet=null;state.room=null;state.pets=[];state.prices=[];state.rooms=[];state.slots=[];state.slotLoading=false;state.loading=false;
+            form.reset();grid.querySelectorAll('input,select,textarea,button').forEach(n=>n.disabled=false);pickers.forEach(p=>p.reset(false));fields.phone.value=fields.weight.value=fields.health.value='';hotel.hidden=taxi.hidden=groups.style.hidden=groups.return.hidden=groups.day.hidden=groups.slot.hidden=true;groups.start.hidden=false;
+            fields.day.min=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const last=new Date(Date.now()+90*86400000);fields.day.max=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(last);
+            Object.values(fields).forEach(n=>n.removeAttribute('aria-invalid'));[...trip.options].forEach(option=>option.hidden=false);updateTaxiDistance();
+            fields.slot.replaceChildren(new Option('Chọn ngày để xem giờ trống',''));slotStatus.textContent='';state.returnFocus=document.activeElement;message.textContent=success.textContent=quoteText.textContent='';save.disabled=false;save.textContent='Tạo lịch hẹn';overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');fields.customer.focus();
+        };
+        state.close=closeDialog;state.clear=()=>{closeDialog();form.reset();state.customer=state.pet=state.service=state.room=null;state.serviceRejected=false;state.pending=null;Object.values(fields).forEach(n=>n.removeAttribute('aria-invalid'));message.textContent='';pickers.forEach(p=>p.reset(false));};dialog=state;return state;
     }
     window.addEventListener('hashchange',()=>dialog?.close());
     window.PawpalStaffBooking=Object.freeze({open:()=>{if(window.PawpalAdminAccess?.isStaff()&&window.PawpalAdminAccess.state.user.permissions.includes('work.booking.create'))build().open();},closeAll:()=>dialog?.clear()});
@@ -697,26 +754,36 @@
 targets:{"appointments":"tab-service-detail"},
 profiles:{"service-profile":{read:"appointments",render:async(ctx)=>{const {el,date,money,status,read,table,card,facts,go,root,kind,id,row,target,turn}=ctx;
             const details = facts(root, row.appointment_code, [['Trạng thái', status(row.appointment_status)], ['Bắt đầu', date(row.scheduled_start_at)], ['Kết thúc', date(row.scheduled_end_at)]]);
-            if(PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle')){const complaint=el('button','Tạo khiếu nại','admin-btn admin-btn-secondary');complaint.type='button';complaint.onclick=()=>PawpalStaffComplaintCreate.open({appointmentId:id});details.append(complaint);}
+            const careNotes=[['Dị ứng',row.pet_allergy],['Cảnh báo an toàn',row.pet_safety_note],['Lưu ý chăm sóc',row.pet_routine]].filter(([,value])=>value&& !/^(không|none)$/i.test(String(value).trim()));
+            if(careNotes.length){
+                const warnings=el('div',null,'workspace-service-pet-alerts');warnings.style.cssText='margin:16px 0;background:transparent;border:none;';
+                if(row.pet_name)warnings.append(el('strong',row.pet_name));
+                for(const [label,value]of careNotes){const line=el('p',label+': '+value);line.style.cssText='margin:6px 0;white-space:pre-wrap;color:'+(label==='Lưu ý chăm sóc'?'#4F7A65':'#DC2626')+';';warnings.append(line);}
+                details.append(warnings);
+            }
+            const actions=el('div',null,'staff-service-profile-actions');
+            actions.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;';
+            if(PawpalAdminAccess.state.user.permissions.includes('work.complaint.handle')){const complaint=el('button','Tạo khiếu nại','admin-btn admin-btn-secondary');complaint.type='button';complaint.onclick=()=>PawpalStaffComplaintCreate.open({appointmentId:id});actions.append(complaint);}
             if (window.PawpalAdminAccess.state.user.permissions.includes('work.cashier.collect')) {
-                const receipt=el('button','Phiếu ca dịch vụ','admin-btn admin-btn-secondary');receipt.type='button';receipt.onclick=()=>window.PawpalStaffServiceReceipt.open({appointmentId:id});details.append(receipt);
+                const receipt=el('button','Phiếu ca dịch vụ','admin-btn admin-btn-secondary');receipt.type='button';receipt.onclick=()=>window.PawpalStaffServiceReceipt.open({appointmentId:id});actions.append(receipt);
             }
             if (['in_progress','completed'].includes(row.appointment_status) && window.PawpalAdminAccess.state.user.permissions.includes('work.service.perform')) {
                 const pickup = el('button', 'Mời đón bé', 'admin-btn admin-btn-secondary'); pickup.type = 'button';
-                pickup.onclick = () => window.PawpalStaffPickup.open({ appointmentId:id, onSaved:()=>ctx.refresh() }); details.append(pickup);
+                pickup.onclick = () => window.PawpalStaffPickup.open({ appointmentId:id, onSaved:()=>ctx.refresh() }); actions.append(pickup);
             }
             if (!['cancelled','no_show'].includes(row.appointment_status) && window.PawpalAdminAccess.state.user.permissions.includes('work.cashier.collect')) {
                 const collect = el('button', 'Thu tiền', 'admin-btn admin-btn-primary'); collect.type = 'button';
-                collect.onclick = () => window.PawpalStaffServiceCashier.open({ appointmentId: id, onSaved: () => ctx.refresh() }); details.append(collect);
+                collect.onclick = () => window.PawpalStaffServiceCashier.open({ appointmentId: id, onSaved: () => ctx.refresh() }); actions.append(collect);
             }
             if (['confirmed','checked_in','in_progress'].includes(row.appointment_status) && window.PawpalAdminAccess.state.user.permissions.includes('work.service.perform')) {
                 const intake = el('button', 'Lập biên bản tiếp nhận', 'admin-btn admin-btn-primary'); intake.type = 'button';
-                intake.onclick = () => window.PawpalStaffIntake.open({ appointmentId: id, onSaved: () => ctx.refresh() }); details.append(intake);
+                intake.onclick = () => window.PawpalStaffIntake.open({ appointmentId: id, onSaved: () => ctx.refresh() }); actions.append(intake);
             }
             if (row.appointment_status === 'in_progress' && window.PawpalAdminAccess.state.user.permissions.includes('work.service.perform')) {
                 const handover = el('button', 'Bàn giao', 'admin-btn admin-btn-primary'); handover.type = 'button';
-                handover.onclick = () => window.PawpalStaffHandover.open({ appointmentId: id, onSaved: () => ctx.refresh() }); details.append(handover);
+                handover.onclick = () => window.PawpalStaffHandover.open({ appointmentId: id, onSaved: () => ctx.refresh() }); actions.append(handover);
             }
+            if(actions.childElementCount)details.append(actions);
             const stays = await read('hotel_stays', { id }); if (!ctx.isCurrent()) return;
             for (const stay of stays) {
                 const stayBlock = facts(root, 'Lưu trú', [['Phòng', stay.room_number || 'Chưa tải được tên phòng'], ['Trạng thái', stay.status === 'closed' ? 'Đã trả phòng' : stay.status === 'checked_in' ? 'Đang lưu trú' : status(stay.status)]]);
@@ -1701,7 +1768,8 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 const petWeight = Number(item.pet_profile?.weight) > 0 ? `${item.pet_profile.weight} kg` : 'Chưa cập nhật';
                 const rawAllergy = item.pet_profile?.allergy && !/^(không|none)$/i.test(item.pet_profile.allergy.trim()) ? item.pet_profile.allergy.trim() : null;
                 const rawRoutine = item.pet_profile?.routine && !/^(không|none)$/i.test(item.pet_profile.routine.trim()) ? item.pet_profile.routine.trim() : null;
-                const petAlertParts = [rawAllergy ? `Dị ứng: ${rawAllergy}` : null, rawRoutine ? `Lưu ý: ${rawRoutine}` : null].filter(Boolean);
+                const rawSafety = item.pet_profile?.safety_note && !/^(không|none)$/i.test(item.pet_profile.safety_note.trim()) ? item.pet_profile.safety_note.trim() : null;
+                const petAlertParts = [rawAllergy ? `Dị ứng: ${rawAllergy}` : null, rawSafety ? `An toàn: ${rawSafety}` : null, rawRoutine ? `Lưu ý: ${rawRoutine}` : null].filter(Boolean);
                 const petAllergy = petAlertParts.length > 0 ? petAlertParts.join(' • ') : (item.note && item.note.toLowerCase().includes('dị ứng') ? item.note : null);
 
                 const intake = mapRecord(item.records, 'intake',item.pet_id);
@@ -1787,7 +1855,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         const state=PawpalServices.state,found=state.bookingsData.find(b=>b.id===id||b.dbId===id);
         if(found&&!force&&state.pageBookings?.some(b=>b.dbId===found.dbId))return found;
         const rows=mapBookings(await fetchBookingsRaw({id,force,forceDirectory:false}));
-        const booking=rows[0];
+        const booking=rows.find(b=>b.id===id||b.dbId===id);
         state.bookingsData=state.bookingsData.filter(b=>b.id!==id&&b.dbId!==id);
         if(booking)state.bookingsData=[...state.bookingsData.filter(b=>b.dbId!==booking.dbId),booking];
         return booking||null;
@@ -1885,18 +1953,20 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         });
 
         sessionStorage.setItem('pawpal_admin_services_active_subtab', subtabId);
+        const selectedId=PawpalServices.state.selectedBookingId;
+        const targetHash='#'+subtabId+(subtabId==='tab-service-detail'&&selectedId?'?id='+encodeURIComponent(selectedId):'');
         if (updateHistory) {
-            if (window.location.hash !== '#' + subtabId) {
+            if (window.location.hash !== targetHash) {
                 try {
-                    history.pushState(null, '', '#' + subtabId);
+                    history.pushState(null, '', targetHash);
                 } catch (e) {
-                    window.location.hash = '#' + subtabId;
+                    window.location.hash = targetHash;
                 }
             }
         } else {
-            if (window.location.hash !== '#' + subtabId) {
+            if (window.location.hash !== targetHash) {
                 try {
-                    history.replaceState(null, '', '#' + subtabId);
+                    history.replaceState(null, '', targetHash);
                 } catch (e) {}
             }
         }

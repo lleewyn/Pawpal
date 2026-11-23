@@ -1,5 +1,6 @@
 import {editBookingOwner,editBookingPet} from './booking-inline.mjs?v=20261119_booking_breed_text';
 import {vietnamDateTimeInput,parseVietnamDateTimeInput} from '/scripts/shared/booking-time.mjs';
+import {estimatedTaxiDistance} from '/scripts/shared/taxi-distance.mjs';
 import {guestCommerce,GuestCommerceError} from '/scripts/shared/guest-commerce-client.mjs';
 import {isGuestShopper} from '/scripts/shared/guest-cart.mjs';
 import {renderGuestPets,loadGuestBookingContext} from './booking-guest-pets.mjs';
@@ -237,12 +238,6 @@ function renderServices(){
  if(preset && (state.guest||preset.category==='pet_hotel'||Number(state.pet.weight)>0))choose(preset);
  renderCards();
  el('step2Back').onclick=()=>show(1);el('step2Next').disabled=!state.service;el('step2Next').onclick=()=>{if(state.service){renderSchedule();show(3);}};
-}
-function estimatedTaxiDistance(pickup,dropoff){
- const normalize=value=>String(value||'').normalize('NFC').trim().toLocaleLowerCase('vi').replace(/\s+/g,' ');
- const from=normalize(pickup),to=normalize(dropoff);if(!from||!to)return null;if(from===to)return 0;
- let hash=0;for(const character of [from,to].sort().join('|'))hash=(hash*31+character.codePointAt(0))>>>0;
- return (10+hash%291)/10;
 }
 function renderSchedule(){
  clearInterval(availabilityPollTimer);

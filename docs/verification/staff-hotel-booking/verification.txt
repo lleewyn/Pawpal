@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-11-23T08:21:43.306Z",
+  "checks": [
+    "Hotel catalog shows multiple dog-compatible packages; cat/rabbit-only options filtered by species",
+    "Database rejects Daycare for unsupported rabbit",
+    "Changing pet to rabbit immediately explains incompatibility and disables create without sending a write",
+    "Selecting a compatible package clears the previous species error",
+    "Dog Daycare creates exactly one appointment and room reservation, leaves assignment to manager",
+    "All test customers, pets, hotel reservations and audit rows rolled back"
+  ],
+  "scope": "Actual form with live STAFF RPCs; actual Hotel catalog/room; synthetic customer and pets rolled back"
+}

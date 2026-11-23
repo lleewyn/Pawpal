@@ -2288,7 +2288,7 @@
             <form id="formSalesCashier" class="modal-body-clean" onsubmit="return false;" novalidate style="max-height:72vh;overflow-y:auto;overscroll-behavior:contain;">
                 <p id="salesCashierMeta" style="color:var(--text-muted);margin:0;"></p>
                 <div style="display:flex;gap:24px;flex-wrap:wrap;"><span>Tổng chi phí <strong id="salesCashierTotal">—</strong></span><span>Đã thu sau hoàn <strong id="salesCashierCollected">—</strong></span><span>Còn phải thu <strong id="salesCashierRemaining">—</strong></span></div>
-                <div id="salesCashierHistory" style="max-height:200px;overflow-y:auto;overscroll-behavior:contain;"></div>
+                <div id="salesCashierHistory" style="max-height:200px;flex-shrink:0;overflow-y:auto;overscroll-behavior:contain;"></div>
                 <div class="form-row-2col">
                     <div class="form-group-item"><label for="salesCashierAction" class="form-label-clean">Thao tác</label><select id="salesCashierAction" class="admin-select"><option value="collect">Thu tiền</option><option value="refund">Hoàn tiền</option></select></div>
                     <div class="form-group-item"><label for="salesCashierMethod" class="form-label-clean">Phương thức <span style="color:#DC2626;">*</span></label><select id="salesCashierMethod" class="admin-select" required></select></div>

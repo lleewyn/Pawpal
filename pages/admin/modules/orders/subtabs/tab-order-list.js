@@ -1322,7 +1322,9 @@
         sales_refund_return_not_received:'Cần nhận và kiểm định hàng trả trước khi hoàn tiền.',
         sales_refund_return_limit:'Số tiền vượt giá trị còn được hoàn của các sản phẩm đã trả.',
         sales_refund_return_reconcile:'Đơn có khoản hoàn cũ chưa liên kết yêu cầu trả hàng. Cần đối soát trước khi hoàn thêm.',
+        invalid_sales_money:'Điền đủ số tiền, lý do và xác nhận giao dịch thực tế.',
         invalid_service_money:'Điền đủ số tiền, lý do và xác nhận giao dịch thực tế.',
+        sales_money_method_invalid:'Phương thức thanh toán không còn khả dụng. Đóng và mở lại để chọn phương thức khác.',
         sales_request_conflict:'Yêu cầu này đã được ghi với nội dung khác. Tải lại để đối chiếu.'
     })[e?.message]||(e?.code==='42501'?'Bạn chưa có quyền thực hiện thao tác này.':'Không thể ghi giao dịch. Vui lòng tải lại và kiểm tra số tiền.');
     m.enhanceEntitySelects = function() {
@@ -1365,11 +1367,12 @@
         const payment=context?.payments.find(p=>p.id===el('salesCashierPayment').value);
         const selected=context?.returnRefunds?.find(r=>r.id===el('salesCashierReturn').value);
         const amount=Number(el('salesCashierAmount').value);
+        const fullyRefunded=refund&&context?.returnRefunds?.length&&context.returnRefunds.every(r=>r.request_status==='completed'&&Number(r.remaining)===0);
         const rmaError=refund&&context?.returnRefunds?.length
-            ? (!selected?'Chọn yêu cầu trả hàng đã nhận.':amount>Number(selected.remaining)?'Số tiền vượt giá trị còn được hoàn của các sản phẩm đã trả.':''):'';
+            ? (fullyRefunded?'Các yêu cầu trả hàng đã được hoàn tiền đầy đủ.':!selected?'Chọn yêu cầu trả hàng đã nhận.':amount>Number(selected.remaining)?'Số tiền vượt giá trị còn được hoàn của các sản phẩm đã trả.':''):'';
         const plan=rmaError?{error:rmaError}:refund&&payment?refundPreview?.(payment,el('salesCashierAmount').value):null;
         row.textContent=refund?(plan?.error||(plan?'Thu hồi '+plan.points+' điểm thưởng. Chi tiêu xét hạng giảm '+m.formatCurrency(plan.eligible)+'. Điểm còn lại '+plan.balance+'.':'Chọn khoản thu gốc để đối soát điểm.')):'';
-        row.style.color=plan?.error?'#DC2626':'#4F7A65';
+        row.style.color=plan?.error&&!fullyRefunded?'#DC2626':'#4F7A65';
         el('btnSaveSalesMoney').disabled=busy||!context||(refund&&(!plan||!!plan.error));
         return plan;
     }
@@ -1391,6 +1394,11 @@
         el('salesCashierAmount').value=maximum>0?String(maximum):'';el('salesCashierAmount').max=String(maximum);
         m.enhanceEntitySelects();
         previewRefund();
+    }
+    function loadError(error){
+        if(error?.code==='PGRST202'||error?.code==='42883')return 'Chưa thể tải thông tin thu ngân do hệ thống chưa được cập nhật đầy đủ. Vui lòng liên hệ quản trị viên.';
+        if(error?.code==='42501'||error?.message==='sales_cashier_forbidden')return m.errorMessage(error);
+        return 'Không thể tải thông tin thu ngân. Đóng và mở lại để thử lại.';
     }
     async function load(current){
         ({refundLoyaltyPreview:refundPreview}=await import('/scripts/shared/refund-loyalty.mjs'));
@@ -1424,7 +1432,7 @@
         for(const id of ['salesCashierTotal','salesCashierCollected','salesCashierRemaining'])el(id).textContent='—';
         el('btnSaveSalesMoney').disabled=true;
         el('modalSalesCashier').style.removeProperty('display');el('modalSalesCashier').classList.add('active');
-        try{await load(current);}catch(error){if(current===session)el('salesCashierError').textContent=m.errorMessage(error);}
+        try{await load(current);}catch(error){if(current===session){el('salesCashierHistory').textContent='Chưa tải được lịch sử giao dịch.';el('salesCashierError').textContent=loadError(error);}}
         finally{if(current===session)previewRefund();}
     };
     el('formSalesCashier').addEventListener('submit',event=>event.preventDefault());

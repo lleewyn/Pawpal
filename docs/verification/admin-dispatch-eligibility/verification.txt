@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-11-23T04:57:40.214Z",
+  "checks": [
+    "Unranked available staff offered for service without level requirement; busy and recurring-only staff excluded",
+    "Service requiring technician level still excludes staff without that level",
+    "Server rejects forced assignment to busy staff",
+    "Actual dispatch autocomplete lists and selects eligible unranked staff",
+    "Real assignment RPC saves correct responsible staff",
+    "Reported appointment displays precise conflicting booking and full time range, keeps save disabled",
+    "Fixture staff, shifts, bookings and assignment removed; reported appointment unchanged",
+    "Migration 278 applied; no existing shifts or bookings changed"
+  ],
+  "scope": "Live Admin RPCs, actual dispatch modal; fixture changes rolled back; recurring-only and conflict guards preserved"
+}

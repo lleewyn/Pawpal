@@ -348,6 +348,7 @@ body.admin-body .admin-ui-standard.admin-ui-customer-reference :is(.admin-btn,.a
 .staff-workspace-modal .workspace-error { margin: 0; color: #DC2626; background: transparent; border: none; font-size: 13px; }
 .staff-workspace-modal .workspace-error:empty { display: none; }
 .staff-workspace-modal .workspace-pet-card { width: 760px; max-width: 95vw; }
+#staffBookingModal .workspace-modal-footer .admin-btn:disabled { opacity: .5; cursor: not-allowed; }
 .workspace-pet-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .workspace-pet-grid .workspace-field-wide { grid-column: 1 / -1; }
 .workspace-autocomplete { position: relative; }

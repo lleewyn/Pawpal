@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-11-23T04:37:11.745Z",
+  "checks": [
+    "NV-A saves allergy and safety note through real edit modal, including legacy gender",
+    "NV-A appointment reads current warnings matching pet profile",
+    "Actual staff appointment warning renderer displays new allergy and safety text",
+    "NV-B cannot read unassigned appointment or its pet warnings",
+    "QL-A reads identical saved warnings; actual manager alert mapping includes safety note",
+    "Other pet and original owner unchanged",
+    "Fixture customer, both pets, appointment and audit history rolled back",
+    "Migration 277 applied without changing existing business records"
+  ],
+  "scope": "Real STAFF/ADMIN database roles; actual pet editor and warning renderers; fixtures fully rolled back; transport Realtime not exercised"
+}

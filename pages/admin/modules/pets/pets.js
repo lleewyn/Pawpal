@@ -2,6 +2,7 @@
 (function () {
     'use strict';
     let petModal;
+    const normalizeGender=value=>({male:'male',nam:'male','đực':'male',female:'female',nu:'female','nữ':'female','cái':'female',unknown:'unknown','chưa rõ':'unknown'})[String(value||'unknown').trim().toLocaleLowerCase('vi')]||'unknown';
     const node = (tag, text, className) => { const element = document.createElement(tag); if (text != null) element.textContent = text; if (className) element.className = className; return element; };
     async function lookup(kind, query = '', id = null, page = 1) {
         const { data, error } = await window.getSupabaseClient().rpc('get_staff_workspace', { p_kind: kind, p_query: query, p_id: id, p_page: page });
@@ -28,7 +29,9 @@
         const owner = field('owner', 'Chủ nuôi', 'text', true, true); owner.input.placeholder = 'Tìm tên, mã khách hoặc số điện thoại';
         field('phone', 'Số điện thoại').input.readOnly = true;
         field('name', 'Tên bé cưng', 'text', true);
-        const breed = field('breed', 'Giống và loài', 'text', true); breed.input.placeholder = 'Tìm giống trong danh mục';
+        const species = field('species', 'Loài', 'select', true);
+        species.input.append(new Option('Chọn loài',''));
+        const breed = field('breed', 'Giống cụ thể', 'text', true); breed.input.placeholder = 'Nhập giống cụ thể';breed.input.maxLength=160;
         const gender = field('gender', 'Giới tính', 'select');
         for (const [value, text] of [['unknown', 'Chưa rõ'], ['male', 'Đực'], ['female', 'Cái']]) { const option = node('option', text); option.value = value; gender.input.append(option); }
         field('dob', 'Ngày sinh', 'date');
@@ -42,7 +45,7 @@
             input.addEventListener('input', clearFieldError); input.addEventListener('change', clearFieldError);
         });
         cancel.type = save.type = 'button'; cancel.dataset.closeModal = id; footer.append(cancel, save); form.append(header, grid, errorText, footer); card.append(form); overlay.append(card); document.body.append(overlay);
-        const state = { overlay, form, fields, errorText, save, saving: false, loading: false, expectedUpdatedAt: null, editing: false, owner: null, breed: null, petId: null, onCreated: null, returnFocus: null, generation: 0 };
+        const state = { overlay, form, fields, errorText, save, saving: false, loading: false, expectedUpdatedAt: null, editing: false, owner: null, petId: null, onCreated: null, returnFocus: null, generation: 0 };
         const pickers = [];
         function autocomplete({ group, input }, key, kind, minimum, titleOf, subtitleOf, selected) {
             group.classList.add('workspace-autocomplete');
@@ -89,7 +92,13 @@
             const picker = { choose, reset, invalidate, group }; pickers.push(picker); return picker;
         }
         const ownerPicker = autocomplete(owner, 'owner', 'customers', 3, row => row.full_name, row => row.phone_number || row.customer_code, row => { fields.phone.value = row?.phone_number || ''; });
-        const breedPicker = autocomplete(breed, 'breed', 'breeds', 0, row => row.breed_name, row => row.species_name);
+        state.loadSpecies=async()=>{
+            const generation=state.generation;
+            const {data,error}=await window.getSupabaseClient().rpc('get_staff_pet_species');if(error)throw error;
+            if(generation!==state.generation)return;
+            if(!Array.isArray(data))throw Error('invalid_species_catalog');
+            species.input.replaceChildren(new Option('Chọn loài',''),...data.map(row=>new Option(row.species_name,row.id)));
+        };
         overlay.addEventListener('click', event => { pickers.forEach(picker => { if (!picker.group.contains(event.target)) picker.invalidate(); }); if (event.target === overlay || event.target.closest('[data-close-modal="' + id + '"]')) closeDialog(); });
         function closeDialog() { state.generation++; pickers.forEach(picker => picker.invalidate()); overlay.classList.remove('active'); overlay.setAttribute('aria-hidden', 'true'); if (state.returnFocus?.isConnected) state.returnFocus.focus(); }
         overlay.addEventListener('keydown', event => {
@@ -105,7 +114,10 @@
             const invalid = (input, text) => { input.setAttribute('aria-invalid', 'true'); errorText.textContent = text; input.focus(); };
             if (!state.owner) return invalid(fields.owner, 'Chọn chủ nuôi từ danh sách gợi ý.');
             const name = fields.name.value.trim(); if (!name || name.length > 200) return invalid(fields.name, 'Nhập tên bé cưng từ 1 đến 200 ký tự.');
-            if (!state.breed) return invalid(fields.breed, 'Chọn giống và loài từ danh sách gợi ý.');
+            if (!fields.species.value) return invalid(fields.species, 'Chọn một loài thú cưng.');
+            const breedName=fields.breed.value.trim();
+            if(!breedName||breedName.length>160||/^\d+$/.test(breedName)||/^(chưa rõ|chưa cập nhật|unknown|null|undefined)$/i.test(breedName))return invalid(fields.breed,'Nhập giống cụ thể hợp lệ, tối đa 160 ký tự.');
+            if(!['male','female','unknown'].includes(fields.gender.value))return invalid(fields.gender,'Chọn giới tính của bé cưng hoặc Chưa rõ.');
             const birth = fields.dob.value, today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
             if (birth && birth > today) return invalid(fields.dob, 'Ngày sinh không được ở tương lai.');
             const weightValue = fields.weight.value === '' ? null : Number(fields.weight.value);
@@ -114,19 +126,19 @@
             state.saving = true; save.disabled = true; save.textContent = 'Đang lưu'; const turn = state.generation;
             try {
                 const { data, error } = await window.getSupabaseClient().rpc('save_admin_pet', { p_pet_id: state.petId, p_expected_updated_at: state.expectedUpdatedAt, p_details: {
-                    customer_id: state.owner.id, pet_name: name, breed_id: state.breed.id, gender: fields.gender.value, date_of_birth: birth || null, color: fields.color.value.trim() || null,
+                    customer_id: state.owner.id, pet_name: name, species_id:fields.species.value, breed_name:breedName, gender: fields.gender.value, date_of_birth: birth || null, color: fields.color.value.trim() || null,
                     safety_note: fields.safety.value.trim() || null, allergy: fields.allergy.value.trim() || null, routine: fields.routine.value.trim() || null, status: 'active'
                 }, p_weight: weightValue });
                 if (error) throw error;
                 if (data !== state.petId) throw Error('invalid_pet_result');
                 if (turn === state.generation && overlay.classList.contains('active')) { const callback = state.onCreated; closeDialog(); state.reset(); if (window.PawpalAdminAccess?.isStaff()) callback?.(data); }
             } catch (error) {
-                if (turn === state.generation) errorText.textContent = error.message === 'duplicate_pet_name' ? 'Chủ nuôi đã có bé cưng trùng tên. Hãy kiểm tra hồ sơ có sẵn.' : error.code === 'PT409' ? 'Hồ sơ đã thay đổi. Đóng form và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.' : error.code === '42501' ? 'Bạn không có quyền lưu hồ sơ bé cưng.' : 'Chưa xác nhận lưu thành công. Giữ nguyên thông tin để kiểm tra hoặc thử lại.';
+                if (turn === state.generation) errorText.textContent = error.message === 'duplicate_pet_name' ? 'Chủ nuôi đã có bé cưng trùng tên. Hãy kiểm tra hồ sơ có sẵn.' : error.message==='invalid_pet_details'?'Thông tin bé cưng chưa hợp lệ. Kiểm tra giới tính, ngày sinh và cân nặng trước khi lưu.':error.message==='invalid_pet_species'?'Loài đã chọn không còn khả dụng. Đóng form và mở lại để tải danh mục mới.': error.code === 'PT409' ? 'Hồ sơ đã thay đổi. Đóng form và mở lại để lấy dữ liệu mới; nội dung đang nhập vẫn được giữ trong form này.' : error.code === '42501' ? 'Bạn không có quyền lưu hồ sơ bé cưng.' : 'Chưa xác nhận lưu thành công. Giữ nguyên thông tin để kiểm tra hoặc thử lại.';
             } finally { state.saving = false; save.disabled = false; save.textContent = state.editing ? 'Lưu thay đổi' : 'Lưu bé cưng'; }
         };
         form.addEventListener('submit', event => event.preventDefault());
         state.close = closeDialog; state.reset = () => { state.editing = false; state.loading = false; state.expectedUpdatedAt = null; form.reset(); pickers.forEach(picker => picker.reset()); errorText.textContent = ''; Object.values(fields).forEach(input => { input.removeAttribute('aria-invalid'); input.disabled = false; }); state.petId = crypto.randomUUID(); title.textContent = 'Thêm bé cưng'; save.textContent = 'Lưu bé cưng'; save.disabled = state.saving; };
-        state.ownerPicker = ownerPicker; state.breedPicker = breedPicker; state.title = title; petModal = state; return state;
+        state.ownerPicker = ownerPicker; state.title = title; petModal = state; return state;
     }
     async function editPet({ petId, onCreated } = {}) {
         if (!window.PawpalAdminAccess?.state.user?.permissions.includes('work.pet.write')) return;
@@ -136,19 +148,15 @@
         Object.values(state.fields).forEach(input => input.disabled = true);
         const turn = ++state.generation; state.overlay.classList.add('active'); state.overlay.setAttribute('aria-hidden', 'false'); state.overlay.querySelector('.btn-modal-close').focus();
         try {
+            await state.loadSpecies();
             const rows = await lookup('pets', '', petId), pet = rows.find(row => row.id === petId);
             if (!pet?.updated_at) throw Error('pet_missing');
             const owners = await lookup('customers', '', pet.customer_id), owner = owners.find(row => row.id === pet.customer_id);
-            let breed;
-            for (let page = 1; page <= 100 && turn === state.generation; page++) {
-                const candidates = await lookup('breeds', '', null, page); breed = candidates.find(row => row.id === pet.breed_id);
-                if (breed || candidates.length < 10) break;
-            }
             if (turn !== state.generation) return;
-            if (!owner || !breed) throw Error('pet_relations_missing');
+            if (!owner || !pet.pet_species_id || !pet.breed_name) throw Error('pet_relations_missing');
             state.petId = pet.id; state.expectedUpdatedAt = pet.updated_at;
-            state.ownerPicker.choose(owner); state.breedPicker.choose(breed);
-            const values = { name: pet.pet_name, gender: pet.gender, dob: pet.date_of_birth, weight: pet.current_weight, color: pet.color, safety: pet.safety_note, allergy: pet.allergy, routine: pet.routine };
+            state.ownerPicker.choose(owner);state.fields.species.value=pet.pet_species_id;state.fields.breed.value=pet.breed_name;
+            const values = { name: pet.pet_name, gender: normalizeGender(pet.gender), dob: pet.date_of_birth, weight: pet.current_weight, color: pet.color, safety: pet.safety_note, allergy: pet.allergy, routine: pet.routine };
             Object.entries(values).forEach(([key, value]) => state.fields[key].value = value ?? '');
             Object.values(state.fields).forEach(input => input.disabled = false); state.loading = false; state.save.disabled = false; state.save.textContent = 'Lưu thay đổi'; state.fields.name.focus();
         } catch {
@@ -160,8 +168,11 @@
         const state = petDialog(); if (state.saving) return;
         state.reset(); state.returnFocus = document.activeElement; state.onCreated = onCreated; const turn = ++state.generation;
         state.overlay.classList.add('active'); state.overlay.setAttribute('aria-hidden', 'false'); state.fields.owner.focus();
+        state.loading=true;state.save.disabled=true;
+        try{await state.loadSpecies();if(turn!==state.generation)return;state.loading=false;state.save.disabled=false;}
+        catch{if(turn===state.generation)state.errorText.textContent='Không tải được danh mục loài. Đóng form và mở lại để thử lại.';return;}
         if (customerId) {
-            try { const rows = await lookup('customers', '', customerId); if (turn === state.generation && rows[0]) { state.ownerPicker.choose(rows[0]); state.fields.name.focus(); } }
+            try { const rows = await lookup('customers', '', customerId),owner=rows.find(row=>row.id===customerId); if (turn === state.generation && owner) { state.ownerPicker.choose(owner); state.fields.name.focus(); } }
             catch { if (turn === state.generation) state.errorText.textContent = 'Không tải được chủ nuôi. Hãy tìm và chọn lại.'; }
         }
     }
@@ -177,7 +188,7 @@
  views.register("Thú cưng",{columns:{pets:[['Mã bé', 'pet_code'], ['Tên bé', 'pet_name'], ['Giới tính', r => status(r.gender)], ['Cân nặng', r => r.current_weight == null ? '—' : r.current_weight + ' kg'], ['Lưu ý', 'safety_note']]},
 targets:{"pets":"tab-pet-profile"},
 profiles:{"pet-profile":{read:"pets",render:async(ctx)=>{const {el,date,money,status,read,table,card,facts,go,root,kind,id,row,target,turn}=ctx;
-            const details = facts(root, row.pet_name, [['Mã bé', row.pet_code], ['Cân nặng', row.current_weight == null ? '—' : row.current_weight + ' kg'], ['Cảnh báo an toàn', row.safety_note], ['Dị ứng', row.allergy], ['Tập tính', row.routine]]);
+            const details = facts(root, row.pet_name, [['Mã bé', row.pet_code], ['Loài',row.species_name], ['Giống cụ thể',row.breed_name], ['Cân nặng', row.current_weight == null ? '—' : row.current_weight + ' kg'], ['Cảnh báo an toàn', row.safety_note], ['Dị ứng', row.allergy], ['Tập tính', row.routine]]);
             if (window.PawpalAdminAccess.state.user.permissions.includes('work.pet.write')) {
                 const edit = el('button', 'Sửa hồ sơ', 'admin-btn admin-btn-primary'); edit.type = 'button';
                 edit.onclick = () => window.PawpalStaffForms.editPet({ petId: id, onCreated: () => ctx.refresh() }); details.append(edit);

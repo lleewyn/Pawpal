@@ -21,7 +21,7 @@
   if(replyInit)return replyInit;
   if(!replyMedia){replyInit=(async()=>{
    const {createEvidenceMediaEditor}=await import('/scripts/shared/evidence-media.mjs');
-   if(current()?.rawId!==t.rawId)return null;
+   if(current()?.rawId!==t.rawId||!$('complaintReplyMedia'))return null;
    $('complaintReplyMedia').replaceChildren();
    replyMedia=createEvidenceMediaEditor({root:$('complaintReplyMedia'),db:client(),purpose:'ticket_image'});
    $('btnSubmitReply').dataset.requestId ||=crypto.randomUUID();
@@ -64,6 +64,7 @@
   } finally { if(button) button.disabled=false; }
  }
  async function renderTicketDetail(id) {
+  if(!$('complaintDetailData')||(sessionStorage.getItem('pawpal_admin_active_module')&&sessionStorage.getItem('pawpal_admin_active_module')!=='Khiếu nại'))return;
   const version=++renderVersion;
   gallery?.clear();
   const t=tickets().find(t=>t.id===(id || mod.state.currentTicketId) || t.rawId===(id || mod.state.currentTicketId));
@@ -73,7 +74,7 @@
   mod.state.currentTicketId=t.id; mod.state.currentActiveTicket=t;
   if(!replySaving&&!finished(t))ensureReplyMedia(t).catch(()=>{if(version===renderVersion)text('complaintReplyMedia','Không mở được công cụ đính kèm ảnh.');});
   if(version!==renderVersion)return;
-  $('complaintReplyMedia').inert=finished(t)||replySaving;
+  if($('complaintReplyMedia'))$('complaintReplyMedia').inert=finished(t)||replySaving;
   sessionStorage.setItem('pawpal_admin_complaint_selected_id',t.id); mod.updateBreadcrumb(t.id);
   text('viewTicketCode',t.id);text('detailTicketTitle',t.title);text('viewTicketStatusBadge',statusNames[t.status] || t.status);
   if(t.status==='processing'&&!t.resolution_started_at)text('viewTicketStatusBadge',t.resolved_by?'Đã duyệt, chờ thông báo':'Chờ xử lý');
@@ -131,6 +132,7 @@
   text('btnAssignHandler', (t.status==='new' || !t.staffAssigned || t.staffAssigned==='Chưa phân công') ? 'Nhận xử lý' : 'Đổi người xử lý');
   text('btnCompleteComplaint',directAward(t.resolution_type)?'Thực hiện bồi hoàn':'Liên kết kết quả thực hiện');
   show('btnCompleteComplaint',t.status==='processing' && Boolean(t.resolved_by) && Boolean(t.resolution_type) && Boolean(t.resolution_started_at));
+  show('btnCreateComplaintRedo',t.status==='processing' && t.resolution_type==='redo_service' && Boolean(t.resolution_started_at));
   show('btnLinkComplaintSource',!finished(t) && !t.bookingId && !t.orderId);
   text('complaintAttachments','Đang tải tệp đính kèm…');
   loadAttachments(t,version);
@@ -244,7 +246,7 @@
    try{if(typeof rows==='function'){await new Promise(resolve=>setTimeout(resolve,250));if(version!==readVersion)return;matches=await rows(input.value);}else matches=rows.filter(r=>r.label.toLocaleLowerCase().includes(input.value.toLocaleLowerCase())).slice(0,30);}
    catch(e){if(version===readVersion){dropdown.textContent='Chưa tải được giao dịch. Vui lòng thử lại.';dropdown.style.display='block';}return;}
    if(version!==readVersion||request!==$('resolveTicketModalOverlay')?.dataset.requestId||scope!==window.PawpalDataStore?.buildKey?.('complaint-source')||!$('resolveTicketModalOverlay')?.classList.contains('active'))return;
-   dropdown.innerHTML=matches.map(r=>`<button type="button" class="customer-autocomplete-item" data-id="${escapeHtml(r.id)}">${escapeHtml(r.label)}</button>`).join('')||'Chưa có kết quả phù hợp.';dropdown.style.display='block';dropdown.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{readVersion++;selected.value=b.dataset.id;input.value=b.textContent;dropdown.style.display='none';onSelect?.(b.dataset.id);});
+   dropdown.innerHTML=matches.map(r=>`<button type="button" class="customer-autocomplete-item" style="display:block;width:100%;text-align:left;white-space:normal;overflow-wrap:anywhere;opacity:1;" data-id="${escapeHtml(r.id)}" ${r.disabled?'disabled':''}><strong style="color:#203A2C;font-weight:600;">${escapeHtml(r.label)}</strong>${r.reason?`<small style="display:block;color:#4F7A65;font-size:11.5px;margin-top:3px;">${escapeHtml(r.reason)}</small>`:''}</button>`).join('')||'Chưa có kết quả phù hợp.';dropdown.style.display='block';dropdown.querySelectorAll('[data-id]:not([disabled])').forEach(b=>b.onclick=()=>{readVersion++;selected.value=b.dataset.id;input.value=matches.find(r=>r.id===b.dataset.id)?.label||b.textContent;dropdown.style.display='none';onSelect?.(b.dataset.id);});
   };
   input.oninput=()=>{selected.value='';onSelect?.(null);render();};input.onfocus=render;input.onblur=()=>setTimeout(()=>dropdown.style.display='none',150);
  }
@@ -312,10 +314,9 @@
     if(!original?.pet_id)throw Error('Phiếu chưa có lịch hẹn và hồ sơ bé cưng đã xác minh.');
     const originalItems=await readAll(()=>client().from('appointment_item').select('service_id').eq('appointment_id',original.id).order('id'));
     const services=new Set(originalItems.map(item=>item.service_id).filter(Boolean));
-    const appointments=await readAll(()=>client().from('appointment').select('id,appointment_code,scheduled_start_at,created_at,items:appointment_item(service_id)').eq('customer_id',t.customerId).eq('pet_id',original.pet_id).eq('appointment_status','completed').order('id'));
-    rows=appointments.filter(a=>a.items.some(item=>services.has(item.service_id)) &&
-      (t.resolution_type==='change_staff' || (a.id!==original.id && Date.parse(a.created_at)>=Date.parse(t.createdAtRaw))))
-      .map(a=>({id:a.id,label:a.appointment_code+' · '+mod.formatDateTime(a.scheduled_start_at)}));
+    const appointments=await readAll(()=>client().from('appointment').select('id,appointment_code,scheduled_start_at,created_at,items:appointment_item(service_id,name_snapshot)').eq('customer_id',t.customerId).eq('pet_id',original.pet_id).in('appointment_status',['completed','da_hoan_tat','done']).order('id'));
+    rows=appointments.filter(a=>t.resolution_type==='change_staff' || (a.id!==original.id && Date.parse(a.created_at)>=Date.parse(t.createdAtRaw)))
+      .map(a=>({id:a.id,label:a.appointment_code+' · '+mod.formatDateTime(a.scheduled_start_at),disabled:!a.items.some(item=>services.has(item.service_id)),reason:a.items.some(item=>services.has(item.service_id))?'':a.items.map(item=>item.name_snapshot).filter(Boolean).join(', ')+' · Khác gói dịch vụ gốc, không thể dùng làm kết quả làm lại.'}));
    }
    if(!isCurrent())return;
    bindEvidence('complaintEvidence',rows,id=>{
@@ -327,8 +328,9 @@
      bindEvidence('complaintReplacement',result?replacementRows.filter(r=>!result.returnId||r.id===result.returnId):[]);
     }
    });
-   if(!rows.length)text('resolveTicketModalOverlayError','Chưa có kết quả hoàn tất phù hợp trong Bán hàng hoặc Dịch vụ.');
-   confirm.disabled=!rows.length;
+   const available=rows.some(row=>!row.disabled);
+   if(!available)text('resolveTicketModalOverlayError',t.resolution_type==='redo_service'?'Cần lịch làm lại đã hoàn tất, đúng khách, bé cưng và gói dịch vụ gốc. Dùng nút Tạo lịch làm lại trên phiếu để điền sẵn thông tin.':'Chưa có kết quả hoàn tất phù hợp trong Bán hàng hoặc Dịch vụ.');
+   confirm.disabled=!available;
   }catch(error){if(isCurrent())text('resolveTicketModalOverlayError','Không tải được kết quả: '+error.message);}
   finally{if(isCurrent())$('complaintEvidenceSearch').disabled=false;}
  }
@@ -340,10 +342,17 @@
   bind('btnStartComplaintResolution',()=>openResolveModal('start_resolution'));
   bind('btnCloseComplaint',()=>openResolveModal('close'));bind('btnReopenTicket',()=>openResolveModal('reopen'));bind('btnCompleteComplaint',()=>openResolveModal('complete'));
   bind('btnLinkComplaintSource',()=>openResolveModal('link_source'));
+  bind('btnCreateComplaintRedo',()=>{
+   const t=current(),original=mod.state.cachedAppointments.find(a=>a.appointment_code===t.bookingId||a.id===t.bookingId);
+   if(!original||!t.customerId){mod.showToast('Chưa tải được lịch hẹn gốc. Vui lòng tải lại phiếu.','warning');return;}
+   sessionStorage.setItem('pawpal_admin_booking_preset',JSON.stringify({custId:t.customerId,appointmentId:original.id,ticketId:t.rawId,ticketCode:t.id}));
+   sessionStorage.setItem('pawpal_admin_services_active_subtab','tab-service-bookings');
+   location.hash='#tab-service-bookings';
+  });
   bind('btnOpenComplaintSource',()=>{
    const t=current(),order=mod.state.cachedOrders.find(o=>o.order_code===t.orderId || o.id===t.orderId),appt=mod.state.cachedAppointments.find(a=>a.appointment_code===t.bookingId || a.id===t.bookingId);
    if(order){sessionStorage.setItem('pawpal_admin_order_selected_id',order.id);sessionStorage.setItem('pawpal_admin_order_subtab','tab-order-detail');if(window.PawpalOrders?.state)window.PawpalOrders.state.selectedOrderId=order.id;document.querySelector('[data-title="Bán hàng"]')?.click();}
-   else if(appt){sessionStorage.setItem('pawpal_admin_service_selected_id',appt.id);sessionStorage.setItem('pawpal_admin_services_active_subtab','tab-service-detail');if(window.PawpalServices?.state)window.PawpalServices.state.selectedBookingId=appt.id;document.querySelector('[data-title="Dịch vụ"]')?.click();}
+   else if(appt){sessionStorage.setItem('pawpal_admin_service_selected_id',appt.id);sessionStorage.setItem('pawpal_admin_services_active_subtab','tab-service-detail');if(window.PawpalServices?.state)window.PawpalServices.state.selectedBookingId=appt.id;location.hash='#tab-service-detail?id='+encodeURIComponent(appt.id);}
   });
   bind('btnManagerApproveProposal',()=>act('approve',{note:$('complaintApprovalNote').value.trim()},$('btnManagerApproveProposal')));
   bind('btnManagerRejectProposal',()=>act('reject_proposal',{note:$('complaintApprovalNote').value.trim()},$('btnManagerRejectProposal')));

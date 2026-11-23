@@ -1331,6 +1331,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const bookingId = params.get('id') || params.get('bookingId') || params.get('booking_id');
                 if (bookingId) {
                     sessionStorage.setItem('pawpal_admin_service_selected_id', bookingId);
+                    if (window.PawpalServices?.state) window.PawpalServices.state.selectedBookingId = bookingId;
                     if (window.PawpalServices?.switchSubtab) {
                         window.PawpalServices.switchSubtab('tab-service-detail');
                     }

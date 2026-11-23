@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-11-23T04:25:47.132Z",
+  "checks": [
+    "Legacy nu loads as Cái without an empty gender select",
+    "STAFF saves 3.5 kg and care note through actual modal",
+    "Browser reload preserves new weight/note, gender and pre-existing allergy/safety notes",
+    "Owner and existing profile/history unchanged; one new weight measurement appended",
+    "Older blank-select client preserves stored gender and does not duplicate weight history",
+    "Fixture customer, pet, history and audit data fully rolled back",
+    "Migration 276 applied; no existing business rows updated"
+  ],
+  "scope": "Actual staff modal with live SQL RPC transaction; synthetic pet with legacy nu gender; full rollback"
+}

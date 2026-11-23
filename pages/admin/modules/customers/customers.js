@@ -284,17 +284,20 @@ profiles:{"customer-profile":{read:"customers",render:async(ctx)=>{const {el,dat
             const {data:context,error:contextError}=await getSupabaseClient().rpc('get_staff_customer_context',{p_customer_id:id});if(!ctx.isCurrent())return;
             if(contextError||context?.id!==id||context.points==null||!Number.isFinite(Number(context.points)))throw Error('Không tải được hạng, Pawpoint và ghi chú khách hàng. Vui lòng thử lại.');
             const details = facts(root, row.full_name, [['Mã KH', row.customer_code], ['Số điện thoại', row.phone_number], ['Email liên hệ', row.contact_email], ['Hạng thành viên',context.tier_name||'Chưa có hạng'], ['Pawpoint',new Intl.NumberFormat('vi-VN').format(Number(context.points))], ['Ghi chú nội bộ',context.note||'Chưa có ghi chú']]);
+            const actions=el('div',null,'staff-customer-profile-actions');
+            actions.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;';
             if (window.PawpalAdminAccess.state.user.permissions.includes('work.customer.write')) {
-                const note=el('button','Sửa ghi chú','admin-btn admin-btn-secondary');note.type='button';note.onclick=()=>window.PawpalStaffCustomerNote.open({customerId:id,onSaved:()=>ctx.refresh()});details.append(note);
+                const note=el('button','Sửa ghi chú','admin-btn admin-btn-secondary');note.type='button';note.onclick=()=>window.PawpalStaffCustomerNote.open({customerId:id,onSaved:()=>ctx.refresh()});actions.append(note);
                 const edit = el('button', 'Sửa thông tin', 'admin-btn admin-btn-secondary'); edit.type = 'button';
-                edit.onclick = () => window.PawpalStaffForms.editCustomer({ customerId: id, onSaved: () => ctx.refresh() }); details.append(edit);
+                edit.onclick = () => window.PawpalStaffForms.editCustomer({ customerId: id, onSaved: () => ctx.refresh() }); actions.append(edit);
                 const addresses = el('button', 'Sổ địa chỉ', 'admin-btn admin-btn-secondary'); addresses.type = 'button';
-                addresses.onclick = () => window.PawpalStaffForms.editAddresses({ customerId: id, onSaved: () => ctx.refresh() }); details.append(addresses);
+                addresses.onclick = () => window.PawpalStaffForms.editAddresses({ customerId: id, onSaved: () => ctx.refresh() }); actions.append(addresses);
             }
             if (window.PawpalAdminAccess.state.user.permissions.includes('work.pet.write')) {
                 const create = el('button', 'Thêm bé cưng', 'admin-btn admin-btn-primary'); create.type = 'button';
-                create.onclick = () => window.PawpalStaffForms.openPet({ customerId: id, onCreated: petId => go('tab-pet-profile', petId) }); details.append(create);
+                create.onclick = () => window.PawpalStaffForms.openPet({ customerId: id, onCreated: petId => go('tab-pet-profile', petId) }); actions.append(create);
             }
+            if(actions.childElementCount)details.append(actions);
             const pets = await read('pets', { id }); if (ctx.isCurrent()) table('pets', pets, card(root, 'Thú cưng'));
 }}},
 toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;

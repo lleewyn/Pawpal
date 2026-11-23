@@ -1,0 +1,6 @@
+﻿Targeted checks
+PASS: complaint_service_navigation_ui.cjs
+PASS: complaint_redo_completion_cloud.cjs --apply-cloud (migration 274; business changes rolled back)
+PASS: complaint_service_redo_live_ui.cjs --run (real UI and transaction-bound SQL; data restored)
+PASS: JavaScript syntax and scoped git diff --check
+Existing limitation: complaint_execution_gate_ui.cjs fails its manager-approval assertion at line 40. The same failure was reproduced using the unchanged HEAD version of tab-complaint-detail.js. That unrelated test was not changed.
