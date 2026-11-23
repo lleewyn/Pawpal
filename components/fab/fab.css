@@ -1218,7 +1218,17 @@ body:not(.admin-body) .fab-send-state button{margin-left:8px}
 .fab-member-prompt-back{display:block;width:100%;padding:10px 0;margin-top:4px;border:0;background:transparent;color:#236b48;font:500 12px/1.5 Inter,system-ui,sans-serif;cursor:pointer}
 .fab-member-prompt-contact{display:block;width:fit-content;margin:14px auto 0;color:#718476;font:400 11px/1.6 Inter,system-ui,sans-serif;text-decoration:underline;text-underline-offset:3px}
 .fab-member-prompt :is(button,a):focus-visible{outline:2px solid #236b48;outline-offset:3px}
-.fab-support-boundary{flex-shrink:0;padding:10px 16px;background:#f4f9f6;color:#4f7a65;font:400 11.5px/1.5 Inter,system-ui,sans-serif}
+.fab-support-boundary{flex-shrink:0;background:#f4f9f6;color:#4f7a65;font:400 11.5px/1.5 Inter,system-ui,sans-serif;border-bottom:1px solid #e5eee8;transition:all .2s ease}
+.fab-support-boundary-bar{display:flex;align-items:center;justify-content:space-between;padding:5px 14px;cursor:pointer;user-select:none;background:rgba(35,107,72,0.04);border-bottom:1px solid rgba(35,107,72,0.08)}
+.fab-support-boundary-summary{font-weight:600;font-size:11px;color:#236b48;display:flex;align-items:center;gap:6px}
+.fab-support-boundary-summary::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:#236b48}
+.fab-support-boundary-toggle{background:transparent;border:0;padding:2px 4px;margin:0;cursor:pointer;color:#236b48;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:background-color .15s}
+.fab-support-boundary-toggle:hover{background:#dceee2}
+.fab-support-toggle-icon{transition:transform .2s ease;display:block}
+.fab-support-boundary.is-collapsed .fab-support-toggle-icon{transform:rotate(180deg)}
+.fab-support-boundary-body{padding:6px 14px 10px 14px}
+.fab-support-boundary.is-collapsed .fab-support-boundary-body{display:none}
+.fab-support-boundary.is-collapsed .fab-support-boundary-bar{border-bottom-color:transparent}
 .fab-support-boundary p{margin:0 0 4px}
 .fab-support-boundary a{color:#236b48;font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .fab-support-boundary a:focus-visible{outline:2px solid #236b48;outline-offset:3px}

@@ -89,7 +89,6 @@
             <div class="admin-workspace-body admin-workspace-table-body" data-biz-transactions hidden></div>
           </section>
           <nav class="admin-pagination-bar biz-wide" data-biz-transactions-pagination hidden aria-label="Phân trang giao dịch"></nav>
-          <section class="admin-card admin-workspace-card biz-panel biz-wide finance-panel" data-finance-root></section>
           <section class="admin-card admin-workspace-card dash-panel biz-panel biz-wide" id="bizProfitPanel">
             <header class="dash-panel-heading admin-workspace-heading biz-panel-head biz-finance-head">
               <h3 class="admin-card-title">Kế hoạch thu và chi</h3>
@@ -132,7 +131,24 @@
           ${panel('vouchers', 'Sử dụng voucher')}
           ${panel('points', 'Biến động điểm thưởng')}
           </div>
+          <details class="admin-card admin-workspace-card biz-wide biz-finance-details" data-biz-finance hidden>
+            <summary class="admin-card-title">Sổ tài chính</summary>
+            <div>
+              <section class="biz-panel" data-finance-root></section>
+            </div>
+          </details>
         </div>`;
+
+        const finance = window.PawpalDashboardFinance;
+        const financeDetails = $('[data-biz-finance]');
+        const access = window.PawpalAdminAccess;
+        financeDetails.hidden = !(finance && access?.isAdmin?.() && access.state?.user?.permissions?.includes('finance.read'));
+        financeDetails.addEventListener('toggle', () => {
+            if (financeDetails.hidden || !financeDetails.open || !state.range || !state.root?.contains(financeDetails)) return;
+            if (financeMountedRoot) { finance.refresh(); return; }
+            financeMountedRoot = financeDetails.querySelector('[data-finance-root]');
+            finance.mount(financeMountedRoot, state.range);
+        });
 
         state.root.addEventListener('click', click);
         state.root.addEventListener('change', change);
@@ -542,11 +558,7 @@
         try {
             const range = M.period(from, to);
             state.range = range; state.data = {}; state.errors = {}; state.updated = null;
-            const financeRoot = $('[data-finance-root]');
-            if (window.PawpalDashboardFinance && financeRoot) {
-                if (financeMountedRoot !== financeRoot) { window.PawpalDashboardFinance.mount(financeRoot, range); financeMountedRoot = financeRoot; }
-                else window.PawpalDashboardFinance.setPeriod(range);
-            }
+            if (financeMountedRoot) window.PawpalDashboardFinance.setPeriod(range);
             state.drillGeneration++; state.drill = null;
             $('[data-biz-transactions]').hidden = true;
             $('[data-biz-transactions-pagination]').hidden = true;
@@ -716,7 +728,7 @@
 
     const api = {
         init,
-        refresh: () => Promise.all([state.pending || reload(), window.PawpalDashboardFinance?.refresh()]),
+        refresh: () => Promise.all([state.pending || reload(), $('[data-biz-finance]')?.open && window.PawpalDashboardFinance?.refresh()]),
         unmount,
         getMetrics,
         getLastUpdatedTime: () => state.updated ? new Date(state.updated).toLocaleTimeString('vi-VN', { timeZone: M.zone }) : 'Chưa cập nhật'

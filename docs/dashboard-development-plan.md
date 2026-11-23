@@ -18,13 +18,19 @@ Dashboard phải trả lời được năm câu hỏi:
 
 Mỗi kết luận phải có kỳ dữ liệu, công thức, độ đầy đủ và liên kết đến bản ghi chứng minh. Khi dữ liệu chưa đủ, hiển thị đúng giới hạn; không tự kết luận doanh nghiệp an toàn, có lãi hoặc sắp mất khả năng chi trả.
 
+### Phạm vi tài chính cập nhật — 23/11/2026
+
+- **Dashboard → Kinh doanh:** Hiển thị tiền thu, tiền hoàn và thực thu ròng theo kỳ. Cho mở danh sách giao dịch và hồ sơ gốc. Hiển thị khoản đến hạn khi nguồn công nợ đã được đối soát.
+- **Sổ tài chính trong Kinh doanh:** Giữ nhập liệu, đối soát và báo cáo chuyên sâu trong một khu vực thu gọn mặc định. Người có quyền mở ngay tại tab Kinh doanh. Dashboard giữ hai tab Điều hành và Kinh doanh.
+- **Ưu tiên:** Tinh gọn Kinh doanh và tiếp tục hoàn thiện Điều hành. Nghiệm thu Dashboard theo dữ liệu giao dịch hiện có. Nhập chứng từ lịch sử, đối soát và nghiệm thu báo cáo tài chính theo tiến độ riêng.
+
 ### 1.1. Cách người chủ sử dụng
 
 - **Đầu ngày:** mở Vận hành để biết lịch phục vụ, đơn cần giao, việc khẩn cấp và nguồn lực còn thiếu; giao hoặc mở nơi giao việc.
 - **Trong ngày:** theo dõi việc đang thực hiện, việc quá hạn và người phụ trách; xử lý tại hồ sơ nghiệp vụ gốc.
 - **Cuối ngày:** kiểm tra việc chưa xong, tiền đã ghi nhận và phần cần đối soát. Khi chưa có sổ thu chi đầy đủ, không gọi đây là số dư cuối ngày.
 - **Hằng tuần:** xem Kinh doanh để biết giao dịch, khách và nhóm dịch vụ/sản phẩm đang tăng hay giảm; chọn hành động điều chỉnh có căn cứ.
-- **Cuối kỳ:** xem kết quả hoạt động, chi phí, công nợ và khả năng chi trả khi các nguồn tài chính đã đạt nghiệm thu.
+- **Cuối kỳ:** xem tổng hợp thu, hoàn và thực thu ròng trên Dashboard. Mở khu vực Sổ tài chính ngay trong tab Kinh doanh để đối soát và xem báo cáo chuyên sâu.
 
 ### 1.2. Nguyên tắc chọn nội dung
 
@@ -69,8 +75,8 @@ Triển khai theo các mốc M0 đến M5. Mỗi mốc có đầu ra và điều
 - **M0 — Chốt định nghĩa và khả năng cung cấp dữ liệu.** Điều kiện đầu vào cho mọi mốc còn lại.
 - **M1 — Điều hành cửa hàng hằng ngày.** Ưu tiên việc cần làm, lịch phục vụ, đơn cần giao và người phụ trách; sử dụng được trước khi có báo cáo tài chính hoàn chỉnh.
 - **M2 — Giải thích biến động kinh doanh.** Biết tăng/giảm ở đâu, từ số giao dịch, giá trị bình quân hay nhóm khách; dùng nguồn hiện có sau khi đối chiếu.
-- **M3 — Xây nền dữ liệu tài chính thực tế.** Có quy trình ghi chi phí, giá vốn, số dư và công nợ; điều kiện bắt buộc trước kết luận tài chính.
-- **M4 — Kết quả hoạt động và khả năng chi trả.** Chỉ mở từng phần khi nguồn tương ứng đã đạt đối soát.
+- **M3 — Sổ tài chính, phạm vi riêng.** Thu gọn phần ghi nhận và đối soát chi phí, giá vốn, số dư và công nợ trong tab Kinh doanh.
+- **M4 — Báo cáo trong Sổ tài chính, phạm vi riêng.** Nghiệm thu theo từng nhóm nguồn đã đối soát.
 - **M5 — Nghiệm thu quản lý và phát hành từng phần.** Áp dụng cổng nghiệm thu cho từng mốc, sau đó nghiệm thu tích hợp.
 
 Những phần chưa nằm trong đợt đầu: dự báo bằng AI, kết luận tự động nguy cơ phá sản, thay thế hệ thống kế toán đầy đủ, thêm tab hoặc viết lại toàn bộ Admin.
@@ -171,7 +177,7 @@ Những phần chưa nằm trong đợt đầu: dự báo bằng AI, kết luậ
 - Từng số tổng mở được danh sách chứng minh và đối chiếu khớp.
 - Chưa có giá vốn thực tế thì xếp hạng vẫn được gọi là giá trị giao dịch/số lượng, không đổi thành xếp hạng lợi nhuận.
 
-## 7. M3 — Nền dữ liệu tài chính thực tế
+## 7. M3 — Ghi nhận và đối soát trong Sổ tài chính
 
 Các nhóm dữ liệu dưới đây là **đề xuất cần thiết kế sau M0**, không phải các bảng đã được xác nhận tồn tại. Ưu tiên tái sử dụng nguồn hiện có; chỉ thêm bảng khi nguồn hiện tại không đáp ứng được nghiệp vụ.
 
@@ -208,7 +214,7 @@ Các nhóm dữ liệu dưới đây là **đề xuất cần thiết kế sau M
 - Giá vốn lịch sử vẫn giữ đúng khi thay đổi giá vốn hiện tại trong danh mục.
 - Dữ liệu chưa có nguồn được báo thiếu, không coi là 0.
 
-## 8. M4 — Kết quả kinh doanh và khả năng chi trả
+## 8. M4 — Kết quả hoạt động và lịch thu chi trong Sổ tài chính
 
 ### 8.1. Báo cáo kết quả hoạt động
 
@@ -260,9 +266,9 @@ Quyết định được hỗ trợ: phân công lại, gọi khách, xử lý �
 
 1. **Kết quả trong kỳ:** tiền thu, hoàn tiền, thu thuần, số ca hoàn thành và số đơn hoàn thành. Giá trị bình quân thể hiện tại phần phân tích tương ứng, tránh dồn nhiều chỉ số ngang hàng.
 2. **Điều cần chú ý:** thông báo dựa trên điều kiện kiểm chứng được, kèm giá trị thay đổi và liên kết. Nêu `Chưa xác định nguyên nhân` khi chỉ mới biết biến động.
-3. **Dịch vụ và sản phẩm:** tách nhóm để biết số lượng, giá trị bình quân và giá trị giao dịch thay đổi ở đâu. Sau M4 mới thêm hiệu quả sau chi phí cho phần đủ nguồn.
+3. **Dịch vụ và sản phẩm:** tách nhóm để biết số lượng, giá trị bình quân và giá trị giao dịch thay đổi ở đâu.
 4. **Khách hàng:** khách mới có giao dịch, khách từng giao dịch trước kỳ nay quay lại và các chỉ số đủ cửa sổ quan sát. Phân biệt khách giao dịch lần đầu với hồ sơ khách mới được tạo.
-5. **Tài chính thực tế:** kết quả hoạt động, số dư khả dụng, khoản đến hạn và thiếu hụt theo lịch dự kiến sau M3/M4. Khi chưa đủ nguồn, hiện ngắn gọn nhóm dữ liệu cần bổ sung; không dựng biểu đồ bằng số 0.
+5. **Khoản đến hạn:** Tóm tắt khi nguồn công nợ đã đối soát. Người có quyền mở khu vực Sổ tài chính ngay trong tab Kinh doanh để nhập liệu, đối soát và xem báo cáo.
 6. **Thông tin bổ trợ:** kế hoạch thu và chi, voucher, điểm thưởng, hạng thành viên. Giữ chức năng hiện có nhưng đặt sau nội dung ra quyết định chính.
 
 Quyết định được hỗ trợ: kiểm tra nhóm dịch vụ giảm, xem hàng chậm bán, liên hệ nhóm khách phù hợp, kiểm tra chi phí và chuẩn bị khoản thanh toán sắp đến hạn. Không tự quy hiệu quả khuyến mãi hoặc nguyên nhân mất khách nếu chưa có dữ liệu chứng minh.
@@ -327,9 +333,9 @@ Không thêm khối chỉ để lấp chỗ trống. Trạng thái trống là k
 - [ ] **P03 — Bản Vận hành sử dụng đầu tiên, thuộc M1, sau P02.** Đầu ra: tóm tắt, danh sách việc và nhịp phục vụ; kiểm tra mở hồ sơ, bộ lọc, nguồn lỗi một phần, desktop/điện thoại. Có thể nghiệm thu và sử dụng trước các gói sau.
 - [ ] **P04 — Điều phối và lịch sử công việc, thuộc M1, sau P02.** Đầu ra: luồng người phụ trách, thời hạn, nhận việc/xử lý/mở lại và nguồn lực theo loại dịch vụ. Lịch sử bắt đầu từ ngày thu thật; xu hướng chỉ mở khi nguồn đầy đủ. Modal thực hiện từng cái theo AGENTS.md.
 - [ ] **P05 — Phân tích kinh doanh, thuộc M2, sau P01.** Đầu ra: giao dịch hoàn thành, giá trị bình quân, khách quay lại đúng định nghĩa, so sánh kỳ tương đương và danh sách chứng minh. Nghiệm thu riêng dịch vụ và sản phẩm.
-- [ ] **P06 — Quy trình ghi nhận tài chính, thuộc M3, sau phần định nghĩa tài chính P01.** Đầu ra: nơi nhập/duyệt chi phí, số dư, công nợ, giá vốn lịch sử và liên kết chứng từ. Hoàn thiện từng nhóm nguồn, không chờ thiết kế hết mọi báo cáo mới bắt đầu thu thập dữ liệu.
-- [ ] **P07 — Báo cáo kết quả hoạt động, thuộc M4, sau phần doanh thu/giá vốn/chi phí đã đối soát của P06.** Đầu ra: kết quả thực tế hoặc tạm tính có phạm vi, đối chiếu kế hoạch và nguồn chứng minh. Phần chưa đạt nguồn chưa được gọi là lãi/lỗ thực tế.
-- [ ] **P08 — Khả năng chi trả, thuộc M4, sau phần số dư/công nợ/lịch thanh toán đã đối soát của P06.** Đầu ra: nghĩa vụ đến hạn, số dư theo lịch thu chi và cảnh báo thiếu tiền có giả định. Không bắt P08 chờ P07 nếu nguồn riêng đã đạt điều kiện.
+- [ ] **P06 — Thu gọn Sổ tài chính trong tab Kinh doanh.** Dùng lại biểu mẫu, sổ và báo cáo hiện có. Kiểm tra quyền truy cập và dữ liệu đã ghi. Đối soát chứng từ theo từng nhóm nguồn.
+- [ ] **P07 — Nghiệm thu báo cáo kết quả hoạt động trong Sổ tài chính, thuộc M4, sau phần doanh thu/giá vốn/chi phí đã đối soát của P06.** Đầu ra: kết quả thực tế hoặc tạm tính có phạm vi, đối chiếu kế hoạch và nguồn chứng minh. Phần chưa đạt nguồn chưa được gọi là lãi/lỗ thực tế.
+- [ ] **P08 — Nghiệm thu lịch thu chi trong Sổ tài chính, thuộc M4, sau phần số dư/công nợ/lịch thanh toán đã đối soát của P06.** Đầu ra: nghĩa vụ đến hạn, số dư theo lịch thu chi và cảnh báo thiếu tiền có giả định. Không bắt P08 chờ P07 nếu nguồn riêng đã đạt điều kiện.
 - [ ] **P09 — Nghiệm thu tích hợp, thuộc M5.** Đầu ra: người chủ thực hiện các tình huống quản lý thực tế, số liệu đối chiếu khớp, quyền và hiệu năng đạt yêu cầu; ghi rõ phần đã mở và phần còn thiếu dữ liệu.
 
 Tất cả gói do người triển khai chuẩn bị phương án, mã và bằng chứng kiểm tra. Người chủ nghiệm thu theo quyết định kinh doanh; người phụ trách dữ liệu thực tế xác nhận nguồn và đối soát. Không coi việc đánh dấu hoàn thành một giao diện là hoàn thành nguồn dữ liệu của nó.
@@ -376,6 +382,8 @@ Thiếu thông tin tài chính chỉ chặn phần tài chính phụ thuộc; v�
 - [Biên bản kiểm tra ngày 16/11/2026](verification/dashboard-manager-review.md); dùng làm lịch sử nghiệm thu, không thay thế kiểm tra hiện tại.
 
 ## 15. Tiến độ
+
+Các ghi chép theo ngày mô tả trạng thái khi kiểm thử. Sổ tài chính trong tab Kinh doanh đã được thu gọn mặc định ở mã giao diện. Phần đối soát chứng từ thực tế tiếp tục theo tiến độ riêng.
 
 - [x] Đọc Dashboard hiện tại và lập kế hoạch phát triển.
 - [x] Điều chỉnh mục tiêu theo nhu cầu chủ kinh doanh dịch vụ và sản phẩm; ưu tiên điều hành hằng ngày.

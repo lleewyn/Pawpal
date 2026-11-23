@@ -41,6 +41,14 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         });
         await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/subtabs/tab-dashboard-business.js', 'utf8') });
         await page.evaluate(() => {
+            PawpalAdminAccess.state.user.permissions.push('finance.read');
+            window.financeMounts = 0;
+            window.PawpalDashboardFinance = {
+                mount(root) { window.financeMounts++; root.textContent = 'Sổ tài chính đã tải'; },
+                setPeriod() {},
+                refresh() {},
+                unmount() {}
+            };
             window.originalMetricLoad = PawpalBusinessMetrics.load;
             const gate = new Promise(resolve => {window.releaseInitialLoad = resolve;});
             PawpalBusinessMetrics.load = async (...args) => {await gate;return window.originalMetricLoad(...args);};
@@ -52,6 +60,17 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         assert.equal(await page.locator('[data-biz-panel="membership"] .biz-skeleton').count(), 1);
         assert.equal(await page.locator('[data-biz-panel="insights"] .biz-skeleton').count(), 1);
         await page.evaluate(async () => {releaseInitialLoad();await initialLoad;PawpalBusinessMetrics.load = originalMetricLoad;});
+        const book = page.locator('[data-biz-finance]');
+        const bookSummary = book.locator('summary');
+        assert.equal(await bookSummary.isVisible(), true);
+        assert.equal(await book.evaluate(el => el.open), false);
+        assert.equal(await page.evaluate(() => financeMounts), 0);
+        await bookSummary.focus();
+        await page.keyboard.press('Enter');
+        await page.waitForFunction(() => financeMounts === 1);
+        assert.equal(await book.locator('[data-finance-root]').isVisible(), true);
+        await bookSummary.click();
+        assert.equal(await book.locator('[data-finance-root]').isVisible(), false);
         assert.equal(await page.locator('.biz-skeleton,.biz-kpi-skeleton').count(), 0);
         await page.evaluate(() => {
             const gate = new Promise(resolve => {window.releaseCustomerLoad = resolve;});
@@ -133,6 +152,8 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         await page.evaluate(() => { PawpalAdminAccess.isAdmin = () => false; return PawpalDashboardOverview.refresh(); });
         assert.match(await page.locator('[data-biz-panel="cash"]').innerText(), /chưa có quyền/);
         assert.equal(await page.locator('.biz-chart').count(), 0);
+        await page.evaluate(async () => { PawpalDashboardOverview.unmount(); await PawpalDashboardOverview.init(); });
+        assert.equal(await book.isVisible(), false);
         assert.deepEqual(errors, []);
         console.log('PASS: filters, 90 days, invalid dates, partial errors, retry, zero data, chart, mobile, restored range and access denial (isolated fixtures).');
     } finally { await browser.close(); }

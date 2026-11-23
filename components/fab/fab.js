@@ -99,7 +99,7 @@ function initFab(){
   syncControls();
   const labels={bot_handling:'Hỗ trợ tự động',waiting_agent:'Đang chờ nhân viên',agent_handling:'Nhân viên đang hỗ trợ',resolved:'Đã hoàn tất',closed:'Đã đóng',completed:'Đã hoàn tất',blocked:'Tạm khóa'};
   notify(labels[status]||'Đang xử lý');$('fabChatTitleText').textContent='PawPal hỗ trợ';
-  const handoffNotice=$('fabHandoffNotice');if(handoffNotice){handoffNotice.hidden=!['waiting_agent','agent_handling'].includes(status);handoffNotice.textContent=status==='agent_handling'?'CSKH đã tiếp nhận cuộc trò chuyện.':'Đã chuyển cuộc trò chuyện sang chờ CSKH tiếp nhận.';}
+  const handoffNotice=$('fabHandoffNotice');if(handoffNotice){handoffNotice.hidden=!['waiting_agent','agent_handling'].includes(status);handoffNotice.textContent=status==='agent_handling'?'CSKH đã tiếp nhận cuộc trò chuyện.':'Đã chuyển cuộc trò chuyện sang chờ CSKH tiếp nhận.';if(!handoffNotice.hidden){$('fabSupportBoundary')?.classList.remove('is-collapsed');$('fabSupportToggleBtn')?.setAttribute('aria-expanded','true');}}
  }
  function remember(){if(active)sessionStorage.setItem('pawpal_chat_active_'+identity,active);}
  function render(){
@@ -212,6 +212,11 @@ function initFab(){
   if(identity==='guest'){event.preventDefault();sessionStorage.setItem('pawpal_redirect_after_login','/user#support-create');location.assign('/login');}
  }
  $('fabSupportRequestLink')?.addEventListener('click',openSupportRequest);
+ const supportBoundary=$('fabSupportBoundary'),supportToggleBtn=$('fabSupportToggleBtn'),supportBar=$('fabSupportBoundaryBar');
+ function toggleSupportBoundary(force){if(!supportBoundary)return;const willCollapse=typeof force==='boolean'?force:!supportBoundary.classList.contains('is-collapsed');supportBoundary.classList.toggle('is-collapsed',willCollapse);if(supportToggleBtn){supportToggleBtn.setAttribute('aria-expanded',String(!willCollapse));supportToggleBtn.title=willCollapse?'Mở rộng thông báo':'Thu gọn thông báo';}sessionStorage.setItem('pawpal_fab_boundary_collapsed',willCollapse?'1':'0');}
+ supportToggleBtn?.addEventListener('click',e=>{e.stopPropagation();toggleSupportBoundary();});
+ supportBar?.addEventListener('click',()=>toggleSupportBoundary());
+ if(sessionStorage.getItem('pawpal_fab_boundary_collapsed')==='1')toggleSupportBoundary(true);
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&panel.classList.contains('open')){panel.classList.remove('open');$('fabAiBtn')?.focus();}});
  $('fabChatExpand')?.addEventListener('click',()=>panel.classList.toggle('expanded'));
  $('fabChatNewBtn')?.addEventListener('click',fresh);$('fabHistoryNewBtn')?.addEventListener('click',fresh);$('fabChatHistoryBtn')?.addEventListener('click',()=>{historyPage=0;history();});

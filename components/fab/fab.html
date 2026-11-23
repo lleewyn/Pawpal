@@ -98,10 +98,20 @@
 
     <!-- Màn hình Chat chính -->
     <div class="fab-chat-main-view" id="fabChatMainView">
-        <div class="fab-support-boundary">
-            <p>Chat để tư vấn và trao đổi với CSKH. Khiếu nại hoặc đề nghị bồi hoàn cần tạo yêu cầu tại Hỗ trợ.</p>
-            <a href="/user#support-create" id="fabSupportRequestLink">Tạo yêu cầu hỗ trợ</a>
-            <p id="fabHandoffNotice" role="status" aria-live="polite" hidden></p>
+        <div class="fab-support-boundary" id="fabSupportBoundary">
+            <div class="fab-support-boundary-bar" id="fabSupportBoundaryBar">
+                <span class="fab-support-boundary-summary">Lưu ý hỗ trợ và khiếu nại</span>
+                <button type="button" class="fab-support-boundary-toggle" id="fabSupportToggleBtn" title="Thu gọn / Mở rộng" aria-label="Thu gọn hoặc mở rộng thông báo" aria-expanded="true">
+                    <svg class="fab-support-toggle-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                </button>
+            </div>
+            <div class="fab-support-boundary-body" id="fabSupportBoundaryBody">
+                <p>Chat để tư vấn và trao đổi với CSKH. Khiếu nại hoặc đề nghị bồi hoàn cần tạo yêu cầu tại Hỗ trợ.</p>
+                <a href="/user#support-create" id="fabSupportRequestLink">Tạo yêu cầu hỗ trợ</a>
+                <p id="fabHandoffNotice" role="status" aria-live="polite" hidden></p>
+            </div>
         </div>
         <div class="fab-toxic-banner" id="fabToxicBanner" style="display: none;"></div>
         <div class="fab-chat-messages" id="fabChatMessages">

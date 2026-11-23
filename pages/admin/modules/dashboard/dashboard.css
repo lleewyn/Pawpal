@@ -2272,6 +2272,19 @@ button[disabled]{cursor:not-allowed}
     border-top: none;
     padding-top: 10px;
 }
+.business-dash .biz-finance-details > summary {
+    display: list-item;
+    list-style: none;
+    cursor: pointer;
+    padding: 12px 16px;
+}
+.business-dash .biz-finance-details > summary::-webkit-details-marker {
+    display: none;
+}
+.business-dash .biz-finance-details > summary:hover {
+    text-decoration: underline;
+}
+
 .business-dash .biz-summary {
     cursor: pointer;
     font-size: 12px;

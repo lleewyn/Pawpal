@@ -237,6 +237,16 @@ const root = 'pages/admin/modules/dashboard/';
         await page.waitForFunction(() => !document.querySelector('.is-refreshing') && document.querySelectorAll('[data-ops-task-id]').length === 10);
         assert.equal(await page.locator('[data-kpi="todayAppointments"] [data-kpi-value]').innerText(), (5001).toLocaleString('vi-VN'));
         assert.match(await page.locator('[data-ops-panel="alerts"] [data-ops-tag]').innerText(), /Hiện tại/);
+        const agenda = page.locator('[data-ops-panel="agenda"]');
+        assert.match(await agenda.innerText(), /Dữ liệu vượt/);
+        await page.evaluate(() => { fixtures.appointment.pop(); PawpalOperationsDashboard.refresh(); });
+        await page.waitForFunction(() => !document.querySelector('.is-refreshing') && !document.querySelector('[data-ops-panel="agenda"]').textContent.includes('Dữ liệu vượt'));
+        assert.equal(await page.locator('[data-kpi="todayAppointments"] [data-kpi-value]').innerText(), (5000).toLocaleString('vi-VN'));
+        await page.evaluate(() => {
+            fixtures.appointment.push({ ...fixtures.appointment[0], id: 'cap5000' });
+            PawpalOperationsDashboard.refresh();
+        });
+        await page.waitForFunction(() => !document.querySelector('.is-refreshing') && document.querySelector('[data-ops-panel="agenda"]').textContent.includes('Dữ liệu vượt'));
         await page.evaluate(()=>{failKpis=true;PawpalOperationsDashboard.refresh();});
         await page.waitForFunction(()=>PawpalOperationsDashboard.getState().errors.kpis);
         assert.equal(await page.locator('[data-kpi="todayAppointments"] [data-kpi-value]').innerText(),'—','KPI failure cannot reuse old totals or become zero');

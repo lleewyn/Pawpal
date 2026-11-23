@@ -107,3 +107,12 @@ Các phần điều phối/lịch sử còn thiếu ở mục 2, nghiệm thu P0
 - Phát hiện qua ảnh điện thoại: các nhóm biểu đồ vẫn giữ hai cột, làm cắt số trong biểu đồ tròn và thu nhỏ biểu đồ so sánh. Đã xếp nhóm thành một cột ở màn hình hẹp. Bảng sản phẩm/dịch vụ cho phép tên xuống dòng và giữ số lượng/giá trị trong chiều rộng khung, không phải cuộn ngang chỉ để thấy số.
 - Xác minh bằng ảnh sau sửa và hình học DOM: biểu đồ so sánh đủ rộng, số trong biểu đồ tròn không tràn, ba cột bảng xếp hạng nằm trong khung. Các bảng nghiệp vụ nhiều cột vẫn cuộn riêng. Đối chiếu style với Khách hàng và kiểm thử tại 1440/820/390/320px đạt.
 - Bộ kiểm tra Admin thật đạt với 42 đường dẫn API đọc, năm hồ sơ nguồn mở đúng, không lỗi JavaScript và không yêu cầu ghi nghiệp vụ. Các kiểm tra phân tích/chứng minh, sổ tài chính, style và bảng việc đạt. Cache giao diện đổi thành `20261122_dashboard_panels_v3`; không thay đổi CSDL và chưa push.
+
+
+## Kiểm tra Dashboard ngày 24/11/2026
+
+- Kiểm thử trình duyệt dùng mã giao diện trong workspace với Supabase thật qua tài khoản Admin. Điều hành, bảng việc, Kinh doanh và Sổ tài chính thu gọn đều đạt. Đã mở năm hồ sơ nguồn qua 42 đường dẫn API đọc. Bài kiểm thử chặn ghi nghiệp vụ.
+- Kiểm tra mã Kinh doanh đang phục vụ trên Vercel cho thấy bản công khai chưa có Sổ tài chính thu gọn. Kết quả kiểm thử mã trong workspace chưa xác nhận phát hành frontend.
+- Điều hành kiểm tra thêm dòng 5.001 trong lượt đọc cuối để xác định dữ liệu bị cắt. Bài kiểm thử trình duyệt xác nhận đúng 5.000 dòng không báo thiếu, 5.001 dòng có báo thiếu ở danh sách và KPI tổng hợp tại máy chủ vẫn giữ tổng đầy đủ. Các truy vấn còn chờ trong hàng đợi được bỏ qua nếu yêu cầu đã lỗi thời.
+- Bảng việc dùng phân công từ hồ sơ lịch hẹn và hỗ trợ. Đơn hàng, việc tồn kho và đổi trả vẫn cần nguồn giao việc phù hợp với quy trình. Ngưỡng SLA nghiệp vụ cần người phụ trách xác nhận. Kiểm thử Realtime với nghiệp vụ thật cần môi trường thử nghiệm cho phép ghi dữ liệu.
+- Chuyển các biểu đồ còn tổng hợp từ danh sách giới hạn ở trình duyệt sang nguồn tổng hợp tại máy chủ và đo độ trễ trên tập dữ liệu đại diện vẫn là đầu việc mở.

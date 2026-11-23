@@ -135,12 +135,15 @@
     async function readPaged(buildQuery, orderColumn = 'id') {
         const rows = [];
         for (let offset = 0; offset < MAX_ROWS; offset += PAGE_SIZE) {
-            const { data, error } = await buildQuery().order(orderColumn, { ascending: true }).range(offset, offset + PAGE_SIZE - 1);
+            const isLastPage = offset + PAGE_SIZE >= MAX_ROWS;
+            const end = isLastPage ? MAX_ROWS : offset + PAGE_SIZE - 1;
+            const { data, error } = await buildQuery().order(orderColumn, { ascending: true }).range(offset, end);
             if (error) throw error;
             rows.push(...(data || []));
+            if (rows.length > MAX_ROWS) return { rows: rows.slice(0, MAX_ROWS), truncated: true };
             if (!data || data.length < PAGE_SIZE) return { rows, truncated: false };
         }
-        return { rows, truncated: true };
+        return { rows, truncated: false };
     }
 
     function safeErrorMessage(error) {
@@ -317,6 +320,7 @@
             try { return await job(); } finally { const next = queue.shift(); if (next) next(); else running--; }
         };
         await Promise.all(list.map(name => withSlot(async () => {
+            if (generation !== state.generation || versions.get(name) !== requestVersions.get(name)) return;
             try {
                 const access = window.PawpalAdminAccess;
                 if (access && (!access.isAdmin() || RESOURCE_PERMISSIONS[name].some(table => !access.state.user?.permissions?.includes(`${table}.read`)))) {
