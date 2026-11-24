@@ -387,7 +387,7 @@
             if(!host){host=document.createElement('div');host.id='staffRecurringHost';host.className='staff-recurring-panel';host.hidden=true;el('scheduleDayViewWrapper').before(host);}
             if(!host.hidden){host.hidden=true;recurringDispose?.();recurringDispose=null;return;}
             host.hidden=false;host.textContent='Đang tải lịch định kỳ…';
-            try{const {mountRecurringSchedule}=await import('/pages/admin/modules/staff/staff-recurring.mjs');if(turn!==recurringVersion||host.hidden)return;const cleanup=await mountRecurringSchedule(host,{staff:PawpalStaff.state.staff,client:window.getSupabaseClient(),enhanceSelect:PawpalStaff.enhanceEntitySelect});if(turn!==recurringVersion||host.hidden)cleanup();else recurringDispose=cleanup;}
+            try{const {mountRecurringSchedule}=await import('/pages/admin/modules/staff/staff-recurring.mjs?v=20261124');if(turn!==recurringVersion||host.hidden)return;const cleanup=await mountRecurringSchedule(host,{staff:PawpalStaff.state.staff,client:window.getSupabaseClient(),enhanceSelect:PawpalStaff.enhanceEntitySelect});if(turn!==recurringVersion||host.hidden)cleanup();else recurringDispose=cleanup;}
             catch{host.textContent='Không tải được lịch định kỳ. Vui lòng thử lại.';}
         });
         for(const id of ['leaveSwapModalForm','incidentReportModalForm'])document.getElementById(id)?.addEventListener('submit',event=>event.preventDefault());

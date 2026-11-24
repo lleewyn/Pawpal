@@ -267,7 +267,7 @@ function renderSchedule(){
  el('step3Back').onclick=()=>show(2);el('step3Next').onclick=loadQuote;
  el('bookingStart').min=vietnamDateTimeInput(Date.now());
  const availability=document.createElement('div');availability.className='booking-availability';
- availability.innerHTML='<button type="button" class="btn-green-outline" id="bookingCheckSlots">Xem giờ có thể đặt</button><p id="bookingAvailabilityMessage" class="field-note" aria-live="polite">Bạn có thể gửi yêu cầu trước; cửa hàng sẽ duyệt lịch và phân nhân viên sau.</p><div id="bookingDaySlots" class="booking-day-slots"></div><p id="bookingHoldFeedback" class="field-note" role="status"></p><div id="bookingStaffPreferences"></div>';
+ availability.innerHTML='<button type="button" class="btn-green-outline" id="bookingCheckSlots">Xem giờ có thể đặt</button><p id="bookingAvailabilityMessage" class="field-note" aria-live="polite">Chọn ngày để xem giờ có thể đặt.</p><div id="bookingDaySlots" class="booking-day-slots"></div><p id="bookingHoldFeedback" class="field-note" role="status"></p><div id="bookingStaffPreferences"></div>';
  el('bookingNote').closest('.form-group').before(availability);
  let version=0;
  const resetAvailability=()=>{++version;clearHold();state.preferredStaff=null;state.availability=null;state.quote=null;state.details=null;el('bookingDaySlots').replaceChildren();el('bookingStaffPreferences').replaceChildren();el('bookingStart').value='';el('step3Next').disabled=true;summary();};
@@ -294,6 +294,7 @@ function renderSchedule(){
     :noStaff?'Ngày này chưa có nhân viên được phân ca phù hợp với dịch vụ. Vui lòng chọn ngày khác hoặc liên hệ cửa hàng để được sắp xếp.':`Ngày này không còn khung giờ phù hợp với thời lượng dịch vụ trong giờ phục vụ ${result.open}–${result.close}. Vui lòng chọn ngày khác.`;
    if(spaSlots){
     const staffRoot=el('bookingStaffPreferences'),slotsRoot=el('bookingDaySlots');
+    staffRoot.hidden=slotsRoot.hidden=availableCount===0;
     slotsRoot.classList.remove('booking-day-slots');
     slotsRoot.before(staffRoot);
     renderStaffSlots({staffRoot,slotsRoot,slots,isCurrent:()=>request===version,onInvalidTime:rejectInvalidBookingTime,
