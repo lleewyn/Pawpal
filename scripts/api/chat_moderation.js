@@ -73,8 +73,12 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
         }
     });
 
-    // 2. Chấm điểm cấp độ cảm xúc (1 - 6) từ triggers CSDL
-    let detectedLevel = 2; // Mặc định: Cấp 2 (Bình thường, trung lập)
+    const folded = lower.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/\s+/g, ' ').trim();
+    const socialIntent = /^(?:xin chao|chao(?: ban| pawpal)?|hello|hi)[!.?\s]*$/.test(folded) ? 'greeting'
+        : /^(?:cam on|cam on ban|cam on pawpal)[!.?\s]*$/.test(folded) ? 'thanks' : null;
+
+    // A standalone greeting starts at level 1. Configured triggers may raise it.
+    let detectedLevel = socialIntent ? 1 : 2;
     triggers.forEach(tr => {
         const patterns = (tr.trigger_pattern || '').split(',').map(p => p.trim().toLowerCase()).filter(Boolean);
         for (const p of patterns) {
@@ -86,10 +90,14 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
         }
     });
 
+    const repeatedAttempts = /\b(?:(?:goi|nhan|hoi|lien he|bao)\s+(?:(?:toi|den) )?(?:may|nhieu|hai|ba|[2-9]\d*) lan|lan thu (?:hai|ba|tu|[2-9]\d*) roi)\b/.test(folded);
+    const stillUnresolved = /\b(?:van (?:chua|khong) (?:toi|den|don|giao|phan hoi|xu ly|giai quyet|hoan tien|xong)|(?:khong|chua co) ai (?:nghe|tra loi|phan hoi|xu ly|giai quyet))\b/.test(folded);
+    const missedAppointment = /\bhen\b[^.!?;]{0,70}\b(?:ma|nhung)\b[^.!?;]{0,65}\b(?:van )?chua (?:toi|den|don)\b|\bqua gio hen\b[^.!?;]{0,60}\b(?:van )?chua (?:toi|den|don)\b/.test(folded);
+    const isImplicitlyUpset = stillUnresolved && (repeatedAttempts || missedAppointment);
+
     // 3. Phân loại loại rủi ro (Risk Type) theo ngữ cảnh thực tế (R0 / P0-03)
     let riskType = 'none';
-    const folded = lower.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
-    if (/\b(?:chay mau|ngo doc|co giat|hap hoi|kho tho|tho doc|tho gap|tai nan|gay chan|nuot di vat|so cuu|bat tinh)\b/.test(folded)) {
+    if (/\b(?:chay mau|ngo doc|co giat|hap hoi|kho tho|tho doc|tho gap|kho danh thuc|khong dung day duoc|khong the dung day|tai nan|gay chan|nuot di vat|so cuu|bat tinh)\b/.test(folded)) {
         riskType = 'medical_emergency';
         detectedLevel = 6; // Cấp 6: Khẩn cấp theo thang đo chatbot_sentiment_tier (1 - 6)
     } else if (/\b(?:mang thai|co bau|chua de|sinh con|met moi|bieng an|bo an|ue oai|nam li bi|ngu nhieu|so hai|run ray|bi dau)\b/.test(folded)) {
@@ -102,9 +110,15 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
     } else if (/trừ tiền|chưa nhận được tiền|sai tiền|hoàn tiền|mất tiền|thanh toán lỗi/i.test(lower)) {
         riskType = 'billing_dispute';
         detectedLevel = Math.max(detectedLevel, 4);
-    } else if (/giao trễ|giao sai|giao nhầm|hỏng hàng|hàng (?:bị )?(?:hỏng|vỡ|lỗi)|trầy xước|vòi tiền|thái độ/i.test(lower)) {
+    } else if (missedAppointment || /giao trễ|giao sai|giao nhầm|hỏng hàng|hàng (?:bị )?(?:hỏng|vỡ|lỗi)|trầy (?:xước|da)|vòi tiền|thái độ/i.test(lower)) {
         riskType = 'service_complaint';
         detectedLevel = Math.max(detectedLevel, 4);
+    }
+
+    const isHighlyUpset = /(?<!\bkhong )\b(?:(?:rat|qua|cuc ky) (?:buc xuc|buc minh)|(?:buc xuc|buc minh|buc|tuc) (?:lam|qua)|khong the chap nhan)\b/.test(folded)
+        || /(?:^|\b(?:toi|minh|em) )(?:(?:van|dang) )?(?:rat )?tuc gian\b/.test(folded);
+    if (isHighlyUpset || isImplicitlyUpset) {
+        detectedLevel = Math.max(detectedLevel, 5);
     }
 
     // 4. Phân loại hình thức vi phạm (Abuse Type)
@@ -152,6 +166,10 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
         worstAction,
         maskedText,
         detectedLevel,
+        socialIntent,
+        isHighlyUpset,
+        isImplicitlyUpset,
+        missedAppointment,
         isUrgent,
         riskType,
         abuseType,

@@ -1,294 +1,302 @@
-# Chương 8: Kiến trúc hệ thống và giải thuật thông minh
+# Chương 8. Kiến trúc hệ thống và giải thuật thông minh
 
 ## Danh mục bảng và hình trong chương
 
-### Danh mục hình
-* **Hình 8.1**: Sơ đồ kiến trúc phân tầng tổng thể của hệ thống Pawpal.
-* **Hình 8.2**: Sơ đồ luồng giao tiếp và cơ chế kiểm soát bảo mật đa lớp giữa các thành phần.
-* **Hình 8.3**: Sơ đồ kiến trúc đường ống xử lý trí tuệ nhân tạo sáu tầng của hệ thống Pawpal.
-* **Hình 8.4**: Lưu đồ quy trình xử lý hội thoại và phân luồng trải nghiệm của Trợ lý Pawpal Chatbot.
-* **Hình 8.5**: Giao diện tương tác thực tế của Trợ lý Pawpal Chatbot trên kênh người dùng công chúng.
-* **Hình 8.6**: Lưu đồ quy trình xử lý tác vụ thông minh và kiểm soát thẩm quyền của Trợ lý Pawpal Copilot.
-* **Hình 8.7**: Giao diện phân hệ làm việc Trợ lý Pawpal Copilot trong không gian quản trị.
-* **Hình 8.8**: Lưu đồ giải thuật kiểm duyệt nội dung độc hại và kích hoạt phân luồng cảm xúc.
-* **Hình 8.9**: Ảnh minh chứng kiểm thử tính toán giá dịch vụ làm đẹp theo cân nặng thực tế.
-* **Hình 8.10**: Ảnh minh chứng kiểm thử chốt chặn bảo vệ quyền riêng tư đơn hàng của khách vãng lai.
-* **Hình 8.11**: Ảnh minh chứng kiểm thử nhận diện cảm xúc lo lắng và phản hồi xoa dịu tự nhiên.
-* **Hình 8.12**: Ảnh minh chứng kiểm thử tổng hợp hồ sơ khách hàng 360 độ qua trợ lý nội bộ.
-* **Hình 8.13**: Ảnh minh chứng kiểm thử cảnh báo các mặt hàng tồn kho chạm ngưỡng an toàn.
-* **Hình 8.14**: Ảnh minh chứng kiểm thử cơ chế chốt chặn nhân viên xem doanh thu trái phép.
+Chương này sử dụng Hình 8.1 đến Hình 8.3 để trình bày kiến trúc phân tầng, kiểm soát truy cập và các bước xử lý một yêu cầu. Hình 8.4, Hình 8.6 và Hình 8.8 lần lượt mô tả luồng Chatbot, luồng Copilot và cách xử lý nội dung có rủi ro. Các ảnh giao diện gồm lượt hỏi giờ mở cửa ở Hình 8.5, lượt tra lịch Spa ở Hình 8.7 và sáu lượt thử nghiệp vụ ở Hình 8.9 đến Hình 8.14.
 
-### Danh mục bảng
-* **Bảng 8.1**: Ma trận phân quyền truy cập chức năng và dữ liệu theo vai trò người dùng.
-* **Bảng 8.2**: Ma trận tính năng và phạm vi phục vụ của trợ lý thông minh theo đối tượng người dùng.
-* **Bảng 8.3**: Bảng ánh xạ các ý định người dùng và mẫu câu hỏi phổ biến trong Trợ lý Pawpal Chatbot.
-* **Bảng 8.4**: Danh mục công cụ tra cứu dữ liệu an toàn phục vụ vận hành của Trợ lý Pawpal Copilot.
-* **Bảng 8.5**: Bảng phân loại 6 cấp độ cảm xúc, nhóm rủi ro và hành động điều phối tương ứng.
-* **Bảng 8.6**: Bảng kết quả kiểm thử thực nghiệm độ chuẩn xác và hiệu năng của giải thuật trợ lý thông minh.
-
----
+Bảng 8.1 và Bảng 8.2 tổng hợp quyền truy cập và phạm vi hỗ trợ theo vai trò. Bảng 8.3 trình bày cách Chatbot chọn nguồn theo câu hỏi. Bảng 8.4 liệt kê các công cụ tra cứu của Copilot. Bảng 8.5 và bảng bổ sung mô tả cấp độ cảm xúc cùng cách phản hồi theo tình huống.
 
 ## Lời mở đầu chương
-Chương này trình bày toàn bộ giải pháp kỹ thuật của hệ thống quản lý và chăm sóc thú cưng Pawpal, tập trung vào hai nội dung cốt lõi: kiến trúc hệ thống và giải thuật trợ lý trí tuệ nhân tạo. 
 
-Phần kiến trúc làm rõ cách tổ chức phân tầng độc lập, luồng giao tiếp giữa các dịch vụ, cơ chế truyền phát dữ liệu thời gian thực và kiến trúc an toàn thông tin đa lớp nhằm bảo đảm hệ thống vận hành liên tục, bảo mật và sẵn sàng mở rộng. 
-
-Phần giải thuật thông minh đi sâu vào mô hình kiến trúc đường ống xử lý trí tuệ nhân tạo sáu tầng và giá trị thực tế mang lại cho hai đối tượng người dùng trọng tâm: hỗ trợ khách hàng tự tra cứu thông tin dịch vụ nhanh chóng, minh bạch và hỗ trợ nhân viên vận hành tối ưu hóa công việc hàng ngày. Đặc biệt, giải thuật được thiết kế dựa trên triết lý thấu cảm, lấy con người và thú cưng làm trung tâm, giải quyết đồng thời bài toán nâng cao năng suất hoạt động lẫn giải tỏa căng thẳng tâm lý cho cả chủ nuôi và đội ngũ nhân sự.
-
----
+Chương này trình bày kiến trúc hệ thống PawPal, cơ chế kiểm soát truy cập và quy trình xử lý yêu cầu của hai trợ lý thông minh. Chatbot trên website hỗ trợ khách tra cứu thông tin công khai và dữ liệu thuộc tài khoản đã xác thực. Copilot trong cổng quản trị hỗ trợ nhân viên và quản lý khai thác dữ liệu theo phạm vi công việc. Phần thực nghiệm sử dụng các tình huống đại diện để minh họa kết quả tra cứu, cách phản hồi và những giới hạn truy cập của từng vai trò.
 
 ## 8.1. Mô hình kiến trúc phân tầng hệ thống
 
 ### 8.1.1. Kiến trúc phân tầng chức năng
-Hệ thống Pawpal được thiết kế theo mô hình phân tầng độc lập nhằm bảo đảm tính module hóa, dễ bảo trì và dễ mở rộng khi quy mô dịch vụ tăng lên. Cấu trúc tổng thể của hệ thống bao gồm bốn tầng chính có ranh giới rõ ràng.
 
-Tầng giao diện người dùng đảm nhận việc tiếp nhận tương tác và hiển thị thông tin trực quan. Tầng này phân tách làm hai môi trường riêng biệt gồm cổng thông tin công chúng và bảng điều khiển quản trị. Cổng thông tin công chúng là ứng dụng web tương tác mượt mà dành cho khách hàng tìm kiếm dịch vụ, đặt lịch làm đẹp, mua sản phẩm, theo dõi sức khỏe thú cưng và trò chuyện với trợ lý ảo. Bảng điều khiển quản trị là môi trường làm việc hiệu năng cao dành cho nhân viên lễ tân, kỹ thuật viên chăm sóc, thu ngân và cấp quản lý thực hiện các thao tác nghiệp vụ hàng ngày.
+Kiến trúc PawPal gồm bốn tầng. Tầng giao diện cung cấp website công khai, khu vực tài khoản khách hàng và cổng quản trị. Khách hàng sử dụng website để tra giá, đặt lịch, mua sản phẩm và trao đổi với Chatbot. Thành viên có thể theo dõi hồ sơ và giao dịch của mình trong khu vực tài khoản. Nhân viên và quản lý thực hiện các nghiệp vụ được phân quyền trong cổng quản trị.
 
-Tầng cổng dịch vụ đóng vai trò trung gian tiếp nhận mọi yêu cầu từ giao diện gửi lên máy chủ. Tầng này chịu trách nhiệm kiểm tra tính hợp lệ của dữ liệu đầu vào, xác thực danh tính người gửi, kiểm soát hạn mức gọi dịch vụ theo từng địa chỉ mạng để chống nghẽn đường truyền và điều hướng yêu cầu đến đúng bộ xử lý nội bộ. Đặc biệt, cơ chế truyền phát dữ liệu thời gian thực được thiết lập tại tầng này cho phép đẩy từng cụm từ kết quả về màn hình người dùng ngay khi máy chủ xử lý xong, giúp giảm độ trễ hiển thị cụm từ đầu tiên xuống dưới một giây và tạo cảm giác phản hồi mượt mà như người thật đang trò chuyện.
+Tầng cổng dịch vụ tiếp nhận yêu cầu từ Chatbot và Copilot qua cùng địa chỉ `/api/admin-chat`. API xác thực phiên, kiểm tra đầu vào và hạn mức, sau đó chọn nhánh xử lý theo vai trò và nội dung yêu cầu.
 
-Tầng dữ liệu quản lý toàn bộ việc lưu trữ lâu dài của hệ thống. Dữ liệu có cấu trúc như thông tin khách hàng, hồ sơ thú cưng, lịch hẹn, giao dịch bán hàng và ca dịch vụ được quản lý trong hệ quản trị cơ sở dữ liệu quan hệ PostgreSQL. Dữ liệu tập tin như hình ảnh sản phẩm, ảnh chụp hồ sơ thú cưng và hình ảnh minh chứng tình trạng lông, da gửi qua khung chat được phân tách lưu trữ tại kho tập tin chuyên dụng để giảm tải tối đa cho cơ sở dữ liệu chính.
+Tầng dữ liệu dùng Supabase PostgreSQL để lưu hồ sơ, lịch hẹn, giao dịch và hội thoại. Các thủ tục truy vấn và chính sách truy cập theo hàng xác định những bản ghi mà người dùng được phép đọc. Ảnh đính kèm hội thoại được lưu trong kho tệp riêng và truy cập qua API quản lý tệp.
 
-Tầng tích hợp trí tuệ nhân tạo là dịch vụ trung gian độc lập chịu trách nhiệm kết nối với mô hình ngôn ngữ lớn. Tầng này hoàn toàn không cho phép mô hình ngôn ngữ truy cập trực tiếp vào cơ sở dữ liệu. Thay vào đó, máy chủ đứng ra lọc sạch dữ liệu nhạy cảm, chuẩn hóa câu hỏi, bóc tách tham số và chỉ cung cấp các đoạn trích dữ liệu đã được thẩm định an toàn cho mô hình tạo câu trả lời.
+Tầng tích hợp mô hình dùng Gemini cho những tác vụ cần tổng hợp hướng dẫn hoặc soạn bản nháp. Máy chủ chịu trách nhiệm chọn và đọc nguồn. Mô hình nhận câu hỏi và ngữ cảnh đã được máy chủ giới hạn cho tác vụ đó.
 
-> **Hình 8.1: Sơ đồ kiến trúc phân tầng tổng thể của hệ thống Pawpal**  
-> *(Sơ đồ thể hiện 4 tầng: Giao diện người dùng, Cổng dịch vụ trung gian, Quản trị cơ sở dữ liệu và Tầng tích hợp trí tuệ nhân tạo)*.
+![Sơ đồ kiến trúc phân tầng PawPal](figures/chuong-08/hinh-08-01-kien-truc-phan-tang.png)
+
+**Hình 8.1.** Kiến trúc phân tầng của PawPal.
+
+Như thể hiện ở Hình 8.1, trình duyệt gửi yêu cầu trợ lý đến cổng dịch vụ qua HTTP. Cơ chế truyền sự kiện một chiều từ máy chủ (SSE) được sử dụng ở các nhánh hỗ trợ truyền phát. Supabase Realtime phục vụ các màn hình cần cập nhật khi dữ liệu thay đổi. Phiên bản Gemini ghi trong sơ đồ minh họa một cấu hình triển khai.
 
 ### 8.1.2. Mô hình triển khai và luồng tương tác giữa các thành phần
-Các thành phần trong hệ thống Pawpal giao tiếp với nhau theo các giao thức mạng tiêu chuẩn và tuân thủ nguyên tắc không tin cậy bất kỳ dữ liệu nào gửi từ trình duyệt. Mọi yêu cầu từ khách hàng hay nhân viên đều phải đi qua cổng kiểm soát an toàn trước khi chạm tới cơ sở dữ liệu.
 
-Khi người dùng gửi một câu hỏi hoặc yêu cầu tác vụ, cổng dịch vụ sẽ kiểm tra trạng thái đăng nhập và hạn mức truy cập. Nếu yêu cầu liên quan đến các tác vụ trí tuệ nhân tạo, hệ thống sẽ thực hiện bóc tách tham số nghiệp vụ trước tại máy chủ, sau đó dùng quyền nội bộ để đọc dữ liệu cần thiết từ cơ sở dữ liệu, ghép thành ngữ cảnh có cấu trúc rồi mới chuyển đến mô hình ngôn ngữ lớn. Cách thiết kế này ngăn chặn hoàn toàn việc rò rỉ mã truy vấn nội bộ hoặc dữ liệu riêng tư của người dùng khác.
+Trong mô hình triển khai của PawPal, Vercel lưu trữ giao diện web và vận hành các API phía máy chủ. Supabase cung cấp dịch vụ xác thực người dùng và cơ sở dữ liệu PostgreSQL. Trình duyệt kết nối với Supabase Auth khi người dùng đăng nhập và dùng phiên đã xác thực để gọi các thủ tục được cấp quyền. Các nghiệp vụ cần xử lý phía máy chủ được gửi đến API tương ứng.
 
-> **Hình 8.2: Sơ đồ luồng giao tiếp và cơ chế kiểm soát bảo mật đa lớp giữa các thành phần**  
-> *(Sơ đồ thể hiện luồng truyền dữ liệu có kiểm soát giữa máy khách, cổng dịch vụ, cơ sở dữ liệu và máy chủ xử lý ngôn ngữ)*.
+Khi người dùng gửi câu hỏi đến Chatbot hoặc Copilot, API kiểm tra phiên đăng nhập hoặc quyền sở hữu hội thoại của khách vãng lai trước khi xác định phạm vi tra cứu. Yêu cầu về dữ liệu cá nhân được xử lý theo phiên của chủ tài khoản. Yêu cầu trong cổng quản trị được kiểm tra theo quyền nghiệp vụ của nhân viên hoặc quản lý.
 
----
+Chatbot trên website và Copilot dành cho quản lý có thể gửi sự kiện từ máy chủ để giao diện hiển thị trạng thái xử lý hoặc nội dung phản hồi. Copilot dành cho nhân viên trả kết quả dưới dạng JSON sau khi xác minh lại quyền truy cập và phạm vi dữ liệu.
+
+![Sơ đồ trình tự giao tiếp và kiểm soát bảo mật](figures/chuong-08/hinh-08-02-luong-giao-tiep-bao-mat.png)
+
+**Hình 8.2.** Luồng giao tiếp và các lớp kiểm soát truy cập.
+
+Hình 8.2 mô tả trình tự xử lý một yêu cầu Copilot có sử dụng Gemini. Sau khi xác thực phiên, cổng dịch vụ đăng ký một suất tra cứu có thời hạn để kiểm soát số yêu cầu xử lý đồng thời. Suất này được dùng trong quá trình đọc dữ liệu và được giải phóng khi yêu cầu kết thúc. Máy chủ chọn phần dữ liệu cần thiết để xây dựng ngữ cảnh trước khi gọi Gemini. Với câu hỏi đã có kết quả trực tiếp từ cơ sở dữ liệu, máy chủ định dạng kết quả và trả về giao diện.
 
 ## 8.2. Kiến trúc an toàn thông tin và kiểm soát truy cập
 
 ### 8.2.1. Cơ chế xác thực và quản lý định danh người dùng
-Hệ thống quản lý định danh người dùng dựa trên hai nhóm đối tượng rõ rệt để tối ưu hóa trải nghiệm tự phục vụ mà vẫn bảo đảm an toàn dữ liệu.
 
-Đối với khách hàng thành viên, hệ thống xác thực thông qua mã tài khoản duy nhất được mã hóa an toàn. Khi đăng nhập thành công, mỗi yêu cầu gửi đi đều mang theo chữ ký xác thực. Nhờ đó, hệ thống nhận diện chính xác chủ tài khoản để tự động nạp danh sách thú cưng, lịch hẹn và điểm thưởng cá nhân mà không cần khách hàng phải nhập lại thông tin.
+Thành viên đăng nhập qua Supabase Auth. Khi gọi chức năng cần xác thực, trình duyệt gửi mã truy cập của phiên để máy chủ kiểm tra và đối chiếu với hồ sơ khách hàng đang hoạt động. Trợ lý xác định chủ tài khoản từ phiên đó trước khi đọc hồ sơ, lịch hẹn hoặc đơn hàng cá nhân.
 
-Đối với khách vãng lai chưa tạo tài khoản, hệ thống không bắt buộc người dùng phải đăng ký ngay mới được tư vấn. Thay vào đó, hệ thống tự động cấp phát một chuỗi khóa phiên làm việc ẩn danh được băm một chiều bằng giải thuật SHA-256. Khóa phiên này cho phép lưu tạm thời lịch sử trao đổi trong phiên truy cập hiện tại. Khi khách hàng quyết định đăng ký hoặc đăng nhập tài khoản chính thức, hệ thống sẽ tự động liên kết toàn bộ nội dung trò chuyện trước đó vào hồ sơ thành viên mới mà không làm mất dữ liệu.
+Khách vãng lai có thể hỏi thông tin công khai qua phiên khách. Cổng dịch vụ sử dụng SHA-256 để băm mã phiên trước khi đối chiếu với bản ghi chưa hết hạn và chưa bị thu hồi. Khi liên kết hội thoại với tài khoản thành viên, máy chủ xác minh quyền sở hữu phiên khách và điều kiện của tài khoản nhận hội thoại. Việc đọc giao dịch cá nhân yêu cầu xác thực tài khoản và kiểm tra quyền sở hữu giao dịch.
 
 ### 8.2.2. Kiểm soát phân quyền đa tầng và bảo vệ dữ liệu nghiệp vụ
-Hệ thống áp dụng chính sách kiểm soát truy cập theo vai trò kết hợp chặt chẽ với bảo mật cấp độ hàng dữ liệu trực tiếp trong cơ sở dữ liệu.
 
-Ở tầng quản trị nội bộ, hệ thống cố định hai nhóm vai trò rõ ràng gồm vai trò quản lý và vai trò nhân viên. Vai trò quản lý nắm toàn quyền vận hành, được phép xem báo cáo doanh thu, biến động dòng tiền, danh sách nhân sự và điều chỉnh các quy định vận hành của tiệm. Vai trò nhân viên chỉ được cấp các quyền công việc gắn với nghiệp vụ thực tế như tiếp nhận ca dịch vụ, ghi nhận chăm sóc, kiểm tra tồn kho và hỗ trợ khách hàng. Nhân viên hoàn toàn bị chặn với mã lỗi bảo mật khi cố gắng truy cập các chỉ số tài chính hoặc sửa đổi cấu hình hệ thống.
+Cổng API kiểm tra danh tính và quyền sử dụng chức năng. Khi truy vấn tiếp tục xuống cơ sở dữ liệu, các thủ tục đọc giới hạn kết quả theo quyền trên nguồn và phạm vi công việc. Chẳng hạn, quyền thực hiện dịch vụ cho phép nhân viên xem các lịch được giao. Quyền thu tiền tại quầy có thể cho phép đối soát một đơn xác định, còn tổng hợp thực thu toàn cơ sở cần quyền đọc thanh toán và hoàn tiền của quản lý.
 
-Ở tầng cơ sở dữ liệu, chính sách bảo mật cấp độ hàng quy định dữ liệu của khách hàng nào thì chỉ tài khoản đó hoặc nhân viên đang phụ trách ca dịch vụ đó mới có quyền đọc. Ràng buộc kỹ thuật này bảo đảm kể cả khi xảy ra lỗi ở tầng giao diện, cơ sở dữ liệu bên dưới vẫn kiên quyết từ chối các truy vấn trái phép.
+Khách vãng lai có thể xem danh mục, giá công khai và nhận hướng dẫn đăng nhập khi hỏi về giao dịch cá nhân. Tài khoản thành viên đang hoạt động và đã thiết lập mật khẩu có thể đề nghị gặp chuyên viên hoặc đính kèm tối đa ba ảnh mỗi tin khi đáp ứng điều kiện của hệ thống. Cơ sở dữ liệu kiểm tra điều kiện thành viên khi chuyển hội thoại sang chờ nhân viên.
 
-**Bảng 8.1: Ma trận phân quyền truy cập chức năng và dữ liệu theo vai trò người dùng**
+Trong cổng quản trị, nhân viên tiếp nhận hội thoại từ hàng đợi theo quyền tác nghiệp và thêm ghi chú nội bộ trong phạm vi ca được phép xử lý. Quyền xem lịch trực, lịch dịch vụ, tồn kho và phòng khả dụng được kiểm tra theo từng tác vụ. Bảng 8.1 tổng hợp quyền truy cập của bốn nhóm người dùng.
 
-| Phân hệ và Dữ liệu nghiệp vụ | Khách vãng lai | Khách thành viên | Nhân viên | Quản lý |
-| :--- | :---: | :---: | :---: | :---: |
-| Tra cứu bảng giá, dịch vụ, sản phẩm công khai | Cho phép | Cho phép | Cho phép | Cho phép |
-| Tra cứu hồ sơ thú cưng, đơn hàng, điểm cá nhân | Từ chối | Cho phép | Cho phép theo ca | Cho phép |
-| Gửi yêu cầu gặp chuyên viên tư vấn trực tiếp | Từ chối | Cho phép | Không áp dụng | Không áp dụng |
-| Đính kèm hình ảnh thực tế trong tin nhắn | Từ chối | Tối đa 3 ảnh | Cho phép | Cho phép |
-| Tiếp nhận ca chat và trao đổi với khách hàng | Không áp dụng | Không áp dụng | Ca được phân công | Mọi ca |
-| Tạo và đọc ghi chú nội bộ trong ca chat | Không áp dụng | Không áp dụng | Cho phép | Cho phép |
-| Tra cứu lịch hẹn, tồn kho, phòng trống qua trợ lý | Không áp dụng | Không áp dụng | Cho phép | Cho phép |
-| Tra cứu doanh thu, thực thu, tiền hoàn lại | Từ chối | Từ chối | Bị chặn hoàn toàn | Cho phép |
-| Chỉnh sửa kho quy định và câu trả lời mẫu | Từ chối | Từ chối | Từ chối | Cho phép |
+**Bảng 8.1. Ma trận quyền truy cập theo vai trò**
 
----
+| Dữ liệu hoặc chức năng | Khách vãng lai | Thành viên | Nhân viên | Quản lý |
+| --- | --- | --- | --- | --- |
+| Danh mục và bảng giá công khai | Có | Có | Có | Có |
+| Hồ sơ khách hàng và giao dịch cá nhân qua trợ lý | Yêu cầu xác thực | Thuộc tài khoản | Theo quyền công việc | Theo quyền quản trị |
+| Yêu cầu gặp chuyên viên | Hướng dẫn đăng nhập hoặc thiết lập tài khoản | Có khi đủ điều kiện thành viên | Tiếp nhận theo quyền tác nghiệp | Điều phối theo quyền quản trị |
+| Đính kèm ảnh trong chat | Yêu cầu đủ điều kiện thành viên | Tối đa 3 ảnh mỗi tin | Theo quyền xử lý hội thoại | Theo quyền quản trị |
+| Tiếp nhận và trao đổi trong ca chat | — | — | Theo hàng đợi hoặc ca được giao và quyền xử lý | Theo quyền quản trị |
+| Ghi chú nội bộ của ca chat | — | — | Theo quyền và phạm vi ca | Theo quyền quản trị |
+| Lịch trực cá nhân và lịch dịch vụ được giao | — | — | Theo quyền công việc | Theo quyền quản trị |
+| Tra cứu tồn kho và phòng khả dụng qua Copilot | — | — | Cần quyền đọc kho hoặc quyền đặt lịch tương ứng | Theo quyền đọc nguồn tương ứng |
+| Tổng hợp thực thu toàn cơ sở | — | — | API từ chối | Cần quyền đọc thanh toán và hoàn tiền |
+| Sửa quy định hoặc câu trả lời mẫu | — | — | — | Theo quyền quản trị |
 
 ## 8.3. Kiến trúc đường ống xử lý trí tuệ nhân tạo
 
-Hệ thống trí tuệ nhân tạo của Pawpal được xây dựng theo mô hình kiến trúc đường ống sáu tầng khép kín nhằm bảo đảm sự kết hợp hài hòa giữa tính chính xác dữ liệu, an toàn nghiệp vụ và trải nghiệm giao tiếp tự nhiên. Mỗi thông điệp gửi từ người dùng đều phải trải qua quy trình xử lý nghiêm ngặt qua sáu tầng chức năng độc lập.
+**Bước 1. Tiếp nhận và kiểm duyệt.** API kiểm tra phiên, quyền của người gửi và tính hợp lệ của dữ liệu đầu vào. Với tin nhắn gửi qua Chatbot trên website, hệ thống áp dụng quy tắc kiểm duyệt và xác định hai kết quả riêng là cấp độ cảm xúc và nhóm rủi ro. Kết quả này giúp chọn hướng trả lời hoặc xem xét chuyển hội thoại cho nhân viên.
 
-Tầng đầu tiên là tầng tiếp nhận và kiểm duyệt đầu vào. Tại đây, câu hỏi thô của người dùng được chuẩn hóa ký tự và quét qua bộ lọc từ cấm hai lớp. Nếu phát hiện các từ ngữ thô tục hoặc biến thể lách từ, hệ thống tự động làm mờ bằng ký tự ba sao để giữ gìn giao diện văn minh. Đồng thời, giải thuật chấm điểm cảm xúc sẽ xác định mức độ cảm xúc từ cấp một đến cấp sáu và phân loại vào một trong năm nhóm rủi ro nghiệp vụ gồm cấp cứu y tế, tranh chấp thanh toán, khiếu nại dịch vụ, chăm sóc đặc biệt hoặc bình thường.
+**Bước 2. Phân tích ý định.** Bộ định tuyến xác định người dùng đang hỏi giá, tra hồ sơ, xem lịch hay cần hỗ trợ. Hệ thống trích các tham số cần thiết như loài, cân nặng, mã giao dịch và ngày theo giờ Việt Nam. Với câu hỏi tiếp nối, hệ thống dùng thông tin từ lịch sử khi có đủ căn cứ để xác định đúng đối tượng hoặc bộ lọc.
 
-Tầng thứ hai là tầng phân tích ý định và lập kế hoạch tác vụ. Hệ thống tiến hành bóc tách các thực thể nghiệp vụ quan trọng như giống loài thú cưng, khoảng cân nặng, ngày giờ hoặc tên dịch vụ. Dựa trên các thực thể này, bộ lập kế hoạch sẽ quyết định hướng xử lý tiếp theo: chuyển sang công cụ tính giá làm đẹp, kiểm tra phòng trống, tra cứu đơn hàng cá nhân hay chuyển sang kịch bản xoa dịu tâm lý khách hàng.
+**Bước 3. Truy vấn chỉ đọc.** Máy chủ chọn công cụ trong danh mục đã đăng ký và kiểm tra quyền đọc, bộ lọc cùng phạm vi dữ liệu. Hạn mức số lần gọi, số bản ghi và dung lượng phản hồi giúp giới hạn mỗi lượt tra cứu. Các tác vụ nghiệp vụ như tạo lịch hoặc hoàn tiền được xử lý qua chức năng riêng.
 
-Tầng thứ ba là tầng cổng truy vấn dữ liệu an toàn chỉ đọc. Đây là chốt chặn kỹ thuật quan trọng nhất bảo đảm mô hình ngôn ngữ không bao giờ được phép tương tác trực tiếp với cơ sở dữ liệu. Toàn bộ các công cụ đọc dữ liệu được đăng ký cố định trong danh mục khép kín. Trước khi thực thi bất kỳ truy vấn nào, hệ thống đối soát nghiêm ngặt quyền hạn công việc của người gọi theo cơ chế kiểm soát truy cập vai trò và bảo mật cấp hàng. Toàn bộ thao tác chỉ gọi các thủ tục lưu trữ an toàn chỉ đọc, hoàn toàn không hỗ trợ bất kỳ lệnh ghi đè hay thay đổi dữ liệu nào qua trợ lý.
+**Bước 4. Chuẩn hóa ngữ cảnh.** Máy chủ chọn thông tin cần thiết từ nguồn đã đọc và sắp xếp theo tác vụ. Nếu cần gọi mô hình, ngữ cảnh được giới hạn theo quyền, phạm vi và dung lượng. Chỉ dẫn yêu cầu mô hình bám vào nguồn được cung cấp và nói rõ khi dữ liệu còn thiếu.
 
-Tầng thứ tư là tầng chuẩn hóa ngữ cảnh và triệt tiêu ảo giác. Trước khi nạp dữ liệu vào mô hình trí tuệ nhân tạo, máy chủ tiến hành làm sạch toàn bộ tên bảng, tên cột, mã khóa kỹ thuật và dữ liệu riêng tư của người dùng khác. Đồng thời, hệ thống áp đặt hợp đồng bằng chứng bắt buộc mô hình chỉ được trả lời dựa trên những dữ liệu có thực được cung cấp từ cơ sở dữ liệu nội bộ. Nếu thiếu dữ liệu, giải thuật bắt buộc phải thông báo chưa có thông tin xác nhận thay vì tự ý suy đoán mức giá hay bịa đặt chính sách tiệm.
+**Bước 5. Tạo phản hồi.** Câu hỏi về giá, số dư, lịch hoặc thực thu có thể được trả lời bằng cách định dạng dữ liệu đã đọc. Khi cần tổng hợp hướng dẫn hoặc soạn bản nháp, máy chủ có thể dùng Gemini. Giao diện nhận kết quả qua luồng sự kiện máy chủ hoặc dưới dạng JSON, tùy nhánh xử lý.
 
-Tầng thứ năm là tầng xử lý ngôn ngữ và truyền phát thời gian thực. Hệ thống sử dụng bộ điều phối quản lý nhóm khóa kết nối dịch vụ thông minh để bảo đảm hoạt động liên tục, tránh nghẽn hạn mức. Dữ liệu câu trả lời sau khi được mô hình ngôn ngữ tạo ra sẽ được truyền phát từng cụm từ về máy khách theo thời gian thực thông qua kết nối luồng một chiều, giúp giảm độ trễ hiển thị cụm từ đầu tiên xuống dưới một giây và tạo cảm giác mượt mà như chuyên viên đang trực tiếp gõ phím.
+**Bước 6. Hậu kiểm và chuyển ca.** Hệ thống kiểm tra cấu trúc phản hồi và lưu lượt trao đổi. Copilot nhân viên xác minh lại phạm vi công việc trước khi gửi kết quả. Với Chatbot, nếu tài khoản và quy tắc điều phối cho phép, hội thoại được đưa vào hàng đợi để nhân viên tiếp nhận.
 
-Tầng thứ sáu là tầng hậu kiểm và điều phối chuyển giao ca thông minh. Tại tầng cuối cùng này, câu trả lời được kiểm tra định dạng và chuẩn hóa theo phong cách giao tiếp thấu cảm của Pawpal: xưng là Pawpal, gọi khách là bạn và gọi thú cưng là bé với lời lẽ ấm áp, lịch sự. Khi phát hiện các rủi ro cấp cứu y tế, tranh chấp thanh toán hoặc khách hàng bày tỏ mong muốn gặp người thật, hệ thống tự động khóa phản hồi máy móc và kích hoạt cờ ưu tiên chuyển toàn bộ nội dung trò chuyện sang hàng đợi cho nhân viên hoặc quản lý tiếp nhận xử lý trực tiếp.
+![Sơ đồ sáu tầng xử lý yêu cầu trợ lý](figures/chuong-08/hinh-08-03-duong-ong-ai.png)
 
-> **Hình 8.3: Sơ đồ kiến trúc đường ống xử lý trí tuệ nhân tạo sáu tầng của hệ thống Pawpal**  
-> *(Sơ đồ thể hiện 6 tầng khép kín: Tiếp nhận kiểm duyệt, Phân tích ý định, Cổng dữ liệu chỉ đọc, Chuẩn hóa ngữ cảnh, Xử lý truyền phát và Hậu kiểm chuyển giao ca)*.
-
----
+**Hình 8.3.** Đường ống sáu bước xử lý yêu cầu trợ lý.
 
 ## 8.4. Giải thuật trợ lý thông minh hỗ trợ khách hàng
 
 ### 8.4.1. Mục tiêu và giá trị hỗ trợ khách hàng
-Trợ lý ảo trên kênh người dùng công chúng được xây dựng với mục tiêu trở thành nhân viên tư vấn số hoạt động liên tục suốt ngày đêm, đồng hành cùng chủ nuôi thú cưng cả về mặt tiện ích thao tác lẫn xoa dịu tâm lý.
 
-Về mặt hoạt động thực tế, trợ lý giúp khách hàng nhận báo giá chính xác tức thì bất kể ngày đêm mà không cần phải chờ nhân viên phản hồi thủ công. Do biểu phí làm đẹp phụ thuộc chặt chẽ vào loài thú cưng và cân nặng thực tế, hệ thống tự động bóc tách các thông số này để đối soát mức giá niêm yết chuẩn xác nhất. Ngoài ra, khách hàng thành viên có thể tự tra cứu tình trạng đơn hàng, ngày giờ ca hẹn làm đẹp sắp tới, số dư điểm thưởng và lịch sử tiêm phòng chỉ bằng một câu hỏi ngắn. Khách hàng cũng dễ dàng gửi đính kèm tối đa ba ảnh chụp thực tế tình trạng da lông của bé để nhân viên chuẩn bị dụng cụ chu đáo trước khi khách đưa bé đến tiệm.
+Mục tiêu của Chatbot là giúp khách hàng nhận được thông tin đáng tin cậy và biết bước tiếp theo cần thực hiện. Khi khách bày tỏ lo lắng hoặc không hài lòng, trợ lý ghi nhận sự việc cụ thể, giải thích cách xử lý và hướng đến người có chuyên môn khi cần. Trong các lượt trao đổi tiếp theo, phản hồi sử dụng thông tin khách vừa bổ sung để hướng dẫn tiếp. Giá trị của phản hồi thấu cảm được thể hiện qua mức độ phù hợp với tình huống và tính rõ ràng của hướng dẫn.
 
-Về mặt tinh thần và cảm xúc, trợ lý đóng vai trò như một điểm tựa tâm lý xóa tan sự hoang mang của người nuôi khi thú cưng gặp vấn đề bất thường lúc đêm muộn. Nhờ khả năng nhận diện các từ ngữ lo âu, trợ lý phản hồi bằng giọng điệu điềm tĩnh, ấm áp, đưa ra lời khuyên theo dõi ban đầu và kết nối ngay với chuyên viên hỗ trợ. Cách gọi thú cưng là bé và xưng là Pawpal mang lại cảm giác được thấu hiểu, tôn trọng như một thành viên gia đình thực thụ. Đồng thời, việc tính toán giá cả công khai, minh bạch giúp khách hàng hoàn toàn an tâm, không còn nỗi lo bị báo giá mập mờ hay phụ thu vô lý khi đến tiệm.
+Chatbot hỗ trợ khách hàng tra cứu giờ mở cửa, danh mục dịch vụ, bảng giá và tình trạng còn hàng của sản phẩm. Khi khách cung cấp cân nặng của thú cưng, trợ lý có thể tìm các mức giá tắm phù hợp với khoảng cân. Điều kiện nhận từng loài, khung giờ và phụ phí được kiểm tra khi đặt lịch. Với dịch vụ lưu trú, Chatbot giới thiệu loại phòng và mức giá, còn tình trạng phòng được xác định sau khi khách chọn ngày và giờ.
 
-**Bảng 8.2: Ma trận tính năng và phạm vi phục vụ của trợ lý thông minh theo đối tượng người dùng**
+Sau khi đăng nhập, thành viên có thể tra cứu hồ sơ thú cưng, lịch hẹn theo các khoảng thời gian được hỗ trợ, đơn hàng, số dư điểm, ưu đãi, nhật ký chăm sóc và yêu cầu hỗ trợ. Với vấn đề cần đánh giá về sức khỏe, Chatbot hướng chủ nuôi liên hệ bác sĩ thú y. Cửa sổ trò chuyện phục vụ trao đổi với bộ phận chăm sóc khách hàng, còn mục **Hỗ trợ** tiếp nhận và theo dõi khiếu nại hoặc đề nghị bồi hoàn.
 
-| Nhóm tính năng | Khách vãng lai | Khách thành viên | Nhân viên tác nghiệp | Quản lý cơ sở |
-| :--- | :---: | :---: | :---: | :---: |
-| Tư vấn giá làm đẹp theo cân nặng | Hỗ trợ đầy đủ | Hỗ trợ đầy đủ | Hỗ trợ báo giá | Hỗ trợ báo giá |
-| Kiểm tra phòng khách sạn còn trống | Hỗ trợ xem phòng | Hỗ trợ xem phòng | Hỗ trợ xếp phòng | Toàn quyền quản lý |
-| Tra cứu đơn hàng và điểm tích lũy | Hướng dẫn đăng nhập | Tra cứu tức thì | Tra cứu theo mã | Toàn quyền kiểm tra |
-| Gửi hình ảnh vết thương, tình trạng lông | Yêu cầu đăng nhập | Gửi tối đa 3 ảnh | Gửi ảnh minh chứng | Xem toàn bộ ảnh |
-| Tra cứu ca làm việc và lịch trực | Không hỗ trợ | Không hỗ trợ | Xem ca cá nhân | Xem ca toàn tiệm |
-| Cảnh báo sản phẩm chạm ngưỡng tồn kho | Không hỗ trợ | Không hỗ trợ | Xem danh sách thiếu | Xem báo cáo nhập hàng |
-| Đối soát doanh thu và tiền hoàn trả | Không hỗ trợ | Không hỗ trợ | Bị từ chối tự động | Xem toàn diện |
+**Bảng 8.2. Phạm vi hỗ trợ của Chatbot và Copilot**
+
+| Nhu cầu | Khách vãng lai | Thành viên | Nhân viên | Quản lý |
+| --- | --- | --- | --- | --- |
+| Tra giá dịch vụ công khai | Giá tham khảo theo thông tin cung cấp | Giá tham khảo theo thông tin cung cấp | Theo phạm vi tác nghiệp | Theo quyền đọc danh mục |
+| Kiểm tra phòng khách sạn khả dụng | Kiểm tra ở bước đặt | Kiểm tra ở bước đặt | Kiểm tra theo khoảng thời gian khi có quyền đặt lịch | Kiểm tra theo quyền đọc phòng và lưu trú |
+| Tra đơn hàng và điểm tích lũy | Hướng dẫn đăng nhập | Dữ liệu thuộc tài khoản | Theo quyền công việc | Theo quyền quản trị |
+| Đính kèm hình ảnh trong hội thoại | Hướng dẫn đăng nhập hoặc thiết lập tài khoản | Tối đa 3 ảnh mỗi tin khi đủ điều kiện | Theo quyền xử lý hội thoại | Theo quyền quản trị |
+| Tra cứu ca làm việc và lịch trực | — | — | Xem lịch cá nhân và lịch được giao theo quyền | Tra theo phạm vi được cấp |
+| Hàng tồn dưới mức tối thiểu | — | — | Danh sách theo quyền đọc kho | Tổng và danh sách theo quyền |
+| Thực thu toàn cơ sở | — | — | Từ chối | Tổng hợp theo kỳ được hỗ trợ |
 
 ### 8.4.2. Cách thức khách hàng tương tác và trải nghiệm
-Khách hàng tương tác với trợ lý thông qua cửa sổ trò chuyện xuất hiện ở góc dưới màn hình. Giao diện được thiết kế tối giản để người dùng chỉ cần gõ câu hỏi tự nhiên hoặc chạm vào các nút gợi ý có sẵn như hỏi bảng giá tắm sấy, quy định gửi khách sạn hoặc kiểm tra ưu đãi hiện có.
 
-Khi nhận được câu hỏi, hệ thống áp dụng cơ chế truyền phát dữ liệu thời gian thực. Từng câu trả lời xuất hiện nối tiếp nhau ngay khi máy chủ xử lý xong từng cụm từ, giúp khách hàng đọc được nội dung ngay lập tức mà không phải nhìn biểu tượng chờ đợi lâu. Đi kèm câu trả lời là các liên kết dẫn thẳng đến trang đặt lịch hoặc trang chi tiết sản phẩm để khách hàng thao tác tiếp một cách liền mạch.
+Người dùng mở khung Chatbot ở góc dưới trang và nhập câu hỏi bằng tiếng Việt. Tùy nội dung, câu trả lời có thể kèm liên kết đến trang đặt lịch, chi tiết sản phẩm, đăng nhập hoặc tài khoản để người dùng tiếp tục thao tác.
 
-Hệ thống phân luồng trải nghiệm dựa trên trạng thái tài khoản của người dùng rất rõ ràng. Nếu là khách vãng lai, trợ lý phản hồi đầy đủ các thông tin công khai và lịch sự hướng dẫn khách đăng nhập khi chạm đến các thông tin cá nhân. Nếu là khách hàng thành viên, trợ lý cho phép gửi đính kèm tối đa ba ảnh chụp thực tế tình trạng của bé cưng để nhân viên nắm bắt nhanh trước khi tiếp nhận ca.
+![Lưu đồ xử lý hội thoại khách hàng](figures/chuong-08/hinh-08-04-luong-chatbot.png)
 
-> **Hình 8.4: Lưu đồ quy trình xử lý hội thoại và phân luồng trải nghiệm của Trợ lý Pawpal Chatbot**  
-> *(Lưu đồ thể hiện các bước: Tiếp nhận tin nhắn, lọc từ ngữ, phân loại khách hàng, gọi dữ liệu tương ứng và truyền phát câu trả lời về màn hình)*.  
-> **[Hình 8.5: Giao diện tương tác thực tế của Trợ lý Pawpal Chatbot trên kênh người dùng công chúng](file:///C:/Users/QUYEN/.gemini/antigravity-cli/brain/7a76c9d1-504b-4a2d-877e-c42a3920b2f8/hinh_8_5_giao_dien_chatbot_cong_chung.png)**  
-> *(Ảnh chụp màn hình thực tế thể hiện tư vấn giá làm đẹp theo cân nặng, liên kết đặt lịch và cơ chế phản hồi truyền phát)*.
+**Hình 8.4.** Luồng Chatbot theo danh tính khách hàng.
 
-**Bảng 8.3: Bảng ánh xạ các ý định người dùng và mẫu câu hỏi phổ biến trong Trợ lý Pawpal Chatbot**
+Hình 8.4 cho thấy hệ thống xác định danh tính trước khi lựa chọn nguồn dữ liệu. Khách vãng lai được hỗ trợ thông tin công khai. Khi yêu cầu liên quan đến hồ sơ cá nhân, hệ thống kiểm tra phiên đăng nhập trước khi thực hiện tra cứu. Các câu hỏi về sức khỏe và khiếu nại được xử lý theo nhóm rủi ro trình bày ở mục 8.6.2.
 
-| Nhóm ý định | Mẫu câu hỏi thực tế của khách hàng | Nguồn dữ liệu tra cứu | Kết quả trả về cho người dùng |
-| :--- | :--- | :--- | :--- |
-| Hỏi giá làm đẹp theo cân nặng | Bé cún phốc sóc nặng 4kg tắm sấy giá bao nhiêu | Bảng giá dịch vụ và phân loại cân nặng | Mức giá chính xác, thời lượng dự kiến, liên kết đặt lịch |
-| Kiểm tra phòng khách sạn thú cưng | Tiệm còn phòng đôi cho mèo ngày mai không | Danh mục phòng và lịch lưu trú thực tế | Số phòng còn trống, tiện ích đi kèm, giá theo ngày |
-| Tra cứu đơn hàng cá nhân | Đơn hàng thức ăn của mình giao đến đâu rồi | Bảng đơn hàng của chính tài khoản đó | Mã đơn, trạng thái đóng gói hoặc vận chuyển, ngày giao |
-| Kiểm tra điểm thưởng tích lũy | Mình tích được bao nhiêu điểm và dùng thế nào | Bảng điểm thưởng của tài khoản | Số dư điểm hiện tại, giá trị quy đổi giảm trừ đơn hàng |
-| Phản ánh sự cố dịch vụ | Bé nhà mình về bị trầy nhẹ ở chân, cần hỗ trợ | Bộ lọc từ ngữ và kích hoạt cảm xúc | Xin lỗi và xót xa cùng chủ, hướng dẫn chụp ảnh, chuyển quản lý xử lý chu đáo |
+Trong lượt hỏi “PawPal mở cửa mấy giờ?”, khách vãng lai nhận được giờ hoạt động từ 08:00 đến 20:00 vào ngày thường và từ 08:00 đến 21:00 vào cuối tuần. Hình 8.5 cũng cho thấy Chatbot hướng khách kiểm tra khả năng nhận lịch theo ngày cụ thể và cung cấp liên kết liên hệ.
 
----
+![Khung Chatbot PawPal hiển thị câu hỏi và giờ mở cửa ngày thường, cuối tuần](figures/chuong-08/hinh-08-05-chatbot-cong-khai.png)
+
+**Hình 8.5.** Giao diện Chatbot công khai khi hỏi giờ mở cửa.
+
+Bảng 8.3 trình bày cách hệ thống chọn nguồn và phản hồi theo từng ý định. Các câu hỏi về giờ mở cửa và giá dịch vụ sử dụng nguồn công khai. Các câu hỏi về đơn hàng, điểm tích lũy và ưu đãi sử dụng dữ liệu thuộc tài khoản đã xác thực. Khi khách muốn kiểm tra phòng trống cho một ngày cụ thể, trợ lý hướng dẫn nhập ngày và giờ trong luồng đặt lịch.
+
+**Bảng 8.3. Ánh xạ ý định với nguồn và kết quả**
+
+| Ý định | Câu hỏi minh họa | Nguồn hoặc quy tắc | Kết quả |
+| --- | --- | --- | --- |
+| Giờ mở cửa | PawPal mở cửa mấy giờ? | Thông tin cửa hàng được công bố | Giờ ngày thường, cuối tuần và thông tin liên hệ |
+| Giá tắm theo cân nặng | Giá tắm cho chó 7 kg? | Danh mục công khai và khoảng cân | Mức giá, thời lượng và liên kết đặt lịch |
+| Tình trạng bán hàng | Hạt cho mèo còn hàng không? | Danh mục và biến thể công khai | Giá và trạng thái còn hàng tại lúc kiểm tra |
+| Phòng khách sạn còn trống | Khách sạn còn phòng ngày mai không? | Hướng dẫn kiểm tra khả dụng | Chuyển đến bước đặt để chọn ngày và giờ |
+| Đặt lịch cho khách vãng lai | Chưa có tài khoản thì đặt cho hai bé được không? | Hướng dẫn đặt lịch công khai | Có thể đặt khi chưa đăng nhập, mỗi yêu cầu chọn một bé |
+| Trạng thái đơn cá nhân | Đơn hàng của tôi đang ở đâu? | Xác thực tài khoản rồi đọc đơn thuộc tài khoản | Mã đơn và trạng thái ghi nhận hoặc hướng dẫn đăng nhập |
+| Điểm và ưu đãi | Tôi còn bao nhiêu điểm, ưu đãi nào dùng được? | Số dư điểm và ví ưu đãi thuộc tài khoản | Số dư và thông tin ưu đãi, điều kiện áp dụng được kiểm tra khi mua hoặc đặt |
+| Phản ánh dịch vụ hoặc thanh toán | Tôi muốn yêu cầu bồi hoàn | Quy trình tiếp nhận tại mục Hỗ trợ | Hướng dẫn tạo yêu cầu và theo dõi kết quả |
 
 ## 8.5. Giải thuật trợ lý thông minh hỗ trợ vận hành
 
 ### 8.5.1. Mục tiêu và giá trị hỗ trợ đội ngũ vận hành
-Trợ lý nội bộ được xây dựng như một cộng sự hỗ trợ nghiệp vụ cho đội ngũ nhân sự tiệm, mang lại giá trị thiết thực cho cả nhân viên tác nghiệp lẫn người quản lý cơ sở trên hai phương diện hoạt động và tinh thần.
 
-Đối với nhân viên tác nghiệp gồm kỹ thuật viên, lễ tân, chăm sóc khách hàng và thu ngân, trợ lý triệt tiêu hoàn toàn thao tác tra cứu thủ công qua nhiều màn hình rời rạc. Chỉ với một câu lệnh tìm kiếm, nhân viên nắm bắt ngay hồ sơ tổng hợp toàn diện gồm tên chủ, số điện thoại, danh sách thú cưng và tiền sử bệnh. Khi tiếp nhận khiếu nại khó, trợ lý hỗ trợ soạn sẵn bản nháp trả lời lịch sự, đúng quy chuẩn tiệm để nhân viên duyệt nhanh trước khi gửi. Việc trợ lý giải quyết trước các câu hỏi lặp lại giúp nhân viên giải tỏa áp lực kiệt sức trong giờ cao điểm, tự tin xử lý tình huống khó và luôn an tâm về an toàn thân thể nhờ được cảnh báo trước tập tính hung dữ hay sợ máy sấy của từng bé cưng.
+Copilot tập trung các chức năng tra cứu nghiệp vụ trong cổng quản trị. Nhân viên có thể xem lịch được giao, ca trực cá nhân, tồn kho hoặc hồ sơ thuộc phạm vi công việc. Quản lý có thể tổng hợp lịch, tồn kho và thực thu theo các kỳ được hỗ trợ. Với hồ sơ khách hàng 360°, hệ thống xác định một khách hàng cụ thể trước khi đọc các nguồn liên quan. Tác vụ minh họa ở Hình 8.12 kết hợp hồ sơ thú cưng và đơn hàng được tạo mới nhất. Tra cứu lịch hẹn và phiếu hỗ trợ được thực hiện theo yêu cầu riêng.
 
-Đối với người quản lý và chủ cơ sở, trợ lý cung cấp công cụ giám sát và ra quyết định dựa trên số liệu thời gian thực. Quản lý có thể kiểm tra nhanh tình trạng phòng trống, rà soát danh sách sản phẩm chạm ngưỡng tồn kho tối thiểu để lên kế hoạch nhập hàng mà không cần chờ báo cáo giấy. Cơ chế phân quyền tự động ngăn chặn nhân viên truy cập số liệu doanh thu nhạy cảm, giúp bảo vệ bí mật kinh doanh tuyệt đối. Nhờ đó, chủ cơ sở hoàn toàn an tâm vì tiệm luôn được vận hành liên tục cả đêm, đồng thời giữ vững chuẩn mực phục vụ văn minh của thương hiệu mà không lo nhân viên tư vấn sai giá hay tranh cãi với khách.
+Mỗi công cụ kiểm tra quyền tương ứng với nguồn dữ liệu cần truy vấn. Chẳng hạn, quyền xem lịch trực cá nhân và quyền xem lịch dịch vụ được giao phục vụ hai tác vụ khác nhau. Khi tra phòng khả dụng, công cụ kiểm tra lịch lưu trú trong khoảng ngày giờ được yêu cầu. Việc xác nhận giữ phòng được thực hiện ở bước đặt.
 
-**Bảng 8.4: Danh mục công cụ tra cứu dữ liệu an toàn phục vụ vận hành của Trợ lý Pawpal Copilot**
+Công cụ tồn kho so sánh số lượng hiện tại của biến thể đang bán với mức tối thiểu. Khi đối soát một đơn xác định, Copilot đọc số đã thu, số đã hoàn và phần còn phải thu theo quyền. Khi tổng hợp thực thu toàn cơ sở, hệ thống dùng các giao dịch thanh toán và hoàn tiền thành công có thời điểm nằm trong kỳ tra cứu. Tác vụ tổng hợp này yêu cầu quyền đọc cả hai nguồn.
 
-| Tên công cụ nội bộ | Mã quyền hạn bắt buộc | Nguồn dữ liệu truy vấn | Mục đích nghiệp vụ phục vụ nhân viên |
-| :--- | :--- | :--- | :--- |
-| Tra cứu khách hàng | Quyền đọc thông tin khách | Bảng khách hàng và hồ sơ liên hệ | Tìm thông tin chủ nuôi và số điện thoại liên lạc |
-| Tra cứu thú cưng | Quyền đọc hồ sơ thú cưng | Bảng thú cưng, giống loài và sức khỏe | Xem tuổi, cân nặng, tiền sử bệnh và tập tính của bé |
-| Danh sách lịch hẹn | Quyền thực hiện dịch vụ | Bảng lịch hẹn và ca dịch vụ trong ngày | Nắm bắt lịch làm việc, dịch vụ cần làm cho từng bé |
-| Cảnh báo hàng tồn thấp | Quyền đọc kho hàng | Bảng biến thể sản phẩm và số lượng tồn | Liệt kê các mặt hàng chạm ngưỡng tối thiểu để nhập thêm |
-| Tra cứu phòng trống | Quyền tạo lịch dịch vụ | Bảng phòng khách sạn và lịch lưu trú | Tư vấn cho khách tại quầy các phòng còn trống |
-| Tra cứu ca làm việc | Quyền xem thông tin cá nhân | Bảng nhân sự và lịch trực cá nhân | Nhân viên kiểm tra ca trực và ngày nghỉ của chính mình |
-| Báo cáo doanh thu | Quyền đọc thanh toán tài chính | Bảng thanh toán và hoàn tiền | Chỉ dành cho quản lý theo dõi dòng tiền, nhân viên bị chặn |
+**Bảng 8.4. Các công cụ tra cứu tiêu biểu của Copilot**
+
+| Công cụ | Quyền của nhân viên | Quyền của quản lý | Nguồn dữ liệu | Kết quả và phạm vi |
+| --- | --- | --- | --- | --- |
+| Tra cứu khách hàng | Đọc thông tin khách hàng theo phạm vi công việc | Đọc hồ sơ và thông tin liên hệ của khách hàng | Khách hàng và hồ sơ liên hệ | Khách khớp mã, tên hoặc số điện thoại theo phạm vi |
+| Tra cứu thú cưng | Đọc hồ sơ thú cưng theo phạm vi công việc | Đọc hồ sơ thú cưng | Hồ sơ thú cưng, loài và giống | Dữ liệu hồ sơ được phép đọc |
+| Lịch dịch vụ | Thực hiện dịch vụ theo lịch được giao | Đọc lịch hẹn và danh mục dịch vụ | Lịch hẹn, hạng mục và nhóm dịch vụ | Lịch được giao hoặc lịch theo bộ lọc của quản lý |
+| Tồn kho dưới mức tối thiểu | Xem tồn kho theo phạm vi công việc | Đọc dữ liệu tồn kho và sản phẩm | Tồn kho, biến thể và sản phẩm | Biến thể đang bán có tồn nhỏ hơn mức tối thiểu |
+| Phòng còn khả dụng | Tạo lịch hẹn | Đọc thông tin phòng và lịch lưu trú | Phòng, loại phòng và lịch lưu trú | Kiểm tra phòng cho khoảng ngày giờ được hỏi |
+| Lịch trực | Xem thông tin và ca trực của mình | Đọc hồ sơ nhân sự và lịch trực | Hồ sơ nhân viên và ca trực | Lịch cá nhân hoặc lịch trong phạm vi quản lý |
+| Đối soát một đơn | Thu tiền tại quầy | Đọc đơn hàng, thanh toán và hoàn tiền | Đơn hàng, giao dịch thanh toán và hoàn tiền | Tiền đã thu, đã hoàn và phần còn phải thu của đơn xác định |
+| Thực thu | Không có quyền tổng hợp thực thu toàn cơ sở | Đọc giao dịch thanh toán và giao dịch hoàn tiền | Giao dịch thanh toán và hoàn tiền thành công | Tổng thu, tổng hoàn và thực thu theo thời điểm giao dịch trong kỳ |
 
 ### 8.5.2. Cách thức nhân viên khai thác và sử dụng Copilot
-Nhân viên sử dụng trợ lý thông qua thanh nhập lệnh chuyên biệt nằm ngay trong giao diện làm việc quản trị. Khung tương tác có sẵn các nút lệnh nhanh để nhân viên bấm chọn tra cứu chỉ với một thao tác đơn giản.
 
-Khi nhân viên chăm sóc khách hàng tiếp nhận một ca khiếu nại, trợ lý sẽ hỗ trợ đọc ngữ cảnh trao đổi và đưa ra gợi ý câu trả lời mẫu theo đúng chuẩn mực lịch sự của tiệm. Nhân viên có thể sử dụng nguyên văn hoặc chỉnh sửa lại cho phù hợp với tình huống thực tế trước khi gửi cho khách.
+Nhân viên truy cập Copilot tại mục **Trợ lý** trong không gian làm việc. Quản lý sử dụng mục **Trợ lý AI** trong cổng quản trị. Sau khi nhận câu hỏi, Copilot lựa chọn công cụ theo nội dung yêu cầu và quyền của tài khoản. Các câu hỏi tiếp nối có thể sử dụng bộ lọc của phiên hiện tại. Khi thông tin về đối tượng hoặc kỳ tra cứu chưa đủ, trợ lý yêu cầu người dùng bổ sung.
 
-Khi có ca chat chuyển tiếp từ khách hàng, nhân viên sẽ thấy bản tóm tắt ngắn gọn nội dung mà khách đã trao đổi với máy trước đó. Trong suốt quá trình hỗ trợ, nhân viên có thể ghi lại các ghi chú nội bộ ngay trong ca chat để các nhân sự ca sau cùng nắm được tình hình của bé cưng mà không hiển thị cho khách hàng thấy.
+Nhân viên có quyền truy cập hội thoại có thể yêu cầu tóm tắt nội dung hoặc soạn bản nháp phản hồi. Copilot xây dựng bản nháp từ phần hội thoại được phép đọc. Nhân viên kiểm tra nội dung và quyết định gửi theo quy trình hỗ trợ.
 
-> **Hình 8.6: Lưu đồ quy trình xử lý tác vụ thông minh và kiểm soát thẩm quyền của Trợ lý Pawpal Copilot**  
-> *(Lưu đồ thể hiện các bước: Tiếp nhận câu lệnh nhân viên, xác thực quyền công việc, truy vấn dữ liệu an toàn chỉ đọc, tổng hợp kết quả và trả về giao diện)*.  
-> **[Hình 8.7: Giao diện phân hệ làm việc Trợ lý Pawpal Copilot trong không gian quản trị](file:///C:/Users/QUYEN/.gemini/antigravity-cli/brain/7a76c9d1-504b-4a2d-877e-c42a3920b2f8/hinh_8_7_giao_dien_copilot_quan_tri.png)**  
-> *(Ảnh chụp màn hình phân hệ Copilot thể hiện tra cứu hồ sơ 360 độ, cảnh báo tồn kho và thông báo từ chối truy cập doanh thu)*.
+![Lưu đồ xử lý tác vụ và kiểm tra quyền Copilot](figures/chuong-08/hinh-08-06-luong-copilot.png)
 
----
+**Hình 8.6.** Luồng Copilot và kiểm tra quyền tác nghiệp.
 
-## 8.6. Cơ chế giải thuật thông minh vận hành bên dưới giao diện
+Hình 8.6 mô tả cách Copilot lựa chọn công cụ, kiểm tra quyền và xác định phạm vi tra cứu trước khi trả kết quả.
 
-### 8.6.1. Giải thuật phân tích ngữ cảnh, nhận diện ý định và nguyên tắc triệt tiêu ảo giác
-Khi nhận được câu hỏi từ người dùng, giải thuật đầu tiên sẽ bóc tách các thực thể quan trọng như tên loài thú cưng, số cân nặng, ngày giờ hoặc tên dịch vụ.
+Tình huống ở Hình 8.7 kiểm tra bộ lọc theo ngày và trạng thái bằng câu hỏi “Hôm nay bao nhiêu lịch Spa chờ phục vụ?”. Copilot ghi nhận 0 lịch hẹn Spa và cắt tỉa ở trạng thái chờ phục vụ ngày 25/11/2026. Phản hồi kèm thời điểm cập nhật và liên kết **Mở lịch hẹn** để quản lý xem dữ liệu trong phân hệ tương ứng.
 
-Mô hình ngôn ngữ bị ràng buộc chặt chẽ bởi nguyên tắc trung thực dữ liệu và hợp đồng bằng chứng. Trợ lý chỉ được phép khẳng định các thông tin có trong nguồn dữ liệu nội bộ đã được cấp phép xác thực. Nếu trong cơ sở dữ liệu chưa có thông tin về dịch vụ hoặc khoảng giá đó, giải thuật bắt buộc trợ lý phải thông báo rõ ràng là chưa có dữ liệu xác nhận, tuyệt đối không được tự ý suy đoán mức giá, bịa đặt chính sách hay hứa hẹn bồi hoàn làm sai lệch thông tin đến khách hàng.
+![Khung Copilot của quản lý hiển thị số lịch Spa và cắt tỉa chờ phục vụ](figures/chuong-08/hinh-08-07-copilot-quan-ly.png)
 
-### 8.6.2. Giải thuật kiểm duyệt nội dung, phân tầng cảm xúc 6 cấp độ và xoa dịu tâm lý
-Hệ thống tích hợp bộ giải thuật phân tích cảm xúc và kiểm duyệt nội dung đa tầng chạy trực tiếp trước khi câu hỏi được gửi tới bộ xử lý ngôn ngữ. Bộ lọc từ ngữ tự động quét và che giấu các từ ngữ thô tục, xúc phạm hoặc biến thể lách từ bằng dấu ba sao để giữ gìn môi trường giao tiếp văn minh.
+**Hình 8.7.** Giao diện Copilot của quản lý khi tra lịch Spa.
 
-Giải thuật phân loại toàn bộ tin nhắn thành sáu cấp độ cảm xúc và năm nhóm rủi ro nghiệp vụ để kích hoạt hành vi ứng xử tương ứng một cách tự động. Cấp một và cấp hai đại diện cho trạng thái bình thường với nhóm rủi ro trống, trợ lý phản hồi tự nhiên và cung cấp thông tin bảng giá chuẩn. Cấp ba phản ánh tâm lý lo lắng chăm sóc nhẹ, trợ lý chủ động giải thích hiện tượng lạ chỗ sau tắm sấy và hướng dẫn theo dõi ban đầu mà không ép buộc chuyển ca. Cấp bốn bắt các khiếu nại dịch vụ như bé bị trầy da hay thợ làm ẩu, trợ lý chân thành xin lỗi, xót xa cùng chủ nuôi, hướng dẫn chụp ảnh minh chứng và tự động đưa ca vào hàng đợi ưu tiên cho quản lý. Cấp năm nhận diện tranh chấp thanh toán gắt gao, trợ lý lập tức trấn an cam kết hoàn tiền nếu có sai sót, yêu cầu ảnh giao dịch và chuyển thẳng cho chuyên viên thu ngân. Cấp sáu là cấp cứu y tế tối khẩn khi bé chảy máu nhiều hay ngộ độc, trợ lý lập tức dừng mọi tư vấn làm đẹp, khuyên chủ nuôi đưa bé đến cơ sở thú y gần nhất ngay lập tức, hướng dẫn sơ cứu cầm máu ban đầu và cung cấp số hotline điều xe cứu hộ khẩn cấp.
+## 8.6. Cơ chế giải thuật vận hành bên dưới giao diện
 
-> **Hình 8.8: Lưu đồ giải thuật kiểm duyệt nội dung độc hại và kích hoạt phân luồng cảm xúc**  
-> *(Lưu đồ thể hiện các bước: Kiểm tra từ cấm, chấm điểm cảm xúc tiêu cực, phân loại nguy cơ và kích hoạt điều hướng ca khẩn cấp)*.
+### 8.6.1. Phân tích ngữ cảnh, nhận diện ý định và hạn chế suy diễn
 
-**Bảng 8.5: Bảng phân loại 6 cấp độ cảm xúc, nhóm rủi ro và hành động điều phối tương ứng**
+Bộ định tuyến chuẩn hóa câu hỏi tiếng Việt và nhận diện các tham số nghiệp vụ. Công cụ tra cứu thực hiện việc lọc hoặc tổng hợp số liệu tại cơ sở dữ liệu. Trợ lý trình bày giá, số lượng bản ghi, số tiền hoặc khoảng ngày dựa trên kết quả truy vấn. Hệ thống phân biệt ba trường hợp gồm truy vấn thành công với tập kết quả rỗng, nguồn dữ liệu không khả dụng và tài khoản thiếu quyền đọc. Với câu hỏi cần kết hợp nhiều nguồn, phản hồi ghi rõ phần dữ liệu đã tra cứu được và phần chưa thể xác nhận.
 
-| Cấp độ cảm xúc | Dấu hiệu nhận biết trong tin nhắn | Nhóm rủi ro nghiệp vụ | Mức độ khẩn cấp | Hành động xử lý tự động của hệ thống |
-| :---: | :--- | :--- | :---: | :--- |
-| Cấp 1 | Lời chào, hỏi thăm dịch vụ lịch sự | Không có rủi ro (`none`) | Thấp | Trả lời tự nhiên, ấm áp, cung cấp liên kết đặt lịch |
-| Cấp 2 | Khách hỏi bảng giá, giờ mở cửa, địa chỉ | Không có rủi ro (`none`) | Thấp | Báo giá theo đúng cân nặng và loài thú cưng |
-| Cấp 3 | Khách lo lắng bé mệt mỏi, biếng ăn sau tắm | Chăm sóc đặc biệt (`special_care`) | Trung bình | Xoa dịu tâm lý, hướng dẫn theo dõi, không ép chuyển ca |
-| Cấp 4 | Khách phàn nàn bé bị trầy da, thợ làm ẩu | Khiếu nại dịch vụ (`service_complaint`) | Cao | Xin lỗi, thương bé, xin ảnh vết trầy, chuyển quản lý |
-| Cấp 5 | Bị trừ tiền 2 lần, đòi hoàn tiền, từ ngữ gắt | Tranh chấp tiền (`billing_dispute`) | Cao | Trấn an hoàn tiền, xin ảnh giao dịch, chuyển thu ngân |
-| Cấp 6 | Bé chảy máu nhiều, co giật, thở dốc, ngộ độc | Cấp cứu y tế (`medical_emergency`) | Tối khẩn | Hướng dẫn sơ cứu, khuyên đi thú y ngay, cấp hotline xe |
+Khi sử dụng mô hình ngôn ngữ, máy chủ giới hạn số bản ghi, dung lượng và phạm vi thông tin được đưa vào ngữ cảnh. Chỉ dẫn yêu cầu mô hình dựa trên dữ liệu đã cung cấp và thông báo khi thiếu căn cứ. Đối với câu hỏi có kết quả xác định từ nguồn nghiệp vụ, hệ thống ưu tiên trả lời trực tiếp để hạn chế sai lệch khi diễn đạt số liệu.
 
-**So sánh sự khác biệt giữa phong cách giao tiếp máy móc và phong cách thấu cảm của Pawpal**:
+### 8.6.2. Kiểm duyệt nội dung, cấp độ cảm xúc và xử lý rủi ro
 
-| Tình huống thực tế | Phong cách hành chính máy móc (Cần loại bỏ) | Phong cách thấu cảm Pawpal (Đang áp dụng) |
-| :--- | :--- | :--- |
-| **Bé mệt sau ca tắm sấy** | "PawPal hiểu bạn lo lắng. Bé mệt do lạ chỗ. Bạn cho bé uống nước và theo dõi thêm." | "Dạ bạn đừng quá lo nhé, PawPal hiểu tâm lý của bạn lúc này. Sau khi tắm sấy, nhiều bé do lạ chỗ hoặc tiêu hao nhiều năng lượng nên sẽ thèm ngủ và hơi lười ăn một chút. Bạn để bé nghỉ ngơi ở góc quen thuộc, đặt sẵn chén nước sạch gần bé nha. Nếu bé có biểu hiện nào bất thường hơn, bạn cứ nhắn cho tụi mình liền nhé, tụi mình luôn ở đây cùng bạn." |
-| **Sự cố trừ tiền tài khoản** | "PawPal ghi nhận phản ánh về thanh toán của bạn và chuyển hội thoại cho nhân viên kiểm tra đối soát." | "PawPal rất tiếc vì sự cố thanh toán này khiến bạn phiền lòng! Bạn an tâm nha, toàn bộ số tiền bị trừ nhầm hoặc phát sinh lỗi bên mình sẽ kiểm tra và hoàn trả lại đầy đủ cho bạn. Bạn chụp giúp PawPal màn hình giao dịch bị trừ tiền nhé, nhân viên hỗ trợ đang vào phòng chat ngay bây giờ để xử lý trực tiếp cùng bạn đây ạ." |
-| **Bé bị trầy xước sau tỉa** | "PawPal xin lỗi vì trải nghiệm không mong muốn. Chuyển quản lý kiểm tra camera ca cắt tỉa và xử lý bồi hoàn." | "PawPal xin lỗi bạn và thương bé nhiều lắm! Tụi mình rất xót khi nghe tin bé bị đau như vậy. Bạn chụp giúp PawPal vết trầy của bé để tụi mình xem mức độ thế nào nhé. Quản lý tiệm đang vào tiếp nhận ngay để kiểm tra lại ca làm và chịu trách nhiệm xử lý chu đáo cho bé, bạn yên tâm nhé." |
-| **Cấp cứu thú cưng** | "Khẩn cấp: Pawpal là dịch vụ làm đẹp, không phải cơ sở cấp cứu thú y. Đưa bé đi thú y ngay." | "Bạn bình tĩnh nhé! Trường hợp của bé cần bác sĩ thú y can thiệp ngay lập tức. Bạn lấy gạc hoặc khăn sạch ấn nhẹ cầm máu, giữ bé nằm nghiêng thoáng khí và đưa bé đến trạm thú y gần nhất ngay nha. Nếu bạn cần xe hỗ trợ di chuyển gấp đến phòng khám, bạn gọi liền hotline 1900-PAWPAL (nhấn phím 1) để tiệm điều xe hỗ trợ bạn và bé ngay nhé!" |
+Bộ lọc nhận diện từ ngữ vi phạm và một số biến thể chính tả. Tùy cấu hình, hệ thống che phần vi phạm hoặc chặn tin nhắn. Đồng thời, bộ phân loại xác định cấp độ cảm xúc và nhóm rủi ro của tình huống. Các nhóm rủi ro bao gồm vấn đề cần lưu ý về chăm sóc, chủ đề y tế thường gặp, cấp cứu thú y, khiếu nại dịch vụ và tranh chấp thanh toán.
+
+![Lưu đồ kiểm duyệt và phân cấp cảm xúc](figures/chuong-08/hinh-08-08-kiem-duyet-va-cam-xuc.png)
+
+**Hình 8.8.** Luồng kiểm duyệt nội dung và xử lý rủi ro.
+
+Hình 8.8 minh họa cách hệ thống sử dụng kết quả kiểm duyệt và phân loại để chọn nhánh xử lý. Cấp độ biểu thị mức ưu tiên, còn nhóm rủi ro giúp xác định nội dung phản hồi. Lời chào hoặc lời cảm ơn đứng riêng thuộc cấp 1. Câu hỏi thông tin thông thường được xử lý ở cấp 2 nếu chưa có dấu hiệu nâng mức. Một phản ánh thanh toán có thể thuộc cấp 4 và được nâng lên cấp 5 khi khách thể hiện sự bức xúc rõ ràng. Quy tắc cấu hình cũng có thể nâng mức ưu tiên của một khiếu nại. Lời đáp vẫn dựa vào sự việc và cảm xúc khách thể hiện trong tin nhắn. Hướng dẫn cấp cứu thú y được dùng khi nhận diện dấu hiệu cấp cứu.
+
+Cùng một cấp độ có thể dẫn đến các phản hồi khác nhau tùy nhóm rủi ro. Khi chủ nuôi lo bé mệt sau tắm, Chatbot ghi nhận sự lo lắng và giúp khách chuẩn bị thông tin để gọi bác sĩ thú y. Phản hồi cũng nêu các dấu hiệu cần đưa bé đi cấp cứu ngay. Nếu khách báo đã có một trong các dấu hiệu đó, hướng dẫn liên hệ ngay bác sĩ thú y được đặt ở đầu câu trả lời. [Hướng dẫn thú y của VCA về tình trạng mệt bất thường](https://vcahospitals.com/urgent-care/health-concerns/lethargy) · [Hướng dẫn của Cornell về dấu hiệu hô hấp ở chó](https://www.vet.cornell.edu/departments-centers-and-institutes/riney-canine-health-center/canine-health-topics/canine-respiratory-disease-outbreaks).
+
+Với phản ánh dịch vụ, tranh chấp thanh toán hoặc câu hỏi về thủ tục bồi hoàn, Chatbot ghi nhận vấn đề và hướng dẫn gửi yêu cầu trong mục **Hỗ trợ**. Khách vãng lai được hướng dẫn đăng nhập để thực hiện bước này. Khi đáp ứng điều kiện chuyển giao, hội thoại được đưa vào hàng đợi chờ nhân viên tiếp nhận.
+
+Đối với câu hỏi tiếp nối về sức khỏe hoặc yêu cầu hỗ trợ, máy chủ có thể đối chiếu tối đa bốn tin nhắn gần nhất của khách trong cùng hội thoại nếu hội thoại có hoạt động trong 30 phút gần đây. Các thông tin mới được dùng để tiếp tục hướng dẫn ở đúng chủ đề. Ví dụ, khi chủ nuôi cho biết bé vừa nôn một lần, Chatbot nhắc báo đúng số lần và thời điểm nôn cho bác sĩ thú y. Khi khách cho biết đã gửi yêu cầu bồi hoàn, Chatbot hướng dẫn theo dõi và bổ sung thông tin trong yêu cầu đã có. Nếu khách chỉ nói mình còn lo nhưng ngữ cảnh chưa xác định được sự việc, trợ lý hỏi một câu ngắn để làm rõ.
+
+Với khách vãng lai chỉ nhắn “Tôi tức giận quá!”, Chatbot ghi nhận sự bức xúc và hỏi “Bạn có thể kể ngắn chuyện vừa xảy ra để bên mình hướng dẫn bước tiếp theo không?”. Khi sự việc đã rõ, lời đáp tập trung vào cách xử lý. Trong tình huống khách bức xúc vì bị trừ tiền hai lần, nếu khách cho biết đã gửi yêu cầu, Chatbot hướng dẫn theo dõi yêu cầu hiện có. Chuỗi phản hồi này được kiểm tra ở cấp API.
+
+Chatbot cũng nhận diện mức độ ưu tiên dựa trên sự việc khách mô tả. Chẳng hạn, câu “Hẹn 2 giờ mà 3 giờ rồi vẫn chưa tới đón bé. Tôi gọi mấy lần không ai nghe.” có các dấu hiệu quá giờ hẹn, đã liên hệ nhiều lần và chưa được phản hồi. Hệ thống xử lý tình huống này ở cấp 5. Lời đáp mở đầu bằng “PawPal rất tiếc vì bạn đã phải chờ quá giờ hẹn” và hướng dẫn ghi lại giờ hẹn cùng lần liên hệ gần nhất để nhân viên kiểm tra. Khi khách nhắn tiếp rằng vấn đề vẫn chưa được xử lý, Chatbot hướng dẫn theo dõi hoặc bổ sung thông tin trong yêu cầu đang mở. Các trường hợp này được kiểm tra ở cấp API cùng với các câu hỏi trung tính có nhiều dấu hỏi hoặc chỉ đề cập số lần liên hệ.
+
+**Bảng 8.5. Sáu cấp độ cảm xúc và ví dụ phản hồi**
+
+| Cấp độ | Tình huống minh họa | Cách xử lý | Trích lời đáp của PawPal |
+| --- | --- | --- | --- |
+| 1. Thân thiện | “Chào PawPal!” | Đáp lời chào hoặc cảm ơn và mời khách nêu điều cần hỗ trợ. | “Chào bạn! PawPal có thể giúp gì cho bạn và bé hôm nay?” |
+| 2. Trung tính | “PawPal mở cửa mấy giờ?” | Cung cấp thông tin theo yêu cầu từ nguồn được xác nhận. | “Ngày thường: 08:00–20:00” và “Cuối tuần: 08:00–21:00”. |
+| 3. Lo lắng | “Bé cún mệt mỏi và biếng ăn sau khi tắm.” | Ghi nhận nỗi lo cụ thể, hướng dẫn chuẩn bị thông tin khi gọi bác sĩ thú y và nêu dấu hiệu cấp cứu. | “PawPal hiểu vì sao bạn lo khi thấy bé mệt và ăn ít sau buổi tắm.” |
+| 4. Phản ánh sự cố | “Tôi bị trừ tiền hai lần.” | Ghi nhận vấn đề và hướng dẫn gửi thông tin liên quan để kiểm tra. | “Thấy tiền bị trừ hai lần, bạn lo là điều dễ hiểu.” |
+| 5. Bức xúc rõ rệt | “Hẹn 2 giờ mà 3 giờ rồi vẫn chưa tới đón bé. Tôi gọi mấy lần không ai nghe.” | Ghi nhận sự việc, hướng dẫn gửi thông tin để kiểm tra và xét điều kiện chuyển ca. Nếu tin nhắn vi phạm quy tắc ở mức bị chặn, yêu cầu khách diễn đạt lại. | “PawPal rất tiếc vì bạn đã phải chờ quá giờ hẹn.” |
+| 6. Khẩn cấp | “Bé nhà tôi khó thở.” | Đưa hướng dẫn cấp cứu lên đầu câu trả lời, sau đó ghi nhận nỗi lo của chủ nuôi. | “Bạn hãy liên hệ ngay bác sĩ thú y hoặc cơ sở cấp cứu thú y gần nhất. PawPal hiểu lúc này bạn rất lo cho bé. Đừng chờ phản hồi trong chat.” |
+
+**Bảng bổ sung. So sánh phong cách phản hồi theo tình huống**
+
+Cột giữa sử dụng các câu minh họa cho cách diễn đạt hành chính. Cột bên phải ghi nguyên văn phản hồi dành cho khách vãng lai trong phiên bản cập nhật. Phản hồi về sức khỏe và thủ tục bồi hoàn được xác minh trên trình duyệt ở môi trường cục bộ. Các nhánh tranh chấp, khiếu nại và cấp cứu được kiểm tra tại cổng dịch vụ, còn cơ chế lưu phản hồi được xác minh trên PostgreSQL thử nghiệm.
+
+| Tình huống thực tế | Phong cách hành chính máy móc | Phong cách thấu cảm PawPal đang áp dụng |
+| --- | --- | --- |
+| Bé mệt và biếng ăn sau tắm | “Vui lòng liên hệ bác sĩ thú y.” | “PawPal hiểu vì sao bạn lo khi thấy bé mệt và ăn ít sau buổi tắm. Để bác sĩ thú y nắm tình hình nhanh hơn, khi gọi bạn hãy nói rõ các biểu hiện bắt đầu lúc nào, lần cuối bé ăn hoặc uống và bé có nôn hay không.<br><br>Nếu bé khó thở, khó đánh thức hoặc không đứng dậy được, hãy đưa bé đến cơ sở cấp cứu thú y ngay.<br><br>Nếu bạn lo tình trạng này có liên quan đến buổi chăm sóc tại PawPal, bạn có thể gửi mã lịch hẹn để nhân viên kiểm tra lại.” |
+| Khách hỏi thủ tục bồi hoàn | “Vui lòng tạo yêu cầu bồi hoàn trong mục Hỗ trợ.” | “PawPal sẽ hướng dẫn bạn gửi yêu cầu và theo dõi kết quả nhé.<br><br>Bạn đăng nhập trước nhé. Trong mục Hỗ trợ, bạn chọn đơn hàng hoặc lịch hẹn liên quan, mô tả sự việc và đính kèm minh chứng nếu có. Sau khi gửi yêu cầu, bạn có thể theo dõi kết quả ngay tại đó.” |
+| Khách vãng lai phản ánh bị trừ tiền hai lần | “Tài khoản chưa đăng nhập. Vui lòng đăng nhập.” | “Thấy tiền bị trừ hai lần, bạn lo là điều dễ hiểu.<br><br>Bạn đăng nhập trước nhé. Trong mục Hỗ trợ, bạn chọn đơn hàng và ghi thời điểm của hai giao dịch để bên mình đối soát. Sau khi gửi yêu cầu, bạn có thể theo dõi kết quả ngay tại đó.” |
+| Khách vãng lai báo bé bị trầy xước sau cắt tỉa | “Vui lòng đăng nhập để gửi phản ánh.” | “PawPal rất tiếc khi biết bé bị trầy. Bên mình hiểu bạn lo khi thấy bé như vậy.<br><br>Bạn đăng nhập trước nhé. Trong mục Hỗ trợ, bạn chọn lịch hẹn và mô tả tình trạng của bé để nhân viên kiểm tra lại buổi chăm sóc. Sau khi gửi yêu cầu, bạn có thể theo dõi kết quả ngay tại đó.” |
+| Khách nói rất bức xúc vì bị trừ tiền hai lần | “Vui lòng gửi yêu cầu đối soát.” | “PawPal rất tiếc vì chuyện này khiến bạn bức xúc. Bên mình cần một vài thông tin để kiểm tra chuyện đã xảy ra.<br><br>Bạn đăng nhập trước nhé. Trong mục Hỗ trợ, bạn chọn đơn hàng và ghi thời điểm của hai giao dịch để bên mình đối soát. Sau khi gửi yêu cầu, bạn có thể theo dõi kết quả ngay tại đó.” |
+| Chủ nuôi báo dấu hiệu cấp cứu | “Vui lòng liên hệ cơ sở cấp cứu thú y.” | “Bạn hãy liên hệ ngay bác sĩ thú y hoặc cơ sở cấp cứu thú y gần nhất. PawPal hiểu lúc này bạn rất lo cho bé. Đừng chờ phản hồi trong chat.” |
 
 ### 8.6.3. Cổng truy vấn dữ liệu an toàn chỉ đọc
-Để bảo vệ an toàn cho cơ sở dữ liệu, toàn bộ các công cụ mà trợ lý trí tuệ nhân tạo sử dụng đều là các thủ tục lưu trữ chỉ đọc được định nghĩa sẵn trên máy chủ cơ sở dữ liệu.
 
-Trợ lý thông minh hoàn toàn không có quyền thực hiện các thao tác thêm mới, sửa đổi hoặc xóa dữ liệu trong cơ sở dữ liệu. Mọi thay đổi dữ liệu như tạo lịch hẹn, trừ điểm hay xác nhận đơn hàng bắt buộc phải do chính người dùng hoặc nhân viên thực hiện thông qua các nút bấm chức năng trên màn hình. Thiết kế này loại trừ hoàn toàn rủi ro trợ lý tự ý tạo giao dịch khống hoặc làm sai lệch số liệu của hệ thống.
+Cổng truy vấn chỉ đọc sử dụng danh mục công cụ đã đăng ký. Mỗi công cụ quy định bộ lọc hợp lệ và quyền cần thiết. Trước khi gọi thủ tục truy vấn, máy chủ xác thực phiên và kiểm tra các giới hạn tài nguyên. Đối với Copilot dành cho nhân viên, hệ thống kiểm tra lại phạm vi công việc trước khi trả kết quả mới hoặc hiển thị phản hồi đã lưu.
 
----
+Các thao tác tạo lịch, thay đổi đơn hàng, điều chỉnh điểm và hoàn tiền được thực hiện qua các chức năng nghiệp vụ có kiểm tra quyền. Phân hệ hội thoại lưu câu hỏi, câu trả lời và trạng thái chuyển ca để phục vụ việc theo dõi.
 
-## 8.7. Đánh giá thực nghiệm hiệu quả và kết luận chương
+## 8.7. Đánh giá thực nghiệm và kết luận chương
 
-### 8.7.1. Đánh giá hiệu quả vận hành thực tế qua các kịch bản kiểm thử cụ thể
-Hiệu quả của giải thuật thông minh và kiến trúc hệ thống đã được kiểm chứng thông qua các đợt kiểm thử tự động trên nhiều kịch bản thực tế đại diện cho cả hai phân hệ trợ lý khách hàng và trợ lý vận hành nội bộ.
+### 8.7.1. Kết quả theo các kịch bản tiêu biểu
 
-Ở nhóm kịch bản trên kênh khách hàng, thử nghiệm đầu tiên đánh giá khả năng tính toán chính xác bảng giá dịch vụ làm đẹp theo cân nặng thực tế. Khi người dùng nhập câu hỏi hỏi giá tắm sấy cho bé cún Poodle nặng 5kg, hệ thống đã nhận diện đúng khoảng cân nặng từ 4kg đến dưới 7kg, báo chính xác gói tắm sấy cơ bản có giá 180.000 đồng với thời lượng khoảng 60 phút và đính kèm nút đặt lịch trực tiếp mà không đưa ra giá phỏng đoán. Kết quả giao dịch tương tác được thể hiện tại Hình 8.9.
+Các tình huống thực nghiệm được tiến hành ngày 25/11/2026. Các lượt tra cứu nghiệp vụ sử dụng bản PawPal triển khai trên Vercel. Tình huống phản hồi về sức khỏe ở Hình 8.11 được thực hiện trong môi trường cục bộ sau khi cập nhật cách xử lý hội thoại tiếp nối. Mỗi tình huống dùng một phiên hội thoại riêng với vai trò tương ứng. Các lượt trao đổi trong cùng một tình huống tiếp nối được thực hiện trong cùng phiên. [Kịch bản chụp ảnh Chương 8](chuong-8-kich-ban-chup-anh.md).
 
-> **[Hình 8.9: Ảnh minh chứng kiểm thử tính toán giá dịch vụ làm đẹp theo cân nặng thực tế](file:///C:/Users/QUYEN/.gemini/antigravity-cli/brain/7a76c9d1-504b-4a2d-877e-c42a3920b2f8/hinh_8_9_tinh_gia_can_nang.png)**  
-> *(Ảnh chụp màn hình thực tế: Trợ lý phản hồi chính xác giá gói dịch vụ theo số cân nặng và hiển thị nút đặt lịch trực tiếp)*.
+Tình huống thứ nhất đánh giá khả năng tra cứu giá theo cân nặng. Khi khách hỏi “Giá tắm cho chó 7 kg?”, Chatbot trả về bốn lựa chọn. Trong số đó, gói tắm vệ sinh cơ bản áp dụng từ 5 kg đến dưới 10 kg, có giá 170.000 đồng và thời lượng dự kiến 75 phút. Phản hồi trong Hình 8.9 cung cấp liên kết chọn gói và hướng dẫn khách kiểm tra điều kiện nhận loài, giá theo lịch cụ thể và phụ phí tại bước đặt.
 
-Thử nghiệm thứ hai xác thực cơ chế chốt chặn bảo vệ quyền riêng tư đơn hàng khi người dùng chưa đăng nhập. Khi khách vãng lai gửi yêu cầu kiểm tra tiến độ đơn hàng hôm qua, hệ thống nhận diện đây là dữ liệu riêng tư, kiên quyết từ chối trích xuất thông tin và gửi lời hướng dẫn thân thiện mời người dùng đăng nhập tài khoản chính thức. Toàn bộ giao diện tương tác từ chối an toàn được ghi nhận tại Hình 8.10.
+![Khung Chatbot hiển thị giá các gói tắm cho chó 7 kg](figures/chuong-08/hinh-08-09-gia-tam-theo-can-nang.png)
 
-> **[Hình 8.10: Ảnh minh chứng kiểm thử chốt chặn bảo vệ quyền riêng tư đơn hàng của khách vãng lai](file:///C:/Users/QUYEN/.gemini/antigravity-cli/brain/7a76c9d1-504b-4a2d-877e-c42a3920b2f8/hinh_8_10_chan_quyen_rieng_tu_khach_vang_lai.png)**  
-> *(Ảnh chụp màn hình thực tế: Trợ lý từ chối tra cứu đơn hàng cá nhân đối với khách vãng lai và cung cấp liên kết đăng nhập an toàn)*.
+**Hình 8.9.** Giá các gói tắm trả về cho câu hỏi về chó 7 kg.
 
-Thử nghiệm thứ ba kiểm tra khả năng nhận diện cảm xúc lo lắng và phản hồi xoa dịu tự nhiên. Khi chủ nuôi phản ánh bé cún mệt mỏi và biếng ăn sau khi tắm, hệ thống đã bắt đúng cấp độ cảm xúc ba, không ép chuyển ca máy móc mà gửi lời dỗ dành ấm áp, giải thích hiện tượng lạ chỗ sau tắm sấy, hướng dẫn cho bé uống nước và theo dõi nơi yên tĩnh. Hình ảnh tương tác thuần chữ thấu cảm được minh họa tại Hình 8.11.
+Tình huống thứ hai kiểm tra quyền truy cập vào dữ liệu đơn hàng cá nhân. Khách vãng lai hỏi “Đơn hàng của tôi hôm qua đã giao chưa?”. Phản hồi trong Hình 8.10 yêu cầu khách đăng nhập và gửi lại câu hỏi để hệ thống xác minh tài khoản trước khi tra cứu.
 
-> **[Hình 8.11: Ảnh minh chứng kiểm thử nhận diện cảm xúc lo lắng và phản hồi xoa dịu tự nhiên](file:///C:/Users/QUYEN/.gemini/antigravity-cli/brain/7a76c9d1-504b-4a2d-877e-c42a3920b2f8/hinh_8_11_xoa_diu_khach_lo_lang.png)**  
-> *(Ảnh chụp màn hình thực tế: Phản hồi thuần chữ dịu dàng, thấu cảm, xóa bỏ hoàn toàn giọng điệu hành chính)*.
+![Khung Chatbot hướng dẫn đăng nhập để tra đơn hàng cá nhân](figures/chuong-08/hinh-08-10-gioi-han-don-hang-vang-lai.png)
 
-Ở nhóm kịch bản trên kênh quản trị nội bộ, thử nghiệm thứ tư đánh giá tính năng tổng hợp hồ sơ khách hàng toàn diện 360 độ chỉ với một câu lệnh tra cứu thông tin khách hàng kèm số điện thoại. Trợ lý Copilot đã liên kết dữ liệu khách hàng, thú cưng và lịch sử ca làm, hiển thị trọn vẹn tên chủ nuôi, số điện thoại, hạng thành viên, số dư điểm thưởng, danh sách hai bé cưng kèm lưu ý an toàn về việc bé thứ hai nhút nhát và sợ tiếng máy sấy. Giao diện tổng hợp hồ sơ được thể hiện tại Hình 8.12.
+**Hình 8.10.** Giới hạn tra đơn hàng của khách vãng lai.
 
-> **[Hình 8.12: Ảnh minh chứng kiểm thử tổng hợp hồ sơ khách hàng 360 độ qua trợ lý nội bộ](file:///C:/Users/QUYEN/.gemini/antigravity-cli/brain/7a76c9d1-504b-4a2d-877e-c42a3920b2f8/hinh_8_12_ho_so_khach_360.png)**  
-> *(Ảnh chụp màn hình thực tế: Khung trả lời của Copilot tổng hợp toàn cảnh thông tin khách hàng, lịch sử và cảnh báo tập tính bé cưng)*.
+Trong lượt kiểm tra tiếp nối ở môi trường cục bộ, khách cho biết đã có mã đơn và hỏi có cần đăng nhập hay không. Chatbot giải thích rằng mã đơn xác định giao dịch, còn việc xem trạng thái đòi hỏi xác minh người đặt. Với đơn đặt bằng tài khoản, khách được hướng dẫn đăng nhập. Với đơn đặt khi chưa đăng nhập, khách được hướng dẫn mở trang **Tra cứu đơn hàng** và xác minh số điện thoại đã dùng khi đặt.
 
-Thử nghiệm thứ năm kiểm tra khả năng rà soát và cảnh báo hàng tồn kho chạm ngưỡng an toàn nhằm hỗ trợ kế hoạch nhập hàng của thủ kho. Khi nhân viên yêu cầu kiểm tra danh sách sản phẩm sắp hết hàng, hệ thống đã tự động lọc các biến thể sản phẩm có số lượng tồn nhỏ hơn hoặc bằng mức tối thiểu quy định, lập tức trả về bảng danh mục cụ thể gồm mã sản phẩm, tên hạt thức ăn hoặc sữa tắm, số lượng tồn hiện tại và gợi ý số lượng cần nhập thêm. Kết quả kiểm tra được trình bày tại Hình 8.13.
+Tình huống thứ ba kiểm tra khả năng phản hồi qua hai lượt trao đổi. Ở lượt đầu, chủ nuôi báo “Bé cún mệt mỏi và biếng ăn sau khi tắm.” Chatbot ghi nhận nỗi lo, hướng dẫn chuẩn bị thông tin khi gọi bác sĩ thú y và nêu các dấu hiệu cần đi cấp cứu. Ở lượt tiếp theo trong cùng phiên, chủ nuôi bổ sung “Bé vừa nôn một lần.” Chatbot trả lời “Bạn báo thêm cho bác sĩ là bé đã nôn một lần. Nếu nhớ, hãy nói thời điểm bé nôn.” Hai lượt phản hồi được trình bày trong Hình 8.11.
 
-> **[Hình 8.13: Ảnh minh chứng kiểm thử cảnh báo các mặt hàng tồn kho chạm ngưỡng an toàn](file:///C:/Users/QUYEN/.gemini/antigravity-cli/brain/7a76c9d1-504b-4a2d-877e-c42a3920b2f8/hinh_8_13_canh_bao_ton_kho.png)**  
-> *(Ảnh chụp màn hình thực tế: Copilot liệt kê danh sách sản phẩm dưới ngưỡng tối thiểu phục vụ kế hoạch nhập hàng)*.
+![Hai lượt trao đổi khi chủ nuôi báo bé mệt sau tắm và bổ sung tình trạng nôn](figures/chuong-08/hinh-08-11-luu-y-suc-khoe.png)
 
-Thử nghiệm thứ sáu xác thực cơ chế kiểm soát quyền hạn theo vai trò nhằm ngăn chặn nhân viên kỹ thuật xem báo cáo doanh thu của tiệm. Khi tài khoản nhân viên gửi câu hỏi về số tiền tiệm thu được hôm nay, máy chủ cơ sở dữ liệu nhận diện tài khoản thiếu quyền đọc thanh toán tài chính, lập tức chặn lệnh gọi và trả về thông báo từ chối an toàn với mã lỗi bảo mật quy định mà không làm lộ bất kỳ số liệu kinh doanh nào. Minh chứng từ chối quyền truy cập được lưu lại tại Hình 8.14.
+**Hình 8.11.** Phản hồi khi chủ nuôi báo bé mệt và bổ sung dấu hiệu ở lượt tiếp theo.
 
-> **[Hình 8.14: Ảnh minh chứng kiểm thử cơ chế chốt chặn nhân viên xem doanh thu trái phép](file:///C:/Users/QUYEN/.gemini/antigravity-cli/brain/7a76c9d1-504b-4a2d-877e-c42a3920b2f8/hinh_8_14_chan_quyen_doanh_thu.png)**  
-> *(Ảnh chụp màn hình thực tế: Thông báo từ chối quyền truy cập của Copilot khi nhân viên hỏi dữ liệu doanh thu nhạy cảm)*.
+Một chuỗi kiểm tra bổ sung trong môi trường cục bộ gồm ba lượt hỏi về thủ tục bồi hoàn, thông báo đã gửi yêu cầu và hỏi thời điểm có kết quả. Sau khi khách cho biết đã gửi, Chatbot hướng dẫn mở lại mục **Hỗ trợ** để theo dõi hoặc bổ sung dữ liệu vào yêu cầu đang mở. Khi khách hỏi thời điểm xử lý, Chatbot trả lời rằng chưa thể xác nhận và chỉ nơi xem cập nhật.
 
-**Bảng 8.6: Bảng kết quả kiểm thử thực nghiệm độ chuẩn xác và hiệu năng của giải thuật trợ lý thông minh**
+Tình huống thứ tư kiểm tra khả năng tổng hợp hồ sơ 360° theo số điện thoại. Quản lý nhập “Xem hồ sơ khách hàng 360° theo số điện thoại: 0901234567”. Copilot xác định hồ sơ kiểm thử Lê Lệ Quyên QA và trả về hai hồ sơ thú cưng đang hoạt động là mèo lala và chó Corgi Milu. Hình 8.12 ghi nhận đơn được tạo mới nhất có mã `ORD-20260707-973249` với thông báo “Chưa có nhãn trạng thái”. Phản hồi hiển thị thời điểm đọc riêng cho nguồn thú cưng và nguồn đơn hàng.
 
-| Chỉ số kiểm thử thực tế | Kết quả đo lường | Nhận xét và đánh giá chuyên môn |
-| :--- | :---: | :--- |
-| Độ chính xác tính giá dịch vụ theo cân nặng | 100% | Báo đúng giá theo quy định, không nhầm lẫn khoảng cân |
-| Tỷ lệ chặn truy vấn thông tin riêng tư từ khách vãng lai | 100% | Bảo vệ hoàn toàn đơn hàng và điểm thưởng của thành viên |
-| Tỷ lệ ngăn chặn nhân viên xem doanh thu trái phép | 100% | Máy chủ từ chối lập tức với mã lỗi bảo mật quy định |
-| Thời gian phản hồi cụm từ đầu tiên qua truyền phát | 0.8 đến 1.2 giây | Người dùng đọc được nội dung gần như ngay tức thì |
-| Tỷ lệ chuyển giao ca thành công khi khách bức xúc | 100% | Chuyển mượt mà sang nhân viên, giữ trọn vẹn ngữ cảnh |
-| Tỷ lệ lọc sạch từ ngữ kích động và lách từ | 100% | Làm mờ hoàn toàn và nâng cấp độ bảo vệ tự động |
+![Khung Copilot hiển thị hồ sơ thú cưng và kết quả tra đơn mới nhất của cùng khách](figures/chuong-08/hinh-08-12-ho-so-khach-360.png)
 
-### 8.7.2. Tóm tắt các đóng góp cốt lõi của chương
-Chương 8 đã khẳng định giải pháp xây dựng hệ thống Pawpal không dừng lại ở mức giao diện thông thường, mà được định hình vững chắc bởi ba trụ cột công nghệ then chốt:
+**Hình 8.12.** Tra hồ sơ khách hàng 360° theo số điện thoại qua Copilot.
 
-Thứ nhất là nền tảng kiến trúc phân tầng an toàn áp dụng triệt để mô hình không tin cậy dữ liệu đầu vào từ trình duyệt. Việc kết hợp chặt chẽ giữa cơ chế kiểm soát truy cập theo vai trò công việc ở tầng cổng dịch vụ và chính sách bảo mật cấp độ hàng dữ liệu tại tầng cơ sở dữ liệu bảo đảm tính toàn vẹn thông tin và bảo vệ tuyệt đối bí mật kinh doanh của cơ sở.
+Tình huống thứ năm kiểm tra việc xác định các biến thể sản phẩm có tồn kho dưới mức tối thiểu. Khi nhân viên hỏi “Có bao nhiêu SKU dưới ngưỡng?”, Copilot hiển thị hai kết quả trên trang đầu tiên. Hình 8.13 ghi nhận SKU TP-HAT-01-V2 còn 29 đơn vị và SKU TP-HAT-01-V1 còn 37 đơn vị. Mức tồn tối thiểu của cả hai biến thể là 80 đơn vị. Số lượng kết quả được tính trong phạm vi trang đang hiển thị và dữ liệu mà nhân viên được phép đọc.
 
-Thứ hai là cơ chế truyền phát dữ liệu thời gian thực kết hợp với giải thuật triệt tiêu ảo giác nghiêm ngặt. Việc phát luồng từng cụm từ kết quả giúp rút ngắn thời gian chờ đợi phản hồi xuống dưới một giây. Đồng thời, việc ràng buộc mô hình ngôn ngữ bằng hợp đồng bằng chứng chỉ cho phép trả lời dựa trên dữ liệu nội bộ đã xác thực giúp loại trừ hoàn toàn hiện tượng bịa đặt thông tin, mang lại sự tin cậy tuyệt đối cho khách hàng và nhân sự.
+![Khung trợ lý nhân viên hiển thị hai SKU dưới mức tồn tối thiểu trên trang đầu tiên](figures/chuong-08/hinh-08-13-ton-kho-duoi-nguong.png)
 
-Thứ ba là trải nghiệm giao tiếp thấu cảm lấy con người và thú cưng làm trung tâm. Hệ thống đã chuyển đổi thành công từ mô hình trợ lý ảo trả lời theo mẫu hành chính cứng nhắc sang một người bạn đồng hành ấm áp, biết lắng nghe, thấu cảm và xoa dịu nỗi lo âu của chủ nuôi, đồng thời san sẻ áp lực vận hành, nâng cao năng suất và bảo đảm an toàn nghề nghiệp cho đội ngũ nhân sự tiệm.
+**Hình 8.13.** Danh sách hàng tồn dưới mức tối thiểu trong luồng nhân viên.
+
+Tình huống thứ sáu kiểm tra quyền truy cập số liệu tài chính. Khi nhân viên hỏi “Thực thu hôm nay bao nhiêu?”, API trả mã HTTP 403. Hình 8.14 ghi lại thông báo “Chưa có quyền đọc dữ liệu hoặc dùng nguồn này”. Câu hỏi được giữ trong ô nhập sau khi hệ thống từ chối yêu cầu.
+
+![Khung trợ lý nhân viên hiển thị thông báo thiếu quyền và câu hỏi về thực thu](figures/chuong-08/hinh-08-14-gioi-han-quyen-nhan-vien.png)
+
+**Hình 8.14.** Từ chối yêu cầu xem thực thu trong luồng nhân viên.
+
+### 8.7.2. Kết luận chương
+
+Kiến trúc phân tầng của PawPal xác định trách nhiệm của giao diện, cổng dịch vụ, tầng dữ liệu và tầng tích hợp mô hình. Chatbot và Copilot khai thác dữ liệu nghiệp vụ theo phạm vi quyền của người dùng. Các câu hỏi cần số liệu được xử lý qua công cụ tra cứu, còn mô hình ngôn ngữ hỗ trợ các tác vụ tổng hợp hướng dẫn hoặc soạn bản nháp.
+
+Kết quả thực nghiệm minh họa khả năng tra cứu giá, tổng hợp hồ sơ, kiểm tra tồn kho và kiểm soát quyền truy cập. Các lượt thử cũng ghi nhận cách Chatbot hướng dẫn chủ nuôi khi được báo về dấu hiệu sức khỏe. Phạm vi thực nghiệm của chương là kiểm tra chức năng theo tình huống đại diện. Việc đánh giá thời gian phản hồi, độ bao phủ câu hỏi và tỷ lệ chuyển giao hội thoại cần tập thử và tiêu chí đo lường riêng.
+
+### Mã nguồn tham chiếu
+
+Luồng khách hàng được triển khai qua các mô đun phụ trách cổng API, định tuyến câu hỏi công khai, tra cứu theo tài khoản, kiểm duyệt và xử lý lượt trao đổi tiếp nối. [Cổng Chatbot và Copilot](../api/admin-chat.js), [định tuyến Chatbot công khai](../scripts/api/chat_public_guest.js), [tra cứu dành cho thành viên](../scripts/api/chat_member.js), [kiểm duyệt tin nhắn](../scripts/api/chat_moderation.js), [xử lý lượt trao đổi tiếp nối](../scripts/api/chat_public_continuity.js).
+
+Luồng nội bộ dùng bộ lập kế hoạch để nhận diện tác vụ và danh mục công cụ để giới hạn bộ lọc, quyền và dữ liệu trả về. [Bộ lập kế hoạch Copilot](../scripts/api/admin_copilot.js), [danh mục công cụ đọc nội bộ](../scripts/api/chat_read_tools.js).
