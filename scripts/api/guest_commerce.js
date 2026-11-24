@@ -184,12 +184,14 @@ function createGuestCommerce({admin,secret,origins,production=true,otpPreviewOri
     }
     const details=body.details;
     const allowedDetails=['hold_id','pet_id','service_id','scheduled_start_at','note','addon_ids','preferred_staff_id','check_out_at','room_id','diet_notes','care_notes','pickup_address','dropoff_address','distance_km','trip_type','return_at'];
+    if(action==='booking-quote'||action==='booking-create')allowedDetails.push('voucher_code');
     const dateKeys=['scheduled_start_at','check_out_at','return_at'];
     if(!details||typeof details!=='object'||Array.isArray(details)||Buffer.byteLength(JSON.stringify(details))>12000
      ||Object.keys(details).some(k=>!allowedDetails.includes(k))||!UUID.test(details.pet_id)||!UUID.test(details.service_id)
      ||typeof details.scheduled_start_at!=='string'
      ||dateKeys.some(k=>details[k]!=null&&(typeof details[k]!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d{1,3})?)?(?:Z|[+-]\d\d:\d\d)$/.test(details[k])||!Number.isFinite(Date.parse(details[k]))))
      ||['note','diet_notes','care_notes'].some(k=>details[k]!=null&&(typeof details[k]!=='string'||details[k].length>4000))
+     ||('voucher_code' in details&&(typeof details.voucher_code!=='string'||!details.voucher_code.trim()||details.voucher_code.length>100))
      ||['pickup_address','dropoff_address'].some(k=>details[k]!=null&&(typeof details[k]!=='string'||details[k].length>1000))
      ||['preferred_staff_id','room_id','hold_id'].some(k=>details[k]!=null&&!UUID.test(details[k]))
      ||(details.distance_km!=null&&(typeof details.distance_km!=='number'||!Number.isFinite(details.distance_km)||details.distance_km<=0))
@@ -236,6 +238,8 @@ function createGuestCommerce({admin,secret,origins,production=true,otpPreviewOri
    if(error.reason==='sales_refund_required'){status=409;message='Đơn đã thu tiền. Vui lòng liên hệ cửa hàng để hoàn tiền trước khi hủy.';}
    const holdErrors={booking_hold_expired:'Đã hết 15 phút giữ chỗ. Vui lòng chọn lại giờ và nhân viên.',booking_lead_time_required:'Vui lòng chọn giờ cách hiện tại hơn 2 tiếng.',booking_staff_required:'Vui lòng chọn nhân viên chăm sóc.',preferred_staff_unavailable:'Nhân viên này không còn trống. Vui lòng chọn nhân viên hoặc giờ khác.'};
    if(holdErrors[error.reason]){status=409;message=holdErrors[error.reason];}
+   const voucherErrors={booking_voucher_not_applicable:'Mã giảm giá không áp dụng cho lịch hẹn này.',booking_voucher_exhausted:'Mã giảm giá đã hết lượt sử dụng.',booking_owned_voucher_required:'Bạn cần đổi ưu đãi này trước khi sử dụng.'};
+   if(action.startsWith('booking-')&&voucherErrors[error.reason]){status=400;message=voucherErrors[error.reason];}
    if(error.reason==='sales_available_stock_insufficient'){status=409;message='Sản phẩm không đủ tồn kho khả dụng. Vui lòng cập nhật giỏ hàng.';}
    if(status===400&&action.startsWith('order-'))message='Thông tin đơn hàng hoặc số lượng sản phẩm không hợp lệ.';
    const bookingErrors={invalid_slot_day:['scheduled_start_at','Vui lòng chọn ngày trong 90 ngày tới để xem giờ khả dụng.'],outside_operating_hours:['scheduled_start_at','Giờ đã chọn nằm ngoài giờ phục vụ hoặc không đủ thời gian hoàn thành.'],booking_slot_full:['scheduled_start_at','Khung giờ này đã đủ lịch. Vui lòng chọn giờ khác.'],future_booking_required:['scheduled_start_at','Vui lòng chọn thời gian trong tương lai.'],invalid_hotel_stay:['check_out_at','Thời gian trả phòng phải sau thời gian nhận phòng.'],hotel_room_conflict:['room_id','Phòng đã có lịch trong thời gian này. Vui lòng chọn phòng hoặc thời gian khác.'],hotel_room_unavailable:['room_id','Phòng không còn khả dụng. Vui lòng chọn phòng khác.'],invalid_taxi_return:['return_at','Thời gian lượt về phải sau khi hoàn thành lượt đi.']};

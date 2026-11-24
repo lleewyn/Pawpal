@@ -10,7 +10,7 @@ export async function loadGuestBookingContext(db){
  if(species.error)throw species.error;
  return {catalog:catalog.data,breeds:cleanGuestBreeds(breeds.data),species:species.data,context};
 }
-export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNext,onContext}){
+export function renderGuestPets({root,db,context,breeds,species=[],selectedPetId,onChoose,onNext,onContext}){
  let pets=(context.pets||[]).map(p=>guestPetFromContext(p,breeds)),selected=null,page=context.page||1,hasMore=!!context.hasMore,busy=false;
  const firstVisit=!pets.length&&!context.contact;
  root.innerHTML=`<div class="step-header"><h2>${firstVisit?'Thông tin đặt lịch':'Chọn bé cưng'}</h2><p class="step-subtitle">Bạn có thể đặt lịch mà không cần tài khoản.</p></div>
@@ -65,7 +65,9 @@ export function renderGuestPets({root,db,context,breeds,species=[],onChoose,onNe
   if(!pets.length&&!firstVisit)feedback.textContent='Điền thông tin bé cưng để chọn dịch vụ phù hợp.';
  }
  contactView();draw();
- const pending=sessionStorage.getItem(pendingKey),recovered=pets.find(p=>p.id===pending);if(recovered){sessionStorage.removeItem(pendingKey);choose(recovered);}
+ const pending=sessionStorage.getItem(pendingKey);
+ const recovered=pets.find(p=>p.id===pending)||pets.find(p=>p.id===selectedPetId);
+ if(recovered)choose(recovered);
  get('step1Next').onclick=()=>{if(selected&&!busy)onNext();};
  get('guestPetMore').onclick=async()=>{
   if(busy)return;busy=true;get('guestPetMore').disabled=true;

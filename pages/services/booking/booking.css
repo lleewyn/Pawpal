@@ -1955,7 +1955,28 @@ body.booking-page-body{background:#fff;color:#274b39;font-family:Inter,system-ui
 .booking-page-body .booking-day-slots,.booking-page-body .booking-staff-options{display:flex;flex-wrap:wrap;gap:9px}
 .booking-page-body .booking-day-slots button:disabled{background:#f4f5f1;border-color:#e5e9e1;color:#a2aca0;cursor:not-allowed;text-decoration:line-through}
 .booking-live-form [hidden]{display:none!important}
-.booking-live-form [data-booking-hold]{display:block;margin:0 0 20px;padding:12px 16px;border:none;border-radius:9px;background:#EEF5F1;color:#236B48;font-weight:600;font-variant-numeric:tabular-nums}
+.booking-live-form [data-booking-hold] {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 8px 0 0;
+    color: #4F7A65;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.booking-hold-time {
+    padding: 1px 7px;
+    border-radius: 9px;
+    background: #EEF5F1;
+    color: #236B48;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.booking-live-form .booking-hold-expired {
+    color: #A43D38;
+}
 .booking-page-body .booking-staff-label{font-size:13px;color:#31553f;font-weight:600;margin:0 0 6px}
 .booking-page-body .booking-staff-options{margin-top:12px}
 .booking-page-body .booking-staff-options small{display:block;font-size:11px;margin-top:3px;font-weight:400}
@@ -2025,6 +2046,70 @@ body.booking-page-body{background:#fff;color:#274b39;font-family:Inter,system-ui
 .booking-page-body .booking-confirm-price{display:flex;justify-content:space-between;align-items:start;gap:20px;margin:12px 0;font-size:13px}
 .booking-page-body .booking-confirm-price small{display:block;color:#718476;font-size:12px;margin-top:3px}
 .booking-page-body .booking-confirm-price strong{white-space:nowrap;font-weight:500}
+.booking-voucher-entry {
+    margin: 16px 0;
+}
+
+.booking-voucher-entry > label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.booking-voucher-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.booking-page-body .booking-live-form .booking-voucher-controls input {
+    flex: 1 1 150px;
+    width: auto;
+    min-width: 0;
+}
+
+.booking-voucher-entry [role="status"] {
+    margin-top: 6px;
+}
+
+.booking-voucher-entry:has([aria-invalid="true"]) [role="status"] {
+    color: #A43D38;
+}
+
+.booking-voucher-list-toggle {
+    padding: 4px 0;
+    margin-top: 8px;
+    border: 0;
+    background: transparent;
+    color: #236B48;
+    font-weight: 600;
+}
+
+.booking-voucher-list {
+    display: grid;
+    gap: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px 0;
+    color: #4F7A65;
+    font-size: 13px;
+}
+
+.booking-voucher-choice {
+    display: grid;
+    gap: 2px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 9px;
+    background: #EEF5F1;
+    text-align: left;
+    color: #236B48;
+}
+
+.booking-voucher-choice:hover,
+.booking-voucher-choice:focus-visible {
+    background: #DCEEE2;
+}
 .booking-page-body .booking-confirm-total{display:flex;align-items:center;justify-content:space-between;gap:20px;background:#f3f7ee;border-radius:9px;padding:16px 18px;margin-top:16px}
 .booking-page-body .booking-confirm-total strong{font:600 25px/1.4 Lora,serif;color:#214939;white-space:nowrap}
 .booking-page-body .booking-confirm-notice p{font-size:12px;line-height:1.8;color:#637a69;margin:8px 0 0}

@@ -12,6 +12,23 @@
     const el=(tag,text,className)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(className)n.className=className;return n;};
     async function read(kind,id,page=1){const {data,error}=await getSupabaseClient().rpc('get_staff_workspace',{p_kind:kind,p_query:'',p_id:id,p_page:page});if(error)throw error;return data.items;}
     async function findLog(appointmentId,logId){for(let page=1;page<=100;page++){const rows=await read('care_logs',appointmentId,page),row=rows.find(item=>item.id===logId);if(row)return row;if(rows.length<10)return null;}throw Error('care_log_limit');}
+    const extraNoteTitle = 'Ghi chú ngoài quy trình';
+    const extraNoteOption = 'extra-note';
+    function setCareLogSteps(field, steps, previousTitle) {
+        field.replaceChildren(new Option('Chọn công đoạn', ''));
+        field.options[0].disabled = true;
+        for (const step of steps) field.add(new Option(step, 'step:' + step));
+        field.add(new Option(extraNoteTitle, extraNoteOption));
+        if (previousTitle === extraNoteTitle) {
+            field.value = extraNoteOption;
+        } else if (previousTitle) {
+            const matching = steps.find(step => step.toLowerCase() === previousTitle.trim().toLowerCase());
+            if (!matching) field.add(new Option(previousTitle + ' (đã ghi)', 'previous'));
+            field.value = matching ? 'step:' + matching : 'previous';
+        } else {
+            field.value = steps.length ? '' : extraNoteOption;
+        }
+    }
     function localMinute(value){const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(value)).map(p=>[p.type,p.value]));return parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute;}
     let dialog;
     function build(){
@@ -21,9 +38,9 @@
         const form=el('form');form.noValidate=true;form.setAttribute('onsubmit','return false;');
         const header=el('div',null,'workspace-modal-header'),title=el('h2','Ghi nhật ký chăm sóc'),close=el('button','Đóng','btn-modal-close');title.id='staffCareLogTitle';close.type='button';close.dataset.closeModal=overlay.id;header.append(title,close);
         const summary=el('p','','workspace-care-log-summary');form.append(header,summary);const fields={};
-        for(const[key,text,type,required]of[['title','Công việc','text',true],['at','Thời điểm','datetime-local',true],['staff','Người ghi nhận','text',false],['note','Ghi nhận','textarea',false]]){
-            const group=el('div',null,'workspace-form-field'),label=el('label',text+(required?' ':'')),input=el(type==='textarea'?'textarea':'input',null,'admin-input');input.id='staffCareLog'+key;
-            if(type!=='textarea')input.type=type;else{input.rows=4;input.maxLength=4000;}if(key==='title')input.maxLength=200;if(key==='staff')input.readOnly=true;input.required=required;label.htmlFor=input.id;if(required)label.append(el('span','*','workspace-required'));group.append(label,input);form.append(group);fields[key]=input;
+        for(const[key,text,type,required]of[['title','Công đoạn','select',true],['at','Thời điểm','datetime-local',true],['staff','Người ghi nhận','text',false],['note','Ghi nhận','textarea',false]]){
+            const group=el('div',null,'workspace-form-field'),label=el('label',text+(required?' ':'')),input=el(['select','textarea'].includes(type)?type:'input',null,type==='select'?'admin-select':'admin-input');input.id='staffCareLog'+key;
+            if(input.tagName==='INPUT')input.type=type;if(type==='textarea'){input.rows=4;input.maxLength=4000;}if(key==='staff')input.readOnly=true;input.required=required;label.htmlFor=input.id;if(required)label.append(el('span','*','workspace-required'));group.append(label,input);form.append(group);fields[key]=input;
         }
         const mediaRoot=el('div',null,'workspace-form-field');mediaRoot.id='staffCareLogMedia';form.append(mediaRoot);
         const mediaEditor=import('/scripts/shared/care-media.mjs').then(({createCareMediaEditor})=>createCareMediaEditor({root:mediaRoot,db:window.getSupabaseClient()}));
@@ -37,10 +54,14 @@
         form.addEventListener('submit',event=>event.preventDefault());
         save.onclick=async()=>{
             if(state.loading||state.saving||!state.row)return;message.textContent='';Object.values(fields).forEach(input=>input.removeAttribute('aria-invalid'));
-            const invalid=(key,text)=>{fields[key].setAttribute('aria-invalid','true');message.textContent=text;fields[key].focus();},name=fields.title.value.trim(),at=state.log&&fields.at.value===localMinute(state.log.recorded_at)?new Date(state.log.recorded_at):new Date(fields.at.value+':00+07:00');
-            if(!name||name.length>200)return invalid('title','Nhập tên công việc từ 1 đến 200 ký tự.');
+            const invalid=(key,text)=>{fields[key].setAttribute('aria-invalid','true');message.textContent=text;fields[key].focus();},at=state.log&&fields.at.value===localMinute(state.log.recorded_at)?new Date(state.log.recorded_at):new Date(fields.at.value+':00+07:00');
+            const selected = fields.title.value;
+            const name = selected === extraNoteOption ? extraNoteTitle :
+                selected === 'previous' ? state.log?.action_name_snapshot : selected.slice('step:'.length);
+            if(!name||name.length>200)return invalid('title','Chọn công đoạn của dịch vụ hoặc ghi chú ngoài quy trình.');
             if(!Number.isFinite(+at)||+at>Date.now())return invalid('at','Chọn thời điểm đã thực hiện, không ở tương lai.');
             if(fields.note.value.trim().length>4000)return invalid('note','Ghi nhận không được quá 4000 ký tự.');
+            if(selected===extraNoteOption&&!fields.note.value.trim())return invalid('note','Nhập nội dung ghi chú ngoài quy trình.');
             if(!allowed()){message.textContent='Bạn không có quyền ghi nhật ký ca dịch vụ.';return;}
             const recordedAt=state.log&&fields.at.value===localMinute(state.log.recorded_at)?state.log.recorded_at:at.toISOString();
             const details={title:name,note:fields.note.value.trim(),recorded_at:recordedAt,staff_id:PawpalAdminAccess.state.user.id},signature=JSON.stringify(details);
@@ -74,8 +95,14 @@
                 if(!row||row.appointment_status!=='in_progress'){message.textContent='Không tìm thấy ca đang thực hiện trong phạm vi được giao.';save.textContent='Lưu nhật ký';return;}
                 const log=logId?await findLog(appointmentId,logId):null;if(generation!==state.generation)return;
                 if(logId&&(!log||log.recorded_by!==PawpalAdminAccess.state.user.id)){message.textContent='Chỉ được sửa nhật ký do chính bạn ghi.';save.textContent='Lưu thay đổi';return;}
-                const pets=await read('pets',row.pet_id);if(generation!==state.generation)return;const pet=pets.find(item=>item.id===row.pet_id);if(!pet)throw Error('missing_pet');
-                state.row=row;state.log=log;summary.textContent=row.appointment_code+' · '+pet.pet_name;fields.title.value=log?.action_name_snapshot||'';fields.note.value=log?.description||'';fields.at.value=localMinute(log?.recorded_at||new Date());fields.staff.value=PawpalAdminAccess.state.user.name;
+                const [pets, result] = await Promise.all([
+                    read('pets', row.pet_id),
+                    getSupabaseClient().rpc('get_staff_care_log_steps', { p_appointment: row.id })
+                ]);
+                if(generation!==state.generation)return;const pet=pets.find(item=>item.id===row.pet_id);if(!pet)throw Error('missing_pet');
+                if(result.error||!Array.isArray(result.data))throw Error('missing_care_log_steps');
+                setCareLogSteps(fields.title, result.data, log?.action_name_snapshot);
+                state.row=row;state.log=log;summary.textContent=row.appointment_code+' · '+pet.pet_name;fields.note.value=log?.description||'';fields.at.value=localMinute(log?.recorded_at||new Date());fields.staff.value=PawpalAdminAccess.state.user.name;
                 await(await mediaEditor).reset({appointment:row.id,logId:log?.id});if(generation!==state.generation)return;
                 state.loading=false;Object.values(fields).forEach(input=>input.disabled=false);save.disabled=false;save.textContent=log?'Lưu thay đổi':'Lưu nhật ký';fields.title.focus();
             }catch{if(generation===state.generation){message.textContent='Không tải đủ dữ liệu ca hoặc nhật ký. Đóng form và tải lại hồ sơ.';save.textContent='Lưu nhật ký';}}

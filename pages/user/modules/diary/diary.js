@@ -132,7 +132,7 @@ export async function initPetDiary() {
     window.addEventListener('hashchange', diaryHashHandler);
     const db = window.getSupabaseClient?.() || window.SupabaseClient;
     const owner = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id;
-    stopDiaryRealtime = watchCustomerTables(db, owner, ['care_log','care_log_media','appointment','pet_profile','pet_weight_history'], async () => {
+    stopDiaryRealtime = watchCustomerTables(db, owner, ['care_log','care_log_media','appointment','appointment_record','pet_profile','pet_weight_history'], async () => {
         if(currentPetId && window.location.hash.includes('diary')) {
             try { await selectAndLoadPet(currentPetId,currentSessionId,{allowDefaultFallback:false}); }
             catch (_) { showToast('Không thể cập nhật nhật ký. Vui lòng tải lại.', 'error'); }
@@ -480,7 +480,7 @@ async function syncPetDiaryFromSupabase(pet) {
         
         // 1. Tìm các lịch hẹn thuộc về bé cưng này
         let apptQuery = db.from('appointment')
-            .select('id, appointment_code, scheduled_start_at, appointment_status, appointment_item(name_snapshot)').eq('customer_id',pet.userId);
+            .select('id, appointment_code, scheduled_start_at, appointment_status, check_in_time, check_out_time, appointment_item(name_snapshot)').eq('customer_id',pet.userId);
         
         if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(petUuid)) {
             apptQuery = apptQuery.eq('pet_id', petUuid);
@@ -519,16 +519,35 @@ async function syncPetDiaryFromSupabase(pet) {
             throw error;
         }
 
-        if (!data?.length) return {currentSession:null,history:[]};
+        const checkedIn = apptRows.filter(apt => apt.check_in_time || apt.check_out_time ||
+            ['checked_in', 'in_progress', 'completed'].includes(apt.appointment_status));
+        const entries = [...(data || [])];
+        for (let i = 0; i < checkedIn.length; i += 3) {
+            const batches = await Promise.all(checkedIn.slice(i, i + 3).map(async apt => {
+                const { data: execution, error } = await db.rpc('own_service_booking_execution', { p_booking: apt.id });
+                if (error) throw error;
+                return (execution?.records || [])
+                    .filter(record => ['intake', 'handover'].includes(record.record_type))
+                    .map(record => ({
+                        ...record,
+                        appointment_id: apt.id,
+                        action_name_snapshot: record.record_type === 'intake' ? 'Tiếp nhận bé' : 'Bàn giao bé',
+                        description: record.condition_note || '',
+                        care_log_media: record.media
+                    }));
+            }));
+            entries.push(...batches.flat());
+        }
+        entries.sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at));
+        if (!entries.length) return {currentSession:null,history:[]};
 
         diaryMediaReader ||= createCareMediaReader(db);
-        const media = await diaryMediaReader.read(data.flatMap(log => log.care_log_media || []));
-        const mediaById = new Map(media.map(row => [row.id, row]));
-        for (const log of data) log.care_log_media = (log.care_log_media || []).map(row => mediaById.get(row.id) || {...row,resolved_url:''});
+        const media = await diaryMediaReader.read(entries.flatMap(log => log.care_log_media || []));
+        const mediaById = new Map(media.map(row => [row.id, row.resolved_url]));
 
         const sessionsMap = {};
 
-        for (const log of data) {
+        for (const log of entries) {
             const aptId = log.appointment_id || 'no-appointment';
             const apt = apptMap.get(aptId);
             const serviceName = apt?.appointment_item?.[0]?.name_snapshot || 'Chăm sóc tại tiệm';
@@ -545,7 +564,7 @@ async function syncPetDiaryFromSupabase(pet) {
                 };
             }
 
-            const mediaUrl = log.care_log_media?.[0]?.resolved_url || null;
+            const attachments = log.care_log_media || [];
             const staffName = 'Kỹ thuật viên PawPal';
 
             sessionsMap[aptId].timeline.push({
@@ -554,7 +573,9 @@ async function syncPetDiaryFromSupabase(pet) {
                 description: log.description || log.observed_condition || '',
                 timestamp: log.recorded_at,
                 staff: staffName,
-                image: mediaUrl,
+                recordType: log.record_type,
+                hasAttachments: attachments.length > 0,
+                imageUrls: attachments.map(row => mediaById.get(row.id)).filter(Boolean),
                 urgent: log.observed_condition && !['Tốt', 'Bình thường', 'Ổn định'].includes(log.observed_condition)
             });
         }
@@ -595,6 +616,7 @@ function mapAppointmentStatus(status) {
         'vang_mat':       'Vắng mặt',
         'pending':        'Chờ xác nhận',
         'confirmed':      'Đã xác nhận',
+        'checked_in':     'Đã tiếp nhận',
         'completed':      'Hoàn thành',
         'cancelled':      'Đã hủy',
         'no_show':        'Vắng mặt',
@@ -605,7 +627,7 @@ function mapAppointmentStatus(status) {
 }
 
 async function getOrSeedTrackerLogs(pet) {
- const logs = await syncPetDiaryFromSupabase(pet); liveDiaryState[pet.id] = logs; return logs;
+    const logs = await syncPetDiaryFromSupabase(pet); liveDiaryState[pet.id] = logs; return logs;
 }
 
 function renderPetInfoCard(pet, currentSession) {
@@ -683,29 +705,12 @@ function renderServiceStepper(currentSession, pet) {
 
     container.classList.remove('d-none');
 
-    let currentStep = 1;
-    const timeline = currentSession.timeline || [];
-    const latestEvent = timeline.length > 0 ? timeline[0] : null;
-    const statusStr = ((latestEvent?.status || '') + ' ' + (latestEvent?.description || '')).toLowerCase();
-
-    if (currentSession.status === 'Hoàn thành' || statusStr.includes('hoàn thành')) {
-        currentStep = 4;
-    } else if (statusStr.includes('cắt') || statusStr.includes('tỉa') || statusStr.includes('tạo kiểu') || statusStr.includes('chải')) {
-        currentStep = 3;
-    } else if (statusStr.includes('tắm') || statusStr.includes('sấy') || statusStr.includes('massage')) {
-        currentStep = 2;
-    } else {
-        currentStep = 1;
-    }
-
+    const timeline = [...currentSession.timeline].reverse();
     const steps = [
-        { num: 1, title: 'Tiếp nhận', sub: 'Bàn giao bé cưng' },
-        { num: 2, title: 'Tắm và Sấy', sub: 'Thư giãn dịu nhẹ' },
-        { num: 3, title: 'Cắt tỉa và Spa', sub: 'Tạo kiểu xinh xắn' },
-        { num: 4, title: 'Hoàn tất', sub: 'Sẵn sàng đón bé' }
+        { title: 'Tiếp nhận bé', done: timeline.some(item => item.recordType === 'intake') },
+        ...timeline.filter(item => !item.recordType).map(item => ({ title: item.status, done: true })),
+        { title: 'Bàn giao bé', done: timeline.some(item => item.recordType === 'handover') }
     ];
-
-    const progressPercent = currentStep === 1 ? 0 : (currentStep === 2 ? 28 : (currentStep === 3 ? 56 : 84));
 
     container.innerHTML = `
         <div class="stepper-header">
@@ -716,28 +721,20 @@ function renderServiceStepper(currentSession, pet) {
                 <span class="stepper-time-badge">${formatDate(currentSession.date)}</span>
             </div>
             <div class="stepper-status-badge ${currentSession.status === 'Hoàn thành' ? 'status-finished' : 'status-ongoing'}">
-                ${currentSession.status === 'Hoàn thành' ? 'Đã hoàn tất' : 'Tiến trình trực tiếp'}
+                ${escapeHtml(currentSession.status)}
             </div>
         </div>
 
         <div class="stepper-track-wrapper">
-            <div class="stepper-progress-bar" style="width: ${progressPercent}%;"></div>
             <div class="stepper-steps">
-                ${steps.map(step => {
-                    const isDone = step.num < currentStep || currentStep === 4;
-                    const isActive = step.num === currentStep && currentStep !== 4;
-                    let stateClass = 'pending';
-                    if (isDone) stateClass = 'done';
-                    else if (isActive) stateClass = 'active';
-
+                ${steps.map((step, index) => {
                     return `
-                        <div class="stepper-step ${stateClass}">
+                        <div class="stepper-step ${step.done ? 'done' : 'pending'}">
                             <div class="step-circle">
-                                <span>${step.num}</span>
+                                <span>${index + 1}</span>
                             </div>
                             <div class="step-content">
-                                <span class="step-name">${step.title}</span>
-                                <span class="step-desc">${step.sub}</span>
+                                <span class="step-name">${escapeHtml(step.title)}</span>
                             </div>
                         </div>
                     `;
@@ -881,10 +878,35 @@ function renderTimeline(timeline, activeSession = null) {
 
     if (emptyTimeline) emptyTimeline.classList.add('d-none');
 
-    const sorted = [...(timeline || [])].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const sorted = [...(timeline || [])].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-    const timelineItemsHtml = sorted.map((item, idx) => buildTimelineItemHtml(item, sorted.length - idx, sorted.length)).join('');
+    const timelineItemsHtml = sorted.map((item, idx) => buildTimelineItemHtml(item, idx + 1)).join('');
     wrapper.innerHTML = showcaseHtml + timelineItemsHtml;
+    wrapper.querySelectorAll('.timeline-story-card').forEach((card, index) => {
+        const item = sorted[index];
+        const photo = card.querySelector('.story-photo-wrap');
+        if (!photo) return;
+
+        const img = photo.querySelector('img');
+        const unavailable = card.querySelector('.story-photo-unavailable');
+        const sources = item.imageUrls[Symbol.iterator]();
+        const loadNext = () => {
+            photo.classList.add('d-none');
+            const { value, done } = sources.next();
+            if (done) {
+                unavailable.classList.remove('d-none');
+                return;
+            }
+            img.src = value;
+        };
+        img.alt = item.status;
+        img.addEventListener('error', loadNext);
+        img.addEventListener('load', () => photo.classList.remove('d-none'));
+        photo.addEventListener('click', () => {
+            window.openDiaryImageModal(img.currentSrc, `${item.status} — ${formatTimestamp(item.timestamp)}`);
+        });
+        loadNext();
+    });
 
     // Gắn sự kiện đánh giá sao
     const ratingWidget = document.getElementById('starRatingWidget');
@@ -961,13 +983,16 @@ function getStageMetadata(status, desc) {
     };
 }
 
-function buildTimelineItemHtml(item, itemIndex, totalItems) {
+function buildTimelineItemHtml(item, itemIndex) {
     const isUrgent = item.urgent || item.type === 'urgent';
     const isCompleted = item.type === 'completed';
     const timeStr = formatTimestamp(item.timestamp);
-    const imageUrl = resolveTimelineImageUrl(item, currentPetObject);
-    const meta = getStageMetadata(item.status, item.description);
-    const nodeLabel = meta.stepNumber || (itemIndex ? String(itemIndex).padStart(2, '0') : '01');
+    const meta = item.recordType === 'handover'
+        ? { badgeText: 'Bàn giao', badgeBg: '#DCEEE2', badgeColor: '#165335', themeClass: 'stage-complete' }
+        : item.recordType === 'intake'
+            ? { badgeText: 'Tiếp nhận', badgeBg: '#EEF5F1', badgeColor: '#236B48', themeClass: 'stage-receive' }
+            : getStageMetadata(item.status, item.description);
+    const nodeLabel = String(itemIndex).padStart(2, '0');
 
     return `
         <div class="timeline-story-card ${isUrgent ? 'timeline-item-urgent' : ''}" data-item-id="${item.id}">
@@ -1000,13 +1025,12 @@ function buildTimelineItemHtml(item, itemIndex, totalItems) {
                 <p class="story-card-desc">${escapeHtml(item.description)}</p>
 
                 <!-- Ảnh chụp hoạt động thực tế (Story Photo) -->
-                ${imageUrl ? `
-                <div class="story-photo-wrap" onclick="window.openDiaryImageModal('${imageUrl}', '${escapeHtml(item.status)} — ${escapeHtml(timeStr)}')" title="Bấm để xem ảnh phóng to nét căng">
-                    <img src="${imageUrl}" alt="${escapeHtml(item.status)}" class="story-photo-img" loading="lazy" />
-                    <div class="story-photo-overlay">
-                        <span class="story-zoom-btn">Phóng to</span>
-                    </div>
-                </div>
+                ${item.hasAttachments ? `
+                <button type="button" class="story-photo-wrap d-none" aria-label="Phóng to ảnh nhật ký">
+                    <img class="story-photo-img" alt="" />
+                    <span class="story-photo-overlay">Phóng to</span>
+                </button>
+                <p class="story-timestamp story-photo-unavailable d-none">Ảnh hiện không xem được.</p>
                 ` : ''}
 
                 <!-- Khung chat khẩn / Hóa đơn nếu có -->
@@ -1023,63 +1047,6 @@ function buildTimelineItemHtml(item, itemIndex, totalItems) {
         </div>
     `;
 }
-
-function resolveTimelineImageUrl(item, pet) {
-    if (!item || typeof item !== 'object') return '';
-
-    const candidates = [
-        item.image,
-        item.photo,
-        item.imageUrl,
-        item.photoUrl,
-        item.imageSrc,
-        item.photoSrc,
-        item.thumbnail,
-        item.thumbnailUrl,
-        item.src,
-        item.url,
-        item.media?.[0]?.src,
-        item.media?.[0]?.image,
-        item.media?.[0]?.photo,
-        item.media?.[0]?.url,
-        item.image?.src,
-        item.photo?.src,
-        item.image?.url,
-        item.photo?.url,
-        item.media?.src,
-        item.media?.image,
-        item.media?.photo,
-        item.media?.url
-    ];
-
-    let rawImage = candidates.find(value => typeof value === 'string' && value.trim() !== '');
-
-    // Nếu ảnh là ảnh chibi / clip-art cũ (như catcute, dogcute, cat10, pet3), ưu tiên thay thế bằng ảnh chụp Spa thực tế 100%
-    if (rawImage && (rawImage.includes('catcute') || rawImage.includes('dogcute') || rawImage.includes('cat10') || rawImage.includes('/publics/'))) {
-        rawImage = null;
-    }
-
-    if (!rawImage) {
-        rawImage = getTimelineFallbackImage(item, pet);
-    }
-    if (!rawImage) return '';
-
-    if (rawImage && rawImage.startsWith('blob:')) {
-        try { return new URL(rawImage).origin === window.location.origin ? rawImage : ''; } catch { return ''; }
-    }
-    if (rawImage && !rawImage.startsWith('http') && !rawImage.startsWith('data:') && !rawImage.startsWith('/')) {
-        rawImage = '/' + rawImage;
-    }
-
-    try {
-        const url = new URL(rawImage, window.location.href);
-        return ['https:', 'http:'].includes(url.protocol) ? url.href : '';
-    } catch {
-        return rawImage;
-    }
-}
-
-function getTimelineFallbackImage() { return ''; }
 
 function setupDiaryImageModal() {
     const modal = document.getElementById('diaryImageModal');
