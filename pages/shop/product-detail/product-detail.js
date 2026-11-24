@@ -25,17 +25,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
         
-        let attempts = 0;
-        while (!window.DataLoader && attempts++ < 20) await new Promise(resolve => setTimeout(resolve, 100));
         if (!productId || !window.DataLoader) throw new Error('Product unavailable');
         if (productId && window.DataLoader) {
-            const products = await window.DataLoader.loadProducts();
-            cachedProducts = Array.isArray(products) ? products : [];
-            const product = products.find(p => p.id.toString() === productId);
+            const product = await window.DataLoader.getProductById(productId);
             if (product) {
                 renderProductDetails(product);
                 currentLoadedProduct = product;
-                finishProductLoading('.product-detail-section, .product-tabs-section, .you-may-like-section, .related-products-section');
+                finishProductLoading('.product-detail-section, .product-tabs-section');
             }
         }
 
@@ -190,7 +186,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     ensureWishlistButtons();
-    bindRelatedProductCards(isProductInWishlist, toggleWishlistItem);
+    if (currentLoadedProduct) {
+        const recommendations = '.you-may-like-section, .related-products-section';
+        window.DataLoader.whenNearViewport(document.querySelector(recommendations), () => {
+            void bindRelatedProductCards(isProductInWishlist, toggleWishlistItem)
+                .then(hasProducts => finishProductLoading(recommendations, hasProducts === false ? 'Chưa có sản phẩm gợi ý.' : undefined))
+                .catch(() => finishProductLoading(recommendations, 'Không thể tải sản phẩm gợi ý.'));
+        });
+    }
 
     const decreaseQtyBtn = document.getElementById('decreaseQty');
     const increaseQtyBtn = document.getElementById('increaseQty');
@@ -536,7 +539,7 @@ function getProductCatalog() {
 
 async function bindRelatedProductCards(isProductInWishlist, toggleWishlistItem) {
     const products = await getProductCatalog();
-    if (!products || products.length === 0) return;
+    if (!products || !products.some(product => product.id !== currentLoadedProduct?.id)) return false;
 
     const youMayLikeProducts = products.filter(p=>p.id!==currentLoadedProduct?.id).slice(0,5);
     
@@ -924,11 +927,18 @@ function renderProductDetails(product, {preserveVariants=false}={}) {
 }
 function escapeHtml(value) { return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-async function loadPublicProductDetails(product){
+function loadPublicProductDetails(product){
     document.getElementById('productUsageContent').textContent=product.usage || 'Chưa có hướng dẫn sử dụng được công bố cho sản phẩm này.';
     const count=Number(product.reviewCount)||0,rating=Number(product.rating)||0;
     document.querySelectorAll('.product-detail-section .rating-text').forEach(el=>el.textContent=count?`${rating.toFixed(1)} / 5 · ${count} đánh giá`:'Chưa có đánh giá công bố');
     const summary=document.getElementById('productReviewSummary');summary.textContent=count?`${rating.toFixed(1)} / 5 từ ${count} đánh giá công bố`:'Chưa có đánh giá công bố';
+    window.DataLoader.whenNearViewport(document.querySelector('.product-reviews-section'),()=>loadPublicProductReviews(product));
+    const shippingTab=document.querySelector('.product-tabs-nav [data-tab="shipping"]');
+    shippingTab?.addEventListener('click',loadPublicDeliveryOptions,{once:true});
+    if(shippingTab?.classList.contains('active'))shippingTab.click();
+}
+
+async function loadPublicProductReviews(product){
     try{
         const rows=await window.DataLoader.getProductReviews(product.id);let page=0,filterStar='all',filterVariant='all';
         const total = rows.length;
@@ -1012,6 +1022,9 @@ async function loadPublicProductDetails(product){
         syncPagination();chips.addEventListener('click',syncPagination);document.getElementById('productReviewFilter').addEventListener('change',syncPagination);
     }catch{document.getElementById('reviewsContainer').innerHTML='<p role="alert">Không thể tải đánh giá. Vui lòng tải lại trang.</p>';}
     finally{finishProductLoading('.product-reviews-section');}
+}
+
+async function loadPublicDeliveryOptions(){
     try{
         const result=await (window.getSupabaseClient?.() || window.SupabaseClient).rpc('public_product_delivery_options');if(result.error)throw result.error;
         document.getElementById('productDeliveryOptions').innerHTML=(result.data || []).map(row=>`<p><strong>${escapeHtml(row.name)}</strong> · Phí cấu hình ${Number(row.fee).toLocaleString('vi-VN')}đ${row.estimated_days?' · Dự kiến '+escapeHtml(row.estimated_days)+' ngày':''}<br>${escapeHtml(row.description || '')}</p>`).join('') || '<p>Chưa có tùy chọn giao hàng được công bố.</p>';

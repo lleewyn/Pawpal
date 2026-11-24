@@ -45,6 +45,11 @@ function getServicePriceText(s){
  if(prices.min!=null)return 'Từ '+money(prices.min)+(prices.isRoom?'/ngày':'');
  return '';
 }
+let estimateRead;
+function loadServiceCardEstimates(){
+ estimateRead ||= loadPriceEstimates(db).then(prices=>state.priceEstimates=prices);
+ return estimateRead;
+}
 function presetServiceFromUrl(){
  const params=new URLSearchParams(location.search);
  const preferred=params.get('service')||params.get('serviceId')||params.get('id');
@@ -274,7 +279,7 @@ function renderServices(){
    return `<button type="button" class="booking-service-card ${isSelected?'selected':''}" data-service="${escape(s.id)}" ${missing?'disabled':''} aria-pressed="${isSelected}">
     <div class="booking-service-card-top">
      <span class="booking-service-tag">${escape(categories[s.category] || '')} · ${s.duration} phút</span>
-     ${price?`<span class="booking-service-price">${escape(price)}</span>`:''}
+     <span class="booking-service-price" ${price?'':'hidden'}>${escape(price)}</span>
     </div>
     <strong>${escape(toSentenceCase(s.name))}</strong>
     <small>${escape(s.description || '')}</small>
@@ -289,6 +294,18 @@ function renderServices(){
  const preset=(currentService && supported().some(s=>s.id===currentService.id)) ? currentService : supported().find(s=>[s.id,s.code,s.code.replace(/^SVC-/,'').replaceAll('-','').replace(/^TAX/,'TXI')].includes(preferred));
  choose(preset && (state.guest||preset.category==='pet_hotel'||Number(state.pet.weight)>0) ? preset : null);
  renderCards();
+ const cards=el('bookingServiceCards');
+ if(!state.priceEstimates)void loadServiceCardEstimates().then(()=>{
+  if(state.disposed||!cards.isConnected)return;
+  const services=new Map(supported().map(service=>[String(service.id),service]));
+  cards.querySelectorAll('[data-service]').forEach(card=>{
+   const price=card.querySelector('.booking-service-price');
+   const service=services.get(card.dataset.service);
+   if(!service||!price)return;
+   price.textContent=getServicePriceText(service);
+   price.hidden=!price.textContent;
+  });
+ });
  el('step2Back').onclick=()=>show(1);el('step2Next').disabled=!state.service;el('step2Next').onclick=()=>{if(state.service){renderSchedule();show(3);}};
 }
 function renderSchedule(){
@@ -639,7 +656,6 @@ async function init(){
    const receiptId=new URLSearchParams(location.search).get('bookingSuccess')||saved;
    if(receiptId){try{await renderBookingReceipt(root,receiptId);clearBookingDraft();return;}catch(error){if(error.status!==404)throw error;}}
    const data=await startupRead(()=>loadGuestBookingContext(db));if(state.disposed)return;state.catalog=data.catalog;state.breeds=data.breeds;state.species=data.species;state.guestContext=data.context;state.profile=data.context.contact;
-   state.priceEstimates=await loadPriceEstimates(db);
    presetServiceFromUrl();
    restoreBookingForm(readBookingDraft());bindStepper();return;
   }
@@ -651,11 +667,9 @@ async function init(){
   const prior=await startupRead(async()=>{const result=await db.from('appointment').select('id').eq('id',requestId).maybeSingle();if(result.error)throw result.error;return result;});if(state.disposed)return;
   if(prior.data)clearBookingDraft();
   if(prior.data){sessionStorage.removeItem(journalKey);el('step1').innerHTML=heading('Yêu cầu đã được tiếp nhận')+'<p>Lịch hẹn đã có trên hệ thống. Bạn không cần gửi lại yêu cầu.</p><a class="btn-cta" id="bookingRecovered" href="/user#booking-detail?id='+encodeURIComponent(prior.data.id)+'">Xem lịch hẹn</a>';show(1);return;}
-  const [catalog,pets,profile]=await Promise.all(['customer_service_catalog','own_booking_pets','customer_profile_snapshot'].map(name=>startupRead(()=>rpc(name))));if(state.disposed)return;state.catalog=catalog;state.pets=pets;state.profile=profile;
-  state.priceEstimates=await loadPriceEstimates(db);
-  presetServiceFromUrl();
-
-  const restriction=await startupRead(()=>rpc('own_booking_restriction'));if(state.disposed)return;
+  const [catalog,pets,profile,restriction]=await Promise.all(['customer_service_catalog','own_booking_pets','customer_profile_snapshot','own_booking_restriction'].map(name=>startupRead(()=>rpc(name))));
+  if(state.disposed)return;
+  state.catalog=catalog;state.pets=pets;state.profile=profile;
   if (restriction.locked) {
       el('step1').innerHTML = heading('Tài khoản tạm khóa đặt lịch trực tuyến') + 
           '<div class="booking-lock-notice p-4 my-3" style="background:#FFF5F5;border:1px solid #FED7D7;border-radius:9px;color:#C53030;">' +
@@ -669,6 +683,7 @@ async function init(){
       return;
   }
 
+  presetServiceFromUrl();
   restoreBookingForm(readBookingDraft());
   if(!pets.length)el('bookingPetSelected').textContent='Bạn chưa có hồ sơ bé cưng đang hoạt động. Hãy thêm hồ sơ trước khi đặt lịch.';
   bindStepper();

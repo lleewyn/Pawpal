@@ -3,9 +3,12 @@ import { voucherBelongsToUser } from '/scripts/shared/cart-state.mjs';
 import { readCheckoutRequest, writeCheckoutRequest } from '/scripts/shared/checkout-request.mjs';
 import { isGuestShopper } from '/scripts/shared/guest-cart.mjs';
 
+const checkoutPlaceholder='/assets/images/shop/products/placeholder.webp';
+const checkoutVariantId=item=>String(item.variantId || item.product_variant_id || item.id).toLowerCase();
+const escapeCheckoutText=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 const checkoutState = {
     cart: [],
-    products: [],
     user: null,
     selectedAddress: null,
     editingAddressId: null,
@@ -182,15 +185,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        await loadData();
-        await loadProducts();
-
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        checkoutState.user = checkoutState.user || currentUser;
-        const profileResponse=await (window.getSupabaseClient?.()||window.SupabaseClient).rpc('customer_profile_snapshot');
+        const db=window.getSupabaseClient?.()||window.SupabaseClient;
+        const owner=checkoutState.user.id;
+        const [profileResponse, myVouchers]=await Promise.all([
+            db.rpc('customer_profile_snapshot'),
+            window.API.getUserVouchers(owner),
+            loadData()
+        ]);
         if(profileResponse.error)throw profileResponse.error;
+        if(profileResponse.data?.id!==owner || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id!==owner) {
+            throw new Error('Phiên tài khoản đã thay đổi.');
+        }
         adoptCheckoutProfile(profileResponse.data);
-        checkoutState.myVouchers = await window.API.getUserVouchers(checkoutState.user.id);
+        checkoutState.myVouchers = myVouchers;
         
         initializeShippingForm();
         renderDeliveryOptions();
@@ -206,6 +213,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         setupEventListeners();
         finishCheckoutLoading();
+        void fillCheckoutThumbnails(owner);
     } catch (error) {
         console.error('Error initializing checkout:', error);
         const content = document.querySelector('.checkout-main-container');
@@ -218,50 +226,50 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadData() {
     const db=window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if(!db)throw new Error('Chưa kết nối cấu hình đặt hàng.');
-    const {data,error}=await db.rpc('customer_shop_options');if(error)throw error;
+    const [{data,error},quoted]=await Promise.all([
+        db.rpc('customer_shop_options'),
+        db.rpc('quote_own_sales_order',{p_details:{delivery:false,discount_mode:'none'},p_lines:checkoutState.cart.map(item=>({variant_id:item.variantId||item.product_variant_id||item.id,quantity:Number(item.quantity ?? item.qty)}))}),
+        loadVouchers()
+    ]);
+    if(error)throw error;
+    if(quoted.error)throw quoted.error;
     checkoutState.deliveryOptions=(data.delivery_options||[]).map(d=>({...d,fee:Number(d.fee),estimatedDays:d.estimated_days}));
     checkoutState.paymentMethods=(data.payment_methods||[]).map(m=>({...m,configId:m.id,id:({'cod':'cod','cash':'cash','bank transfer':'bank','vietqr':'vietqr'})[m.short_name.toLowerCase()],shortName:m.short_name,bankInfo:m.bank_info}));
     checkoutState.pointValue=Number(data.point_value)||0;
     checkoutState.selectedPayment=checkoutState.paymentMethods.find(m=>m.id==='cod')?.id||checkoutState.paymentMethods[0]?.id||null;
-    const quoted=await db.rpc('quote_own_sales_order',{p_details:{delivery:false,discount_mode:'none'},p_lines:checkoutState.cart.map(item=>({variant_id:item.variantId||item.product_variant_id||item.id,quantity:Number(item.quantity)}))});
-    if(quoted.error)throw quoted.error;
+    const byVariant = new Map((quoted.data.lines || []).map(line => [checkoutVariantId({id:line.variant_id}),line]));
+    checkoutState.cart = checkoutState.cart.map(item => {
+        const line = byVariant.get(checkoutVariantId(item));
+        if (!line || line.unit_price == null || !Number.isFinite(Number(line.unit_price))) throw new Error('Chưa xác nhận được giá sản phẩm.');
+        const quantity = Number(item.quantity ?? item.qty);
+        return {
+            ...item, name:line.name || item.name, sku:line.sku || item.sku,
+            image:item.image || checkoutPlaceholder,
+            price:Number(line.unit_price), stock:line.available == null ? null : Number(line.available), quantity, qty:quantity
+        };
+    });
     checkoutState.user.points=Number(quoted.data.points_balance)||0;
     checkoutState.user.pawPoints=checkoutState.user.points;
-    await loadVouchers();
+}
+async function fillCheckoutThumbnails(owner) {
+    const missing=checkoutState.cart.filter(item=>item.image===checkoutPlaceholder);
+    if (!missing.length || !window.DataLoader?.loadCartProducts) return;
+    try {
+        const products=await window.DataLoader.loadCartProducts(missing.map(checkoutVariantId),{fallback:false});
+        if (!products || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id!==owner) return;
+        const images=new Map(products.flatMap(product=>product.variants.map(variant=>[String(variant.id),variant.images?.[0]||product.image])));
+        checkoutState.cart.forEach((item,index)=>{
+            const image=images.get(checkoutVariantId(item));
+            if (!image || item.image!==checkoutPlaceholder) return;
+            item.image=image;
+            const element=document.querySelectorAll('#order-items .order-item-img')[index];
+            if(element)element.src=image;
+        });
+    } catch (_) { /* The order summary is usable while images are unavailable. */ }
 }
 async function loadVouchers() {
     if(!window.API?.getVouchers)throw new Error('Chưa tải dịch vụ mã ưu đãi.');
     checkoutState.vouchers=await window.API.getVouchers();
-}
-
-async function loadProducts() {
-    try {
-        if (window.DataLoader && typeof window.DataLoader.loadProducts === 'function') {
-            checkoutState.products = await window.DataLoader.loadProducts();
-            
-            // Merge product details into cart items
-            checkoutState.cart = checkoutState.cart.map(item => {
-                const product = checkoutState.products.find(p => String(p.id) === String(item.product_id || item.id));
-                if (product) {
-                    const variant=product.variants?.find(v=>String(v.id)===String(item.variantId || item.product_variant_id || item.id));
-                    return { 
-                        ...product, 
-                        ...item, 
-                        price: Number(variant?.price ?? item.price ?? product.price ?? 0),
-                        quantity: Number(item.quantity ?? item.qty ?? 1),
-                        qty: Number(item.quantity ?? item.qty ?? 1)
-                    };
-                }
-                return { ...item, quantity: Number(item.quantity ?? item.qty ?? 1), qty: Number(item.quantity ?? item.qty ?? 1) };
-            });
-        } else {
-            console.warn('DataLoader không có sẵn, không thể tải sản phẩm');
-            checkoutState.products = [];
-        }
-    } catch (error) {
-        console.error('Error loading products:', error);
-        checkoutState.products = [];
-    }
 }
 
 function validateCheckoutCart() {
@@ -269,22 +277,10 @@ function validateCheckoutCart() {
         return { valid: false, message: 'Giỏ hàng của bạn đang trống. Vui lòng chọn sản phẩm trước khi thanh toán.' };
     }
 
-    if (!checkoutState.products || checkoutState.products.length === 0) {
-        return { valid: true };
-    }
-
     for (const item of checkoutState.cart) {
-        const product = checkoutState.products.find(p => String(p.id) === String(item.product_id || item.id));
-        if (!product) {
-            continue;
+        if (item.stock != null && Number(item.quantity) > item.stock) {
+            return { valid: false, message: `Sản phẩm "${item.name}" chỉ còn ${item.stock} trong kho. Vui lòng điều chỉnh số lượng.` };
         }
-
-        const variant=product.variants?.find(v=>String(v.id)===String(item.variantId || item.product_variant_id || item.id));
-        if (!variant || Number(item.quantity) > Number(variant.stock)) {
-            const remaining = variant?.stock || 0;
-            return { valid: false, message: `Sản phẩm "${product.name}" chỉ còn ${remaining} trong kho. Vui lòng điều chỉnh số lượng.` };
-        }
-
     }
 
     updateOrderTotals();
@@ -992,10 +988,10 @@ function renderOrderSummary() {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'order-item';
         itemDiv.innerHTML = `
-            <img src="${item.image}" alt="${item.name}" class="order-item-img">
+            <img src="${escapeCheckoutText(item.image)}" alt="${escapeCheckoutText(item.name)}" class="order-item-img">
             <div class="order-item-info">
-                <h4>${item.name}</h4>
-                ${item.selectedVariant ? `<div class="order-item-variant" style="font-size: 0.8rem; color: #4F7A65; margin: 2px 0 4px 0;">Phân loại: <strong style="color: #236B48;">${item.selectedVariant}</strong></div>` : ''}
+                <h4>${escapeCheckoutText(item.name)}</h4>
+                ${item.selectedVariant ? `<div class="order-item-variant" style="font-size: 0.8rem; color: #4F7A65; margin: 2px 0 4px 0;">Phân loại: <strong style="color: #236B48;">${escapeCheckoutText(item.selectedVariant)}</strong></div>` : ''}
                 ${isBuyNow ? `
                     <div class="buy-now-qty-control" data-index="${index}">
                         <button type="button" class="buy-now-qty-btn" data-action="decrease" aria-label="Giảm số lượng">-</button>

@@ -545,6 +545,19 @@ export const API = {
 
     async validateCartStock(cartItems) {
         const items=normalizeCartItems(cartItems);if(!items.length)return {valid:true};
+        if (window.DataLoader?.loadCartProducts) {
+            const idOf = item => String(item.variantId||item.product_variant_id||item.id).toLowerCase();
+            const products=await window.DataLoader.loadCartProducts(items.map(idOf),{fallback:false});
+            if (products !== null) {
+                const stock = new Map(products.flatMap(product=>product.variants.map(variant=>[variant.id,variant.stock])));
+                for (const item of items) {
+                    const id=idOf(item);
+                    if (!stock.has(id)) throw new Error('Phân loại sản phẩm không còn được bán.');
+                    if (item.quantity>stock.get(id)) throw new Error('Sản phẩm không đủ tồn kho khả dụng.');
+                }
+                return {valid:true};
+            }
+        }
         const db=window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if(!db)throw new Error('Không thể kiểm tra tồn kho.');
         const {data,error}=await db.rpc('customer_shop_catalog');if(error)throw error;

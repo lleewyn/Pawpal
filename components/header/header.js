@@ -802,6 +802,23 @@
             if(!topBar.firstElementChild)topBar.remove();
         };
     }
+    async function loadPublicNotices(client) {
+        const key='pawpal_public_notices:'+client.supabaseUrl;
+        try {
+            const cached=JSON.parse(sessionStorage.getItem(key));
+            const age=Date.now()-cached?.at;
+            if (age>=0 && age<30000 && Array.isArray(cached.rows)) return cached.rows;
+        } catch (_) {}
+        const {data,error}=await client.rpc('get_public_site_notices');
+        if (error) throw error;
+        if (!Array.isArray(data)) throw new Error('Invalid public notice response');
+        try {
+            const serialized=JSON.stringify({at:Date.now(),rows:data});
+            if (serialized.length<=50000) sessionStorage.setItem(key,serialized);
+        } catch (_) {}
+        return data;
+    }
+
     async function renderDynamicTopBarNotice() {
         if(noticeLoading)return;
         noticeLoading=true;
@@ -809,9 +826,7 @@
             const client=window.getSupabaseClient?.();
             if(!client){if(noticeAttempts++<10)setTimeout(renderDynamicTopBarNotice,500);return;}
             noticeAttempts=0;
-            const {data:notices,error}=await client.rpc('get_public_site_notices');
-            if(error)throw error;
-            if(!Array.isArray(notices))throw new Error('Invalid public notice response');
+            const notices=await loadPublicNotices(client);
             const type=row=>String(row.type).toLowerCase().replace('-','');
             renderTopBarNotices(notices.filter(row=>type(row)==='topbar'));
             popupNotices=notices.filter(row=>type(row)==='popup');

@@ -201,16 +201,13 @@ async function initCartPage() {
             const currentUser = getCurrentUser();
             if (!ensureCartAccess()) return;
 
-            products = await window.DataLoader.loadProducts();
+            const fetchedCart = window.API?.getUserCart
+                ? await window.API.getUserCart(currentUser.id)
+                : JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
             if (!stillOwnsCart()) return;
-            
-            let fetchedCart = [];
-            if (window.API && typeof window.API.getUserCart === 'function') {
-                fetchedCart = await window.API.getUserCart(currentUser.id);
-            } else {
-                fetchedCart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
-            }
             const localCart = await restoreCartFromBackup(fetchedCart || []);
+            if (!stillOwnsCart()) return;
+            products = await window.DataLoader.loadCartProducts(localCart.map(item=>item.variantId||item.product_variant_id));
             if (!stillOwnsCart()) return;
             cart = localCart.map(item => normalizeCartItem({
                 ...products.find(product => isSameCartItemId(product.id, item.product_id || item.id)), ...item,
@@ -249,20 +246,8 @@ async function initCartPage() {
                 selectedIds.add(normalizeId(item.id));
             });
 
-            try {
-                if (window.API && typeof window.API.getVouchers === 'function') {
-                    vouchers = await window.API.getVouchers();
-                } else {
-                    const vouchersResponse = await fetch('/data/vouchers.json');
-                    vouchers = await vouchersResponse.json();
-                }
-            } catch (err) {
-                console.error(' Lỗi tải danh sách voucher:', err);
-            }
-
             myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]')
                 .filter(v => voucherBelongsToUser(v, getCurrentUser()));
-            vouchers = vouchers.filter(mayUseVoucher);
             if (!stillOwnsCart()) return;
             
             setupVoucherEvents();
@@ -272,6 +257,15 @@ async function initCartPage() {
             renderAvailableVouchers();
             renderMyVouchers();
             renderCart();
+            if (cart.length && window.API?.getVouchers) {
+                void window.API.getVouchers().then(rows => {
+                    if (!stillOwnsCart() || !cartItemsList.isConnected) return;
+                    vouchers = rows.filter(mayUseVoucher);
+                    if (!appliedVoucher) loadPersistedVoucher();
+                    renderAvailableVouchers();
+                    calculateTotals();
+                }).catch(error => console.warn('[Cart] Không tải được ưu đãi:', error));
+            }
             if (typeof window.updateCartBadge === 'function') {
                 window.updateCartBadge();
             }
@@ -461,8 +455,9 @@ async function initCartPage() {
             const variants = getProductVariants(product || item);
 
             // Xác định phân loại đang được chọn
-            let currentVariant = null;
-            if (item.selectedVariant) {
+            const variantId = item.variantId || item.product_variant_id;
+            let currentVariant = variantId ? variants.find(v => isSameCartItemId(v.id, variantId)) : null;
+            if (!currentVariant && item.selectedVariant) {
                 currentVariant = variants.find(v => v.name === item.selectedVariant);
             }
             if (!currentVariant) {
@@ -1120,6 +1115,15 @@ async function initCartPage() {
                     selectedIds = new Set([...selectedIds].filter(id => currentIds.has(id)));
                     cart.forEach(item => { if (!previousIds.has(normalizeId(item.id))) selectedIds.add(normalizeId(item.id)); });
                     renderCart();
+                    const missing = cart.filter(item => !products.some(product => isSameCartItemId(product.id, item.product_id || item.id)));
+                    if (missing.length) {
+                        void window.DataLoader.loadCartProducts(missing.map(item=>item.variantId||item.product_variant_id)).then(rows => {
+                            if (!stillOwnsCart() || !rows.length) return;
+                            const merged = new Map([...products,...rows].map(product=>[product.id,product]));
+                            products = [...merged.values()];
+                            renderCart();
+                        }).catch(error => console.warn('[Cart] Không tải được thông tin sản phẩm:', error));
+                    }
                 };
                 document.addEventListener('cart_updated', cartRoot.cartUpdatedHandler);
             }

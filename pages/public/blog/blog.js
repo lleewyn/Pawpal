@@ -271,7 +271,7 @@
         if (!window.DataLoader || typeof window.DataLoader.loadBlogs !== 'function') {
             throw new Error('Không tìm thấy nguồn tải Cẩm nang');
         }
-        const data = await window.DataLoader.loadBlogs(true);
+        const data = await window.DataLoader.loadBlogs();
         state.articles = (Array.isArray(data) ? data : []).map(toArticle).filter((a) => a.slug);
         state.loaded = true;
         renderSpotlight();

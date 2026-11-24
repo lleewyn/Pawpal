@@ -46,12 +46,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        let attempts = 0;
-        while ((!window.DataLoader || typeof window.DataLoader.getServiceById !== 'function') && attempts < 25) {
-            await new Promise(r => setTimeout(r, 100));
-            attempts++;
-        }
-
         if (window.DataLoader && typeof window.DataLoader.getServiceById === 'function') {
             serviceData = await window.DataLoader.getServiceById(serviceId);
             if (!serviceData) {
@@ -71,13 +65,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             try { setupFAQs(); } catch (e) { console.warn('setupFAQs error:', e); }
             try { setupConfigurator(); recalculatePrice(); } catch (e) { console.warn('setupConfigurator error:', e); }
             finishServiceLoading('.service-detail-layout, .service-tabs-section');
-            setupReviews().catch(e => {
+            window.DataLoader.whenNearViewport(document.querySelector('.service-reviews-section'), () => setupReviews().catch(e => {
                 console.warn('setupReviews error:', e);
                 finishServiceLoading('.service-reviews-section', 'Không thể tải đánh giá. Vui lòng tải lại trang.');
-            }).finally(() => finishServiceLoading('.service-reviews-section'));
+            }).finally(() => finishServiceLoading('.service-reviews-section')));
             try { setupStickyBarTrigger(); } catch (e) { console.warn('setupStickyBarTrigger error:', e); }
             try { setupWishlistAndShare(); } catch (e) { console.warn('setupWishlistAndShare error:', e); }
-            try { setupRelatedServices(); } catch (e) { console.warn('setupRelatedServices error:', e); }
+            setupRelatedServices().catch(e => console.warn('setupRelatedServices error:', e));
 
         } else {
             console.error('DataLoader not initialized');

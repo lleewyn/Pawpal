@@ -113,22 +113,9 @@
     }
 
     async function getArticle(slug, id) {
-        let blogs = [];
-        if (window.DataLoader && typeof window.DataLoader.loadBlogs === 'function') {
-            try {
-                blogs = await window.DataLoader.loadBlogs();
-            } catch (error) {
-                console.warn('Không thể tải danh sách bài viết, sẽ thử tra cứu bài hiện tại:', error);
-            }
-        }
-        blogs = Array.isArray(blogs) ? blogs : [];
-        const found = slug ? blogs.find((item) => item.slug === slug) : blogs.find((item) => String(item.id) === id);
-        if (found) return { blog: found, others: blogs };
-
-        // Truy vấn đúng bài viết đã yêu cầu khi danh sách được cache chưa chứa bài.
         const client = (typeof window.getSupabaseClient === 'function' && window.getSupabaseClient()) || window.SupabaseClient;
         if (client && (slug || id)) {
-            let request = client.from('blog_post').select('*, blog_category(category_name)')
+            let request = client.from('blog_post').select('id,title,slug,summary,content,thumbnail_url,thumbnail_media_asset_id,publish_at,created_at,view_count,blog_category(category_name)')
                 .in('status', ['published', 'PUBLISHED', 'dang_hien_thi', 'da_xuat_ban']);
             request = slug ? request.eq('slug', slug) : request.eq('id', id);
             const { data, error } = await request.maybeSingle();
@@ -148,13 +135,12 @@
                         date: data.publish_at || data.created_at,
                         viewCount: data.view_count,
                         categoryName: data.blog_category?.category_name || 'Cẩm nang',
-                        categorySlug: data.blog_category?.category_slug || ''
-                    },
-                    others: blogs
+                        categorySlug: data.blog_category?.category_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || ''
+                    }
                 };
             }
         }
-        return { blog: null, others: blogs };
+        return { blog: null };
     }
 
     function showToast(message, error = false) {
@@ -333,7 +319,7 @@
             if (!slug && !id) {
                 throw new Error('Không có mã bài viết');
             }
-            const { blog, others } = await getArticle(slug, id);
+            const { blog } = await getArticle(slug, id);
             if (!blog) {
                 byId('blog-title').textContent = 'Không tìm thấy bài viết';
                 byId('breadcrumbCurrentTitle').textContent = 'Không tìm thấy bài viết';
@@ -343,8 +329,16 @@
                 byId('blogCommentsSection').hidden = true;
             } else {
                 renderArticle(blog);
-                renderTrending(others, blog.id);
-                renderRelated(others, blog);
+                const loader = window.DataLoader;
+                if (loader) loader.whenNearViewport(byId('sidebarTrendingList') || byId('related-posts-container'), () => {
+                    void loader.loadBlogs({includeContent:false}).then(others => {
+                        renderTrending(others, blog.id);
+                        renderRelated(others, blog);
+                    }).catch(() => {
+                        renderTrending([], blog.id);
+                        renderRelated([], blog);
+                    });
+                });
             }
         } catch (error) {
             console.error('Lỗi tải bài viết:', error);

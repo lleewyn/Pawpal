@@ -1,15 +1,13 @@
 
 const dataCache = {
-    products: null,
     services: null,
-    blogs: null,
     blogCategories: null
 };
 
 // Only published, account-independent presentation data belongs in this cache.
 // Checkout, stock checks and customer/admin records continue to read live data.
 const publicReadCache = new Map(), publicReadPending = new Map();
-const PUBLIC_READ_TTL = { services: 60000, products: 60000, homeBanners: 30000, membershipTiers: 120000 };
+const PUBLIC_READ_TTL = { services: 60000, products: 60000, homeBanners: 30000, membershipTiers: 120000, blogs: 60000, blogMetadata: 60000 };
 async function cachedPublicRead(name, loader) {
     const ttl = PUBLIC_READ_TTL[name];
     if (!ttl) throw new Error('Unsupported public cache');
@@ -32,8 +30,8 @@ async function cachedPublicRead(name, loader) {
             const next = { at: Date.now(), data };
             // Bound browser storage and never persist a failed request or stale fallback.
             const serialized = JSON.stringify(next);
+            publicReadCache.set(key, next);
             if (serialized.length <= 250000) {
-                publicReadCache.set(key, next);
                 try { sessionStorage.setItem(key, serialized); } catch (_) {}
             }
             return data;
@@ -203,15 +201,10 @@ function transformProductData(rawData) {
 }
 
 async function loadProducts() {
-    if (dataCache.products) {
-        return dataCache.products;
-    }
-    const products = await cachedPublicRead('products', loadProductsUncached);
-    dataCache.products = products;
-    return products;
+    return cachedPublicRead('products', loadProductsUncached);
 }
 
-async function loadProductsUncached() {
+async function loadProductsUncached({productId,variantIds} = {}) {
     try {
         const db = window.SupabaseClient;
         if (!db) {
@@ -219,14 +212,17 @@ async function loadProductsUncached() {
         }
 
         console.log('Loading products from Supabase...');
-        const { data: rawProducts, error } = await db.rpc('customer_shop_catalog');
+        const { data: rawProducts, error } = productId
+            ? await db.rpc('customer_shop_product', {p_product:productId})
+            : variantIds ? await db.rpc('customer_shop_cart_products', {p_variants:variantIds})
+                : await db.rpc('customer_shop_catalog');
         
         if (error) {
             throw error;
         }
 
         console.log(` Loaded ${rawProducts.length} products from Supabase`);
-        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
+        const rootPath = '/';
         
         const knownBrands = ['Royal Canin', 'Pedigree', 'Me-O', 'Whiskas', "Hill's", 'Purina', 'Kong', 'Taste of the Wild', 'Frontline', 'Furminator', 'Nylabone', 'Hartz', "King's Pet", 'Inaba', 'Nutrience', 'Zenith', 'Orijen', 'Acana', 'GimCat', 'Gimborn', 'TropiClean', 'Bio-Pharmachemie'];
 
@@ -324,16 +320,44 @@ async function loadProductsUncached() {
 }
 
 async function getProductById(productId) {
-    const products = await loadProducts();
-    const product = products.find(p => p.id === productId);
-    
-    if (!product) {
-        console.error(` Product not found: ID ${productId}`);
-        return null;
+    if (!/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i.test(productId)) return null;
+    const normalizedId = productId.toLowerCase();
+    const project = window.SupabaseClientConfig?.url || window.SupabaseClient?.supabaseUrl || location.origin;
+    const key = 'pawpal_public_v1:' + project + ':products';
+    let cached = publicReadCache.get(key);
+    if (!cached) {
+        try { cached = JSON.parse(sessionStorage.getItem(key)); } catch (_) {}
     }
-    
-    console.log(` Found product:`, product.name);
-    return product;
+    const age = Date.now() - cached?.at;
+    if (age >= 0 && age < PUBLIC_READ_TTL.products && Array.isArray(cached.data)) {
+        const matched = cached.data.find(product => product.id === normalizedId);
+        if (matched) return structuredClone(matched);
+    }
+    try {
+        return (await loadProductsUncached({productId:normalizedId}))[0] || null;
+    } catch (error) {
+        if (error.code !== 'PGRST202') throw error;
+        // Static pages can deploy before the database migration.
+        return (await loadProducts()).find(product => product.id === normalizedId) || null;
+    }
+}
+
+async function loadCartProducts(ids, {fallback = true} = {}) {
+    const variants = [...new Set(ids.filter(Boolean).map(id=>String(id).toLowerCase()))];
+    if (!variants.length) return [];
+    const wanted = new Set(variants);
+    const matching = products => products.filter(product=>product.variants.some(variant=>wanted.has(variant.id)));
+    try {
+        const products = new Map();
+        for (let index=0;index<variants.length;index+=100) {
+            const rows=await loadProductsUncached({variantIds:variants.slice(index,index+100)});
+            rows.forEach(product=>products.set(product.id,product));
+        }
+        return [...products.values()];
+    } catch (error) {
+        if (error.code !== 'PGRST202') throw error;
+        return fallback ? matching(await loadProducts()) : null;
+    }
 }
 
 async function getProductsByCategory(category) {
@@ -551,17 +575,22 @@ async function loadBlogCategories() {
     }
 }
 
-async function loadBlogs(forceRefresh = false) {
-    if (!forceRefresh && dataCache.blogs?.length) return dataCache.blogs;
+const blogFields = 'id,title,slug,summary,thumbnail_media_asset_id,thumbnail_url,author_id,publish_at,created_at,view_count,category_id,blog_category(category_name)';
+const publishedBlogStatuses = ['published', 'PUBLISHED', 'dang_hien_thi', 'da_xuat_ban'];
 
+function loadBlogs({includeContent = true} = {}) {
+    return cachedPublicRead(includeContent ? 'blogs' : 'blogMetadata', () => readBlogs(includeContent));
+}
+
+async function readBlogs(includeContent) {
     try {
         const db = window.getSupabaseClient?.() || window.SupabaseClient;
         if (!db) throw new Error('Supabase client is not initialized');
 
-        const { data, error } = await db.from('blog_post').select('*, blog_category(category_name)').in('status', ['published', 'PUBLISHED', 'dang_hien_thi', 'da_xuat_ban']).order('publish_at', { ascending: false });
+        const { data, error } = await db.from('blog_post').select(blogFields + (includeContent ? ',content' : '')).in('status', publishedBlogStatuses).order('publish_at', { ascending: false });
         if (error) throw error;
 
-        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
+        const rootPath = '/';
         const formatted = data.map(item => {
             return {
                 id: item.id,
@@ -579,12 +608,23 @@ async function loadBlogs(forceRefresh = false) {
             };
         });
 
-        dataCache.blogs = formatted;
         return formatted;
     } catch (error) {
         console.error('Error fetching blogs:', error);
         throw error;
     }
+}
+
+function whenNearViewport(element, load) {
+    if (!element) return;
+    if (!('IntersectionObserver' in window)) { load(); return; }
+    const observer = new IntersectionObserver(entries => {
+        if (entries.some(entry => entry.isIntersecting)) {
+            observer.disconnect();
+            load();
+        }
+    }, {rootMargin:'400px 0px'});
+    observer.observe(element);
 }
 
 async function loadBanners() {
@@ -629,6 +669,7 @@ window.DataLoader = {
     loadHomeBanners,
     loadMembershipTiers,
     loadProducts,
+    loadCartProducts,
     getProductById,
     getProductsByCategory,
     getProductsByBrand,
@@ -638,6 +679,7 @@ window.DataLoader = {
     getProductReviews,
     getServiceReviews,
     loadBlogs,
+    whenNearViewport,
     loadBlogCategories,
     loadBanners
 };
