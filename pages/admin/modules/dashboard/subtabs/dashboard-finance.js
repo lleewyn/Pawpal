@@ -14,7 +14,7 @@
     };
     const titles = { account: 'Khai báo số dư', expense: 'Ghi nhận chi phí', receivable: 'Ghi khoản phải thu', payable: 'Ghi khoản phải trả', movement: 'Ghi thu chi khác', transfer: 'Chuyển tiền nội bộ', settle: 'Thanh toán công nợ', payment: 'Chọn nơi nhận khoản thu', refund: 'Chọn nơi chi khoản hoàn', payment_covered: 'Xác nhận khoản thu trong số dư đầu', refund_covered: 'Xác nhận khoản hoàn trong số dư đầu', reconcile: 'Đối soát số dư', stock_opening: 'Xác nhận giá trị vốn tồn', sale_cost: 'Ghi giá vốn dòng bán', service_cost: 'Ghi chi phí trực tiếp của ca', refund_allocation: 'Phân loại khoản hoàn', revenue_confirm: 'Xác nhận giá trị hồ sơ cũ', period_review: 'Đối soát kết quả trong kỳ', void_entry: 'Hủy ghi nhận', void_movement: 'Hủy thu chi' };
     Object.assign(titles, { void_coverage: 'Hủy xác nhận trong số dư đầu', revenue_credit: 'Ghi giảm trừ và đối soát phiếu đổi trả', document_due: 'Đặt hạn thu hoặc hoàn tiền' });
-    const s = { root: null, range: null, view: 'expenses', section: 'expenses', query: '', page: 1, report: null, rows: [], total: 0, loading: false, error: null, generation: 0, form: null, attempt: null, saving: false, timer: null, listeners: [], lookupVersion: 0, forecastPage: 1, includeReceivables: false, horizon: 30 };
+    const s = { root: null, range: null, view: 'expenses', section: 'expenses', query: '', page: 1, report: null, rows: [], total: 0, loading: false, error: null, generation: 0, form: null, attempt: null, saving: false, listeners: [], lookupVersion: 0, forecastPage: 1, includeReceivables: false, horizon: 30, updatedAt: 0 };
     const node = selector => s.root?.querySelector(selector) || s.forecast?.querySelector(selector);
     const client = () => window.getSupabaseClient?.() || window.SupabaseClient;
     const canWrite = () => !!(window.PawpalAdminAccess?.isAdmin?.() && window.PawpalAdminAccess.state?.user?.permissions?.includes('finance.write'));
@@ -155,6 +155,7 @@
         if (results[1].status === 'fulfilled' && Array.isArray(results[1].value?.rows) && Number.isSafeInteger(results[1].value?.total) && results[1].value.rows.length <= 10) {
             const page = results[1].value; s.rows = page.rows; s.total = page.total; s.page = page.page;
         } else { s.rows = []; s.error = errorText(results[1].reason || Error('invalid_response')); }
+        if (!s.error) s.updatedAt = Date.now();
         rememberPosition(); renderSummary(); renderTools(); renderTable(); renderPending();
     }
     function field(name, label, options = {}) {
@@ -355,21 +356,36 @@
             if (['ArrowDown', 'ArrowUp'].includes(event.key) && options.length) { event.preventDefault(); list.hidden = false; const index = options.indexOf(document.activeElement); options[(index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length].focus(); }
         });
         on(document, 'click', event => { if (!event.target.closest('.customer-autocomplete-wrapper') && !event.target.closest('[data-fin-action]')) { s.lookupVersion++; s.root?.querySelectorAll('[data-fin-options]').forEach(list => list.hidden = true); } });
-        const invalidate = () => { clearTimeout(s.invalidationTimer); s.invalidationTimer = setTimeout(() => { if (s.root?.getClientRects().length && !document.hidden && !s.saving) refresh(); }, 800); };
-        on(window, 'pawpal:workspace-invalidated', invalidate); on(window, 'pawpal:mutation', invalidate);
-        on(document, 'visibilitychange', () => { if (!document.hidden) invalidate(); });
+        on(window, 'pawpal:workspace-invalidated', event => {
+            if (!event.detail?.modules || event.detail.modules.includes('Dashboard')) invalidate();
+        });
+        on(window, 'pawpal:mutation', invalidate);
+        on(document, 'visibilitychange', () => { if (!document.hidden && (!s.updatedAt || Date.now() - s.updatedAt >= 120_000)) invalidate(); });
+        on(window, 'online', invalidate);
+    }
+    function invalidate() {
+        if (!s.root) return;
+        s.updatedAt = 0;
+        clearTimeout(s.invalidationTimer);
+        s.invalidationTimer = setTimeout(() => {
+            if (!s.root?.getClientRects().length || document.hidden) return;
+            if (s.loading || s.saving) invalidate();
+            else refresh();
+        }, 800);
     }
     function mount(root, range) {
         unmount(); if (!root) return;
         restorePosition(); s.root = root; s.range = { from: range.from, to: range.to }; shell(); bind(); renderTools(); refresh(); renderPending();
-        s.timer = setInterval(() => { if (s.root?.getClientRects().length && !document.hidden && !s.saving) refresh(); }, 120000);
     }
     function setPeriod(range) {
         if (!s.root || s.range?.from === range.from && s.range?.to === range.to) return;
         s.range = { from: range.from, to: range.to }; s.page = 1; s.forecastPage = 1; s.rows = []; s.report = null; if (s.form?.kind === 'period_review') closeForm(); refresh();
     }
     function unmount() {
-        clearInterval(s.timer); clearTimeout(s.searchTimer); clearTimeout(s.lookupTimer); clearTimeout(s.invalidationTimer); s.generation++; s.lookupVersion++; s.listeners.splice(0).forEach(remove => remove()); s.pagination?.remove(); s.forecast?.remove(); s.forecastPagination?.remove(); s.root = null; s.forecast = null; s.report = null; s.rows = []; s.form = null;
+        clearTimeout(s.searchTimer); clearTimeout(s.lookupTimer); clearTimeout(s.invalidationTimer); s.generation++; s.lookupVersion++; s.listeners.splice(0).forEach(remove => remove()); s.pagination?.remove(); s.forecast?.remove(); s.forecastPagination?.remove(); s.root = null; s.forecast = null; s.report = null; s.rows = []; s.form = null;
     }
-    window.PawpalDashboardFinance = { mount, setPeriod, unmount, refresh, getState: () => ({ section: s.section, error: s.error, loading: s.loading, pendingWrite: !!s.attempt }) };
+    function refreshIfStale() {
+        if (!s.loading && !s.saving && Date.now() - s.updatedAt >= 120_000) return refresh();
+    }
+    window.PawpalDashboardFinance = { mount, setPeriod, unmount, refresh, refreshIfStale, invalidate, getState: () => ({ section: s.section, error: s.error, loading: s.loading, pendingWrite: !!s.attempt }) };
 })();

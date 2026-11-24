@@ -110,47 +110,42 @@
 
     let staffRenderSequence = 0;
     async function renderStaffList() {
-        const sequence = ++staffRenderSequence;
-        if (PawpalStaff.state.loadError) {
-            const target=document.getElementById('staffListTableBody');
-            if(target)target.innerHTML='<tr><td colspan="8" style="padding:28px;text-align:center;">Không thể tải dữ liệu nhân sự. Vui lòng tải lại trang.</td></tr>';
-            return;
-        }
-        if (!PawpalStaff.state.isLoaded) return;
-        updateStaffKpis();
         if (!document.getElementById('subtab-tab-staff-list')?.classList.contains('active')) return;
         const tbody = document.getElementById('staffListTableBody');
         if (!tbody) return;
-        const staffList = PawpalStaff.state?.staff || [];
-        tbody.innerHTML = '';
-
-        if (staffList.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="8" style="text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13.5px;">
-                        Chưa có dữ liệu nhân sự.
-                    </td>
-                </tr>
-            `;
-            renderStaffPagination(0);
-            return;
-        }
-
+        const sequence = ++staffRenderSequence;
+        const filters = getStaffFilters();
+        const requestKey = JSON.stringify([filters, currentStaffPage]);
+        tbody.inert = tbody.dataset.pageKey !== requestKey;
+        tbody.setAttribute('aria-busy', 'true');
+        if (!tbody.rows.length) window.PawpalAdmin?.renderTableSkeleton(tbody);
         let response;
         try {
-            response = await PawpalStaff.getStaffPage(getStaffFilters(), currentStaffPage);
+            response = await PawpalStaff.getStaffPage(filters, currentStaffPage);
             if (!response || sequence !== staffRenderSequence) return;
         } catch (error) {
             if (sequence !== staffRenderSequence) return;
+            delete tbody.dataset.pageKey;
+            delete tbody.dataset.loadingSkeleton;
+            tbody.replaceChildren();
             const cell = tbody.insertRow().insertCell();
             cell.colSpan = 8;
             cell.textContent = 'Không tải được danh sách nhân sự. Thử lại bằng nút làm mới.';
             renderStaffPagination(0);
             return;
+        } finally {
+            if (sequence === staffRenderSequence) {
+                tbody.inert = false;
+                tbody.removeAttribute('aria-busy');
+            }
         }
+        delete tbody.dataset.loadingSkeleton;
+        tbody.replaceChildren();
         const list = response.rows;
         const totalPages = Math.ceil(response.total / STAFF_PAGE_SIZE);
         currentStaffPage = response.page;
+        tbody.dataset.pageKey = JSON.stringify([filters, currentStaffPage]);
+        if (PawpalStaff.state.isLoaded) updateStaffKpis();
 
         if (list.length === 0) {
             const emptyTr = document.createElement('tr');
@@ -175,10 +170,14 @@
             else if (staff.status === 'PAUSE') statusBadge = '<span class="admin-badge badge-neutral">Tạm nghỉ</span>';
             else statusBadge = '<span class="admin-badge badge-danger">Nghỉ việc</span>';
 
-            const shiftText=escapeHtml(PawpalStaff.formatStaffSchedule(PawpalStaff.getNearestStaffSchedule(staff.rawId)));
+            const supportingDataPending = !PawpalStaff.state.isLoaded && !PawpalStaff.state.loadError;
+            const shiftText = supportingDataPending ? '<span class="skeleton-text"></span>' :
+                PawpalStaff.state.loadError ? '—' : escapeHtml(PawpalStaff.formatStaffSchedule(PawpalStaff.getNearestStaffSchedule(staff.rawId)));
 
             let skillText = '';
-            if (!staff.skillResult) { skillText = '<span>Chưa đánh giá</span>'; } else if (staff.skillResult === 'PASS') {
+            if (supportingDataPending) { skillText = '<span class="skeleton-text"></span>'; }
+            else if (PawpalStaff.state.loadError) { skillText = '—'; }
+            else if (!staff.skillResult) { skillText = '<span>Chưa đánh giá</span>'; } else if (staff.skillResult === 'PASS') {
                 skillText = `<span style="color: var(--text-main); font-size: 13px;">${staff.skillExam || 'Đạt tiêu chuẩn'}</span>`;
             } else if (staff.skillResult === 'RETRAIN') {
                 skillText = `<span class="alert-indicator text-warning" style="font-weight: 500;">• ${staff.skillExam || 'Cần đào tạo lại'}</span>`;
@@ -957,7 +956,6 @@
             }, 300);
         }
 
-        renderStaffList();
         renderStaffAlertBar();
     }
 

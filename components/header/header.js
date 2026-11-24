@@ -518,10 +518,29 @@
         setupLogoutButtons();
     }
 
-    // Đóng dropdown khi click ra ngoài (đăng ký 1 lần duy nhất)
+    // Đóng mở và đóng khi click ra ngoài dropdown (ủy quyền sự kiện toàn cục vững chắc)
     document.addEventListener('click', (e) => {
+        const userBtn = e.target.closest('#userMenuToggle');
+        const notiBtn = e.target.closest('#headerNotificationBtn');
         const dropdown = document.getElementById('userDropdown');
         const notiDropdown = document.getElementById('notificationDropdown');
+
+        if (userBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (dropdown) dropdown.classList.toggle('show');
+            if (notiDropdown) notiDropdown.classList.remove('show');
+            return;
+        }
+
+        if (notiBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (notiDropdown) notiDropdown.classList.toggle('show');
+            if (dropdown) dropdown.classList.remove('show');
+            return;
+        }
+
         if (dropdown && !e.target.closest('.user-menu-wrapper')) {
             dropdown.classList.remove('show');
         }

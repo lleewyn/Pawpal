@@ -141,6 +141,9 @@
             if (campaignEl) campaignEl.classList.remove('is-loading');
             if (!grid.isConnected) return;
             const prev=$('#prevSlide'), next=$('#nextSlide');
+            let autoplayTimer = null;
+            const AUTOPLAY_DELAY = 5000;
+
             function show() {
                 const row=slides[current];imgEl.sizes='(max-width: 700px) calc(100vw - 32px), (max-width: 1800px) calc(100vw - 80px), 1720px';
                 if(row.srcset)imgEl.srcset=row.srcset;else imgEl.removeAttribute('srcset');
@@ -150,10 +153,58 @@
                 $('.book-inline').href=row.link;
                 $('.book-inline').textContent=row.link.startsWith('/booking')?'Đặt lịch ngay ↗':'Khám phá dịch vụ ↗';
             }
+
+            function goTo(index, resetTimer = true) {
+                if (slides.length < 2) return;
+                current = (index + slides.length) % slides.length;
+                imgEl.style.opacity = '0.7';
+                setTimeout(() => {
+                    show();
+                    imgEl.style.opacity = '1';
+                }, 120);
+                if (resetTimer) restartAutoplay();
+            }
+
+            function startAutoplay() {
+                if (slides.length < 2 || autoplayTimer) return;
+                autoplayTimer = setInterval(() => {
+                    if (document.visibilityState !== 'hidden') {
+                        goTo(current + 1, false);
+                    }
+                }, AUTOPLAY_DELAY);
+            }
+
+            function stopAutoplay() {
+                if (autoplayTimer) {
+                    clearInterval(autoplayTimer);
+                    autoplayTimer = null;
+                }
+            }
+
+            function restartAutoplay() {
+                stopAutoplay();
+                startAutoplay();
+            }
+
             [prev,next].forEach(b=>{b.hidden=false;b.disabled=slides.length<2;});
-            prev.onclick = ()=>{current=(current-1+slides.length)%slides.length;show();};
-            next.onclick = ()=>{current=(current+1)%slides.length;show();};
+            prev.onclick = ()=>{goTo(current - 1);};
+            next.onclick = ()=>{goTo(current + 1);};
             show();
+            startAutoplay();
+
+            // Tạm dừng khi rê chuột hoặc chạm vào banner để người dùng đọc thông tin
+            if (campaignEl) {
+                campaignEl.addEventListener('mouseenter', stopAutoplay);
+                campaignEl.addEventListener('mouseleave', startAutoplay);
+                campaignEl.addEventListener('touchstart', stopAutoplay, { passive: true });
+                campaignEl.addEventListener('touchend', restartAutoplay, { passive: true });
+            }
+
+            // Dừng autoplay khi tab bị ẩn để tiết kiệm tài nguyên
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') stopAutoplay();
+                else startAutoplay();
+            });
 
             // Other banners load only when selected; avoid unused media authorization reads.
         }

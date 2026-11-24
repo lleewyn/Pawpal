@@ -828,9 +828,11 @@
             try {
                 PawpalSettings.state.loadError = null;
                 const loaders = {promos:fetchPromosData,content:fetchContentData,system:fetchSystemConfigData,audit:fetchAuditData};
-                const resources = requestedGroups;
-                const results=await Promise.allSettled(resources.filter(key=>loaders[key]).map(key=>loaders[key](options)));
-                if(results.some(r=>r.status==='rejected'||r.value===null))PawpalSettings.state.loadError='Không tải được đầy đủ dữ liệu cấu hình. Hãy kiểm tra quyền và kết nối rồi tải lại.';
+                const groups = requestedGroups.filter(key => loaders[key]);
+                for (const key of groups) {
+                    const result = await Promise.resolve().then(() => loaders[key](options)).catch(() => null);
+                    if (result === null) PawpalSettings.state.loadError='Không tải được đầy đủ dữ liệu cấu hình. Hãy kiểm tra quyền và kết nối rồi tải lại.';
+                }
                 PawpalSettings.state.isLoaded = true;
             } catch (err) {
                 PawpalSettings.state.loadError = 'Không thể tải cấu hình. Vui lòng tải lại trang.';

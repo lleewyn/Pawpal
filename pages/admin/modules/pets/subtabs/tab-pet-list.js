@@ -195,6 +195,45 @@
         }
     }
 
+    let petAvatarObserver;
+    let petAvatarQueue = Promise.resolve();
+    function loadVisiblePetAvatars(tbody) {
+        petAvatarObserver?.disconnect();
+        const images = [...tbody.querySelectorAll('img[data-pet-avatar-asset]')];
+        if (!images.length || !PawpalPets.readPetAvatars) return;
+        const hydrate = visible => {
+            petAvatarQueue = petAvatarQueue.then(async () => {
+                const connected = visible.filter(image => image.isConnected && image.getClientRects().length);
+                if (!connected.length || document.hidden) return;
+                const urls = await PawpalPets.readPetAvatars(connected.map(image => image.dataset.petAvatarAsset));
+                for (const image of connected) {
+                    const url = urls.get(image.dataset.petAvatarAsset);
+                    if (url && image.isConnected) {
+                        image.src = url;
+                        delete image.dataset.petAvatarAsset;
+                    }
+                }
+            }).catch(() => {});
+        };
+        if (typeof IntersectionObserver !== 'function') { hydrate(images); return; }
+        petAvatarObserver = new IntersectionObserver((entries, observer) => {
+            const visible = entries.filter(entry => entry.isIntersecting).map(entry => entry.target);
+            visible.forEach(image => observer.unobserve(image));
+            if (visible.length) hydrate(visible);
+        });
+        images.forEach(image => petAvatarObserver.observe(image));
+    }
+    function resumePetAvatars() {
+        if (!document.hidden && document.getElementById('subtab-tab-pet-list')?.classList.contains('active')) {
+            const tbody = document.getElementById('petTableTbody');
+            if (tbody) loadVisiblePetAvatars(tbody);
+        }
+    }
+    window.addEventListener('admin:module-show', event => {
+        if (event.detail?.module === 'Thú cưng' && event.detail.revisited) resumePetAvatars();
+    });
+    document.addEventListener('visibilitychange', resumePetAvatars);
+
     function renderPetsTable() {
         closePetGlobalDropdown();
         const tbody = document.getElementById('petTableTbody');
@@ -233,20 +272,25 @@
             const key = PawpalPets.petPageKey(request);
             PawpalPets.state.listRequest = request;
             if (PawpalPets.state.petPage?.key !== key) {
+                delete tbody.dataset.pageKey;
                 if (PawpalPets.state.failedPageKey === key) {
+                    delete tbody.dataset.loadingSkeleton;
                     tbody.innerHTML = '<tr><td class="pet-empty-state-table" colspan="9">Kh\u00f4ng th\u1ec3 t\u1ea3i danh s\u00e1ch. <button type="button" class="pet-action-link" id="btnRetryPetPage">Th\u1eed l\u1ea1i</button></td></tr>';
                     document.getElementById('petPageNumbersContainer')?.replaceChildren();
                     document.getElementById('petPaginationBar').style.display='none';
                     document.getElementById('btnRetryPetPage').onclick=()=>{PawpalPets.state.failedPageKey=null;PawpalPets.loadPetsModuleData({force:true}).then(()=>{renderPetsTable();updatePetKPIs();});};
                     return;
                 }
-                tbody.innerHTML = '<tr><td class="pet-empty-state-table" colspan="9">\u0110ang t\u1ea3i danh s\u00e1ch...</td></tr>';
+                if (tbody.dataset.loadingSkeleton !== 'true') {
+                    window.PawpalAdmin?.renderTableSkeleton(tbody, { rows: 5 });
+                }
                 if (PawpalPets.state.pendingPageKey !== key) {
                     PawpalPets.state.pendingPageKey=key;
                     PawpalPets.loadPetsModuleData().then(()=>{if(PawpalPets.state.pendingPageKey===key)PawpalPets.state.pendingPageKey=null;renderPetsTable();updatePetKPIs();});
                 }
                 return;
             }
+            tbody.dataset.pageKey = key;
         }
 
         const petsData = PawpalPets.state?.petsData || {};
@@ -381,7 +425,7 @@
             return `
                 <tr class="${rowClass}" data-id="${esc(pet.code)}">
                     <td class="pet-u-text-center">
-                        <img src="${esc(pet.avatar || '/assets/images/publics/dogcute3.jpg')}" class="pet-avatar-cell" alt="${esc(pet.name)}">
+                        <img src="${esc(pet.avatar || '/assets/images/publics/dogcute3.jpg')}" class="pet-avatar-cell" alt="${esc(pet.name)}" loading="lazy" decoding="async"${pet.avatarAssetId && !pet.avatar?.startsWith('blob:') ? ` data-pet-avatar-asset="${esc(pet.avatarAssetId)}"` : ''}>
                     </td>
                     <td><strong class="pet-code-text admin-table-code" title="${esc(pet.code)}">${esc(pet.code)}</strong></td>
                     <td>
@@ -406,6 +450,7 @@
                 </tr>
             `;
         }).join('');
+        loadVisiblePetAvatars(tbody);
     }
 
     function clearAllPetFilters() {

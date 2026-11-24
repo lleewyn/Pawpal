@@ -435,6 +435,14 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
         if(!petImageReader){const {createServiceMediaReader}=await import('/scripts/shared/service-media-reader.mjs');petImageReader=createServiceMediaReader({db:client});}
         await petImageReader.hydrate(rows);
     }
+    PawpalPets.readPetAvatars = async function(assetIds) {
+        const client = window.getSupabaseClient?.() || window.SupabaseClient;
+        if (!client || !assetIds.length) return new Map();
+        const rows = [...new Set(assetIds)].map(id => ({ images: [{ media_asset_id: id }] }));
+        await hydratePetImages(rows, client);
+        return new Map(rows.map(({ images: [image] }) => [image.media_asset_id, image.resolved_url]));
+    };
+    window.addEventListener('pawpal:access-invalidated', () => petImageReader?.clear());
     PawpalPets.readPetPage = async function(request = {}, {force=false} = {}) {
         const key = 'page:' + JSON.stringify(request);
         const catalog = !catalogLoadedAt || Date.now()-catalogLoadedAt>600000;
@@ -452,16 +460,21 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
             });
             if (error) throw error;
             if(!data || (!Array.isArray(data.pets) && !Array.isArray(data.owners)))throw new Error('invalid_pet_page_response');
-            const images=(data.pets||[]).filter(p=>p.avatar_media_asset_id).map(p=>({pet:p,images:[{media_asset_id:p.avatar_media_asset_id}]}));
-            await hydratePetImages(images,client);for(const row of images)row.pet.resolved_avatar_url=row.images[0].resolved_url;
-            return {...data,_fetchedAt:Date.now(),_catalogIncluded:includeCatalog};
+            const contextMediaLoaded = Boolean(request.ids || request.lookup);
+            if (contextMediaLoaded) {
+                const images=(data.pets||[]).filter(p=>p.avatar_media_asset_id).map(p=>({pet:p,images:[{media_asset_id:p.avatar_media_asset_id}]}));
+                await hydratePetImages(images,client);
+                for(const row of images)row.pet.resolved_avatar_url=row.images[0].resolved_url;
+            }
+            return {...data,_fetchedAt:Date.now(),_catalogIncluded:includeCatalog,_contextMediaLoaded:contextMediaLoaded};
         }, {force,ttl:60000});
     };
 
-    PawpalPets.isPetContextFresh = pet => !!pet && pet._contextGeneration===pageGeneration && Date.now()-(pet._contextAt||0)<60000;
+    PawpalPets.isPetContextFresh = pet => !!pet && (!pet.avatarAssetId || pet._contextMediaLoaded === true) &&
+        pet._contextGeneration===pageGeneration && Date.now()-(pet._contextAt||0)<60000;
 
     PawpalPets.loadPetContext = async function(ids, attempt = 0) {
-        const unique = [...new Set(ids.filter(Boolean))].filter(id=>{const pet=PawpalPets.getPet(id);return !pet || pet._contextGeneration!==pageGeneration || Date.now()-(pet._contextAt||0)>=60000;}).sort();
+        const unique = [...new Set(ids.filter(Boolean))].filter(id=>!PawpalPets.isPetContextFresh(PawpalPets.getPet(id))).sort();
         const generation = pageGeneration;
         for (let offset=0;offset<unique.length;offset+=100) {
             const data = await PawpalPets.readPetPage({ids:unique.slice(offset,offset+100),page:1,size:100});
@@ -654,7 +667,11 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
             });
         }
         if (!commit) return petsMap;
-        for (const pet of Object.values(petsMap)) {pet._contextAt=data._fetchedAt || Date.now();pet._contextGeneration=pageGeneration;}
+        for (const pet of Object.values(petsMap)) {
+            pet._contextAt=data._fetchedAt || Date.now();
+            pet._contextGeneration=pageGeneration;
+            pet._contextMediaLoaded=data._contextMediaLoaded;
+        }
         const previous = PawpalPets.state.petsData || {};
         const byId = new Map(Object.values(previous).map(pet => [pet.rawId, pet]));
         for (const [code, fresh] of Object.entries(petsMap)) {
@@ -959,7 +976,7 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
         }
 
         sessionStorage.setItem('pawpal_admin_pet_subtab', targetSubtab);
-        if (targetSubtab==='tab-pet-profile') {PawpalPets.subtabs.profile?.openPetProfile(sessionStorage.getItem('pawpal_admin_pet_id'),false);PawpalPets.subtabs.profile?.switchDrawerTab(sessionStorage.getItem('pawpal_admin_pet_drawertab') || 'ptab-traits');}
+        if (targetSubtab==='tab-pet-profile') {PawpalPets.subtabs.profile?.openPetProfile(sessionStorage.getItem('pawpal_admin_pet_id') || Object.keys(PawpalPets.state.petsData)[0],false);PawpalPets.subtabs.profile?.switchDrawerTab(sessionStorage.getItem('pawpal_admin_pet_drawertab') || 'ptab-traits');}
         if (targetSubtab==='tab-pet-carelog') {PawpalPets.subtabs.carelog?.renderCarelogsTable();if(petsVisible())PawpalPets.fetchCareLogsTab().then(()=>PawpalPets.subtabs.carelog?.renderCarelogsTable()).catch(()=>PawpalPets.subtabs.carelog?.renderCarelogsTable());}
         if (targetSubtab==='tab-pet-reminders') {PawpalPets.subtabs.reminders?.renderRemindersTable();PawpalPets.subtabs.reminders?.updateReminderKPIs();if(petsVisible())PawpalPets.fetchRemindersAppointments().then(()=>{PawpalPets.subtabs.reminders?.renderRemindersTable();PawpalPets.subtabs.reminders?.updateReminderKPIs();}).catch(()=>PawpalPets.subtabs.reminders?.renderRemindersTable());}
         if (pendingAllPets || pendingPetIds.size || pendingDetails || pendingCarelogs || pendingReminders) schedulePetsRefresh();
@@ -1148,20 +1165,20 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
         if (!isCurrent()) return;
 
         // Khởi tạo các subtab con nếu đã load vào DOM
-        if (PawpalPets.subtabs.list?.renderPetsTable) {
+        if (document.getElementById('subtab-tab-pet-list')?.classList.contains('active') && PawpalPets.subtabs.list?.renderPetsTable) {
             PawpalPets.subtabs.list.renderPetsTable();
             PawpalPets.subtabs.list.updatePetKPIs();
         }
-        if (PawpalPets.subtabs.carelog?.renderCarelogsTable) {
+        if (document.getElementById('subtab-tab-pet-carelog')?.classList.contains('active') && PawpalPets.subtabs.carelog?.renderCarelogsTable) {
             PawpalPets.subtabs.carelog.renderCarelogsTable();
         }
-        if (PawpalPets.subtabs.reminders?.renderRemindersTable) {
+        if (document.getElementById('subtab-tab-pet-reminders')?.classList.contains('active') && PawpalPets.subtabs.reminders?.renderRemindersTable) {
             PawpalPets.subtabs.reminders.renderRemindersTable();
         }
         const savedPetId = sessionStorage.getItem('pawpal_admin_pet_id');
         const restoredSubtab=window.location.hash.replace('#','') || sessionStorage.getItem('pawpal_admin_pet_subtab');
         const petId=savedPetId || Object.keys(PawpalPets.state.petsData)[0];
-        if(!savedPetId || PawpalPets.getPet(savedPetId) || restoredSubtab==='tab-pet-profile')PawpalPets.subtabs.profile?.openPetProfile?.(petId,false);
+        if(_isPetsInit && restoredSubtab==='tab-pet-profile')PawpalPets.subtabs.profile?.openPetProfile?.(petId,false);
 
         if (_isPetsInit) return; // Đã gắn event listeners rồi, không gắn lặp lại
         _isPetsInit = true;

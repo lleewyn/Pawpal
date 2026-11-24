@@ -482,6 +482,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         const request = pageRequest || PawpalComplaints.state.lastPageRequest || { kind: defaultKind, filters: {}, page: 1 };
         PawpalComplaints.state.lastPageRequest = request;
         const requestKey = JSON.stringify(request);
+        const context = PawpalComplaints.state.currentTicketId || null;
 
         if (force && !resources) window.PawpalDataStore?.invalidate('complaints:detail:*');
         const requestSequence = ++complaintsLoadSequence;
@@ -498,9 +499,9 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                 throw new Error('Không thể kết nối cơ sở dữ liệu.');
             }
 
-            // Sử dụng cache nếu dữ liệu còn mới VÀ đã có dữ liệu thực tế
-            const totalComplaintsCount = (PawpalComplaints.state.serviceComplaints?.length || 0) + (PawpalComplaints.state.orderComplaints?.length || 0);
-            if (!pageRequest && !force && totalComplaintsCount > 0 && Date.now() - _complLastFetchedAt < COMPL_CACHE_TTL_MS) {
+            const cachedPage = PawpalComplaints.state.serverPages?.[request.kind];
+            if (!pageRequest && !force && cachedPage?.requestKey === requestKey && cachedPage.context === context &&
+                Date.now() - Math.min(cachedPage.loadedAt, _complLastFetchedAt) < COMPL_CACHE_TTL_MS) {
                 console.log('[Complaints] Dùng cache, bỏ qua fetch.');
                 updateComplaintsKpis();
                 PawpalComplaints.subtabs.services?.renderServiceComplaintsTable();
@@ -537,22 +538,20 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                 };
                 const { data: pageMeta, error: pageError } = await client.rpc('admin_complaint_page', {
                     p_kind: request.kind, p_filters: request.filters || {}, p_page: request.page || 1,
-                    p_size: 10, p_context: PawpalComplaints.state.currentTicketId || null
+                    p_size: 10, p_context: context
                 });
                 if (pageError) throw pageError;
                 if (!pageMeta || !Array.isArray(pageMeta.tickets)) throw new Error('Invalid complaint page response');
                 const tickets = pageMeta.tickets;
                 const customerIds = [...new Set(tickets.map(ticket => ticket.customer_id).filter(Boolean))];
                 const scope = column => ({ column, ids: customerIds });
-                const [customers, phones, profiles, pets, appointments, orders, staffList] = await Promise.all([
-                    readAll('customer', 'id,contact_email,customer_status', 'id', scope('id')),
-                    readAll('customer_phone', 'id,customer_id,phone_number,is_primary', 'id', scope('customer_id')),
-                    readAll('customer_profile', 'customer_id,full_name,gender', 'customer_id', scope('customer_id')),
+                const [customers, pets, staffList] = await Promise.all([
+                    readAll('customer', 'id,contact_email,customer_status,customer_phone(phone_number,is_primary),customer_profile(customer_id,full_name,gender)', 'id', scope('id')),
                     readAll('pet_profile', 'id,customer_id,pet_code,pet_name,avatar_url,routine,allergy,safety_note,breed:pet_breed(breed_name,species:pet_species(species_name))', 'id', {column:'id',ids:tickets.map(t=>t.pet_id).filter(Boolean)}),
-                    Promise.resolve([]),
-                    Promise.resolve([]),
                     readAll('staff', 'id,full_name,job_title,employment_status,auth_user_id')
                 ]);
+                const profiles = customers.flatMap(customer => customer.customer_profile || []);
+                const appointments = [], orders = [];
                 const sourceColumns = {
                     appointment: 'id,appointment_code,customer_id,pet_id,scheduled_start_at,scheduled_end_at,appointment_status,note,staff:staff_id(full_name),items:appointment_item(id,is_primary,name_snapshot,service:service_id(service_name,category:service_category(category_code)))',
                     sales_order: 'id,order_code,customer_id,order_status,shipping_status,tracking_code,created_at,carrier:shipping_provider(provider_name)'
@@ -572,8 +571,8 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                 if (missingPets.length) pets.push(...await readAll('pet_profile', 'id,customer_id,pet_code,pet_name,avatar_url,routine,allergy,safety_note,breed:pet_breed(breed_name,species:pet_species(species_name))', 'id', { column: 'id', ids: missingPets }));
                 return {
                     tickets, profiles, staffList, pageMeta,
-                    customers: customers.map(c => ({ ...c, email: c.contact_email,
-                        phone_main: phones.find(p => p.customer_id === c.id && p.is_primary)?.phone_number || null })),
+                    customers: customers.map(({customer_phone, customer_profile, ...customer}) => ({ ...customer, email: customer.contact_email,
+                        phone_main: customer_phone?.find(phone => phone.is_primary)?.phone_number || null })),
                     pets: pets.map(p => ({ ...p, species: p.breed?.species?.species_name,
                         breed: p.breed?.breed_name })),
                     appointments: appointments.map(a => {
@@ -588,24 +587,23 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
                 };
             };
 
-            const cachedPayload = window.PawpalDataStore?.fetch
-                ? await window.PawpalDataStore.fetch('complaints:data:related:' + window.PawpalDataStore.buildKey('page', { requestKey, context: PawpalComplaints.state.currentTicketId || '' }), fetchComplaintsData, {
+            const dataRequest = window.PawpalDataStore?.fetch
+                ? window.PawpalDataStore.fetch('complaints:data:related:' + window.PawpalDataStore.buildKey('page', { requestKey, context }), fetchComplaintsData, {
                     ttlMs: window.PawpalDataStore.TTL.OPERATIONAL,
                     backgroundRevalidate: false,
                     force
                 })
-                : await fetchComplaintsData();
+                : fetchComplaintsData();
 
+            const [cachedPayload, identity] = await Promise.all([dataRequest, client.auth.getUser()]);
             if (requestSequence !== complaintsLoadSequence) return;
-            const identity = await client.auth.getUser();
             if (identity.error) throw identity.error;
-            if (requestSequence !== complaintsLoadSequence) return;
             PawpalComplaints.state.loadError = null;
             PawpalComplaints.state.unclassifiedTickets = [];
 
             PawpalComplaints.state.serverPages ||= {};
             PawpalComplaints.state.serverStats = cachedPayload.pageMeta.stats;
-            PawpalComplaints.state.serverPages[request.kind] = { ...cachedPayload.pageMeta, requestKey, loadedAt: Date.now() };
+            PawpalComplaints.state.serverPages[request.kind] = { ...cachedPayload.pageMeta, requestKey, context, loadedAt: Date.now() };
             const tickets = cachedPayload.tickets || [];
             const messages = []; // Tải on-demand theo ticket_id khi mở chi tiết khiếu nại (PERF-03.K02)
             const customers = cachedPayload.customers || [];

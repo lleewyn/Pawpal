@@ -34,14 +34,21 @@
             'admin_customer_page','admin_pawpoint_page','admin_pet_page','get_admin_service_booking_page',
             'get_admin_sales_order_page','get_admin_sales_product_page','get_admin_sales_stock_history_page','get_admin_sales_review_page',
             'admin_overview_workload','admin_complaint_context','admin_complaint_page','admin_staff_directory_page','admin_staff_assessment_page','admin_staff_list_page',
-            'admin_chat_rule_page_bounded','admin_chat_canned_page','admin_audit_page','admin_service_review_summary','admin_service_review_page','admin_article_page','admin_promos_page'
+            'admin_chat_rule_page_bounded','admin_chat_canned_page','admin_audit_page','admin_service_review_summary','admin_service_review_page','admin_article_page','admin_promos_page',
+            'admin_dashboard_work_page','admin_dashboard_operation_totals','admin_dashboard_work_history','admin_dashboard_logistics_page',
+            'get_admin_dashboard_cashflow','admin_dashboard_business_analysis','admin_finance_report','admin_finance_page',
+            'admin_staff_directory_summary','admin_staff_assessment_summary','get_admin_chat_inbox_view','admin_active_booking_holds'
+        ]);
+        const priorityReads = new Set([
+            'admin_customer_page','admin_pet_page','admin_staff_list_page','admin_complaint_page',
+            'get_admin_sales_order_page','get_admin_service_booking_page','get_admin_chat_inbox_view'
         ]);
         const readQueue = [];
         let activeReads = 0;
         // Bound read bursts across modules without delaying writes or Auth requests.
-        function readFetch(input, init) {
+        function readFetch(input, init, priority) {
             return new Promise((resolve, reject) => {
-                const task = {start() {
+                const task = {priority, start() {
                     init.signal?.removeEventListener('abort', abort);
                     if(init.signal?.aborted){reject(init.signal.reason || new DOMException('Aborted','AbortError'));pump();return;}
                     activeReads++;
@@ -57,7 +64,10 @@
                 }
                 if(init.signal?.aborted){abort();return;}
                 init.signal?.addEventListener('abort',abort,{once:true});
-                readQueue.push(task);pump();
+                const insertBefore = priority ? readQueue.findIndex(queued => !queued.priority) : -1;
+                if (insertBefore < 0) readQueue.push(task);
+                else readQueue.splice(insertBefore, 0, task);
+                pump();
             });
         }
         function pump() { while(activeReads<4 && readQueue.length)readQueue.shift().start(); }
@@ -81,7 +91,7 @@
             if (canShare && inFlightReads.has(key)) return (await inFlightReads.get(key)).clone();
 
             const request = (async () => {
-                const response = await readFetch(input, init);
+                const response = await readFetch(input, init, priorityReads.has(rpcName));
                 if (response.status === 402) {
                     const message = await response.clone().text();
                     if (/egress|bandwidth/i.test(message)) {

@@ -866,6 +866,20 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
 
     const directoryCache=new Map(),directoryRequests=new Map();
     let directoryGeneration = 0;
+    PawpalCustomers.refreshCustomerNote = async function(dbId, note) {
+        directoryGeneration++;
+        for (const [key, entry] of directoryCache) {
+            if (entry.data.custData?.some(customer => customer.id === dbId)) directoryCache.delete(key);
+        }
+        const customer = PawpalCustomers.getCustomer(dbId);
+        if (customer) customer.note = note;
+        const client = window.getSupabaseClient();
+        const { data, error } = await client.from('customer').select('note,updated_at').eq('id', dbId).single();
+        if (error) throw error;
+        const current = PawpalCustomers.getCustomer(dbId);
+        if (current) Object.assign(current, { note: data.note || '', updatedAt: data.updated_at });
+        return data;
+    };
     PawpalCustomers.serverCustomerPaging=true;
     PawpalCustomers.readCustomerPage=async function(request={},options={}){
         if(options.force){directoryGeneration+=1;directoryCache.clear();}

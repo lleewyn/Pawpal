@@ -108,7 +108,8 @@
     window.addEventListener('pawpal:access-verified', syncOwner);
     window.addEventListener('pawpal:access-invalidated', syncOwner);
     window.addEventListener('pawpal:workspace-invalidated', event => {
-        if (event.detail?.domain && !['support', 'customer'].includes(event.detail.domain)) return;
+        const domains = event.detail?.domains || (event.detail?.domain ? [event.detail.domain] : null);
+        if (domains && event.detail?.modules && !domains.some(domain => ['support', 'customer'].includes(domain))) return;
         clearTimeout(refreshTimer);
         refreshTimer = setTimeout(() => { void refresh(); }, 300);
     });

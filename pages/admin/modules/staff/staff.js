@@ -683,19 +683,12 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
             moduleTitleEl.style.display = 'none';
         }
 
+        if (document.getElementById('subtab-tab-staff-list')?.classList.contains('active')) {
+            await PawpalStaff.subtabs.list?.renderStaffList();
+            if (!isCurrent()) return;
+        }
         await loadStaffModuleData();
         if (!isCurrent()) return;
-
-        if (PawpalStaff.subtabs.list?.renderStaffList) {
-            PawpalStaff.subtabs.list.renderStaffList();
-            PawpalStaff.subtabs.list.renderStaffAlertBar();
-        }
-        if (PawpalStaff.subtabs.schedule?.renderScheduleTable) {
-            PawpalStaff.subtabs.schedule.renderScheduleTable();
-        }
-        if (PawpalStaff.subtabs.assessment?.renderAssessmentList) {
-            PawpalStaff.subtabs.assessment.renderAssessmentList();
-        }
 
         const savedSubtab = sessionStorage.getItem('pawpal_admin_staff_active_subtab');
         const hashSubtab = window.location.hash ? window.location.hash.substring(1) : '';

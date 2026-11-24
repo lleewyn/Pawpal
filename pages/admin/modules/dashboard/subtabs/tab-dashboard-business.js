@@ -23,7 +23,7 @@
     permissions.returning = ['sales_order.read', 'appointment.read'];
     permissions.plan = ['payment.read', 'refund_transaction.read'];
     permissions.analysis = ['payment.read', 'refund_transaction.read', 'sales_order.read', 'sales_order_detail.read', 'appointment.read', 'appointment_item.read'];
-    const state = { root: null, range: null, data: {}, errors: {}, loading: new Set(), sort: 'value', bucket: 'day', generation: 0, updated: null, timer: null, pending: null, showCustom: false, drill: null, drillGeneration: 0 };
+    const state = { root: null, range: null, data: {}, errors: {}, loading: new Set(), sort: 'value', bucket: 'day', generation: 0, updated: null, pending: null, showCustom: false, drill: null, drillGeneration: 0 };
     const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const num = value => Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 1 });
     const money = value => num(value) + ' đ';
@@ -158,15 +158,24 @@
           </details>
         </div>`;
 
-        const finance = window.PawpalDashboardFinance;
         const financeDetails = $('[data-biz-finance]');
         const access = window.PawpalAdminAccess;
-        financeDetails.hidden = !(finance && access?.isAdmin?.() && access.state?.user?.permissions?.includes('finance.read'));
-        financeDetails.addEventListener('toggle', () => {
+        financeDetails.hidden = !(access?.isAdmin?.() && access.state?.user?.permissions?.includes('finance.read'));
+        financeDetails.addEventListener('toggle', async () => {
             if (financeDetails.hidden || !financeDetails.open || !state.range || !state.root?.contains(financeDetails)) return;
-            if (financeMountedRoot) { finance.refresh(); return; }
-            financeMountedRoot = financeDetails.querySelector('[data-finance-root]');
-            finance.mount(financeMountedRoot, state.range);
+            if (financeMountedRoot) { window.PawpalDashboardFinance.refreshIfStale(); return; }
+            const host = financeDetails.querySelector('[data-finance-root]');
+            if (!window.PawpalDashboardFinance) {
+                window.PawpalAdmin?.renderBlockSkeleton(host, 'Đang tải sổ tài chính');
+                try { await import('/pages/admin/modules/dashboard/subtabs/dashboard-finance.js?v=20261124_instant_navigation'); }
+                catch {
+                    host.textContent = 'Không tải được sổ tài chính. Hãy thu gọn rồi mở lại.';
+                    return;
+                }
+            }
+            if (financeMountedRoot || !financeDetails.open || !state.root?.contains(financeDetails)) return;
+            financeMountedRoot = host;
+            window.PawpalDashboardFinance.mount(host, state.range);
         });
 
         state.root.addEventListener('click', click);
@@ -735,11 +744,26 @@
         resizeObserver.observe(root);
         const client = window.getSupabaseClient?.() || window.SupabaseClient;
         if (client?.channel) {
-            realtimeChannel = client.channel('admin-dashboard-live-sync');
+            const channel = realtimeChannel = client.channel('admin-dashboard-live-sync');
             for (const [table, metrics] of Object.entries(metricsByTable)) {
-                realtimeChannel.on('postgres_changes', { event: '*', schema: 'public', table }, () => scheduleReload(metrics));
+                channel.on('postgres_changes', { event: '*', schema: 'public', table }, () => {
+                    scheduleReload(metrics);
+                    if (['payment', 'refund_transaction', 'sales_order', 'appointment'].includes(table)) {
+                        window.PawpalDashboardFinance?.invalidate?.();
+                    }
+                });
             }
-            realtimeChannel.subscribe();
+            let reconnecting = false;
+            channel.subscribe(status => {
+                if (realtimeChannel !== channel) return;
+                if (status === 'SUBSCRIBED' && reconnecting) {
+                    reconnecting = false;
+                    scheduleReload(keys);
+                    window.PawpalDashboardFinance?.invalidate?.();
+                } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
+                    reconnecting = true;
+                }
+            });
         }
 
         let saved;
@@ -749,7 +773,6 @@
         } catch { saved = null; }
 
         const today = M.dayKey(new Date());
-        state.timer = setInterval(() => { if (visible() && !state.pending) reload(); }, 300000);
         await apply(saved?.from || M.shift(today, -29), saved?.to || today, !!saved?.isCustom, true);
     }
 
@@ -759,7 +782,6 @@
         document.body.classList.remove('business-dashboard-active');
         state.generation++;
         state.drillGeneration++;
-        clearInterval(state.timer);
         clearTimeout(invalidationTimer);
         pendingMetrics.clear();
         if (realtimeChannel) (window.getSupabaseClient?.() || window.SupabaseClient)?.removeChannel?.(realtimeChannel);
@@ -789,9 +811,14 @@
         }, 500);
     }
     document.addEventListener('visibilitychange', () => {
-        if (visible() && pendingMetrics.size) scheduleReload([]);
+        if (!visible()) return;
+        if (pendingMetrics.size) scheduleReload([]);
+        else if (!state.pending && Date.now() - (state.updated || 0) >= 300_000) scheduleReload(keys);
     });
-    window.addEventListener('pawpal:workspace-invalidated', () => scheduleReload(keys));
+    window.addEventListener('online', () => { if (visible()) scheduleReload(keys); });
+    window.addEventListener('pawpal:workspace-invalidated', event => {
+        if (!event.detail?.modules || event.detail.modules.includes('Dashboard')) scheduleReload(keys);
+    });
     window.addEventListener('pawpal:access-invalidated', () => { if (state.root) state.root.replaceChildren(); unmount(); state.data = {}; });
 
     const api = {

@@ -40,7 +40,7 @@ async function testFetch() {
     let now = 1_000_000;
     ctx.Date = class extends Date { static now() { return now; } };
     let reply = () => new Response('[{"id":1}]');
-    ctx.window.fetch = async () => { calls++; await tick(); return reply(); };
+    ctx.window.fetch = async input => { calls++; await tick(); return reply(input); };
     ctx.window.supabase = { createClient(url, optionsKey, options) { fetchOptions = options; return {}; } };
     load(ctx, 'scripts/api/supabase-client.js');
     assert.equal(ctx.window.SupabaseClientConfig.url, 'https://cpzuvaplseielhgcnqrn.supabase.co', 'Obsolete browser configuration must not select the retired local/Cloud backend');
@@ -76,78 +76,68 @@ async function testFetch() {
     await fetch(url);
     assert.equal(calls, beforeCooldown + 5, 'Unrelated 402 errors must not activate egress cooldown');
     console.log('PASS: REST deduplication, actor isolation, writes, cancellation, quota cooldown and recovery');
+
+    const started = [], pending = [];
+    reply = input => new Response(new ReadableStream({ start(controller) {
+        started.push(input);
+        pending.push(() => controller.close());
+    } }));
+    const background = Array.from({ length: 6 }, (_, index) => fetch(`${url}&offset=${index}`));
+    const page = fetch(`${ctx.window.SupabaseClientConfig.url}/rest/v1/rpc/admin_staff_list_page`, {
+        method: 'POST', body: '{}'
+    });
+    for (let index = 0; index < 3; index++) await tick();
+    assert.equal(started.length, 4, 'Only four Supabase read bodies can transfer concurrently');
+    pending.shift()();
+    for (let index = 0; index < 3; index++) await tick();
+    assert.equal(started.length, 5);
+    assert.match(started[4], /admin_staff_list_page$/);
+    pending.pop()();
+    await page;
+    while (pending.length) {
+        pending.splice(0).forEach(close => close());
+        for (let index = 0; index < 3; index++) await tick();
+    }
+    await Promise.all(background);
+    console.log('PASS: active list requests move ahead of queued ancillary reads');
 }
 
-async function testDashboard() {
+async function testDataStore() {
     const ctx = browserContext();
+    let now = 1000;
+    ctx.Date = class extends Date { static now() { return now; } };
     load(ctx, 'pages/admin/admin-data-store.js');
-    const requests = [];
-    const handlers = {};
-    const kpi = { textContent: '' };
-    ctx.document.getElementById = id => id === 'dashboardCustomers' ? kpi : null;
-    let failOrders = false;
-    let appointments = [{ id: 'a1', customer_id: 'c1', pet_id: 'p1', items: [], scheduled_start_at: '2026-10-23T08:00:00+07:00' }];
-    const client = {
-        async rpc() { return { data: { daily: [], totals: {} }, error: null }; },
-        from(table) {
-            const request = { table };
-            const query = {
-                select(columns, options) { request.columns = columns; request.options = options; return this; },
-                order() { return this; }, limit() { return this; }, range() { return this; },
-                in(column, ids) { request.filter = { column, ids: [...ids] }; return this; },
-                then(resolve, reject) {
-                    requests.push(request);
-                    const data = table === 'appointment' ? appointments
-                        : table === 'customer_profile' ? [{ customer_id: 'c1', full_name: 'Test' }]
-                        : table === 'pet_profile' && !request.options?.head ? [{ id: 'p1', pet_name: 'Test' }] : [];
-                    const error = failOrders && table === 'sales_order' ? { message: 'exceeded_egress_quota' } : null;
-                    return Promise.resolve({ data, count: request.options?.head ? 25 : null, error }).then(resolve, reject);
-                }
-            };
-            return query;
-        },
-        channel() { return { on(type, filter, fn) { handlers[filter.table] = fn; return this; }, subscribe() {} }; }
-    };
-    ctx.window.getSupabaseClient = () => client;
-    load(ctx, 'pages/admin/modules/dashboard/dashboard.js');
-    const dashboard = ctx.window.PawpalDashboard;
-    await dashboard.init();
-    assert.equal(requests.length, 11);
-    assert.equal(kpi.textContent, 25);
-    assert.equal(requests.filter(r => r.table === 'product').length, 1, 'Empty inventory must not trigger fallback queries');
-    assert.deepEqual(requests.find(r => r.table === 'customer_profile').filter.ids, ['c1']);
-    assert.deepEqual(requests.find(r => r.table === 'pet_profile' && !r.options?.head).filter.ids, ['p1']);
-    const initialCalls = requests.length;
-    await dashboard.loadDashboardData();
-    assert.equal(requests.length, initialCalls, 'Reopening a warm Dashboard must not load again');
+    const cache = ctx.window.PawpalDataStore;
+    const policy = { staleTimeMs: 10, gcTimeMs: 50 };
+    let calls = 0, finishRefresh;
+    const initial = async () => ++calls;
+    assert.equal(await cache.fetch('cache:page', initial, policy), 1);
+    assert.equal(await cache.fetch('cache:page', initial, policy), 1);
+    now += 11;
+    const refresh = () => { calls++; return new Promise(resolve => { finishRefresh = resolve; }); };
+    assert.equal(await cache.fetch('cache:page', refresh, policy), 1);
+    assert.equal(await cache.fetch('cache:page', refresh, policy), 1, 'Readers can keep the current page while one refresh is running');
+    assert.equal(calls, 2, 'Stale reads share a single background refresh');
+    finishRefresh(2);
+    await tick();
+    assert.equal(cache.peek('cache:page').data, 2);
+    now += 51;
+    assert.equal(cache.peek('cache:page'), null, 'Inactive data is collected after gcTime');
+    assert.equal(cache.getStats().cache.hitRatio, 0.75);
 
-    // Inactive module: invalidate immediately, no network. Reopen loads only affected data.
-    ctx.sessionStorage.setItem('pawpal_admin_active_module', 'Bán hàng');
-    handlers.sales_order();
-    assert.equal(requests.length, initialCalls);
-    await dashboard.loadDashboardData();
-    assert.equal(requests.length, initialCalls + 1, 'One order event must refetch one dataset instead of eleven');
-    assert.equal(requests.at(-1).table, 'sales_order');
-
-    handlers.appointment();
-    appointments = [{ id: 'a2', customer_id: 'c2', pet_id: 'p2', items: [], scheduled_start_at: '2026-10-23T09:00:00+07:00' }];
-    const beforeAppointment = requests.length;
-    await dashboard.loadDashboardData();
-    assert.equal(requests.length, beforeAppointment + 3, 'Appointment changes load appointments and only their two related profiles');
-    assert.deepEqual(requests.filter(r => r.table === 'customer_profile').at(-1).filter.ids, ['c2']);
-
-    // A failed read must be an error, not a cached successful empty list/KPI zero.
-    failOrders = true;
-    handlers.sales_order();
-    await dashboard.loadDashboardData();
-    dashboard.renderDashboardKPIs();
-    assert.equal(kpi.textContent, '—');
-    assert.equal(ctx.window.PawpalDataStore.peek(ctx.window.PawpalDataStore.buildKey('unused')), null);
-    failOrders = false;
-    await dashboard.loadDashboardData();
-    dashboard.renderDashboardKPIs();
-    assert.equal(kpi.textContent, 25, 'Failed resource must be retried, not treated as a successful empty cache');
-    console.log('PASS: Dashboard 11 → 1 requests for an order event, related profiles, empty state and error recovery');
+    ctx.window.PawpalAdminAccess = { state: { user: { auth_user_id: 'actor', tenant_id: 'one', permissions: ['staff.read'] } } };
+    await cache.fetch('unqualified-key', async () => 'tenant one');
+    ctx.window.PawpalAdminAccess.state.user = { auth_user_id: 'actor', tenant_id: 'two', permissions: ['staff.read'] };
+    assert.equal(cache.peek('unqualified-key'), null, 'A tenant change clears even unqualified cache keys');
+    await cache.fetch('unqualified-key', async () => 'tenant two');
+    ctx.window.PawpalAdminAccess.state.user.permissions = [];
+    assert.equal(cache.peek('unqualified-key'), null, 'A permission change cannot reuse a previously authorized entry');
+    await cache.fetch('chatbot:inbox', async () => []);
+    await cache.fetch('orders:list:1', async () => []);
+    cache.invalidateWorkspaceDomain('chat');
+    assert.equal(cache.peek('chatbot:inbox').stale, true);
+    assert.equal(cache.peek('orders:list:1').stale, false, 'Chat changes preserve the order-list cache');
+    console.log('PASS: cache hits, stale refresh, inactivity GC, tenant isolation and permission isolation');
 
     // Cache correctness while a request is in flight or the user logs out.
     const store = ctx.window.PawpalDataStore;
@@ -180,4 +170,4 @@ async function testDashboard() {
     console.log('PASS: invalidation races, logout isolation, hidden-tab suppression and resume');
 }
 
-(async () => { await testFetch(); await testDashboard(); })().catch(error => { console.error(error); process.exitCode = 1; });
+(async () => { await testFetch(); await testDataStore(); })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -118,28 +118,42 @@
         white-space: nowrap;
     }
 
-    /* Hover Dropdown cho màn hình Desktop */
+    /* Hover & Active Dropdown cho màn hình Desktop */
     .nav-item.dropdown {
         position: relative;
     }
 
-    .nav-item.dropdown:hover > .dropdown-menu {
+    .nav-item.dropdown:hover > .dropdown-menu,
+    .nav-item.dropdown > .dropdown-menu.show {
         display: block;
         opacity: 1;
         visibility: visible;
-        margin-top: 0;
+        transform: translateY(0);
     }
 
-    .nav-item.dropdown:hover > .nav-link svg {
+    .nav-item.dropdown:hover > .nav-link svg,
+    .nav-item.dropdown > .nav-link.show svg {
         transform: rotate(180deg);
+        color: #214939;
     }
 
     /* Xoay mượt mũi tên cho dropdown (desktop & mobile) */
     .nav-link svg {
-        transition: transform 0.22s ease;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
         transform-origin: center;
     }
     
+    /* Vùng đệm vô hình chống trượt chuột khi rê xuống menu */
+    .nav-item.dropdown > .dropdown-menu::before {
+        content: '';
+        position: absolute;
+        top: -12px;
+        left: 0;
+        right: 0;
+        height: 12px;
+        background: transparent;
+    }
+
     .nav-item.dropdown > .dropdown-menu {
         position: absolute;
         top: 100%;
@@ -147,33 +161,72 @@
         display: block;
         opacity: 0;
         visibility: hidden;
-        transition: all 0.2s ease;
-        margin-top: 10px;
-        background: var(--color-bg-white);
-        border: var(--border-card);
-        border-radius: var(--card-border-radius);
-        box-shadow: var(--shadow-md);
-        padding: 8px 0;
-        min-width: 200px;
+        transform: translateY(6px);
+        transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+        margin-top: 6px;
+        background: #FFFFFF;
+        border: 1px solid #ECF2EE;
+        border-radius: 9px;
+        box-shadow: 0 14px 36px rgba(35, 107, 72, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+        padding: 6px;
+        min-width: 220px;
         z-index: 1050;
     }
 
     .dropdown-item {
-        padding: 8px 16px;
-        font-family: var(--font-body);
-        font-size: 15px;
-        color: var(--color-text-dark);
-        transition: background-color 0.2s, color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 14px;
+        border-radius: 6px;
+        font-family: var(--font-body, Inter, system-ui, sans-serif);
+        font-size: 13.5px;
+        font-weight: 500;
+        color: #274B39;
+        text-decoration: none;
+        background: transparent;
+        border: none;
+        transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
     }
 
-    .dropdown-item:hover {
-        background-color: var(--color-primary-light);
-        color: var(--color-primary-dark);
+    .dropdown-item:hover,
+    .dropdown-item:focus {
+        background-color: #EEF5F1;
+        color: #214939;
+        font-weight: 600;
+        transform: translateX(3px);
+    }
+
+    .dropdown-item.fw-bold {
+        font-weight: 700;
+        color: #214939;
     }
 
     .dropdown-divider {
-        margin: var(--space-xs) 0;
-        border-top-color: var(--color-border);
+        height: 1px;
+        margin: 5px 6px;
+        background-color: #ECF2EE;
+        border: 0;
+        opacity: 1;
+    }
+
+    /* CTA Item ("Đặt lịch ngay") — Triệt tiêu màu xanh dương Bootstrap */
+    .dropdown-item.text-primary,
+    .dropdown-item-cta {
+        color: #214939 !important;
+        background-color: #F4FAF7 !important;
+        font-weight: 600 !important;
+        border-radius: 6px;
+        margin-top: 4px;
+        border: 1px solid rgba(35, 107, 72, 0.12);
+    }
+
+    .dropdown-item.text-primary:hover,
+    .dropdown-item-cta:hover {
+        background-color: #214939 !important;
+        color: #FFFFFF !important;
+        border-color: #214939 !important;
+        transform: translateX(3px);
     }
 }
 
@@ -1116,6 +1169,109 @@ body:not(.admin-body) .main-header .notification-dropdown-footer{padding:8px 16p
 body:not(.admin-body) .main-header .notification-dropdown-footer a{padding:10px 14px;border-radius:9px;background:#eef4ed;color:#214939!important;font:600 12px/1.5 Inter,system-ui,sans-serif;text-decoration:none}
 @media(max-width:600px){body:not(.admin-body) .main-header .notification-dropdown{position:fixed;top:72px;right:16px;margin-top:0;width:calc(100vw - 32px)}}
 body:not(.admin-body) .main-header .notification-list .notification-item-dropdown{width:100%;text-align:left;margin:0 0 4px}
+
+/* Public Nav Dropdown Luxury Editorial Styling */
+body:not(.admin-body) .main-header .dropdown-menu {
+    border: 1px solid #ECF2EE !important;
+    border-radius: 9px !important;
+    background: #FFFFFF !important;
+    box-shadow: 0 14px 36px rgba(35, 107, 72, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    padding: 6px !important;
+    min-width: 220px !important;
+    margin-top: 6px !important;
+}
+
+body:not(.admin-body) .main-header .dropdown-item {
+    font-size: 13.5px !important;
+    color: #274B39 !important;
+    border-radius: 6px !important;
+    padding: 9px 14px !important;
+    font-weight: 500 !important;
+    font-family: Inter, system-ui, sans-serif !important;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+body:not(.admin-body) .main-header .dropdown-item:hover,
+body:not(.admin-body) .main-header .dropdown-item:focus {
+    background: #EEF5F1 !important;
+    color: #214939 !important;
+    font-weight: 600 !important;
+    transform: translateX(3px) !important;
+}
+
+body:not(.admin-body) .main-header .dropdown-item.fw-bold {
+    font-weight: 700 !important;
+    color: #214939 !important;
+}
+
+body:not(.admin-body) .main-header .dropdown-divider {
+    height: 1px !important;
+    margin: 5px 6px !important;
+    background: #ECF2EE !important;
+    border: 0 !important;
+    opacity: 1 !important;
+}
+
+body:not(.admin-body) .main-header .dropdown-item.text-primary,
+body:not(.admin-body) .main-header .dropdown-item-cta {
+    color: #214939 !important;
+    background: #F4FAF7 !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    margin-top: 4px !important;
+    border: 1px solid rgba(35, 107, 72, 0.12) !important;
+}
+
+body:not(.admin-body) .main-header .dropdown-item.text-primary:hover,
+body:not(.admin-body) .main-header .dropdown-item-cta:hover {
+    background: #214939 !important;
+    color: #FFFFFF !important;
+    border-color: #214939 !important;
+    transform: translateX(3px) !important;
+}
+
+/* User Profile Dropdown 9px standards */
+body:not(.admin-body) .main-header .user-dropdown {
+    border: 1px solid #ECF2EE !important;
+    border-radius: 9px !important;
+    box-shadow: 0 14px 36px rgba(35, 107, 72, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    padding: 6px !important;
+    min-width: 280px !important;
+}
+
+body:not(.admin-body) .main-header .user-dropdown .dropdown-item {
+    border-radius: 6px !important;
+    margin: 2px 0 !important;
+    width: 100% !important;
+    padding: 9px 12px !important;
+    font-size: 13.5px !important;
+    color: #274B39 !important;
+}
+
+body:not(.admin-body) .main-header .user-dropdown .dropdown-item:hover {
+    background: #EEF5F1 !important;
+    color: #214939 !important;
+    font-weight: 600 !important;
+    transform: translateX(3px) !important;
+}
+
+body:not(.admin-body) .main-header .user-dropdown .dropdown-divider {
+    height: 1px !important;
+    background: #ECF2EE !important;
+    margin: 4px 6px !important;
+    border: 0 !important;
+}
+
+body:not(.admin-body) .main-header .user-dropdown .dropdown-item-danger {
+    color: #DC2626 !important;
+}
+
+body:not(.admin-body) .main-header .user-dropdown .dropdown-item-danger:hover {
+    background: #FEE2E2 !important;
+    color: #991B1B !important;
+}
 
 
 /* ==========================================================================

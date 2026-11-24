@@ -751,14 +751,39 @@
             const input=document.getElementById('drawerCustNote');
             const cust=getCust(document.getElementById('profileValCustId')?.textContent);
             if(!cust?.dbId)return;
+            const view=document.getElementById('customerNoteReadView');
+            const previous=view?.textContent;
+            const note=input.value.trim();
+            const sameCustomer=()=>document.getElementById('profileValCustId')?.textContent===cust.id;
+            if(view)view.textContent=note||'Chưa có ghi chú';
+            if(noteEditor)noteEditor.hidden=true;
+            let saved=false;
             btnSaveNote.disabled=true;
             input.readOnly=true;if(cancelNote)cancelNote.disabled=true;
             try{
                 const {error}=await window.getSupabaseClient().rpc('save_customer_note',{p_customer_id:cust.dbId,p_expected_updated_at:input.dataset.version,p_note:input.value});
                 if(error)throw error;
-                await PawpalCustomers.refreshCustomerData();renderDrawerCustomerProfile(cust.id);
+                saved=true;
+                const fresh=await PawpalCustomers.refreshCustomerNote(cust.dbId,note);
+                if(sameCustomer()){
+                    input.value=fresh.note||'';
+                    input.dataset.version=fresh.updated_at;
+                    if(view)view.textContent=fresh.note||'Chưa có ghi chú';
+                    if(editNote)editNote.hidden=false;
+                }
                 PawpalCustomers.showToast('Đã lưu ghi chú khách hàng.','success');
-            }catch(error){PawpalCustomers.showToast(error.code==='PT409'?'Hồ sơ đã thay đổi. Vui lòng làm mới trước khi lưu ghi chú.':'Không thể lưu ghi chú. Vui lòng thử lại.','warning');}
+            }catch(error){
+                if(saved){
+                    if(sameCustomer()&&editNote)editNote.hidden=false;
+                    PawpalCustomers.showToast('Đã lưu ghi chú. Hãy làm mới hồ sơ trước khi sửa tiếp.','warning');
+                }else{
+                    if(sameCustomer()){
+                        if(view)view.textContent=previous;
+                        if(noteEditor)noteEditor.hidden=false;
+                    }
+                    PawpalCustomers.showToast(error.code==='PT409'?'Hồ sơ đã thay đổi. Vui lòng làm mới trước khi lưu ghi chú.':'Không thể lưu ghi chú. Vui lòng thử lại.','warning');
+                }
+            }
             finally{btnSaveNote.disabled=false;input.readOnly=false;if(cancelNote)cancelNote.disabled=false;}
         });
 

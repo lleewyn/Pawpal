@@ -5,9 +5,10 @@
     let state = Object.freeze({ role: null, user: null, error: null });
     let pending, revision = 0, lastVerified;
     let signalChannel,signalOwner,signalTimer;
+    const pendingSignalDomains = new Set();
     const navigationVerificationMs = 10_000;
     let verifiedAt = 0, signalHealthy = false, signalRevision = 0;
-    function stopSignals(){clearTimeout(signalTimer);signalHealthy=false;if(signalChannel){try{window.getSupabaseClient?.()?.removeChannel(signalChannel);}catch{}}signalChannel=null;signalOwner=null;}
+    function stopSignals(){clearTimeout(signalTimer);pendingSignalDomains.clear();signalHealthy=false;if(signalChannel){try{window.getSupabaseClient?.()?.removeChannel(signalChannel);}catch{}}signalChannel=null;signalOwner=null;}
     function startSignals(context,user){
         if(context.workspace_signals!==true){stopSignals();return;}
         if(signalChannel&&signalOwner===user.auth_user_id)return;stopSignals();signalOwner=user.auth_user_id;
@@ -17,7 +18,18 @@
             const row=payload.new;if(signalOwner!==owner||state.user?.auth_user_id!==owner||row?.auth_user_id!==owner||typeof row.revision!=='string')return;
             verifiedAt=0;
             signalRevision++;
-            clearTimeout(signalTimer);signalTimer=setTimeout(()=>{if(signalOwner!==owner)return;window.PawpalDataStore?.clear();window.dispatchEvent(new CustomEvent('pawpal:workspace-invalidated',{detail:{domain:row.domain}}));verify().catch(()=>{});},180);
+            pendingSignalDomains.add(row.domain);
+            clearTimeout(signalTimer);signalTimer=setTimeout(()=>{
+                if(signalOwner!==owner)return;
+                const store=window.PawpalDataStore;
+                const domains=[...pendingSignalDomains];
+                pendingSignalDomains.clear();
+                const affected=state.role==='ADMIN'?domains.map(domain=>store?.invalidateWorkspaceDomain?.(domain)):null;
+                const modules=affected?.every(Boolean)?[...new Set(affected.flat())]:null;
+                if(!modules)store?.clear();
+                window.dispatchEvent(new CustomEvent('pawpal:workspace-invalidated',{detail:{domains,modules}}));
+                verify().catch(()=>{});
+            },180);
         }).subscribe(status=>{
             if(signalOwner!==owner)return;
             signalHealthy=status==='SUBSCRIBED';
@@ -71,11 +83,14 @@
             const user = Object.freeze({ id: staff.id, rawId: staff.id, auth_user_id: staff.auth_user_id,
                 name: staff.full_name, full_name: staff.full_name, phone: staff.phone_number || '', email: staff.email || '',
                 role: roles[0].toLowerCase(), system_role: roles[0], access_roles: [...roles],
+                tenant_id: context.tenant_id ?? staff.tenant_id ?? null, branch_id: context.branch_id ?? staff.branch_id ?? null,
                 position: staff.job_title || '', permissions: [...staff.permission_codes], _source: 'supabase_auth' });
-            const previousPermissions = state.user?.permissions;
+            const previousPermissions = previousUser?.permissions;
             const permissionsChanged = previousPermissions &&
                 (previousPermissions.length !== user.permissions.length || previousPermissions.some(code => !user.permissions.includes(code)));
-            if (previousRole && (previousRole !== roles[0] || previousUser.id !== user.id || previousUser.auth_user_id !== user.auth_user_id || permissionsChanged)) {
+            const scopeChanged = previousUser &&
+                (previousUser.tenant_id !== user.tenant_id || previousUser.branch_id !== user.branch_id);
+            if (previousRole && (previousRole !== roles[0] || previousUser.id !== user.id || previousUser.auth_user_id !== user.auth_user_id || permissionsChanged || scopeChanged)) {
                 const changed = Error('Quyền hoặc tài khoản đã thay đổi. Đang tải lại.');
                 invalidate(changed);
                 // Destroy old module objects as well as the visible state before using the new identity.
@@ -84,7 +99,7 @@
             }
             state = Object.freeze({ role: roles[0], user, error: null });
             verifiedAt = observedSignalRevision === signalRevision ? Date.now() : 0;
-            lastVerified = { role: state.role, user: { id: user.id, auth_user_id: user.auth_user_id } };
+            lastVerified = { role: state.role, user };
             for (const storage of [localStorage, sessionStorage]) storage.setItem('pawpal_admin_user', JSON.stringify(user));
             document.documentElement.dataset.adminRole = state.role;
             startSignals(context,user);

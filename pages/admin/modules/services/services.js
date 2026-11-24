@@ -1476,33 +1476,49 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         return data;
     };
     let intakeMediaReader, handoverMediaReader, adjustmentMediaReader;
-    async function fetchBookingsRaw({ force = false, forceDirectory = force, ids, id } = {}) {
+    PawpalServices.loadBookingRooms = function() {
+        const db = window.getSupabaseClient();
+        const store = window.PawpalDataStore;
+        const read = () => allRows(() => db.from('hotel_room')
+            .select('id,room_number,status,type:room_type_id(id,room_type,daily_price,status,service_id,billing_minutes)').order('id'));
+        return store ? store.fetch('services:directory:rooms:' + store.buildKey('hotel-rooms'), read, {
+            ttlMs: store.TTL_TIERS.CATALOG, backgroundRevalidate: false
+        }) : read();
+    };
+
+    async function fetchBookingsRaw({ force = false, ids, id } = {}) {
         const adaptPet=p=>({...p,breed:one(p.breed)?.breed_name||'',species:one(one(p.breed)?.species)?.species_name||'',weight:p.weight??null});
         const fetcher=async()=>{
             const db=window.getSupabaseClient();
             if(ids&&!ids.length)return [];
-            const appointments=await allRows(()=>{let query=db.from('appointment').select('*,customer:customer_id('+customerFields+'),pet_profile:pet_id('+petFields+'),staff:staff_id(id,full_name,job_title),requestedStaff:requested_staff_id(id,full_name),items:appointment_item(*,service:service_id(id,service_code,service_name,estimated_duration,category:category_id(category_code))),records:appointment_record(*,recorder:recorded_by(full_name)),adjustments:appointment_adjustment(*),taxi:taxi_trip(*),hotel:hotel_booking(*,room:room_id(room_number,type:room_type_id(room_type)))').order('created_at',{ascending:false}).order('id');if(ids)query=query.in('id',ids);if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'appointment_code',id);return query;});
+            const readAppointments=()=>allRows(()=>{let query=db.from('appointment').select('*,customer:customer_id('+customerFields+'),pet_profile:pet_id('+petFields+'),staff:staff_id(id,full_name,job_title),requestedStaff:requested_staff_id(id,full_name),items:appointment_item(*,service:service_id(id,service_code,service_name,estimated_duration,category:category_id(category_code))),records:appointment_record(*,recorder:recorded_by(full_name)),adjustments:appointment_adjustment(*),taxi:taxi_trip(*),hotel:hotel_booking(*,room:room_id(room_number,type:room_type_id(room_type)))').order('created_at',{ascending:false}).order('id');if(ids)query=query.in('id',ids);if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'appointment_code',id);return query;});
+            const readFinancials=selectedIds=>{
+                const scoped=query=>(ids||id)?query.in('appointment_id',selectedIds):query;
+                return Promise.all([
+                    allRows(()=>scoped(db.from('appointment_totals').select('appointment_id,total_price').order('appointment_id'))),
+                    allRows(()=>scoped(db.from('payment').select('id,appointment_id,amount,transaction_status,refund_transaction(refund_status,refunded_amount)').not('appointment_id','is',null).order('id')))
+                ]);
+            };
+            const [appointments,financials]=await Promise.all([readAppointments(),ids?readFinancials(ids):null]);
             if(!appointments.length)return [];
             const petIds=[...new Set(appointments.map(a=>a.pet_id).filter(Boolean))];
-            const [weights,measurements,rooms]=await Promise.all([
+            const times=[...new Set(appointments.flatMap(a=>(a.records||[]).map(r=>r.recorded_at)).filter(Boolean))];
+            const [weights,measurements,[totals,payments]]=await Promise.all([
                 petIds.length?allRows(()=>db.from('pet_current_weight').select('pet_id,weight').in('pet_id',petIds).order('pet_id')):[],
-                petIds.length?allRows(()=>{let q=db.from('pet_weight_history').select('pet_id,weight,measured_at').in('pet_id',petIds);const times=[...new Set(appointments.flatMap(a=>(a.records||[]).map(r=>r.recorded_at)).filter(Boolean))];return times.length?q.in('measured_at',times).order('id'):q.limit(0).order('id');}):[],
-                allRows(()=>db.from('hotel_room').select('id,room_number,status,type:room_type_id(id,room_type,daily_price,status,service_id,billing_minutes)').order('id'))
+                petIds.length&&times.length?allRows(()=>db.from('pet_weight_history').select('pet_id,weight,measured_at').in('pet_id',petIds).in('measured_at',times).order('id')):[],
+                financials||readFinancials(appointments.map(a=>a.id))
             ]);
-            PawpalServices.state.weightMeasurements=measurements;PawpalServices.state.liveRooms=rooms;
+            PawpalServices.state.weightMeasurements=measurements;
             const weightMap=new Map(weights.map(w=>[w.pet_id,Number(w.weight)]));
 
-            if(!intakeMediaReader){const {createIntakeMediaReader}=await import('/scripts/shared/intake-media-reader.mjs');intakeMediaReader=createIntakeMediaReader({db});}
-            await intakeMediaReader.hydrate(appointments);
-            if(!handoverMediaReader){const {createIntakeMediaReader}=await import('/scripts/shared/intake-media-reader.mjs');handoverMediaReader=createIntakeMediaReader({db,recordType:'handover'});}
-            await handoverMediaReader.hydrate(appointments);
-            if(!adjustmentMediaReader){const {createAdjustmentMediaReader}=await import('/scripts/shared/adjustment-media-reader.mjs');adjustmentMediaReader=createAdjustmentMediaReader({db});}
-            await adjustmentMediaReader.hydrate(appointments);
-            const selectedIds=appointments.map(a=>a.id),scoped=query=>(ids||id)?query.in('appointment_id',selectedIds):query;
-            const [totals,payments]=await Promise.all([
-                allRows(()=>scoped(db.from('appointment_totals').select('appointment_id,total_price').order('appointment_id'))),
-                allRows(()=>scoped(db.from('payment').select('id,appointment_id,amount,transaction_status,refund_transaction(refund_status,refunded_amount)').not('appointment_id','is',null).order('id')))
-            ]);
+            if(id){
+                if(!intakeMediaReader){const {createIntakeMediaReader}=await import('/scripts/shared/intake-media-reader.mjs');intakeMediaReader=createIntakeMediaReader({db});}
+                await intakeMediaReader.hydrate(appointments);
+                if(!handoverMediaReader){const {createIntakeMediaReader}=await import('/scripts/shared/intake-media-reader.mjs');handoverMediaReader=createIntakeMediaReader({db,recordType:'handover'});}
+                await handoverMediaReader.hydrate(appointments);
+                if(!adjustmentMediaReader){const {createAdjustmentMediaReader}=await import('/scripts/shared/adjustment-media-reader.mjs');adjustmentMediaReader=createAdjustmentMediaReader({db});}
+                await adjustmentMediaReader.hydrate(appointments);
+            }
             const totalsMap=new Map(totals.map(t=>[t.appointment_id,Number(t.total_price)]));
             return appointments.map(a=>{
                 const item=a.items.find(i=>i.is_primary&&i.status!=='cancelled')||a.items.find(i=>i.is_primary);
@@ -1520,44 +1536,12 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
 
     async function fetchStaffRaw({ force = false } = {}) {
         const fetcher=async()=>{
-            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-            if (db) {
-                try {
-                    const {data,error}=await db.rpc('admin_service_staff_candidates');
-                    if(!error && Array.isArray(data) && data.length) return data;
-                } catch (_) {}
-                try {
-                    const {data,error}=await db.from('staff').select('id,full_name,job_title,specialization,staff_level_id,employment_status').eq('employment_status','active');
-                    if(!error && Array.isArray(data) && data.length) {
-                        return data.map(s=>({
-                            id: s.id,
-                            full_name: s.full_name,
-                            job_title: s.job_title || 'Kỹ thuật viên',
-                            specialization: s.specialization || 'Spa và Grooming',
-                            staff_level_id: s.staff_level_id || null,
-                            service_locked: false
-                        }));
-                    }
-                } catch (_) {}
-            }
-            try {
-                const res = await fetch('/data/staff.json');
-                if (res.ok) {
-                    const json = await res.json();
-                    const list = Array.isArray(json) ? json : json.staff || json.staffs || [];
-                    if (list.length) {
-                        return list.map(s => ({
-                            id: s.id || s.code,
-                            full_name: s.name || s.full_name,
-                            job_title: s.position || s.role || 'KTV',
-                            specialization: s.bio || s.specialization || 'Chăm sóc thú cưng',
-                            staff_level_id: s.staff_level_id || null,
-                            service_locked: false
-                        }));
-                    }
-                }
-            } catch (_) {}
-            return [];
+            const db=window.getSupabaseClient?.() || window.SupabaseClient;
+            if(!db)throw Error('connection_unavailable');
+            const {data,error}=await db.rpc('admin_service_staff_candidates');
+            if(error)throw error;
+            if(!Array.isArray(data))throw Error('invalid_staff_candidates');
+            return data;
         };
         return window.PawpalDataStore ? window.PawpalDataStore.fetch('services:staff',fetcher,{ttlMs:window.PawpalDataStore.TTL_TIERS.CATALOG,force,backgroundRevalidate:false}) : fetcher();
     }
@@ -1912,9 +1896,8 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
     const defaultBookingFilters={query:'',category:'ALL',status:'ALL',staff:'ALL',today:false,upcoming:false,allergy:false,sla:false};
     async function ensureBooking(id,{force=false}={}){
         if(!id)return null;
-        const state=PawpalServices.state,found=state.bookingsData.find(b=>b.id===id||b.dbId===id);
-        if(found&&!force&&state.pageBookings?.some(b=>b.dbId===found.dbId))return found;
-        const rows=mapBookings(await fetchBookingsRaw({id,force,forceDirectory:false}));
+        const state=PawpalServices.state;
+        const rows=mapBookings(await fetchBookingsRaw({id,force}));
         const booking=rows.find(b=>b.id===id||b.dbId===id);
         state.bookingsData=state.bookingsData.filter(b=>b.id!==id&&b.dbId!==id);
         if(booking)state.bookingsData=[...state.bookingsData.filter(b=>b.dbId!==booking.dbId),booking];
@@ -1927,22 +1910,22 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         if(!Array.isArray(data?.exportRows))throw Error('invalid_booking_export');
         return data.exportRows;
     };
-    async function loadServicesData({force=false,forceDirectory=force,forceStaff=force,prefetch=false,filters,page,render=true}={}){
+    async function loadServicesData({force=false,forceStaff=force,prefetch=false,filters,page,render=true,loadStaff=true}={}){
         const db=window.getSupabaseClient?.()||window.SupabaseClient,state=PawpalServices.state;
         if(!db){state.loadError='Không thể kết nối cơ sở dữ liệu.';return false;}
         if(force)window.PawpalDataStore?.invalidate('services:bookings*');
         const version=++bookingReadVersion;
         filters={...defaultBookingFilters,...(filters||state.bookingFilters||{})};page=page||state.bookingPageMeta?.page||1;state.bookingFilters=filters;
-        const staffRequest=fetchStaffRaw({force:forceStaff}).then(staff=>{
+        const staffRequest=loadStaff?fetchStaffRaw({force:forceStaff}).then(staff=>{
             if(version===bookingReadVersion)state.liveStaffList=staff;
-        }).catch(error=>console.warn('[PawpalServices] Booking staff:',error));
+        }).catch(error=>console.warn('[PawpalServices] Booking staff:',error)):null;
         try{
             state.loadError=null;
             const fetcher=async()=>{
                 const {data,error}=await db.rpc('get_admin_service_booking_page',{p_filters:filters,p_page:page,p_export:false});
                 if(error)throw error;
                 if(!data||!Array.isArray(data.ids)||data.ids.length>10)throw Error('invalid_booking_page');
-                return {meta:data,rows:await fetchBookingsRaw({ids:data.ids,force,forceDirectory})};
+                return {meta:data,rows:await fetchBookingsRaw({ids:data.ids,force})};
             };
             const store=window.PawpalDataStore,key='services:bookings:page:'+(store?.buildKey?.('booking-page',{filters:JSON.stringify(filters),page})||JSON.stringify({filters,page}));
             const result=await (store?store.fetch(key,fetcher,{force,ttlMs:store.TTL_TIERS.OPERATIONAL,backgroundRevalidate:false}):fetcher());
@@ -1956,10 +1939,10 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         }catch(error){if(version!==bookingReadVersion)return null;state.loadError='Không thể tải dữ liệu dịch vụ. Vui lòng thử lại.';state.pageBookings=[];console.error('[PawpalServices] Booking page:',error);}
         if(render){PawpalServices.subtabs.bookings?.renderBookingsTable({skipFetch:true});PawpalServices.subtabs.bookings?.renderUpcomingBar();PawpalServices.subtabs.bookings?.updateKPIs();}
         const selectedBookingId=state.selectedBookingId;
-        if(!state.loadError&&selectedBookingId&&!state.pageBookings.some(b=>b.id===selectedBookingId||b.dbId===selectedBookingId)){
+        if(!state.loadError&&selectedBookingId&&document.getElementById('subtab-tab-service-detail')?.classList.contains('active')){
             await ensureBooking(selectedBookingId,{force}).catch(error=>console.warn('[PawpalServices] Booking detail:',error));
         }
-        await staffRequest;
+        if(render)await staffRequest;
         if(version!==bookingReadVersion)return null;
         return !state.loadError;
     }
@@ -1975,6 +1958,8 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 }
             } else if (mutation.entity === 'service' || mutation.entity === 'service_price_matrix') {
                 window.PawpalDataStore.invalidate('services:catalog*');
+            } else if (mutation.entity === 'hotel_room_type') {
+                window.PawpalDataStore.invalidate('services:directory:rooms:*');
             } else if (['customer','customer_profile','customer_phone','pet_profile','pet_weight_history','hotel_room','room_type'].includes(mutation.entity)) {
                 window.PawpalDataStore.invalidate('services:directory*');
                 window.PawpalDataStore.invalidate('services:bookings*');
@@ -2180,7 +2165,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 else if(tab==='tab-service-reviews'){groups.delete('bookings');groups.delete('catalog');}
                 else {groups.delete('catalog');groups.delete('reviews');}
                 await Promise.all([
-                    groups.has('bookings')?loadServicesData({force:true,forceDirectory:false,forceStaff:false,prefetch:false}):null,
+                    groups.has('bookings')?loadServicesData({force:true,forceStaff:false,prefetch:false}):null,
                     groups.has('catalog')?loadCatalogData({force:true}):null,
                     groups.has('reviews')?loadReviewsData({force:true}):null
                 ]);
@@ -2201,7 +2186,10 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'appointment' }, () => triggerServiceSync('services:bookings*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'service' }, () => triggerServiceSync('services:catalog*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'service_price_matrix' }, () => triggerServiceSync('services:catalog*'))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'hotel_room_type' }, () => triggerServiceSync('services:catalog*'))
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'hotel_room_type' }, () => {
+                    window.PawpalDataStore?.invalidate('services:directory:rooms:*');
+                    triggerServiceSync('services:catalog*');
+                })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'taxi_price_rule' }, () => triggerServiceSync('services:catalog*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'service_image' }, () => triggerServiceSync('services:catalog*'))
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'review' }, () => triggerServiceSync('services:reviews*'))

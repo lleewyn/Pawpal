@@ -851,7 +851,7 @@
             if (PawpalServices.state.selectedBookingId === booking.id) PawpalServices.subtabs.detail?.renderBookingDetail?.(booking.id);
 
             try {
-                await PawpalServices.loadServicesData({force:true,forceDirectory:false,forceStaff:false,prefetch:false});
+                await PawpalServices.loadServicesData({force:true,forceStaff:false,prefetch:false});
                 if (booking.dbId) await PawpalServices.ensureBooking(booking.dbId,{force:true});
             } catch (_) {}
             renderBookingsTable(); updateKPIs(); renderUpcomingBar();
@@ -1666,7 +1666,7 @@
         function updateCategoryOptions() {
             const val = catSelect ? catSelect.value : 'Spa';
             const rooms=document.getElementById('newBookingHotelRoomType');
-            if(rooms)rooms.replaceChildren(new Option('',''));
+            if(rooms){rooms.disabled=false;rooms.replaceChildren(new Option('',''));}
             const trip=document.getElementById('newBookingTaxiTripType');if(trip){trip.disabled=false;trip.value='';}
             updateTaxiReturnFields();
             if (hotelFields) hotelFields.style.display = (val === 'Hotel') ? 'block' : 'none';
@@ -2067,7 +2067,24 @@
             if (serviceHidden) serviceHidden.value = s.name;
             if (serviceHidden) serviceHidden.dataset.serviceId=s.dbId;
             const rooms=document.getElementById('newBookingHotelRoomType');
-            if(rooms)rooms.replaceChildren(new Option('',''),...(PawpalServices.state.liveRooms||[]).filter(r=>['active','available'].includes(r.status)&&r.type?.status==='active'&&r.type.service_id===s.dbId).map(r=>new Option(r.room_number+' · '+r.type.room_type+' · '+Number(r.type.daily_price).toLocaleString('vi-VN')+' đ/'+(r.type.billing_minutes===60?'giờ':'ngày'),r.id)));
+            if(rooms && catSelect?.value==='Hotel'){
+                rooms.disabled=true;
+                rooms.replaceChildren(new Option('Đang tải phòng',''));
+                const stillSelected=()=>rooms.isConnected && catSelect.value==='Hotel' && serviceHidden?.dataset.serviceId===s.dbId;
+                PawpalServices.loadBookingRooms().then(available=>{
+                    if(!stillSelected())return;
+                    const options=available.filter(room=>['active','available'].includes(room.status)&&room.type?.status==='active'&&room.type.service_id===s.dbId);
+                    rooms.replaceChildren(new Option('',''), ...options.map(room=>new Option(
+                        room.room_number+' · '+room.type.room_type+' · '+Number(room.type.daily_price).toLocaleString('vi-VN')+
+                        ' đ/'+(room.type.billing_minutes===60?'giờ':'ngày'), room.id
+                    )));
+                    rooms.disabled=false;
+                }).catch(()=>{
+                    if(!stillSelected())return;
+                    rooms.replaceChildren(new Option('Không tải được phòng. Chọn lại gói dịch vụ.',''));
+                    rooms.disabled=false;
+                });
+            }
             const trip=document.getElementById('newBookingTaxiTripType');
             if(trip){trip.disabled=Boolean(s.tripType);if(s.tripType)trip.value=s.tripType;updateTaxiReturnFields();}
             updateGroomingFields();
@@ -2082,6 +2099,7 @@
                     if (serviceInput) serviceInput.value = '';
                     if (serviceHidden) serviceHidden.value = '';
                     delete serviceHidden.dataset.serviceId;serviceInput.style.display='';serviceInput.focus();
+                    if(rooms){rooms.disabled=false;rooms.replaceChildren(new Option('',''));}
                     serviceSelectedCard.style.display = 'none';
                     updateGroomingFields();
                 });
@@ -2331,7 +2349,7 @@
                         if(error)throw error;if(data!==booking.dbId)throw new Error('Không xác nhận được phân công KTV.');
                         window.PawpalDataStore?.invalidate('staff:schedules*');
                         try {
-                            await PawpalServices.loadServicesData({force:true,forceDirectory:false,forceStaff:false,prefetch:false});
+                            await PawpalServices.loadServicesData({force:true,forceStaff:false,prefetch:false});
                             if (booking.dbId) await PawpalServices.ensureBooking(booking.dbId,{force:true});
                         } catch (_) {}
                     } catch (err) {

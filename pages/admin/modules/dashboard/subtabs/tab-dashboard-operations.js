@@ -14,7 +14,6 @@
     const MAX_ROWS = 5000;
     const ALERTS_PER_PAGE = 10;
     const REALTIME_DEBOUNCE_MS = 800;
-    const POLL_INTERVAL_MS = 60_000;
     const CHANNEL_NAME = 'admin-ops-dashboard-live';
 
     // Bảng CSDL -> nhóm dữ liệu cần tải lại khi bảng thay đổi
@@ -91,7 +90,6 @@
         channel: null,
         realtime: 'connecting',
         debounceTimer: null,
-        pollTimer: null,
         clockTimer: null,
         inFlight: null,
         generation: 0,
@@ -402,11 +400,12 @@
     }
 
     // ------------------------------------------------------------------
-    // Realtime và làm mới định kỳ
+    // Realtime và đồng bộ lại khi kết nối phục hồi
     // ------------------------------------------------------------------
     function setRealtimeStatus(status) {
+        const wasOffline = state.realtime === 'offline';
         state.realtime = status;
-        if (status === 'live') stopPolling(); else startPolling();
+        if (status === 'live' && wasOffline) requestReload(allResourceNames());
         renderSyncStatus();
     }
 
@@ -434,18 +433,6 @@
         const client = getClient();
         if (state.channel && client?.removeChannel) client.removeChannel(state.channel);
         state.channel = null;
-    }
-
-    function startPolling() {
-        if (state.pollTimer || !state.root) return;
-        state.pollTimer = setInterval(() => {
-            if (!document.hidden && state.root?.isConnected && state.root.getClientRects().length) requestReload(allResourceNames());
-        }, POLL_INTERVAL_MS);
-    }
-
-    function stopPolling() {
-        clearInterval(state.pollTimer);
-        state.pollTimer = null;
     }
 
     // ------------------------------------------------------------------
@@ -1045,10 +1032,12 @@
         const period = M().resolvePeriod(preset, new Date(), custom);
         if (!period.ok) { showFilterError(period.error); return; }
         showFilterError('');
+        if (!reuse || state.period?.from !== period.from || state.period?.to !== period.to) {
+            state.alertsPage = state.agendaPage = state.logisticsPage = 1;
+        }
         state.preset = preset;
         state.custom = custom || {};
         state.period = period;
-        state.alertsPage = 1;
         try { sessionStorage.setItem('pawpal_admin_ops_dashboard_range', JSON.stringify({ preset, custom: preset === 'custom' ? custom : null })); } catch (_) { /* bỏ qua */ }
         reloadAll(reuse);
     }
@@ -1132,15 +1121,21 @@
         });
         state.root.querySelectorAll('[data-ops-link]').forEach(card => { card.tabIndex = 0; card.setAttribute('role', 'button'); });
         // Tín hiệu làm mới của Admin (bao gồm thao tác xóa mà Realtime theo bảng không gửi).
-        on(window, 'pawpal:workspace-invalidated', () => requestReload(allResourceNames()));
+        on(window, 'pawpal:workspace-invalidated', event => {
+            if (!event.detail?.modules || event.detail.modules.includes('Dashboard')) requestReload(allResourceNames());
+        });
         on(window, 'pawpal:mutation', event => {
             const table = event.detail?.table;
             if (TABLE_RESOURCES[table]) requestReload(TABLE_RESOURCES[table]);
         });
         on(document, 'visibilitychange', () => {
-            if (!document.hidden) refreshClock();
-            if (!document.hidden && state.dirty.size) flushReload();
+            if (document.hidden) return;
+            refreshClock();
+            if (state.realtime !== 'live' && Date.now() - (state.lastUpdatedAt?.getTime() || 0) >= 60_000) {
+                requestReload(allResourceNames());
+            } else if (state.dirty.size) flushReload();
         });
+        on(window, 'online', () => requestReload(allResourceNames()));
         on(window, 'admin:module-show', () => { if(state.dirty.size) flushReload(); });
         on(window, 'admin:subtab-change', () => { if(state.dirty.size) flushReload(); });
         bindTooltip();
@@ -1177,7 +1172,6 @@
         state.errors = {};
         state.loading.clear();
         state.dirty.clear();
-        state.alertsPage = state.agendaPage = state.logisticsPage = 1;
         state.alertsScope = state.alertsKind = 'all';
         try {
             const filters = JSON.parse(sessionStorage.getItem('pawpal_admin_ops_dashboard_tasks') || 'null');
@@ -1202,7 +1196,6 @@
     function unmount() {
         clearTimeout(state.debounceTimer);
         clearInterval(state.clockTimer);
-        stopPolling();
         unsubscribeRealtime();
         state.listeners.splice(0).forEach(remove => remove());
         state.generation++;

@@ -3034,11 +3034,9 @@ input:checked + .switch-slider:before {
    Zero extra weight, no hover animations, pure 60/120fps scrolling & rendering
    ========================================================================== */
 
-/* GPU Layer Promotion for Sticky & Fixed Nav Elements to prevent scroll repainting */
+/* Fixed Nav Elements: Ensure dropdowns can hang outside without clipping */
 .main-header {
-    transform: translateZ(0);
-    will-change: transform;
-    contain: layout paint;
+    /* Do not apply contain: paint or layout on header, otherwise dropdowns will be clipped */
 }
 
 #fabContainer,

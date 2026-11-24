@@ -17,6 +17,8 @@
     const _store = new Map();
     const _inFlightPromises = new Map();
     let _cacheGeneration = 0;
+    let _cacheScope;
+    const cacheMetrics = { hits: 0, staleHits: 0, misses: 0, deduplicated: 0, evictions: 0 };
 
     // Lấy định danh người dùng quản trị hiện tại để cô lập cache hoàn toàn (PERF-02.03, PERF-02.12)
     function getCurrentActorId() {
@@ -57,11 +59,29 @@
     }
 
     // Cơ chế LRU eviction để bảo vệ dung lượng RAM (PERF-02.14)
-    function evictOldestIfFull() {
-        if (_store.size >= MAX_CACHE_ENTRIES) {
-            // Map keys() trả về theo thứ tự chèn, lấy phần tử đầu tiên để xóa
-            const oldestKey = _store.keys().next().value;
-            if (oldestKey) _store.delete(oldestKey);
+    function ensureCacheScope() {
+        const user = window.PawpalAdminAccess?.state?.user;
+        const scope = JSON.stringify([
+            user?.auth_user_id || getCurrentActorId(), user?.tenant_id || '',
+            user?.branch_id || getCurrentBranchId(), user?.system_role || '',
+            [...(user?.permissions || [])].sort()
+        ]);
+        if (_cacheScope !== undefined && _cacheScope !== scope) clearAll();
+        _cacheScope = scope;
+    }
+
+    function pruneCache(now, incoming = 0) {
+        for (const [key, entry] of _store) {
+            if (!_inFlightPromises.has(key) && now - entry.lastAccessAt >= entry.gcTimeMs) {
+                _store.delete(key);
+                cacheMetrics.evictions++;
+            }
+        }
+        for (const key of _store.keys()) {
+            if (_store.size + incoming <= MAX_CACHE_ENTRIES) break;
+            if (_inFlightPromises.has(key)) continue;
+            _store.delete(key);
+            cacheMetrics.evictions++;
         }
     }
 
@@ -72,19 +92,33 @@
      * @param {Object} options - { ttlMs, force, backgroundRevalidate }
      */
     async function fetchResource(key, fetcherFn, options = {}) {
-        const ttlMs = options.ttlMs || TTL_TIERS.OPERATIONAL;
+        ensureCacheScope();
+        const ttlMs = options.staleTimeMs ?? options.ttlMs ?? TTL_TIERS.OPERATIONAL;
+        const gcTimeMs = options.gcTimeMs ?? Math.max(120_000, ttlMs * 3);
         const force = Boolean(options.force);
         const now = Date.now();
 
-        let entry = _store.get(key);
+        pruneCache(now);
+        const entry = _store.get(key);
+        if (entry) {
+            entry.lastAccessAt = now;
+            _store.delete(key);
+            _store.set(key, entry);
+        }
 
         // 1. Single-Flight: Nếu đang có request cùng key đang bay, dùng lại promise đó (PERF-02.04)
         if (_inFlightPromises.has(key)) {
+            if (!force && entry?.hasLoaded && options.backgroundRevalidate !== false) {
+                cacheMetrics.staleHits++;
+                return entry.data;
+            }
+            cacheMetrics.deduplicated++;
             return _inFlightPromises.get(key);
         }
 
         // 2. Cache Hit: Nếu cache hợp lệ trong TTL và không force (PERF-02.05)
         if (!force && entry && entry.hasLoaded && (now - entry.updatedAt < ttlMs) && !entry.stale) {
+            cacheMetrics.hits++;
             return entry.data;
         }
 
@@ -92,18 +126,20 @@
         if (!force && entry && entry.hasLoaded && (entry.stale || now - entry.updatedAt >= ttlMs)) {
             // Chạy revalidate ngầm ở nền nếu cho phép, trả về dữ liệu cũ ngay lập tức (0ms UI wait)
             if (options.backgroundRevalidate !== false) {
+                cacheMetrics.staleHits++;
                 revalidateInBackground(key, fetcherFn, entry.version);
                 return entry.data;
             }
         }
 
         // 4. Bắt đầu fetch mới
-        evictOldestIfFull();
+        cacheMetrics.misses++;
+        pruneCache(now, entry ? 0 : 1);
         const baseVersion = entry?.version || 0;
         const nextVersion = baseVersion + 1;
         const generation = _cacheGeneration;
         // Đăng ký cả request đang tải để invalidation giữa chừng không bị mất.
-        _store.set(key, entry || { hasLoaded: false, version: baseVersion, stale: true });
+        _store.set(key, entry || { hasLoaded: false, version: baseVersion, stale: true, lastAccessAt: now, gcTimeMs });
 
         const job = (async () => {
             try {
@@ -116,6 +152,8 @@
                         status: 'success',
                         error: null,
                         updatedAt: Date.now(),
+                        lastAccessAt: Date.now(),
+                        gcTimeMs,
                         hasLoaded: true, // Tách biệt hasLoaded khỏi data.length (PERF-02.06)
                         version: nextVersion,
                         cacheKey: key,
@@ -131,6 +169,8 @@
                         status: 'error',
                         error: err,
                         updatedAt: latestEntry?.updatedAt || 0,
+                        lastAccessAt: Date.now(),
+                        gcTimeMs,
                         hasLoaded: latestEntry?.hasLoaded || false,
                         version: nextVersion,
                         cacheKey: key,
@@ -140,6 +180,7 @@
                 throw err;
             } finally {
                 if (_inFlightPromises.get(key) === job) _inFlightPromises.delete(key);
+                pruneCache(Date.now());
             }
         })();
 
@@ -163,6 +204,7 @@
                         status: 'success',
                         error: null,
                         updatedAt: Date.now(),
+                        lastAccessAt: Date.now(),
                         hasLoaded: true,
                         version: nextVersion,
                         stale: false
@@ -209,6 +251,27 @@
         }
     }
 
+    function invalidateWorkspaceDomain(domain) {
+        const affected = {
+            service: { modules: ['Dashboard', 'Dịch vụ', 'Khách hàng', 'Thú cưng', 'Nhân sự', 'Khiếu nại'],
+                keys: ['dashboard:*', 'services:*', 'customers:*', 'pets:*', 'staff:*', 'complaints:*'] },
+            sales: { modules: ['Dashboard', 'Bán hàng', 'Dịch vụ', 'Khách hàng', 'Khiếu nại'],
+                keys: ['dashboard:*', 'orders:*', 'services:bookings*', 'customers:*', 'complaints:*'] },
+            customer: { modules: ['Dashboard', 'Khách hàng', 'Thú cưng', 'Bán hàng', 'Dịch vụ', 'Khiếu nại', 'Chatbot'],
+                keys: ['dashboard:*', 'customers:*', 'pets:*', 'orders:customers*', 'services:directory*', 'complaints:*', 'chatbot:*'] },
+            catalog: { modules: ['Dashboard', 'Bán hàng', 'Dịch vụ', 'Cấu hình'],
+                keys: ['dashboard:*', 'orders:products*', 'orders:vouchers*', 'services:catalog*', 'services:directory*', 'settings:*'] },
+            support: { modules: ['Dashboard', 'Khiếu nại', 'Khách hàng', 'Bán hàng', 'Dịch vụ', 'Chatbot'],
+                keys: ['dashboard:*', 'complaints:*', 'customers:*', 'orders:list*', 'services:reviews*', 'chatbot:*'] },
+            chat: { modules: ['Chatbot'], keys: ['chatbot:*'] },
+            copilot: { modules: ['Chatbot'], keys: ['chatbot:*'] },
+            notification: { modules: [], keys: [] }
+        }[domain];
+        if (!affected) return null;
+        affected.keys.forEach(invalidate);
+        return affected.modules;
+    }
+
     /**
      * Xóa sạch toàn bộ dữ liệu trong bộ nhớ (khi đăng xuất, chuyển tài khoản hoặc đổi chi nhánh) (PERF-02.12)
      */
@@ -228,6 +291,8 @@
      * Đọc trực tiếp dữ liệu đang có trong cache (đồng bộ)
      */
     function peek(key) {
+        ensureCacheScope();
+        pruneCache(Date.now());
         return _store.get(key) || null;
     }
 
@@ -466,6 +531,7 @@
         buildKey,
         fetch: fetchResource,
         invalidate,
+        invalidateWorkspaceDomain,
         clear: clearAll,
         peek,
         emitMutation,
@@ -481,7 +547,9 @@
             activeRefreshes: _metrics.refreshes,
             pendingRealtimeRefreshes: _realtimeDebounceTimers.size,
             invalidations: _metrics.invalidations,
-            activeChannelsCount: _metrics.activeChannels.size
+            activeChannelsCount: _metrics.activeChannels.size,
+            cache: { ...cacheMetrics, hitRatio: (cacheMetrics.hits + cacheMetrics.staleHits) /
+                Math.max(1, cacheMetrics.hits + cacheMetrics.staleHits + cacheMetrics.misses) }
         })
     };
 

@@ -791,6 +791,7 @@ rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.inc
                 try { supabase.removeChannel(existing); } catch (e) {}
             }
 
+            let reconnecting = false;
             chatbotRealtimeChannel = supabase.channel('admin-chatbot-global-sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, payload => {
                     inboxPages.clear();
@@ -803,8 +804,14 @@ rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.inc
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
                         PawpalChatbot.state.isRealtimeHealthy = true;
+                        if (reconnecting) {
+                            reconnecting = false;
+                            refreshInboxDebounced(150);
+                        }
                     } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                         PawpalChatbot.state.isRealtimeHealthy = false;
+                        reconnecting = true;
+                        inboxPages.clear();
                     }
                 });
 
@@ -965,17 +972,12 @@ rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.inc
         }
     });
 
-    window.addEventListener('focus', () => {
-        refreshInboxDebounced(150);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && document.getElementById('subtab-tab-live-support')?.classList.contains('active')) {
+            loadInboxSummary({ reuse: true });
+        }
     });
-
-    // PR-02: Fallback polling 45s chỉ chạy khi Realtime mất kết nối và tab đang hiển thị
-    setInterval(() => {
-        if (sessionStorage.getItem('pawpal_admin_active_module') !== 'Chatbot') return;
-        if (document.hidden) return;
-        if (PawpalChatbot.state.isRealtimeHealthy) return;
-        refreshInboxDebounced(0);
-    }, 45000);
+    window.addEventListener('online', () => refreshInboxDebounced(150));
 
     const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
     const savedTab = sessionStorage.getItem('pawpal_admin_chatbot_subtab');
