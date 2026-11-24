@@ -6,6 +6,7 @@ const {planComparison,answerComparison}=require('./chat_stage4_compare.js');
 const {planCustomerCase,answerCustomerCase}=require('./chat_stage4_customer_case.js');
 const {planPending,answerPending}=require('./chat_stage4_pending.js');
 const normalize=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+const asksCapabilities=q=>/ho tro.*gi|(?:ban|tro ly|chatbot) lam duoc gi|chuc nang/.test(q);
 const isToolGuide=question=>{const q=normalize(question);return /\b(tro ly|chatbot)( admin)?\b/.test(q)&&/tra cuu/.test(q)&&/nhu the nao|duoc (nhung )?gi/.test(q);};
 const text=v=>String(v??'').replace(/[|\r\n]/g,' ').slice(0,600);
 const labels={'appointment.list':'Lịch hẹn','inventory.low_stock':'Sản phẩm tồn kho thấp','ticket.open':'Khiếu nại chưa kết thúc','customer.lookup':'Khách hàng','order.lookup':'Đơn hàng','catalog.product':'Sản phẩm','catalog.service':'Dịch vụ','catalog.service_price':'Bảng giá dịch vụ','revenue.summary':'Thực thu','knowledge.search':'Thông tin tra cứu'};
@@ -89,7 +90,7 @@ function plan(question,now=new Date(),readContext={}){
   if(!query&&/gia|bao nhieu tien/.test(q))return {intent:'clarify',answer:'Hãy ghi tên hoặc SKU sau dấu hai chấm để tra đúng giá biến thể. Ví dụ: Sản phẩm: TP-HAT-01.'};
   return {intent:/san pham|hang hoa/.test(q)?'catalog.product':'catalog.service',filters:{query}};
  }
- if(!/ho tro.*gi|ban lam duoc gi|chuc nang/.test(q)&&q.trim().split(/\s+/).length>=3)return {intent:'knowledge.search',filters:{query:question.slice(0,120)}};
+ if(!asksCapabilities(q)&&q.trim().split(/\s+/).length>=3)return {intent:'knowledge.search',filters:{query:question.slice(0,120)}};
  return {intent:'capabilities'};
 }
 function contextualPlan(question,history=[],now=new Date(),readContext={}){
@@ -260,7 +261,7 @@ function planStaff(question,now=new Date(),history=[]){
  const q=normalize(question);
  if(/^(?:hay |vui long |giup toi |toi muon )?(?:hoan tien|duyet (?:huy|boi hoan|hoan tien)|phan cong|cap quyen|doi vai tro|doi gia|sua gia|khoa tai khoan|xoa tai khoan)\b/.test(q)||/danh sach.*nhan (?:su|vien)|nhan (?:su|vien).*toan (?:he thong|cua hang)/.test(q))throw Object.assign(Error('staff_tool_forbidden'),{code:'42501'});
  if(/doanh thu|thuc thu|tong thu|revenue|payroll|luong|hoa hong|danh gia|review|cau hinh|settings|api.?key|mat khau|password|secret|token|bai viet|blog/.test(q.split(/[:：]/)[0]))throw Object.assign(Error('staff_tool_forbidden'),{code:'42501'});
- if(/ho tro.*gi|ban lam duoc gi|chuc nang|tro ly.*tra cuu.*duoc/.test(q))return {intent:'capabilities'};
+ if(asksCapabilities(q)||/tro ly.*tra cuu.*duoc/.test(q))return {intent:'capabilities'};
  if(/^trang\s+\d+\??$/.test(q.trim())&&!history.length)return {intent:'history.followup'};
  let route=history.length?contextualPlan(question,history,now,{}):plan(question,now,{});
  if(route.intent==='customer.pets')route={intent:'customer.case',filters:{query:route.filters.query,kind:'pets_only'}};
@@ -275,6 +276,12 @@ function formatStaffFacts(data){
  const time=v=>{if(!Number.isFinite(Date.parse(v)))invalid();return new Date(v).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});};
  const title={...labels,'internal.customer_resolve':'Khách đã xác định','internal.customer_pets':'Thú cưng của khách','internal.customer_latest_order':'Đơn được tạo mới nhất','internal.customer_appointment':'Ca gần nhất được giao','internal.customer_tickets':'Khiếu nại được giao của khách','conversation.context':'Nội dung hội thoại được giao'}[data.intent]||'Kết quả trong quyền công việc';
  const lines=[`**${title} — trang ${data.page}**`,`${data.items.length} kết quả trên trang hiện tại. Không phải tổng toàn bộ dữ liệu.`];
+ if(['appointment.list','appointment.search'].includes(data.intent)){
+  const service={grooming_spa:'Tắm và cắt tỉa',pet_hotel:'Lưu trú',pet_taxi:'Đưa đón'}[data.scope?.category];
+  const shift={morning:'Buổi sáng',afternoon:'Buổi chiều',evening:'Buổi tối'}[data.scope?.day_part];
+  const filters=[service,statuses[data.scope?.status],shift].filter(Boolean);
+  if(filters.length)lines.push(filters.join(' · '));
+ }
  if(data.ambiguous){lines.push('Chưa xác định duy nhất dịch vụ. Hãy dùng mã dịch vụ chính xác.');if(data.items.length)invalid();}
  else if(!data.items.length)lines.push('Không có kết quả trong phạm vi và trang vừa đọc.');
  for(const r of data.items){

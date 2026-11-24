@@ -92,6 +92,7 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
    if(!allow('staff-answer:'+user.id,30))return fail(429,'Vui lòng chờ trước khi hỏi tiếp.');
    const prior=await caller.rpc('replay_staff_copilot_exchange',replayArgs);if(prior.error)throw prior.error;
    const replayed=Boolean(prior.data);
+   let answerType='history.replay';
    if(!replayed){
     const admitted=await admission.acquireStaff(caller,{requestId:body.requestId,sessionId:body.sessionId,question});lease=admitted.lease;
     if(admitted.scope_token!==initial.data.scope_token)throw {code:'PT409'};
@@ -102,6 +103,7 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     let timer;const task=copilot.answerStaff({question,caller,staff,budget,history,conversationId:body.conversationId,generateReply,beforeModel});task.catch(()=>{});
     let answer;try{answer=await Promise.race([task,new Promise((_,reject)=>{timer=setTimeout(()=>reject({code:'57014'}),25000);})]);}finally{clearTimeout(timer);}
     if(typeof answer.reply!=='string'||!answer.reply.trim()||answer.reply.length>16000)throw {code:'XX000'};
+    answerType=answer.answer_type;
     await verifyScope(admitted.scope_token);
     const service=serviceClient||createClient(process.env.PAWPAL_ADMIN_SUPABASE_URL,process.env.PAWPAL_ADMIN_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
     const saved=await service.rpc('complete_staff_copilot_request',{p_actor:user.id,p_lease:lease,p_question:question,p_answer:answer.reply,p_scope_refs:budget.snapshot().staff_scope_refs||[]});if(saved.error)throw saved.error;
@@ -110,7 +112,7 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
    const fresh=await verifyScope(initial.data.scope_token);
    // Revalidate source references after model/save as well as on an idempotent retry.
    const final=await fresh.caller.rpc('replay_staff_copilot_exchange',replayArgs);if(final.error)throw final.error;if(!final.data||final.data.scope_version!==1||typeof final.data.reply!=='string')throw {code:'PT409'};
-   const payload={ok:true,...final.data,replayed,answer_type:replayed?'history.replay':route.intent};
+   const payload={ok:true,...final.data,replayed,answer_type:answerType};
    if(Buffer.byteLength(JSON.stringify(payload))>32768)throw {code:'54000'};
    // STAFF answers are sent only after validation; no unverified model chunks are streamed.
    return res.json(payload);

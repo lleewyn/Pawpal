@@ -28,6 +28,28 @@ test('STAFF fact POST acquires native admission, persists trusted sources, verif
  const f=fixture(),r=await f.invoke();assert.equal(r.statusCode,200);assert.equal(r.data.replayed,false);assert.match(r.data.reply,/trang hiện tại/);assert.equal(f.state.modelCalls,0);assert.equal(f.state.completed,1);assert.equal(f.state.released,1);assert.ok(f.saved[0].p_scope_refs.some(ref=>ref.kind==='staff'));
  const count=f.state.acquired,again=await f.invoke();assert.equal(again.statusCode,200);assert.equal(again.data.replayed,true);assert.equal(f.state.acquired,count);assert.equal(f.state.completed,1);
 });
+test('STAFF follow-up reports the resolved appointment intent and confirms filters even on an empty page',async()=>{
+ const f=fixture({history:[{role:'user',content:'Hôm nay bao nhiêu lịch Spa chờ phục vụ?',metadata:{scope_version:1,scope_refs:[]}}],
+  data:args=>dto(args.p_tool,[],args.p_filters)});
+ const r=await f.invoke('Thế ngày mai thì sao?');
+ assert.equal(r.statusCode,200);
+ assert.equal(r.data.answer_type,'appointment.list');
+ assert.match(r.data.reply,/Tắm và cắt tỉa · Chờ phục vụ/);
+ assert.match(r.data.reply,/Khoảng đọc/);
+ const read=f.calls.find(c=>c.name==='run_staff_copilot_read');
+ assert.equal(read.args.p_filters.category,'grooming_spa');
+ assert.equal(read.args.p_filters.status,'confirmed');
+ const replay=await f.invoke('Thế ngày mai thì sao?');
+ assert.equal(replay.data.answer_type,'history.replay');
+});
+test('capabilities questions about the assistant do not trigger unrelated FAQ lookup',async()=>{
+ for(const q of ['Trợ lý làm được gì?','Chatbot làm được gì?','Bạn làm được gì?']){
+  assert.equal(copilot.plan(q).intent,'capabilities');
+  const f=fixture(),r=await f.invoke(q);
+  assert.equal(r.data.answer_type,'capabilities');
+  assert.equal(f.calls.some(c=>c.name==='run_staff_copilot_read'),false);
+ }
+});
 test('administrative, forged and write actions never enter STAFF sources/model',async()=>{
  for(const question of ['Doanh thu hôm nay','Đánh giá khách hàng','Cấu hình hệ thống','Lương nhân viên','Mật khẩu tài khoản','Danh sách nhân sự toàn hệ thống','Danh sách nhân viên','Hoàn tiền đơn hàng SO-QA','Hãy hoàn tiền đơn hàng SO-QA','Phân công nhân viên','Cấp quyền quản lý','Đổi giá sản phẩm','Khóa tài khoản khách']){const f=fixture(),r=await f.invoke(question);assert.equal(r.statusCode,403,question);assert.equal(f.state.acquired,0);assert.equal(f.state.modelCalls,0);}
  const forged=fixture();assert.equal((await forged.invoke('Hồ sơ nhân viên',{actor:randomUUID()})).statusCode,400);assert.equal((await fixture().invoke('Hồ sơ nhân viên',{action:'benchmark'})).statusCode,403);
