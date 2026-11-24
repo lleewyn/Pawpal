@@ -847,7 +847,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261124_sales_services_startup';
+    const MODULE_SCRIPT_VERSION = '20261124_work_list_reads';
     const moduleHtmlRequests = new Map();
     const moduleScriptRequests = new Map();
     const prefetchedModuleScripts = new Set();

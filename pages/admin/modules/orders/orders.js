@@ -320,30 +320,31 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
  }
  async function orders({ids,id}={}){
   if(ids && !ids.length)return [];
+  const returnFields='id,sales_order_id,resolution_type,reason,return_type,description,request_status,created_at,updated_at,'+
+   (window.PAWPAL_SALES_REPLACEMENTS_ENABLED===true?'replacement:sales_replacement(order_id,kind,order:order_id(id,order_code,order_status,tracking_code,shipping_status)),':'')+
+   'lines:return_request_detail(id,quantity,sales_order_detail_id,line:sales_order_detail_id(product_name_snapshot,sku_snapshot,unit_price,discount_amount,quantity,product_variant_id))';
   const readSource=()=>rows(()=>{
-   let query=db().from('sales_order').select('*,customer:customer_id(id,auth_user_id,unverified_contact_phone,customer_profile(full_name),customer_phone(phone_number,is_primary)),provider:shipping_provider_id(provider_name),lines:sales_order_detail(*,variant:product_variant_id(id,sku_variant,product_id,product:product_id(specs),media:product_variant_media(image_url,media_asset_id,is_thumbnail,display_order))),payments:payment(id,amount,transaction_status,payment_type,payment_method_config_id,method:payment_method_config_id(name,short_name),refunds:refund_transaction(refund_status,refunded_amount))').order('created_at',{ascending:false}).order('id');
+   let query=db().from('sales_order').select('*,customer:customer_id(id,auth_user_id,unverified_contact_phone,customer_profile(full_name),customer_phone(phone_number,is_primary)),provider:shipping_provider_id(provider_name),lines:sales_order_detail(*,variant:product_variant_id(id,sku_variant,product_id,product:product_id(specs),media:product_variant_media(image_url,media_asset_id,is_thumbnail,display_order))),payments:payment(id,amount,transaction_status,payment_type,payment_method_config_id,method:payment_method_config_id(name,short_name),refunds:refund_transaction(refund_status,refunded_amount)),returns:return_request!sales_order_id('+returnFields+'),redemptions:voucher_redemption(order_id,discount_amount_snapshot,status)').order('created_at',{ascending:false}).order('id')
+    .order('created_at',{referencedTable:'returns',ascending:false}).order('id',{referencedTable:'returns'});
    if(ids)query=query.in('id',ids);
    if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'order_code',id);
    return query;
   });
-  const readExtras=selectedIds=>{
-   const scoped=query=>(ids||id)?query.in('order_id',selectedIds):query;
-   return Promise.all([
-   rows(()=>scoped(db().from('sales_order_totals').select('order_id,total_amount').order('order_id'))),
-   rows(()=>{let query=db().from('return_request').select('id,sales_order_id,resolution_type,reason,return_type,description,request_status,created_at,updated_at,'+(window.PAWPAL_SALES_REPLACEMENTS_ENABLED===true?'replacement:sales_replacement(order_id,kind,order:order_id(id,order_code,order_status,tracking_code,shipping_status)),':'')+'lines:return_request_detail(id,quantity,sales_order_detail_id,line:sales_order_detail_id(product_name_snapshot,sku_snapshot,unit_price,discount_amount,quantity,product_variant_id))').order('created_at',{ascending:false}).order('id');return (ids||id)?query.in('sales_order_id',selectedIds):query;}),
-   rows(()=>scoped(db().from('voucher_redemption').select('order_id,discount_amount_snapshot,status').not('order_id','is',null).order('id')))
-   ]);
-  };
-  const [source,extras]=await Promise.all([readSource(),ids?readExtras(ids):null]);
+  const readTotals=selectedIds=>rows(()=>{
+   const query=db().from('sales_order_totals').select('order_id,total_amount').order('order_id');
+   return query.in('order_id',selectedIds);
+  });
+  const [source,pageTotals]=await Promise.all([readSource(),ids?readTotals(ids):null]);
   if(!source.length)return [];
-  const [totals,returns,redemptions]=extras||await readExtras(source.map(o=>o.id));
+  const totals=pageTotals||await readTotals(source.map(o=>o.id));
   const totalMap=new Map(totals.map(t=>[t.order_id,Number(t.total_amount)]));
   return source.map(o=>{
    const amount=totalMap.get(o.id);if(amount===undefined)throw Error('Thiếu tổng đơn hàng V1.');
    const allPayments=o.payments||[];
    const payments=allPayments.filter(p=>p.transaction_status==='succeeded').sort((a,b)=>a.id.localeCompare(b.id)),gross=payments.reduce((n,p)=>n+Number(p.amount),0),collected=payments.reduce((n,p)=>n+net(p),0),refunds=gross-collected;
    const status=({draft:'pending',pending:'pending',packing:'confirmed',confirmed:'confirmed',shipped:'shipping',shipping:'shipping',delivered:'completed',completed:'completed',cancelled:'cancelled',returned:'returned'})[o.order_status]||o.order_status;
-   const requests=returns.filter(r=>r.sales_order_id===o.id),r=requests[0],returnsTotal=payments.reduce((n,p)=>n+(p.refunds||[]).filter(v=>v.refund_status==='succeeded').reduce((s,v)=>s+Number(v.refunded_amount),0),0);
+   const requests=o.returns||[],r=requests[0],returnsTotal=payments.reduce((n,p)=>n+(p.refunds||[]).filter(v=>v.refund_status==='succeeded').reduce((s,v)=>s+Number(v.refunded_amount),0),0);
+   const redemptions=o.redemptions||[];
    const paymentStatus=collected>=amount&&amount>0?'paid':collected>0?'partial':gross>0&&refunds>=gross?'refunded':'unpaid';
    const activePayments=payments.length>0?payments:allPayments;
    let methods=[...new Set(activePayments.map(p=>one(p.method)?.name||one(p.method)?.short_name).filter(Boolean))];

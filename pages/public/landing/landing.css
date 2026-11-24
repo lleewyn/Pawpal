@@ -1825,3 +1825,60 @@ body.landing-v218 #homePage .home-pet-hero{width:130px;bottom:-3px}
 @media(max-width:700px){body.landing-v218 #homePage .home-pet-hero{width:70px;bottom:-2px}}
 @media(min-width:701px) and (max-width:900px){body.landing-v218 #homePage .home-pet-journal{width:130px;right:-80px;top:-73px}}
 @media(max-width:700px){body.landing-v218 #homePage .home-pet-journal{width:55px;top:-31px}}
+
+/* Premium Infinite Smooth Sliding Carousel for Campaign Banner */
+body.landing-v218 .campaign-slider-stage {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    border-radius: 9px;
+    border: 1px solid #ECF2EE;
+    background: #EEF5F1;
+}
+
+body.landing-v218 .campaign-slider-track {
+    display: flex;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    will-change: transform;
+    touch-action: pan-y;
+}
+
+body.landing-v218 .campaign-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    line-height: 0;
+}
+
+body.landing-v218 .campaign-slide a {
+    display: block;
+    width: 100%;
+    text-decoration: none;
+    line-height: 0;
+}
+
+body.landing-v218 .campaign-slide .campaign-img,
+body.landing-v218 .campaign-slider-stage .campaign-img {
+    width: 100%;
+    display: block;
+    aspect-ratio: 86/27;
+    max-height: 540px;
+    object-fit: cover;
+    object-position: center;
+    border: 0 !important;
+    background: transparent !important;
+    user-select: none;
+    -webkit-user-drag: none;
+    transition: none !important;
+}
+
+body.landing-v218 .campaign.is-loading .campaign-slider-stage {
+    opacity: 0.88;
+}

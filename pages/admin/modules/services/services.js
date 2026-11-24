@@ -1463,7 +1463,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         for(let offset=0;;offset+=500){const page=await readRows(makeQuery().range(offset,offset+499));rows.push(...page);if(page.length<500)return rows;}
     }
     const customerFields='id,auth_user_id,customer_status,unverified_contact_phone,customer_profile(full_name),customer_phone(phone_number,is_primary)';
-    const petFields='id,customer_id,pet_code,pet_name,breed_id,date_of_birth,allergy,routine,safety_note,avatar_url,status,updated_at,breed:breed_id(breed_name,species:species_id(species_name))';
+    const petFields='id,customer_id,pet_code,pet_name,breed_id,date_of_birth,allergy,routine,safety_note,avatar_url,status,updated_at,breed:breed_id(breed_name,species:species_id(species_name)),currentWeight:pet_current_weight(weight)';
     PawpalServices.searchBookingDirectory=async function(kind,query='',owner=null){
         const db=window.getSupabaseClient(),store=window.PawpalDataStore;
         const scope=store?.buildKey?.('booking-directory')||'session';
@@ -1491,25 +1491,18 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         const fetcher=async()=>{
             const db=window.getSupabaseClient();
             if(ids&&!ids.length)return [];
-            const readAppointments=()=>allRows(()=>{let query=db.from('appointment').select('*,customer:customer_id('+customerFields+'),pet_profile:pet_id('+petFields+'),staff:staff_id(id,full_name,job_title),requestedStaff:requested_staff_id(id,full_name),items:appointment_item(*,service:service_id(id,service_code,service_name,estimated_duration,category:category_id(category_code))),records:appointment_record(*,recorder:recorded_by(full_name)),adjustments:appointment_adjustment(*),taxi:taxi_trip(*),hotel:hotel_booking(*,room:room_id(room_number,type:room_type_id(room_type)))').order('created_at',{ascending:false}).order('id');if(ids)query=query.in('id',ids);if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'appointment_code',id);return query;});
-            const readFinancials=selectedIds=>{
-                const scoped=query=>(ids||id)?query.in('appointment_id',selectedIds):query;
-                return Promise.all([
-                    allRows(()=>scoped(db.from('appointment_totals').select('appointment_id,total_price').order('appointment_id'))),
-                    allRows(()=>scoped(db.from('payment').select('id,appointment_id,amount,transaction_status,refund_transaction(refund_status,refunded_amount)').not('appointment_id','is',null).order('id')))
-                ]);
-            };
-            const [appointments,financials]=await Promise.all([readAppointments(),ids?readFinancials(ids):null]);
+            const readAppointments=()=>allRows(()=>{let query=db.from('appointment').select('*,customer:customer_id('+customerFields+'),pet_profile:pet_id('+petFields+'),staff:staff_id(id,full_name,job_title),requestedStaff:requested_staff_id(id,full_name),items:appointment_item(*,service:service_id(id,service_code,service_name,estimated_duration,category:category_id(category_code))),records:appointment_record(*,recorder:recorded_by(full_name)),adjustments:appointment_adjustment(*),taxi:taxi_trip(*),hotel:hotel_booking(*,room:room_id(room_number,type:room_type_id(room_type))),payments:payment(amount,transaction_status,refund_transaction(refund_status,refunded_amount))').order('created_at',{ascending:false}).order('id');if(ids)query=query.in('id',ids);if(id)query=query.eq(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id)?'id':'appointment_code',id);return query;});
+            const readTotals=selectedIds=>allRows(()=>db.from('appointment_totals').select('appointment_id,total_price')
+                .in('appointment_id',selectedIds).order('appointment_id'));
+            const [appointments,pageTotals]=await Promise.all([readAppointments(),ids?readTotals(ids):null]);
             if(!appointments.length)return [];
             const petIds=[...new Set(appointments.map(a=>a.pet_id).filter(Boolean))];
             const times=[...new Set(appointments.flatMap(a=>(a.records||[]).map(r=>r.recorded_at)).filter(Boolean))];
-            const [weights,measurements,[totals,payments]]=await Promise.all([
-                petIds.length?allRows(()=>db.from('pet_current_weight').select('pet_id,weight').in('pet_id',petIds).order('pet_id')):[],
+            const [measurements,totals]=await Promise.all([
                 petIds.length&&times.length?allRows(()=>db.from('pet_weight_history').select('pet_id,weight,measured_at').in('pet_id',petIds).in('measured_at',times).order('id')):[],
-                financials||readFinancials(appointments.map(a=>a.id))
+                pageTotals||readTotals(appointments.map(a=>a.id))
             ]);
             PawpalServices.state.weightMeasurements=measurements;
-            const weightMap=new Map(weights.map(w=>[w.pet_id,Number(w.weight)]));
 
             if(id){
                 if(!intakeMediaReader){const {createIntakeMediaReader}=await import('/scripts/shared/intake-media-reader.mjs');intakeMediaReader=createIntakeMediaReader({db});}
@@ -1525,8 +1518,9 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 const at=new Date(a.scheduled_start_at);
                 const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(at).map(p=>[p.type,p.value]));
                 const service=item?.service ? {...item.service,service_name:item.name_snapshot,estimated_duration:item.duration_minutes,service_category:categoryCode(item.service)} : null;
-                const collected=payments.filter(p=>p.appointment_id===a.id&&p.transaction_status==='succeeded').reduce((sum,p)=>sum+Number(p.amount)-(p.refund_transaction||[]).filter(r=>r.refund_status==='succeeded').reduce((n,r)=>n+Number(r.refunded_amount),0),0);
-                return {...a,records:(a.records||[]).map(r=>({...r,measured_weight:measurements.find(w=>w.pet_id===a.pet_id&&w.measured_at===r.recorded_at)?.weight==null?null:Number(measurements.find(w=>w.pet_id===a.pet_id&&w.measured_at===r.recorded_at).weight)})),service,customer:{...a.customer,phone_main:primaryPhone(a.customer)},pet_profile:adaptPet({...a.pet_profile,weight:weightMap.get(a.pet_id)??null}),
+                const collected=(a.payments||[]).filter(p=>p.transaction_status==='succeeded').reduce((sum,p)=>sum+Number(p.amount)-(p.refund_transaction||[]).filter(r=>r.refund_status==='succeeded').reduce((n,r)=>n+Number(r.refunded_amount),0),0);
+                const weight=one(a.pet_profile?.currentWeight)?.weight;
+                return {...a,records:(a.records||[]).map(r=>({...r,measured_weight:measurements.find(w=>w.pet_id===a.pet_id&&w.measured_at===r.recorded_at)?.weight==null?null:Number(measurements.find(w=>w.pet_id===a.pet_id&&w.measured_at===r.recorded_at).weight)})),service,customer:{...a.customer,phone_main:primaryPhone(a.customer)},pet_profile:adaptPet({...a.pet_profile,weight:weight==null?null:Number(weight)}),
                     appointment_date:parts.year+'-'+parts.month+'-'+parts.day,appointment_time:parts.hour+':'+parts.minute,
                     total_price:totalsMap.get(a.id)??0,collected,payment_status:collected>0&&collected>=(totalsMap.get(a.id)??0)?'paid':collected>0?'partial':'unpaid'};
             });

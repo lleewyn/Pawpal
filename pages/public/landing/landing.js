@@ -116,9 +116,9 @@
             const imgEl = $('#campaignImg');
             if (!imgEl) return;
             const campaignEl = imgEl.closest('.campaign');
+            const stageEl = $('#campaignStage') || imgEl.parentElement;
             const fallbackSlide = {src:'/assets/images/landing-v218/pet-taxi-clean.webp',name:'Pet Taxi — Đồng hành cùng bé',link:'/booking?service=TXI01'};
             let slides = [];
-            let current = 0;
             try {
                 const data = await window.DataLoader.loadHomeBanners();
                 const now = Date.now();
@@ -132,7 +132,7 @@
                     const responsive = b.image_media_asset_id ? [640,1280,1720].map(w=>url.href+'&width='+w+' '+w+'w').join(', ') : '';
                     slides.push({src:b.image_media_asset_id?url.href+'&width=1720':url.href,srcset:responsive,name:b.title||'Ưu đãi PawPal',link:link.pathname+link.search});
                 }
-            } catch (_) { /* Approved brand artwork remains available if the catalogue is unavailable. */ }
+            } catch (_) {}
 
             if (!slides.length) {
                 slides = [fallbackSlide];
@@ -140,36 +140,108 @@
 
             if (campaignEl) campaignEl.classList.remove('is-loading');
             if (!grid.isConnected) return;
-            const prev=$('#prevSlide'), next=$('#nextSlide');
+
+            const prev = $('#prevSlide'), next = $('#nextSlide');
+            const total = slides.length;
+
+            if (total === 1) {
+                const s = slides[0];
+                imgEl.src = s.src;
+                if (s.srcset) imgEl.srcset = s.srcset;
+                imgEl.alt = s.name;
+                $('#slideName').textContent = s.name;
+                $('#slideNum').textContent = '01';
+                $('#slidePager').textContent = '01 / 01';
+                $('.book-inline').href = s.link;
+                $('.book-inline').textContent = s.link.startsWith('/booking') ? 'Đặt lịch ngay ↗' : 'Khám phá dịch vụ ↗';
+                [prev, next].forEach(b => { b.hidden = false; b.disabled = true; });
+                return;
+            }
+
+            // Infinite Sliding Track: [clone of last, slide 0, slide 1, ..., slide N-1, clone of first]
+            const items = [slides[total - 1], ...slides, slides[0]];
+            let trackPos = 1; // Start at slide 0 (offset -100%)
+            let isAnimating = false;
             let autoplayTimer = null;
             const AUTOPLAY_DELAY = 5000;
+            const EASING = 'transform 0.55s cubic-bezier(0.25, 1, 0.35, 1)';
 
-            function show() {
-                const row=slides[current];imgEl.sizes='(max-width: 700px) calc(100vw - 32px), (max-width: 1800px) calc(100vw - 80px), 1720px';
-                if(row.srcset)imgEl.srcset=row.srcset;else imgEl.removeAttribute('srcset');
-                imgEl.src=row.src;imgEl.alt=row.name;
-                $('#slideName').textContent=row.name;$('#slideNum').textContent=String(current+1).padStart(2,'0');
-                $('#slidePager').textContent=`${String(current+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}`;
-                $('.book-inline').href=row.link;
-                $('.book-inline').textContent=row.link.startsWith('/booking')?'Đặt lịch ngay ↗':'Khám phá dịch vụ ↗';
+            stageEl.innerHTML = `
+                <div class="campaign-slider-track" id="campaignTrack" style="transform: translate3d(-100%, 0, 0);">
+                    ${items.map((item, idx) => `
+                        <div class="campaign-slide" data-slide-index="${idx}">
+                            <a href="${item.link}" tabindex="-1">
+                                <img ${idx === 1 ? 'id="campaignImg"' : ''}
+                                     src="${item.src}"
+                                     ${item.srcset ? `srcset="${item.srcset}"` : ''}
+                                     sizes="(max-width: 700px) calc(100vw - 32px), (max-width: 1800px) calc(100vw - 80px), 1720px"
+                                     alt="${esc(item.name)}"
+                                     class="campaign-img"
+                                     fetchpriority="${idx === 1 ? 'high' : 'auto'}"
+                                     decoding="async">
+                            </a>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            const track = stageEl.querySelector('#campaignTrack');
+
+            function getRealIndex() {
+                if (trackPos <= 0) return total - 1;
+                if (trackPos >= items.length - 1) return 0;
+                return trackPos - 1;
             }
 
-            function goTo(index, resetTimer = true) {
-                if (slides.length < 2) return;
-                current = (index + slides.length) % slides.length;
-                imgEl.style.opacity = '0.7';
-                setTimeout(() => {
-                    show();
-                    imgEl.style.opacity = '1';
-                }, 120);
-                if (resetTimer) restartAutoplay();
+            function updateFooter() {
+                const realIdx = getRealIndex();
+                const row = slides[realIdx];
+                if (!row) return;
+                $('#slideName').textContent = row.name;
+                $('#slideNum').textContent = String(realIdx + 1).padStart(2, '0');
+                $('#slidePager').textContent = `${String(realIdx + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+                $('.book-inline').href = row.link;
+                $('.book-inline').textContent = row.link.startsWith('/booking') ? 'Đặt lịch ngay ↗' : 'Khám phá dịch vụ ↗';
             }
+
+            function moveTo(pos, animated = true) {
+                if (animated) {
+                    isAnimating = true;
+                    track.style.transition = EASING;
+                } else {
+                    track.style.transition = 'none';
+                }
+                trackPos = pos;
+                track.style.transform = `translate3d(-${trackPos * 100}%, 0, 0)`;
+                updateFooter();
+            }
+
+            function goNext() {
+                if (isAnimating) return;
+                moveTo(trackPos + 1, true);
+                restartAutoplay();
+            }
+
+            function goPrev() {
+                if (isAnimating) return;
+                moveTo(trackPos - 1, true);
+                restartAutoplay();
+            }
+
+            track.addEventListener('transitionend', () => {
+                isAnimating = false;
+                if (trackPos >= items.length - 1) {
+                    moveTo(1, false);
+                } else if (trackPos <= 0) {
+                    moveTo(total, false);
+                }
+            });
 
             function startAutoplay() {
-                if (slides.length < 2 || autoplayTimer) return;
+                if (autoplayTimer) return;
                 autoplayTimer = setInterval(() => {
                     if (document.visibilityState !== 'hidden') {
-                        goTo(current + 1, false);
+                        goNext();
                     }
                 }, AUTOPLAY_DELAY);
             }
@@ -186,27 +258,38 @@
                 startAutoplay();
             }
 
-            [prev,next].forEach(b=>{b.hidden=false;b.disabled=slides.length<2;});
-            prev.onclick = ()=>{goTo(current - 1);};
-            next.onclick = ()=>{goTo(current + 1);};
-            show();
+            [prev, next].forEach(b => { b.hidden = false; b.disabled = false; });
+            prev.onclick = () => goPrev();
+            next.onclick = () => goNext();
+
+            updateFooter();
             startAutoplay();
 
-            // Tạm dừng khi rê chuột hoặc chạm vào banner để người dùng đọc thông tin
-            if (campaignEl) {
-                campaignEl.addEventListener('mouseenter', stopAutoplay);
-                campaignEl.addEventListener('mouseleave', startAutoplay);
-                campaignEl.addEventListener('touchstart', stopAutoplay, { passive: true });
-                campaignEl.addEventListener('touchend', restartAutoplay, { passive: true });
-            }
+            // Tạm dừng khi rê chuột hoặc chạm
+            stageEl.addEventListener('mouseenter', stopAutoplay);
+            stageEl.addEventListener('mouseleave', startAutoplay);
+
+            // Vuốt cảm ứng trên màn hình cảm ứng / di động
+            let touchStartX = 0;
+            stageEl.addEventListener('touchstart', (e) => {
+                stopAutoplay();
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            stageEl.addEventListener('touchend', (e) => {
+                const diff = touchStartX - e.changedTouches[0].screenX;
+                if (Math.abs(diff) > 40) {
+                    if (diff > 0) goNext();
+                    else goPrev();
+                }
+                restartAutoplay();
+            }, { passive: true });
 
             // Dừng autoplay khi tab bị ẩn để tiết kiệm tài nguyên
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'hidden') stopAutoplay();
                 else startAutoplay();
             });
-
-            // Other banners load only when selected; avoid unused media authorization reads.
         }
         const entries = [...root.querySelectorAll('.pj-entry')];
         const photo = $('#pj-active-photo'), original = photo.src;
