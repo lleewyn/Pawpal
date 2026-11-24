@@ -284,7 +284,7 @@
                     <td style="white-space: nowrap; font-size: 12px; color: var(--text-muted);">${item.createdAt || '—'}</td>
                     <td style="text-align: center; white-space: nowrap;">${statusBadge}</td>
                     <td style="text-align: center; white-space: nowrap;">
-                        <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-order-complaint-actions" aria-label="Thao tác khiếu nại ${escapeHtml(item.id)}" aria-haspopup="menu" aria-expanded="false" data-ticket-id="${escapeHtml(item.id)}">•••</button>
+                        <button type="button" class="btn-order-complaint-actions" aria-label="Thao tác khiếu nại ${escapeHtml(item.id)}" aria-haspopup="menu" aria-expanded="false" data-ticket-id="${escapeHtml(item.id)}">•••</button>
                     </td>
                 </tr>
             `;

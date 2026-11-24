@@ -2231,22 +2231,6 @@
     border-radius: var(--admin-radius);
     white-space: nowrap;
 }
-.rules-action-menu-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-weight: 700;
-    font-size: 15px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: var(--admin-radius);
-    transition: background 0.15s, color 0.15s;
-}
-.rules-action-menu-btn:hover {
-    background-color: #EEF5F1;
-    color: #236B48;
-}
 .rules-pagination-wrap {
     display: flex;
     justify-content: center;
@@ -4612,21 +4596,6 @@
     box-shadow: none !important;
     font-size: inherit;
     font-weight: 600;
-}
-#subtab-tab-chatbot-rules .rules-action-menu-btn {
-    min-width: 28px;
-    min-height: 28px;
-    padding: 4px 7px;
-    color: #65736a;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 2px;
-    font-size: 14px;
-}
-#subtab-tab-chatbot-rules .rules-action-menu-btn:hover {
-    color: var(--cb-green);
-    background: #f5f8f5;
-    border-color: var(--cb-border);
 }
 #subtab-tab-chatbot-rules .rules-pagination-wrap {
     display: flex;

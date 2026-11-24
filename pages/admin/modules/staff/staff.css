@@ -76,18 +76,6 @@
     color: var(--text-muted) !important;
 }
 /* THANH CẢNH BÁO NHÂN SỰ CHỦ ĐỘNG (DẢI MỎNG ALERT TONE, THUẦN CHỮ, KHÔNG VIỀN, TRIỆT TIÊU THANH TRƯỢT) */
-.staff-module .staff-alert-strip {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 9px 18px;
-    background-color: rgba(244, 249, 246, 0.85);
-    border-bottom: 1px solid var(--border-neutral) !important;
-    border-radius: var(--admin-radius, 9px) var(--admin-radius, 9px) 0 0;
-    font-size: 13px;
-    overflow: hidden;
-}
 .staff-module .alert-strip-left {
     display: flex;
     align-items: center;
@@ -2062,14 +2050,6 @@
     line-height: 1.2;
     letter-spacing: -0.25px;
 }
-.staff-module .staff-alert-strip {
-    min-height: 42px;
-    padding: 8px 14px;
-    background: #f8faf8;
-    border: 0 !important;
-    border-bottom: 1px solid var(--staff-border) !important;
-    border-radius: var(--staff-radius) var(--staff-radius) 0 0;
-}
 .staff-module .alert-item-tag {
     background: #eef5f1;
     border: 0 !important;
@@ -2275,9 +2255,6 @@
     }
     .staff-module .kpi-card {
         border-bottom: 1px solid var(--staff-border);
-    }
-    .staff-module .staff-alert-strip {
-        align-items: flex-start;
     }
     .staff-module .filter-row-top {
         align-items: stretch;
@@ -2625,7 +2602,6 @@
 .staff-module .staff-recurring-table tbody,.staff-module .staff-recurring-table tr,.staff-module .staff-recurring-table td { background: transparent; }
 .staff-module .staff-recurring-table td:first-child { border-left: 3px solid transparent; }
 .staff-module .staff-recurring-nowrap { white-space: nowrap; }
-.staff-module .staff-recurring-edit { padding: 6px 8px; border: none; border-radius: 9px; background: transparent; color: #236B48; font: inherit; cursor: pointer; }
 .staff-module .staff-recurring-empty { color: #4F7A65; }
 .staff-module .staff-recurring-feedback { color: #236B48; margin: 0; }
 @media(max-width:600px){.staff-module .staff-recurring-fields{grid-template-columns:1fr}.staff-module .staff-recurring-panel{padding:16px}}

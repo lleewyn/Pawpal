@@ -65,7 +65,12 @@
     }
     function renderSummary() {
         const target = node('[data-fin-summary]'); if (!target) return;
-        if (!s.report) { target.innerHTML = s.loading ? '<p class="biz-caption">Đang tải tài chính…</p>' : '<p class="biz-caption">Chưa tải được số tổng tài chính.</p>'; renderForecast(); return; }
+        if (!s.report) {
+            if (s.loading) window.PawpalAdmin.renderBlockSkeleton(target, 'Đang tải tài chính');
+            else target.innerHTML = '<p class="biz-caption">Chưa tải được số tổng tài chính.</p>';
+            renderForecast();
+            return;
+        }
         const r = s.report, m = r.missing;
         const evidenceOpen = !!target.querySelector('[data-fin-evidence]')?.open;
         const problems = [['revenue', 'hồ sơ cần xác nhận giá trị', 'revenues'], ['product_cost', 'dòng hoặc giao dịch thiếu giá vốn', 'sale_costs'], ['service_cost', 'ca cần ghi chi phí trực tiếp', 'services'], ['refunds', 'khoản hoàn cần phân loại', 'refunds'], ['returns', 'phiếu đổi trả cần đối soát', 'returns']].filter(([key]) => m[key] > 0);
@@ -115,7 +120,7 @@
     function renderTable() {
         const target = node('[data-fin-table]'); if (!target) return;
         if (s.error) { target.innerHTML = `<p class="biz-error" role="alert">${esc(s.error)} ${action('refresh', 'Thử lại')}</p>`; s.pagination.innerHTML = ''; return; }
-        if (s.loading && !s.rows.length) { target.innerHTML = '<p class="biz-caption">Đang tải sổ tài chính…</p>'; return; }
+        if (s.loading && !s.rows.length) { window.PawpalAdmin.renderBlockSkeleton(target, 'Đang tải sổ tài chính'); return; }
         if (!s.rows.length) { target.innerHTML = '<p class="biz-empty">' + (s.query ? 'Không tìm thấy chứng từ phù hợp.' : s.section === 'expenses' ? 'Chưa có khoản chi phí nào.' : 'Chưa có dữ liệu trong danh sách này.') + '</p>'; s.pagination.innerHTML = ''; return; }
         const account = s.section === 'accounts', stock = ['stock_costs', 'sale_costs'].includes(s.section);
         const debt = ['expenses', 'obligations'].includes(s.section), documents = s.section === 'source_documents';

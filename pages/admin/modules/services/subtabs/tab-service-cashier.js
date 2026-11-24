@@ -49,11 +49,11 @@
         if(busy){m.showToast('Đang ghi giao dịch, vui lòng chờ.','warning');return;}
         booking=selected;const current=++session;context=null;el('formServiceCashier').reset();
         el('cashierMeta').textContent=selected.id+' · '+(selected.customerName||selected.customer||'Chưa có tên khách')+' · '+selected.petName;
-        el('cashierError').textContent='';el('cashierHistory').textContent='Đang tải giao dịch…';
+        el('cashierError').textContent='';window.PawpalAdmin.renderBlockSkeleton(el('cashierHistory'), 'Đang tải giao dịch');
         for(const id of ['cashierTotal','cashierCollected','cashierRemaining'])el(id).textContent='—';
         el('btnSaveServiceMoney').disabled=true;
         el('modalServiceCashier').style.removeProperty('display');el('modalServiceCashier').classList.add('active');
-        try{await load(current);}catch(error){if(current===session)el('cashierError').textContent=m.errorMessage(error);}
+        try{await load(current);}catch(error){if(current===session){el('cashierHistory').replaceChildren();el('cashierError').textContent=m.errorMessage(error);}}
         finally{if(current===session)previewRefund();}
     };
     el('formServiceCashier').addEventListener('submit',event=>event.preventDefault());

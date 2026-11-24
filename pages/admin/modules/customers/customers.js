@@ -218,7 +218,7 @@
         if (!window.PawpalAdminAccess?.state.user?.permissions.includes('work.customer.write')) return;
         const state = addressDialog(); if (state.saving) return;
         state.row = null; state.entries = []; state.loading = true; state.returnFocus = document.activeElement; state.onSaved = onSaved; state.errorText.textContent = '';
-        state.save.disabled = true; state.save.textContent = 'Đang tải'; state.list.textContent = 'Đang tải...'; state.add.disabled = true; const turn = ++state.generation;
+        state.save.disabled = true; state.save.textContent = 'Đang tải'; window.PawpalAdmin.renderBlockSkeleton(state.list, 'Đang tải sổ địa chỉ'); state.add.disabled = true; const turn = ++state.generation;
         state.overlay.classList.add('active'); state.overlay.setAttribute('aria-hidden', 'false'); state.overlay.querySelector('.btn-modal-close').focus();
         try {
             const rows = await lookup('customers', '', customerId), row = rows.find(item => item.id === customerId);

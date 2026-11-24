@@ -21,7 +21,6 @@
 .services-module .admin-badge {background:none!important;border:0!important;border-radius:0!important;padding:0;height:auto;min-height:0;font:500 12px/1.5 Inter,'Segoe UI',sans-serif}
 .services-module .service-detail-card {border:none;background:transparent;box-shadow:none}
 .services-module .detail-section-title,.services-module .admin-card-title {font-size:14px;font-weight:650;color:#275e49;border-bottom:none}
-.services-module .booking-upcoming-strip {background:transparent;border:0;padding:10px 14px;font-size:12px;color:#6f8176}
 .services-module .upcoming-strip-badge {background:none;border:0;padding:0;font-weight:650;color:#275e49}
 .services-module .upcoming-item-tag {background:transparent;border:0;border-radius:0;font-size:12px;padding:0}
 .services-module .service-detail-grid > * {min-width:0}

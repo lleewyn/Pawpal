@@ -1603,8 +1603,10 @@ body.shop-public-page,.shop-public-page .shop-page{background:#fff;color:#254936
 .shop-public-page .section-header-shop{display:none}
 .shop-public-page .shop-by-category-section{padding:8px 0 26px;background:#fff}
 .shop-public-page .category-grid{gap:12px}
-.shop-public-page .category-card{border:1px solid #e1e8dd;border-radius:7px;box-shadow:none;background:#f8faf5;padding:12px 8px;transform:none!important}
+.shop-public-page .category-card{border:1px solid #e1e8dd;border-radius:7px;box-shadow:none;background:#f8faf5;padding:12px 8px;transform:none!important;transition:border-color .2s ease,background-color .2s ease}
 .shop-public-page .category-card:hover{background:#f4efd9;border-color:#d2b46a;box-shadow:none}
+.shop-public-page .category-card.active{background:#EEF5F1!important;border-color:#236B48!important;box-shadow:0 0 0 1px #236B48!important}
+.shop-public-page .category-card.active .category-card-label{color:#236B48!important;font-weight:700!important}
 .shop-public-page .category-card-icon-wrapper{background:transparent;box-shadow:none}
 .shop-public-page .category-card-label{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#315540}
 .shop-public-page .shop-layout{grid-template-columns:235px minmax(0,1fr);gap:32px}

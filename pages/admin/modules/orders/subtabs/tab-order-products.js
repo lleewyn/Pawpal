@@ -1342,7 +1342,7 @@
  api.renderProductReviewsModalContent=async sku=>{
   const product=m.state.products.find(p=>p.sku===sku);if(!product)return;
   const requestedFilter=filter,requestedPage=page;
-  const current=++session;el('productReviewsListContainer').textContent='Đang tải đánh giá…';
+  const current=++session;window.PawpalAdmin.renderBlockSkeleton(el('productReviewsListContainer'), 'Đang tải đánh giá');
   try{
    const result=await window.PawpalOrderV1.cached('reviews:'+product.id+':'+requestedFilter+':'+requestedPage,async()=>{
     const db=window.getSupabaseClient();

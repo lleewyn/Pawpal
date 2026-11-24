@@ -483,17 +483,156 @@ body.admin-body .admin-ui-standard.admin-ui-customer-reference :is(.admin-btn,.a
 @media(max-width:640px) { html[data-admin-role="STAFF"] .admin-header { flex-wrap:wrap; height:auto; min-height:84px; padding:8px 12px; gap:8px; } html[data-admin-role="STAFF"] .admin-header-left { flex:1 0 100%; overflow:visible; } html[data-admin-role="STAFF"] .btn-mobile-menu-toggle { flex-shrink:0; } html[data-admin-role="STAFF"] .header-subtabs-group { min-width:0; flex-shrink:1; overflow-x:auto; scrollbar-width:none; } html[data-admin-role="STAFF"] .admin-header-right { width:100%; justify-content:flex-end; } }
 @media (max-width: 640px) { .staff-workspace .admin-card { padding: 16px; } .staff-workspace .workspace-toolbar { align-items: stretch; } .staff-workspace .workspace-toolbar .admin-card-title { width: 100%; } .staff-workspace .workspace-facts { grid-template-columns: 1fr; gap: 4px; } .staff-workspace .workspace-facts dd { margin-bottom: 12px; } }
 
+/* Workspace cards and KPI groups use the same square corners as the customer list. */
+.admin-body .admin-preview-content :is(
+    .admin-card,
+    .admin-workspace-card,
+    .admin-workspace-section,
+    .kpi-card,
+    .dashboard-kpi-card,
+    .admin-kpi-grid,
+    :has(> :is(.kpi-card, .dashboard-kpi-card))
+):not(:where(
+    .admin-modal,
+    .admin-modal-card,
+    .admin-modal-backdrop *,
+    .admin-modal-overlay *,
+    .modal-backdrop *,
+    .modal-overlay *,
+    [role="dialog"] *
+)) {
+    border-radius: 0 !important;
+}
+
+/* Main table frames follow the customer list surface. */
+.admin-body .admin-preview-content .admin-card:is(
+    .customer-master-card,
+    .pet-master-card,
+    .service-master-card,
+    .order-master-card,
+    .product-master-card,
+    .promo-master-card,
+    .staff-master-card,
+    .complaint-master-card,
+    .rules-master-card,
+    .settings-master-card,
+    .v7-points-ledger
+),
+.admin-body .admin-preview-content .admin-workspace-card:has(> .admin-workspace-table-body) {
+    border: 1px solid #D9E0DB !important;
+    border-radius: 0 !important;
+    background: #FFF !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* Operational notices above admin tables */
+.admin-body .staff-module #subtab-tab-staff-list {
+    row-gap: 10px;
+}
+
+.admin-body .admin-table-notice {
+    background: rgba(244, 249, 246, 0.85);
+    border: 0 !important;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.admin-body .cod-reconcile-strip.admin-table-notice {
+    margin: 0;
+}
+
+.admin-body .admin-table-notice-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    min-height: 38px;
+    padding: 8px 14px;
+    color: #4F7A65;
+    font: 400 12px/1.45 var(--admin-font, Inter, "Segoe UI", Arial, sans-serif);
+}
+
+.admin-body .admin-table-notice-line .admin-table-notice-content {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.admin-body .cod-strip-left.admin-table-notice-content {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+}
+
+.admin-body .admin-table-notice .cod-strip-highlight {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+}
+
+.admin-body .admin-table-notice-line > :last-child {
+    margin-inline-start: auto;
+}
+
+.admin-body .admin-table-notice-line .admin-table-notice-title {
+    color: #236B48;
+    font-size: inherit;
+    font-weight: 650;
+}
+
+.admin-body .admin-table-notice .admin-table-notice-action {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0;
+    color: #236B48 !important;
+    font: 600 12px/1.45 var(--admin-font, Inter, "Segoe UI", Arial, sans-serif) !important;
+    min-height: 0;
+    padding: 2px 0 !important;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.admin-body .admin-table-notice .admin-table-notice-action:hover {
+    color: #165335 !important;
+    text-decoration-thickness: 2px;
+}
+
+.admin-body .admin-table-notice .admin-table-notice-action:focus-visible {
+    outline: 2px solid #236B48;
+    outline-offset: 2px;
+}
+
+.admin-body .admin-table-notice-line :is(.alert-item-tag, .upcoming-item-tag) {
+    background: transparent;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 2px 4px;
+    font: inherit;
+}
+
+.admin-body .admin-table-notice-line :is(.alert-item-tag, .upcoming-item-tag):hover {
+    background: #EEF5F1;
+}
+
 /* Chuẩn hóa nút thao tác 3 chấm trong bảng dữ liệu toàn hệ thống Admin (Rule 2 AGENTS.md) */
-.admin-table .btn-action-trigger,
-.admin-table .btn-action-more,
-.admin-table .btn-booking-action-more,
-.admin-table .btn-dots-action,
-.admin-table .btn-voucher-dots,
-.admin-table .rules-action-menu-btn,
-.customers-module #customerDataTable .btn-action-more {
+:is(.admin-table, table) td :is(
+    .btn-action-trigger,
+    .btn-action-more,
+    .btn-booking-action-more,
+    .btn-dots-action,
+    .btn-voucher-dots,
+    .rules-action-menu-btn,
+    .btn-order-complaint-actions,
+    .staff-recurring-edit,
+    .workspace-item-menu > summary
+) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
     width: 32px;
     height: 32px;
     min-width: 32px;
@@ -502,41 +641,49 @@ body.admin-body .admin-ui-standard.admin-ui-customer-reference :is(.admin-btn,.a
     max-height: 32px;
     padding: 0;
     margin: 0 auto;
-    background-color: transparent;
+    background: transparent;
     border: 1px solid transparent;
     border-radius: var(--admin-radius, 9px);
-    color: var(--text-muted, #4F7A65);
+    color: #4F7A65;
+    font-family: var(--admin-font, Inter, "Segoe UI", Arial, sans-serif);
     font-size: 16px;
     font-weight: 700;
     line-height: 1;
     letter-spacing: 1px;
-    text-decoration: none !important;
     cursor: pointer;
-    outline: none;
     box-shadow: none;
-    transition: none !important;
+    transition: none;
 }
 
-.admin-table .btn-action-trigger:hover,
-.admin-table .btn-action-more:hover,
-.admin-table .btn-booking-action-more:hover,
-.admin-table .btn-dots-action:hover,
-.admin-table .btn-voucher-dots:hover,
-.admin-table .rules-action-menu-btn:hover,
-.customers-module #customerDataTable .btn-action-more:hover,
-.admin-table .btn-action-trigger:focus-visible,
-.admin-table .btn-action-more:focus-visible,
-.admin-table .btn-booking-action-more:focus-visible,
-.admin-table .btn-dots-action:focus-visible,
-.admin-table .btn-voucher-dots:focus-visible,
-.admin-table .rules-action-menu-btn:focus-visible,
-.customers-module #customerDataTable .btn-action-more:focus-visible,
-.admin-table .btn-action-trigger.active,
-.admin-table .btn-action-more.active,
-.customers-module #customerDataTable .btn-action-more.active {
-    background-color: #EEF5F1;
+:is(.admin-table, table) td :is(
+    .btn-action-trigger,
+    .btn-action-more,
+    .btn-booking-action-more,
+    .btn-dots-action,
+    .btn-voucher-dots,
+    .rules-action-menu-btn,
+    .btn-order-complaint-actions,
+    .staff-recurring-edit,
+    .workspace-item-menu > summary
+):is(:hover, :focus-visible, .active, [aria-expanded="true"], [open] > summary) {
+    background: #EEF5F1;
     border-color: var(--border-neutral, #ECF2EE);
     color: #236B48;
+}
+
+:is(.admin-table, table) td :is(
+    .btn-action-trigger,
+    .btn-action-more,
+    .btn-booking-action-more,
+    .btn-dots-action,
+    .btn-voucher-dots,
+    .rules-action-menu-btn,
+    .btn-order-complaint-actions,
+    .staff-recurring-edit,
+    .workspace-item-menu > summary
+):focus-visible {
+    outline: 2px solid #236B48;
+    outline-offset: 2px;
 }
 
 /* ==========================================================================

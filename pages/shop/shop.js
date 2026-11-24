@@ -344,10 +344,9 @@ function initResponsiveCategorySection() {
 
     if (jumpLink) {
         jumpLink.addEventListener('click', (event) => {
-            if (window.innerWidth <= 768) {
-                event.preventDefault();
-                document.getElementById('all-products')?.scrollIntoView({ behavior: 'smooth' });
-            }
+            event.preventDefault();
+            document.getElementById('btnClearFilters')?.click();
+            document.getElementById('all-products')?.scrollIntoView({ behavior: 'smooth' });
         });
     }
 
@@ -532,6 +531,11 @@ function initCategoryGrid() {
             state.filters.category = category === 'all' ? 'all' : [category];
             state.currentPage = 1;
 
+            categoryCards.forEach(c => c.classList.remove('active'));
+            if (category !== 'all') {
+                card.classList.add('active');
+            }
+
             const categoryFilters = document.getElementById('categoryFilters');
             if (categoryFilters) {
                 categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -547,17 +551,17 @@ function initCategoryGrid() {
 }
 
 const catMapping = {
-    'food-dry': { catId: 'c0000000-0000-0000-0000-000000000001', keywords: ['hạt', 'khô', 'dry'] },
-    'food-wet': { catId: 'c0000000-0000-0000-0000-000000000001', keywords: ['pate', 'sốt', 'ướt', 'lon', 'lon', 'pouches'] },
-    'bones': { catId: 'c0000000-0000-0000-0000-000000000001', keywords: ['xương', 'gặm', 'bánh thưởng', 'snack', 'súp thưởng'] },
-    'bowls': { catId: 'c0000000-0000-0000-0000-000000000002', keywords: ['bát', 'chén', 'khay ăn', 'bình nước'] },
-    'toys': { catId: 'c0000000-0000-0000-0000-000000000002', keywords: ['đồ chơi', 'bóng', 'cần câu', 'lật đật', 'chuông', 'thú nhồi', 'trêu', 'cắn', 'catnip'] },
-    'clothes': { catId: 'c0000000-0000-0000-0000-000000000002', keywords: ['áo', 'quần', 'mũ', 'nón', 'váy', 'giày', 'tất'] },
-    'furniture': { catId: 'c0000000-0000-0000-0000-000000000002', keywords: ['chuồng', 'giường', 'nệm', 'đệm', 'lồng', 'nhà', 'võng', 'chuột cào', 'trụ cào', 'nhà cây'] },
-    'accessories': { catId: 'c0000000-0000-0000-0000-000000000004', keywords: ['vòng', 'dây', 'túi', 'balo', 'kính', 'rọ mõm', 'yếm'] },
-    'hygiene': { catId: 'c0000000-0000-0000-0000-000000000003', keywords: ['cát', 'khay vệ sinh', 'tã', 'bỉm', 'xịt', 'khử mùi', 'sữa tắm', 'dầu gội', 'khăn', 'chậu', 'nhà vệ sinh'] },
-    'grooming': { catId: 'c0000000-0000-0000-0000-000000000003', keywords: ['lược', 'tông đơ', 'kéo', 'bấm móng', 'cạo', 'chải'] },
-    'health': { catId: 'c0000000-0000-0000-0000-000000000003', keywords: ['thuốc', 'nhỏ gáy', 'tẩy giun', 'vitamin', 'gel', 'dinh dưỡng', 'xịt rận', 'phòng rận', 'trị rận', 'canxi'] }
+    'food-dry': { catIds: ['c0000000-0000-0000-0000-000000000001'], catNames: ['Thực phẩm'], keywords: ['hạt', 'khô', 'dry', 'cỏ khô'] },
+    'food-wet': { catIds: ['c0000000-0000-0000-0000-000000000001'], catNames: ['Thực phẩm'], keywords: ['pate', 'sốt', 'ướt', 'lon', 'pouches'] },
+    'bones': { catIds: ['c0000000-0000-0000-0000-000000000001'], catNames: ['Thực phẩm'], keywords: ['xương', 'gặm', 'bánh thưởng', 'snack', 'súp thưởng', 'mài răng'] },
+    'bowls': { catIds: ['c0000000-0000-0000-0000-000000000002'], catNames: ['Đồ dùng'], keywords: ['bát', 'chén', 'khay ăn', 'bình nước', 'phun nước', 'máy cho ăn'] },
+    'toys': { catIds: ['c0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000004'], catNames: ['Đồ dùng', 'Phụ kiện'], keywords: ['đồ chơi', 'bóng', 'cần câu', 'lật đật', 'chuông', 'thú nhồi', 'trêu', 'cắn', 'catnip', 'bàn cào'] },
+    'clothes': { catIds: ['c0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000004'], catNames: ['Đồ dùng', 'Phụ kiện'], keywords: ['áo', 'quần', 'mũ', 'nón', 'váy', 'giày', 'tất'] },
+    'furniture': { catIds: ['c0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000004'], catNames: ['Đồ dùng', 'Phụ kiện'], keywords: ['chuồng', 'giường', 'nệm', 'đệm', 'lồng', 'nhà', 'võng', 'chuột cào', 'trụ cào', 'nhà cây'] },
+    'accessories': { catIds: ['c0000000-0000-0000-0000-000000000004'], catNames: ['Phụ kiện'], keywords: ['vòng', 'dây', 'túi', 'balo', 'kính', 'rọ mõm', 'yếm'] },
+    'hygiene': { catIds: ['c0000000-0000-0000-0000-000000000003'], catNames: ['Vệ sinh'], keywords: ['cát', 'khay vệ sinh', 'tã', 'bỉm', 'xịt', 'khử mùi', 'sữa tắm', 'dầu gội', 'khăn', 'chậu', 'nhà vệ sinh', 'máy dọn rác'] },
+    'grooming': { catIds: ['c0000000-0000-0000-0000-000000000003'], catNames: ['Vệ sinh'], keywords: ['lược', 'tông đơ', 'kéo', 'bấm móng', 'cạo', 'chải', 'kìm cắt', 'máy hút lông'] },
+    'health': { catIds: ['c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000003'], catNames: ['Thực phẩm', 'Vệ sinh'], keywords: ['thuốc', 'nhỏ gáy', 'tẩy giun', 'vitamin', 'gel', 'dinh dưỡng', 'xịt rận', 'phòng rận', 'trị rận', 'canxi', 'dầu cá', 'men vi sinh'] }
 };
 
 function productMatchesCategory(p, c) {
@@ -574,11 +578,9 @@ function productMatchesCategory(p, c) {
     const map = catMapping[c];
     if (!map) return p.category === c || p.categoryName === c;
     
-    const isCorrectCategory = p.category === map.catId || 
-        (map.catId === 'c0000000-0000-0000-0000-000000000001' && p.categoryName === 'Thực phẩm') ||
-        (map.catId === 'c0000000-0000-0000-0000-000000000002' && p.categoryName === 'Đồ dùng') ||
-        (map.catId === 'c0000000-0000-0000-0000-000000000003' && p.categoryName === 'Vệ sinh') ||
-        (map.catId === 'c0000000-0000-0000-0000-000000000004' && p.categoryName === 'Phụ kiện');
+    const isCorrectCategory = (map.catIds && map.catIds.includes(p.category)) ||
+        (map.catNames && map.catNames.includes(p.categoryName)) ||
+        p.category === map.catId || p.categoryName === c;
     
     if (map.keywords && map.keywords.length > 0) {
         return isCorrectCategory && map.keywords.some(kw => nameLower.includes(kw));
@@ -645,6 +647,10 @@ function initFilters() {
                     state.filters.category = checkedCategories;
                 }
             }
+            const activeCats = Array.isArray(state.filters.category) ? state.filters.category : [state.filters.category];
+            document.querySelectorAll('.category-card').forEach(c => {
+                c.classList.toggle('active', activeCats.length === 1 && activeCats[0] === c.dataset.category);
+            });
             state.currentPage = 1;
             applyFilters();
             renderProducts();
@@ -698,6 +704,7 @@ function initFilters() {
     });
     
     document.getElementById('btnClearFilters').addEventListener('click', () => {
+        document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
         state.sort = 'default';
         state.filters = {
             category: 'all',

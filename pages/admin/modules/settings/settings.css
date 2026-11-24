@@ -352,6 +352,26 @@
     gap: 12px;
 }
 
+.settings-module-wrapper .banner-grid-message {
+    grid-column: 1 / -1;
+}
+
+.settings-module-wrapper .banner-loading-card .banner-preview-img {
+    display: block;
+}
+
+.settings-module-wrapper .banner-loading-card .skeleton-text {
+    width: 80%;
+    height: 11px;
+}
+
+.settings-module-wrapper .banner-loading-card .skeleton-text:nth-child(2) { width: 63%; }
+.settings-module-wrapper .banner-loading-card .skeleton-text:nth-child(3) { width: 70%; }
+
+.settings-module-wrapper :is(#bannerPaginationBar, #notificationPaginationBar):has(.pagination-controls:empty) {
+    display: none;
+}
+
 .settings-module-wrapper .banner-item-card {
     display: flex;
     min-width: 0;
@@ -630,22 +650,7 @@
 /* ==========================================================================
    THANH CẢNH BÁO ZERO MISS TỨC THỜI (CHUẨN GOM KHỐI THỐNG NHẤT AGENTS.MD)
    ========================================================================== */
-.settings-module-wrapper .settings-alert-strip {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 14px;
-    background-color: #ffffff;
-    border: 0 !important;
-    border-bottom: 1px solid #e4eae5 !important;
-    border-radius: 0;
-    gap: 12px;
-    flex-wrap: wrap;
-}
 
-.settings-module-wrapper .settings-alert-strip.is-safe {
-    background-color: #f7faf7;
-}
 
 .settings-module-wrapper .alert-strip-left {
     display: flex;
@@ -668,34 +673,9 @@
     gap: 8px;
 }
 
-.settings-module-wrapper .settings-alert-strip .btn-alert-strip-filter {
-    background: transparent !important;
-    border: none !important;
-    color: var(--settings-primary) !important;
-    font-family: inherit;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    cursor: pointer;
-    padding: 4px 8px !important;
-    border-radius: 6px;
-    text-decoration: underline;
-    transition: background-color 0.15s, color 0.15s;
-    white-space: nowrap;
-}
 
-.settings-module-wrapper .settings-alert-strip .btn-alert-strip-filter:hover {
-    color: var(--settings-primary-strong) !important;
-    background-color: var(--settings-primary-soft) !important;
-}
 
-.settings-module-wrapper .settings-alert-strip.is-safe .btn-alert-strip-filter {
-    color: #275e49 !important;
-}
 
-.settings-module-wrapper .settings-alert-strip.is-safe .btn-alert-strip-filter:hover {
-    color: #0E3622 !important;
-    background-color: rgba(22, 83, 53, 0.08) !important;
-}
 
 /* HUY HIỆU KHẨN CẤP / MUTED PASTEL (KHÔNG VIỀN THEO AGENTS.MD) */
 .settings-module-wrapper .badge-urgent {
@@ -1213,14 +1193,6 @@
 
 .settings-module-wrapper .settings-audit-kpi-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.settings-module-wrapper .settings-alert-strip.is-attention .alert-strip-text {
-    color: #8a5a12;
-}
-
-.settings-module-wrapper .settings-alert-strip.is-safe .alert-strip-text {
-    color: var(--settings-primary);
 }
 
 .settings-module-wrapper .admin-badge:where(:not(.priority-chip):not(.sla-chip):not(.badge-sla-ok):not(.badge-sla-urgent):not(.badge-sla-warning)) {

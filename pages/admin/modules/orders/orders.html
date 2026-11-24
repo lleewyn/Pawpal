@@ -62,6 +62,31 @@
   </div>
  </div>
  <!-- KHU VỰC 3: KHỐI QUẢN LÝ ĐƠN HÀNG THỐNG NHẤT (GOM KHỐI) -->
+ <!-- DẢI TỔNG HỢP ĐỐI SOÁT DÒNG TIỀN COD (GIAI ĐOẠN 1) -->
+ <div class="cod-reconcile-strip admin-table-notice admin-table-notice-line" id="codReconcileSummaryStrip" style="display: none;">
+  <div class="cod-strip-left admin-table-notice-content">
+   <span class="cod-strip-title admin-table-notice-title">
+    Đối soát COD bưu cục:
+   </span>
+   <span class="cod-strip-highlight" id="dispCodPendingCount">
+    0 đơn hàng
+   </span>
+   <span class="cod-strip-divider">
+    •
+   </span>
+   <span>
+    Tổng tiền thu hộ chờ về:
+    <strong class="text-heading" id="dispCodPendingAmount">
+     0 đ
+    </strong>
+   </span>
+  </div>
+  <div class="cod-strip-right">
+   <button class="btn-cod-quick-reconcile admin-table-notice-action" id="btnQuickReconcileAllCod" type="button">
+    Thu tiền từng đơn
+   </button>
+  </div>
+ </div>
  <div class="admin-card order-master-card">
   <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
   <div class="table-toolbar-section">
@@ -175,31 +200,6 @@
     <button class="admin-btn-clear-filters" id="btnOrderClearFilters" style="display: none;" type="button">
      Xóa bộ lọc
     </button>
-   </div>
-   <!-- DẢI TỔNG HỢP ĐỐI SOÁT DÒNG TIỀN COD (GIAI ĐOẠN 1) -->
-   <div class="cod-reconcile-strip" id="codReconcileSummaryStrip" style="display: none;">
-    <div class="cod-strip-left">
-     <span class="cod-strip-title">
-      Đối soát COD bưu cục:
-     </span>
-     <span class="cod-strip-highlight" id="dispCodPendingCount">
-      0 đơn hàng
-     </span>
-     <span class="cod-strip-divider">
-      •
-     </span>
-     <span>
-      Tổng tiền thu hộ chờ về:
-      <strong class="text-heading" id="dispCodPendingAmount">
-       0 đ
-      </strong>
-     </span>
-    </div>
-    <div class="cod-strip-right">
-     <button class="btn-cod-quick-reconcile" id="btnQuickReconcileAllCod" type="button">
-      Thu tiền từng đơn
-     </button>
-    </div>
    </div>
    <!-- DẢI THAO TÁC HÀNG LOẠT (GIAI ĐOẠN 2: BATCH DISPATCH VÀ PACKING) -->
    <div class="batch-action-toolbar" id="batchActionToolbar" style="display: none;">
@@ -843,7 +843,7 @@
       </th>
      </tr>
     </thead>
-    <tbody class="" id="productsTableBody">
+    <tbody class="" id="productsTableBody" data-load-skeleton>
      <!-- Nạp động từ orders.js -->
     </tbody>
    </table>
@@ -942,7 +942,7 @@
       </th>
      </tr>
     </thead>
-    <tbody class="" id="vouchersTableBody">
+    <tbody class="" id="vouchersTableBody" data-load-skeleton>
      <!-- Nạp động từ orders.js -->
     </tbody>
    </table>

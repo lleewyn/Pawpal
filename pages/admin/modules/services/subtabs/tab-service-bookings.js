@@ -1284,7 +1284,7 @@
             const ranges={ALL:[0,24],MORNING:[8,12],AFTERNOON:[12,17],EVENING:[17,24]},hours=ranges[shiftFilter]||ranges.ALL;
             const from=+start+hours[0]*3600000,to=+start+hours[1]*3600000;
             document.getElementById('staffScheduleTitle').textContent='Lịch trực và điều phối kỹ thuật viên ('+date.split('-').reverse().join('/')+')';
-            grid.textContent='Đang tải lịch làm việc…';
+            window.PawpalAdmin.renderBlockSkeleton(grid, 'Đang tải lịch làm việc');
             try {
                 const db=window.getSupabaseClient(),shifts=[];
                 for(let offset=0;;offset+=500){const {data,error}=await db.from('staff_schedule').select('id,staff_id,start_at,end_at,availability_status,reason').eq('schedule_status','active').gt('end_at',start.toISOString()).lt('start_at',end.toISOString()).order('id').range(offset,offset+499);if(error)throw error;shifts.push(...data);if(data.length<500)break;}

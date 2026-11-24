@@ -101,10 +101,10 @@
 
     function renderVoucherPager(tbody){
         let pager=document.getElementById('salesVoucherPager');
-        if(!pager){pager=document.createElement('div');pager.id='salesVoucherPager';pager.className='pagination-container';pager.style.cssText='display:flex;justify-content:center;gap:4px;background:transparent;border:none;padding:2px 0;margin-top:-6px;';(tbody.closest('.admin-card')||tbody.closest('table').parentElement).after(pager);}
+        if(!pager){pager=document.createElement('div');pager.id='salesVoucherPager';pager.className='pagination-container';(tbody.closest('.admin-card')||tbody.closest('table').parentElement).after(pager);}
         pager.replaceChildren();const meta=state.voucherMeta;if(!meta||meta.total<=10)return;
         const pages=Math.ceil(meta.total/10),page=meta.page;
-        const add=(label,target,disabled)=>{const b=document.createElement('button');b.type='button';b.className='admin-btn admin-btn-secondary';b.style.cssText='border:none;background:transparent;padding:4px 9px;border-radius:9px;';b.textContent=label;b.disabled=disabled;if(target===page&&label===String(page)){b.style.background='#236B48';b.style.color='#fff';}b.onclick=()=>PawpalOrders.fetchVouchersData({page:target});pager.append(b);};
+        const add=(label,target,disabled)=>{const b=document.createElement('button');b.type='button';b.className='pagination-btn';b.textContent=label;b.disabled=disabled;if(target===page&&label===String(page))b.setAttribute('aria-current','page');b.onclick=()=>PawpalOrders.fetchVouchersData({page:target});pager.append(b);};
         add('<',page-1,page===1);for(let i=Math.max(1,page-2);i<=Math.min(pages,page+2);i++)add(String(i),i,i===page);add('>',page+1,page===pages);
     }
 

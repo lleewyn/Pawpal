@@ -456,6 +456,10 @@
         const scope=settingsReadScope();
         const request={bannerPage:bannerPage||PawpalSettings.state.promosRequest?.bannerPage||1,voucherPage:voucherPage||PawpalSettings.state.promosRequest?.voucherPage||1,filters:filters||PawpalSettings.state.promosRequest?.filters||{}};
         PawpalSettings.state.promosRequest=request;
+        PawpalSettings.state.promosLoading = true;
+        PawpalSettings.state.promosLoadError = null;
+        PawpalSettings.subtabs.banners?.renderBanners?.();
+        PawpalSettings.subtabs.banners?.renderVouchers?.();
         const fetcher = async () => {
             const client = getSupabaseClient();
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
@@ -477,15 +481,14 @@
                 res = await fetcher();
             }
             if(version!==promosReadVersion||scope!==settingsReadScope())return null;
-            PawpalSettings.state.promosMeta=res;
-            PawpalSettings.state.promosLoadError=null;
-            PawpalSettings.state.promosRequest={...request,bannerPage:res.bannerPage,voucherPage:res.voucherPage};
-
             const banners = rememberRows('banner',res.banners || []);
             const previews=banners.map(b=>({id:b.id,images:b.image_media_asset_id?[{media_asset_id:b.image_media_asset_id}]:[]}));
             if(sessionStorage.getItem('pawpal_settings_marketing_tab')==='mkt-banners' && previews.some(b=>b.images.length)){
                 const {createServiceMediaReader}=await import('/scripts/shared/service-media-reader.mjs');contentImageReader ||=createServiceMediaReader({db:getSupabaseClient()});await contentImageReader.hydrate(previews);
             }
+            if(version!==promosReadVersion||scope!==settingsReadScope())return null;
+            PawpalSettings.state.promosMeta=res;
+            PawpalSettings.state.promosRequest={...request,bannerPage:res.bannerPage,voucherPage:res.voucherPage};
             const bannerPreviewUrls=new Map(previews.map(b=>[b.id,b.images[0]?.resolved_url||'']));
             const vouchers = rememberRows('voucher',res.vouchers || []);
             const notifs = res.notifs || [];
@@ -555,6 +558,7 @@
                 PawpalSettings.state.notificationsList = [];
             }
 
+            PawpalSettings.state.promosLoading = false;
             PawpalSettings.subtabs.banners?.renderBanners?.();
             PawpalSettings.subtabs.banners?.renderVouchers?.();
             PawpalSettings.subtabs.banners?.renderZeroMissAlerts?.();
@@ -563,8 +567,10 @@
             return res;
         } catch (err) {
             if(version!==promosReadVersion||scope!==settingsReadScope())return null;
+            PawpalSettings.state.promosLoading = false;
             PawpalSettings.state.promosLoadError='Không tải được khuyến mãi. Vui lòng thử lại.';
             console.error('[Settings] Lỗi nạp promos/vouchers:', err);
+            PawpalSettings.subtabs.banners?.renderBanners?.();
             PawpalSettings.subtabs.banners?.renderVouchers?.();
             return null;
         }
@@ -650,7 +656,13 @@
         }
     }
 
+    let systemReadVersion = 0;
     async function fetchSystemConfigData({ force = false } = {}) {
+        const version = ++systemReadVersion;
+        const scope = settingsReadScope();
+        const current = () => version === systemReadVersion && scope === settingsReadScope();
+        PawpalSettings.state.systemLoadStatus = 'loading';
+        PawpalSettings.subtabs.banners?.renderNotifications?.();
         const fetcher = async () => {
             const client = getSupabaseClient();
             if (!client) throw new Error('Chưa kết nối cơ sở dữ liệu');
@@ -685,6 +697,7 @@
                 res = await fetcher();
             }
 
+            if (!current()) return null;
             PawpalSettings.state.servicesList = res.services || [];
             PawpalSettings.state.deliveryOptions=rememberRows('delivery_option_config',res.deliveryOptions||[]);
             PawpalSettings.state.productsList = res.products || [];
@@ -713,11 +726,15 @@
             }
 
             PawpalSettings.state.notificationsList=structuredClone(PawpalSettings.state.systemConfig.websiteNotices||[]);
+            PawpalSettings.state.systemLoadStatus = 'ready';
             PawpalSettings.subtabs.banners?.renderNotifications?.();
             PawpalSettings.subtabs.system?.renderSystemConfigCards?.();
             updateSafeModeUI();
             return res;
         } catch (err) {
+            if (!current()) return null;
+            PawpalSettings.state.systemLoadStatus = 'error';
+            PawpalSettings.subtabs.banners?.renderNotifications?.();
             console.error('[Settings] Lỗi nạp system_config:', err);
             return null;
         }

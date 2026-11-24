@@ -176,7 +176,7 @@
    const reload=document.getElementById('btnSyncRagData');if(reload){reload.disabled=busy||loading;reload.textContent=loading?'Đang tải lịch sử':'Tải lại lịch sử';}
    document.getElementById('currentCopilotSessionTitle').textContent=current?.title||(loading?'Đang tải lịch sử…':'Phiên mới');
    const messages=current?.messages||[];
-   if(loading){const notice=document.createElement('div');notice.className='copilot-history-loading';notice.setAttribute('role','status');const label=document.createElement('div');label.className='copilot-loading-title';label.textContent='Đang tải lịch sử trò chuyện';const dots=document.createElement('span');dots.className='copilot-loading-dots';dots.setAttribute('aria-hidden','true');for(let i=0;i<3;i++){const dot=document.createElement('span');dot.textContent='.';dots.append(dot);}label.append(dots);const hint=document.createElement('div');hint.className='copilot-loading-hint';hint.textContent='Mình đang lấy các phiên và tin nhắn gần đây. Bạn chờ một chút nhé.';notice.append(label,hint);timeline.append(notice);}
+   if(loading) window.PawpalAdmin.renderBlockSkeleton(timeline, 'Đang tải lịch sử trò chuyện');
    if(failed){const notice=document.createElement('div');notice.className='copilot-history-error';notice.setAttribute('role','status');notice.textContent='Chưa tải được lịch sử. '+failed;const retry=document.createElement('button');retry.type='button';retry.className='admin-btn admin-btn-secondary';retry.textContent='Thử tải lại';retry.onclick=()=>load({force:true}).catch(error=>app.showToast?.(error.message,'error'));notice.append(document.createElement('br'),retry);timeline.append(notice);}
    if(!messages.length&&!loading&&!failed){
     const emptyNotice=document.createElement('div');
@@ -225,7 +225,8 @@
 
    const filtered=sessions;
    const total=Math.max(1,Math.ceil(totalSessions/10));
-   if(sessionsLoading||sessionsError||!sessionsLoaded){const notice=document.createElement('div');notice.className='copilot-session-empty';notice.setAttribute('role','status');notice.textContent=sessionsLoading?'Đang tải các phiên chat…':sessionsError?'Chưa tải được danh sách phiên. Bạn có thể thử tải lại.':'Lịch sử chưa được tải. Bạn có thể bấm Tải lại lịch sử.';list.append(notice);}
+   if(sessionsLoading) window.PawpalAdmin.renderBlockSkeleton(list, 'Đang tải các phiên chat');
+   else if(sessionsError||!sessionsLoaded){const notice=document.createElement('div');notice.className='copilot-session-empty';notice.setAttribute('role','status');notice.textContent=sessionsError?'Chưa tải được danh sách phiên. Bạn có thể thử tải lại.':'Lịch sử chưa được tải. Bạn có thể bấm Tải lại lịch sử.';list.append(notice);}
    else if(!filtered.length){
     const empty=document.createElement('div');empty.className='copilot-session-empty';empty.textContent='Không tìm thấy phiên chat phù hợp.';list.append(empty);
    }else{
@@ -258,7 +259,8 @@
     }
    }
 
-   if(sessionsLoading||sessionsError||!sessionsLoaded)return;
+   if(sessionsLoading) window.PawpalAdmin.renderBlockSkeleton(list, 'Đang tải các phiên chat');
+   else if(sessionsError||!sessionsLoaded)return;
    const pager=document.createElement('div');pager.className='rules-pagination-wrap';
    pager.classList.add('copilot-session-pager');
    for(const [text,disabled,delta,isActive] of [['<',page===1,-1,false],[String(page),false,0,true],['>',page===total,1,false]]){

@@ -18,6 +18,16 @@
     let schedulePage=1,editingSchedule=null,scheduleRequest=null,selectedShiftStaff=null;
     let recurringDispose=null,recurringVersion=0;
     const el=id=>document.getElementById(id);
+    const shiftStaffKey = value => String(value || '').trim().toLocaleLowerCase('vi')
+        .normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/g, 'd').replace(/\s+/g, ' ');
+    const shiftStaffMatches = value => {
+        const query = shiftStaffKey(value);
+        if (!query) return [];
+        const staff = PawpalStaff.state.staff.filter(member => member.status === 'ACTIVE' && member.rawId);
+        const exact = staff.filter(member => [member.name, member.id].some(label => shiftStaffKey(label) === query));
+        if (exact.length || query.length < 3) return exact;
+        return staff.filter(member => shiftStaffKey(member.name).includes(query));
+    };
     const localTime=value=>{
         const date=new Date(value),shifted=new Date(date.getTime()+7*3600000);
         return shifted.toISOString().slice(0,16);
@@ -54,7 +64,7 @@
         if (PawpalStaff.ensureScheduleRange && !PawpalStaff.hasScheduleRange(rangeStart, rangeEnd)) {
             if (!el('subtab-tab-staff-schedule')?.classList.contains('active')) return;
             const target = el(currentScheduleView === 'WEEK' ? 'scheduleWeekViewWrapper' : 'scheduleTableBody');
-            if (target) target.textContent = 'Đang tải lịch làm việc…';
+            window.PawpalAdmin.renderBlockSkeleton(target, 'Đang tải lịch làm việc');
             const version = ++scheduleReadVersion;
             PawpalStaff.ensureScheduleRange(rangeStart, rangeEnd).then(() => {
                 if (version === scheduleReadVersion) renderScheduleTable();
@@ -133,14 +143,28 @@
         el('shiftAvailability').value=schedule?.availability_status||'available';el('shiftStatus').value=schedule?.schedule_status||'active';el('shiftReason').value=schedule?.reason||'';el('shiftAlertBanner').textContent='';el('shiftAlertBanner').style.display='none';
         el('shiftStatus').disabled=!schedule;el('shiftModalOverlay').classList.add('active');
         const input=el('shiftStaffSearch'),popover=el('shiftStaffOptions');
-        const render=()=>{popover.replaceChildren();for(const s of PawpalStaff.state.staff.filter(s=>s.status==='ACTIVE'&&PawpalStaff.matchSearch(s.name+' '+s.position,input.value))){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.style.cssText='display:block;width:100%;text-align:left;background:transparent;border:none';button.textContent=s.name+' · '+s.position;button.onclick=()=>{selectedShiftStaff=s.rawId;input.value=s.name;popover.style.display='none';};popover.append(button);}popover.style.display=popover.childElementCount?'block':'none';};
+        const render=()=>{popover.replaceChildren();for(const s of PawpalStaff.state.staff.filter(s=>s.status==='ACTIVE'&&PawpalStaff.matchSearch([s.name,s.id,s.position].join(' '),input.value))){const button=document.createElement('button');button.type='button';button.className='admin-btn';button.style.cssText='display:block;width:100%;text-align:left;background:transparent;border:none';button.textContent=[s.name,s.id,s.position].filter(Boolean).join(' · ');button.onclick=()=>{selectedShiftStaff=s.rawId;input.value=s.name;popover.style.display='none';};popover.append(button);}popover.style.display=popover.childElementCount?'block':'none';};
         input.onfocus=render;input.oninput=()=>{selectedShiftStaff=null;render();};input.onblur=()=>setTimeout(()=>popover.style.display='none',120);input.onkeydown=e=>{if(e.key==='Escape')popover.style.display='none';};popover.style.display='none';
     }
     async function saveCustomShift(){
         const button=el('btnSaveShift');if(button.disabled)return;button.disabled=true;
         try{
+            const input = el('shiftStaffSearch');
+            if (!selectedShiftStaff) {
+                const matches = shiftStaffMatches(input.value);
+                if (matches.length !== 1) {
+                    el('shiftAlertBanner').textContent = matches.length
+                        ? 'Có nhiều nhân viên trùng tên. Chọn đúng người trong danh sách hoặc nhập mã nhân viên.'
+                        : 'Chọn nhân viên đang làm việc hoặc nhập tên hay mã nhân viên.';
+                    el('shiftAlertBanner').style.display = 'block';
+                    input.focus();
+                    return;
+                }
+                input.value = matches[0].name;
+                selectedShiftStaff = matches[0].rawId;
+            }
             const start=el('shiftInputStart').value,end=el('shiftInputEnd').value;
-            if(!selectedShiftStaff||!start||!end)throw Error('invalid_staff_schedule');
+            if(!start||!end)throw Error('invalid_staff_schedule');
             const details={staff_id:selectedShiftStaff,start_at:new Date(start+':00+07:00').toISOString(),end_at:new Date(end+':00+07:00').toISOString(),availability_status:el('shiftAvailability').value,schedule_status:el('shiftStatus').value,reason:el('shiftReason').value.trim()};
             const {error}=await window.getSupabaseClient().rpc('save_admin_staff_schedule',{p_request_id:scheduleRequest,p_schedule_id:editingSchedule?.id||scheduleRequest,p_expected_updated_at:editingSchedule?.updated_at||null,p_details:details});if(error)throw error;
             await PawpalStaff.loadStaffModuleData({force:true});currentScheduleDate=start.slice(0,10);el('scheduleDatePicker').value=currentScheduleDate;renderScheduleTable();el('shiftModalOverlay').classList.remove('active');PawpalStaff.showToast('Đã lưu ca làm việc.','success');
@@ -235,13 +259,13 @@
         if (trayPendingCountEl) trayPendingCountEl.textContent = pendingCount;
 
         if (!container) return;
-        if(!PawpalStaff.state.isLoaded){container.textContent='Đang tải đơn nghỉ và đổi ca…';return;}
+        if(!PawpalStaff.state.isLoaded){window.PawpalAdmin.renderBlockSkeleton(container, 'Đang tải đơn nghỉ và đổi ca');return;}
         if(PawpalStaff.state.requestError){container.textContent=/permission denied|row.level security/i.test(PawpalStaff.state.requestError) ? 'Phiên quản trị chưa được phép đọc đơn. Vui lòng đăng nhập lại tại /admin/login; nếu vẫn lỗi, kiểm tra liên kết Auth và quyền nhân sự.' : /schema cache|does not exist/i.test(PawpalStaff.state.requestError) ? 'Chưa có bảng đơn nghỉ/đổi ca. Cần chạy migration staff_shift_request.' : 'Không tải được đơn nghỉ/đổi ca. Vui lòng tải lại và kiểm tra kết nối.';return;}
         const tray = document.getElementById('leaveRequestsTrayModal');
         if (!tray?.classList.contains('active')) return;
         let result;
         try {
-            container.textContent = 'Đang tải đơn nghỉ và đổi ca…';
+            window.PawpalAdmin.renderBlockSkeleton(container, 'Đang tải đơn nghỉ và đổi ca');
             result = await PawpalStaff.getShiftRequestPage(filterStatus, requestPage);
             if (version !== requestReadVersion || !tray.classList.contains('active')) return;
             requestPage = result.page;
@@ -386,8 +410,8 @@
             let host=el('staffRecurringHost');
             if(!host){host=document.createElement('div');host.id='staffRecurringHost';host.className='staff-recurring-panel';host.hidden=true;el('scheduleDayViewWrapper').before(host);}
             if(!host.hidden){host.hidden=true;recurringDispose?.();recurringDispose=null;return;}
-            host.hidden=false;host.textContent='Đang tải lịch định kỳ…';
-            try{const {mountRecurringSchedule}=await import('/pages/admin/modules/staff/staff-recurring.mjs?v=20261124');if(turn!==recurringVersion||host.hidden)return;const cleanup=await mountRecurringSchedule(host,{staff:PawpalStaff.state.staff,client:window.getSupabaseClient(),enhanceSelect:PawpalStaff.enhanceEntitySelect});if(turn!==recurringVersion||host.hidden)cleanup();else recurringDispose=cleanup;}
+            host.hidden=false;window.PawpalAdmin.renderBlockSkeleton(host, 'Đang tải lịch định kỳ');
+            try{const {mountRecurringSchedule}=await import('/pages/admin/modules/staff/staff-recurring.mjs?v=20261124_admin_pagination');if(turn!==recurringVersion||host.hidden)return;const cleanup=await mountRecurringSchedule(host,{staff:PawpalStaff.state.staff,client:window.getSupabaseClient(),enhanceSelect:PawpalStaff.enhanceEntitySelect});if(turn!==recurringVersion||host.hidden)cleanup();else recurringDispose=cleanup;}
             catch{host.textContent='Không tải được lịch định kỳ. Vui lòng thử lại.';}
         });
         for(const id of ['leaveSwapModalForm','incidentReportModalForm'])document.getElementById(id)?.addEventListener('submit',event=>event.preventDefault());

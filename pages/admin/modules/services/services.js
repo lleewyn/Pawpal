@@ -184,7 +184,7 @@
                     rows.filter(row => { const text = String(titleOf(row) || '').trim(); return text && !/^\d+$/.test(text) && !/^(unknown|null|undefined|chưa rõ|chưa cập nhật)$/i.test(text); }).slice(0,10).forEach((row, index) => {
                         const button = el('button', null, 'workspace-autocomplete-option'); button.type = 'button'; button.id = menu.id + index; button.setAttribute('role', 'option'); button.setAttribute('aria-selected', 'false'); button.append(el('strong', titleOf(row)), el('small', subtitleOf(row))); button.onclick = () => { choose(row); if(key!=='pet')input.focus(); }; buttons.push(button); menu.append(button);
                     });
-                    const paging=el('div',null,'workspace-pager');
+                    const paging=el('div',null,'workspace-pager workspace-autocomplete-pager');
                     for(const [label,next]of [['<',page-1],['>',page+1]]){if(next<1||(next>page&&rows.length<10))continue;const button=el('button',label,'workspace-text-button');button.type='button';button.setAttribute('aria-label',next<page?'Trang trước':'Trang sau');button.onmousedown=event=>event.preventDefault();button.onclick=event=>{event.stopPropagation();skipFocusSearch=true;input.focus();skipFocusSearch=false;search(next);};paging.append(button);}if(paging.childElementCount)menu.append(paging);
                     if (!buttons.length) menu.append(el('p', 'Chưa có kết quả. Nhập tên, mã hoặc số điện thoại để tìm.'));
                 } catch { if (turn === version) menu.replaceChildren(el('p', 'Không tải được gợi ý. Bấm lại ô để thử.')); }

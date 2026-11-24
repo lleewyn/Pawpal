@@ -28,19 +28,19 @@
         </div>
 
         <!-- KHỐI BẢNG DỮ LIỆU THỐNG NHẤT (GOM KHỐI) -->
-        <div class="admin-card complaint-master-card">
-            <!-- THANH CẢNH BÁO KHIẾU NẠI VẬN HÀNH (DẢI MỎNG ALERT TONE, THUẦN CHỮ, KHÔNG VIỀN) -->
-            <div class="complaints-alert-strip" id="serviceComplaintsAlertBar">
-                <div class="alert-strip-left">
-                    <span class="alert-strip-badge">Cảnh báo vận hành:</span>
-                    <div class="alert-strip-items" id="serviceAlertItemsContainer">
-                        <!-- Render by JS -->
-                    </div>
-                </div>
-                <div class="alert-strip-right">
-                    <button type="button" class="btn-alert-strip-filter" id="btnFilterUrgentService">Lọc ca cần xử lý gấp</button>
+        <!-- THANH CẢNH BÁO KHIẾU NẠI VẬN HÀNH (DẢI MỎNG ALERT TONE, THUẦN CHỮ, KHÔNG VIỀN) -->
+        <div class="complaints-alert-strip admin-table-notice admin-table-notice-line" id="serviceComplaintsAlertBar">
+            <div class="alert-strip-left admin-table-notice-content">
+                <span class="alert-strip-badge admin-table-notice-title">Cảnh báo vận hành:</span>
+                <div class="alert-strip-items" id="serviceAlertItemsContainer">
+                    <!-- Render by JS -->
                 </div>
             </div>
+            <div class="alert-strip-right">
+                <button type="button" class="btn-alert-strip-filter admin-table-notice-action" id="btnFilterUrgentService">Lọc ca cần xử lý gấp</button>
+            </div>
+        </div>
+        <div class="admin-card complaint-master-card">
 
             <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
             <div class="table-toolbar-section">
@@ -129,7 +129,7 @@
                             <th style="text-align: center; width: 60px;">Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="serviceComplaintsTableBody">
+                    <tbody id="serviceComplaintsTableBody" data-load-skeleton>
                         <!-- Render by JS -->
                     </tbody>
                 </table>
@@ -173,19 +173,19 @@
         </div>
 
         <!-- KHỐI BẢNG DỮ LIỆU ĐƠN HÀNG THỐNG NHẤT -->
-        <div class="admin-card complaint-master-card">
-            <!-- THANH CẢNH BÁO KHIẾU NẠI VẬN HÀNH ĐƠN HÀNG -->
-            <div class="complaints-alert-strip" id="orderComplaintsAlertBar">
-                <div class="alert-strip-left">
-                    <span class="alert-strip-badge">Cảnh báo vận hành:</span>
-                    <div class="alert-strip-items" id="orderAlertItemsContainer">
-                        <!-- Render by JS -->
-                    </div>
-                </div>
-                <div class="alert-strip-right">
-                    <button type="button" class="btn-alert-strip-filter" id="btnFilterUrgentOrder">Lọc ca cần xử lý gấp</button>
+        <!-- THANH CẢNH BÁO KHIẾU NẠI VẬN HÀNH ĐƠN HÀNG -->
+        <div class="complaints-alert-strip admin-table-notice admin-table-notice-line" id="orderComplaintsAlertBar">
+            <div class="alert-strip-left admin-table-notice-content">
+                <span class="alert-strip-badge admin-table-notice-title">Cảnh báo vận hành:</span>
+                <div class="alert-strip-items" id="orderAlertItemsContainer">
+                    <!-- Render by JS -->
                 </div>
             </div>
+            <div class="alert-strip-right">
+                <button type="button" class="btn-alert-strip-filter admin-table-notice-action" id="btnFilterUrgentOrder">Lọc ca cần xử lý gấp</button>
+            </div>
+        </div>
+        <div class="admin-card complaint-master-card">
 
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
@@ -274,7 +274,7 @@
                             <th style="text-align: center; width: 60px;">Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="orderComplaintsTableBody">
+                    <tbody id="orderComplaintsTableBody" data-load-skeleton>
                         <!-- Render by JS -->
                     </tbody>
                 </table>

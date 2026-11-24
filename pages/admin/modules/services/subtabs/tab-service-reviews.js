@@ -21,7 +21,7 @@
         replyImageGallery?.clear();const version=++replyImageVersion;
         let root=modal.querySelector('#serviceReviewImages');if(!root){root=document.createElement('div');root.id='serviceReviewImages';(document.getElementById('reviewModalCustomerComment')||document.getElementById('replyReviewComment'))?.after(root);}
         if(!root.isConnected)return;
-        root.textContent='Đang tải ảnh đánh giá…';
+        window.PawpalAdmin.renderBlockSkeleton(root, 'Đang tải ảnh đánh giá');
         if(!modal.dataset.mediaCloseBound){modal.dataset.mediaCloseBound='true';new MutationObserver(()=>{if(!modal.classList.contains('active')){replyImageVersion++;replyImageGallery?.clear();}}).observe(modal,{attributes:true,attributeFilter:['class']});}
         try{
             const db=window.getSupabaseClient?.()||window.SupabaseClient,result=await db.from('review_media').select('image_url,media_asset_id').eq('review_id',review.dbId).order('display_order');if(result.error)throw result.error;

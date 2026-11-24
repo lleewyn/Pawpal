@@ -75,6 +75,11 @@
         if (targets[kind] || hasActions) tr.append(el('th', 'Thao tác'));
         thead.append(tr); table.append(thead);
         const tbody = document.createElement('tbody');
+        if (rows === null) {
+            table.append(tbody); wrapper.append(table); parent.append(wrapper);
+            window.PawpalAdmin.renderTableSkeleton(tbody);
+            return;
+        }
         for (const row of rows) {
             const line = document.createElement('tr');
             line.dataset.recordId=row.id;
@@ -123,8 +128,9 @@
             let query = params.get('q') || '', page = Math.max(1, Number(params.get('page')) || 1), input;
             const content = el('div'), pager = el('nav', null, 'workspace-pager'); pager.setAttribute('aria-label', 'Phân trang'); main.append(content); root.append(pager);
             async function load() {
-                errorText.textContent = ''; content.textContent = 'Đang tải...'; pager.replaceChildren();
+                errorText.textContent = ''; pager.replaceChildren();
                 if (requiredSearch && query.trim().length < 3) { content.textContent = 'Nhập ít nhất 3 ký tự hoặc mã để tra cứu.'; return; }
+                content.replaceChildren(); table(kind, null, content);
                 try {
                     const rows = await read(kind, { query, page }); if (turn !== revision) return;
                     content.replaceChildren(); table(kind, rows, content);
@@ -839,7 +845,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261124_complaint_activity_layout';
+    const MODULE_SCRIPT_VERSION = '20261124_staff_shift_selection';
     let staffDomainScriptsReady;
     async function loadStaffDomainScripts() {
         if (!staffDomainScriptsReady) staffDomainScriptsReady = (async () => {
@@ -1734,37 +1740,89 @@ document.addEventListener('DOMContentLoaded', async () => {
             update();
         });
     };
-    const renderTableSkeleton = (tbody, { columns = null, rows = 4 } = {}) => {
-        if (!tbody) return;
-        const colCount = columns || tbody.closest('table')?.querySelectorAll('thead th').length || 6;
-        tbody.dataset.loadingSkeleton = 'true';
-        tbody.innerHTML = Array.from({ length: rows }, (_, index) => {
-            const cells = Array.from({ length: colCount }, (__, cIdx) => {
-                if (cIdx === 0 && colCount >= 6) {
-                    return '<td style="text-align: center;"><span class="skeleton-avatar"></span></td>';
+    const tableHeaders = tbody => {
+        const rows = Array.from(tbody.closest('table')?.tHead?.rows || []);
+        const grid = [];
+        for (const [rowIndex, row] of rows.entries()) {
+            const slots = grid[rowIndex] ||= [];
+            let column = 0;
+            for (const header of row.cells) {
+                while (slots[column]) column++;
+                const span = Math.min(header.rowSpan || rows.length, rows.length - rowIndex);
+                for (let offset = 0; offset < span; offset++) {
+                    const covered = grid[rowIndex + offset] ||= [];
+                    for (let slot = column; slot < column + header.colSpan; slot++) covered[slot] = header;
                 }
-                const width = Math.min(160, Math.max(50, 60 + ((cIdx * 23 + index * 17) % 75)));
-                return `<td><span class="skeleton-text" style="width: ${width}px;"></span></td>`;
-            }).join('');
-            return `<tr class="skeleton-row admin-auto-skeleton">${cells}</tr>`;
-        }).join('');
+                column += header.colSpan;
+            }
+        }
+        return grid.at(-1) || [];
     };
 
+    const renderTableSkeleton = (tbody, { columns = null, rows = 4 } = {}) => {
+        if (!tbody) return;
+        const headers = tableHeaders(tbody);
+        const count = headers.length || columns || 1;
+        tbody.dataset.loadingSkeleton = 'true';
+        tbody.setAttribute('aria-busy', 'true');
+        tbody.setAttribute('aria-label', 'Đang tải dữ liệu');
+        const cells = Array.from({ length: count }, (_, index) => {
+            const header = headers[index];
+            const label = header?.textContent.trim();
+            const photo = header?.matches('.customer-col-photo, .pet-col-photo') || label === 'Ảnh';
+            const centered = photo || label === 'Thao tác' || header?.classList.contains('cell-center');
+            const classes = [
+                header?.matches('.customer-col-photo, .customer-col-code') ? header.className : '',
+                centered ? 'admin-skeleton-cell-center' : ''
+            ].join(' ').trim();
+            const shape = photo ? 'skeleton-avatar' : label === 'Trạng thái' ? 'skeleton-badge' : 'skeleton-text';
+            const width = centered ? 18 : 56 + (index * 23) % 72;
+            return `<td class="${classes}"><span class="${shape}" style="--skeleton-width: ${width}px;"></span></td>`;
+        }).join('');
+        tbody.innerHTML = `<tr class="skeleton-row admin-auto-skeleton" aria-hidden="true">${cells}</tr>`.repeat(rows);
+    };
+
+    const renderBlockSkeleton = (container, label) => {
+        if (!container) return;
+        const placeholder = document.createElement('div');
+        placeholder.className = 'admin-data-skeleton';
+        placeholder.setAttribute('role', 'status');
+        placeholder.setAttribute('aria-label', label);
+        for (let index = 0; index < 3; index++) {
+            const line = document.createElement('span');
+            line.className = 'skeleton-text';
+            line.setAttribute('aria-hidden', 'true');
+            placeholder.append(line);
+        }
+        container.replaceChildren(placeholder);
+    };
     window.PawpalAdmin = window.PawpalAdmin || {};
-    window.PawpalAdmin.renderTableSkeleton = renderTableSkeleton;
+    Object.assign(window.PawpalAdmin, { renderTableSkeleton, renderBlockSkeleton });
 
     const ensureTableSkeleton = (root = document) => {
         root.querySelectorAll('table tbody').forEach(tbody => {
-            if (tbody.dataset.loadingSkeleton === 'true') return;
-            const textContent = (tbody.textContent || '').trim().toLowerCase();
-            const isTextLoading = tbody.children.length === 1 && (
-                textContent.includes('đang tải') ||
-                textContent.includes('đang nạp') ||
-                textContent.includes('đang kiểm tra') ||
-                textContent.includes('loading')
-            );
-            if (!tbody.children.length || isTextLoading) {
-                renderTableSkeleton(tbody, { rows: 4 });
+            const firstRow = tbody.rows[0];
+            if (firstRow?.classList.contains('skeleton-row')) {
+                const headers = tableHeaders(tbody);
+                if (headers.length && Array.from(tbody.rows).some(row =>
+                    row.classList.contains('skeleton-row') && row.cells.length !== headers.length)) {
+                    renderTableSkeleton(tbody, { rows: tbody.rows.length });
+                }
+                return;
+            }
+
+            const cell = firstRow?.cells[0];
+            const loadingMessage = tbody.rows.length === 1 && firstRow.cells.length === 1 &&
+                (cell.colSpan > 1 || cell.matches('[role="status"]')) &&
+                /^(?:đang (?:tải|nạp|kiểm tra)|loading\b)/i.test(cell.textContent.trim());
+            if (loadingMessage || (!firstRow && tbody.hasAttribute('data-load-skeleton'))) {
+                renderTableSkeleton(tbody);
+                return;
+            }
+            if (tbody.getAttribute('aria-label') === 'Đang tải dữ liệu') {
+                delete tbody.dataset.loadingSkeleton;
+                tbody.removeAttribute('aria-busy');
+                tbody.removeAttribute('aria-label');
             }
         });
     };

@@ -31,19 +31,19 @@
 </div>
 </div>
 <!-- KHỐI BẢNG DỮ LIỆU THỐNG NHẤT (GOM KHỐI) -->
-<div class="admin-card service-master-card">
 <!-- THANH THÔNG BÁO NHANH LỊCH HẸN TRONG 60 PHÚT (MỎNG, GỌN, KHÔNG BOX-IN-BOX, KHÔNG ICON) -->
-<div class="booking-upcoming-strip" id="upcomingAlertBar">
-<div class="upcoming-strip-left">
-<span class="upcoming-strip-badge">Sắp tới trong 60 phút:</span>
+<div class="booking-upcoming-strip admin-table-notice admin-table-notice-line" id="upcomingAlertBar">
+<div class="upcoming-strip-left admin-table-notice-content">
+<span class="upcoming-strip-badge admin-table-notice-title">Sắp tới trong 60 phút:</span>
 <div class="upcoming-strip-items" id="upcomingItemsContainer">
 <!-- Danh sách tóm tắt render động -->
 </div>
 </div>
 <div class="upcoming-strip-right">
-<button class="btn-strip-filter" id="btnFilterUpcomingQuick" type="button">Lọc danh sách</button>
+<button class="btn-strip-filter admin-table-notice-action" id="btnFilterUpcomingQuick" type="button">Lọc danh sách</button>
 </div>
 </div>
+<div class="admin-card service-master-card">
 <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
 <div class="table-toolbar-section">
 <div class="filter-row-top">
@@ -435,7 +435,7 @@
 <th class="svc-inline-53f6dca2">Thao tác</th>
 </tr>
 </thead>
-<tbody id="servicesCatalogTableBody">
+<tbody id="servicesCatalogTableBody" data-load-skeleton>
 <!-- Nạp động từ CSV dichvu.csv -->
 </tbody>
 </table>
@@ -528,7 +528,7 @@
 <th class="svc-inline-224699c7">Thao tác</th>
 </tr>
 </thead>
-<tbody id="servicesReviewTableBody">
+<tbody id="servicesReviewTableBody" data-load-skeleton>
 <!-- Nạp động từ services.js -->
 </tbody>
 </table>

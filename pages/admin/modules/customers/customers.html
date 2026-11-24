@@ -1,5 +1,5 @@
 <!-- PawPal Admin / Khách hàng: HTML fragment. Stylesheet external nằm cạnh file này. -->
-<link rel="stylesheet" href="/pages/admin/modules/customers/customers.css?v=20261124_customer_pet_history_style" data-pawpal-module-stylesheet="customers">
+<link rel="stylesheet" href="/pages/admin/modules/customers/customers.css?v=20261124_customer_loading_skeleton" data-pawpal-module-stylesheet="customers">
 <div class="customers-module">
 <!-- ====================================================================
          SUB-TAB 1: KHÁCH HÀNG (DANH SÁCH và TIẾP NHẬN TẠI QUẦY)
@@ -28,9 +28,9 @@
 <span class="kpi-val text-danger" id="custStatComplaint"><span class="skeleton-kpi"></span></span>
 </div>
 </div>
-<section class="customer-operations" hidden="" id="custComplaintAlertBar">
-<div class="customer-ops-head"><strong>Cần xử l&yacute; <span id="custOpsCount"></span></strong><span id="custOpsSummary"></span><button aria-controls="custOpsDetails" aria-expanded="false" id="custToggleOps" type="button">Xem chi tiết</button></div>
-<div hidden="" id="custOpsDetails"><div class="customer-ops-toolbar"><button id="btnFilterComplaintQuick" type="button">Lọc kh&aacute;ch c&oacute; khiếu nại</button></div><div id="custComplaintItemsContainer"></div></div>
+<section class="customer-operations admin-table-notice" hidden="" id="custComplaintAlertBar">
+<div class="customer-ops-head admin-table-notice-line"><strong class="admin-table-notice-title">Cần xử l&yacute; <span id="custOpsCount"></span></strong><span id="custOpsSummary"></span><button aria-controls="custOpsDetails" aria-expanded="false" class="admin-table-notice-action" id="custToggleOps" type="button">Xem chi tiết</button></div>
+<div hidden="" id="custOpsDetails"><div class="customer-ops-toolbar"><button class="admin-table-notice-action" id="btnFilterComplaintQuick" type="button">Lọc kh&aacute;ch c&oacute; khiếu nại</button></div><div id="custComplaintItemsContainer"></div></div>
 </section>
 <!-- KHU VỰC 2 và 3: KHỐI DỮ LIỆU THỐNG NHẤT (BỘ LỌC + BẢNG DANH SÁCH) -->
 <div class="admin-card customer-master-card">
@@ -79,6 +79,7 @@
 <table class="admin-table" id="customerDataTable">
 <thead>
 <tr>
+<th class="customer-col-photo">&#7842;nh</th>
 <th class="customer-col-code">M&atilde; KH</th>
 <th>Họ t&ecirc;n</th>
 <th>Số &dstrok;iện thoại</th>
@@ -91,6 +92,7 @@
 </thead>
 <tbody id="customerTableTbody">
 <tr class="skeleton-row">
+<td class="customer-col-photo"><span class="skeleton-avatar"></span></td>
 <td><span class="skeleton-text skeleton-width-75"></span></td>
 <td><span class="skeleton-text skeleton-width-140"></span></td>
 <td><span class="skeleton-text skeleton-width-95"></span></td>
@@ -101,6 +103,7 @@
 <td class="cell-center"><span class="skeleton-text skeleton-width-20"></span></td>
 </tr>
 <tr class="skeleton-row">
+<td class="customer-col-photo"><span class="skeleton-avatar"></span></td>
 <td><span class="skeleton-text skeleton-width-70"></span></td>
 <td><span class="skeleton-text skeleton-width-120"></span></td>
 <td><span class="skeleton-text skeleton-width-95"></span></td>
@@ -111,6 +114,7 @@
 <td class="cell-center"><span class="skeleton-text skeleton-width-20"></span></td>
 </tr>
 <tr class="skeleton-row">
+<td class="customer-col-photo"><span class="skeleton-avatar"></span></td>
 <td><span class="skeleton-text skeleton-width-75"></span></td>
 <td><span class="skeleton-text skeleton-width-150"></span></td>
 <td><span class="skeleton-text skeleton-width-95"></span></td>
@@ -121,6 +125,7 @@
 <td class="cell-center"><span class="skeleton-text skeleton-width-20"></span></td>
 </tr>
 <tr class="skeleton-row">
+<td class="customer-col-photo"><span class="skeleton-avatar"></span></td>
 <td><span class="skeleton-text skeleton-width-72"></span></td>
 <td><span class="skeleton-text skeleton-width-110"></span></td>
 <td><span class="skeleton-text skeleton-width-95"></span></td>
@@ -339,7 +344,7 @@
 <th>L&yacute; do</th>
 </tr>
 </thead>
-<tbody id="pawpointHistoryTbody">
+<tbody id="pawpointHistoryTbody" data-load-skeleton>
 </tbody>
 </table></div>
 </div>
@@ -354,7 +359,7 @@
 <th>Quyền lợi</th>
 </tr>
 </thead>
-<tbody id="membershipTierPolicyTbody"></tbody>
+<tbody id="membershipTierPolicyTbody" data-load-skeleton></tbody>
 </table>
 </div></details></div>
 </section>

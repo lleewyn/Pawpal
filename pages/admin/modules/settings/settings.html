@@ -45,16 +45,16 @@
 
         <!-- TAB PANEL 1: VOUCHER KHUYẾN MÃI -->
         <div class="settings-tab-panel active" id="mkt-vouchers">
-            <div class="admin-card settings-master-card">
-                <!-- THANH CẢNH BÁO TÍCH HỢP TRỰC TIẾP ĐẦU BẢNG (CHUẨN GOM KHỐI THỐNG NHẤT AGENTS.MD) -->
-                <div class="settings-alert-strip" id="settingsAlertBar">
-                    <div class="alert-strip-left">
-                        <span class="alert-strip-text" id="alertStripMessage">Đang quét tình trạng Voucher và Banner chiến dịch...</span>
-                    </div>
-                    <div class="alert-strip-actions">
-                        <button type="button" class="btn-alert-strip-filter" id="btnFilterZeroMiss">Lọc mục cần xử lý</button>
-                    </div>
+            <!-- THANH CẢNH BÁO TÍCH HỢP TRỰC TIẾP ĐẦU BẢNG (CHUẨN GOM KHỐI THỐNG NHẤT AGENTS.MD) -->
+            <div class="settings-alert-strip admin-table-notice admin-table-notice-line" id="settingsAlertBar">
+                <div class="alert-strip-left admin-table-notice-content">
+                    <span class="alert-strip-text admin-table-notice-title" id="alertStripMessage">Đang quét tình trạng Voucher và Banner chiến dịch...</span>
                 </div>
+                <div class="alert-strip-actions">
+                    <button type="button" class="btn-alert-strip-filter admin-table-notice-action" id="btnFilterZeroMiss">Lọc mục cần xử lý</button>
+                </div>
+            </div>
+            <div class="admin-card settings-master-card">
 
                 <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
                 <div class="table-toolbar-section">
@@ -108,7 +108,7 @@
                                 <th class="settings-col-actions">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody id="vouchersTableBody">
+                        <tbody id="vouchersTableBody" data-load-skeleton>
                             <!-- Render by JS -->
                         </tbody>
                     </table>
@@ -280,7 +280,7 @@
                             <th class="settings-col-actions"></th>
                         </tr>
                     </thead>
-                    <tbody id="articlesTableBody">
+                    <tbody id="articlesTableBody" data-load-skeleton>
                         <!-- Render by JS -->
                     </tbody>
                 </table>
@@ -539,7 +539,7 @@
                             <th class="settings-col-audit-status">Trạng thái ghi nhận</th>
                         </tr>
                     </thead>
-                    <tbody id="auditLogTableBody">
+                    <tbody id="auditLogTableBody" data-load-skeleton>
                         <!-- Render by JS -->
                     </tbody>
                 </table>

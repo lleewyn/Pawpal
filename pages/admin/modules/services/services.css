@@ -30,16 +30,6 @@
 
 /* 0. KHU VỰC THÔNG BÁO LỊCH HẸN SẮP TỚI (DẠNG DẢI NGANG MỎNG, ALERT TONE, GỌN GÀNG) */
 
-.services-module .booking-upcoming-strip {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 9px 20px;
-    background-color: rgba(244, 249, 246, 0.85);
-    border-bottom: 1px solid var(--border-neutral);
-    font-size: 13px;
-}
 
 .services-module .upcoming-strip-left {
     display: flex;
@@ -1430,31 +1420,6 @@
     letter-spacing: 1px;
 }
 
-.services-module #servicesBookingTable .btn-booking-action-more {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 32px;
-    min-height: 32px;
-    padding: 4px 8px;
-    border: none;
-    border-radius: var(--admin-radius);
-    background: transparent;
-    color: var(--text-muted);
-    font-family: inherit;
-    font-size: 17px;
-    line-height: 1;
-    letter-spacing: 1px;
-    box-shadow: none;
-    cursor: pointer;
-}
-
-.services-module #servicesBookingTable .btn-booking-action-more:hover,
-.services-module #servicesBookingTable .btn-booking-action-more:focus-visible {
-    background: #EEF5F1;
-    color: #236B48;
-}
-
 .services-module #servicesReviewTable .service-review-content-cell {
     width: 260px;
     min-width: 220px;
@@ -2781,20 +2746,6 @@
     box-shadow: none;
 }
 
-.services-module .booking-upcoming-strip {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-width: 0;
-    padding: 9px 14px;
-    color: #6f8176;
-    background: #ffffff;
-    border: 0;
-    border-bottom: 1px solid #e7ece8;
-    border-radius: 0;
-    font-size: 12px;
-}
 
 .services-module .upcoming-strip-left {
     min-width: 0;
@@ -3214,20 +3165,6 @@
     color: #6f8176;
     font-size: 11px;
     font-weight: 400;
-}
-
-.services-module .admin-table .btn-booking-action-more {
-    color: #47745e;
-    background: transparent;
-    border: 0;
-    border-radius: 5px;
-    font-size: 18px;
-}
-
-.services-module .admin-table .btn-booking-action-more:hover,
-.services-module .admin-table .btn-booking-action-more:focus-visible {
-    color: #275e49;
-    background: #eef5f1;
 }
 
 /* Phân trang và hồ sơ: giữ cấu trúc nghiệp vụ, bỏ nền trang trí thừa. */

@@ -29,19 +29,19 @@
         </div>
 
         <!-- KHỐI BẢNG DỮ LIỆU -->
-        <div class="admin-card staff-master-card">
-            <!-- THANH CẢNH BÁO NHÂN SỰ CHỦ ĐỘNG (DẢI MỎNG ALERT TONE, THUẦN CHỮ, KHÔNG VIỀN) -->
-            <div class="staff-alert-strip" id="staffAlertBar">
-                <div class="alert-strip-left">
-                    <span class="alert-strip-badge">Cảnh báo vận hành:</span>
-                    <div class="alert-strip-items" id="staffAlertItemsContainer">
-                        <!-- Render động bởi JS -->
-                    </div>
-                </div>
-                <div class="alert-strip-right">
-                    <button type="button" class="btn-alert-strip-filter" id="btnFilterStaffAlertQuick">Lọc danh sách</button>
+        <!-- THANH CẢNH BÁO NHÂN SỰ CHỦ ĐỘNG (DẢI MỎNG ALERT TONE, THUẦN CHỮ, KHÔNG VIỀN) -->
+        <div class="staff-alert-strip admin-table-notice admin-table-notice-line" id="staffAlertBar">
+            <div class="alert-strip-left admin-table-notice-content">
+                <span class="alert-strip-badge admin-table-notice-title">Cảnh báo vận hành:</span>
+                <div class="alert-strip-items" id="staffAlertItemsContainer">
+                    <!-- Render động bởi JS -->
                 </div>
             </div>
+            <div class="alert-strip-right">
+                <button type="button" class="btn-alert-strip-filter admin-table-notice-action" id="btnFilterStaffAlertQuick">Lọc danh sách</button>
+            </div>
+        </div>
+        <div class="admin-card staff-master-card">
 
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
@@ -460,7 +460,7 @@
                             <th style="text-align: center; width: 60px;">Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="assessmentListTableBody">
+                    <tbody id="assessmentListTableBody" data-load-skeleton>
                         <!-- Render by JS -->
                     </tbody>
                 </table>

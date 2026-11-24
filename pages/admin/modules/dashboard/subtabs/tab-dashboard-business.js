@@ -271,7 +271,7 @@
         const generation = ++state.drillGeneration, range = { ...state.range };
         state.drill = { kind, page };
         const target = $('[data-biz-transactions]'), pagination = $('[data-biz-transactions-pagination]');
-        target.hidden = false; target.innerHTML = '<p class="biz-caption">Đang tải danh sách…</p>'; pagination.hidden = true;
+        target.hidden = false; window.PawpalAdmin.renderBlockSkeleton(target, 'Đang tải danh sách'); pagination.hidden = true;
         try {
             const cash = ['receipt', 'refund'].includes(kind);
             const cohort = cohortKinds.includes(kind), evidence = !cash && !['order', 'appointment'].includes(kind);
@@ -445,7 +445,8 @@
         body.setAttribute('aria-busy', String(!!pending));
         if (pending || failed) {
             badge.textContent = pending ? 'Đang cập nhật' : 'Chưa đủ dữ liệu';
-            body.innerHTML = pending ? '<p class="biz-caption">Đang tải dữ liệu thu và chi…</p>' : status(failed);
+            if (pending) window.PawpalAdmin.renderBlockSkeleton(body, 'Đang tải dữ liệu thu và chi');
+            else body.innerHTML = status(failed);
             return;
         }
         if (!estimate) {

@@ -10,9 +10,9 @@
         if(!booking?.dbId){m.showToast('Không tìm thấy ca dịch vụ của đánh giá.','warning');return;}
         if(busy)return;current=booking;review=sourceReview||null;const seq=++sequence;
         el('serviceTicketMeta').textContent=booking.id+' · '+(booking.customerName||booking.customer||'Chưa có tên khách')+' · '+booking.petName;
-        el('serviceTicketDescription').value=review?.comment&&review.comment!=='—'?review.comment:'';el('serviceTicketError').textContent='';el('serviceTicketHistory').textContent='Đang tải phiếu…';el('btnSaveServiceTicket').disabled=false;
+        el('serviceTicketDescription').value=review?.comment&&review.comment!=='—'?review.comment:'';el('serviceTicketError').textContent='';window.PawpalAdmin.renderBlockSkeleton(el('serviceTicketHistory'), 'Đang tải phiếu');el('btnSaveServiceTicket').disabled=false;
         el('modalServiceTicket').style.removeProperty('display');el('modalServiceTicket').classList.add('active');
-        try{await history(seq);}catch(error){if(seq===sequence)el('serviceTicketError').textContent=m.errorMessage(error);}
+        try{await history(seq);}catch(error){if(seq===sequence){el('serviceTicketHistory').replaceChildren();el('serviceTicketError').textContent=m.errorMessage(error);}}
     };
     el('formServiceTicket').addEventListener('submit',event=>event.preventDefault());
     el('btnSaveServiceTicket').onclick=async()=>{

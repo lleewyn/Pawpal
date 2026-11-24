@@ -170,13 +170,13 @@
             const key=JSON.stringify(request);PawpalCustomers.state.customerListRequest=request;
             if(PawpalCustomers.state.customerPage?.key!==key&&PawpalCustomers.state.customerFailedKey!==key){
                 if(PawpalCustomers.state.customerPendingKey!==key){PawpalCustomers.state.customerPendingKey=key;PawpalCustomers.loadCustomersModuleData().then(()=>{if(PawpalCustomers.state.customerPendingKey===key)PawpalCustomers.state.customerPendingKey=null;renderCustomersTable();});}
-                tbody.innerHTML='<tr><td colspan="8" class="customer-data-state">Đang tải danh sách khách hàng…</td></tr>';document.getElementById('custResultsCount').textContent='Đang tải…';return;
+                tbody.innerHTML='<tr><td colspan="9" class="customer-data-state">Đang tải danh sách khách hàng…</td></tr>';document.getElementById('custResultsCount').textContent='Đang tải…';return;
             }
         }
         if (!PawpalCustomers.state.hasLoadedCustomers) {
             if (PawpalCustomers.state.listLoadStatus === 'error') {
                 delete tbody.dataset.loadingSkeleton;
-                tbody.innerHTML = '<tr><td colspan="8" class="customer-data-state"><strong>Không thể tải danh sách khách hàng</strong><p>Giữ nguyên bộ lọc và thử nạp lại dữ liệu.</p><button type="button" id="custRetryLoad">Thử lại</button></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="customer-data-state"><strong>Không thể tải danh sách khách hàng</strong><p>Giữ nguyên bộ lọc và thử nạp lại dữ liệu.</p><button type="button" id="custRetryLoad">Thử lại</button></td></tr>';
                 const count=document.getElementById('custResultsCount');if(count)count.textContent='Chưa tải được dữ liệu';
                 document.getElementById('customerPaginationControls')?.replaceChildren();
                 document.getElementById('custRetryLoad').onclick=async event=>{event.target.disabled=true;await PawpalCustomers.loadCustomersModuleData({force:true});renderCustomersTable();updateCustomerKPIs();renderComplaintBar();};
@@ -221,7 +221,7 @@
         if (pageItems.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px; font-size: 13.5px;">
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 30px; font-size: 13.5px;">
                         ${allCusts.length?'Không tìm thấy khách hàng nào phù hợp với bộ lọc hiện tại.':'Chưa có khách hàng. Bấm Thêm khách để tạo hồ sơ đầu tiên.'}
                         ${allCusts.length?'<button type="button" id="btnResetCustomerFilters" style="background:none;border:none;color:#275e49;text-decoration:underline;cursor:pointer">Xóa bộ lọc</button>':''}
                     </td>
@@ -276,14 +276,14 @@
 
             return `
                 <tr class="${rowLockedClass} ${rowComplaintClass}" data-id="${esc(c.id)}">
-                    <td style="${firstTdBorder}"><strong class="customer-code-text admin-table-code" title="${esc(c.id)}">${esc(c.id)}</strong></td>
+                    <td class="customer-col-photo" style="${firstTdBorder}">
+                        <span class="customer-initial-avatar" aria-hidden="true">${esc(PawpalCustomers.customerInitials(c.name))}</span>
+                    </td>
+                    <td class="customer-col-code"><strong class="customer-code-text admin-table-code" title="${esc(c.id)}">${esc(c.id)}</strong></td>
                     <td>
-                        <div class="customer-list-identity">
-                            <span class="customer-initial-avatar" aria-hidden="true">${esc(PawpalCustomers.customerInitials(c.name))}</span>
-                            <div class="user-name-cell">
-                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" title="${esc(c.name)}" data-id="${esc(c.id)}">${esc(c.name)}</a>
-                                <div class="user-sub-cell">${subCellHtml}</div>
-                            </div>
+                        <div class="user-name-cell">
+                            <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" title="${esc(c.name)}" data-id="${esc(c.id)}">${esc(c.name)}</a>
+                            <div class="user-sub-cell">${subCellHtml}</div>
                         </div>
                     </td>
                     <td><strong>${esc(c.phone)}</strong>${c.phoneUnverified?'<div class="text-muted" style="font-size:11.5px">Chưa xác minh</div>':''}</td>

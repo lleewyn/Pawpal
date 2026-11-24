@@ -156,8 +156,43 @@
         if (!container) return;
         if(!document.getElementById('mkt-banners')?.classList.contains('active'))return;
 
-        const bannersList = PawpalSettings.state?.bannersList || [];
-        container.innerHTML = '';
+        const { bannersList = [], promosLoading, promosLoadError, promosMeta } = PawpalSettings.state;
+        const pager = document.getElementById('bannerPaginationControls');
+        container.replaceChildren();
+        container.removeAttribute('aria-busy');
+        container.removeAttribute('aria-label');
+        pager?.replaceChildren();
+        if (promosLoadError) {
+            const message = document.createElement('p');
+            message.className = 'settings-empty-state banner-grid-message';
+            message.setAttribute('role', 'alert');
+            message.textContent = promosLoadError;
+            container.append(message);
+            return;
+        }
+        if (promosLoading || !promosMeta) {
+            container.setAttribute('aria-busy', 'true');
+            container.setAttribute('aria-label', 'Đang tải banner');
+            const cards = `
+                <div class="banner-item-card banner-loading-card" aria-hidden="true">
+                    <div class="banner-preview-img skeleton-box"></div>
+                    <div class="banner-card-info">
+                        <span class="skeleton-text"></span>
+                        <span class="skeleton-text"></span>
+                        <span class="skeleton-text"></span>
+                    </div>
+                    <div class="banner-card-actions"><span class="skeleton-badge"></span></div>
+                </div>`;
+            container.innerHTML = cards.repeat(3);
+            return;
+        }
+        if (!bannersList.length) {
+            const message = document.createElement('p');
+            message.className = 'settings-empty-state banner-grid-message';
+            message.textContent = 'Chưa có banner nào.';
+            container.append(message);
+            return;
+        }
         const totalPages = Math.max(1, Math.ceil((PawpalSettings.state.promosMeta?.bannerTotal||0) / SETTINGS_PAGE_SIZE));
         bannerPage=PawpalSettings.state.promosMeta?.bannerPage||1;
         bannerPage = Math.min(bannerPage, totalPages);
@@ -299,8 +334,12 @@
     function renderVouchers() {
         const tbody = document.getElementById('vouchersTableBody');
         if (!tbody) return;
+        if (PawpalSettings.state.promosLoading) {
+            window.PawpalAdmin.renderTableSkeleton(tbody);
+            return;
+        }
         if (PawpalSettings.state.promosLoadError) {delete tbody.dataset.loadingSkeleton;tbody.innerHTML=`<tr><td colspan="${tbody.closest('table').querySelectorAll('thead th').length}" class="settings-table-message settings-table-message--error">Không thể tải dữ liệu cấu hình. Vui lòng tải lại trang.</td></tr>`;return;}
-        if (!PawpalSettings.state.isLoaded) return;
+        if (!PawpalSettings.state.promosMeta) return;
         delete tbody.dataset.loadingSkeleton;
 
         const vouchersList = PawpalSettings.state?.vouchersList || [];
@@ -418,6 +457,17 @@
     function renderNotifications() {
         const container = document.getElementById('notificationsListContainer');
         if (!container) return;
+
+        const { systemLoadStatus } = PawpalSettings.state;
+        if (systemLoadStatus !== 'ready') {
+            document.getElementById('notificationPaginationControls')?.replaceChildren();
+            if (systemLoadStatus === 'error') {
+                container.innerHTML = '<p class="settings-empty-state" role="alert">Không thể tải thông báo website.</p>';
+            } else {
+                window.PawpalAdmin.renderBlockSkeleton(container, 'Đang tải thông báo website');
+            }
+            return;
+        }
 
         const notificationsList = PawpalSettings.state?.notificationsList || [];
         container.innerHTML = '';

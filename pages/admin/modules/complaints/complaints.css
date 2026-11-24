@@ -69,18 +69,6 @@
     letter-spacing: -0.3px;
 }
 /* THANH CẢNH BÁO KHIẾU NẠI VẬN HÀNH (DẢI MỎNG ALERT TONE, THUẦN CHỮ, KHÔNG VIỀN) */
-.complaints-module .complaints-alert-strip {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 9px 18px;
-    background-color: rgba(244, 249, 246, 0.85);
-    border-bottom: 1px solid var(--border-neutral) !important;
-    border-radius: var(--admin-radius, 9px) var(--admin-radius, 9px) 0 0;
-    font-size: 13px;
-    overflow: hidden;
-}
 .complaints-module .complaints-alert-strip .alert-strip-left {
     display: flex;
     align-items: center;
@@ -1197,11 +1185,6 @@
     font-size: 23px;
     line-height: 1.2;
     letter-spacing: -0.2px;
-}
-.complaints-module .complaints-alert-strip {
-    padding: 8px 14px;
-    background: #f7faf7;
-    border-bottom: 1px solid var(--complaint-border) !important;
 }
 .complaints-module .alert-item-tag {
     border-radius: 5px !important;

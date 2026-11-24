@@ -1428,7 +1428,7 @@
         if(busy){m.showToast('Đang ghi giao dịch, vui lòng chờ.','warning');return;}
         booking=selected;const current=++session;context=null;el('formSalesCashier').reset();
         el('salesCashierMeta').textContent=selected.id+' · '+(selected.customerName||selected.customer||'Chưa có tên khách');
-        el('salesCashierError').textContent='';el('salesCashierHistory').textContent='Đang tải giao dịch…';
+        el('salesCashierError').textContent='';window.PawpalAdmin.renderBlockSkeleton(el('salesCashierHistory'), 'Đang tải giao dịch');
         for(const id of ['salesCashierTotal','salesCashierCollected','salesCashierRemaining'])el(id).textContent='—';
         el('btnSaveSalesMoney').disabled=true;
         el('modalSalesCashier').style.removeProperty('display');el('modalSalesCashier').classList.add('active');

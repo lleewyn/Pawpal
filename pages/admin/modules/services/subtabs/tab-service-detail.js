@@ -44,7 +44,8 @@
                 state.style.display = 'block';
                 state.setAttribute('role','status');
                 state.setAttribute('aria-live','polite');
-                state.textContent = loading ? 'Đang tải hồ sơ lịch hẹn…' : PawpalServices.state.loadError || PawpalServices.state.detailError
+                if (loading) window.PawpalAdmin.renderBlockSkeleton(state, 'Đang tải hồ sơ lịch hẹn');
+                else state.textContent = PawpalServices.state.loadError || PawpalServices.state.detailError
                     ? 'Không thể tải hồ sơ lịch hẹn. Vui lòng tải lại trang.'
                     : !bookingId ? 'Chọn một lịch hẹn từ danh sách để xem hồ sơ.'
                     : 'Không tìm thấy lịch hẹn đã chọn hoặc bạn chưa có quyền xem.';
@@ -56,7 +57,7 @@
         const reviewPanel = card?.querySelector('#bookingDetailReviews');
         if (reviewPanel) {
             reviewPanel.dataset.bookingId = booking.dbId;
-            import('/pages/admin/modules/services/booking-reviews.mjs?v=20261124_service_review_section').then(({ mountBookingReviews }) => {
+            import('/pages/admin/modules/services/booking-reviews.mjs?v=20261124_admin_pagination').then(({ mountBookingReviews }) => {
                 if (reviewPanel.isConnected && reviewPanel.dataset.bookingId === booking.dbId) {
                     mountBookingReviews(reviewPanel, booking, { db: window.getSupabaseClient() });
                 }
@@ -615,7 +616,7 @@
         if (!carelogsContainer) return;
 
         if (!booking._careLogsLoaded && PawpalServices.fetchBookingCareLogs && booking.dbId) {
-            carelogsContainer.innerHTML = '<div style="color:var(--text-muted);padding:12px 0;">Đang nạp nhật ký chăm sóc…</div>';
+            window.PawpalAdmin.renderBlockSkeleton(carelogsContainer, 'Đang tải nhật ký chăm sóc');
             PawpalServices.fetchBookingCareLogs(booking.dbId).then(logs => {
                 booking.careLogs = logs;
                 booking.carelogs = logs;
@@ -625,8 +626,9 @@
                 }
             }).catch(err => {
                 console.warn('[PawpalServices] Lỗi nạp nhật ký ca:', err);
-                booking._careLogsLoaded = true;
-                renderDetailCareLogs(booking);
+                if (PawpalServices.state?.selectedBookingId === booking.id) {
+                    carelogsContainer.textContent = 'Không tải được nhật ký chăm sóc. Mở lại hồ sơ để thử lại.';
+                }
             });
             return;
         }

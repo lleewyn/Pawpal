@@ -29,7 +29,16 @@ export function mountBookingReviews(root,booking,{db}={}){
     };
     article.append(label,input,feedback,save);root.append(article);
    }
-   if(data.total>10){const pager=element('nav');pager.style.cssText='display:flex;justify-content:center;gap:12px';for(const [text,delta,disabled]of [['<',-1,page<=1],['>',1,page*10>=data.total]]){const b=element('button',text,'admin-btn');b.type='button';b.disabled=disabled;b.onclick=()=>{page+=delta;void load();};pager.append(b);}root.append(pager);}
+   if(data.total>10){
+    const pager=element('nav',null,'admin-pagination-bar');pager.setAttribute('aria-label','Phân trang đánh giá');
+    for(const [text,delta,disabled]of [['<',-1,page<=1],[String(page),0,false],['>',1,page*10>=data.total]]){
+     const button=element('button',text,'pagination-btn');button.type='button';button.disabled=disabled;
+     if(delta===0)button.setAttribute('aria-current','page');
+     else button.onclick=()=>{page+=delta;void load();};
+     pager.append(button);
+    }
+    root.append(pager);
+   }
   }catch{if(valid()&&version===epoch){root.replaceChildren(heading,element('p','Không thể tải đánh giá.'));const retry=element('button','Thử lại','admin-btn');retry.type='button';retry.onclick=load;root.append(retry);}}
  }
  const refresh=()=>{if(valid()&&!(root.contains(document.activeElement)&&document.activeElement.tagName==='TEXTAREA'))void load();};

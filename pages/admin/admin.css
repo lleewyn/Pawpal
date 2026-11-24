@@ -94,9 +94,41 @@
 }
 
 .skeleton-row td {
-    padding: 16px 14px !important;
     border-bottom: 1px solid var(--border-neutral);
     background-color: transparent !important;
+}
+
+.skeleton-row :is(.skeleton-text, .skeleton-avatar, .skeleton-badge) {
+    max-width: 100%;
+}
+
+.admin-auto-skeleton .skeleton-text {
+    width: var(--skeleton-width, 70%);
+    height: 10px;
+}
+
+.admin-table .skeleton-row .admin-skeleton-cell-center {
+    text-align: center !important;
+}
+
+.admin-data-skeleton {
+    display: grid;
+    gap: 12px;
+    padding: 12px 14px;
+}
+
+.admin-data-skeleton .skeleton-text {
+    width: min(100%, 320px);
+    height: 11px;
+}
+
+.admin-data-skeleton .skeleton-text:nth-child(2) { width: min(80%, 245px); }
+.admin-data-skeleton .skeleton-text:nth-child(3) { width: min(65%, 175px); }
+
+@media (prefers-reduced-motion: reduce) {
+    :is(.skeleton-box, .skeleton-kpi, .skeleton-text, .skeleton-avatar, .skeleton-badge, .skeleton-pill) {
+        animation: none !important;
+    }
 }
 
 .skeleton-card-block {
@@ -115,14 +147,14 @@
 
 .admin-module-skeleton-shell .shell-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+    gap: 10px;
 }
 
 .admin-module-skeleton-shell .shell-kpi-card {
     background: var(--surface-white);
     border: 1px solid var(--border-neutral);
-    border-radius: var(--admin-radius);
+    border-radius: 0;
     padding: 14px 18px;
     display: flex;
     flex-direction: column;
@@ -132,7 +164,7 @@
 .admin-module-skeleton-shell .shell-master-card {
     background: var(--surface-white);
     border: 1px solid var(--border-neutral);
-    border-radius: var(--admin-radius);
+    border-radius: 0;
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -142,7 +174,12 @@
 .admin-module-skeleton-shell .shell-toolbar {
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 12px;
+}
+
+.admin-module-skeleton-shell .shell-toolbar > .skeleton-text {
+    max-width: 100%;
 }
 
 @keyframes skeletonPulse {

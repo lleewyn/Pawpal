@@ -1337,7 +1337,7 @@
             const searchVal = (inputSearchCanned?.value || '').toLowerCase().trim();
             const catVal = selectCannedCategory?.value || 'all';
             const version=++cannedLibraryVersion,pager=document.getElementById('cannedLibraryPagination');
-            cannedResponsesList.textContent='Đang tải câu mẫu…';pager?.replaceChildren();
+            window.PawpalAdmin.renderBlockSkeleton(cannedResponsesList, 'Đang tải câu mẫu');pager?.replaceChildren();
             let response;
             try{response=await loadLiveCannedResponses({query:searchVal,category:catVal,page:cannedLibraryPage});}
             catch{if(version===cannedLibraryVersion)cannedResponsesList.textContent='Không tải được câu mẫu. Hãy thử lại.';return;}
@@ -1408,7 +1408,7 @@
             if(!e.target.closest('#linkRecentOrder, .chat-order-info'))return;
             const c=getCurrentConversationSafe();if(!c?.recentOrder?.id)return;
             const target={conversation:c.id,customer:c.customerId,order:c.recentOrder.id};trackingTarget=target;
-            const summary=document.getElementById('trackingOrderSummary');summary.textContent='Đang tải...';
+            const summary=document.getElementById('trackingOrderSummary');window.PawpalAdmin.renderBlockSkeleton(summary, 'Đang tải thông tin đơn hàng');
             PawpalChatbot.openModal?.('orderTrackingModalOverlay');
             const {data,error}=await supabase.from('sales_order').select('id,order_code,order_status').eq('id',target.order).eq('customer_id',target.customer).single();
             if(trackingTarget!==target)return;
