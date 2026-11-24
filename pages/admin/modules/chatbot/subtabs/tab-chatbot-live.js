@@ -1350,9 +1350,13 @@
             if(selectCannedCategory)selectCannedCategory.value=catVal;
             const filtered=response.rows.map(r=>({...r,catName:r.category}));
             const lastPage=Math.max(1,Math.ceil(response.total/10));
-            for(const [label,disabled,delta]of [['<',response.page<=1,-1],[String(response.page),false,0],['>',response.page>=lastPage,1]]){
+            if(lastPage>1) for(const [label,disabled,delta]of [['<',response.page<=1,-1],[String(response.page),false,0],['>',response.page>=lastPage,1]]){
                 const b=document.createElement('button');b.type='button';b.className='rules-page-btn'+(delta===0?' active':'');b.textContent=label;b.disabled=disabled;
-                if(delta)b.addEventListener('click',()=>{cannedLibraryPage+=delta;renderCannedLibrary();});else b.setAttribute('aria-current','page');pager?.appendChild(b);
+                if(delta){
+                    b.setAttribute('aria-label',delta<0?'Trang trước':'Trang sau');
+                    b.addEventListener('click',()=>{cannedLibraryPage+=delta;renderCannedLibrary();});
+                } else b.setAttribute('aria-current','page');
+                pager?.appendChild(b);
             }
 
             if (filtered.length === 0) {
@@ -1361,8 +1365,8 @@
             }
 
             cannedResponsesList.innerHTML = filtered.map(item => `
-                <div class="canned-response-card" style="padding: 14px 0; border: none; margin-bottom: 10px; background: transparent; display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="canned-response-card" style="padding: 10px 0; border: none; background: transparent; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 4px 8px; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <code style="background: transparent; color: #236B48; font-weight: 700; font-size: 12px;">${escapeHtml(item.shortcut)}</code>
                             <span style="font-weight: 600; color: #203A2C; font-size: 13.5px;">${escapeHtml(item.title)}</span>

@@ -845,7 +845,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261124_staff_shift_selection';
+    const MODULE_SCRIPT_VERSION = '20261124_canned_modal_layout';
     let staffDomainScriptsReady;
     async function loadStaffDomainScripts() {
         if (!staffDomainScriptsReady) staffDomainScriptsReady = (async () => {

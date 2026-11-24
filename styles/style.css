@@ -135,10 +135,18 @@ input[type="password"]::-ms-clear {
 }
 
 html {
+    scroll-behavior: smooth;
     scroll-padding-top: 90px;
     overscroll-behavior-y: none;
     overflow-y: scroll;
     scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto !important;
+    }
 }
 
 html.lenis, html.lenis body { height: auto; }
@@ -164,7 +172,7 @@ img {
 a {
     color: inherit;
     text-decoration: none;
-    transition: var(--transition-smooth);
+    transition: color 0.18s ease, opacity 0.18s ease;
 }
 
 ul { list-style: none; }
@@ -3019,4 +3027,51 @@ input:checked + .switch-slider:before {
 .about-hero {
     position: relative;
     overflow: hidden;
+}
+
+/* ==========================================================================
+   PAWPAL ULTRA-SMOOTH PUBLIC SCROLL & HARDWARE ACCELERATION
+   Zero extra weight, no hover animations, pure 60/120fps scrolling & rendering
+   ========================================================================== */
+
+/* GPU Layer Promotion for Sticky & Fixed Nav Elements to prevent scroll repainting */
+.main-header {
+    transform: translateZ(0);
+    will-change: transform;
+    contain: layout paint;
+}
+
+#fabContainer,
+.fab-wrapper,
+#fabBookingBtn {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Offscreen Layout & Paint Containment: Skips layout/paint thrashing on long public pages */
+.services-editorial,
+.pet-personality,
+.pj-journal,
+.process-editorial,
+.pawpass-editorial,
+.v4-faq-section,
+.v28-team-editorial,
+.v29-faq-heading,
+.site-footer,
+.footer-container,
+.blog-list-container,
+.about-team-section,
+.about-story-section,
+.about-companions-section {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 500px;
+}
+
+/* Optimize public product & catalog items rendering */
+.catalog-item,
+.product-card,
+.blog-card,
+.service-card,
+.v4-person {
+    contain: content;
 }

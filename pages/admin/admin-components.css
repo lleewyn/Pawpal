@@ -483,6 +483,104 @@ body.admin-body .admin-ui-standard.admin-ui-customer-reference :is(.admin-btn,.a
 @media(max-width:640px) { html[data-admin-role="STAFF"] .admin-header { flex-wrap:wrap; height:auto; min-height:84px; padding:8px 12px; gap:8px; } html[data-admin-role="STAFF"] .admin-header-left { flex:1 0 100%; overflow:visible; } html[data-admin-role="STAFF"] .btn-mobile-menu-toggle { flex-shrink:0; } html[data-admin-role="STAFF"] .header-subtabs-group { min-width:0; flex-shrink:1; overflow-x:auto; scrollbar-width:none; } html[data-admin-role="STAFF"] .admin-header-right { width:100%; justify-content:flex-end; } }
 @media (max-width: 640px) { .staff-workspace .admin-card { padding: 16px; } .staff-workspace .workspace-toolbar { align-items: stretch; } .staff-workspace .workspace-toolbar .admin-card-title { width: 100%; } .staff-workspace .workspace-facts { grid-template-columns: 1fr; gap: 4px; } .staff-workspace .workspace-facts dd { margin-bottom: 12px; } }
 
+/* Primary workspace actions use the customer-list button as their reference. */
+.admin-body .admin-preview-content .admin-btn.admin-btn-primary:not(:where(
+    .admin-btn-danger, .is-destructive,
+    .admin-modal-overlay *, .admin-modal-backdrop *, .modal-overlay *, .modal-backdrop *, [role="dialog"] *
+)) {
+    box-sizing: border-box;
+    min-height: 32px !important;
+    padding: 7px 11px !important;
+    border: 1px solid #275E49 !important;
+    border-radius: var(--admin-radius, 9px) !important;
+    background: #275E49 !important;
+    color: #FFF !important;
+    font: 600 12px/16px var(--admin-font, Inter, "Segoe UI", Arial, sans-serif) !important;
+    box-shadow: none !important;
+}
+
+.admin-body .admin-preview-content .admin-btn.admin-btn-primary:not(:where(
+    .admin-btn-danger, .is-destructive,
+    .admin-modal-overlay *, .admin-modal-backdrop *, .modal-overlay *, .modal-backdrop *, [role="dialog"] *
+)):is(:hover, :focus-visible):not(:is(:disabled, [aria-disabled="true"])) {
+    background: #1D4D3B !important;
+    border-color: #1D4D3B !important;
+}
+
+/* Shared modal surface and palette, based on the customer forms. */
+.admin-body :is(.admin-modal-overlay, .admin-modal-backdrop, .modal-overlay, .modal-backdrop) {
+    --admin-dialog-padding: 26px 30px;
+    background-color: rgba(26, 43, 35, 0.45) !important;
+}
+
+.admin-body :is(.admin-modal-overlay, .admin-modal-backdrop, .modal-overlay, .modal-backdrop)
+    :is(.admin-modal-card, .modal-card, .admin-modal__card) {
+    padding: var(--admin-dialog-padding) !important;
+    border-color: #ECF2EE !important;
+    border-radius: var(--admin-radius, 9px) !important;
+    background: #FFF !important;
+    overscroll-behavior: contain;
+}
+
+.admin-body :is(.admin-modal-overlay, .admin-modal-backdrop, .modal-overlay, .modal-backdrop)
+    :is(.modal-title-clean, .admin-modal-title, .workspace-modal-title, .workspace-modal-header h2):not(#modalCancelOrder *) {
+    color: #26392F !important;
+}
+
+.admin-body :is(.admin-modal-overlay, .admin-modal-backdrop, .modal-overlay, .modal-backdrop)
+    :is(.form-label-clean, .form-label) {
+    color: #526D59 !important;
+}
+
+.admin-body :is(.admin-modal-overlay, .admin-modal-backdrop, .modal-overlay, .modal-backdrop)
+    :is(.modal-header-clean, .admin-modal__header, .workspace-modal-header, .modal-footer-clean, .admin-modal__footer, .workspace-modal-footer) {
+    border-block: 0 !important;
+}
+
+.admin-body :is(.admin-modal-overlay, .admin-modal-backdrop, .modal-overlay, .modal-backdrop)
+    :is(.modal-footer-clean, .admin-modal__footer, .workspace-modal-footer, .modal-actions-footer)
+    .admin-btn:is(.admin-btn-primary, .admin-btn-secondary, .admin-btn-danger) {
+    box-sizing: border-box;
+    min-height: 36px !important;
+    padding: 8px 12px !important;
+    border-radius: var(--admin-radius, 9px) !important;
+    font: 600 12px/18px var(--admin-font, Inter, "Segoe UI", Arial, sans-serif) !important;
+    box-shadow: none !important;
+}
+
+.admin-body :is(.admin-modal-overlay, .admin-modal-backdrop, .modal-overlay, .modal-backdrop)
+    :is(.modal-footer-clean, .admin-modal__footer, .workspace-modal-footer, .modal-actions-footer)
+    .admin-btn.admin-btn-secondary:not(:is(.admin-btn-danger, .is-destructive)) {
+    background-color: #FFF !important;
+    border-color: #D7DFD9 !important;
+    color: #275E49 !important;
+}
+
+.admin-body :is(.admin-modal-overlay, .admin-modal-backdrop, .modal-overlay, .modal-backdrop)
+    :is(.modal-footer-clean, .admin-modal__footer, .workspace-modal-footer, .modal-actions-footer)
+    .admin-btn.admin-btn-secondary:not(:is(.admin-btn-danger, .is-destructive)):is(:hover, :focus-visible):not(:disabled) {
+    background-color: #EEF5F1 !important;
+}
+
+.admin-body :is(.admin-modal-overlay, .admin-modal-backdrop, .modal-overlay, .modal-backdrop)
+    .admin-btn-primary:not(:is(.admin-btn-danger, #btnConfirmEscalate, #modalCancelOrder *)) {
+    background-color: #275E49 !important;
+    border-color: #275E49 !important;
+    color: #FFF !important;
+}
+
+.admin-body :is(.admin-modal-overlay, .admin-modal-backdrop, .modal-overlay, .modal-backdrop)
+    .admin-btn-primary:not(:is(.admin-btn-danger, #btnConfirmEscalate, #modalCancelOrder *)):is(:hover, :focus-visible):not(:disabled) {
+    background-color: #1D4D3B !important;
+    border-color: #1D4D3B !important;
+}
+
+@media (max-width: 600px) {
+    .admin-body :is(.admin-modal-overlay, .admin-modal-backdrop, .modal-overlay, .modal-backdrop) {
+        --admin-dialog-padding: 24px 20px;
+    }
+}
+
 /* Workspace cards and KPI groups use the same square corners as the customer list. */
 .admin-body .admin-preview-content :is(
     .admin-card,

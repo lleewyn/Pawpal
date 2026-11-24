@@ -672,16 +672,16 @@
          MODAL 4: THƯ VIỆN CÂU MẪU CSKH CHUẨN MỰC
          ==================================================================== -->
     <div class="admin-modal-overlay" id="cannedResponsesModalOverlay">
-        <div class="admin-modal-card" style="width: 740px; max-width: 95vw;">
+        <div class="admin-modal-card" role="dialog" aria-modal="true" aria-labelledby="cannedLibraryTitle" style="width: 740px; max-width: 95vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Thư viện câu mẫu CSKH chuẩn mực</div>
+                <div class="modal-title-clean" id="cannedLibraryTitle">Thư viện câu trả lời mẫu</div>
                 <button type="button" class="modal-btn-close-text" id="btnDismissCannedModal" data-close-modal="cannedResponsesModalOverlay">Đóng</button>
             </div>
             <div class="modal-body-clean canned-lib-body" style="display: flex; flex-direction: column; gap: 16px;">
                 <!-- THANH TÌM KIẾM VÀ DROPDOWN BỘ LỌC CHỦ ĐỀ CÂU MẪU -->
                 <div class="canned-lib-filter-row">
-                    <input type="text" class="admin-input canned-search-input" id="inputSearchCanned" placeholder="Tìm câu mẫu theo từ khóa (giao trễ, xin lỗi, bồi hoàn, camera...)...">
-                    <select class="admin-select canned-category-select" id="selectCannedCategory">
+                    <input type="text" class="admin-input canned-search-input" id="inputSearchCanned" aria-label="Tìm câu trả lời mẫu" placeholder="Tìm theo từ khóa hoặc mã câu mẫu">
+                    <select class="admin-select canned-category-select" id="selectCannedCategory" aria-label="Chủ đề câu mẫu">
                         <option value="all">Tất cả</option>
                     </select>
                 </div>
@@ -691,9 +691,6 @@
                     <!-- Render by JS -->
                 </div>
                 <div class="rules-pagination-wrap" id="cannedLibraryPagination"></div>
-            </div>
-            <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnCloseCannedModalBottom" data-close-modal="cannedResponsesModalOverlay">Đóng</button>
             </div>
         </div>
     </div>

@@ -1831,16 +1831,34 @@
 }
 
 #cannedResponsesModalOverlay .admin-modal-card {
-    padding: 26px 30px;
-    border-radius: var(--admin-radius, 9px);
+    display: flex;
+    flex-direction: column;
+    max-height: 90dvh;
+    overflow: hidden;
 }
-#cannedResponsesModalOverlay .modal-header-clean,
-#cannedResponsesModalOverlay .modal-footer-clean {
+#cannedResponsesModalOverlay .modal-header-clean {
+    flex-shrink: 0;
     border: none !important;
     padding-left: 0;
     padding-right: 0;
 }
-#cannedResponsesModalOverlay .modal-body-clean { padding: 0; }
+#cannedResponsesModalOverlay .modal-body-clean {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+}
+#cannedResponsesModalOverlay .canned-responses-list {
+    min-height: 0;
+    max-height: 55dvh;
+    overflow-y: auto;
+}
+body.admin-body #cannedLibraryPagination {
+    padding: 2px 0 !important;
+}
+#cannedLibraryPagination:empty {
+    display: none;
+}
 @media (max-width: 600px) {
     #cannedResponsesModalOverlay .canned-lib-filter-row { flex-direction: column; align-items: stretch; }
     #cannedResponsesModalOverlay .canned-search-input,
