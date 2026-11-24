@@ -1933,6 +1933,9 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         if(force)window.PawpalDataStore?.invalidate('services:bookings*');
         const version=++bookingReadVersion;
         filters={...defaultBookingFilters,...(filters||state.bookingFilters||{})};page=page||state.bookingPageMeta?.page||1;state.bookingFilters=filters;
+        const staffRequest=fetchStaffRaw({force:forceStaff}).then(staff=>{
+            if(version===bookingReadVersion)state.liveStaffList=staff;
+        }).catch(error=>console.warn('[PawpalServices] Booking staff:',error));
         try{
             state.loadError=null;
             const fetcher=async()=>{
@@ -1942,18 +1945,22 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 return {meta:data,rows:await fetchBookingsRaw({ids:data.ids,force,forceDirectory})};
             };
             const store=window.PawpalDataStore,key='services:bookings:page:'+(store?.buildKey?.('booking-page',{filters:JSON.stringify(filters),page})||JSON.stringify({filters,page}));
-            const [result,staff]=await Promise.all([store?store.fetch(key,fetcher,{force,ttlMs:store.TTL_TIERS.OPERATIONAL,backgroundRevalidate:false}):fetcher(),fetchStaffRaw({force:forceStaff})]);
+            const result=await (store?store.fetch(key,fetcher,{force,ttlMs:store.TTL_TIERS.OPERATIONAL,backgroundRevalidate:false}):fetcher());
             if(version!==bookingReadVersion)return null;
-            state.liveStaffList=staff;
             const mapped=mapBookings(result.rows),pageIds=new Set(mapped.map(b=>b.dbId));
             state.bookingsData=[...state.bookingsData.filter(b=>(b.id===state.selectedBookingId||b.dbId===state.selectedBookingId)&&!pageIds.has(b.dbId)),...mapped];
             state.pageBookings=mapped;state.bookingPageMeta=result.meta;state.isLoaded=true;
-            if(state.selectedBookingId&&!mapped.some(b=>b.id===state.selectedBookingId||b.dbId===state.selectedBookingId))await ensureBooking(state.selectedBookingId,{force});
-            if(version!==bookingReadVersion)return null;
+            state.bookingPageKey=JSON.stringify([filters,result.meta.page]);
             if(prefetch&&!state.servicesData.length)loadCatalogData().catch(()=>{});
             if(prefetch&&!state.reviewsData.length)loadReviewsData().catch(()=>{});
         }catch(error){if(version!==bookingReadVersion)return null;state.loadError='Không thể tải dữ liệu dịch vụ. Vui lòng thử lại.';state.pageBookings=[];console.error('[PawpalServices] Booking page:',error);}
         if(render){PawpalServices.subtabs.bookings?.renderBookingsTable({skipFetch:true});PawpalServices.subtabs.bookings?.renderUpcomingBar();PawpalServices.subtabs.bookings?.updateKPIs();}
+        const selectedBookingId=state.selectedBookingId;
+        if(!state.loadError&&selectedBookingId&&!state.pageBookings.some(b=>b.id===selectedBookingId||b.dbId===selectedBookingId)){
+            await ensureBooking(selectedBookingId,{force}).catch(error=>console.warn('[PawpalServices] Booking detail:',error));
+        }
+        await staffRequest;
+        if(version!==bookingReadVersion)return null;
         return !state.loadError;
     }
     PawpalServices.loadServicesData = loadServicesData;

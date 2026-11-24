@@ -21,7 +21,7 @@ body.admin-body{--sidebar-width:220px;--header-height:56px;--canvas-bg:#f5f7f5;-
 .admin-body .admin-header{height:56px;min-height:56px;padding:0 22px;gap:18px;background:#fff;border-bottom:1px solid #dce4df;backdrop-filter:none;box-shadow:none}
 .admin-body .admin-header-left{gap:12px;flex-wrap:nowrap;min-width:0;overflow:auto;scrollbar-width:none}
 .admin-body .header-subtabs-group{gap:14px;flex-shrink:0}
-.admin-body .header-subtab-btn{font-family:inherit;font-size:12px;font-weight:500;line-height:1.5;padding:12px 0 9px;color:#6f8176;border-bottom:2px solid transparent}
+.admin-body .header-subtab-btn{font-family:inherit;font-size:12px;font-weight:500;line-height:1.5;padding:12px 0 3px;color:#6f8176;border-bottom:2px solid transparent}
 .admin-body .header-subtab-btn.active{color:#275e49!important;font-weight:650!important;border-bottom:2px solid #275e49!important}
 .admin-body .header-subtab-divider,.admin-body .subtab-divider{font-size:11px;color:#9caea2}
 .admin-body .header-module-title{font-size:13px;color:#275e49;font-weight:650!important}

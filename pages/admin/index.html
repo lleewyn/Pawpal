@@ -11,18 +11,18 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest" defer></script>
     <!-- CSS Quản Trị -->
-    <link rel="stylesheet" href="/pages/admin/admin.css?v=20261124_loading_skeletons">
+    <link rel="stylesheet" href="/pages/admin/admin.css?v=20261124_admin_loading_feedback">
     <link rel="stylesheet" href="/pages/admin/modules/dashboard/dashboard.css?v=20261124_dashboard_tones">
     <link rel="stylesheet" href="/pages/admin/modules/customers/customers.css?v=20261124_customer_loading_skeleton">
     <link rel="stylesheet" href="/pages/admin/modules/pets/pets.css?v=20261124_pet_profile_alignment">
     <link rel="stylesheet" href="/pages/admin/modules/orders/orders.css?v=20261124_shared_modal_palette">
     <link rel="stylesheet" href="/pages/admin/modules/staff/staff.css?v=20261114_staff_form">
     <link rel="stylesheet" href="/pages/admin/modules/complaints/complaints.css?v=20261024_reference_3">
-    <link rel="stylesheet" href="/pages/admin/admin-shell-v7.css?v=20261122_mobile_header">
+    <link rel="stylesheet" href="/pages/admin/admin-shell-v7.css?v=20261124_tab_spacing">
     <link rel="stylesheet" href="/pages/admin/modules/services/services-v8.css?v=1">
     <link rel="stylesheet" href="/pages/admin/modules/orders/orders-v8.css?v=2">
     <script src="/pages/admin/modules/orders/order-modal-v8.js?v=2" defer></script>
-    <link rel="stylesheet" href="/pages/admin/admin-components.css?v=20261124_modal_actions">
+    <link rel="stylesheet" href="/pages/admin/admin-components.css?v=20261124_filter_tab_spacing">
     <link rel="stylesheet" href="/pages/admin/modules/orders/orders-pos.css?v=2">
     <link rel="stylesheet" href="/pages/admin/modules/services/services.css?v=20261122_scheduled_staff_only">
     <link rel="stylesheet" href="/pages/admin/modules/chatbot/chatbot.css?v=20261124_canned_modal_layout">
@@ -52,7 +52,7 @@
             <!-- DANH SÁCH 9 MENU QUẢN TRỊ THEO THỨ TỰ YÊU CẦU -->
             <nav class="admin-sidebar-nav" id="sidebarNav">
                 <div class="admin-nav-group-label" aria-label="Quản lý chung"><span class="nav-group-full">Quản lý chung</span><span class="nav-group-short" aria-hidden="true">QL</span></div>
-                <button type="button" class="sidebar-menu-btn" data-title="Dashboard" title="Dashboard">
+                <button type="button" class="sidebar-menu-btn active" data-title="Dashboard" title="Dashboard">
                     <span class="menu-icon"><i data-lucide="layout-dashboard"></i></span>
                     <span class="menu-text">Dashboard</span>
                 </button>
@@ -68,7 +68,7 @@
                     <span class="menu-icon"><i data-lucide="calendar"></i></span>
                     <span class="menu-text">Dịch vụ</span>
                 </button>
-                <button type="button" class="sidebar-menu-btn active" data-title="Bán hàng" title="Bán hàng">
+                <button type="button" class="sidebar-menu-btn" data-title="Bán hàng" title="Bán hàng">
                     <span class="menu-icon"><i data-lucide="shopping-bag"></i></span>
                     <span class="menu-text">Bán hàng</span>
                 </button>
@@ -149,10 +149,10 @@
     <!-- Data Store & Single-Flight Cache Trung Tâm (Giai đoạn 2) -->
     <script src="/scripts/shared/customer-identity.js"></script>
     <script src="/scripts/shared/review-insights.js?v=1"></script>
-    <script src="/pages/admin/admin-data-store.js?v=20261022_copilot_v4"></script>
+    <script src="/pages/admin/admin-data-store.js?v=20261124_realtime_queue"></script>
 
     <!-- Script điều hướng hệ thống Admin -->
-    <script src="/pages/admin/admin.js?v=20261124_canned_modal_layout"></script>
+    <script src="/pages/admin/admin.js?v=20261124_admin_loading_feedback"></script>
     <script src="/pages/admin/complaint-notices.js?v=2" defer></script>
 </body>
 </html>

@@ -1490,7 +1490,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
 
     let _isComplaintsInit = false;
     // Khởi tạo phân hệ
-    async function initComplaintsModule() {
+    async function initComplaintsModule(isCurrent = () => true) {
         const hasData = ((PawpalComplaints.state?.serviceComplaints?.length || 0) + (PawpalComplaints.state?.orderComplaints?.length || 0)) > 0;
         if (_isComplaintsInit && hasData) {
             updateComplaintsKpis();
@@ -1499,7 +1499,6 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             PawpalComplaints.subtabs.orders?.renderOrderComplaintsTable?.();
             return;
         }
-        _isComplaintsInit = true;
 
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const moduleTitleEl = document.getElementById('headerModuleTitle');
@@ -1509,7 +1508,9 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
             moduleTitleEl.style.display = 'none';
         }
 
-        await loadComplaintsModuleData({ force: !hasData });
+        await loadComplaintsModuleData();
+        if (!isCurrent() || _isComplaintsInit) return;
+        _isComplaintsInit = true;
         setupComplaintsRealtimeChannel();
         updateComplaintsKpis();
         renderComplaintsAlertBar();

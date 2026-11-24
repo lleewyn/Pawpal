@@ -234,8 +234,9 @@
         const tbody = document.getElementById('servicesBookingTableBody');
         if (!tbody) return;
         if(PawpalServices.state.serverBookingPagination&&!skipFetch){
-            tbody.inert=true;tbody.setAttribute('aria-busy','true');
             const filters={query:currentSearchTerm,category:currentFilterCategory,status:currentFilterStatus,staff:currentFilterStaff,today:isTodayFilterActive,upcoming:isUpcomingFilterActive,allergy:isAllergyFilterActive,sla:isSlaFilterActive};
+            tbody.inert=tbody.dataset.pageKey!==JSON.stringify([filters,currentBookingPage]);
+            tbody.setAttribute('aria-busy','true');
             const success=await PawpalServices.loadServicesData({filters,page:currentBookingPage,render:false,prefetch:false});
             if(success===null)return;
             tbody.inert=false;tbody.removeAttribute('aria-busy');
@@ -247,12 +248,14 @@
             exportBookings=[];
             renderBookingsPagination(0);
             if (PawpalServices.state.loadError) {
+                delete tbody.dataset.pageKey;
                 delete tbody.dataset.loadingSkeleton;
                 tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:28px;">Không thể tải dữ liệu dịch vụ. Vui lòng tải lại trang.</td></tr>';
             }
             return;
         }
         delete tbody.dataset.loadingSkeleton;
+        if (PawpalServices.state.bookingPageKey) tbody.dataset.pageKey=PawpalServices.state.bookingPageKey;
 
 
         const bookingsData = PawpalServices.state.serverBookingPagination?(PawpalServices.state.pageBookings||[]):PawpalServices.state?.bookingsData||[];

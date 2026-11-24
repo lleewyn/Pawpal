@@ -250,7 +250,7 @@ body.admin-body .admin-ui-standard.admin-ui-customer-reference :is(.admin-btn,.a
 .admin-ui-customer-reference .admin-table .row-urgent td:first-child { border-left-color: #dc2626; }
 .admin-ui-customer-reference .admin-filter-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
 .admin-ui-customer-reference .admin-filter-tab {
-    padding: 4px 0;
+    padding: 4px 0 1px;
     border: 0;
     border-bottom: 2px solid transparent;
     border-radius: 0;

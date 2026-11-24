@@ -235,18 +235,22 @@ function setupGallery() {
     if (!serviceData) return;
 
     const mainImg = document.getElementById('mainShowcaseImg');
-    const fallbackImage = '/assets/images/services/' + (serviceData.category === 'hotel' ? 'hotel.png' : 'spa.png');
+    const fallbackImage = '/assets/images/services/' + (serviceData.category === 'hotel' ? 'htl01.webp' : (serviceData.category === 'taxi' ? 'txi01.webp' : 'spa.png'));
 
     if (mainImg) {
         mainImg.onerror = function () {
             this.onerror = null;
             this.src = fallbackImage;
+            this.style.opacity = '1';
         };
-        mainImg.src = serviceData.image || fallbackImage;
+        const initialSrc = serviceData.image || fallbackImage;
+        mainImg.src = initialSrc;
+        mainImg.style.opacity = '1';
     }
 
     const thumbsContainer = document.getElementById('galleryThumbnails');
-    if (!thumbsContainer) return;
+    const prevBtn = document.getElementById('galleryPrev');
+    const nextBtn = document.getElementById('galleryNext');
 
     let rawImages = Array.isArray(serviceData.images) && serviceData.images.length > 0 ? [...serviceData.images] : [serviceData.image || fallbackImage];
 
@@ -256,25 +260,39 @@ function setupGallery() {
     galleryImages = rawImages;
     currentImageIndex = 0;
 
-    thumbsContainer.innerHTML = rawImages.map((imgUrl, index) => `
-        <div class="gallery-thumb ${index === 0 ? 'active' : ''}" data-index="${index}">
-            <img src="${imgUrl}" alt="Ảnh ${index + 1}" class="gallery-thumb-img" onerror="this.onerror=null; this.src='${fallbackImage}'">
-        </div>
-    `).join('');
+    // Toggle navigation arrows visibility based on images count
+    if (prevBtn) prevBtn.style.display = galleryImages.length > 1 ? 'flex' : 'none';
+    if (nextBtn) nextBtn.style.display = galleryImages.length > 1 ? 'flex' : 'none';
 
-    thumbsContainer.querySelectorAll('.gallery-thumb').forEach(thumb => {
-        thumb.addEventListener('click', () => {
-            const idx = parseInt(thumb.getAttribute('data-index'), 10);
-            currentImageIndex = idx;
-            updateMainImage(currentImageIndex);
-            resetAutoSlide();
-        });
-    });
+    if (thumbsContainer) {
+        if (galleryImages.length > 1) {
+            thumbsContainer.style.display = 'grid';
+            thumbsContainer.innerHTML = rawImages.map((imgUrl, index) => `
+                <div class="gallery-thumb ${index === 0 ? 'active' : ''}" data-index="${index}">
+                    <img src="${imgUrl}" alt="Ảnh ${index + 1}" class="gallery-thumb-img" onerror="this.onerror=null; this.src='${fallbackImage}'">
+                </div>
+            `).join('');
 
-    const prevBtn = document.getElementById('galleryPrev');
-    const nextBtn = document.getElementById('galleryNext');
-    if (prevBtn) prevBtn.addEventListener('click', () => navigateGallery(-1));
-    if (nextBtn) nextBtn.addEventListener('click', () => navigateGallery(1));
+            thumbsContainer.querySelectorAll('.gallery-thumb').forEach(thumb => {
+                thumb.addEventListener('click', () => {
+                    const idx = parseInt(thumb.getAttribute('data-index'), 10);
+                    currentImageIndex = idx;
+                    updateMainImage(currentImageIndex);
+                    resetAutoSlide();
+                });
+            });
+        } else {
+            thumbsContainer.innerHTML = '';
+            thumbsContainer.style.display = 'none';
+        }
+    }
+
+    if (prevBtn) {
+        prevBtn.onclick = () => navigateGallery(-1);
+    }
+    if (nextBtn) {
+        nextBtn.onclick = () => navigateGallery(1);
+    }
 
     startAutoSlide();
 }
@@ -290,17 +308,24 @@ function updateMainImage(index) {
         });
     }
 
+    const nextSrc = galleryImages[index];
+    if (mainImg.src === nextSrc && mainImg.complete) {
+        mainImg.style.opacity = '1';
+        return;
+    }
+
     if (typeof gsap !== 'undefined') {
         gsap.to(mainImg, {
-            opacity: 0.1,
-            duration: 0.15,
+            opacity: 0.25,
+            duration: 0.12,
             onComplete: () => {
-                mainImg.src = galleryImages[index];
-                gsap.to(mainImg, { opacity: 1, duration: 0.25 });
+                mainImg.src = nextSrc;
+                gsap.to(mainImg, { opacity: 1, duration: 0.2 });
             }
         });
     } else {
-        mainImg.src = galleryImages[index];
+        mainImg.src = nextSrc;
+        mainImg.style.opacity = '1';
     }
 }
 

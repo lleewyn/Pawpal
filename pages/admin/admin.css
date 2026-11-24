@@ -8,6 +8,40 @@
    5. Không dùng subtitle
    ========================================================================== */
 
+/* Layered important declarations take precedence over module button overrides. */
+@layer admin-button-shape {
+    :is(.admin-body, .admin-login-body)
+        :where(button, .admin-btn, [role="button"], input[type="button"], input[type="submit"], input[type="reset"]) {
+        border-radius: 4px !important;
+    }
+
+    .admin-body :is(
+        .header-subtab-btn, .admin-filter-tab, .drawer-tab-btn, .settings-tab-btn,
+        .form-subtab-btn, .catalog-tab-btn, .staff-shift-tab-btn,
+        .inbox-tab-btn, .rules-hub-tab-btn
+    ) {
+        border-radius: 0 !important;
+    }
+
+    .admin-body :is(
+        .drawer-tab-btn, .settings-tab-btn, .form-subtab-btn, .catalog-tab-btn,
+        .staff-shift-tab-btn, .inbox-tab-btn, .rules-hub-tab-btn
+    ) {
+        padding-bottom: 3px !important;
+    }
+
+    .admin-body :is(
+        input[type="search"], input.search-input, .search-box-wrapper input,
+        :is(.table-toolbar-section, .filter-row-top, .filter-row-bottom,
+            .filter-dropdown-group, .pawpoint-toolbar, .ops-toolbar,
+            .staff-shift-filter-row, .rules-table-toolbar, .rules-toolbar,
+            .canned-lib-filter-row, .inbox-search-box)
+        :is(select, input:not([type="hidden"], [type="checkbox"], [type="radio"]))
+    ) {
+        border-radius: 4px !important;
+    }
+}
+
 :root {
     /* Kích thước */
     --admin-radius: 9px;
@@ -136,6 +170,16 @@
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
     padding: 16px;
+}
+
+.admin-preview-content:has(> .admin-module-verifying) > :not(.admin-module-verifying) {
+    display: none;
+}
+
+.admin-module-verifying {
+    margin: 0;
+    padding: 16px 0;
+    color: var(--text-muted);
 }
 
 .admin-module-skeleton-shell {

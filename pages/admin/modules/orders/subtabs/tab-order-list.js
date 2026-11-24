@@ -265,8 +265,9 @@
         const pendingStatus = sessionStorage.getItem('pawpal_admin_order_filter_status');
         if(pendingStatus){sessionStorage.removeItem('pawpal_admin_order_filter_status');currentFilterStatus=pendingStatus;ordersCurrentPage=1;const select=document.getElementById('orderFilterStatus');if(select)select.value=pendingStatus;}
         if(state.serverPagination&&!skipFetch){
-            tbody.inert=true;tbody.setAttribute('aria-busy','true');
             const filters={query:(document.getElementById('orderSearchInput')?.value||'').trim(),status:currentFilterStatus,payment:currentFilterPayment,payStatus:currentFilterPayStatus,complaint:filterComplaintOnly,urgent:filterUrgentOnly,overdue:filterSlaOverdueOnly};
+            tbody.inert=tbody.dataset.pageKey!==JSON.stringify([filters,ordersCurrentPage]);
+            tbody.setAttribute('aria-busy','true');
             const success=await PawpalOrders.fetchOrdersData({filters,page:ordersCurrentPage,render:false});
             if(success===false&&!state.ordersError)return;
             tbody.inert=false;tbody.removeAttribute('aria-busy');
@@ -274,6 +275,7 @@
         }
         if(skipFetch){tbody.inert=false;tbody.removeAttribute('aria-busy');}
         if (state.ordersError) {
+            delete tbody.dataset.pageKey;
             renderOrdersPagination(0);
             for (const id of ['batchActionToolbar', 'codReconcileSummaryStrip']) {
                 const element = document.getElementById(id);
@@ -289,6 +291,7 @@
 
         const ordersList = state.serverPagination ? (state.pageOrders||[]) : (state.orders || []);
         if (!state.ordersLoaded) return;
+        if (state.orderPageKey) tbody.dataset.pageKey=state.orderPageKey;
 
         // Tự động nhận diện bộ lọc trạng thái chuyển tiếp từ Dashboard
         const pendingStatusFromSession = sessionStorage.getItem('pawpal_admin_order_filter_status');

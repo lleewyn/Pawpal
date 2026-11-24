@@ -4,6 +4,21 @@
     const cohortKinds = ['customers', 'first_observed', 'returned_from_before', 'repeated_in_period'];
     const drillLabels = { order: 'Đơn bán hàng', appointment: 'Ca dịch vụ', receipt: 'Khoản thu', refund: 'Khoản hoàn', customers: 'Khách có giao dịch hoàn thành', first_observed: 'Khách lần đầu trong lịch sử quan sát', returned_from_before: 'Khách đã giao dịch trước kỳ nay quay lại', repeated_in_period: 'Khách có từ hai giao dịch trong kỳ', orders_created: 'Đơn tạo trong kỳ', orders_cancelled: 'Đơn tạo trong kỳ hiện đã hủy', appointments_created: 'Lịch tạo trong kỳ', appointments_cancelled: 'Lịch tạo trong kỳ hiện đã hủy', appointments_no_show: 'Lịch tạo trong kỳ hiện ghi nhận khách vắng mặt' };
     const keys = ['cash', 'sources', 'products', 'services', 'customers', 'membership', 'vouchers', 'points', 'returning', 'plan', 'analysis'];
+    const metricsByTable = {
+        payment: ['cash', 'sources', 'analysis'],
+        refund_transaction: ['cash', 'analysis'],
+        sales_order: ['products', 'returning', 'analysis'],
+        sales_order_detail: ['products', 'analysis'],
+        appointment: ['services', 'returning', 'analysis'],
+        appointment_item: ['services', 'analysis'],
+        customer: ['customers', 'analysis'],
+        customer_profile: ['analysis'],
+        customer_membership: ['membership'],
+        membership_tier: ['membership'],
+        voucher_redemption: ['vouchers'],
+        paw_point_transaction: ['points'],
+        admin_dashboard_plan: ['plan']
+    };
     const permissions = { cash: ['payment.read', 'refund_transaction.read'], previous: ['payment.read', 'refund_transaction.read'], sources: ['payment.read'], products: ['sales_order.read', 'sales_order_detail.read'], services: ['appointment.read', 'appointment_item.read'], customers: ['customer.read'], membership: ['customer_membership.read', 'membership_tier.read'], vouchers: ['voucher_redemption.read'], points: ['paw_point_transaction.read'] };
     permissions.returning = ['sales_order.read', 'appointment.read'];
     permissions.plan = ['payment.read', 'refund_transaction.read'];
@@ -708,8 +723,8 @@
         const client = window.getSupabaseClient?.() || window.SupabaseClient;
         if (client?.channel) {
             realtimeChannel = client.channel('admin-dashboard-live-sync');
-            for (const table of ['payment', 'refund_transaction', 'sales_order', 'sales_order_detail', 'appointment', 'appointment_item', 'customer', 'customer_profile', 'customer_membership', 'membership_tier', 'voucher_redemption', 'paw_point_transaction', 'admin_dashboard_plan']) {
-                realtimeChannel.on('postgres_changes', { event: '*', schema: 'public', table }, scheduleReload);
+            for (const [table, metrics] of Object.entries(metricsByTable)) {
+                realtimeChannel.on('postgres_changes', { event: '*', schema: 'public', table }, () => scheduleReload(metrics));
             }
             realtimeChannel.subscribe();
         }
@@ -721,7 +736,7 @@
         } catch { saved = null; }
 
         const today = M.dayKey(new Date());
-        state.timer = setInterval(() => { if (visible() && !state.pending) reload(); }, 120000);
+        state.timer = setInterval(() => { if (visible() && !state.pending) reload(); }, 300000);
         await apply(saved?.from || M.shift(today, -29), saved?.to || today, !!saved?.isCustom);
     }
 
@@ -733,6 +748,7 @@
         state.drillGeneration++;
         clearInterval(state.timer);
         clearTimeout(invalidationTimer);
+        pendingMetrics.clear();
         if (realtimeChannel) (window.getSupabaseClient?.() || window.SupabaseClient)?.removeChannel?.(realtimeChannel);
         realtimeChannel = null;
         state.pending = null;
@@ -744,16 +760,23 @@
     }
 
     let invalidationTimer;
-    function scheduleReload() {
+    const pendingMetrics = new Set();
+    function scheduleReload(metrics) {
+        if (!state.root?.isConnected) return;
+        for (const key of metrics) pendingMetrics.add(key);
         clearTimeout(invalidationTimer);
-        state.updated = null;
         invalidationTimer = setTimeout(() => {
             if (!visible()) return;
-            if (state.pending) { scheduleReload(); return; }
-            reload();
+            if (state.pending) { scheduleReload([]); return; }
+            const requested = [...pendingMetrics];
+            pendingMetrics.clear();
+            if (requested.length) reload(requested);
         }, 500);
     }
-    window.addEventListener('pawpal:workspace-invalidated', scheduleReload);
+    document.addEventListener('visibilitychange', () => {
+        if (visible() && pendingMetrics.size) scheduleReload([]);
+    });
+    window.addEventListener('pawpal:workspace-invalidated', () => scheduleReload(keys));
     window.addEventListener('pawpal:access-invalidated', () => { if (state.root) state.root.replaceChildren(); unmount(); state.data = {}; });
 
     const api = {

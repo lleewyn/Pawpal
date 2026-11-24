@@ -810,16 +810,26 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
             const retained=new Set([...(state.selectedBatchOrderIds||[]),state.selectedOrderId].filter(Boolean));
             const pageIds=new Set(result.rows.map(o=>o.id));
             currentOrdersList=[...state.orders.filter(o=>retained.has(o.id)&&!pageIds.has(o.id)),...result.rows];
-            Object.assign(state,{orders:currentOrdersList,pageOrders:result.rows,orderPageMeta:result.meta,ordersLoaded:true,ordersError:false});
-            if(state.selectedOrderId)await ensureOrder(state.selectedOrderId,{force});
-            if(version!==ordersReadVersion)return false;
+            Object.assign(state,{orders:currentOrdersList,pageOrders:result.rows,orderPageMeta:result.meta,ordersLoaded:true,ordersError:false,
+                orderPageKey:JSON.stringify([filters,result.meta.page])});
         } catch (err) {
             if(version!==ordersReadVersion)return false;
             Object.assign(state,{pageOrders:[],ordersError:true});
             console.warn('[Orders V1] Orders:', err);
         }
         if(render)window.PawpalOrders.controllers.list?.renderOrdersTable({skipFetch:true});
-        if(state.selectedOrderId)window.PawpalOrders.renderOrderDetail(state.selectedOrderId);
+        const selectedOrderId=state.selectedOrderId;
+        if(selectedOrderId){
+            try {
+                await ensureOrder(selectedOrderId,{force});
+                if(version===ordersReadVersion&&selectedOrderId===state.selectedOrderId){
+                    window.PawpalOrders.renderOrderDetail(selectedOrderId);
+                }
+            } catch (err) {
+                console.warn('[Orders V1] Order detail:', err);
+            }
+        }
+        if(version!==ordersReadVersion)return false;
         return !state.ordersError;
     }
 

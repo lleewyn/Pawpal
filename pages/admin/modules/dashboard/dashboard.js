@@ -16,7 +16,7 @@
         const hash = window.location.hash.slice(1).split('?')[0];
         const saved = sessionStorage.getItem('pawpal_admin_dashboard_subtab');
         const valid = value => ['tab-dashboard-business', 'tab-dashboard-operations'].includes(value);
-        return valid(hash) ? hash : valid(saved) ? saved : 'tab-dashboard-operations';
+        return valid(hash) ? hash : valid(saved) ? saved : 'tab-dashboard-business';
     }
 
     async function initDashboard(options = {}) {
@@ -78,14 +78,13 @@
     });
 
     // Lắng nghe sự kiện hiển thị module Dashboard
-    window.addEventListener('admin:module-show', async (e) => {
+    window.addEventListener('admin:module-changing', (e) => {
         document.body.classList.toggle('dashboard-active', e.detail?.module === 'Dashboard');
         if (e.detail?.module !== 'Dashboard') {
             subtabs.business?.unmount?.();
             subtabs.operations?.unmount?.();
             return;
         }
-        await refreshDashboard();
     });
 
     // Public API

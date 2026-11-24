@@ -252,6 +252,6 @@
             }
         } catch (e) {}
 
-        window.location.replace(primaryRole === 'ADMIN' ? '/admin#tab-list' : '/admin#tab-dashboard');
+        window.location.replace(primaryRole === 'ADMIN' ? '/admin#tab-dashboard-business' : '/admin#tab-dashboard');
     }
 })();

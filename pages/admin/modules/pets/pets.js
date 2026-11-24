@@ -1134,7 +1134,7 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
 
     let _isPetsInit = false;
 
-    async function initPetsModule() {
+    async function initPetsModule(isCurrent = () => true) {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const moduleTitleEl = document.getElementById('headerModuleTitle');
 
@@ -1145,6 +1145,7 @@ rowAlerts:{pets:row=>row.safety_note?'note':null}});
 
         // Tải dữ liệu ban đầu từ Supabase
         await loadPetsModuleData();
+        if (!isCurrent()) return;
 
         // Khởi tạo các subtab con nếu đã load vào DOM
         if (PawpalPets.subtabs.list?.renderPetsTable) {

@@ -674,7 +674,7 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
     PawpalStaff.openStaffProfile = openStaffProfile;
     let _isStaffListenersInitialized = false;
 
-    async function initStaffModule() {
+    async function initStaffModule(isCurrent = () => true) {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const moduleTitleEl = document.getElementById('headerModuleTitle');
 
@@ -684,6 +684,7 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
         }
 
         await loadStaffModuleData();
+        if (!isCurrent()) return;
 
         if (PawpalStaff.subtabs.list?.renderStaffList) {
             PawpalStaff.subtabs.list.renderStaffList();

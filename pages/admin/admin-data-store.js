@@ -219,6 +219,8 @@
         _realtimeDebounceTimers.forEach(timer => clearTimeout(timer));
         _realtimeDebounceTimers.clear();
         _hiddenRealtimeRefreshes.clear();
+        _runningRealtimeRefreshes.clear();
+        _queuedRealtimeRefreshes.clear();
         console.log('[DataStore] Đã dọn dẹp sạch toàn bộ cache bộ nhớ.');
     }
 
@@ -367,6 +369,8 @@
     // Map lưu bộ đệm debounce cho từng phân hệ
     const _realtimeDebounceTimers = new Map();
     const _hiddenRealtimeRefreshes = new Map();
+    const _runningRealtimeRefreshes = new Map();
+    const _queuedRealtimeRefreshes = new Map();
 
     if (typeof document !== 'undefined') {
         document.addEventListener('visibilitychange', () => {
@@ -417,19 +421,33 @@
                 clearTimeout(_realtimeDebounceTimers.get(timerKey));
             }
 
+            const options = { moduleName, onActiveRefresh, debounceMs };
             const t = setTimeout(async () => {
                 _realtimeDebounceTimers.delete(timerKey);
                 // Kiểm tra lại trạng thái active tại thời điểm timer hết hạn
                 if (isModuleActive(moduleName)) {
                     if (typeof document !== 'undefined' && document.hidden) {
-                        _hiddenRealtimeRefreshes.set(moduleName, { moduleName, onActiveRefresh, debounceMs });
+                        _hiddenRealtimeRefreshes.set(moduleName, options);
                         return;
                     }
+                    if (_runningRealtimeRefreshes.has(moduleName)) {
+                        _queuedRealtimeRefreshes.set(moduleName, options);
+                        return;
+                    }
+                    const refresh = {};
+                    _runningRealtimeRefreshes.set(moduleName, refresh);
                     recordMetric('refresh');
                     try {
                         await onActiveRefresh();
                     } catch (err) {
                         console.warn(`[DataStore] Lỗi refresh realtime cho ${moduleName}:`, err);
+                    } finally {
+                        if (_runningRealtimeRefreshes.get(moduleName) === refresh) {
+                            _runningRealtimeRefreshes.delete(moduleName);
+                            const queued = _queuedRealtimeRefreshes.get(moduleName);
+                            _queuedRealtimeRefreshes.delete(moduleName);
+                            if (queued && !_realtimeDebounceTimers.has(timerKey)) handleRealtimeChange(queued);
+                        }
                     }
                 }
             }, debounceMs);

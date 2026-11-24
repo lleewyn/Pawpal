@@ -420,7 +420,11 @@ async function loadServicesUncached() {
         };
         const legacyCode = svc.service_code.replace(/^SVC-/, '').replaceAll('-', '').replace(/^TAX/, 'TXI');
         const images = (svc.images || []).filter(url => typeof url === 'string' && (/^https:\/\//i.test(url) || url.startsWith('/')));
-        const image = images[0] || '/assets/images/services/' + (artwork[legacyCode] || (category === 'taxi' ? 'txi01.webp' : category === 'hotel' ? 'hotel.png' : 'spa.png'));
+        const primaryArt = artwork[legacyCode] || (category === 'taxi' ? 'txi01.webp' : category === 'hotel' ? 'htl01.webp' : 'spa.png');
+        const image = images[0] || '/assets/images/services/' + primaryArt;
+        const fallbackGallery = category === 'hotel'
+            ? ['/assets/images/services/' + (artwork[legacyCode] || 'htl01.webp'), '/assets/images/services/htl02.jpg', '/assets/images/services/htl05.webp', '/assets/images/services/hotel.png']
+            : (category === 'spa' && artwork[legacyCode] ? ['/assets/images/services/' + artwork[legacyCode], '/assets/images/services/spa.png'] : [image]);
         return {
             id:svc.id,dbId:svc.id,serviceId:svc.service_code,name:svc.service_name,description:svc.description || '',
             category,rawCategory:svc.category_code,petType:(svc.species || []).join(', ') || 'Chưa cấu hình loài',
@@ -429,7 +433,7 @@ async function loadServicesUncached() {
             duration:durationLabel || (svc.estimated_duration ? `${svc.estimated_duration} phút` : ''),
             priceRows:svc.prices || [],tripType:svc.trip_type,packageName:svc.package_name,
             rating:Number(svc.rating),reviewCount:Number(svc.review_count),
-            benefits:svc.benefits || '',checklist:(svc.care_actions || []).join(';'),amenities:svc.amenities || '',groomerLevel:svc.groomer_level || '',image,images:images.length ? images : [image],status:'Đang phục vụ'
+            benefits:svc.benefits || '',checklist:(svc.care_actions || []).join(';'),amenities:svc.amenities || '',groomerLevel:svc.groomer_level || '',image,images:images.length ? images : fallbackGallery,status:'Đang phục vụ'
         };
     });
 }

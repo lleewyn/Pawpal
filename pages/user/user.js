@@ -793,6 +793,30 @@
         }, 100);
 
         setTimeout(() => clearInterval(checkSidebarInterval), 5000);
+        scheduleIdlePrefetch();
+    }
+
+    // 14. Tự động nạp trước (Idle Prefetching) các phân hệ khi máy rảnh
+    function scheduleIdlePrefetch() {
+        const prefetch = async () => {
+            const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            if (!user || !user.id) return;
+            try {
+                const { getPets } = await import('/scripts/api/petService.js');
+                const { API } = await import('/scripts/api/api.js');
+                await Promise.allSettled([
+                    getPets(user.id),
+                    API.getUserBookingPage(user, { page: 1, status: 'all' }),
+                    API.getUserOrderPage(user, { page: 1, status: 'all' }),
+                    API.getUserWishlist(user.id)
+                ]);
+            } catch (_) {}
+        };
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+            window.requestIdleCallback(prefetch, { timeout: 3500 });
+        } else {
+            setTimeout(prefetch, 1500);
+        }
     }
 
     if (document.readyState === 'loading') {

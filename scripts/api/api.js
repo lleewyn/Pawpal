@@ -4,6 +4,7 @@ import { resolveAuthenticatedCustomerId } from '/scripts/shared/customer-identit
 import { normalizeCartItems, publishCart } from '/scripts/shared/cart-state.mjs';
 import { guestCart, isGuestShopper } from '/scripts/shared/guest-cart.mjs';
 import { mediaSource } from '/scripts/shared/media-source.mjs';
+import { swrFetch, invalidateCustomerCache } from '/scripts/shared/customer-cache.mjs';
 
 const wishlistIntents = new Map();
 let cartWriteQueue = Promise.resolve();
@@ -43,12 +44,14 @@ async function ownHistoryPage(user,kind,{status='all',query='',page=1}={}){
 
 export const API = {
     async getContextChoices(user,kind,{query='',id=null}={}){
-        const db=window.getSupabaseClient?.()||window.SupabaseClient;
-        const {data,error}=await db.rpc('own_context_choices',{p_kind:kind,p_query:query.trim().slice(0,200),p_id:id});
-        if(error)throw error;
-        const owner=typeof user==='object'?user.id:user;
-        if(!data||data.owner!==owner||!Array.isArray(data.rows))throw Error('Phiên tài khoản đã thay đổi.');
-        return data.rows;
+        return swrFetch('context_choices', user, async () => {
+            const db=window.getSupabaseClient?.()||window.SupabaseClient;
+            const {data,error}=await db.rpc('own_context_choices',{p_kind:kind,p_query:query.trim().slice(0,200),p_id:id});
+            if(error)throw error;
+            const owner=typeof user==='object'?user.id:user;
+            if(!data||data.owner!==owner||!Array.isArray(data.rows))throw Error('Phiên tài khoản đã thay đổi.');
+            return data.rows;
+        }, { kind, query, id });
     },
     DATA_VERSION: '2026-07-04-v14-guest-data',
 
@@ -122,8 +125,10 @@ export const API = {
     },
 
     async getUserBookingPage(user,options={}){
-        const meta=await ownHistoryPage(user,'bookings',options);
-        return {rows:await this.getUserBookings(user,{ids:meta.ids,summary:meta.summaries}),meta};
+        return swrFetch('bookings', user, async () => {
+            const meta=await ownHistoryPage(user,'bookings',options);
+            return {rows:await this.getUserBookings(user,{ids:meta.ids,summary:meta.summaries}),meta};
+        }, options);
     },
     async getUserBookings(userOrId, { id = null, ids = null, summary = null } = {}) {
         if(Array.isArray(ids)&&!ids.length)return [];
@@ -254,8 +259,10 @@ export const API = {
     },
 
     async getUserOrderPage(user,options={}){
-        const meta=await ownHistoryPage(user,'orders',options);
-        return {rows:await this.getUserOrders(user,{ids:meta.ids,summary:meta.summaries}),meta};
+        return swrFetch('orders', user, async () => {
+            const meta=await ownHistoryPage(user,'orders',options);
+            return {rows:await this.getUserOrders(user,{ids:meta.ids,summary:meta.summaries}),meta};
+        }, options);
     },
     async getUserOrders(userOrId, { id = null, ids = null, summary = null } = {}) {
         if(Array.isArray(ids)&&!ids.length)return [];
@@ -667,11 +674,13 @@ export const API = {
     async clearCart(userId) { return queueCartWrite(()=>this.persistUserCart(userId,[])); },
 
     async getUserWishlist(userId) {
-        const db=window.getSupabaseClient?.() || window.SupabaseClient;
-        if(!db?.auth?.getUser)throw Error('Vui lòng đăng nhập để tải yêu thích.');
-        const owner=await resolveCustomerId(db,userId),result=await db.rpc('own_wishlist_snapshot');
-        if(result.error || result.data?.customer_id!==owner)throw Error('Không thể tải danh sách yêu thích của phiên hiện tại.');
-        return result.data;
+        return swrFetch('wishlist', userId, async () => {
+            const db=window.getSupabaseClient?.() || window.SupabaseClient;
+            if(!db?.auth?.getUser)throw Error('Vui lòng đăng nhập để tải yêu thích.');
+            const owner=await resolveCustomerId(db,userId),result=await db.rpc('own_wishlist_snapshot');
+            if(result.error || result.data?.customer_id!==owner)throw Error('Không thể tải danh sách yêu thích của phiên hiện tại.');
+            return result.data;
+        });
     },
     async setWishlistItem(userId,itemId,isService,saved) {
         const db=window.getSupabaseClient?.() || window.SupabaseClient;
@@ -679,6 +688,7 @@ export const API = {
         const owner=await resolveCustomerId(db,userId);
         const result=await db.rpc('set_own_wishlist_item',{p_kind:isService?'service':'product',p_item:itemId,p_saved:Boolean(saved),p_expected_owner:owner});
         if(result.error || result.data!==Boolean(saved))throw Error('Chưa lưu được yêu thích. Vui lòng thử lại hoặc tải lại trang.');
+        invalidateCustomerCache('wishlist', userId);
         document.dispatchEvent(new CustomEvent('wishlist_updated'));
         return {success:true,action:saved?'added':'removed'};
     },

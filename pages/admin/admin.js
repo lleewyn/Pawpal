@@ -663,7 +663,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const MODULE_SUBTABS_MAP = {
         'Dashboard': {
             title: '',
-            defaultTab: 'tab-dashboard-operations',
+            defaultTab: 'tab-dashboard-business',
             storageKey: 'pawpal_admin_dashboard_subtab',
             subtabs: [
                 { id: 'tab-dashboard-business', label: 'Kinh doanh' },
@@ -845,7 +845,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261124_canned_modal_layout';
+    const MODULE_SCRIPT_VERSION = '20261124_admin_loading_feedback';
+    const moduleHtmlRequests = new Map();
+    const moduleScriptRequests = new Map();
+    const prefetchedModuleScripts = new Set();
     let staffDomainScriptsReady;
     async function loadStaffDomainScripts() {
         if (!staffDomainScriptsReady) staffDomainScriptsReady = (async () => {
@@ -871,22 +874,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Promise.all đã khiến các script động khởi tạo song song và có thể
         // khiến cả phân hệ dừng tại skeleton sau một lần tải lại.
         for (const src of missing) {
-            await new Promise((resolve) => {
-            const script = document.createElement('script');
-            script.className = 'dynamic-module-script';
-            script.async = false; // Bắt buộc thực thi tuần tự theo đúng thứ tự khai báo trong mảng
-            const fullSrc = resolveModulePath(src);
-            script.src = fullSrc + (fullSrc.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION;
-            script.onload = () => {
-                _moduleScriptsLoaded.add(src);
-                resolve();
-            };
-            script.onerror = () => {
-                console.error('Lỗi nạp script:', fullSrc);
-                resolve();
-            };
-            document.body.appendChild(script);
-            });
+            if (_moduleScriptsLoaded.has(src)) continue;
+            if (!moduleScriptRequests.has(src)) {
+                const request = new Promise((resolve) => {
+                    const script = document.createElement('script');
+                    script.className = 'dynamic-module-script';
+                    script.async = false;
+                    const fullSrc = resolveModulePath(src);
+                    script.src = fullSrc + (fullSrc.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION;
+                    script.onload = () => {
+                        _moduleScriptsLoaded.add(src);
+                        resolve();
+                    };
+                    script.onerror = () => {
+                        script.remove();
+                        console.error('Lỗi nạp script:', fullSrc);
+                        resolve();
+                    };
+                    document.body.appendChild(script);
+                }).finally(() => moduleScriptRequests.delete(src));
+                moduleScriptRequests.set(src, request);
+            }
+            await moduleScriptRequests.get(src);
         }
     }
 
@@ -898,9 +907,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Prefetch HTML vào in-memory cache
         fetchModuleHtml(modCfg.html).catch(() => {});
         // Prefetch scripts vào HTTP cache của trình duyệt (0ms khi click thật)
-        modCfg.scripts.filter(s => !_moduleScriptsLoaded.has(s)).forEach(src => {
+        modCfg.scripts.filter(src => !_moduleScriptsLoaded.has(src) && !moduleScriptRequests.has(src) && !prefetchedModuleScripts.has(src)).forEach(src => {
             const fullSrc = resolveModulePath(src);
-            fetch(fullSrc + (fullSrc.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION, { priority: 'low' }).catch(() => {});
+            prefetchedModuleScripts.add(src);
+            fetch(fullSrc + (fullSrc.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION, { priority: 'low' })
+                .then(response => { if (!response.ok) prefetchedModuleScripts.delete(src); })
+                .catch(() => prefetchedModuleScripts.delete(src));
         });
     }
 
@@ -910,11 +922,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (_moduleHtmlCache.has(fullUrl)) {
             return _moduleHtmlCache.get(fullUrl);
         }
-        const res = await fetch(fullUrl + (fullUrl.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION);
-        if (!res.ok) return null;
-        const html = await res.text();
-        _moduleHtmlCache.set(fullUrl, html);
-        return html;
+        if (!moduleHtmlRequests.has(fullUrl)) {
+            const request = (async () => {
+                const res = await fetch(fullUrl + (fullUrl.includes('?') ? '&' : '?') + 'v=' + MODULE_SCRIPT_VERSION);
+                if (!res.ok) return null;
+                const html = await res.text();
+                _moduleHtmlCache.set(fullUrl, html);
+                return html;
+            })().finally(() => moduleHtmlRequests.delete(fullUrl));
+            moduleHtmlRequests.set(fullUrl, request);
+        }
+        return moduleHtmlRequests.get(fullUrl);
     }
 
     // Bảng cấu hình tất cả modules — dùng chung cho loadModule & prefetchModule
@@ -936,11 +954,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Khách hàng': {
             html: 'modules/customers/customers.html',
             scripts: ['modules/customers/customers.js', 'modules/customers/subtabs/tab-customer-list.js', 'modules/customers/subtabs/tab-customer-profile.js', 'modules/customers/subtabs/tab-customer-pawpoint.js'],
-            postLoad: async () => {
+            postLoad: async (isCurrent) => {
                 if (window.PawpalCustomers?.loadCustomersModuleData) {
-                    const hasData = Object.keys(window.PawpalCustomers.state?.customerDatabase || {}).length > 0;
-                    await window.PawpalCustomers.loadCustomersModuleData({ force: !hasData });
+                    await window.PawpalCustomers.loadCustomersModuleData();
                 }
+                if (!isCurrent()) return;
                 const customers = window.PawpalCustomers;
                 customers?.subtabs?.pawpoint?.renderPawpointHistory?.();
                 const profileId = sessionStorage.getItem('pawpal_admin_customer_id') || Object.keys(customers?.state?.customerDatabase || {})[0];
@@ -957,8 +975,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Thú cưng':   {
             html: 'modules/pets/pets.html',
             scripts: ['modules/pets/pets.js', 'modules/pets/subtabs/tab-pet-list.js', 'modules/pets/subtabs/tab-pet-profile.js', 'modules/pets/subtabs/tab-pet-carelog.js', 'modules/pets/subtabs/tab-pet-reminders.js'],
-            postLoad: async () => {
-                if (window.PawpalPets?.init) await window.PawpalPets.init();
+            postLoad: async (isCurrent) => {
+                if (window.PawpalPets?.init) await window.PawpalPets.init(isCurrent);
+                if (!isCurrent()) return;
                 if (window.PawpalPets?.subtabs?.list?.renderPetsTable) {
                     window.PawpalPets.subtabs.list.renderPetsTable();
                     window.PawpalPets.subtabs.list.updatePetKPIs();
@@ -968,8 +987,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Dịch vụ':    {
             html: 'modules/services/services.html',
             scripts: ['modules/services/services.js', 'modules/services/subtabs/tab-service-bookings.js', 'modules/services/subtabs/tab-service-detail.js', 'modules/services/subtabs/tab-service-catalog.js', 'modules/services/subtabs/tab-service-reviews.js', 'modules/services/subtabs/tab-service-cashier.js', 'modules/services/subtabs/tab-service-support.js'],
-            postLoad: async () => {
+            postLoad: async (isCurrent) => {
                 await window.PawpalServices?.init?.();
+                if (!isCurrent()) return;
                 if (window.PawpalServices?.subtabs?.bookings?.renderBookingsTable) {
                     window.PawpalServices.subtabs.bookings.renderBookingsTable();
                     window.PawpalServices.subtabs.bookings.updateKPIs();
@@ -986,21 +1006,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Nhân sự':    {
             html: 'modules/staff/staff.html',
             scripts: ['modules/staff/staff.js', 'modules/staff/subtabs/tab-staff-list.js', 'modules/staff/subtabs/tab-staff-profile.js', 'modules/staff/subtabs/tab-staff-schedule.js', 'modules/staff/subtabs/tab-staff-assessment.js'],
-            postLoad: async () => { if (window.PawpalStaff?.init) await window.PawpalStaff.init(); }
+            postLoad: async (isCurrent) => { if (window.PawpalStaff?.init) await window.PawpalStaff.init(isCurrent); }
         },
         'Khiếu nại':  {
             html: 'modules/complaints/complaints.html',
             scripts: ['modules/complaints/complaints.js', 'modules/complaints/subtabs/tab-complaint-services.js', 'modules/complaints/subtabs/tab-complaint-orders.js', 'modules/complaints/subtabs/tab-complaint-detail.js'],
-            postLoad: async () => {
-                const getCount = () => ((window.PawpalComplaints?.state?.serviceComplaints?.length || 0) + (window.PawpalComplaints?.state?.orderComplaints?.length || 0));
+            postLoad: async (isCurrent) => {
                 if (window.PawpalComplaints?.init) {
-                    await window.PawpalComplaints.init();
+                    await window.PawpalComplaints.init(isCurrent);
                 } else if (window.PawpalComplaints?.loadComplaintsModuleData) {
-                    await window.PawpalComplaints.loadComplaintsModuleData({ force: getCount() === 0 });
+                    await window.PawpalComplaints.loadComplaintsModuleData();
                 }
-                if (getCount() === 0 && window.PawpalComplaints?.loadComplaintsModuleData) {
-                    await window.PawpalComplaints.loadComplaintsModuleData({ force: true });
-                }
+                if (!isCurrent()) return;
                 window.PawpalComplaints?.subtabs?.services?.renderServiceComplaintsTable?.();
                 window.PawpalComplaints?.subtabs?.orders?.renderOrderComplaintsTable?.();
                 window.PawpalComplaints?.updateComplaintsKpis?.();
@@ -1044,21 +1061,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         const requested = ++requestedModuleSequence;
         // Keep a module's DOM attached until its scripts finish initializing.
         // Rapid navigation otherwise detaches forms while later scripts bind them.
-        // Once the active load finishes, only the latest queued navigation runs.
+        // Once the DOM and scripts are ready, the latest queued navigation can run.
+        // Callers can still await data readiness for deep links.
         const activation = moduleActivation.catch(() => {}).then(() => {
             if (requested !== requestedModuleSequence) return;
             return loadModuleNow(moduleName);
         });
         moduleActivation = activation;
-        return activation;
+        return activation.then(result => result?.dataReady);
     }
     async function loadModuleNow(moduleName) {
         const loadRevision = ++moduleLoadRevision;
         if (!contentArea) return;
         const thisLoadId = ++_activeModuleLoadId;
-        try {
-            if (_currentModule !== null) await access.verify();
-        } catch (error) { access.showError(error); return; }
+        if (_currentModule !== null) {
+            const verifying = document.createElement('p');
+            verifying.className = 'admin-module-verifying';
+            verifying.setAttribute('role', 'status');
+            verifying.textContent = `Đang mở ${moduleName}`;
+            contentArea.append(verifying);
+            try {
+                await access.verify();
+            } catch (error) {
+                access.showError(error);
+                return;
+            } finally {
+                verifying.remove();
+            }
+            if (loadRevision !== moduleLoadRevision || thisLoadId !== _activeModuleLoadId) return;
+        }
         access.applyNavigation();
         if (!access.canModule(moduleName)) {
             moduleName = 'Dashboard';
@@ -1072,8 +1103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             sessionStorage.setItem('pawpal_admin_active_module', moduleName);
             sidebarBtns.forEach(button => button.classList.toggle('active', button.dataset.title === moduleName));
             const breadcrumb = document.getElementById('headerDeepBreadcrumb'); if (breadcrumb) breadcrumb.replaceChildren();
-            await window.PawpalAdminViews.mount(moduleName, contentArea);
-            return;
+            return { dataReady: window.PawpalAdminViews.mount(moduleName, contentArea) };
         }
 
         // Cập nhật module active
@@ -1139,7 +1169,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 Promise.resolve().then(async () => {
                     if (thisLoadId !== _activeModuleLoadId) return;
                     try {
-                        await modCfg.postLoad();
+                        await loadModuleScripts(modCfg.scripts);
+                        if (thisLoadId !== _activeModuleLoadId) return;
+                        await modCfg.postLoad(() => thisLoadId === _activeModuleLoadId && cachedEl.parentNode === contentArea);
                         if (thisLoadId === _activeModuleLoadId && moduleName !== 'Dashboard') {
                             syncActiveSubtabPane(cachedEl, moduleName);
                         }
@@ -1222,18 +1254,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     if (loadRevision !== moduleLoadRevision) return;
                     if (thisLoadId !== _activeModuleLoadId) return;
-                    if (modCfg.postLoad) {
-                        try { await modCfg.postLoad(); } catch (err) { console.warn(`[Admin] postLoad ${moduleName}:`, err); }
-                    }
-                    if (loadRevision !== moduleLoadRevision) return;
-                    syncActiveSubtabPane(moduleWrapper, moduleName);
-                    window.dispatchEvent(new CustomEvent('admin:module-show', { detail: { module: moduleName } }));
-                    return;
+                    const isCurrent = () => loadRevision === moduleLoadRevision &&
+                        thisLoadId === _activeModuleLoadId && moduleWrapper.parentNode === contentArea;
+                    const dataReady = Promise.resolve().then(async () => {
+                        if (!isCurrent()) return;
+                        try { await modCfg.postLoad?.(isCurrent); }
+                        catch (err) { console.warn(`[Admin] postLoad ${moduleName}:`, err); }
+                        if (!isCurrent()) return;
+                        syncActiveSubtabPane(moduleWrapper, moduleName);
+                        window.dispatchEvent(new CustomEvent('admin:module-show', { detail: { module: moduleName } }));
+                    });
+                    return { dataReady };
                 }
             } catch (err) {
                 console.error(`Không thể load module ${moduleName}:`, err);
             }
         }
+        if (loadRevision !== moduleLoadRevision || thisLoadId !== _activeModuleLoadId) return;
         if (moduleTitleEl) {
             moduleTitleEl.textContent = moduleName;
             moduleTitleEl.style.display = 'inline-block';
@@ -1446,7 +1483,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (!initialModule) {
-        initialModule = sessionStorage.getItem('pawpal_admin_active_module') || 'Bán hàng';
+        initialModule = sessionStorage.getItem('pawpal_admin_active_module') || 'Dashboard';
     }
 
     sidebarBtns.forEach(b => {
@@ -1480,20 +1517,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // Tải trước toàn bộ 9 template HTML và scripts của các phân hệ quan trọng trong nền
-    // Giúp khi bấm sang phân hệ mới, HTML & scripts đã có sẵn trong memory/disk cache (0ms network)
-    setTimeout(() => {
-        if (!access.isAdmin()) return;
-        Object.values(MODULE_CONFIG).forEach(cfg => {
-            if (cfg && cfg.html) fetchModuleHtml(cfg.html).catch(() => {});
-        });
-        prefetchModule('Dashboard');
-        prefetchModule('Thú cưng');
-        prefetchModule('Dịch vụ');
-        prefetchModule('Bán hàng');
-        prefetchModule('Khách hàng');
-    }, 1200);
-
     // Lắng nghe thay đổi URL Hash liên phân hệ để chuyển module mượt mà
     window.addEventListener('hashchange', () => {
         if (access.isStaff()) {

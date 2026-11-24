@@ -1,3 +1,8 @@
+const resolvedCustomerCache = new Map();
+if (typeof document !== 'undefined') {
+    document.addEventListener('auth_state_changed', () => resolvedCustomerCache.clear());
+}
+
 export async function resolveAuthenticatedCustomerId(db, requestedUser) {
     if (!requestedUser) throw new Error('Vui lòng đăng nhập để tải dữ liệu.');
     const requestedId = typeof requestedUser === 'object' ? (requestedUser.id || requestedUser.custId) : requestedUser;
@@ -6,10 +11,16 @@ export async function resolveAuthenticatedCustomerId(db, requestedUser) {
     if (db?.auth) {
         const auth = await db.auth.getUser();
         if (auth?.error || !auth?.data?.user?.id) throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-        if (auth?.data?.user?.id) {
+        const authUid = auth.data.user.id;
+        if (resolvedCustomerCache.has(authUid)) {
+            const cachedId = resolvedCustomerCache.get(authUid);
+            if (String(cachedId) === String(requestedId)) return cachedId;
+        }
+
+        if (authUid) {
             const { data, error } = await db.from('customer')
                 .select('id, contact_email, customer_status')
-                .eq('auth_user_id', auth.data.user.id)
+                .eq('auth_user_id', authUid)
                 .maybeSingle();
 
             if (!error && data?.id) {
@@ -18,6 +29,7 @@ export async function resolveAuthenticatedCustomerId(db, requestedUser) {
                 if (status === 'locked' || status === 'da_khoa') {
                     throw new Error('Tài khoản đã bị tạm khóa. Vui lòng liên hệ hỗ trợ.');
                 }
+                resolvedCustomerCache.set(authUid, data.id);
                 return data.id;
             }
             throw new Error('Không tìm thấy hồ sơ của phiên đăng nhập hiện tại.');

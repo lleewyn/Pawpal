@@ -1,5 +1,6 @@
 import {uploadCustomerPetImage,resolveCustomerPetImages} from '/scripts/shared/customer-pet-media.mjs';
 import {petArchiveDeadline} from '/scripts/shared/pet-archive.mjs';
+import {swrFetch, invalidateCustomerCache} from '/scripts/shared/customer-cache.mjs';
 const DEFAULT_PET_AVATARS = {
     dog: '/assets/images/publics/dogcute3.jpg',
     cat: '/assets/images/publics/catcute5.jpg',
@@ -162,21 +163,23 @@ export async function getPets(targetUserId) {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db || !currentUser) throw new Error('Vui lòng đăng nhập lại để xem hồ sơ.');
-    const customerId = await getSupabaseCustomerId(db, currentUser);
-    if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== currentUser.id) throw new Error('Phiên đăng nhập đã thay đổi.');
-    if (!customerId || (targetUserId && String(targetUserId) !== String(customerId))) throw new Error('Không xác định được chủ nuôi.');
-    const { data, error } = await db.from('pet_profile')
-        .select('id, updated_at, archived_at, pet_code, pet_name, avatar_url, avatar_media_asset_id, vaccine_media_asset_id, vaccination_recorded, gender, date_of_birth, color, routine, allergy, safety_note, status, customer_id, breed_id, pet_breed(id, breed_name, species_id, pet_species(id, species_name)), pet_weight_history(weight, measured_at)')
-        .eq('customer_id', customerId).order('created_at', { ascending: false })
-        .order('measured_at', {referencedTable: 'pet_weight_history', ascending: false})
-        .order('created_at', {referencedTable: 'pet_weight_history', ascending: false})
-        .order('id', {referencedTable: 'pet_weight_history', ascending: false})
-        .limit(3, {referencedTable: 'pet_weight_history'});
-    if (error) throw error;
-    if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== currentUser.id) throw new Error('Phiên đăng nhập đã thay đổi.');
-    await resolveCustomerPetImages(db,data || [],currentUser.id);
-    if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== currentUser.id) throw new Error('Phiên đăng nhập đã thay đổi.');
-    return (data || []).map(row => mapSupabasePet(row, currentUser));
+    return swrFetch('pets', currentUser, async () => {
+        const customerId = await getSupabaseCustomerId(db, currentUser);
+        if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== currentUser.id) throw new Error('Phiên đăng nhập đã thay đổi.');
+        if (!customerId || (targetUserId && String(targetUserId) !== String(customerId))) throw new Error('Không xác định được chủ nuôi.');
+        const { data, error } = await db.from('pet_profile')
+            .select('id, updated_at, archived_at, pet_code, pet_name, avatar_url, avatar_media_asset_id, vaccine_media_asset_id, vaccination_recorded, gender, date_of_birth, color, routine, allergy, safety_note, status, customer_id, breed_id, pet_breed(id, breed_name, species_id, pet_species(id, species_name)), pet_weight_history(weight, measured_at)')
+            .eq('customer_id', customerId).order('created_at', { ascending: false })
+            .order('measured_at', {referencedTable: 'pet_weight_history', ascending: false})
+            .order('created_at', {referencedTable: 'pet_weight_history', ascending: false})
+            .order('id', {referencedTable: 'pet_weight_history', ascending: false})
+            .limit(3, {referencedTable: 'pet_weight_history'});
+        if (error) throw error;
+        if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== currentUser.id) throw new Error('Phiên đăng nhập đã thay đổi.');
+        await resolveCustomerPetImages(db,data || [],currentUser.id);
+        if (JSON.parse(localStorage.getItem('pawpal_current_user') || 'null')?.id !== currentUser.id) throw new Error('Phiên đăng nhập đã thay đổi.');
+        return (data || []).map(row => mapSupabasePet(row, currentUser));
+    });
 }
 
 export async function savePets(pets) {
@@ -202,6 +205,7 @@ export async function savePets(pets) {
     const {error} = await db.rpc('save_own_pet', {p_id:id,p_expected:pet._updatedAt || null,p_values:values,p_weight:weight});
     if (error) throw error;
     pet._supabaseId = id;
+    invalidateCustomerCache('pets', user);
     return true;
 }
 
@@ -217,6 +221,7 @@ async function changePetStatus(petId, status) {
     if (readError || !pet) throw readError || new Error('Không tìm thấy hồ sơ.');
     const {error} = await db.rpc('change_own_pet_status',{p_id:pet.id,p_expected:pet.updated_at,p_restore:status==='active'});
     if (error) throw error;
+    invalidateCustomerCache('pets', currentUser);
     return true;
 }
 export async function deletePet(petId) { return changePetStatus(petId, 'disabled'); }
