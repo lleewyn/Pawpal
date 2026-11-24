@@ -37,8 +37,10 @@ function plan(question,now=new Date(),readContext={}){
  const pending=planPending(question,now);if(pending)return pending;
  const comparison=planComparison(question,now);if(comparison)return comparison;
  // Inventory scope mentions configured thresholds; it is not a settings lookup.
- if(/ton kho|sku.*(nguong|thieu)|sap het hang|ton thap|ton.*duoi.*nguong/.test(q)){
-  if(/tren nguong|bang nguong|<=|lon hon/.test(q))return {intent:'clarify',answer:'Bạn cần điều kiện tồn kho nào? Hiện truy vấn đã hỗ trợ SKU có tồn kho nhỏ hơn tồn tối thiểu (không bao gồm bằng ngưỡng).'};
+ if(/ton kho|sku.*(nguong|thieu)|sap het hang|ton thap|ton.*nguong/.test(q)){
+  const lowStock=/duoi (?:muc |nguong )?(?:ton toi thieu|nguong)|sap het hang|ton (?:kho )?thap|ton.*(?:nho hon|thap hon).*toi thieu/.test(q);
+  const extraScope=/tren nguong|bang nguong|<=|lon hon|\bsku\s*[:#-]|\bsku\s+[a-z0-9]+-[a-z0-9-]+|theo (?:kho|chi nhanh)|tai (?:kho|chi nhanh)|ban chay|ban nhieu/.test(q);
+  if(!lowStock||extraScope)return {intent:'clarify',answer:'Trợ lý hiện tra được danh sách SKU có tồn kho thấp hơn mức tối thiểu trên toàn hệ thống. Bạn có thể mở mục Sản phẩm để kiểm tra số tồn của một SKU hoặc điều kiện tồn kho khác.'};
   return {intent:'inventory.low_stock',filters:{}};
  }
  const expanded=planStage3(question,now,readContext);if(expanded)return expanded;
@@ -95,13 +97,15 @@ function contextualPlan(question,history=[],now=new Date(),readContext={}){
  const page=reference.match(/^trang\s+(\d+)\??$/);if(page){for(const turn of history.slice().reverse()){if(turn.role!=='user'||/^trang\s+\d+\??$/.test(normalize(turn.content||'')))continue;const previous=plan(String(turn.content||''),now);return readTools.definitions[previous.intent]?.keys.includes('page')?{...previous,filters:{...previous.filters,page:page[1]}}:{intent:'clarify',answer:'Hãy nhắc lại đối tượng hoặc điều kiện tra cứu kèm số trang để tránh chuyển nhầm dữ liệu.'};}return {intent:'clarify',answer:'Hãy cung cấp lại điều kiện tra cứu cùng số trang.'};}
  if(/^(?:thong tin )?(?:khach(?: hang)?|chu nuoi) nay\??$/.test(reference))return readContext.customerQuery?{intent:'customer.lookup',filters:{query:readContext.customerQuery}}:{intent:'clarify',answer:'Hãy chọn hội thoại của khách hàng hoặc cung cấp tên, mã khách hay số điện thoại cần tra cứu.'};
  if(/^(?:thong tin )?don(?: hang)? nay\??$/.test(reference))return readContext.orderCode?{intent:'order.lookup',filters:{query:readContext.orderCode}}:{intent:'clarify',answer:'Hãy cung cấp mã đơn cần tra cứu. Hội thoại đang mở có thể có nhiều đơn hàng.'};
- const route=plan(question,now,readContext);if(!needsContext(question))return route;
+ const route=plan(question,now,readContext);if(!needsContext(question)||!['knowledge.search','capabilities'].includes(route.intent))return route;
  for(const turn of history.slice().reverse()){
   if(turn.role!=='user')continue;const previous=plan(String(turn.content||''),now);
   if(['appointment.list','appointment.search'].includes(previous.intent)){
-   const next=plan('Lịch hẹn '+question,now);
+   const followup=question.replace(/^\s*(?:thế|the|vậy|vay|còn|con)\s+/iu,'').replace(/\s+(?:thì sao|thi sao)[?!.]*$/iu,'');
+   const next=plan('Lịch hẹn '+followup,now);
    if(['appointment.list','appointment.search'].includes(next.intent)){const filters={...previous.filters,...next.filters};delete filters.page;return {...next,intent:previous.intent==='appointment.search'?'appointment.search':next.intent,filters};}
   }
+  if(!needsContext(String(turn.content||'')))break;
  }
  return route;
 }

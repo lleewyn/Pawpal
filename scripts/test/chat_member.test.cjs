@@ -24,10 +24,10 @@ test('formatter verifies owner/envelope, distinguishes paid amounts, and never i
  for(const data of [{...base,customer_id:'b'},{...base,items:Array(6).fill(base.items[0])},{...base,items:[{...base.items[0],paid:null}]}])assert.throws(()=>member.format(data,route,'a'));
  const loyalty=member.format({...base,kind:'loyalty',has_more:false,items:[{points:0,tier:null}]},member.plan('Điểm của tôi'),'a');assert.match(loyalty.reply,/0 Paw Points/);assert.match(loyalty.reply,/chưa thấy hạng/);
 });
-async function invoke({question='Đơn hàng của tôi',guest=false,other=false,sourceError,sourceOwner='owner',publicQuestion=false}={}){
+async function invoke({question='Đơn hàng của tôi',guest=false,other=false,sourceError,sourceOwner='owner',readFixture}={}){
  const id=randomUUID(),calls=[],writes=[],models=[];let callerToken;
  const service={auth:{getUser:async()=>({data:{user:{id:'auth'}}})},from(table){const q={select:()=>q,eq:()=>q,is:()=>q,gt:()=>q,maybeSingle:async()=>({data:table==='customer'?{id:'owner'}:table==='guest_session'?{id:'guest'}:table==='chat_conversation'?{id,customer_id:guest?null:other?'other':'owner',guest_session_id:guest?'guest':null,status:'bot_handling',updated_at:'now'}:null})};return q;},rpc:async(name,args)=>{calls.push(name);if(name==='read_public_chat_rules'||name==='read_public_guest_seed')return {data:{profanity:[],sentiment:[],recent_questions:[]}};if(name==='post_public_chat_message_media'){writes.push(args);return {data:{}};}if(name==='search_public_chat_context')return {data:{faq:[{question:'Giới thiệu chung',answer:'Thông tin công khai',complete:true}],recent:[{sender_type:'bot',content:'PRIVATE_ORDER_AND_PET_DETAILS_MUST_NOT_LEAVE'}],incomplete:false}};assert.fail('Service must not read member data: '+name);}};
- const handler=createHandler({serviceClient:service,createMemberCaller:token=>{callerToken=token;return {rpc:async(name,args)=>{calls.push(name);assert.equal(name,'read_member_chat_context');assert.ok(!Object.hasOwn(args,'customer_id'));return sourceError?{error:sourceError}:{data:{customer_id:sourceOwner,kind:'orders',page:0,items:[],has_more:false,as_of:new Date().toISOString()}};}};},generateReply:async(...args)=>{models.push(args);return '{"reply":"Thông tin công khai.","understood":true}';}});
+ const handler=createHandler({serviceClient:service,createMemberCaller:token=>{callerToken=token;return {rpc:async(name,args)=>{calls.push(name);assert.equal(name,args.p_request.kind==='wallet'?'read_member_chat_details':'read_member_chat_context');assert.ok(!Object.hasOwn(args,'customer_id'));if(readFixture)return readFixture(args.p_request);return sourceError?{error:sourceError}:{data:{customer_id:sourceOwner,kind:'orders',page:0,items:[],has_more:false,as_of:new Date().toISOString()}};}};},generateReply:async(...args)=>{models.push(args);return '{"reply":"Thông tin công khai.","understood":true}';}});
  const res={statusCode:200,setHeader(){},status(n){this.statusCode=n;return this;},json(body){this.body=body;return this;}};
  await handler({method:'POST',headers:{'x-real-ip':randomUUID(),...(!guest?{authorization:'Bearer verified-member-jwt'}:{})},body:{action:'public_send',conversationId:id,requestId:randomUUID(),sessionToken:guest?'x'.repeat(40):undefined,question}},res);return {res,calls,writes,models,callerToken};
 }
@@ -41,4 +41,44 @@ test('member source failure/mismatched owner never falls back to model or fabric
 });
 test('subsequent public model question excludes entire member transcript',async()=>{
  const r=await invoke({question:'Một câu hỏi công khai chưa phân loại'});assert.equal(r.res.statusCode,200);assert.equal(r.models.length,1);assert.deepEqual(r.models[0][2],[]);assert.ok(!JSON.stringify(r.models).includes('PRIVATE_ORDER_AND_PET_DETAILS'));
+});
+test('member appointment scope does not silently expand a named day into all bookings',()=>{
+ assert.deepEqual(member.plan('Lịch mai của bé nhà tôi lúc mấy giờ?').request,{kind:'appointments',page:0,mode:'tomorrow'});
+ for(const q of ['Lịch hẹn của tôi hôm qua','Lịch hẹn của tôi ngày 27/11/2026','Lịch hẹn của tôi hôm nay và ngày mai'])assert.equal(member.plan(q).understood,false,q);
+ assert.equal(member.plan('Đơn ORD-ABC đã hủy chưa?').request.code,'ORD-ABC');
+});
+test('order refund lookup returns confirmed payment facts and does not create a support request',async()=>{
+ const q='Đơn hàng ORD-ABC của tôi đã hoàn tiền chưa?';
+ const stamp=new Date().toISOString();
+ const r=await invoke({question:q,readFixture:request=>{
+  assert.deepEqual(request,{kind:'orders',page:0,code:'ORD-ABC'});
+  return {data:{customer_id:'owner',kind:'orders',page:0,items:[{id:randomUUID(),code:'ORD-ABC',status:'cancelled',created_at:stamp,total:200000,paid:200000,refunded:100000}],has_more:false,as_of:stamp}};
+ }});
+ assert.equal(r.res.statusCode,200);
+ assert.match(r.writes[0].p_reply,/hoàn trả thành công: 100\.000 đ/);
+ assert.match(r.writes[0].p_reply,/tiến độ yêu cầu/);
+ assert.equal(r.writes[0].p_handover,false);
+ assert.equal(r.models.length,0);
+ const tracking=await invoke({question:'Yêu cầu hoàn tiền của tôi đến đâu rồi?'});
+ assert.equal(tracking.res.statusCode,200);
+ assert.match(tracking.writes[0].p_reply,/gửi mã yêu cầu hỗ trợ/);
+ assert.doesNotMatch(tracking.writes[0].p_reply,/Tạo yêu cầu/);
+ assert.equal(tracking.writes[0].p_handover,false);
+});
+test('compound loyalty and voucher question answers both and preserves a verified partial result',async()=>{
+ const stamp=new Date().toISOString(),question='Tôi còn bao nhiêu điểm, ưu đãi nào dùng được?';
+ for(const walletFails of [false,true]){
+  const r=await invoke({question,readFixture:({kind,page})=>{
+   if(kind==='wallet'&&walletFails)return {error:{code:'57014'}};
+   return {data:{customer_id:'owner',kind,page,as_of:stamp,has_more:false,items:kind==='loyalty'?[{points:50,tier:'Bạc'}]:[]}};
+  }});
+  assert.equal(r.res.statusCode,200);
+  assert.match(r.writes[0].p_reply,/50 Paw Points/);
+  assert.match(r.writes[0].p_reply,walletFails?/chưa kiểm tra được ví ưu đãi/:/chưa tìm thấy ví ưu đãi/);
+  assert.equal(r.writes[0].p_understood,!walletFails);
+  assert.equal(r.models.length,0);
+ }
+ const guest=await invoke({question,guest:true});
+ assert.match(guest.writes[0].p_reply,/Đăng nhập/);
+ assert.equal(guest.calls.some(name=>name.startsWith('read_member_chat_')),false);
 });

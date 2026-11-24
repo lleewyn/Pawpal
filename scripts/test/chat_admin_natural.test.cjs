@@ -8,3 +8,20 @@ test('Hotel pricing never fabricates a daily unit from a missing source field',(
 test('room availability requires dates and keeps whole-interval semantics and pagination',()=>{for(const q of ['Hotel còn phòng ngày mai không?','Còn phòng ngày mai không?','Phòng nào còn trống ngày mai?'])assert.equal(plan(q,now).intent,'hotel.availability');const r=plan('Hotel còn phòng từ 02/11/2026 đến 04/11/2026 trang 2',now);assert.equal(r.filters.end_at,'2026-11-04T17:00:00.000Z');assert.equal(r.filters.page,'2');assert.equal(plan('Còn phòng không?',now).intent,'clarify');assert.equal(plan('Hotel còn phòng từ 01/11/2026 đến 05/12/2026',now).intent,'clarify');});
 test('calendar followups retain category/daypart but explicit topic changes remove appointment filters',()=>{const h=[{role:'user',content:'Lịch Spa hôm nay buổi sáng'}];const next=contextualPlan('ngày mai',h,now);assert.equal(next.filters.category,'grooming_spa');assert.equal(next.filters.day_part,'morning');assert.equal(Date.parse(next.filters.start_at),Date.parse('2026-11-02T00:00:00+07:00'));const changed=contextualPlan('Sản phẩm Royal Canin',h,now);assert.equal(changed.intent,'catalog.product');assert.equal(changed.filters.start_at,undefined);});
 test('logistics formatter rejects unknown taxi kind, invalid dates and inconsistent room flags',()=>{const trip={code:'QA',trip_type:'one_way',outbound_at:now.toISOString(),distance:3,price:100000};assert.throws(()=>row('taxi.trips',{...trip,trip_type:'unknown'},String,String));assert.throws(()=>row('taxi.trips',{...trip,outbound_at:null},String,String));assert.throws(()=>row('hotel.availability',{code:'QA',capacity:2,reserved:true,occupied:false,available:true},String,String));});
+test('calendar followup preserves scope for staff and managers and stops on a change of subject',()=>{
+ const {planStaff}=require('../api/admin_copilot.js');
+ const history=[{role:'user',content:'Hôm nay bao nhiêu lịch Spa chờ phục vụ?'}];
+ for(const route of [contextualPlan('Thế ngày mai thì sao?',history,now),planStaff('Thế ngày mai thì sao?',now,history)]){
+  assert.equal(route.filters.category,'grooming_spa');
+  assert.equal(route.filters.status,'confirmed');
+  assert.equal(Date.parse(route.filters.start_at),Date.parse('2026-11-02T00:00:00+07:00'));
+ }
+ assert.equal(contextualPlan('Còn giá Hotel ngày mai?',history,now).intent,'catalog.service_price');
+ assert.notEqual(contextualPlan('Thế ngày mai thì sao?',[...history,{role:'user',content:'Sản phẩm Royal Canin'}],now).intent,'appointment.list');
+ assert.throws(()=>planStaff('Thực thu hôm nay',now),{code:'42501'});
+ assert.equal(plan('Thực thu hôm nay',now).intent,'revenue.summary');
+});
+test('inventory answers use the low-stock source only for the supported scope',()=>{
+ for(const q of ['Tồn kho SKU QA-01 còn bao nhiêu?','Tồn bằng ngưỡng thì sao?','Sản phẩm bán chạy nào tồn kho thấp?','SKU dưới ngưỡng tại chi nhánh nào?'])assert.equal(plan(q,now).intent,'clarify',q);
+ assert.equal(plan('Có bao nhiêu SKU dưới ngưỡng?',now).intent,'inventory.low_stock');
+});

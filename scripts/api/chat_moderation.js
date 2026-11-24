@@ -88,10 +88,11 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
 
     // 3. Phân loại loại rủi ro (Risk Type) theo ngữ cảnh thực tế (R0 / P0-03)
     let riskType = 'none';
-    if (/chảy máu|ngộ độc|co giật|hấp hối|thở dốc|tai nạn|gãy chân|nuốt dị vật|sơ cứu/i.test(lower)) {
+    const folded = lower.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+    if (/\b(?:chay mau|ngo doc|co giat|hap hoi|kho tho|tho doc|tho gap|tai nan|gay chan|nuot di vat|so cuu|bat tinh)\b/.test(folded)) {
         riskType = 'medical_emergency';
         detectedLevel = 6; // Cấp 6: Khẩn cấp theo thang đo chatbot_sentiment_tier (1 - 6)
-    } else if (/mang thai|có bầu|chửa|sinh con|mệt mỏi|biếng ăn|bỏ ăn|uể oải|nằm li bì|ngủ nhiều|lo quá|sợ hãi|run rẩy/i.test(lower)) {
+    } else if (/\b(?:mang thai|co bau|chua de|sinh con|met moi|bieng an|bo an|ue oai|nam li bi|ngu nhieu|so hai|run ray|bi dau)\b/.test(folded)) {
         riskType = 'special_care';
         detectedLevel = Math.max(detectedLevel, 3);
     } else if (/tiêm phòng|vắc xin|vacxin|xổ giun|sổ tiêm|lịch tiêm/i.test(lower)) {

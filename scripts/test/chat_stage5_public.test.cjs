@@ -2,13 +2,47 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUU
 const {createHandler}=require('../../api/admin-chat.js');
 async function invoke({faq=[],recent=[],incomplete=false,error,other=false,guest=false,mediaAssetIds=[],question='Quy định chương trình chưa phân loại'}={}){
  const id=randomUUID(),calls=[],models=[],saved=[];
- const service={auth:{getUser:async()=>({data:{user:{id:'auth'}}})},from(table){const q={select:()=>q,eq:()=>q,is:()=>q,gt:()=>q,maybeSingle:async()=>({data:table==='guest_session'?{id:'guest'}:table==='customer'?{id:'owner'}:table==='chat_conversation'?{id,customer_id:guest?null:other?'someone-else':'owner',guest_session_id:guest?'guest':null,status:'ai_handling',updated_at:'2026-10-30T00:00:00Z'}:null})};return q;},rpc:async(name,args)=>{calls.push({name,args});if(name==='read_public_chat_rules')return {data:{profanity:[],sentiment:[]}};if(name==='search_public_chat_context')return error?{error}:{data:{faq,recent,incomplete}};if(name==='post_public_chat_message_media'){saved.push(args);return {data:{}};}assert.fail(name);}};
+ const service={auth:{getUser:async()=>({data:{user:{id:'auth'}}})},from(table){const q={select:()=>q,eq:()=>q,is:()=>q,gt:()=>q,maybeSingle:async()=>({data:table==='guest_session'?{id:'guest'}:table==='customer'?{id:'owner'}:table==='chat_conversation'?{id,customer_id:guest?null:other?'someone-else':'owner',guest_session_id:guest?'guest':null,status:'ai_handling',updated_at:'2026-10-30T00:00:00Z'}:null})};return q;},rpc:async(name,args)=>{calls.push({name,args});if(name==='read_public_chat_rules'||name==='read_public_guest_seed')return {data:{profanity:[],sentiment:[]}};if(name==='public_chat_membership')return {data:!guest};if(name==='search_public_chat_context')return error?{error}:{data:{faq,recent,incomplete}};if(name==='post_public_chat_message_media'){saved.push(args);return {data:{}};}assert.fail(name);}};
  const handler=createHandler({serviceClient:service,generateReply:async(...args)=>{models.push(args);return JSON.stringify({reply:'Thông tin đã xác nhận.',understood:true});}}),res={statusCode:200,setHeader(){},status(n){this.statusCode=n;return this;},json(data){this.data=data;return this;}};
  await handler({method:'POST',headers:{...(!guest?{authorization:'Bearer local'}:{}),'x-real-ip':randomUUID()},body:{action:'public_send',conversationId:id,requestId:randomUUID(),sessionToken:guest?'g'.repeat(32):undefined,question,mediaAssetIds}},res);
  return {res,calls,models,saved,id};
 }
-test('both guests and members send private images to staff without invoking the text model',async()=>{
- for(const guest of [false,true]){const ids=[randomUUID()],r=await invoke({guest,mediaAssetIds:ids,question:'Ảnh bé cần nhân viên xem'});assert.equal(r.res.statusCode,200);assert.equal(r.models.length,0);assert.equal(r.saved[0].p_handover,true);assert.deepEqual(r.saved[0].p_assets,ids);assert.match(r.saved[0].p_reply,/chưa phân tích/);assert.equal(r.saved[0].p_guest_hash,guest?require('crypto').createHash('sha256').update('g'.repeat(32)).digest('hex'):null);}
+test('eligible members send images to staff without invoking the text model; guests see the membership gate',async()=>{
+ const ids=[randomUUID()],question='Ảnh bé cần nhân viên xem';
+ const member=await invoke({mediaAssetIds:ids,question});
+ assert.equal(member.res.statusCode,200);assert.equal(member.models.length,0);assert.equal(member.saved[0].p_handover,true);assert.deepEqual(member.saved[0].p_assets,ids);assert.match(member.saved[0].p_reply,/chưa phân tích/);assert.equal(member.saved[0].p_guest_hash,null);
+ const guest=await invoke({guest:true,mediaAssetIds:ids,question});
+ assert.equal(guest.res.statusCode,403);assert.equal(guest.res.data.code,'MEMBERSHIP_REQUIRED');assert.equal(guest.models.length,0);assert.equal(guest.saved.length,0);
+});
+test('urgent pet questions prioritize veterinary care for both guests and members',async()=>{
+ for(const guest of [false,true]){
+  const r=await invoke({guest,question:'Be nha toi kho tho, tho gap'});
+  assert.equal(r.res.statusCode,200);
+  assert.match(r.saved[0].p_reply,/liên hệ ngay bác sĩ thú y/);
+  assert.equal(r.saved[0].p_handover,!guest);
+  assert.equal(r.models.length,0);
+ }
+ const r=await invoke({guest:true,question:'Bé nhà tôi bỏ ăn hai ngày'});
+ assert.equal(r.res.statusCode,200);
+ assert.match(r.saved[0].p_reply,/liên hệ bác sĩ thú y/);
+ assert.doesNotMatch(r.saved[0].p_reply,/sau khi tắm|đừng quá lo/i);
+ assert.equal(r.models.length,0);
+});
+test('guest gets both booking rules when asking about an account and a booking for two pets',async()=>{
+ const question='Tôi chưa có tài khoản và nuôi hai bé. Tôi được đặt và có thể gộp hai bé trong một lượt không?';
+ const faq=[
+  {question:'Tôi có được đặt lịch mà chưa có tài khoản không?',answer:'Bạn có thể đặt mà không cần tài khoản.',complete:true},
+  {question:'Tôi có thể đặt lịch cho nhiều bé không?',answer:'Mỗi yêu cầu chỉ chọn một bé.',complete:true}
+ ];
+ for(const rows of [faq,faq.slice(0,1)]){
+  const r=await invoke({guest:true,question,faq:rows});
+  assert.equal(r.res.statusCode,200);
+  assert.deepEqual(r.calls.filter(c=>c.name==='search_public_chat_context').map(c=>c.args.p_question),faq.map(row=>row.question));
+  assert.match(r.saved[0].p_reply,/không cần tài khoản/);
+  assert.match(r.saved[0].p_reply,rows.length===2?/chỉ chọn một bé/:/chưa xác nhận được cách đặt lịch/);
+  assert.equal(r.saved[0].p_understood,rows.length===2);
+  assert.equal(r.models.length,0);
+ }
 });
 test('malformed or excessive chat attachments fail before generation or message writes',async()=>{
  for(const ids of [[randomUUID(),randomUUID(),randomUUID(),randomUUID()],['invalid'],null]){const r=await invoke({mediaAssetIds:ids===null?'invalid':ids});assert.equal(r.res.statusCode,400);assert.equal(r.models.length,0);assert.equal(r.saved.length,0);}

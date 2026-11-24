@@ -7,9 +7,10 @@ const detailKinds=['point_history','wallet','care','hotel','taxi','support'];
 const link=kind=>`[${labels[kind]}](${paths[kind]})`;
 const isFollowup=question=>/^(?:xem (?:tiep|them)|trang \d+|don (?:dau|thu)|lich (?:dau|thu)|be (?:dau|thu))/.test(fold(question));
 const neutralSupport=question=>/^(?:(?:xem|tra cuu|kiem tra) )?(?:yeu cau ho tro|phieu ho tro)(?: cua (?:toi|minh))?(?: (?:xu ly (?:den dau|the nao)|dang o trang thai nao|trang thai|trang \d+))?[?!.]*$/.test(fold(question));
+const refundStatus=question=>/^(?:(?:kiem tra|tra cuu|xem) )?(?:yeu cau hoan tien cua (?:toi|minh) (?:den dau|xu ly den dau|dang o trang thai nao)(?: roi)?|don(?: hang)? (?:ord-[a-z0-9-]+(?: cua (?:toi|minh))?|cua (?:toi|minh)) da hoan tien chua)[?!.]*$/.test(fold(question));
 function plan(question,recent=[]){
  const q=fold(question);
- if(/cua (?:nguoi khac|khach|nhan vien|admin|anh |chi )|ho so khach|doanh thu|gia von|luong nhan vien/.test(q)||/(?:don(?: hang)?|lich(?: hen)?|ho so(?: be)?|thu cung|diem|paw ?points?|hang thanh vien) cua (?!(?:toi|minh|ban|tai khoan|chinh minh)\b)/.test(q))return {reply:'PawPal chỉ tra thông tin thuộc tài khoản bạn đang đăng nhập, không cung cấp hồ sơ người khác hoặc dữ liệu nội bộ. Bạn muốn xem lịch hẹn, đơn hàng, hồ sơ bé hay điểm của mình nhé?',understood:false};
+ if(/cua (?:nguoi khac|khach|nhan vien|admin|anh |chi )|ho so khach|doanh thu|gia von|luong nhan vien/.test(q)||/(?:don(?: hang)?|lich(?: hen)?|ho so(?: be)?|thu cung|diem|paw ?points?|hang thanh vien) cua (?!(?:toi|minh|ban|tai khoan|chinh minh|be nha (?:toi|minh))\b)/.test(q))return {reply:'PawPal chỉ tra thông tin thuộc tài khoản bạn đang đăng nhập, không cung cấp hồ sơ người khác hoặc dữ liệu nội bộ. Bạn muốn xem lịch hẹn, đơn hàng, hồ sơ bé hay điểm của mình nhé?',understood:false};
  if(/la gi|chinh sach|quy dinh|dieu kien|can bao nhieu diem|bao nhieu diem.*(?:len hang|doi)|cach (?:dat|mua)|huong dan/.test(q))return null;
  let base=null,skipped=0;
  if(isFollowup(question)){
@@ -20,23 +21,30 @@ function plan(question,recent=[]){
  const code=String(question).match(/\b(?:ORD|BKG|APT|PET|TKT|SUP|HTL)-[a-z0-9-]+\b/i)?.[0]?.toUpperCase();
  if(code&&code.length>64)return {reply:'Mã bạn gửi quá dài. Bạn kiểm tra lại mã đơn, lịch hoặc bé trong tài khoản giúp PawPal nhé.',understood:false};
  const id=String(question).match(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i)?.[0];
- const groups=[[/don hang|don (?:cua|nao|gan|va)|(?:xem|tra|ma|huy|doi) don|\bord-/.test(q),'orders'],[/lich hen|lich (?:cua|nao|sap|hom nay|mai|va)|\b(?:bkg|apt)-/.test(q),'appointments'],[/thu cung|ho so be|cac be|nhung be|be (?:cua|ten|nha toi)|thong tin be|\bpet-/.test(q),'pets'],[/paw ?points?|so du diem|diem (?:cua|con|thuong)|bao nhieu diem|(?:toi|minh).*con.*diem|(?:toi|minh) (?:(?:dang|o|thuoc|la) ){0,3}hang(?: nao| gi|$)|hang thanh vien|^(?:hang cua|xem hang|kiem tra hang)/.test(q),'loyalty']].filter(([yes])=>yes).map(([,kind])=>kind);
+ if(refundStatus(question)&&/yeu cau hoan tien/.test(q))return {reply:'Bạn gửi mã yêu cầu hỗ trợ, ví dụ TKT-…, để PawPal kiểm tra đúng yêu cầu. Bạn có thể tìm mã và theo dõi kết quả tại '+link('support')+'.',understood:false};
+ const appointment=/lich hen|lich (?:cua|nao|sap|hom nay|hom qua|ngay mai|mai|va)|\b(?:bkg|apt)-/.test(q);
+ const groups=[[/don hang|don (?:cua|nao|gan|va)|(?:xem|tra|ma|huy|doi) don|\bord-/.test(q),'orders'],[appointment,'appointments'],[/thu cung|ho so be|cac be|nhung be|be (?:cua|ten|nha toi)|thong tin be|\bpet-/.test(appointment?q.replace(/\bbe nha (?:toi|minh)\b/g,''):q),'pets'],[/paw ?points?|so du diem|diem (?:cua|con|thuong)|bao nhieu diem|(?:toi|minh).*con.*diem|(?:toi|minh) (?:(?:dang|o|thuoc|la) ){0,3}hang(?: nao| gi|$)|hang thanh vien|^(?:hang cua|xem hang|kiem tra hang)/.test(q),'loyalty']].filter(([yes])=>yes).map(([,kind])=>kind);
  if(groups.length>1)return {reply:'PawPal sẽ tra từng phần cho rõ nhé. Bạn muốn xem lịch hẹn, đơn hàng, hồ sơ bé hay điểm và hạng trước?',understood:false};
  const advanced=[[/lich su.*(?:diem|paw)|diem.*(?:da cong|da tru|bien dong)/.test(q),'point_history'],[/vi uu dai|vi voucher|voucher cua|uu dai cua|ma giam.*cua|(?:toi|minh).*(?:co|con).*voucher/.test(q),'wallet'],[/nhat ky|tien trinh cham soc|cham soc.*cua toi/.test(q),'care'],[/(?:hotel|luu tru|khach san).*(?:cua toi|cua minh|da dat)|(?:phong|ngay nhan|ngay tra).*cua toi/.test(q)||/(?:hotel|luu tru|khach san)/.test(q)&&!!(code||id),'hotel'],[/taxi.*(?:cua toi|cua minh|da dat)|chuyen (?:dua don|taxi)/.test(q)||/(?:taxi|dua don)/.test(q)&&!!(code||id),'taxi'],[/yeu cau ho tro|phieu ho tro|khieu nai cua|\b(?:tkt|sup)-/.test(q),'support']].filter(([yes])=>yes).map(([,kind])=>kind);
  if(advanced.length>1)return {reply:'Bạn muốn PawPal tra phần nào trước: nhật ký, Hotel, Taxi, lịch sử điểm, ví ưu đãi hay yêu cầu hỗ trợ?',understood:false};
- const kind=advanced[0]||groups[0]||base?.request.kind;if(!kind)return null;
+ const withWallet=groups[0]==='loyalty'&&(advanced[0]==='wallet'||(!advanced.length&&/uu dai nao|voucher nao|ma giam nao/.test(q)));
+ const kind=withWallet?'loyalty':advanced[0]||groups[0]||base?.request.kind;if(!kind)return null;
  if(/^(?:cach|lam sao|o dau)|cach (?:xem|tra|kiem tra)/.test(q))return {reply:'Bạn mở '+link(kind)+' trong tài khoản để xem và thao tác nhé. PawPal cũng có thể tra thông tin của bạn ngay trong chat khi bạn hỏi cụ thể.',understood:true};
- if(/huy|doi lich|doi gio|tao don|dat ho|mua ho|cap nhat|chinh sua|doi diem|tru diem|cong diem/.test(q))return {reply:'PawPal có thể giúp bạn tra thông tin, còn thao tác thay đổi cần bạn kiểm tra và xác nhận ở '+link(kind)+' nhé. Câu chat này chưa thay đổi dữ liệu của bạn.',understood:true};
+ if(/\b(?:huy|doi lich|doi gio|tao don|dat ho|mua ho|cap nhat|chinh sua|doi diem|tru diem|cong diem)\b/.test(q)&&!/(?:da (?:huy|doi|cap nhat|cong|tru)|bi huy|trang thai)/.test(q))return {reply:'PawPal có thể giúp bạn tra thông tin, còn thao tác thay đổi cần bạn kiểm tra và xác nhận ở '+link(kind)+' nhé. Câu chat này chưa thay đổi dữ liệu của bạn.',understood:true};
  const pageMatch=q.match(/\btrang\s+(\d+)\b/),next=/^xem (?:tiep|them)/.test(q);
  const page=pageMatch?Number(pageMatch[1])-1:next?(base?.request.page||0)+skipped+1:0;
- if(!Number.isInteger(page)||page<0||page>99||kind==='loyalty'&&page!==0)return {reply:'Bạn chọn trang từ1 đến100 cho danh sách nhé. Điểm và hạng hiện tại chỉ cần một lượt xem. '+link(kind),understood:false};
- if(/thang|nam ngoai|tuan truoc|tuan sau|tu ngay|den ngay/.test(q)&&kind==='appointments')return {reply:'PawPal hiện có thể tra lịch hôm nay, ngày mai, sắp tới hoặc lịch đã qua. Bạn chọn một khoảng này, hoặc mở '+link(kind)+' để lọc thêm nhé.',understood:false};
+ if(!Number.isInteger(page)||page<0||page>99||kind==='loyalty'&&page!==0)return {reply:'Bạn chọn trang từ 1 đến 100 cho danh sách nhé. Điểm và hạng hiện tại chỉ cần một lượt xem. '+link(kind),understood:false};
+ const dateScopes=[/hom nay/,/ngay mai|\bmai\b/,/sap toi|sap den|gan nhat/,/da qua|truoc day/];
+ if(kind==='appointments'&&(/\b(?:hom qua|ngay mot|thang|nam ngoai|tuan|tu ngay|den ngay|cuoi tuan)\b|\d{1,2}[/-]\d{1,2}/.test(q)||dateScopes.filter(pattern=>pattern.test(q)).length>1))return {reply:'PawPal có thể tra lịch hôm nay, ngày mai, sắp tới hoặc lịch đã qua. Bạn chọn một khoảng này, hoặc mở '+link(kind)+' để lọc theo ngày cụ thể nhé.',understood:false};
  const request={kind,page};
  if(base?.request&&isFollowup(question))Object.assign(request,base.request,{page});
  if(code)request.code=code;else if(id)request.id=id;
- if(kind==='appointments'&&!code&&!id&&!base?.request){request.mode=/hom nay/.test(q)?'today':/ngay mai|\bmai\b/.test(q)?'tomorrow':/sap toi|sap den|gan nhat/.test(q)?'upcoming':/da qua|truoc day/.test(q)?'past':'all';}
+ if(kind==='appointments'&&!code&&!id&&!base?.request){
+  const index=dateScopes.findIndex(pattern=>pattern.test(q));
+  request.mode=['today','tomorrow','upcoming','past'][index]||'all';
+ }
  if(kind==='pets'&&!code&&!id){const name=String(question).match(/(?:bé tên|be ten|thông tin bé|thong tin be|hồ sơ bé|ho so be)\s+(.+?)[?!.]*$/iu)?.[1]?.trim();if(name&&!/^(?:của|cua|nhà|nha) (?:tôi|toi|minh|mình)/iu.test(name)){if(name.length>80)return {reply:'Bạn gửi tên hoặc mã bé ngắn gọn để PawPal tra đúng hồ sơ nhé.',understood:false};request.name=name;}}
- return {request};
+ return {request,...(withWallet?{withWallet}:{}),...(refundStatus(question)?{focus:'refund'}:{})};
 }
 const text=(value,max=180)=>typeof value==='string'?value.slice(0,max).trim():'';
 const money=n=>{if(typeof n!=='number'||!Number.isFinite(n)||n<0)throw Error('invalid_member_money');return n.toLocaleString('vi-VN',{maximumFractionDigits:2})+' đ';};
@@ -66,11 +74,12 @@ function format(data,route,owner){
   if(kind==='appointments')line+=date(row.start_at)+(text(row.pet)?' · Bé '+text(row.pet):'')+(text(row.service)?' · '+text(row.service):'')+'.';
   else line+='Tạo lúc '+date(row.created_at)+'.'+(row.shipping_status?' Giao nhận: '+status(row.shipping_status)+'.':'');
   line+=row.total==null?' Chưa có tổng tiền xác nhận.':' Tổng tiền hiện ghi nhận: '+money(row.total)+'.';
-  if(kind==='orders')line+=' Thanh toán thành công: '+money(row.paid)+'. Đã hoàn thành công: '+money(row.refunded)+'.';
+  if(kind==='orders')line+=' Thanh toán thành công: '+money(row.paid)+'. Số tiền hoàn trả thành công: '+money(row.refunded)+'.';
   return line+' [Xem chi tiết]('+path+row.id+')';
  });
  const next=data.has_more?'\nBạn hỏi “'+labels[kind]+' của tôi trang '+(r.page+2)+'” để xem tiếp nhé.':'';
- return {reply:'PawPal gửi bạn thông tin thuộc tài khoản đang đăng nhập nhé:\n\n'+lines.join('\n\n')+next+'\n'+link(kind)+(kind==='orders'?'\nTrạng thái đơn hàng và thanh toán được theo dõi riêng.':''),understood:true};
+ const paymentNote=route.focus==='refund'?'\nSố tiền trên chỉ tính giao dịch hoàn tiền thành công. Bạn có thể xem tiến độ yêu cầu tại '+link('support')+'.':kind==='orders'?'\nTrạng thái đơn hàng và thanh toán được theo dõi riêng.':'';
+ return {reply:'PawPal gửi bạn thông tin thuộc tài khoản đang đăng nhập nhé:\n\n'+lines.join('\n\n')+next+'\n'+link(kind)+paymentNote,understood:true};
 }
 function formatDetails(data,route){
  const kind=route.request.kind;
@@ -98,4 +107,4 @@ function formatDetails(data,route){
 async function read(caller,request){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7000);try{let call=caller.rpc(detailKinds.includes(request.kind)?'read_member_chat_details':'read_member_chat_context',{p_request:request});if(typeof call.abortSignal==='function')call=call.abortSignal(controller.signal);const result=await call;if(result.error)throw result.error;return result.data;}finally{clearTimeout(timer);}
 }
-module.exports={plan,format,read,isFollowup,paths,neutralSupport};
+module.exports={plan,format,read,isFollowup,paths,neutralSupport,refundStatus};

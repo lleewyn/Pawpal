@@ -56,6 +56,12 @@ function createGenerator({serviceClient,request=requestGemini,environmentKey=()=
  };
 }
 const generate=createGenerator();
+async function searchPublicContext(service,conversationId,question){
+ const {data,error}=await service.rpc('search_public_chat_context',{p_conversation:conversationId,p_question:question});
+ if(error)throw error;
+ if(!data||typeof data.incomplete!=='boolean'||!Array.isArray(data.faq)||!Array.isArray(data.recent)||data.faq.length>5||data.recent.length>8||data.faq.some(r=>!r||typeof r.question!=='string'||typeof r.answer!=='string'||!r.answer.trim())||data.recent.some(r=>!r||typeof r.sender_type!=='string'||typeof r.content!=='string')||Buffer.byteLength(JSON.stringify(data),'utf8')>32768)throw Error('invalid_public_context');
+ return data;
+}
 function memberCaller(token){
  const url=process.env.PAWPAL_ADMIN_SUPABASE_URL,key=process.env.PAWPAL_ADMIN_SUPABASE_ANON_KEY;if(!url||!key||!token)throw Error('member_config_unavailable');
  return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false},global:{headers:{Authorization:'Bearer '+token}}});
@@ -233,16 +239,24 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     if(evaluation.worstAction==='block')return fail(400,'Vui lòng điều chỉnh nội dung trước khi gửi.');
     const requestedStaff=require('../scripts/api/chat_public_catalog.js').requestsStaff(question);
     if(requestedStaff)evaluation.shouldHandover=true;
+    const refundLookup=memberHelp.refundStatus(question)&&!requestedStaff&&!evaluation.isToxic&&['none','billing_dispute'].includes(evaluation.riskType);
+    if(refundLookup){
+     evaluation.riskType='none';evaluation.shouldHandover=false;evaluation.detectedLevel=Math.min(evaluation.detectedLevel,2);
+    }
     if(memberHelp.neutralSupport(question)&&!requestedStaff&&!evaluation.isToxic&&evaluation.riskType==='none'){
      evaluation.shouldHandover=false;evaluation.detectedLevel=Math.min(evaluation.detectedLevel,2);
     }
     if(assets.length)evaluation.shouldHandover=true;
     const membershipRequired=evaluation.shouldHandover&&!await canHandoff();
     const supportBoundary=require('../scripts/api/chat_support_boundary.js');
-    const needsSupportRequest=supportBoundary.needsSupportRequest(question,evaluation);
+    const needsSupportRequest=!refundLookup&&supportBoundary.needsSupportRequest(question,evaluation);
     let reply=null,understood=true;
     if(!['waiting_agent','agent_handling'].includes(c.status)){
-     if(needsSupportRequest){
+     if(evaluation.riskType==='medical_emergency'){
+      reply='Bạn hãy liên hệ ngay bác sĩ thú y hoặc cơ sở cấp cứu thú y gần nhất để được hướng dẫn. Đừng chờ phản hồi trong chat.';
+      if(membershipRequired)evaluation.shouldHandover=false;
+      else reply+=' PawPal đồng thời chuyển hội thoại sang chờ nhân viên hỗ trợ thông tin về dịch vụ.';
+     }else if(needsSupportRequest){
       reply=supportBoundary.supportReply;
       if(evaluation.shouldHandover&&!membershipRequired)reply+=' Hội thoại đang được chuyển sang chờ CSKH để trao đổi thêm; bạn vẫn cần gửi yêu cầu trong mục Hỗ trợ.';
       if(membershipRequired){reply+=' Bạn cần đăng nhập để gửi yêu cầu và theo dõi kết quả.';evaluation.shouldHandover=false;}
@@ -251,9 +265,8 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
       if(requestedStaff)reply+=' Yêu cầu vừa nhận: '+Array.from(evaluation.maskedText||question).slice(0,300).join('')+'. Nhân viên sẽ xem nội dung hội thoại để tiếp tục hỗ trợ; chưa xác nhận đã có người nhận ca.';
       if(assets.length)reply='PawPal đã nhận ảnh và chuyển hội thoại sang chờ nhân viên xem. Trợ lý tự động chưa phân tích nội dung ảnh.';
       if(membershipRequired){reply=membershipMessage;evaluation.shouldHandover=false;}
-     }else if(evaluation.riskType==='special_care'||evaluation.detectedLevel===3||/mệt mỏi|biếng ăn|bỏ ăn|uể oải|nằm li bì|ngủ nhiều|lo quá|bị đau|sợ hãi/i.test(question)){
-      reply='Dạ bạn đừng quá lo nhé, PawPal hiểu tâm lý của bạn lúc này. Sau khi tắm sấy, nhiều bé do lạ chỗ hoặc tiêu hao nhiều năng lượng nên sẽ thèm ngủ và hơi lười ăn một chút. Bạn để bé nghỉ ngơi ở góc quen thuộc, đặt sẵn chén nước sạch gần bé nha. Nếu bé có biểu hiện nào bất thường hơn hoặc bạn vẫn chưa an tâm, bạn cứ nhắn hoặc gửi ảnh cho PawPal liền nhé, tụi mình luôn ở đây cùng bạn.';
-      understood=true;
+     }else if(evaluation.riskType==='special_care'){
+      reply='PawPal chưa thể đánh giá tình trạng của bé qua chat. Bạn nên liên hệ bác sĩ thú y và mô tả biểu hiện cùng thời điểm bắt đầu. Nếu bạn cần trao đổi về buổi chăm sóc tại PawPal, hãy cho nhân viên biết mã lịch hẹn.';
      }else if(understanding.isUnclearInput(question)){
       reply=understanding.clarification;understood=false;
      }else{
@@ -261,27 +274,43 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      if(memberRoute){
       if(memberRoute.reply)({reply,understood}=memberRoute);
       else if(!customer){reply='Đây là thông tin thuộc hồ sơ riêng của bạn. Bạn [Đăng nhập](/login) rồi hỏi lại nhé; PawPal chỉ tra dữ liệu thuộc tài khoản đã xác minh.';understood=false;}
-      else{const own=await memberHelp.read(createMemberCaller(token),memberRoute.request);({reply,understood}=memberHelp.format(own,memberRoute,customer.id));}
+      else{
+       const caller=createMemberCaller(token);
+       const readAnswer=async route=>memberHelp.format(await memberHelp.read(caller,route.request),route,customer.id);
+       if(memberRoute.withWallet){
+        const answers=await Promise.allSettled([readAnswer(memberRoute),readAnswer({request:{kind:'wallet',page:0}})]);
+        if(answers.every(result=>result.status==='rejected'))throw answers[0].reason;
+        understood=answers.every(result=>result.status==='fulfilled');
+        reply=answers.map((result,index)=>result.status==='fulfilled'?result.value.reply:`PawPal chưa kiểm tra được ${index===0?'điểm và hạng':'ví ưu đãi'} của bạn lúc này.`).join('\n\n');
+       }else ({reply,understood}=await readAnswer(memberRoute));
+      }
      }else if(publicRoute?.request){
       const advice=await service.rpc('read_public_guest_advice',{p_request:publicRoute.request});if(advice.error)throw advice.error;
       ({reply,understood}=guestHelp.format(advice.data,publicRoute));
      }else if(publicRoute&&!publicRoute.faq){
       if(publicRoute.reply)({reply,understood}=publicRoute);
       else{const catalog=await service.rpc('read_public_chat_catalog',{p_kind:publicRoute.kind,p_query:publicRoute.query});if(catalog.error)throw catalog.error;({reply,understood}=publicCatalog.format(catalog.data,publicRoute));}
+     }else if(publicRoute?.relatedFaq){
+      const questions=[publicRoute.faq,publicRoute.relatedFaq];
+      const contexts=await Promise.allSettled(questions.map(value=>searchPublicContext(service,c.id,value)));
+      if(contexts.every(result=>result.status==='rejected'))throw contexts[0].reason;
+      const answers=contexts.map((result,index)=>result.status==='fulfilled'&&guestHelp.faqReply({faq:questions[index]},result.value.faq));
+      understood=answers.every(Boolean);
+      reply=(answers[0]?.reply||'PawPal chưa xác nhận được điều kiện đặt lịch khi chưa có tài khoản.')+'\n\n'+
+       (answers[1]?.reply||'PawPal chưa xác nhận được cách đặt lịch cho nhiều bé.')+'\n\n[Chọn dịch vụ và thời gian](/booking)';
      }else{
-     const context=await service.rpc('search_public_chat_context',{p_conversation:c.id,p_question:publicRoute?.faq||question});if(context.error)throw context.error;
-     if(!context.data||typeof context.data.incomplete!=='boolean'||!Array.isArray(context.data.faq)||!Array.isArray(context.data.recent)||context.data.faq.length>5||context.data.recent.length>8||context.data.faq.some(r=>!r||typeof r.question!=='string'||typeof r.answer!=='string'||!r.answer.trim())||context.data.recent.some(r=>!r||typeof r.sender_type!=='string'||typeof r.content!=='string')||Buffer.byteLength(JSON.stringify(context.data),'utf8')>32768)throw Error('invalid_public_context');
-     const usableFaq=context.data.faq.filter(r=>!context.data.incomplete||r.complete===true);
+     const context=await searchPublicContext(service,c.id,publicRoute?.faq||question);
+     const usableFaq=context.faq.filter(r=>!context.incomplete||r.complete===true);
      const direct=publicRoute?.faq?guestHelp.faqReply(publicRoute,usableFaq):null;
      if(direct){({reply,understood}=direct);}
      else if(publicRoute?.faq){reply='Mình chưa có đủ hướng dẫn đã xác nhận cho mục này. Bạn có thể xem lựa chọn tại [Dịch vụ](/services), [Cửa hàng](/shop), [Tra cứu](/return-guest) hoặc chọn Gặp chuyên viên. Mình chưa xác nhận giao dịch hay điều kiện riêng của bạn.';understood=false;}
-     else if(context.data.incomplete&&usableFaq.length===0){
+     else if(context.incomplete&&usableFaq.length===0){
       reply='Mình chưa có đủ thông tin để tư vấn chính xác cho yêu cầu này. Bạn cho mình biết dịch vụ quan tâm và nhu cầu của bé, hoặc chọn Gặp chuyên viên để được hỗ trợ thêm nhé.';understood=false;
-     }else if(context.data.faq.length===0){
+     }else if(context.faq.length===0){
       reply='PawPal chưa có đủ thông tin xác nhận cho câu hỏi này. Bạn có thể nói rõ dịch vụ hoặc sản phẩm cần tìm, hoặc chọn gặp nhân viên để được hỗ trợ.';understood=false;
      }else{
      // Member transcripts may now contain private projections. Never include them in public model calls.
-     const history=customer?[]:(context.data.recent||[]).slice().reverse().map(m=>({role:['customer','guest'].includes(m.sender_type)?'user':'model',content:m.content||''}));
+     const history=customer?[]:context.recent.slice().reverse().map(m=>({role:['customer','guest'].includes(m.sender_type)?'user':'model',content:m.content||''}));
      let timer,acceptChunks=true;try{const generated=await Promise.race([generateReply(question,{thongTinPawpal:usableFaq.map(r=>({question:r.question,answer:r.answer}))},history,{audience:'customer',...(stream.enabled?{onDelta:text=>{if(acceptChunks)stream.delta(text);},onReset:()=>{if(acceptChunks)stream.reset();}}:{})}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('ai_timeout')),25000);})]);({reply,understood}=understanding.parseCustomerReply(generated));}finally{acceptChunks=false;clearTimeout(timer);}
      }
      }

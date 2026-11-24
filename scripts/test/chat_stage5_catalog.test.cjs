@@ -42,3 +42,17 @@ test('guest public explanations are allowed while actual balances and records st
  assert.deepEqual(plan('Giá Vitamin'),{kind:'product',query:'Vitamin'});
  assert.equal(plan('Tư vấn sản phẩm sữa tắm'),null);
 });
+test('guest purchase and booking directions reach their FAQ, and price questions keep only relevant details',()=>{
+ const guest=require('../api/chat_public_guest.js');
+ assert.equal(guest.plan('Tôi mua ở đâu?').topic,'buy');
+ assert.equal(guest.plan('Đặt lịch ở đâu?',['Sản phẩm cho mèo']).topic,'booking');
+ assert.equal(guest.plan('PawPal ở đâu?').request.kind,'store');
+ assert.deepEqual(guest.plan('Giá sản phẩm Sữa tắm yến mạch, còn hàng không?').request,{kind:'product',queries:['Sữa tắm yến mạch']});
+ const quote=guest.plan('Bé 7 kg tắm bao nhiêu?');
+ const r=guest.format({kind:'grooming',as_of:data.as_of,has_more:false,items:[{name:'Tắm cơ bản',price:170000,weight_from:5,weight_to:10,weight_to_inclusive:false,duration:75,description:'Mô tả quảng cáo',condition:'Chọn theo loài'}]},quote);
+ assert.match(r.reply,/7 kg/);
+ assert.match(r.reply,/170\.000 đ/);
+ assert.match(r.reply,/75 phút/);
+ assert.match(r.reply,/Chọn theo loài/);
+ assert.doesNotMatch(r.reply,/Mô tả quảng cáo/);
+});
