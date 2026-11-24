@@ -1,5 +1,6 @@
 
 import { API } from '/scripts/api/api.js';
+import { invalidateCustomerCache } from '/scripts/shared/customer-cache.mjs';
 import { cancelCustomerBooking, quoteCustomerBookingMove, moveCustomerBooking } from '/scripts/shared/customer-booking.mjs';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 import { parseVietnamDateTimeInput, vietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
@@ -116,13 +117,15 @@ export async function init() {
         bookingAuthListener=()=>{if(JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id===mountedOwner)return;dispose();allBookings=[];renderBookings('all');};
         document.addEventListener('auth_state_changed',bookingAuthListener);
         bookingPage=1;
-        await loadBookings('all');
+        bookingStatus='all';
         const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        stopBookingsRealtime = watchCustomerTables(client, user?.id, ['appointment', 'appointment_item', 'payment', 'review'], () => {
+        stopBookingsRealtime = watchCustomerTables(client, user?.id, ['appointment', 'appointment_item', 'payment', 'review'], reason => {
+            if (reason === 'change') invalidateCustomerCache('bookings',user.id);
             const active = document.querySelector('.booking-filter-tab.active, .filter-tab.active');
             return loadBookings(active?.dataset.status || 'all');
         });
+        void loadBookings('all');
     } finally {
         isInitRunning = false;
     }
@@ -149,25 +152,12 @@ async function loadBookings(status) {
     try {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (!currentUser) throw new Error('Vui lòng đăng nhập để xem lịch hẹn.');
-        const result = await API.getUserBookingPage(currentUser,{page:bookingPage,status});
-        if (loadVersion !== bookingsLoadVersion) return;
-        if(JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id!==currentUser.id)return;
-        bookingMeta=result.meta;bookingPage=result.meta.page;bookingStatus=status;
-        allBookings = result.rows;
-        // The page already includes each pet's display fields; no second full pet-list query.
-        const userPets = allBookings.map(b=>({id:b.petId,name:b.petName,image:b.petAvatar,species:b.petSpecies,breed:b.petBreed}));
-        if (loadVersion !== bookingsLoadVersion) return;
-        
-        currentPetMap = new Map();
-        (Array.isArray(userPets) ? userPets : []).forEach((pet) => {
-            if (pet._id) currentPetMap.set(String(pet._id), pet);
-            if (pet.id) currentPetMap.set(String(pet.id), pet);
-            if (pet.pet_code) currentPetMap.set(String(pet.pet_code), pet);
-            if (pet.name) currentPetMap.set(String(pet.name).trim().toLowerCase(), pet);
-            if (pet.pet_name) currentPetMap.set(String(pet.pet_name).trim().toLowerCase(), pet);
-        });
-
-        renderBookings(status);
+        const apply = result => {
+            if (loadVersion !== bookingsLoadVersion || JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id !== currentUser.id) return;
+            applyBookingPage(result,status);
+        };
+        const result = await API.getUserBookingPage(currentUser,{page:bookingPage,status},apply);
+        apply(result);
     } catch (error) {
         if (loadVersion !== bookingsLoadVersion) return;
         console.error('Cannot load bookings:', error);
@@ -180,6 +170,19 @@ async function loadBookings(status) {
             empty.textContent = 'Không thể tải lịch hẹn. Vui lòng thử lại.';
         }
     }
+}
+
+function applyBookingPage(result,status) {
+    bookingMeta=result.meta;bookingPage=result.meta.page;bookingStatus=status;
+    allBookings = result.rows;
+    // The page already includes each pet's display fields.
+    currentPetMap = new Map();
+    for (const booking of allBookings) {
+        const pet = {id:booking.petId,name:booking.petName,image:booking.petAvatar,species:booking.petSpecies,breed:booking.petBreed};
+        if (pet.id) currentPetMap.set(String(pet.id), pet);
+        if (pet.name) currentPetMap.set(String(pet.name).trim().toLowerCase(), pet);
+    }
+    renderBookings(status);
 }
 
 function renderBookings(status) {

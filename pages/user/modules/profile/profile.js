@@ -115,6 +115,7 @@ async function syncUserProfileFromSupabase(user, cache = true) {
 
         let customerId = user.id;
         const phone = user.phone || user.phone_main || '';
+        const snapshotRead = loadCustomerProfileSnapshot(client).catch(() => null);
 
         let custRecord = null;
         if (customerId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId)) {
@@ -143,15 +144,20 @@ async function syncUserProfileFromSupabase(user, cache = true) {
 
         if (custRecord) {
             customerId = custRecord.id;
-            const [profRes, memRes, addrRes, phoneRes, pointRes] = await Promise.all([
-                client.from('customer_profile').select('full_name, date_of_birth, gender').eq('customer_id', customerId).maybeSingle(),
+            const [snapshot, memRes, pointRes] = await Promise.all([
+                snapshotRead,
                 client.from('customer_membership').select('membership_tier(tier_name, discount_percent)').eq('customer_id', customerId).maybeSingle(),
-                client.from('customer_address').select('id, receiver_name, receiver_phone, street_address, province, is_default').eq('customer_id', customerId).order('is_default', { ascending: false }),
-                client.from('customer_phone').select('phone_number, is_primary').eq('customer_id', customerId),
                 client.from('customer_point_balance').select('total_paw_points').eq('customer_id', customerId).maybeSingle()
             ]);
-            if (profRes.error || memRes.error || addrRes.error || phoneRes.error || pointRes.error) throw new Error('Không thể tải hồ sơ mới nhất.');
+            if (memRes.error || pointRes.error) throw new Error('Không thể tải hồ sơ mới nhất.');
 
+            const hasSnapshot = snapshot?.id === customerId && snapshot.revision && Array.isArray(snapshot.addresses);
+            const [profRes, addrRes, phoneRes] = hasSnapshot ? [{}, {}, {}] : await Promise.all([
+                client.from('customer_profile').select('full_name').eq('customer_id', customerId).maybeSingle(),
+                client.from('customer_address').select('id, receiver_name, receiver_phone, street_address, province, is_default').eq('customer_id', customerId).order('is_default', { ascending: false }),
+                client.from('customer_phone').select('phone_number, is_primary').eq('customer_id', customerId)
+            ]);
+            if (profRes.error || addrRes.error || phoneRes.error) throw new Error('Không thể tải hồ sơ mới nhất.');
             const profile = profRes.data || {};
             const membership = memRes.data || {};
             const dbAddresses = (addrRes.data || []).map(a => ({
@@ -195,13 +201,7 @@ async function syncUserProfileFromSupabase(user, cache = true) {
                 addresses: dbAddresses
             };
 
-            let freshUser = updatedUser;
-            try {
-                const snapshot = await loadCustomerProfileSnapshot(client);
-                freshUser = applyProfileSnapshot(updatedUser, snapshot);
-            } catch (snapErr) {
-                console.warn('[Profile] RPC customer_profile_snapshot chưa sẵn sàng, dùng dữ liệu truy vấn trực tiếp');
-            }
+            const freshUser = hasSnapshot ? applyProfileSnapshot(updatedUser, snapshot) : updatedUser;
             if (cache && getCurrentUser()?.id === user.id) setCurrentUser(freshUser);
             return freshUser;
         }

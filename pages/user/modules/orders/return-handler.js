@@ -1,4 +1,5 @@
 import { API } from '/scripts/api/api.js';
+import { invalidateCustomerCache } from '/scripts/shared/customer-cache.mjs';
 import {createEvidenceMediaEditor} from '/scripts/shared/evidence-media.mjs';
 
 let currentRmaOrder = null;
@@ -259,6 +260,7 @@ function setupDrawerListeners(editor) {
                 p_details:{reason,type:returnType,note:returnData.description,lines:details},p_assets:assetIds
             });
             if (error) throw error;
+            if (customerId) invalidateCustomerCache('orders', customerId);
             editor.saved();
         } catch (error) {
             console.error('[ReturnHandler] Không thể gửi yêu cầu:', error);

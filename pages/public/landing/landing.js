@@ -173,11 +173,10 @@
                             <a href="${item.link}" tabindex="-1">
                                 <img ${idx === 1 ? 'id="campaignImg"' : ''}
                                      src="${item.src}"
-                                     ${item.srcset ? `srcset="${item.srcset}"` : ''}
-                                     sizes="(max-width: 700px) calc(100vw - 32px), (max-width: 1800px) calc(100vw - 80px), 1720px"
                                      alt="${esc(item.name)}"
                                      class="campaign-img"
                                      fetchpriority="${idx === 1 ? 'high' : 'auto'}"
+                                     onerror="this.onerror=null;this.src='/assets/images/landing-v218/pet-taxi-clean.webp';"
                                      decoding="async">
                             </a>
                         </div>

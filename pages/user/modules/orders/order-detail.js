@@ -1,5 +1,6 @@
 import {mountCancellationReasons,renderCancellationSummary,styleOrderAction} from '/scripts/shared/order-cancellation.mjs';
 import {API} from '/scripts/api/api.js';
+import {invalidateCustomerCache} from '/scripts/shared/customer-cache.mjs';
 import {watchCustomerTables} from '/scripts/shared/customer-realtime.mjs';
 import {getStatusLabel} from '/scripts/shared/order-status.mjs';
 import './return-handler.js';
@@ -103,6 +104,7 @@ function openOrderAction(action){
         try{
             const args={p_request:request,p_order:order._supabaseId,p_expected:order.updatedAt};if(cancel)args.p_reason=reason;
             const result=await client().rpc(cancel?'cancel_own_sales_order':'receive_own_sales_order',args);
+            if(!result.error)invalidateCustomerCache('orders',owner);
             if(owner!==ownerId() || order!==currentOrder)return;
             if(result.error)throw result.error;
             actionPending=false;close();await loadOrderDetail();

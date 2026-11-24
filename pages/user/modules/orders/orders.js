@@ -1,5 +1,6 @@
 import { normalizeOrderStatus, getStatusLabel } from '/scripts/shared/order-status.mjs';
 
+import { invalidateCustomerCache } from '/scripts/shared/customer-cache.mjs';
 import { API } from '/scripts/api/api.js';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 import './return-handler.js';
@@ -20,10 +21,8 @@ const ordersState = {
 let ordersLoadVersion = 0;
 let stopOrdersRealtime;
 let ordersListeners;
-let ordersMountVersion=0;
 const ordersOwner=()=>{try{return JSON.parse(localStorage.getItem('pawpal_current_user')||'null')?.id || null;}catch{return null;}};
 export function dispose() {
-    ++ordersMountVersion;
     ++ordersLoadVersion;
     stopOrdersRealtime?.();
     stopOrdersRealtime=null;
@@ -45,93 +44,68 @@ async function loadOrders() {
             return;
         }
 
-        if (!window.SupabaseClient) {
-            await new Promise(r => setTimeout(r, 300));
-        }
-        if(!valid())return;
-
-        const result = await API.getUserOrderPage(currentUser.id,{page:ordersState.currentPage,status:ordersState.currentTab,query:ordersState.searchQuery});
-        if (!valid()) return;
-        const remoteOrders=result.rows;
-        ordersState.pageMeta=result.meta;ordersState.currentPage=result.meta.page;
-        // Live data is authoritative; never merge browser copies over server state.
-        const mergedList = remoteOrders.map(order => {
-            const products = Array.isArray(order.products) && order.products.length > 0
-                ? order.products
-                : (Array.isArray(order.items) && order.items.length > 0 ? order.items : []);
-            
-            const normalizedProducts = products.map(p => ({
-                ...p,
-                id: p.id || p.productId || '',
-                name: p.name || p.title || 'Sản phẩm',
-                image: p.image || p.img || '/assets/images/shop/products/placeholder.webp',
-                quantity: Number(p.quantity ?? p.qty) || 1,
-                price: Number(p.price ?? p.unitPrice) || 0,
-                total: Number(p.total) || ((Number(p.price) || 0) * (Number(p.quantity) || 1))
-            }));
-
-            const grandTotal = Number(
-                order.pricing?.grandTotal ?? order.pricing?.total ?? order.total ?? 0
-            );
-
-            return {
-                ...order,
-                id: order.id || order.orderId || `ORD-${Date.now()}`,
-                products: normalizedProducts,
-                pricing: {
-                    ...(order.pricing || {}),
-                    total: grandTotal,
-                    grandTotal: grandTotal
-                },
-                paymentMethod: (order.paymentMethod || order.payment?.method || '').toLowerCase(),
-                paymentStatus: String(order.paymentStatus || order.payment?.status || (order.paymentMethod === 'cod' ? 'pending_payment' : 'pending')).toLowerCase(),
-                status: order.status || 'pending',
-                createdAt: order.createdAt || new Date().toISOString()
-            };
-        });
-
-        ordersState.allOrders = mergedList;
-        ordersState.filteredOrders = ordersState.allOrders;
-
-        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        ordersState.returns=[];
-        if (db && ordersState.allOrders.length > 0) {
-            try {
-                const orderUuids = ordersState.allOrders.map(o => o._supabaseId).filter(Boolean);
-                if (orderUuids.length > 0) {
-                    const { data: returnRows, error: returnError } = await db
-                        .from('return_request')
-                        .select('sales_order_id')
-                        .in('sales_order_id', orderUuids);
-                    if(returnError)throw returnError;
-                    if (!valid()) return;
-                    if (returnRows) ordersState.returns = returnRows.map(r => r.sales_order_id);
-                }
-            } catch(e) {
-                throw e;
-            }
-        }
-
-        const lineIds=ordersState.allOrders.flatMap(o=>o.products.map(p=>p.lineId)).filter(Boolean);
-        ordersState.reviews=[];
-        if(db&&lineIds.length){
-            const reviewed=await db.from('review').select('sales_order_detail_id').in('sales_order_detail_id',lineIds);
-            if(reviewed.error)throw reviewed.error;
-            if(!valid())return;
-            const ids=new Set((reviewed.data||[]).map(r=>r.sales_order_detail_id));
-            ordersState.reviews=ordersState.allOrders.filter(o=>o.products.length&&o.products.every(p=>ids.has(p.lineId))).map(o=>o.id);
-        }
-        checkAndExpirePendingOrders();
-        if (!valid()) return;
-        updateStats();
-        updateTabCounts();
-        applyFilters();
-        startPendingOrdersTicker();
+        const apply = result => {
+            if (valid()) renderOrderPage(result);
+        };
+        const result = await API.getUserOrderPage(currentUser.id, {
+            page:ordersState.currentPage,status:ordersState.currentTab,query:ordersState.searchQuery
+        }, apply);
+        apply(result);
     } catch (error) {
         if (!valid()) return;
         console.error('Lỗi load đơn hàng:', error);
         showEmptyState('Không thể tải đơn hàng. Vui lòng thử lại sau.');
     }
+}
+
+function renderOrderPage(result) {
+    const remoteOrders=result.rows;
+    ordersState.pageMeta=result.meta;ordersState.currentPage=result.meta.page;
+    // Live data is authoritative; never merge browser copies over server state.
+    const mergedList = remoteOrders.map(order => {
+        const products = Array.isArray(order.products) && order.products.length > 0
+            ? order.products
+            : (Array.isArray(order.items) && order.items.length > 0 ? order.items : []);
+
+        const normalizedProducts = products.map(p => ({
+            ...p,
+            id: p.id || p.productId || '',
+            name: p.name || p.title || 'Sản phẩm',
+            image: p.image || p.img || '/assets/images/shop/products/placeholder.webp',
+            quantity: Number(p.quantity ?? p.qty) || 1,
+            price: Number(p.price ?? p.unitPrice) || 0,
+            total: Number(p.total) || ((Number(p.price) || 0) * (Number(p.quantity) || 1))
+        }));
+
+        const grandTotal = Number(
+            order.pricing?.grandTotal ?? order.pricing?.total ?? order.total ?? 0
+        );
+
+        return {
+            ...order,
+            id: order.id || order.orderId || `ORD-${Date.now()}`,
+            products: normalizedProducts,
+            pricing: {
+                ...(order.pricing || {}),
+                total: grandTotal,
+                grandTotal: grandTotal
+            },
+            paymentMethod: (order.paymentMethod || order.payment?.method || '').toLowerCase(),
+            paymentStatus: String(order.paymentStatus || order.payment?.status || (order.paymentMethod === 'cod' ? 'pending_payment' : 'pending')).toLowerCase(),
+            status: order.status || 'pending',
+            createdAt: order.createdAt || new Date().toISOString()
+        };
+    });
+
+    ordersState.allOrders = mergedList;
+    ordersState.filteredOrders = ordersState.allOrders;
+
+    ordersState.returns = result.returns;
+    ordersState.reviews = result.reviews;
+    updateStats();
+    updateTabCounts();
+    applyFilters();
+    startPendingOrdersTicker();
 }
 
 let pendingOrdersTicker;
@@ -519,7 +493,7 @@ async function cancelOrder(orderId) {
             const db=window.getSupabaseClient?.()||window.SupabaseClient;
             const {error}=await db.rpc('cancel_own_sales_order',{p_request:cancellationRequest,p_order:order._supabaseId,p_expected:order.updatedAt,p_reason:readReason()});
             if(error)throw error;
-            modal.hide();await loadOrders();applyFilters();updateStats();updateTabCounts();
+            modal.hide();invalidateCustomerCache('orders',ordersOwner());await loadOrders();
             showOrdersToast('Đã hủy đơn hàng.','success');
         }catch(error){showOrdersToast(error.message||'Không thể hủy đơn hàng.','error');}
         finally{button.disabled=false;}
@@ -534,7 +508,8 @@ async function confirmOrderReceipt(orderId) {
         const db=window.getSupabaseClient?.()||window.SupabaseClient;
         const {error}=await db.rpc('receive_own_sales_order',{p_request:crypto.randomUUID(),p_order:order._supabaseId,p_expected:order.updatedAt});
         if(error)throw error;
-        await loadOrders();applyFilters();updateStats();updateTabCounts();
+        invalidateCustomerCache('orders',ordersOwner());
+        await loadOrders();
         showOrdersToast('Đã xác nhận nhận hàng.','success');
     }catch(error){showOrdersToast(error.message||'Không thể xác nhận nhận hàng.','error');}
 }
@@ -636,11 +611,11 @@ let isInitRunning = false;
 export async function initOrders() {
     if (isInitRunning) return;
     dispose();
-    const mount=ordersMountVersion;
     const owner=ordersOwner();
     ordersListeners=new AbortController();
     const signal=ordersListeners.signal;
     const changed=()=>{
+        if (owner===ordersOwner()) return;
         dispose();
         ordersState.allOrders=[];ordersState.filteredOrders=[];ordersState.returns=[];ordersState.reviews=[];
         updateStats();updateTabCounts();
@@ -653,7 +628,10 @@ export async function initOrders() {
     try {
         const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        stopOrdersRealtime = watchCustomerTables(client, user?.id, ['sales_order', 'payment', 'return_request', 'review'], loadOrders);
+        stopOrdersRealtime = watchCustomerTables(client, user?.id, ['sales_order', 'payment', 'return_request', 'review'], reason => {
+            if (reason === 'change') invalidateCustomerCache('orders',user.id);
+            return loadOrders();
+        });
         if (typeof window.setUserSubBreadcrumb === 'function') {
             window.setUserSubBreadcrumb('', 'orders');
         }
@@ -661,8 +639,11 @@ export async function initOrders() {
         // Kiểm tra tab ban đầu từ URL parameter (ví dụ ?status=pending_payment hoặc ?tab=pending_payment)
         const urlParams = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
         const initialStatus = urlParams.get('status') || urlParams.get('tab');
-        if (initialStatus) {
+        if (initialStatus && ordersState.currentTab !== normalizeOrderStatus(initialStatus)) {
             ordersState.currentTab = normalizeOrderStatus(initialStatus);
+            ordersState.currentPage = 1;
+        }
+        {
             const targetTab = [...document.querySelectorAll('.order-filter-tab, .tab-btn')].find(tab=>tab.dataset.status===ordersState.currentTab);
             if (targetTab) {
                 document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((item) => {
@@ -673,9 +654,6 @@ export async function initOrders() {
                 targetTab.setAttribute('aria-selected', 'true');
             }
         }
-
-        await loadOrders();
-        if(mount!==ordersMountVersion || owner!==ordersOwner())return;
 
         document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((button) => {
             bind(button,'click', (event) => {
@@ -693,6 +671,7 @@ export async function initOrders() {
         const searchBtn = document.getElementById('search-btn');
 
         if (searchBtn && searchInput) {
+            searchInput.value = ordersState.searchQuery;
             bind(searchBtn,'click', () => {
                 searchOrders(searchInput.value);
             });
@@ -718,6 +697,7 @@ export async function initOrders() {
                 if (ordersState.currentPage < totalPages) goToPage(ordersState.currentPage + 1);
             });
         }
+        void loadOrders();
     } finally {
         isInitRunning = false;
     }

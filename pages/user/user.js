@@ -85,22 +85,13 @@
         window.addEventListener('pageshow', checkAuth);
     }
     
-    // Đảm bảo window.PawpalCustomerAuth sẵn sàng
-    if (!window.PawpalCustomerAuth) {
-        await new Promise(resolve => {
-            if (window.PawpalCustomerAuth) return resolve();
-            let attempts = 0;
-            const check = setInterval(() => {
-                attempts++;
-                if (window.PawpalCustomerAuth || attempts > 20) {
-                    clearInterval(check);
-                    resolve();
-                }
-            }, 50);
-        });
+    function currentOwner() {
+        try { return String(JSON.parse(localStorage.getItem('pawpal_current_user'))?.id || ''); }
+        catch { return ''; }
     }
-
-    if (window.PawpalCustomerAuth && window.PawpalCustomerAuth.request) {
+    const portalOwner = currentOwner();
+    async function verifyPortalOwner() {
+        if (!portalOwner || !window.PawpalCustomerAuth?.request) return requireLogin();
         try {
             const result = await window.PawpalCustomerAuth.request('me', {}, true);
             const verifiedUser = result?.user || {};
@@ -110,23 +101,28 @@
                 sessionStorage.removeItem('pawpal_current_user');
                 alert('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ bộ phận hỗ trợ khách hàng.');
                 window.location.replace('/login?reason=account-locked');
-                return;
+                return false;
             }
-            if (!checkAuth()) return;
-            if (!verifiedUser.id) throw new Error('Không tìm thấy hồ sơ khách hàng.');
+            if (!checkAuth()) return false;
+            if (currentOwner() !== portalOwner) {
+                window.location.reload();
+                return false;
+            }
+            if (String(verifiedUser.id) !== portalOwner) return requireLogin();
             // The authenticated /me response refreshes the profile, not the Supabase session.
             const profile = JSON.stringify(window.PawpalCustomerAuth.cleanUser(verifiedUser));
             localStorage.setItem('pawpal_current_user', profile);
             sessionStorage.setItem('pawpal_current_user', profile);
+            return true;
         } catch (err) {
-            if(pageLeaving)return;
+            if(pageLeaving)return false;
             console.warn('[UserPortal] Không thể xác nhận phiên khách hàng:', err.message);
             localStorage.removeItem('pawpal_current_user');
             sessionStorage.removeItem('pawpal_current_user');
-            requireLogin();
-            return;
+            return requireLogin();
         }
     }
+    const verified = verifyPortalOwner();
 
     const { createLatestRenderer } = await import('/scripts/shared/latest-render.mjs');
     const moduleRenderer = createLatestRenderer();
@@ -134,10 +130,21 @@
     const moduleHtmlCache = new Map();
     const routePreviewCache = new Map();
     let displayedRouteKey = null;
-    const assetVersion = 'account-20261122-booking-move-slots';
+    const assetVersion = 'account-20261124-customer-loading';
     function routeCacheKey(routeKey) {
-        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        return `${user?.id || ''}:${routeKey}:${window.location.hash.split('?')[1] || ''}`;
+        return `${portalOwner}:${routeKey}:${window.location.hash.split('?')[1] || ''}`;
+    }
+
+    function loadModuleHtml(path) {
+        const url = (path.startsWith('/') ? path : '/pages/user/' + path) + '?v=' + assetVersion;
+        if (!moduleHtmlCache.has(url)) {
+            const pending = fetch(url).then(response => {
+                if (!response.ok) throw new Error('Không thể tải nội dung tài khoản.');
+                return response.text();
+            }).catch(error => { moduleHtmlCache.delete(url); throw error; });
+            moduleHtmlCache.set(url, pending);
+        }
+        return moduleHtmlCache.get(url);
     }
 
     // 2. Định nghĩa cấu hình Routing
@@ -285,9 +292,28 @@
     }
 
     // 3. Trình nạp CSS động
+    const preloaded = new Set();
+    function preloadRouteAssets(routeKey) {
+        const config = ROUTE_CONFIG[routeKey];
+        const connection = navigator.connection;
+        if (!config || connection?.saveData || /2g/.test(connection?.effectiveType || '')) return;
+        loadModuleHtml(config.modulePath).catch(() => {});
+        for (const [path, rel, as] of [[config.moduleCss, 'preload', 'style'], [config.moduleScript, 'modulepreload']]) {
+            if (!path || preloaded.has(path)) continue;
+            preloaded.add(path);
+            const link = document.createElement('link');
+            link.rel = rel;
+            if (as) link.as = as;
+            link.href = '/pages/user/' + path + '?v=' + assetVersion;
+            link.addEventListener('error', () => { preloaded.delete(path); link.remove(); }, {once:true});
+            document.head.appendChild(link);
+        }
+    }
+
+    let cancelPendingStyle;
     function loadModuleCss(cssHref) {
         const existingLink = document.getElementById('dynamic-user-module-css');
-        document.getElementById('dynamic-user-module-css-pending')?.remove();
+        cancelPendingStyle?.();
         if (!cssHref) {
             if (existingLink) existingLink.remove();
             return Promise.resolve();
@@ -299,12 +325,21 @@
         link.rel = 'stylesheet';
         link.href = fullHref;
         return new Promise((resolve, reject) => {
+            cancelPendingStyle = () => {
+                link.remove();
+                cancelPendingStyle = null;
+                resolve();
+            };
             link.addEventListener('load', () => {
+                if (!link.isConnected) return;
+                cancelPendingStyle = null;
                 if (existingLink) existingLink.remove();
                 link.id = 'dynamic-user-module-css';
                 resolve();
             }, { once: true });
             link.addEventListener('error', () => {
+                if (!link.isConnected) return;
+                cancelPendingStyle = null;
                 link.remove();
                 reject(new Error(`Không thể tải giao diện module: ${cssHref}`));
             }, { once: true });
@@ -314,31 +349,16 @@
 
     // 4. Trình nạp Script động
     let activeModuleDispose;
-    async function loadModuleScript(scriptSrc, isModule = false) {
+    async function loadModuleScript(scriptSrc, ticket) {
         const existingScript = document.getElementById('dynamic-user-module-script');
         if (existingScript) existingScript.remove();
 
         if (!scriptSrc) return;
         const fullSrc = (scriptSrc.startsWith('/') ? scriptSrc : `/pages/user/${scriptSrc}`) + '?v=' + assetVersion;
-        if (isModule) {
-            try {
-                if (activeModuleDispose) await activeModuleDispose();
-                activeModuleDispose = null;
-                const mod = await import(fullSrc);
-                activeModuleDispose = typeof mod.dispose === 'function' ? mod.dispose : null;
-                if (mod && typeof mod.init === 'function') {
-                    await mod.init();
-                }
-                return;
-            } catch (err) {
-                throw err;
-            }
-        }
-        const script = document.createElement('script');
-        script.id = 'dynamic-user-module-script';
-        if (isModule) script.type = 'module';
-        script.src = fullSrc;
-        document.body.appendChild(script);
+        const mod = await import(fullSrc);
+        if (!moduleRenderer.isCurrent(ticket) || currentOwner() !== portalOwner) return;
+        activeModuleDispose = typeof mod.dispose === 'function' ? mod.dispose : null;
+        if (typeof mod.init === 'function') await mod.init();
     }
 
     // 5. Cập nhật Breadcrumb & Title
@@ -455,29 +475,34 @@
 
     // 7. Hàm chính: Tải module
     async function loadModule(routeKey) {
+        if (currentOwner() !== portalOwner) return;
         const ticket = moduleRenderer.begin();
         const contentContainer = document.getElementById('userAppContent');
         if (!contentContainer) return;
+        preloadRouteAssets(routeKey);
         if (displayedRouteKey && contentContainer.getAttribute('aria-busy') !== 'true') {
             const view = contentContainer.querySelector('.user-module-view');
             // Never retain passwords or an unfinished edit form in a preview.
-            if (view && !view.querySelector('input[type="password"], form')) {
-                routePreviewCache.set(displayedRouteKey, view.cloneNode(true));
+            if (view && !view.querySelector('input[type="password"], form, #ordersSkeleton, #bookingsSkeleton')) {
+                routePreviewCache.delete(displayedRouteKey);
+                routePreviewCache.set(displayedRouteKey, { view:view.cloneNode(true), savedAt:Date.now() });
+                if (routePreviewCache.size > 6) routePreviewCache.delete(routePreviewCache.keys().next().value);
             }
         }
+        activeModuleDispose?.();
+        activeModuleDispose = null;
         const nextRouteKey = routeCacheKey(routeKey);
         displayedRouteKey = nextRouteKey;
         document.getElementById('userRoutePreview')?.remove();
         const cachedPreview = routePreviewCache.get(nextRouteKey);
         let preview;
-        if (cachedPreview) {
-            preview = cachedPreview.cloneNode(true);
+        if (cachedPreview && Date.now() - cachedPreview.savedAt < 60000) {
+            preview = cachedPreview.view.cloneNode(true);
             preview.id = 'userRoutePreview';
             preview.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
             preview.setAttribute('aria-hidden', 'true');
             preview.inert = true;
             preview.style.cssText = 'position:absolute;inset:0;z-index:2;background:white;pointer-events:none';
-            contentContainer.appendChild(preview);
         }
 
         const config = ROUTE_CONFIG[routeKey] || ROUTE_CONFIG['profile'];
@@ -494,16 +519,9 @@
         // Nạp trực tiếp module chuẩn từ modules/ để tránh hiện tượng tải 2 bước
         if (config.modulePath) {
             try {
-                const fullModuleUrl = (config.modulePath.startsWith('/') ? config.modulePath : `/pages/user/${config.modulePath}`) + `?v=${assetVersion}`;
-                if (!moduleHtmlCache.has(fullModuleUrl)) {
-                    const pending = fetch(fullModuleUrl).then(res => {
-                        if (!res.ok) throw new Error('Không thể tải nội dung tài khoản.');
-                        return res.text();
-                    }).catch(error => { moduleHtmlCache.delete(fullModuleUrl); throw error; });
-                    moduleHtmlCache.set(fullModuleUrl, pending);
-                }
                 {
-                    const html = await moduleHtmlCache.get(fullModuleUrl);
+                    const html = await loadModuleHtml(config.modulePath);
+                    if (!moduleRenderer.isCurrent(ticket)) return;
                     if (config.moduleCss) await loadModuleCss(config.moduleCss);
                     if (!moduleRenderer.isCurrent(ticket)) return;
                     await moduleRenderer.commit(ticket, async () => {
@@ -518,7 +536,7 @@
                                 contentContainer.querySelector('#petDetailView')?.classList.remove('d-none');
                             }
                         }
-                        if (config.moduleScript) await loadModuleScript(config.moduleScript, true);
+                        if (config.moduleScript) await loadModuleScript(config.moduleScript, ticket);
                         if (moduleRenderer.isCurrent(ticket)) {
                             contentContainer.setAttribute('aria-busy', 'false');
                             preview?.remove();
@@ -566,7 +584,7 @@
             const { API } = await import('/scripts/api/api.js');
             const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
             if (!user) throw new Error('Vui lòng đăng nhập.');
-            const items = type === 'order' ? await API.getUserOrders(user.id) : await API.getUserBookings(user);
+            const items = type === 'order' ? await API.getUserOrders(user.id, {id}) : await API.getUserBookings(user, {id});
             if (ticket !== drawerRequest) return;
             const item = items.find(row => [row.id, row.code, row._supabaseId, row.order_code, row.appointment_code].some(value => String(value) === String(id)));
             if (!item) throw new Error('Không tìm thấy thông tin.');
@@ -657,6 +675,16 @@
         const sidebarContainer = document.getElementById('user-sidebar');
         if (!sidebarContainer) return;
 
+        let intentTimer;
+        const warmLink = event => {
+            clearTimeout(intentTimer);
+            const link = event.target.closest('.sidebar-link');
+            const route = Object.keys(ROUTE_CONFIG).find(key => !ROUTE_CONFIG[key].parentRoute && ROUTE_CONFIG[key].sidebarId === link?.id);
+            if (route && route !== resolveRoute(window.location.hash)) intentTimer = setTimeout(() => preloadRouteAssets(route), 150);
+        };
+        sidebarContainer.addEventListener('pointerover', warmLink);
+        sidebarContainer.addEventListener('pointerleave', () => clearTimeout(intentTimer));
+        sidebarContainer.addEventListener('focusin', warmLink);
         sidebarContainer.addEventListener('click', function (e) {
             const link = e.target.closest('.sidebar-link');
             if (!link) return;
@@ -679,10 +707,10 @@
 
             if (linkTab === 'security' || lowerHref.includes('settings')) {
                 matchedRoute = 'settings';
-            } else if (lowerHref.includes('pet-profile') || lowerHref.includes('pet')) {
-                matchedRoute = 'pets';
-            } else if (lowerHref.includes('pet-diary') || lowerHref.includes('diary')) {
+            } else if (lowerHref.includes('diary')) {
                 matchedRoute = 'diary';
+            } else if (lowerHref.includes('pet')) {
+                matchedRoute = 'pets';
             } else if (lowerHref.includes('booking')) {
                 matchedRoute = 'bookings';
             } else if (lowerHref.includes('order')) {
@@ -793,31 +821,29 @@
         }, 100);
 
         setTimeout(() => clearInterval(checkSidebarInterval), 5000);
-        scheduleIdlePrefetch();
     }
 
-    // 14. Tự động nạp trước (Idle Prefetching) các phân hệ khi máy rảnh
-    function scheduleIdlePrefetch() {
-        const prefetch = async () => {
-            const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-            if (!user || !user.id) return;
-            try {
-                const { getPets } = await import('/scripts/api/petService.js');
-                const { API } = await import('/scripts/api/api.js');
-                await Promise.allSettled([
-                    getPets(user.id),
-                    API.getUserBookingPage(user, { page: 1, status: 'all' }),
-                    API.getUserOrderPage(user, { page: 1, status: 'all' }),
-                    API.getUserWishlist(user.id)
-                ]);
-            } catch (_) {}
-        };
-        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-            window.requestIdleCallback(prefetch, { timeout: 3500 });
-        } else {
-            setTimeout(prefetch, 1500);
-        }
-    }
+    preloadRouteAssets(resolveRoute(window.location.hash || sessionStorage.getItem('pawpal_user_active_tab') || 'profile'));
+    if (!await verified || currentOwner() !== portalOwner) return;
+    const clearPreviousOwner = () => {
+        if (currentOwner() === portalOwner) return;
+        moduleRenderer.begin();
+        routePreviewCache.clear();
+        closeDetailDrawer();
+        detailDrawerBody?.replaceChildren();
+        activeModuleDispose?.();
+        activeModuleDispose = null;
+        document.getElementById('userAppContent')?.replaceChildren();
+        if (checkAuth()) window.location.reload();
+    };
+    window.addEventListener('storage', clearPreviousOwner);
+    window.addEventListener('pageshow', clearPreviousOwner);
+    document.addEventListener('auth_state_changed', clearPreviousOwner);
+    window.addEventListener('pawpal:reviewSubmitted', async event => {
+        if (!event.detail?.orderId || currentOwner() !== portalOwner) return;
+        const { invalidateCustomerCache } = await import('/scripts/shared/customer-cache.mjs');
+        invalidateCustomerCache('orders', portalOwner);
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', startUserPortal, { once: true });

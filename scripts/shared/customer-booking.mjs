@@ -1,4 +1,5 @@
 import { resolveAuthenticatedCustomerId } from './customer-identity.mjs';
+import { invalidateCustomerCache } from './customer-cache.mjs';
 
 function bookingMoveError(error) {
     const messages={booking_change_window_closed:'Lịch không còn trong thời gian hoặc số lần được tự đổi. Vui lòng liên hệ cửa hàng.',
@@ -59,6 +60,7 @@ export async function moveCustomerBooking(client,user,booking,quote,reason,reque
     const {data,error}=await client.rpc('reschedule_own_booking_service',{p_request_id:requestId,p_id:booking._supabaseId,p_start:quote.start_at,p_expected_quote:quote.version,p_reason:reason.trim(),p_end:end||null,p_service:quote.serviceId||null});
     if(error)throw bookingMoveError(error);
     if(data!==booking._supabaseId)throw new Error('Chưa nhận được xác nhận đổi lịch.');
+    invalidateCustomerCache('bookings',user);
     return data;
 }
 
@@ -120,6 +122,7 @@ export async function cancelCustomerBooking(client, user, booking, reason, reque
         throw new Error(messages[error.message] || 'Không thể hủy lịch hẹn. Vui lòng tải lại và thử lại.');
     }
     if(data!==booking._supabaseId)throw new Error('Chưa nhận được xác nhận hủy lịch. Vui lòng tải lại.');
+    invalidateCustomerCache('bookings',user);
     try {
         const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
         const idx = localBookings.findIndex(b => String(b.id || b._id) === String(booking.id || booking._supabaseId));
@@ -140,5 +143,6 @@ export async function updateCustomerBooking(client, user, booking, changes) {
         .eq('id', booking._supabaseId).eq('customer_id', customerId)
         .eq('appointment_status', booking.bookingStatus).select('id').single();
     if (result.error || !result.data?.id) throw new Error('Không thể cập nhật lịch hẹn. Vui lòng tải lại và thử lại.');
+    invalidateCustomerCache('bookings',user);
     return result.data;
 }

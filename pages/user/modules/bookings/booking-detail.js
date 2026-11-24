@@ -1,5 +1,6 @@
 ﻿
 import { API } from '/scripts/api/api.js';
+import { invalidateCustomerCache } from '/scripts/shared/customer-cache.mjs';
 import { watchCustomerTables } from '/scripts/shared/customer-realtime.mjs';
 import { parseVietnamDateTimeInput } from '/scripts/shared/booking-time.mjs';
 import {createReviewMediaEditor} from '/scripts/shared/review-media.mjs';
@@ -151,7 +152,11 @@ async function loadBookingDetail(bookingId, preserveReview = false) {
         return;
     }
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    const logistics = await db.rpc('own_service_booking_logistics', {p_booking: currentBooking._supabaseId});
+    const [logistics, userPets, careLogs] = await Promise.all([
+        db.rpc('own_service_booking_logistics', {p_booking: currentBooking._supabaseId}),
+        currentUser && !currentBooking.petName ? API.getUserPets(currentUser.id) : [],
+        currentBooking.petId ? API.getCareLogs() : {}
+    ]);
     if(!valid())return;
     if (logistics.error) throw logistics.error;
     currentBooking.logistics = logistics.data;
@@ -160,11 +165,7 @@ async function loadBookingDetail(bookingId, preserveReview = false) {
         window.setUserSubBreadcrumb(currentBooking.code || currentBooking.id || 'Chi tiết', 'bookings');
     }
 
-    const userPets = currentUser ? await API.getUserPets(currentUser.id) : [];
-    if(!valid())return;
     currentPet = userPets.find((pet) => String(pet._id || pet.id) === String(currentBooking.petId)) || null;
-    const careLogs = await API.getCareLogs();
-    if(!valid())return;
     currentCareLog = currentBooking.petId ? (careLogs[currentBooking.petId] || null) : null;
 
     const careLogButton = document.getElementById('btnViewCareLog');
@@ -281,6 +282,7 @@ function renderBookingDetail(booking) {
     if(!requestPanel){requestPanel=document.createElement('section');requestPanel.id='bookingStaffRequestPanel';document.querySelector('.booking-detail-module-container')?.prepend(requestPanel);}
     renderBookingStaffRequest(requestPanel,booking.staffRequest,{onRespond:async(accept,revision)=>{
         const db=window.getSupabaseClient(),{error}=await db.rpc('respond_own_booking_staff_request',{p_id:booking._supabaseId,p_revision:revision,p_accept:accept});
+        if (!error && booking.userId) invalidateCustomerCache('bookings',booking.userId);
         if(error)throw error;await loadBookingDetail(booking._supabaseId);
     }});
     renderBookingLogistics(booking.logistics);
@@ -523,6 +525,7 @@ async function renderServiceReviewSection(booking,valid=()=>true) {
             serviceReviewEditors.forEach(editor=>editor.saved());
             for(const line of pending)if(sessionStorage.getItem(reviewKey(line))===ids.get(line.id))sessionStorage.removeItem(reviewKey(line));
             await renderServiceReviewSection(booking,valid);
+            if (booking.userId) invalidateCustomerCache('bookings',booking.userId);
             window.dispatchEvent(new CustomEvent('pawpal:reviewSubmitted', {detail:{bookingId: booking._supabaseId}}));
         } catch (error) {
             errorEl.textContent = error.message;

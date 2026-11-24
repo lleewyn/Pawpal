@@ -124,11 +124,12 @@ export const API = {
         }
     },
 
-    async getUserBookingPage(user,options={}){
+    async getUserBookingPage(user,{page=1,status='all',query=''}={},onRefresh){
+        const options={page,status,query};
         return swrFetch('bookings', user, async () => {
             const meta=await ownHistoryPage(user,'bookings',options);
             return {rows:await this.getUserBookings(user,{ids:meta.ids,summary:meta.summaries}),meta};
-        }, options);
+        }, options, onRefresh);
     },
     async getUserBookings(userOrId, { id = null, ids = null, summary = null } = {}) {
         if(Array.isArray(ids)&&!ids.length)return [];
@@ -258,11 +259,27 @@ export const API = {
         return this.getUserBookings(userOrId);
     },
 
-    async getUserOrderPage(user,options={}){
+    async getUserOrderPage(user,{page=1,status='all',query=''}={},onRefresh){
+        const options={page,status,query};
         return swrFetch('orders', user, async () => {
             const meta=await ownHistoryPage(user,'orders',options);
-            return {rows:await this.getUserOrders(user,{ids:meta.ids,summary:meta.summaries}),meta};
-        }, options);
+            if (!meta.ids.length) return {rows:[],meta,returns:[],reviews:[]};
+            const db=window.getSupabaseClient?.()||window.SupabaseClient;
+            const [rows, returns] = await Promise.all([
+                this.getUserOrders(user,{ids:meta.ids,summary:meta.summaries}),
+                db.from('return_request').select('sales_order_id').in('sales_order_id', meta.ids)
+            ]);
+            if (returns.error) throw returns.error;
+            const lineIds=rows.flatMap(order => (order.products || []).map(product => product.lineId)).filter(Boolean);
+            const reviews = lineIds.length ? await db.from('review').select('sales_order_detail_id').in('sales_order_detail_id',lineIds) : {data:[]};
+            if (reviews.error) throw reviews.error;
+            const reviewedIds=new Set((reviews.data||[]).map(row=>row.sales_order_detail_id));
+            return {
+                rows,meta,
+                returns:(returns.data||[]).map(row=>row.sales_order_id),
+                reviews:rows.filter(order => order.products?.length && order.products.every(product => reviewedIds.has(product.lineId))).map(order=>order.id)
+            };
+        }, options, onRefresh);
     },
     async getUserOrders(userOrId, { id = null, ids = null, summary = null } = {}) {
         if(Array.isArray(ids)&&!ids.length)return [];
@@ -302,20 +319,26 @@ export const API = {
 
             const mapOrderStatus = normalizeOrderStatus;
 
-            const totalsResult=summary ? {data:summary} : await db.rpc((id||ids)?'own_context_financials':'own_sales_order_totals',(id||ids)?{p_kind:'orders',p_ids:data.map(row=>row.id)}:undefined);
-            if(totalsResult.error)throw totalsResult.error;
-            const totalsById=new Map((totalsResult.data||[]).map(row=>[row.id,row]));
-            const methodResponse=await db.rpc('customer_shop_options');
-            if(methodResponse.error)throw methodResponse.error;
-            const paymentMethods=new Map((methodResponse.data?.payment_methods||[]).map(m=>[m.id,m]));
-            const variantIds=[...new Set((data||[]).flatMap(o=>(o.sales_order_detail||[]).map(d=>d.product_variant_id)).filter(Boolean))];
+            const variantIds=[...new Set(data.flatMap(o=>(o.sales_order_detail||[]).map(d=>d.product_variant_id)).filter(Boolean))];
             const orderImages=new Map();
-            for(let offset=0;offset<variantIds.length;offset+=100){
-                const thumbnails=await db.rpc('own_order_thumbnails',{p_variants:variantIds.slice(offset,offset+100)});
-                // Media availability must not prevent reading an otherwise valid order.
-                if(thumbnails.error){console.warn('[API] Order thumbnails unavailable:',thumbnails.error.code);continue;}
-                for(const row of thumbnails.data||[]){try{const source=mediaSource(row.media_asset_id?{media_asset_id:row.media_asset_id}:{url:row.image_url});if(source)orderImages.set(row.product_variant_id,source.url);}catch{}}
-            }
+            const readThumbnails=async()=>{
+                for(let offset=0;offset<variantIds.length;offset+=100){
+                    const thumbnails=await db.rpc('own_order_thumbnails',{p_variants:variantIds.slice(offset,offset+100)});
+                    // Media availability must not prevent reading an otherwise valid order.
+                    if(thumbnails.error){console.warn('[API] Order thumbnails unavailable:',thumbnails.error.code);continue;}
+                    for(const row of thumbnails.data||[]){try{const source=mediaSource(row.media_asset_id?{media_asset_id:row.media_asset_id}:{url:row.image_url});if(source)orderImages.set(row.product_variant_id,source.url);}catch{}}
+                }
+            };
+            const hasPaymentMethod=data.some(order=>order.payment?.find(p=>p.payment_type==='collection')?.payment_method_config_id);
+            const [totalsResult,methodResponse]=await Promise.all([
+                summary ? {data:summary} : db.rpc((id||ids)?'own_context_financials':'own_sales_order_totals',(id||ids)?{p_kind:'orders',p_ids:data.map(row=>row.id)}:undefined),
+                hasPaymentMethod ? db.rpc('customer_shop_options') : {data:null},
+                readThumbnails()
+            ]);
+            if(totalsResult.error)throw totalsResult.error;
+            if(methodResponse.error)throw methodResponse.error;
+            const totalsById=new Map((totalsResult.data||[]).map(row=>[row.id,row]));
+            const paymentMethods=new Map((methodResponse.data?.payment_methods||[]).map(m=>[m.id,m]));
             const orders = (data || []).map(o => {
                 const details = o.sales_order_detail || [];
                 const products = details.map(d => {

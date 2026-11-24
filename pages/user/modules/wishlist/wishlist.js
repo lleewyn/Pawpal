@@ -4,6 +4,7 @@
 
 import { API } from '/scripts/api/api.js';
 import {watchCustomerTables} from '/scripts/shared/customer-realtime.mjs';
+import {invalidateCustomerCache} from '/scripts/shared/customer-cache.mjs';
 
 let currentFilter = 'all';
 let wishlistRenderVersion = 0;
@@ -169,7 +170,10 @@ function syncWishlistChannel(owner,id){
     const key=owner+':'+id;if(wishlistChannelKey===key)return;
     const db=window.getSupabaseClient?.() || window.SupabaseClient;
     stopWishlistRealtime?.();wishlistChannelKey=key;
-    stopWishlistRealtime=watchCustomerTables(db,owner,id?['wishlist','wishlist_product','wishlist_service']:['wishlist'],renderWishlist,
+    stopWishlistRealtime=watchCustomerTables(db,owner,id?['wishlist','wishlist_product','wishlist_service']:['wishlist'],reason=>{
+        if(reason==='change')invalidateCustomerCache('wishlist',owner);
+        return renderWishlist();
+    },
         {filters:{wishlist_product:'wishlist_id=eq.'+id,wishlist_service:'wishlist_id=eq.'+id}});
 }
 
