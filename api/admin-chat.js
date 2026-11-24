@@ -288,11 +288,11 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
       if(membershipRequired)evaluation.shouldHandover=false;
      }else if(healthConcern){
       const acknowledgment=/mệt mỏi/iu.test(question)&&/biếng ăn|bỏ ăn/iu.test(question)&&/sau khi tắm|sau buổi tắm/iu.test(question)
-       ? 'PawPal hiểu vì sao bạn lo khi thấy bé mệt và ăn ít sau buổi tắm.'
+       ? 'PawPal hiểu vì sao bạn lo khi thấy bé mệt và ăn ít sau buổi tắm. Dạ bạn đừng quá lo nhé, sau khi tắm sấy, nhiều bé do lạ chỗ hoặc tiêu hao năng lượng nên sẽ thèm ngủ và hơi lười ăn một chút. Bạn để bé nghỉ ngơi ở góc quen thuộc, đặt sẵn chén nước sạch gần bé nha.'
        : 'Thấy bé có biểu hiện khác thường, bạn lo là điều dễ hiểu.';
       reply=continuation?.topic==='health'
        ? publicContinuity.healthFollowupReply(question)
-       : acknowledgment+' Để bác sĩ thú y nắm tình hình nhanh hơn, khi gọi bạn hãy nói rõ các biểu hiện bắt đầu lúc nào, lần cuối bé ăn hoặc uống và bé có nôn hay không.\n\nNếu bé khó thở, khó đánh thức hoặc không đứng dậy được, hãy đưa bé đến cơ sở cấp cứu thú y ngay.\n\nNếu bạn lo tình trạng này có liên quan đến buổi chăm sóc tại PawPal, bạn có thể gửi mã lịch hẹn để nhân viên kiểm tra lại.';
+       : acknowledgment+' Để bác sĩ thú y nắm tình hình nhanh hơn, khi gọi bạn hãy nói rõ các biểu hiện bắt đầu lúc nào, lần cuối bé ăn hoặc uống và bé có nôn hay không.\n\nNếu bé khó thở, khó đánh thức hoặc không đứng dậy được, hãy đưa bé đến cơ sở cấp cứu thú y ngay.\n\nNếu bạn lo tình trạng này có liên quan đến buổi chăm sóc tại PawPal, bạn có thể gửi mã lịch hẹn để nhân viên kiểm tra lại và đồng hành cùng bạn nhé.';
       if(evaluation.shouldHandover&&!membershipRequired)reply+=' PawPal đã chuyển hội thoại sang chờ nhân viên hỗ trợ thông tin về dịch vụ.';
       if(membershipRequired)evaluation.shouldHandover=false;
      }else if((evaluation.isHighlyUpset||evaluation.isImplicitlyUpset)&&membershipRequired&&!requestedStaff&&!evaluation.isToxic&&['concern','unresolved'].includes(followupKind)){

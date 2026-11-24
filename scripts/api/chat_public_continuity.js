@@ -74,13 +74,13 @@ function healthFollowupReply(question){
 function supportFollowupReply(kind,signedIn){
  const openSupport=signedIn?'mở mục [Hỗ trợ](/user#support)':'[đăng nhập](/login) rồi mở mục Hỗ trợ';
  if(kind==='request_sent'){
-  return 'Bạn có thể '+openSupport+' để xem tình trạng của yêu cầu vừa gửi. Nếu cần gửi thêm thông tin, bạn có thể bổ sung trong cùng yêu cầu khi còn mở.';
+  return 'Bạn có thể '+openSupport+' để xem tình trạng của yêu cầu vừa gửi. Nếu cần gửi thêm thông tin, bạn có thể bổ sung trong cùng yêu cầu khi còn mở nhé. Nhân viên bên mình sẽ kiểm tra và phản hồi sớm nhất cho bạn.';
  }
  if(kind==='evidence'){
-  return 'Để gửi minh chứng, bạn '+openSupport+'. Nếu đã có yêu cầu đang mở, bạn bổ sung vào yêu cầu đó để nhân viên xem cùng nội dung trước.';
+  return 'Để gửi minh chứng, bạn '+openSupport+'. Nếu đã có yêu cầu đang mở, bạn bổ sung vào yêu cầu đó để nhân viên xem cùng nội dung trước nhé. Tụi mình sẽ đối soát ngay khi nhận đủ ảnh và chứng từ.';
  }
  if(kind==='timing'){
-  return 'PawPal chưa thể xác nhận thời điểm có kết quả cho yêu cầu này. Bạn có thể '+openSupport+' để xem cập nhật.';
+  return 'PawPal chưa thể xác nhận thời điểm có kết quả cho yêu cầu này. Bạn có thể '+openSupport+' để xem cập nhật nhé. Đội ngũ hỗ trợ sẽ xử lý nhanh nhất có thể theo đúng quy trình.';
  }
  if(kind==='unresolved'){
   return 'Bạn đã báo vấn đề này nhiều lần. Nếu yêu cầu vẫn đang mở, bạn có thể '+openSupport+' để bổ sung lần liên hệ gần nhất vào yêu cầu đó. Bạn đã gửi yêu cầu ở đó chưa?';
