@@ -4282,7 +4282,7 @@
     color: #BA4745;
 }
 
-.pets-module #subtab-tab-pet-profile :is(.drawer-subtabs-row, .drawer-subtabs-bar, .drawer-tab-body, .weight-mini-table, .weight-mini-table tbody, .weight-mini-table tr, .weight-mini-table td) {
+.pets-module #subtab-tab-pet-profile :is(.drawer-subtabs-row, .drawer-subtabs-bar, .weight-mini-table, .weight-mini-table tbody, .weight-mini-table tr, .weight-mini-table td) {
     background: transparent;
 }
 
@@ -4372,10 +4372,6 @@
 
 .pets-module #subtab-tab-pet-profile .pet-profile-duplicate {
     display: none;
-}
-
-.pets-module #subtab-tab-pet-profile .weight-history-table-wrapper + .pet-u-mt-14 {
-    margin-top: 20px;
 }
 
 .pets-module #subtab-tab-pet-profile .pet-profile-note-read {

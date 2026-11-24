@@ -645,7 +645,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const bTabId = button.getAttribute('data-tab') || button.getAttribute('data-subtab');
             button.classList.toggle('active', bTabId === tabId);
         });
-        if (window.location.hash !== `#${tabId}`) history.pushState(null, '', `#${tabId}`);
+        const hash = moduleName === 'Khách hàng' ? window.PawpalCustomers?.getSubtabHash?.(tabId) || `#${tabId}` : `#${tabId}`;
+        if (window.location.hash !== hash) history.pushState(null, '', hash);
 
         window.dispatchEvent(new CustomEvent('admin:subtab-change', {
             detail: { module: moduleName, tabId }
@@ -805,11 +806,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!config || !config.subtabs || config.subtabs.length === 0) return;
 
         const currentHash = (window.location.hash || '').replace('#', '');
+        const customerTab = moduleName === 'Khách hàng' ? normalizeSubtabId(currentHash) : currentHash;
         const savedTab = config.storageKey ? sessionStorage.getItem(config.storageKey) : null;
         let targetTabId = config.defaultTab;
 
-        if (currentHash && config.subtabs.some(s => s.id === currentHash)) {
-            targetTabId = currentHash;
+        if (customerTab && config.subtabs.some(s => s.id === customerTab)) {
+            targetTabId = customerTab;
         } else if (savedTab && config.subtabs.some(s => s.id === savedTab)) {
             targetTabId = savedTab;
         }
@@ -826,15 +828,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        if (targetTabId && window.location.hash !== '#' + targetTabId) {
+        const preserveCustomerProfile = moduleName === 'Khách hàng' && targetTabId === 'tab-profile'
+            && customerTab === 'tab-profile' && currentHash.includes('?');
+        const targetHash = preserveCustomerProfile ? window.location.hash : '#' + targetTabId;
+        if (targetTabId && window.location.hash !== targetHash) {
             try {
-                history.replaceState(null, '', '#' + targetTabId);
+                history.replaceState(null, '', targetHash);
             } catch (e) {}
         }
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261124_customer_profile_avatar';
+    const MODULE_SCRIPT_VERSION = '20261124_complaint_activity_layout';
     let staffDomainScriptsReady;
     async function loadStaffDomainScripts() {
         if (!staffDomainScriptsReady) staffDomainScriptsReady = (async () => {
@@ -1283,19 +1288,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (targetMod === 'Khách hàng' && cleanHash === 'tab-profile') {
                 const custId = params.get('id') || params.get('customerId') || params.get('customer_id');
                 const custName = params.get('name') || params.get('customerName') || params.get('customer_name');
-                if (custId) sessionStorage.setItem('pawpal_admin_customer_id', custId);
+                const [base, query] = window.location.hash.slice(1).split('?');
+                if (normalizeSubtabId(base) !== 'tab-profile' || new URLSearchParams(query).toString() !== params.toString()) return;
+                if (custId) {
+                    if (sessionStorage.getItem('pawpal_admin_customer_id') !== custId) sessionStorage.removeItem('pawpal_admin_customer_name');
+                    sessionStorage.setItem('pawpal_admin_customer_id', custId);
+                }
+                const panel = params.get('panel');
+                sessionStorage.setItem('pawpal_admin_customer_drawertab', ['dtab-personal','dtab-pets','dtab-orders','dtab-bookings','dtab-complaints'].includes(panel) ? panel : 'dtab-personal');
                 if (custName) sessionStorage.setItem('pawpal_admin_customer_name', custName);
-                if (window.PawpalCustomers) {
-                    const resolvedCust = (custId || custName) && window.PawpalCustomers.getCustomer 
-                        ? window.PawpalCustomers.getCustomer(custId || custName) 
-                        : null;
-                    const finalId = resolvedCust ? resolvedCust.id : (custId || custName);
-                    if (finalId && window.PawpalCustomers.subtabs?.profile?.renderDrawerCustomerProfile) {
-                        window.PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(finalId);
-                    }
-                    if (window.PawpalCustomers.switchSubtab) {
-                        window.PawpalCustomers.switchSubtab('tab-profile');
-                    }
+                const customers = window.PawpalCustomers;
+                if (customers && sessionStorage.getItem('pawpal_admin_active_module') === 'Khách hàng') {
+                    const id = custId || customers.getCustomer?.(custName)?.id;
+                    if (id) sessionStorage.setItem('pawpal_admin_customer_id', id);
+                    customers.switchSubtab?.('tab-profile', false);
+                    void customers.restoreProfile?.(id);
                 }
             } else if (targetMod === 'Khiếu nại' && cleanHash === 'tab-complaint-detail') {
                 const ticketId = params.get('id') || params.get('ticketId') || params.get('ticket_id');
@@ -1350,8 +1357,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return saved ? '#' + saved : '#tab-dashboard';
         }
         if (moduleName === 'Khách hàng') {
-            const saved = sessionStorage.getItem('pawpal_admin_customer_subtab');
-            return saved ? '#' + saved : '#tab-list';
+            const saved = sessionStorage.getItem('pawpal_admin_customer_subtab') || 'tab-list';
+            return window.PawpalCustomers?.getSubtabHash?.(saved) || '#' + saved;
         }
         if (moduleName === 'Thú cưng') {
             const saved = sessionStorage.getItem('pawpal_admin_pet_subtab');

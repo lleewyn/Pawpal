@@ -67,10 +67,12 @@
         const monthlyHours=monthSchedules.reduce((sum,s)=>sum+Math.max(0,Math.min(monthEnd,Date.parse(s.end_at))-Math.max(monthStart,Date.parse(s.start_at))),0)/3600000;
         const formatTime=value=>new Date(value).toLocaleString('vi-VN',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 
+        const nameParts = String(staff?.name || '').trim().split(/\s+/).filter(Boolean);
+        const initials = nameParts.length > 1 ? [nameParts[0], nameParts.at(-1)] : nameParts;
         const values = {
+            viewStaffAvatarInitials: initials.map(part => Array.from(part)[0]).join('').toLocaleUpperCase('vi-VN'),
             viewStaffName: staff?.name || 'Chưa có nhân viên',
             viewStaffFullName: staff?.name,
-            viewStaffCode: staff?.id,
             viewStaffId: staff?.id,
             viewStaffPosition: PawpalStaff.formatJobTitle(staff?.position),
             viewStaffJobTitle: PawpalStaff.formatJobTitle(staff?.position),
@@ -102,8 +104,9 @@
                 const canView = window.PawpalAdminAccess?.isAdmin() === true;
                 return canView ? (staff?.totalIncome ? `${Number(staff.totalIncome).toLocaleString('vi-VN')} đ` : 'Chưa tổng hợp') : '••• (Bảo mật)';
             })(),
-            viewStaffCsatScore: staff?.rating ? `${staff.rating}/5.0` : 'Chưa có đánh giá',
-            viewStaffCsatReviews: staff?.reviewCount ? `Từ ${staff.reviewCount} lượt đánh giá` : 'Chưa có đánh giá',
+            viewStaffCsatScore: staff?.rating
+                ? `${staff.rating}/5${staff.reviewCount ? ` · ${staff.reviewCount} lượt` : ''}`
+                : 'Chưa có đánh giá',
             viewStaffRequestedCount: staff?.requestedCount!=null ? `${staff.requestedCount} lượt` : 'Chưa có dữ liệu',
             viewStaffZeroComplaintRate: staff?.zeroComplaintRate || 'Chưa có dữ liệu'
         };
@@ -116,7 +119,7 @@
 
         root.querySelectorAll('[id^="viewStaff"]').forEach(el => {
             if (el.id === 'viewStaffAccountStatus') return;
-            if (el.id === 'viewStaffCustomerReviewsList' || el.id === 'viewStaffAssessmentHistory') el.textContent = 'Chưa có dữ liệu được ghi nhận.';
+            if (el.id === 'viewStaffAssessmentHistory') el.textContent = 'Đang tải lịch sử đánh giá…';
             else if (el.id !== 'viewStaffSafetyBadge') el.textContent = values[el.id] || '—';
         });
         const safety=root.querySelector('#viewStaffSafetyBadge');if(safety){safety.style.display=staff.serviceLocked||staff.skillLocked?'':'none';safety.textContent=staff.serviceLocked?'Đang khóa phân công':'Tạm khóa nhận việc do kết quả tay nghề';}

@@ -173,9 +173,10 @@
 <!-- Dòng chữ đỏ cảnh báo dị ứng hoặc lưu ý đặc biệt -->
 </div>
 <!-- NỘI DUNG CHI TIẾT 2 CỘT THOÁNG ĐÃNG -->
-<div class="service-detail-grid">
+<div class="service-detail-grid admin-profile-content">
 <!-- CỘT TRÁI: THÔNG TIN DỊCH VỤ VÀ TÀI CHÍNH -->
 <div class="detail-column-left">
+<div class="service-profile-overview">
 <!-- KHỐI 1: THÔNG TIN LỊCH HẸN VÀ DỊCH VỤ -->
 <div class="detail-info-group">
 <div class="detail-section-title">Thông tin ca dịch vụ</div>
@@ -211,10 +212,6 @@
 <div class="info-pair svc-inline-e5a6d3c3">
 <span class="info-label">Ghi chú của khách</span>
 <span class="info-value svc-inline-7c8ebd94" id="detailBookingCustomerNote">Không có</span>
-</div>
-<!-- KHỐI ĐẶC THÙ THEO NHÓM DỊCH VỤ (HOTEL / TAXI / SPA) -->
-<div class="special-service-fields-container svc-inline-6e1d9a51" id="detailSpecialServiceFields">
-<!-- Nạp động theo loại dịch vụ từ services.js -->
 </div>
 </div>
 <!-- KHỐI 2: KHÁCH HÀNG VÀ THÚ CƯNG -->
@@ -252,6 +249,8 @@
 <span class="info-value svc-inline-7c8ebd94" id="detailBelongingsText">Không có</span>
 </div>
 </div>
+</div>
+<section class="detail-info-group special-service-fields-container" id="detailSpecialServiceFields"></section>
 <!-- KHỐI 2B: BIÊN BẢN TIẾP NHẬN AN TOÀN (ZERO-CLAIM INTAKE ASSESSMENT) -->
 <div class="detail-info-group" id="detailIntakeSafetySection">
 <div class="svc-inline-8e7b6933 detail-group-heading" style="display: flex;">
@@ -302,9 +301,7 @@
 <!-- Khung ảnh bằng chứng tiếp nhận ngoại quan ban đầu -->
 <div class="svc-inline-e5a6d3c3">
 <div class="info-label svc-inline-e7b13069">Ảnh tiếp nhận đã lưu</div>
-<div class="intake-proof-grid" id="detailIntakeProofGrid">
-<!-- Nạp động ảnh thumbnail -->
-</div>
+<div class="intake-proof-grid" id="detailIntakeProofGrid"></div>
 </div>
 </div>
 </div>
@@ -317,10 +314,10 @@
 <div class="detail-section-title">Ảnh bằng chứng phụ phí</div>
 <div class="intake-proof-grid" id="detailAdjustmentProofGrid"></div>
 </div>
-<div class="detail-info-group">
-<div class="svc-inline-8e7b6933" style="display: flex;">
-<div class="detail-section-title svc-inline-50435ff2">Bảng kê chi phí và Dịch vụ đi cùng</div>
-<div class="svc-inline-90629753" style="display: flex;">
+<div class="detail-info-group" id="detailServiceCosts">
+<div class="svc-inline-8e7b6933 detail-group-heading" style="display: flex;">
+<div class="detail-section-title svc-inline-50435ff2">Chi phí và dịch vụ đi kèm</div>
+<div class="svc-inline-90629753 detail-group-actions" style="display: flex;">
 <button class="btn-text-action" id="btnSettleToPos" type="button">Thu ngân</button>
 <button class="btn-text-action" id="btnOpenAddAccompanyingServiceModal" type="button">Thêm dịch vụ đi cùng</button>
 <button class="btn-text-action" id="btnOpenAddSurchargeModal" type="button">Thêm phụ phí</button>
@@ -328,23 +325,19 @@
 </div>
 <div class="financial-summary-list">
 <div class="summary-row">
-<span class="svc-inline-81595a98">Giá gói dịch vụ chính:</span>
+<span class="svc-inline-81595a98">Giá gói dịch vụ chính</span>
 <span class="svc-inline-21a1be8a" id="detailCostBase">250.000 đ</span>
 </div>
 <!-- DANH SÁCH DỊCH VỤ ĐI CÙNG (ACCOMPANYING SERVICES) -->
-<div class="accompanying-services-list" id="detailAccompanyingServicesList">
-<!-- Nạp động danh sách các gói dịch vụ ghép thêm kèm giá và nút xóa -->
-</div>
+<div class="accompanying-services-list" id="detailAccompanyingServicesList"></div>
 <!-- DANH SÁCH CHI TIẾT TỪNG PHỤ PHÍ / ADD-ON PHÁT SINH -->
-<div class="surcharge-itemized-list" id="detailSurchargeBreakdownList">
-<!-- Nạp động danh sách từng món phụ phí kèm lý do, giá và nút xóa -->
-</div>
-<div class="summary-row svc-inline-fcef297f" id="rowDiscountDisplay">
-<span>Giảm giá ưu đãi:</span>
+<div class="surcharge-itemized-list" id="detailSurchargeBreakdownList"></div>
+<div class="summary-row svc-inline-fcef297f" id="rowDiscountDisplay" hidden>
+<span>Giảm giá ưu đãi</span>
 <span id="detailCostDiscount">-0 đ</span>
 </div>
 <div class="summary-row total-row">
-<span>Tổng cộng thanh toán:</span>
+<span>Tổng thanh toán</span>
 <span id="detailCostTotal">250.000 đ</span>
 </div>
 </div>
@@ -388,6 +381,7 @@
 </div>
 </div>
 </div>
+<section class="detail-info-group" id="bookingDetailReviews"></section>
 </div>
 </div>
 </div>

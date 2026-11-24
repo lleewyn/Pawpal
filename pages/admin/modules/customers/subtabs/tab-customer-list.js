@@ -278,10 +278,13 @@
                 <tr class="${rowLockedClass} ${rowComplaintClass}" data-id="${esc(c.id)}">
                     <td style="${firstTdBorder}"><strong class="customer-code-text admin-table-code" title="${esc(c.id)}">${esc(c.id)}</strong></td>
                     <td>
-                        <div class="user-name-cell">
-                            <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" title="${esc(c.name)}" data-id="${esc(c.id)}">${esc(c.name)}</a>
+                        <div class="customer-list-identity">
+                            <span class="customer-initial-avatar" aria-hidden="true">${esc(PawpalCustomers.customerInitials(c.name))}</span>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" title="${esc(c.name)}" data-id="${esc(c.id)}">${esc(c.name)}</a>
+                                <div class="user-sub-cell">${subCellHtml}</div>
+                            </div>
                         </div>
-                        <div class="user-sub-cell">${subCellHtml}</div>
                     </td>
                     <td><strong>${esc(c.phone)}</strong>${c.phoneUnverified?'<div class="text-muted" style="font-size:11.5px">Chưa xác minh</div>':''}</td>
                     <td>

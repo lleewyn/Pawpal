@@ -163,7 +163,6 @@
             <div class="profile-quick-actions-bar">
                 <div class="drawer-user-headline">
                     <img src="/assets/images/publics/dogcute3.jpg" class="drawer-pet-avatar" id="drawerPetAvatar" alt="Avatar">
-                    <button type="button" class="btn-text-action" id="btnChangePetAvatar">Thay ảnh</button>
                     <div>
                         <div class="pet-flex-wrap-gap-8">
                             <span class="headline-name" id="drawerPetName">Đang tải...</span>
@@ -173,14 +172,15 @@
                         </div>
                         <div class="pet-meta-small">
                             Chủ sở hữu: <a href="javascript:void(0)" class="user-name-link btn-jump-customer" id="drawerPetOwnerLink" data-cust-id="">Đang tải...</a> • Cân nặng: <strong class="pet-text-main" id="drawerPetWeightHeadline">—</strong>
+                            <button type="button" class="btn-text-action" id="btnChangePetAvatar">Thay ảnh</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="drawer-action-buttons">
-                    <button type="button" class="action-btn-pill btn-primary-pill btn-quick-book-spa">Đặt lịch dịch vụ</button>
-                    <button type="button" class="action-btn-pill btn-open-weigh-modal" id="btnDrawerWeighPet" data-id="">Cân bé và thể trạng</button>
+                    <button type="button" class="action-btn-pill btn-quick-book-spa">Đặt lịch dịch vụ</button>
                     <button type="button" class="action-btn-pill btn-quick-carelog">Đăng ảnh nhật ký</button>
+                    <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenEditPetModal">Sửa hồ sơ</button>
                     <button type="button" class="action-btn-pill btn-jump-customer" id="btnDrawerJumpCustomer" data-cust-id="" disabled>Xem chủ nuôi</button>
                 </div>
             </div>
@@ -201,21 +201,15 @@
                     </button>
                     <button type="button" class="drawer-tab-btn" data-drawertab="ptab-history">Lịch sử dịch vụ</button>
                 </div>
-                <div class="drawer-subtabs-status-extra">
-
-                </div>
             </div>
 
             <!-- NỘI DUNG 4 TAB CON -->
-            <div class="drawer-tab-body">
+            <div class="drawer-tab-body admin-profile-content">
                 <!-- TAB CON 1: THỂ TRẠNG VÀ ĐẶC TÍNH -->
                 <div class="drawer-tab-panel active" id="ptab-traits">
                     <div class="detail-grid-two-col">
                         <div class="detail-box">
-                            <div class="pet-row-between-mb-8">
-                                <h4 class="detail-box-title pet-u-mb-0">Thông tin thể trạng</h4>
-                                <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenEditPetModal">Sửa hồ sơ</button>
-                            </div>
+                            <h4 class="detail-box-title">Thông tin thể trạng</h4>
                             <div class="pet-profile-duplicate data-pair-row"><span class="data-key">Mã thú cưng</span><span class="data-val" id="profilePetCode">—</span></div>
                             <div class="pet-profile-duplicate data-pair-row"><span class="data-key">Tên bé cưng</span><span class="data-val" id="profilePetName">—</span></div>
                             <div class="pet-profile-duplicate data-pair-row"><span class="data-key">Loài và giống</span><span class="data-val" id="profilePetSpecies">—</span></div>
@@ -230,7 +224,7 @@
                         <div class="detail-box">
                             <div class="pet-row-between-mb-8">
                                 <h4 class="detail-box-title pet-u-mb-0">Biến động cân nặng</h4>
-                                <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-weigh-modal">Cân bé</button>
+                                <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-weigh-modal" id="btnDrawerWeighPet" data-id="">Cân bé</button>
                             </div>
                             <!-- Danh sách mốc cân nặng theo ngày -->
                             <div class="weight-history-table-wrapper">
@@ -251,17 +245,17 @@
                                 </table>
                             </div>
 
-                            <div class="pet-u-mt-14">
-                                <h4 class="detail-box-title">Ghi chú kỹ thuật viên</h4>
-                                <p id="petGroomerNotesRead" class="pet-profile-note-read"></p>
-                                <details id="petGroomerNotesEditor" class="pet-profile-note-editor">
-                                    <summary>Sửa ghi chú</summary>
-                                    <textarea class="admin-input textarea-note" rows="3" id="petGroomerNotes"></textarea>
+                        </div>
+                        <div class="detail-box">
+                            <h4 class="detail-box-title">Ghi chú kỹ thuật viên</h4>
+                            <p id="petGroomerNotesRead" class="pet-profile-note-read"></p>
+                            <details id="petGroomerNotesEditor" class="pet-profile-note-editor">
+                                <summary>Sửa ghi chú</summary>
+                                <textarea class="admin-input textarea-note" rows="3" id="petGroomerNotes"></textarea>
                                 <div class="pet-actions-right-mt-8">
                                     <button type="button" class="admin-btn admin-btn-primary btn-sm" id="btnSaveGroomerNotes">Lưu ghi chú</button>
                                 </div>
-                                </details>
-                            </div>
+                            </details>
                         </div>
                     </div>
                 </div>

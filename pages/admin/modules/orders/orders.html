@@ -449,17 +449,20 @@
     </div>
    </div>
    <!-- NỘI DUNG CHI TIẾT 2 CỘT THOÁNG ĐÃNG -->
-   <div class="order-detail-grid">
+   <div class="order-detail-grid admin-profile-content">
+    <section id="detailOrderCancellation" hidden>
+     <h3 class="detail-section-title">Lý do hủy đơn hàng</h3>
+     <p></p>
+    </section>
     <!-- CỘT CHÍNH (BÊN TRÁI): SẢN PHẨM VÀ BẢNG KÊ TÀI CHÍNH -->
     <div class="order-main-col">
      <!-- KHỐI LIÊN THÔNG ĐỔI TRẢ RMA (GIAI ĐOẠN 3) -->
-     <div class="" id="detailOrderRmaBannerContainer">
-     </div>
+     <div id="detailOrderRmaBannerContainer"></div>
      <div>
       <div class="detail-section-title">
        Danh sách sản phẩm
       </div>
-      <div class="order-items-scroll"><table class="order-items-table">
+      <div class="order-items-scroll"><table class="order-items-table" role="table" aria-label="Sản phẩm trong đơn">
        <thead>
         <tr>
          <th scope="col">
@@ -479,12 +482,12 @@
          </th>
         </tr>
        </thead>
-       <tbody class="" id="detailOrderItemsBody">
+       <tbody id="detailOrderItemsBody" role="rowgroup">
         <!-- Nạp động từ orders.js -->
        </tbody>
       </table></div>
      </div>
-     <div>
+     <div class="order-payment-summary">
       <div class="detail-section-title">
        Bảng kê thanh toán
       </div>
@@ -505,7 +508,7 @@
          30.000 đ
         </span>
        </div>
-       <div class="summary-row">
+       <div class="summary-row" hidden>
         <span>
          Mã giảm giá
         </span>
@@ -513,7 +516,7 @@
          - 0 đ
         </span>
        </div>
-       <div class="summary-row">
+       <div class="summary-row" hidden>
         <span>
          Điểm Pawpoint đã đổi
         </span>
@@ -532,26 +535,27 @@
       </div>
      </div>
      <div>
-      <div class="detail-section-title">
-       Ghi chú đơn hàng
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div class="detail-section-title">Đối soát thanh toán</div>
+      <div class="shipping-info-block">
        <div class="info-pair">
         <span class="info-label">
-         Ghi chú của khách hàng
+         Phương thức thanh toán
         </span>
-        <span class="info-value orders-inline-4e5b78aa" id="detailCustomerNote">
-         "Giao hàng giờ hành chính, gọi trước khi đến."
+        <span class="info-value" id="detailPaymentMethod">
+         Tiền mặt khi nhận hàng (COD)
         </span>
        </div>
        <div class="info-pair">
         <span class="info-label">
-         Ghi chú nội bộ
+         Trạng thái đối soát
         </span>
-        <span class="info-value orders-inline-7c8ebd94" id="detailInternalNote">
-         Đã xác nhận địa chỉ và kiểm tra hạn sử dụng của túi thức ăn còn trên 12 tháng.
+        <span class="admin-badge badge-unpaid" id="detailPaymentBadge">
+         Chưa thanh toán
         </span>
        </div>
+       <div class="info-pair"><span class="info-label">Đã thu</span><span class="info-value" id="detailPaymentCollected">—</span></div>
+       <div class="info-pair"><span class="info-label">Đã hoàn</span><span class="info-value" id="detailPaymentRefunded">—</span></div>
+       <div class="info-pair"><span class="info-label">Còn phải thu</span><span class="info-value" id="detailPaymentRemaining">—</span></div>
       </div>
      </div>
      <div id="detailOrderReviewsBlock" style="display: none; margin-top: 18px;">
@@ -598,27 +602,9 @@
          123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh
         </span>
        </div>
-       <div class="info-pair">
-        <span class="info-label">
-         Phương thức thanh toán
-        </span>
-        <span class="info-value" id="detailPaymentMethod">
-         Tiền mặt khi nhận hàng (COD)
-        </span>
-       </div>
-       <div class="info-pair">
-        <span class="info-label">
-         Trạng thái đối soát
-        </span>
-        <span class="admin-badge badge-unpaid" id="detailPaymentBadge">
-         Chưa thanh toán
-        </span>
-       </div>
-       <div class="info-pair"><span class="info-label">Đã thu</span><span class="info-value" id="detailPaymentCollected">—</span></div>
-       <div class="info-pair"><span class="info-label">Đã hoàn</span><span class="info-value" id="detailPaymentRefunded">—</span></div>
-       <div class="info-pair"><span class="info-label">Còn phải thu</span><span class="info-value" id="detailPaymentRemaining">—</span></div>
       </div>
      </div>
+
      <div>
       <div class="detail-section-title">
        Đơn vị vận chuyển
@@ -626,7 +612,7 @@
       <div class="shipping-info-block">
        <div class="info-pair">
         <span class="info-label">
-         Hãng giao vận:
+         Hãng giao vận
         </span>
         <span class="info-value" id="detailShippingCarrier">
          J và T Express
@@ -634,7 +620,7 @@
        </div>
        <div class="info-pair">
         <span class="info-label">
-         Mã vận đơn bưu cục:
+         Mã vận đơn
         </span>
         <span class="info-value orders-inline-8f3cb917" id="detailTrackingNumber" style="font-family: monospace; font-size: 14px; color: #236B48;">
          JT123456789
@@ -646,8 +632,30 @@
       <div class="detail-section-title">
        Lịch trình đơn hàng
       </div>
-      <div class="order-timeline-list" id="detailOrderTimeline">
-       <!-- Nạp động từ orders.js -->
+      <div class="order-timeline-list" id="detailOrderTimeline"></div>
+      <p class="order-timeline-empty">Chưa có lịch trình đơn hàng.</p>
+     </div>
+     <div>
+      <div class="detail-section-title">
+       Ghi chú đơn hàng
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+       <div class="info-pair">
+        <span class="info-label">
+         Ghi chú của khách hàng
+        </span>
+        <span class="info-value orders-inline-4e5b78aa" id="detailCustomerNote">
+         Giao hàng giờ hành chính, gọi trước khi đến.
+        </span>
+       </div>
+       <div class="info-pair">
+        <span class="info-label">
+         Ghi chú nội bộ
+        </span>
+        <span class="info-value orders-inline-7c8ebd94" id="detailInternalNote">
+         Đã xác nhận địa chỉ và kiểm tra hạn sử dụng của túi thức ăn còn trên 12 tháng.
+        </span>
+       </div>
       </div>
      </div>
     </div>

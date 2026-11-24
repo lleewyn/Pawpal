@@ -53,9 +53,15 @@
             return;
         }
         if (card) card.style.display = '';
-        let reviewPanel=card?.querySelector('#bookingDetailReviews');
-        if(!reviewPanel&&card){reviewPanel=document.createElement('section');reviewPanel.id='bookingDetailReviews';reviewPanel.style.cssText='padding:16px 0;background:transparent;border:none';card.append(reviewPanel);}
-        if(reviewPanel){reviewPanel.dataset.bookingId=booking.dbId;import('/pages/admin/modules/services/booking-reviews.mjs').then(({mountBookingReviews})=>{if(reviewPanel.isConnected&&reviewPanel.dataset.bookingId===booking.dbId)mountBookingReviews(reviewPanel,booking,{db:window.getSupabaseClient()});});}
+        const reviewPanel = card?.querySelector('#bookingDetailReviews');
+        if (reviewPanel) {
+            reviewPanel.dataset.bookingId = booking.dbId;
+            import('/pages/admin/modules/services/booking-reviews.mjs?v=20261124_service_review_section').then(({ mountBookingReviews }) => {
+                if (reviewPanel.isConnected && reviewPanel.dataset.bookingId === booking.dbId) {
+                    mountBookingReviews(reviewPanel, booking, { db: window.getSupabaseClient() });
+                }
+            });
+        }
         card?.querySelector('#adminStaffRequestPanel')?.remove();
         if (state) state.style.display = 'none';
         PawpalServices.updateBreadcrumb?.(booking.id);
@@ -106,11 +112,15 @@
         // Cảnh báo an toàn Pet Alert
         const petAlertBanner = document.getElementById('detailPetAlertBanner');
         if (petAlertBanner) {
-            if (booking.petAlert) {
+            const alert = String(booking.petAlert || '').split('•').map(part => part.trim()).filter(part =>
+                part && !/^(?:(?:dị ứng|an toàn|lưu ý)\s*:\s*)?(?:không(?: ghi nhận| có)?|chưa ghi nhận|none|—|-)\.?$/i.test(part)
+            ).join(' • ');
+            if (alert) {
                 petAlertBanner.style.display = 'block';
-                petAlertBanner.textContent = `Cảnh báo an toàn cho bé: ${booking.petAlert}`;
+                petAlertBanner.textContent = `Cảnh báo an toàn cho bé: ${alert}`;
             } else {
                 petAlertBanner.style.display = 'none';
+                petAlertBanner.textContent = '';
             }
         }
 
@@ -287,23 +297,23 @@
                 const shortPickup = booking.pickupAddress || 'Chưa cập nhật';
                 const shortDropoff = booking.dropoffAddress || 'Chưa cập nhật';
                 specialFieldsContainer.innerHTML = `
-                    <div style="font-size: 13px; font-weight: 700; color: #236B48; margin-bottom: 8px;">Thông tin điều phối Pet Taxi đưa đón:</div>
+                    <h3 class="detail-section-title">Điều phối Pet Taxi</h3>
                     <div class="info-grid-2col">
-                        <div class="info-pair" style="grid-column: span 2;">
-                            <span class="info-label">Lộ trình đưa đón:</span>
+                        <div class="info-pair service-trip-route">
+                            <span class="info-label">Lộ trình đưa đón</span>
                             <span class="info-value" style="font-weight: 600; color: #236B48;">${escapeTripText(shortPickup)} ➔ ${escapeTripText(shortDropoff)}</span>
                         </div>
                         <div class="info-pair">
-                            <span class="info-label">Hình thức chuyến:</span>
+                            <span class="info-label">Hình thức chuyến</span>
                             <span class="info-value" style="font-weight: 600;">${escapeTripText(({one_way:'Một chiều',round_trip:'Khứ hồi'})[booking.tripType] || 'Chưa ghi nhận')}</span>
                         </div>
                         <div class="info-pair">
-                            <span class="info-label">Cự ly ước tính:</span>
-                            <span class="info-value" style="font-weight: 600;">${booking.distanceKm ? `${booking.distanceKm} km` : 'Chưa cập nhật'}</span>
+                            <span class="info-label">Cự ly ước tính</span>
+                            <span class="info-value" style="font-weight: 600;">${booking.distanceKm ? `${escapeTripText(booking.distanceKm)} km` : 'Chưa cập nhật'}</span>
                         </div>
                     </div>
                 `;
-                if(!booking.taxiTrip)specialFieldsContainer.innerHTML='<div style="color:#DC2626;">Lịch nguồn chưa có chuyến xe riêng. Cần đối soát lộ trình trước khi tiếp nhận.</div>';
+                if(!booking.taxiTrip)specialFieldsContainer.innerHTML='<h3 class="detail-section-title">Điều phối Pet Taxi</h3><div style="color:#DC2626;">Lịch nguồn chưa có chuyến xe riêng. Cần đối soát lộ trình trước khi tiếp nhận.</div>';
                 else if(booking.taxiTrip.return_at){const info=document.createElement('div');info.textContent='Lượt về: '+new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Bangkok',dateStyle:'short',timeStyle:'short'}).format(new Date(booking.taxiTrip.return_at));specialFieldsContainer.append(info);}
             } else {
                 specialFieldsContainer.innerHTML = '';
@@ -550,7 +560,9 @@
         const payStatusEl = document.getElementById('detailPaymentStatus');
 
         if (baseEl) baseEl.textContent = formatCurrency(basePrice);
-        if (discEl) discEl.textContent = voucherDiscount > 0 ? `-${formatCurrency(voucherDiscount)}` : '-0 đ';
+        const discountRow = document.getElementById('rowDiscountDisplay');
+        if (discountRow) discountRow.hidden = !(voucherDiscount > 0);
+        if (discEl) discEl.textContent = voucherDiscount > 0 ? `-${formatCurrency(voucherDiscount)}` : '';
         if (totalEl) totalEl.textContent = formatCurrency(total);
         if (payStatusEl) payStatusEl.textContent = booking.paymentStatus || 'Chưa thanh toán (Thanh toán tại quầy)';
     }

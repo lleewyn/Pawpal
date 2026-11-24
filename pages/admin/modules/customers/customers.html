@@ -1,5 +1,5 @@
 <!-- PawPal Admin / Khách hàng: HTML fragment. Stylesheet external nằm cạnh file này. -->
-<link rel="stylesheet" href="/pages/admin/modules/customers/customers.css?v=20261124_customer_profile_avatar" data-pawpal-module-stylesheet="customers">
+<link rel="stylesheet" href="/pages/admin/modules/customers/customers.css?v=20261124_customer_pet_history_style" data-pawpal-module-stylesheet="customers">
 <div class="customers-module">
 <!-- ====================================================================
          SUB-TAB 1: KHÁCH HÀNG (DANH SÁCH và TIẾP NHẬN TẠI QUẦY)
@@ -145,7 +145,7 @@
          SUB-TAB 2: HỒ SƠ 360 ĐỘ (DRAWER TRƯỢT TỪ BÊN PHẢI HOẶC MÀN HÌNH CHI TIẾT)
          ==================================================================== -->
 <section class="subtab-content" id="subtab-tab-profile">
-<div class="profile-drawer-container admin-card admin-detail-surface">
+<div class="profile-drawer-container">
 <div aria-busy="true" class="customer-profile-placeholder" id="customerProfilePlaceholder" role="status">
 <span class="skeleton-text skeleton-profile-title"></span>
 <div class="customer-profile-skeleton-grid">
@@ -163,7 +163,7 @@
 <!-- THANH THAO TÁC MỘT CHẠM TRÊN ĐẦU DRAWER -->
 <div class="profile-quick-actions-bar">
 <div class="drawer-user-headline">
-<span class="customer-profile-avatar" id="drawerCustomerAvatar" aria-hidden="true"></span>
+<span class="customer-initial-avatar" id="drawerCustomerAvatar" aria-hidden="true"></span>
 <span class="headline-name" id="drawerCustomerName">&mdash;</span>
 <span class="admin-badge badge-tier-gold" id="drawerCustomerTier">&mdash;</span>
 <span class="admin-badge badge-success">&mdash;</span>
@@ -199,20 +199,21 @@
 </button>
 </div>
 <!-- NỘI DUNG 5 TAB CON -->
-<div class="v7-customer-profile-columns"><div class="drawer-tab-body">
+<div class="v7-customer-profile-columns admin-profile-content admin-card"><div class="drawer-tab-body">
 <!-- TAB CON 1: THÔNG TIN CÁ NHÂN -->
 <div class="drawer-tab-panel active" id="dtab-personal">
-<div class="detail-grid-two-col">
-<div class="detail-box">
-<div class="customer-profile-section-header">
-<h4 class="detail-box-title detail-box-title--flush">Hồ sơ c&aacute; nh&acirc;n</h4>
-</div>
-<div class="data-pair-row"><span class="data-key">M&atilde; &dstrok;ịnh danh</span><span class="data-val" id="profileValCustId">&mdash;</span></div>
+<div class="customer-personal-groups">
+<section class="detail-box">
+<h4 class="detail-box-title">Th&ocirc;ng tin c&aacute; nh&acirc;n</h4>
 <div class="data-pair-row"><span class="data-key">Họ v&agrave; t&ecirc;n</span><span class="data-val" id="profileValFullName">&mdash;</span></div>
-<div class="data-pair-row"><span class="data-key">Số &dstrok;iện thoại</span><span class="data-val" id="profileValPhone">&mdash;</span></div>
-<div class="data-pair-row"><span class="data-key">Email</span><span class="data-val" id="profileValEmail">&mdash;</span></div>
 <div class="data-pair-row"><span class="data-key">Giới t&iacute;nh</span><span class="data-val" id="profileValGender">&mdash;</span></div>
 <div class="data-pair-row"><span class="data-key">Ng&agrave;y sinh</span><span class="data-val" id="profileValDob">&mdash;</span></div>
+<div class="data-pair-row"><span class="data-key">M&atilde; &dstrok;ịnh danh</span><span class="data-val" id="profileValCustId">&mdash;</span></div>
+</section>
+<section class="detail-box">
+<h4 class="detail-box-title">Li&ecirc;n hệ v&agrave; t&agrave;i khoản</h4>
+<div class="data-pair-row"><span class="data-key">Số &dstrok;iện thoại</span><span class="data-val" id="profileValPhone">&mdash;</span></div>
+<div class="data-pair-row"><span class="data-key">Email</span><span class="data-val" id="profileValEmail">&mdash;</span></div>
 <div class="data-pair-row data-pair-row--address">
 <span class="data-key data-key--offset">Sổ &dstrok;ịa chỉ</span>
 <div class="data-val customer-address-values" id="profileValAddressContainer">
@@ -229,13 +230,12 @@
 <span class="data-key">Đặt lịch trực tuyến</span>
 <span class="data-val" id="profileBookingRestrictionValue"></span>
 </div>
-</div>
+</section>
 </div>
 </div>
 <!-- TAB CON 2: THÚ CƯNG và SỨC KHỎE -->
 <div class="drawer-tab-panel" id="dtab-pets">
 <div class="customer-profile-pets-header">
-<h4 class="detail-box-title detail-box-title--flush">Danh s&aacute;ch th&uacute; cưng sở hữu</h4>
 <button class="admin-btn admin-btn-secondary btn-sm" id="btnOpenAddPetModal" type="button">Th&ecirc;m b&eacute; cưng</button>
 </div>
 <div class="pet-cards-list" id="petCardsListContainer">

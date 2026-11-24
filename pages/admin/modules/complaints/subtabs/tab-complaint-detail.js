@@ -101,7 +101,10 @@
   };
   if (priorityBadgeEl) priorityBadgeEl.className = `admin-badge priority-chip ${priorityBadgeClass[t.priority] || 'priority-medium'}`;
   text('viewTicketCustomerName',t.customerName);text('viewTicketCustomerPhone',t.phone);
-  text('viewTicketCustomerContent',t.content);text('detailComplaintCreatedTime',t.createdAt);
+  const report = String(t.content ?? '').trim();
+  const normalizeReport = value => String(value ?? '').replace(/\s+/g, ' ').trim();
+  show('complaintCustomerReport',Boolean(report && normalizeReport(report)!==normalizeReport(t.title)));
+  text('viewTicketCustomerContent',report);text('detailComplaintCreatedTime',t.createdAt);
   text('viewTicketRefInfo',t.bookingId || t.orderId || 'Chưa xác minh giao dịch');
   const waiting=t.status==='waiting_customer' && Boolean(t.customerReplyDueAt);
   show('complaintReplyDueLabel',waiting);show('complaintReplyDue',waiting);
@@ -109,9 +112,11 @@
   show('btnOpenComplaintSource',Boolean(t.bookingId || t.orderId));
   text('viewTicketStaffAssigned',t.staffAssigned);text('complaintPerformedBy',t.staffExecuted);show('complaintPerformedBy',Boolean(t.bookingId));show('complaintPerformedByLabel',Boolean(t.bookingId));text('viewTicketPetNotes',[t.petName,t.petNotes].filter(Boolean).join(' · ') || '—');
   text('viewTicketDemand',(t.customerDemand || 'Chưa ghi nhận yêu cầu')+(Number(t.requested_amount)>0?' · '+Number(t.requested_amount).toLocaleString('vi-VN')+' đ':''));
-  text('viewResolutionNote',t.resolution_note || 'Chưa có phương án');
-  text('viewResolutionBadge',optionNames[t.resolution_type] || t.resolution_type || '—');
-  text('viewRefundAmount',t.approved_amount == null ? 'Chưa duyệt' : Number(t.approved_amount).toLocaleString('vi-VN')+(t.resolution_type==='points'?' điểm':' đ'));
+  text('viewResolutionNote',t.resolution_note || (t.resolution_type ? '' : 'Chưa có phương án'));
+  text('viewResolutionBadge',optionNames[t.resolution_type] || t.resolution_type || '');
+  show('complaintApprovedValue', t.approved_amount != null && (Boolean(t.resolved_by) || Number(t.approved_amount)>0));
+  text('viewRefundAmount',t.approved_amount == null ? '' : Number(t.approved_amount).toLocaleString('vi-VN')+(t.resolution_type==='points'?' điểm':' đ'));
+  text('complaintLinkedResults','');
   text('complaintCustomerRating',t.rating == null ? 'Chưa có đánh giá' : t.rating + '/5 sao');
   text('complaintRatingComment',t.ratingComment || '');
   show('complaintRating',finished(t)||t.rating!=null);
@@ -128,6 +133,7 @@
    (t.autoCloseReason==='no_customer_reply' && Date.now()>=Date.parse(t.closedAtRaw)+7*86400000);
   show('btnReopenTicket',finished(t)&&!reopenExpired); show('btnCloseComplaint',t.status==='resolved');
   ['btnAssignHandler','btnRequestMoreInfo','btnOpenResolveModal','btnSubmitReply'].forEach(id=>{if($(id))$(id).disabled=finished(t);});
+  if($('btnJumpComplaintReply'))$('btnJumpComplaintReply').hidden=finished(t);
   show('btnRequestMoreInfo',Boolean(t.customerId));
   text('btnAssignHandler', (t.status==='new' || !t.staffAssigned || t.staffAssigned==='Chưa phân công') ? 'Nhận xử lý' : 'Đổi người xử lý');
   text('btnCompleteComplaint',directAward(t.resolution_type)?'Thực hiện bồi hoàn':'Liên kết kết quả thực hiện');
@@ -158,7 +164,7 @@
  }
  function renderCompletedResults(t,version,rows,hasMore,nextPage){
   const host=$('complaintLinkedResults');if(!host)return;
-  host.textContent=rows.flatMap(a=>{try{const d=JSON.parse(a.description);return [`${mod.formatDateTime(a.created_at)} · ${d.result_id || d.details?.evidence_id || 'Đã ghi nhận'}${d.details?.replacement_order_id?' · Đơn đổi mới: '+d.details.replacement_order_id:''}${d.details?.return_request_id?' · Hàng trả: '+d.details.return_request_id:''}`];}catch{return [];}}).join('\n')||'Chưa liên kết kết quả thực hiện.';
+  host.textContent=rows.flatMap(a=>{try{const d=JSON.parse(a.description);return [`${mod.formatDateTime(a.created_at)} · ${d.result_id || d.details?.evidence_id || 'Đã ghi nhận'}${d.details?.replacement_order_id?' · Đơn đổi mới: '+d.details.replacement_order_id:''}${d.details?.return_request_id?' · Hàng trả: '+d.details.return_request_id:''}`];}catch{return [];}}).join('\n')||(t.resolution_started_at?'Chưa liên kết kết quả thực hiện.':'');
   if(hasMore){const more=document.createElement('button');more.type='button';more.className='admin-btn admin-btn-secondary';more.textContent='Xem kết quả trước';more.onclick=async()=>{
    more.disabled=true;
    try{const page=await readDetailResource(t,'completed:'+nextPage,async()=>{const {data,error}=await client().rpc('admin_complaint_completed_page',{p_ticket:t.rawId,p_page:nextPage});if(error)throw error;return data;});if(version!==renderVersion)return;const seen=new Set();const all=[...rows,...page.slice(0,10)].filter(r=>{if(seen.has(r.id))return false;seen.add(r.id);return true;});renderCompletedResults(t,version,all,page.length>10,nextPage+1);}
@@ -174,7 +180,7 @@
   const seen=new Set(),messages=[...page.slice(0,10).reverse(),...existing].filter(m=>{if(seen.has(m.id))return false;seen.add(m.id);return true;});
   const host=$('viewTicketTimeline');host.innerHTML=messages.map(m=>{
    const author=mod.state.cachedStaff.find(s=>s.auth_user_id===m.sender_account_id)?.full_name || (['staff','cskh','nhan_vien'].includes(m.sender_type)?'Nhân viên':m.sender_type==='system'?'Hệ thống':['user','customer','khach_hang'].includes(m.sender_type)?t.customerName:'Người gửi');
-   return `<article class="complaint-history-entry"><strong>${escapeHtml(author)}</strong> <span>${escapeHtml(mod.formatDateTime(m.created_at))} · ${m.is_internal?'Nội bộ':'Trao đổi'}</span>${m.id===t.customerFollowupMessageId?' <strong class="admin-badge badge-info">Phản hồi mới</strong>':''}<p>${escapeHtml(m.content)}</p></article>`;
+   return `<article class="complaint-history-entry"><div class="complaint-history-meta"><strong>${escapeHtml(author)}</strong><span>${escapeHtml(mod.formatDateTime(m.created_at))} · ${m.is_internal?'Nội bộ':'Trao đổi'}</span>${m.id===t.customerFollowupMessageId?' <strong class="admin-badge badge-info">Phản hồi mới</strong>':''}</div><p>${escapeHtml(m.content)}</p></article>`;
   }).join('') || 'Chưa có lịch sử trao đổi.';
   if(page.length>10){const more=document.createElement('button');more.type='button';more.className='admin-btn admin-btn-secondary';more.textContent='Xem trao đổi trước';more.onclick=async()=>{more.disabled=true;try{await loadMessagePage(t,version,offset+10,messages);}catch(e){if(version===renderVersion){more.disabled=false;more.textContent='Thử tải lại trao đổi trước';}}};host.prepend(more);}
  }
@@ -335,6 +341,11 @@
   finally{if(isCurrent())$('complaintEvidenceSearch').disabled=false;}
  }
  function init(){
+  const jumpToReply=$('btnJumpComplaintReply');
+  if(jumpToReply)jumpToReply.onclick=()=>{
+   $('complaintReplySection')?.scrollIntoView({block:'nearest'});
+   $('replyContentInput')?.focus({preventScroll:true});
+  };
   for(const id of ['selectRequestChannel','selectResolveOption']){const select=$(id);if(select&&![...select.options].some(option=>option.value===''))select.prepend(new Option('','',true,true));}
   const root=$('subtab-tab-complaint-detail');if(!root || root.dataset.v1Bound)return;root.dataset.v1Bound='true';
   const bind=(id,fn)=>{if($(id))$(id).onclick=fn;};

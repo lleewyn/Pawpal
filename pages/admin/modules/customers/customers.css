@@ -1420,11 +1420,6 @@
     font-weight: 700;
 }
 
-.customers-module #subtab-tab-list .customer-master-card {
-    box-shadow: none;
-    backdrop-filter: none;
-}
-
 .customers-module #subtab-tab-list .table-toolbar-section {
     background: transparent;
 }
@@ -1663,11 +1658,14 @@
     color: rgb(38, 61, 49) !important;
 }
 
-.customers-module #subtab-tab-list .customer-master-card {
+.customers-module :is(#subtab-tab-list .customer-master-card, #subtab-tab-profile .v7-customer-profile-columns) {
     border: 1px solid rgb(217, 224, 219);
     border-radius: 0px;
     overflow: visible;
     background: rgb(255, 255, 255);
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 .customers-module #subtab-tab-list .table-toolbar-section {
@@ -2767,7 +2765,7 @@
     border-collapse: collapse;
 }
 
-.customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table th, .customers-module #subtab-tab-profile .drawer-tab-panel > .admin-table td {
+.customers-module #subtab-tab-profile :is(.drawer-tab-panel > .admin-table, .drawer-tab-panel .customer-pets-table) :is(th, td) {
     box-sizing: border-box;
     padding: 13px 14px;
     white-space: normal;
@@ -2885,10 +2883,10 @@
 
 .customers-module #subtab-tab-profile .pet-card-head {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: start;
-    gap: 20px;
-    margin-bottom: 18px;
+    gap: 8px;
+    margin-bottom: 0;
     padding: 0px;
     border: 0px;
     background: transparent;
@@ -2903,6 +2901,7 @@
 }
 
 .customers-module #subtab-tab-profile .pet-card-name {
+    margin: 0;
     font: 650 14px / 1.5 Inter, sans-serif;
     color: rgb(39, 94, 73);
     overflow-wrap: anywhere;
@@ -2939,52 +2938,58 @@
     color: rgb(165, 68, 61);
 }
 
-.customers-module #subtab-tab-profile .pet-card-body {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0px, 1fr));
-    gap: 0px 32px;
-    max-width: 1000px;
-    font: 13px / 1.6 Inter, sans-serif;
+.customers-module #subtab-tab-profile .customer-pets-table-wrap {
+    overflow-x: auto;
+    overscroll-behavior: contain auto;
 }
-
-.customers-module #subtab-tab-profile .pet-card-body > div {
-    display: grid;
-    grid-template-columns: 140px minmax(0px, 1fr);
-    gap: 12px;
-    padding: 9px 0px;
-    align-items: start;
-    min-width: 0px;
+.customers-module #subtab-tab-profile .customer-profile-pets-header {
+    justify-content: flex-end;
+    margin-bottom: 4px;
 }
-
-.customers-module #subtab-tab-profile .pet-card-body > div > span:first-child {
-    color: rgb(114, 133, 121);
-    font-weight: 400;
+.customers-module #subtab-tab-profile .customer-pets-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
 }
-
-.customers-module #subtab-tab-profile .pet-card-body > div > span:last-child {
-    color: rgb(48, 72, 58);
-    font-weight: 500;
-    overflow-wrap: anywhere;
+.customers-module #subtab-tab-profile .drawer-tab-panel .customer-pets-table :is(th, td) {
+    padding-inline: 12px;
 }
-
-@media (max-width: 1000px) {
-    .customers-module #subtab-tab-profile .pet-card-body {
-        grid-template-columns: 1fr;
+.customers-module #subtab-tab-profile .customer-pets-table :is(.pet-card-name, .pet-profile-code, .pet-care-note) { display: block; }
+.customers-module #subtab-tab-profile .pet-care-note + .pet-care-note { margin-top: 4px; }
+.customers-module #subtab-tab-profile .pet-care-empty { color: var(--text-muted); }
+.customers-module #subtab-tab-profile .customer-pets-table .pet-card-actions { gap: 6px; }
+@media (max-width: 760px) {
+    .customers-module #subtab-tab-profile .customer-pets-table { min-width: 0; }
+    .customers-module #subtab-tab-profile .customer-pets-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
     }
-}
-
-@media (max-width: 600px) {
-    .customers-module #subtab-tab-profile .pet-card-head {
-        flex-direction: column;
-        gap: 12px;
+    .customers-module #subtab-tab-profile .customer-pets-table tbody { display: block; }
+    .customers-module #subtab-tab-profile .customer-pets-table tbody tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid #e6ece7;
     }
-
-    .customers-module #subtab-tab-profile .pet-card-actions {
-        gap: 14px;
+    .customers-module #subtab-tab-profile .customer-pets-table tbody tr:last-child { border-bottom: 0; }
+    .customers-module #subtab-tab-profile .customer-pets-table tbody tr > :is(th, td) {
+        display: block;
+        padding: 0;
+        border: 0;
+        min-width: 0;
     }
-
-    .customers-module #subtab-tab-profile .pet-card-body > div {
-        grid-template-columns: 120px minmax(0px, 1fr);
+    .customers-module #subtab-tab-profile .customer-pets-table tbody td:is(:first-child, :nth-last-child(-n+2)) {
+        grid-column: 1 / -1;
+    }
+    .customers-module #subtab-tab-profile .customer-pets-table [data-label]::before {
+        display: block;
+        content: attr(data-label);
+        color: var(--text-muted);
+        font-size: 11px;
     }
 }
 
@@ -4191,24 +4196,27 @@
     border-radius: var(--admin-radius, 9px);
 }
 
-/* Profile alignment: match the approved Pets outer card without nested boxes. */
+/* Keep profile navigation on the page and the detail surface below it. */
 .customers-module #subtab-tab-profile .profile-drawer-container {
-    padding: 18px 20px;
-    background: #ffffff;
-    border: 1px solid #d9e0db;
-    border-radius: 8px;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+    padding: 0;
 }
 
 .customers-module #subtab-tab-profile .profile-quick-actions-bar {
     border: none;
-    padding-bottom: 8px;
+    padding: 4px 0 8px;
+}
+
+.customers-module #subtab-tab-profile .drawer-action-buttons > .action-btn-pill {
+    border: 0;
+    background: transparent;
+}
+
+.customers-module #subtab-tab-profile .drawer-action-buttons > .action-btn-pill:is(:hover, :focus-visible) {
+    background: #eef5f1;
 }
 
 .customers-module #subtab-tab-profile .drawer-user-headline { align-items: center; }
-.customers-module .customer-profile-avatar {
+.customers-module .customer-initial-avatar {
     display: inline-grid;
     place-items: center;
     flex: 0 0 38px;
@@ -4220,11 +4228,23 @@
     font-size: 13px;
     font-weight: 700;
 }
+.customers-module #customerDataTable .customer-list-identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.customers-module #customerDataTable .customer-initial-avatar {
+    flex-basis: 30px;
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
+}
 
 .customers-module #subtab-tab-profile .drawer-subtabs-bar {
     border: none;
     min-height: 0;
     margin-top: 4px;
+    margin-bottom: 10px;
 }
 
 .customers-module #subtab-tab-profile .drawer-tab-btn {
@@ -4235,13 +4255,20 @@
     grid-template-columns: minmax(0, 1fr);
     align-items: start;
     gap: 24px;
-    padding-top: 12px;
+    padding: 16px 20px;
+    margin: 0;
 }
 
 .customers-module #subtab-tab-profile .v7-customer-profile-columns:has(#dtab-personal.active) {
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    column-gap: clamp(24px, 4vw, 56px);
-    max-width: 1100px;
+    grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr);
+    column-gap: clamp(20px, 3vw, 40px);
+}
+
+.customers-module #dtab-personal .customer-personal-groups {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px clamp(20px, 3vw, 40px);
 }
 
 .customers-module #subtab-tab-profile .v7-customer-notes {
@@ -4254,13 +4281,14 @@
 }
 
 .customers-module #subtab-tab-profile .data-pair-row {
-    grid-template-columns: clamp(95px, 24%, 140px) minmax(0, 1fr);
-    column-gap: 12px;
+    grid-template-columns: minmax(95px, 30%) minmax(0, 1fr);
+    column-gap: 10px;
 }
 
 .customers-module #subtab-tab-profile #dtab-personal .data-pair-row {
     padding: 7px 0 !important;
 }
+.customers-module #subtab-tab-profile #dtab-personal .data-pair-row[hidden] { display: none; }
 
 .customers-module #subtab-tab-profile #dtab-personal { padding-top: 0; }
 
@@ -4272,15 +4300,22 @@
     margin-bottom: 0;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1020px) {
     .customers-module #subtab-tab-profile .v7-customer-profile-columns:has(#dtab-personal.active) {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .customers-module #dtab-personal .customer-personal-groups {
         grid-template-columns: minmax(0, 1fr);
     }
 }
 
 @media (max-width: 480px) {
-    .customers-module #subtab-tab-profile .profile-drawer-container {
-        padding: 14px;
+    .customers-module #subtab-tab-profile .v7-customer-profile-columns {
+        padding: 12px 14px;
     }
 }
 

@@ -1,32 +1,125 @@
-/* Shared detail presentation. List pages and modal layouts keep their own rules. */
-body.admin-body :is(#orderDetailData, #subtab-tab-service-detail, #subtab-tab-profile, #subtab-tab-pet-profile, #subtab-tab-staff-profile) .admin-detail-surface {
-    padding: 26px 30px;
-    border: 1px solid #ECF2EE;
-    border-radius: 9px;
-    background: rgba(255, 255, 255, .70);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+/* The customer profile is the reference: page header above a single content surface. */
+body.admin-body :is(#orderDetailData, #subtab-tab-service-detail, #subtab-tab-pet-profile, #subtab-tab-staff-profile, #complaintDetailData) .admin-detail-surface {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     box-shadow: none;
     min-width: 0;
+    overflow: visible;
 }
-body.admin-body .admin-detail-surface :is(.order-detail-header-bar, .service-detail-header-bar, .profile-quick-actions-bar, .staff-profile-quick-bar) {
+body.admin-body .admin-detail-surface :is(.order-detail-header-bar, .service-detail-header-bar, .profile-quick-actions-bar, .staff-profile-quick-bar, .complaint-detail-heading) {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 16px 24px;
-    padding: 0;
-    margin: 0 0 24px;
+    gap: 8px 16px;
+    padding: 4px 0 8px;
+    margin: 0 0 4px;
     border: none;
     background: transparent;
 }
-body.admin-body .admin-detail-surface :is(.order-headline-group, .service-headline-group, .drawer-user-headline, .staff-headline-group) {
+body.admin-body .admin-detail-surface :is(.order-headline-group, .service-headline-group, .drawer-user-headline, .staff-headline-group, .complaint-detail-heading-copy) {
     flex: 1 1 240px;
     min-width: 0;
     overflow-wrap: anywhere;
 }
-body.admin-body .admin-detail-surface :is(.order-action-bar-top, .service-action-bar-top, .drawer-action-buttons, .staff-quick-actions) {
+body.admin-body .admin-detail-surface :is(.headline-name, #detailOrderCode, #detailBookingCode, #detailTicketTitle) {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.45;
+    color: #263d30;
+}
+body.admin-body #subtab-tab-pet-profile .admin-detail-surface { gap: 0; }
+body.admin-body #subtab-tab-pet-profile .profile-quick-actions-bar { margin: 0; }
+body.admin-body #subtab-tab-pet-profile .admin-detail-surface .drawer-subtabs-row { margin: 0; padding: 0; }
+body.admin-body #subtab-tab-pet-profile .admin-detail-surface .drawer-subtabs-bar { min-height: 0; margin: 4px 0 10px; }
+body.admin-body #subtab-tab-pet-profile .admin-detail-surface .drawer-tab-btn { padding-block: 8px; }
+body.admin-body #subtab-tab-pet-profile .drawer-pet-avatar { width: 38px; height: 38px; flex: 0 0 38px; border-radius: 50%; }
+body.admin-body #subtab-tab-pet-profile #btnChangePetAvatar { margin-inline-start: 8px; }
+body.admin-body #subtab-tab-pet-profile #ptab-traits .detail-grid-two-col {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr) minmax(0, .85fr);
+    gap: 20px clamp(20px, 3vw, 40px);
+}
+body.admin-body #subtab-tab-pet-profile #ptab-traits .detail-box-title { margin: 0 0 8px; }
+body.admin-body #subtab-tab-pet-profile #ptab-traits .pet-row-between-mb-8 { align-items: start; min-height: 0; margin-bottom: 8px; }
+body.admin-body #subtab-tab-pet-profile #ptab-traits .pet-row-between-mb-8 .detail-box-title { margin: 0; }
+body.admin-body #subtab-tab-pet-profile #ptab-traits .data-pair-row {
+    grid-template-columns: minmax(95px, 30%) minmax(0, 1fr);
+    gap: 10px;
+    padding: 7px 0 !important;
+    border-bottom: 1px solid #e3e9e5 !important;
+}
+body.admin-body #subtab-tab-pet-profile #ptab-traits .data-val:not(.text-danger) { font-weight: 600; }
+body.admin-body #subtab-tab-pet-profile .pet-profile-note-editor summary {
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+@media (max-width: 1020px) {
+    body.admin-body #subtab-tab-pet-profile #ptab-traits .detail-grid-two-col { grid-template-columns: minmax(0, 1fr); }
+}
+body.admin-body #complaintDetailData .complaint-detail-heading-copy > .complaint-v1-toolbar { margin: 4px 0; }
+body.admin-body #complaintDetailData .complaint-detail-heading { margin-bottom: 10px; }
+body.admin-body #complaintDetailData #detailTicketTitle { margin: 0; }
+body.admin-body #complaintDetailData .complaint-detail-identity :is(#viewTicketCode, #detailComplaintCreatedTime) {
+    margin: 0;
+    color: #4f7a65;
+    font-size: 12px;
+    font-weight: 500;
+}
+body.admin-body #complaintDetailData .complaint-v1-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px clamp(20px, 3vw, 40px);
+}
+body.admin-body #complaintDetailData .complaint-activity-layout {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 24px clamp(20px, 3vw, 40px);
+}
+body.admin-body #complaintDetailData :is(.complaint-history-heading, .complaint-history-meta) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+}
+body.admin-body #complaintDetailData .complaint-history-heading { justify-content: space-between; }
+body.admin-body #complaintDetailData .complaint-reply-section { scroll-margin-block: 12px; }
+body.admin-body #complaintDetailData #btnJumpComplaintReply { display: none; }
+body.admin-body #complaintDetailData .complaint-detail-meta {
+    grid-template-columns: minmax(95px, 34%) minmax(0, 1fr);
+    gap: 0;
+    align-items: stretch;
+}
+body.admin-body #complaintDetailData .complaint-detail-meta > :is(dt, dd) {
+    padding: 7px 0;
+    border-bottom: 1px solid #e3e9e5;
+}
+body.admin-body #complaintDetailData .complaint-detail-meta > dt { padding-inline-end: 10px; }
+body.admin-body #complaintDetailData .complaint-detail-meta > dd { font-weight: 600; }
+body.admin-body #complaintDetailData :is(#viewResolutionBadge, #viewResolutionNote, #complaintLinkedResults):empty { display: none; }
+body.admin-body #complaintDetailData .complaint-history-entry {
+    margin: 0;
+    padding: 8px 0;
+    border-bottom: 1px solid #e3e9e5;
+}
+body.admin-body #complaintDetailData .complaint-history-entry p { margin-top: 3px; }
+body.admin-body #complaintDetailData .complaint-internal-choice input { accent-color: #236b48; }
+@media (max-width: 1100px) {
+    body.admin-body #complaintDetailData .complaint-detail-actions { justify-content: flex-start; }
+}
+@media (max-width: 760px) {
+    body.admin-body #complaintDetailData :is(.complaint-v1-columns, .complaint-activity-layout) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    body.admin-body #complaintDetailData #btnJumpComplaintReply:not([hidden]) { display: inline-flex; }
+}
+body.admin-body .admin-detail-surface :is(.order-action-bar-top, .service-action-bar-top, .drawer-action-buttons, .staff-quick-actions, .complaint-detail-actions) {
     display: flex;
     flex: 0 1 auto;
     justify-content: flex-end;
@@ -36,6 +129,28 @@ body.admin-body .admin-detail-surface :is(.order-action-bar-top, .service-action
     margin: 0 0 0 auto;
     max-width: 100%;
 }
+body.admin-body .admin-detail-surface :is(.order-action-bar-top, .service-action-bar-top, .drawer-action-buttons, .staff-quick-actions, .complaint-detail-actions)
+    > :is(.admin-btn-secondary, .action-btn-pill):not(.btn-primary-pill, #btnProfileEditStaff, #btnOpenEditPetModal) {
+    background: transparent;
+    border-color: transparent;
+}
+body.admin-body .admin-detail-surface :is(.order-action-bar-top, .service-action-bar-top, .drawer-action-buttons, .staff-quick-actions, .complaint-detail-actions)
+    > :is(.admin-btn-secondary, .action-btn-pill):not(.btn-primary-pill, #btnProfileEditStaff, #btnOpenEditPetModal):is(:hover, :focus-visible) {
+    background: #eef5f1;
+}
+body.admin-body .admin-profile-avatar {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #eef5f1;
+    color: #236b48;
+    font-size: 13px;
+    font-weight: 700;
+}
+body.admin-body .admin-profile-avatar:empty { display: none; }
 body.admin-body .admin-detail-surface :is(.order-detail-grid, .service-detail-grid, .staff-profile-sections-grid, .detail-grid-two-col) {
     align-items: start;
     gap: 28px;
@@ -83,6 +198,91 @@ body.admin-body .admin-detail-surface :is(.info-value, .data-val) {
     line-height: 1.6;
     overflow-wrap: anywhere;
 }
+body.admin-body :is(.staff-module, .services-module) .admin-profile-content .info-grid-2col > .info-pair:has(> .info-label + .info-value) {
+    display: grid;
+    grid-template-columns: minmax(85px, 34%) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 4px 10px;
+}
+body.admin-body :is(.staff-module, .services-module) .admin-profile-content .info-grid-2col > .info-pair > .info-value {
+    text-align: left;
+    flex-wrap: wrap;
+}
+body.admin-body #subtab-tab-staff-profile .staff-profile-container { gap: 0; }
+body.admin-body #subtab-tab-staff-profile .staff-profile-quick-bar { margin-bottom: 10px; }
+body.admin-body #subtab-tab-staff-profile .staff-headline-group { flex-wrap: nowrap; }
+body.admin-body #subtab-tab-staff-profile :is(.staff-profile-identity, .staff-profile-meta) {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    min-width: 0;
+    gap: 4px 10px;
+}
+body.admin-body #subtab-tab-staff-profile .headline-name {
+    max-width: none;
+    white-space: normal;
+}
+body.admin-body #subtab-tab-staff-profile .staff-profile-position { color: #4f7a65; }
+body.admin-body #subtab-tab-staff-profile .staff-profile-sections-grid {
+    grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr);
+    gap: 24px clamp(20px, 3vw, 40px);
+}
+body.admin-body #subtab-tab-staff-profile .staff-profile-overview {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px clamp(20px, 3vw, 40px);
+}
+body.admin-body #subtab-tab-staff-profile :is(.info-grid-2col, .csat-summary-grid) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+}
+body.admin-body #subtab-tab-staff-profile :is(.info-grid-2col > .info-pair, .csat-metric-card) {
+    display: grid;
+    grid-template-columns: minmax(95px, 30%) minmax(0, 1fr);
+    align-items: baseline;
+    text-align: left;
+    gap: 4px 10px;
+    min-height: 0;
+    padding: 7px 0;
+    border-bottom: 1px solid #e3e9e5 !important;
+}
+body.admin-body #subtab-tab-staff-profile .info-pair .admin-badge {
+    justify-self: start;
+    white-space: normal;
+}
+body.admin-body #subtab-tab-staff-profile .drawer-section-title { margin-bottom: 8px; }
+body.admin-body #subtab-tab-staff-profile .csat-metric-sub { color: #4f7a65; font-size: 12px; }
+body.admin-body #subtab-tab-staff-profile .csat-metric-val { color: #203a2c; font-size: 13px; font-weight: 600; }
+body.admin-body #subtab-tab-staff-profile .csat-metric-card { border-radius: 0; }
+body.admin-body #subtab-tab-staff-profile .timesheet-metrics-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px 16px;
+}
+body.admin-body #subtab-tab-staff-profile .metric-box {
+    min-height: 0;
+    padding: 0;
+    align-items: flex-start;
+    text-align: left;
+    gap: 4px;
+}
+body.admin-body #subtab-tab-staff-profile .metric-label { order: -1; }
+body.admin-body #subtab-tab-staff-profile .timesheet-metrics-grid .metric-val { font-size: 14px; line-height: 1.45; }
+body.admin-body #subtab-tab-staff-profile .staff-profile-income { max-width: 640px; }
+body.admin-body #subtab-tab-staff-profile .commission-breakdown-card { padding: 0; }
+body.admin-body #subtab-tab-staff-profile .commission-row { gap: 8px 16px; }
+body.admin-body #subtab-tab-staff-profile .commission-row > :last-child { text-align: right; }
+@media (max-width: 1020px) {
+    body.admin-body #subtab-tab-staff-profile .staff-profile-sections-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+    body.admin-body #subtab-tab-staff-profile .staff-profile-overview { grid-template-columns: minmax(0, 1fr); }
+    body.admin-body #subtab-tab-staff-profile .timesheet-metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    body.admin-body #subtab-tab-staff-profile .staff-profile-identity { flex-direction: column; align-items: flex-start; }
+    body.admin-body #subtab-tab-staff-profile :is(.info-grid-2col > .info-pair, .csat-metric-card) {
+        grid-template-columns: minmax(95px, 36%) minmax(0, 1fr);
+    }
+}
 body.admin-body .orders-module #orderDetailData .info-pair {
     display: grid;
     grid-template-columns: minmax(100px, .8fr) minmax(0, 1.4fr);
@@ -91,6 +291,25 @@ body.admin-body .orders-module #orderDetailData .info-pair {
     padding: 5px 0;
 }
 body.admin-body .orders-module #orderDetailData .info-value { text-align: left; }
+body.admin-body #orderDetailData .order-detail-header-bar { margin-bottom: 10px; }
+body.admin-body #orderDetailData .detail-section-title { margin-bottom: 8px; }
+body.admin-body #orderDetailData .shipping-info-block { gap: 0; }
+body.admin-body .orders-module #orderDetailData .shipping-info-block > .info-pair {
+    grid-template-columns: minmax(95px, 30%) minmax(0, 1fr);
+    padding: 7px 0;
+    border-bottom: 1px solid #e3e9e5 !important;
+}
+body.admin-body #orderDetailData .shipping-info-block .admin-badge {
+    justify-self: start;
+    white-space: normal;
+}
+body.admin-body #orderDetailData .order-payment-summary { max-width: 640px; }
+body.admin-body #orderDetailCancellation { grid-column: 1 / -1; }
+body.admin-body #orderDetailCancellation p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+body.admin-body #orderDetailData .summary-row[hidden],
+body.admin-body #orderDetailData .order-timeline-list:empty,
+body.admin-body #orderDetailData .order-timeline-list:not(:empty) + .order-timeline-empty { display: none; }
+body.admin-body #orderDetailData .order-timeline-empty { margin: 0; color: var(--text-muted); }
 body.admin-body .orders-module #orderDetailData .info-pair:has(#detailCustomerNote, #detailInternalNote) {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 6px;
@@ -118,6 +337,72 @@ body.admin-body .services-module .admin-detail-surface .pet-safety-banner {
     background: transparent;
     border: none;
 }
+body.admin-body #subtab-tab-service-detail .service-detail-header-bar { margin-bottom: 10px; }
+body.admin-body #subtab-tab-service-detail .service-detail-grid {
+    grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr);
+    gap: clamp(20px, 3vw, 40px);
+}
+body.admin-body #subtab-tab-service-detail .service-profile-overview {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px clamp(20px, 3vw, 40px);
+}
+body.admin-body #subtab-tab-service-detail .info-grid-2col { row-gap: 0; }
+body.admin-body #subtab-tab-service-detail .service-profile-overview .info-grid-2col {
+    grid-template-columns: minmax(0, 1fr);
+}
+body.admin-body #subtab-tab-service-detail .info-grid-2col > .info-pair {
+    grid-template-columns: minmax(95px, 30%) minmax(0, 1fr);
+    gap: 4px 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid #e3e9e5 !important;
+}
+body.admin-body #subtab-tab-service-detail .detail-section-title { margin-bottom: 8px; }
+body.admin-body #subtab-tab-service-detail .detail-group-heading {
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+body.admin-body #subtab-tab-service-detail .detail-group-heading .detail-section-title { margin: 0; }
+body.admin-body #subtab-tab-service-detail :is(#detailIntakeSafetySection, #detailServiceCosts) .detail-group-heading {
+    justify-content: flex-start;
+    column-gap: 16px;
+}
+body.admin-body #subtab-tab-service-detail #detailServiceCosts { max-width: 640px; }
+body.admin-body #subtab-tab-service-detail #rowDiscountDisplay[hidden] { display: none; }
+body.admin-body #subtab-tab-service-detail .info-grid-2col > .service-trip-route {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(95px, calc((100% - 24px) * .15)) minmax(0, 1fr);
+}
+body.admin-body #subtab-tab-service-detail .detail-info-group .btn-text-action {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #236b48;
+    text-underline-offset: 2px;
+}
+body.admin-body #subtab-tab-service-detail .carelog-quick-add {
+    border: 0;
+    padding: 0;
+    background: transparent;
+}
+body.admin-body #subtab-tab-service-detail .detail-info-group[hidden] { display: none; }
+body.admin-body #subtab-tab-service-detail :is(.special-service-fields-container, .accompanying-services-list, .surcharge-itemized-list):empty,
+body.admin-body #subtab-tab-service-detail #detailIntakeContentContainer > :has(> #detailIntakeProofGrid:empty) {
+    display: none;
+}
+@media (max-width: 1020px) {
+    body.admin-body #subtab-tab-service-detail .service-detail-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+    body.admin-body #subtab-tab-service-detail .service-profile-overview,
+    body.admin-body #subtab-tab-service-detail .info-grid-2col { grid-template-columns: minmax(0, 1fr); }
+    body.admin-body #subtab-tab-service-detail .info-grid-2col > .service-trip-route {
+        grid-template-columns: minmax(95px, 30%) minmax(0, 1fr);
+    }
+}
 body.admin-body .admin-detail-surface .order-timeline-item {
     padding: 0;
     border: none;
@@ -129,7 +414,7 @@ body.admin-body .admin-detail-surface .order-items-scroll {
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: contain auto;
 }
 body.admin-body .admin-detail-surface .order-items-table { min-width: 520px; }
 body.admin-body .admin-detail-surface .order-items-table :is(tbody, tr, td) { background: transparent; }
@@ -144,7 +429,7 @@ body.admin-body :is(#subtab-tab-profile, #subtab-tab-pet-profile) .drawer-subtab
     max-width: 100%;
     min-width: 0;
     overflow-x: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: contain auto;
     flex-wrap: nowrap;
     gap: 16px;
     border: none;
@@ -153,13 +438,73 @@ body.admin-body :is(#subtab-tab-profile, #subtab-tab-pet-profile) .drawer-tab-bt
     flex: 0 0 auto;
 }
 body.admin-body .admin-detail-surface :is(.pet-profile-note-read, .v7-note-read) { color: #203A2C; line-height: 1.75; }
+
+body.admin-body :is(#subtab-tab-profile, #subtab-tab-pet-profile, #subtab-tab-staff-profile, #orderDetailData, #subtab-tab-service-detail, #complaintDetailData) .admin-profile-content {
+    min-width: 0;
+    margin: 0;
+    padding: 16px 20px;
+    border: 1px solid #d9e0db;
+    border-radius: 0;
+    background: #fff;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
 @media (max-width: 900px) {
     body.admin-body .admin-detail-surface :is(.order-detail-grid, .service-detail-grid, .staff-profile-sections-grid, .detail-grid-two-col) {
         grid-template-columns: minmax(0, 1fr);
     }
 }
 @media (max-width: 600px) {
-    body.admin-body :is(#orderDetailData, #subtab-tab-service-detail, #subtab-tab-profile, #subtab-tab-pet-profile, #subtab-tab-staff-profile) .admin-detail-surface { padding: 20px 18px; }
-    body.admin-body .admin-detail-surface :is(.order-action-bar-top, .service-action-bar-top, .drawer-action-buttons, .staff-quick-actions) { width: 100%; }
+    body.admin-body :is(#subtab-tab-profile, #subtab-tab-pet-profile, #subtab-tab-staff-profile, #orderDetailData, #subtab-tab-service-detail, #complaintDetailData) .admin-profile-content { padding: 12px 14px; }
+    body.admin-body .admin-detail-surface :is(.order-action-bar-top, .service-action-bar-top, .drawer-action-buttons, .staff-quick-actions, .complaint-detail-actions) {
+        width: 100%;
+        justify-content: flex-start;
+        margin-left: 0;
+    }
     body.admin-body .admin-detail-surface .info-grid-2col { grid-template-columns: minmax(0, 1fr); }
+    body.admin-body :is(#subtab-tab-profile, #subtab-tab-pet-profile) .drawer-subtabs-bar { flex-wrap: wrap; gap: 4px 14px; }
+    body.admin-body #orderDetailData .order-items-table { min-width: 0; }
+    body.admin-body #orderDetailData .order-items-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+    body.admin-body #orderDetailData .order-items-table tbody { display: block; }
+    body.admin-body #orderDetailData .order-items-table tbody tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px 12px;
+        padding: 8px 0;
+        border-bottom: 1px solid #e6ece7;
+    }
+    body.admin-body #orderDetailData #detailOrderItemsBody td {
+        display: block;
+        padding: 0;
+        border: 0;
+        justify-self: stretch;
+        text-align: left !important;
+    }
+    body.admin-body #orderDetailData .order-items-table tbody td:first-child { grid-column: 1 / -1; }
+    body.admin-body #orderDetailData .order-items-table [data-label]::before {
+        display: block;
+        content: attr(data-label);
+        color: #4f7a65;
+        font-size: 11px;
+        font-weight: 400;
+    }
+    body.admin-body #subtab-tab-pet-profile .weight-mini-table {
+        table-layout: fixed;
+        min-width: 0;
+    }
+    body.admin-body #subtab-tab-pet-profile .weight-mini-table :is(th, td) {
+        width: auto;
+        padding-inline: 6px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    body.admin-body #subtab-tab-pet-profile .weight-mini-table .skeleton-text { max-width: 100%; }
 }

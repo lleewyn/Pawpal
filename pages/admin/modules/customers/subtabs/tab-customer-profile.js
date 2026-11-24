@@ -44,6 +44,10 @@
         });
 
         sessionStorage.setItem('pawpal_admin_customer_drawertab', targetPanelId);
+        if (window.location.hash.slice(1).split('?')[0] === 'tab-profile') {
+            const hash = PawpalCustomers.getSubtabHash?.('tab-profile');
+            if (hash && hash !== window.location.hash) history.replaceState(null, '', hash);
+        }
         const kind = { 'dtab-orders': 'orders', 'dtab-bookings': 'bookings', 'dtab-complaints': 'complaints' }[targetPanelId];
         if (kind && !document.hidden && (!sessionStorage.getItem('pawpal_admin_active_module') || sessionStorage.getItem('pawpal_admin_active_module') === 'Khách hàng') && document.getElementById('subtab-tab-profile')?.classList.contains('active')) {
             const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id');
@@ -101,26 +105,28 @@
             return;
         }
 
-        container.innerHTML = pets.map((pet, idx) => `
-            <div class="pet-detail-card" data-pet-id="${esc(pet.id || ('PET-' + idx))}">
-                <div class="pet-card-head">
-                    <div class="pet-card-head-left">
-                        <span class="pet-card-name">${esc(pet.name)}</span><span class="pet-profile-code">${esc(pet.id || 'Chưa có mã')}</span>
-                        ${pet.status==='inactive'?'<span class="admin-badge badge-neutral">Ngừng theo dõi</span>':''}
-                    </div>
-                    <div class="pet-card-actions">
-                        <button type="button" class="btn-pet-action btn-pet-view-profile admin-btn admin-btn-secondary" data-pet-id="${esc(pet.id || ('PET-' + (idx+1)))}" data-pet-name="${esc(pet.name)}">Xem hồ sơ bé</button>
-                        <button type="button" class="btn-pet-action btn-pet-edit" data-cust-id="${esc(custId)}" data-pet-index="${idx}">Sửa</button>
-                        <button type="button" class="btn-pet-action btn-pet-delete ${pet.status==='inactive'?'':'is-destructive'}" data-cust-id="${esc(custId)}" data-pet-index="${idx}">${pet.status==='inactive'?'Khôi phục':'Gỡ bé cưng'}</button>
-                    </div>
-                </div>
-                <div class="pet-card-body">
-                    <div><span>Loài và giống</span><span>${esc([pet.species,pet.breed].filter(Boolean).join(' · ') || 'Chưa ghi nhận')}</span></div>
-                    <div><span>Cân nặng</span><span>${Number(pet.weight)>0&&Number.isFinite(Number(pet.weight)) ? esc(pet.weight) + ' kg' : 'Chưa ghi nhận'}</span></div>
-                    <div><span>Cảnh báo an toàn</span><span>${esc(pet.safetyNote || '—')}</span></div><div><span>Dị ứng</span><span>${esc(pet.allergy || '—')}</span></div><div><span>Tập tính</span><span>${esc(pet.routine || '—')}</span></div>
-                </div>
-            </div>
-        `).join('');
+        container.innerHTML = `<div class="customer-pets-table-wrap">
+            <table class="admin-table customer-pets-table" aria-label="Thú cưng của khách" role="table">
+                <thead><tr><th scope="col">Bé cưng</th><th scope="col">Loài và giống</th><th scope="col">Cân nặng</th><th scope="col">Lưu ý chăm sóc</th><th scope="col">Thao tác</th></tr></thead>
+                <tbody role="rowgroup">${pets.map((pet, idx) => {
+                    const care = [['An toàn', pet.safetyNote], ['Dị ứng', pet.allergy], ['Tập tính', pet.routine]]
+                        .map(([label, value]) => [label, String(value ?? '').trim()])
+                        .filter(([, value]) => value && !['—', '-'].includes(value));
+                    return `<tr role="row" data-pet-id="${esc(pet.id || ('PET-' + idx))}">
+                        <td role="rowheader"><span class="pet-card-name">${esc(pet.name)}</span><span class="pet-profile-code">${esc(pet.id || 'Chưa có mã')}</span>
+                        ${pet.status === 'inactive' ? '<span class="admin-badge badge-neutral">Ngừng theo dõi</span>' : ''}</td>
+                        <td role="cell" data-label="Loài và giống">${esc([pet.species, pet.breed].filter(Boolean).join(' · ') || 'Chưa ghi nhận')}</td>
+                        <td role="cell" data-label="Cân nặng">${Number(pet.weight) > 0 && Number.isFinite(Number(pet.weight)) ? esc(pet.weight) + ' kg' : 'Chưa ghi nhận'}</td>
+                        <td role="cell" data-label="Lưu ý chăm sóc">${care.length ? care.map(([label, value]) => `<span class="pet-care-note"><strong>${label}</strong> ${esc(value)}</span>`).join('') : '<span class="pet-care-empty">—</span>'}</td>
+                        <td role="cell"><div class="pet-card-actions">
+                            <button type="button" class="btn-pet-action btn-pet-view-profile admin-btn admin-btn-secondary" data-pet-id="${esc(pet.id || ('PET-' + (idx + 1)))}" data-pet-name="${esc(pet.name)}">Xem hồ sơ bé</button>
+                            <button type="button" class="btn-pet-action btn-pet-edit" data-cust-id="${esc(custId)}" data-pet-index="${idx}">Sửa</button>
+                            <button type="button" class="btn-pet-action btn-pet-delete ${pet.status === 'inactive' ? '' : 'is-destructive'}" data-cust-id="${esc(custId)}" data-pet-index="${idx}">${pet.status === 'inactive' ? 'Khôi phục' : 'Gỡ bé cưng'}</button>
+                        </div></td>
+                    </tr>`;
+                }).join('')}</tbody>
+            </table>
+        </div>`;
 
         // Chuyển sang phân hệ Thú cưng
         container.querySelectorAll('.btn-pet-view-profile').forEach(btn => {
@@ -343,11 +349,7 @@
         const headlineName = document.getElementById('drawerCustomerName');
         const headlineTier = document.getElementById('drawerCustomerTier');
         const headlinePhoneBadge = document.querySelector('.drawer-user-headline .badge-success');
-        if (avatar) {
-            const words = String(data.name || '').trim().split(/\s+/).filter(Boolean);
-            const initials = words.length > 1 ? [words[0], words.at(-1)] : words;
-            avatar.textContent = initials.map(word => Array.from(word)[0]).join('').toLocaleUpperCase('vi-VN') || '?';
-        }
+        if (avatar) avatar.textContent = PawpalCustomers.customerInitials(data.name);
         if (headlineName) headlineName.textContent = data.name;
         if (headlineTier) {
             headlineTier.textContent = data.tierName;

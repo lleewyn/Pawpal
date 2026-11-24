@@ -139,23 +139,28 @@
             <!-- THANH THAO TÁC MỘT CHẠM TRÊN ĐẦU HỒ SƠ -->
             <div class="staff-profile-quick-bar">
                 <div class="staff-headline-group">
-                    <span class="headline-name" id="viewStaffName">—</span>
-                    <span class="admin-badge badge-neutral" id="viewStaffCode">—</span>
-                    <span class="admin-badge badge-tier-gold" id="viewStaffPosition">—</span>
-                    <span class="admin-badge badge-active" id="viewStaffStatusBadge">—</span>
-                    <span class="admin-badge badge-locked" id="viewStaffSafetyBadge" style="display: none;">—</span>
+                    <span id="viewStaffAvatarInitials" class="admin-profile-avatar" aria-hidden="true"></span>
+                    <div class="staff-profile-identity">
+                        <span class="headline-name" id="viewStaffName">—</span>
+                        <div class="staff-profile-meta">
+                            <span class="staff-profile-position" id="viewStaffPosition">—</span>
+                            <span class="admin-badge badge-active" id="viewStaffStatusBadge">—</span>
+                            <span class="admin-badge badge-locked" id="viewStaffSafetyBadge" style="display: none;">—</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="staff-quick-actions">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnProfileToggleSafetyLock">Khóa nhận việc</button>
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnProfileEditStaff">Chỉnh sửa hồ sơ</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnProfileEditStaff">Sửa hồ sơ</button>
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnProfileAssignShift">Phân ca làm việc</button>
                     <button type="button" class="admin-btn admin-btn-primary" id="btnProfileAddAssessment">Đánh giá nghiệp vụ</button>
                 </div>
             </div>
 
             <!-- NỘI DUNG HỒ SƠ: THOÁNG ĐÃNG TRÊN NỀN TRẮNG, KHÔNG HỘP LỒNG HỘP -->
-            <div class="staff-profile-sections-grid">
+            <div class="staff-profile-sections-grid admin-profile-content">
                 <div class="staff-profile-left-col">
+                  <div class="staff-profile-overview">
                     <div class="drawer-info-block">
                         <div class="drawer-section-title">Thông tin cá nhân và liên hệ</div>
                         <div class="info-grid-2col">
@@ -183,18 +188,18 @@
                                 <span class="info-label">Ngày bắt đầu làm</span>
                                 <span class="info-value" id="viewStaffJoinDate">—</span>
                             </div>
-                        </div>
-                        <div class="info-pair" style="margin-top: 14px;">
-                            <span class="info-label">Địa chỉ liên hệ</span>
-                            <span class="info-value" id="viewStaffAddress">—</span>
+                            <div class="info-pair">
+                                <span class="info-label">Địa chỉ liên hệ</span>
+                                <span class="info-value" id="viewStaffAddress">—</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="drawer-info-block" style="margin-top: 24px;">
+                    <div class="drawer-info-block">
                         <div class="drawer-section-title">Thông tin công việc và ca trực</div>
                         <div class="info-grid-2col">
                             <div class="info-pair">
-                                <span class="info-label">Chức danh / Chức vụ</span>
+                                <span class="info-label">Chức danh</span>
                                 <span class="info-value" id="viewStaffJobTitle">—</span>
                             </div>
                             <div class="info-pair">
@@ -206,11 +211,11 @@
                                 <span class="info-value" id="viewStaffCurrentShift">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Trạng thái công tác</span>
+                                <span class="info-label">Trạng thái</span>
                                 <span class="info-value text-success" id="viewStaffWorkStatus">—</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Tài khoản Pawpal-er</span>
+                                <span class="info-label">Tài khoản</span>
                                 <span class="admin-badge" id="viewStaffAccountStatus">—</span>
                             </div>
                             <div class="info-pair">
@@ -219,8 +224,9 @@
                             </div>
                         </div>
                     </div>
+                  </div>
 
-                    <div class="drawer-info-block" style="margin-top: 24px;">
+                    <div class="drawer-info-block">
                         <div class="drawer-section-title">Lịch làm việc tháng hiện tại</div>
                         <div class="timesheet-metrics-grid">
                             <div class="metric-box">
@@ -242,8 +248,8 @@
                         </div>
                     </div>
 
-                    <div class="drawer-info-block" style="margin-top: 24px;">
-                        <div class="drawer-section-title">Bảng tính hoa hồng và thu nhập ước tính tháng này</div>
+                    <div class="drawer-info-block staff-profile-income">
+                        <div class="drawer-section-title">Thu nhập ước tính tháng này</div>
                         <div class="commission-breakdown-card">
                             <div class="commission-row">
                                 <span class="commission-label">Lương cơ bản</span>
@@ -251,19 +257,19 @@
                             </div>
                             <div class="commission-row">
                                 <span class="commission-label">Hoa hồng dịch vụ</span>
-                                <span class="commission-val text-success" id="viewStaffServiceCommission">—</span>
+                                <span class="commission-val" id="viewStaffServiceCommission">—</span>
                             </div>
                             <div class="commission-row">
                                 <span class="commission-label">Thưởng khách chỉ định</span>
-                                <span class="commission-val text-indigo" id="viewStaffRequestedBonus">—</span>
+                                <span class="commission-val" id="viewStaffRequestedBonus">—</span>
                             </div>
                             <div class="commission-row">
                                 <span class="commission-label">Thưởng an toàn</span>
-                                <span class="commission-val text-primary" id="viewStaffSafetyBonus">—</span>
+                                <span class="commission-val" id="viewStaffSafetyBonus">—</span>
                             </div>
                             <div class="commission-total-divider"></div>
                             <div class="commission-row total-row">
-                                <span class="commission-total-label">Tổng thu nhập ước tính tháng này</span>
+                                <span class="commission-total-label">Tổng thu nhập ước tính</span>
                                 <span class="commission-total-val" id="viewStaffTotalIncome">—</span>
                             </div>
                         </div>
@@ -275,26 +281,23 @@
                         <div class="drawer-section-title">Đánh giá và phản hồi từ khách hàng</div>
                         <div class="csat-summary-grid">
                             <div class="csat-metric-card">
+                                <span class="csat-metric-sub">Điểm đánh giá</span>
                                 <span class="csat-metric-val" id="viewStaffCsatScore">—</span>
-                                <span class="csat-metric-sub" id="viewStaffCsatReviews">—</span>
                             </div>
                             <div class="csat-metric-card">
-                                <span class="csat-metric-val text-success" id="viewStaffRequestedCount">—</span>
-                                <span class="csat-metric-sub">Khách chỉ định KTV ruột</span>
+                                <span class="csat-metric-sub">Lượt khách chỉ định</span>
+                                <span class="csat-metric-val" id="viewStaffRequestedCount">—</span>
                             </div>
                             <div class="csat-metric-card">
-                                <span class="csat-metric-val text-primary" id="viewStaffZeroComplaintRate">—</span>
-                                <span class="csat-metric-sub">An toàn và Không khiếu nại</span>
+                                <span class="csat-metric-sub">An toàn và không khiếu nại</span>
+                                <span class="csat-metric-val" id="viewStaffZeroComplaintRate">—</span>
                             </div>
                         </div>
 
-                        <div class="customer-reviews-list" id="viewStaffCustomerReviewsList" style="margin-top: 14px;">
-                            <!-- Render dynamically by JS -->
-                        </div>
                     </div>
 
-                    <div class="drawer-info-block" style="margin-top: 24px;">
-                        <div class="drawer-section-title">Lịch sử đánh giá nghiệp vụ gần nhất</div>
+                    <div class="drawer-info-block">
+                        <div class="drawer-section-title">Lịch sử đánh giá nghiệp vụ</div>
                         <div class="assessment-history-list" id="viewStaffAssessmentHistory">Chưa có lịch sử đánh giá.</div>
                     </div>
                 </div>

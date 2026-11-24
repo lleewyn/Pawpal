@@ -456,6 +456,12 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
             .replace(/'/g, '&#39;');
     };
 
+    PawpalCustomers.customerInitials = function(name) {
+        const words = String(name || '').trim().split(/\s+/).filter(Boolean);
+        const initials = words.length > 1 ? [words[0], words.at(-1)] : words;
+        return initials.map(word => Array.from(word)[0]).join('').toLocaleUpperCase('vi-VN') || '?';
+    };
+
     PawpalCustomers.setFieldError = function(id, message) {
         const input = document.getElementById(id);
         let error = document.getElementById(id + 'Error');
@@ -546,6 +552,39 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
         }
     };
 
+    PawpalCustomers.getSubtabHash = function(tabId) {
+        const id = sessionStorage.getItem('pawpal_admin_customer_id');
+        if (tabId !== 'tab-profile' || !id) return '#' + tabId;
+        const params = new URLSearchParams({ id });
+        const panel = sessionStorage.getItem('pawpal_admin_customer_drawertab');
+        if (panel && panel !== 'dtab-personal') params.set('panel', panel);
+        return '#tab-profile?' + params;
+    };
+
+    PawpalCustomers.restoreProfile = async function(id) {
+        if (!id) return;
+        const isCurrent = () => sessionStorage.getItem('pawpal_admin_active_module') === 'Khách hàng'
+            && sessionStorage.getItem('pawpal_admin_customer_id') === id
+            && document.getElementById('subtab-tab-profile')?.classList.contains('active');
+        const findById = () => Object.values(PawpalCustomers.state.customerDatabase || {}).find(customer => customer.id === id || customer.dbId === id);
+        let customer = findById();
+        if (!customer) {
+            try {
+                await PawpalCustomers.lookupCustomers('', id, 1);
+                customer = findById();
+            } catch {
+                if (isCurrent()) {
+                    PawpalCustomers.showToast('Chưa tải được hồ sơ đã chọn. Vui lòng thử lại.', 'warning');
+                    PawpalCustomers.subtabs.profile?.renderDrawerCustomerProfile(null);
+                }
+                return;
+            }
+        }
+        if (!isCurrent()) return;
+        if (customer) sessionStorage.setItem('pawpal_admin_customer_name', customer.name);
+        PawpalCustomers.subtabs.profile?.renderDrawerCustomerProfile(customer?.id || null);
+    };
+
     PawpalCustomers.switchSubtab = function(targetSubtab, updateHistory = true) {
         const root = document.getElementById('subtab-tab-list')?.closest('.admin-module-wrapper');
         if (!root || sessionStorage.getItem('pawpal_admin_active_module') !== 'Khách hàng') return;
@@ -572,22 +611,27 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
 
         sessionStorage.setItem('pawpal_admin_customer_subtab', targetSubtab);
         if (targetSubtab === 'tab-profile') {
+            if (!sessionStorage.getItem('pawpal_admin_customer_id')) {
+                const firstId = Object.keys(PawpalCustomers.state.customerDatabase || {})[0];
+                if (firstId) sessionStorage.setItem('pawpal_admin_customer_id', firstId);
+            }
             PawpalCustomers.subtabs.profile?.switchDrawerTab(sessionStorage.getItem('pawpal_admin_customer_drawertab') || 'dtab-personal');
         }
         if (targetSubtab === 'tab-pawpoint') PawpalCustomers.subtabs.pawpoint?.renderPawpointHistory();
         if (directoryDirty || ledgerDirty || profileDirty || historyDirty) scheduleCustomerSync();
+        const hash = PawpalCustomers.getSubtabHash(targetSubtab);
         if (updateHistory) {
-            if (window.location.hash !== '#' + targetSubtab) {
+            if (window.location.hash !== hash) {
                 try {
-                    history.pushState(null, '', '#' + targetSubtab);
+                    history.pushState(null, '', hash);
                 } catch (e) {
-                    window.location.hash = targetSubtab;
+                    window.location.hash = hash;
                 }
             }
         } else {
-            if (window.location.hash !== '#' + targetSubtab) {
+            if (window.location.hash !== hash) {
                 try {
-                    history.replaceState(null, '', '#' + targetSubtab);
+                    history.replaceState(null, '', hash);
                 } catch (e) {}
             }
         }
@@ -838,8 +882,8 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
             if(generation===directoryGeneration){if(directoryCache.size>=20)directoryCache.delete(directoryCache.keys().next().value);directoryCache.set(key,{at:Date.now(),data});}return data;
         })().finally(()=>directoryRequests.delete(requestKey));directoryRequests.set(requestKey,task);return task;
     };
-    PawpalCustomers.lookupCustomers=async function(query='',lookup=''){
-        const data=await PawpalCustomers.readCustomerPage({query,lookup,page:1,size:15});const customers=hydrateCustomerPage(data),ids=new Set(data.pageIds||[]);
+    PawpalCustomers.lookupCustomers=async function(query='',lookup='',size=15){
+        const data=await PawpalCustomers.readCustomerPage({query,lookup,page:1,size});const customers=hydrateCustomerPage(data),ids=new Set(data.pageIds||[]);
         Object.assign(PawpalCustomers.state.customerDatabase,customers);return Object.values(customers).filter(c=>ids.has(c.dbId));
     };
     PawpalCustomers.hydrateCustomerPage=hydrateCustomerPage;
@@ -1366,7 +1410,7 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
         }
 
         // Khôi phục subtab active và hồ sơ khách hàng đang xem
-        const hashSubtab = window.location.hash ? window.location.hash.replace('#', '') : null;
+        const hashSubtab = window.location.hash.slice(1).split('?')[0];
         const validSubtabs = ['tab-list', 'tab-profile', 'tab-pawpoint'];
         let initialSubtab = 'tab-list';
 
@@ -1379,16 +1423,14 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
             }
         }
 
-        const firstCustId = Object.keys(PawpalCustomers.state.customerDatabase)[0] || 'CUST-001';
+        const firstCustId = Object.keys(PawpalCustomers.state.customerDatabase)[0];
         const savedCustId = sessionStorage.getItem('pawpal_admin_customer_id');
-        if(savedCustId&&!PawpalCustomers.getCustomer(savedCustId)){try{await PawpalCustomers.lookupCustomers('',savedCustId);}catch{PawpalCustomers.showToast('Chưa tải được hồ sơ đã chọn. Vui lòng thử lại.','warning');}}
-        const resolvedCust = savedCustId ? PawpalCustomers.getCustomer(savedCustId) : null;
-        const activeCustId = resolvedCust ? resolvedCust.id : (savedCustId || firstCustId);
-        if (PawpalCustomers.subtabs.profile) {
-            PawpalCustomers.subtabs.profile.renderDrawerCustomerProfile(activeCustId);
-        }
+        const activeCustId = savedCustId || firstCustId;
+        if (!savedCustId && activeCustId && initialSubtab === 'tab-profile') sessionStorage.setItem('pawpal_admin_customer_id', activeCustId);
 
         PawpalCustomers.switchSubtab(initialSubtab, false);
+        if (initialSubtab === 'tab-profile') await PawpalCustomers.restoreProfile(activeCustId);
+        else PawpalCustomers.subtabs.profile?.renderDrawerCustomerProfile(activeCustId);
 
         const savedDrawerTab = sessionStorage.getItem('pawpal_admin_customer_drawertab');
         if (savedDrawerTab && document.getElementById(savedDrawerTab) && PawpalCustomers.subtabs.profile) {

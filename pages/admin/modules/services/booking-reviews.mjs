@@ -1,14 +1,15 @@
 const mounted=new WeakMap();
-function element(tag,text,className=''){const el=document.createElement(tag);if(text!=null)el.textContent=text;el.className=className;if(tag==='h3')el.style.cssText='font-size:18px;margin:0 0 16px;color:#236B48';return el;}
+function element(tag,text,className=''){const el=document.createElement(tag);if(text!=null)el.textContent=text;el.className=className;return el;}
 export function mountBookingReviews(root,booking,{db}={}){
  const previous=mounted.get(root);if(previous?.id===booking.dbId)return;previous?.dispose();
  let disposed=false,epoch=0,page=1;
  const valid=()=>!disposed&&root.isConnected;
  async function load(){
-  const version=++epoch;root.replaceChildren(element('h3','Đánh giá dịch vụ','admin-card-title'),element('p','Đang tải đánh giá…'));
+  const heading=element('h3','Đánh giá dịch vụ','detail-section-title');
+  const version=++epoch;root.replaceChildren(heading,element('p','Đang tải đánh giá…'));
   try{
    const {data,error}=await db.rpc('admin_service_review_page',{p_filters:{appointmentId:booking.dbId},p_page:page,p_size:10});if(error)throw error;if(!valid()||version!==epoch)return;
-   root.replaceChildren(element('h3','Đánh giá dịch vụ','admin-card-title'));
+   root.replaceChildren(heading);
    if(!data.rows?.length){root.append(element('p','Chưa có đánh giá cho lịch hẹn này.'));return;}
    for(const row of data.rows){
     const article=element('article');article.style.cssText='display:grid;gap:10px;margin:16px 0;background:transparent;border:none';
@@ -29,7 +30,7 @@ export function mountBookingReviews(root,booking,{db}={}){
     article.append(label,input,feedback,save);root.append(article);
    }
    if(data.total>10){const pager=element('nav');pager.style.cssText='display:flex;justify-content:center;gap:12px';for(const [text,delta,disabled]of [['<',-1,page<=1],['>',1,page*10>=data.total]]){const b=element('button',text,'admin-btn');b.type='button';b.disabled=disabled;b.onclick=()=>{page+=delta;void load();};pager.append(b);}root.append(pager);}
-  }catch{if(valid()&&version===epoch){root.replaceChildren(element('h3','Đánh giá dịch vụ','admin-card-title'),element('p','Không thể tải đánh giá.'));const retry=element('button','Thử lại','admin-btn');retry.type='button';retry.onclick=load;root.append(retry);}}
+  }catch{if(valid()&&version===epoch){root.replaceChildren(heading,element('p','Không thể tải đánh giá.'));const retry=element('button','Thử lại','admin-btn');retry.type='button';retry.onclick=load;root.append(retry);}}
  }
  const refresh=()=>{if(valid()&&!(root.contains(document.activeElement)&&document.activeElement.tagName==='TEXTAREA'))void load();};
  document.addEventListener('service-reviews-updated',refresh);

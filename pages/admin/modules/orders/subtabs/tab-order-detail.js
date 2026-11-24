@@ -53,21 +53,11 @@
             return;
         }
 
-        let summary = document.getElementById('detailOrderCancellation');
-        if (!summary && content) {
-            summary = document.createElement('section');summary.id = 'detailOrderCancellation';
-            summary.style.cssText = 'margin-bottom:20px;color:#203A2C;white-space:pre-wrap;overflow-wrap:anywhere';
-            content.prepend(summary);
-        }
+        const summary = document.getElementById('detailOrderCancellation');
         if (summary) {
-            summary.replaceChildren();summary.hidden = order.status !== 'cancelled';
-            if (!summary.hidden) {
-                const title = document.createElement('h3');title.textContent = 'Lý do hủy đơn hàng';
-                title.style.cssText = 'font-size:16px;color:#236B48;margin:0 0 8px';
-                const reason = document.createElement('p');reason.style.margin = '0';
-                reason.textContent = order.cancelReason || order.timeline?.find(event => event.title === 'Hủy đơn')?.desc || 'Chưa ghi nhận lý do hủy';
-                summary.append(title,reason);
-            }
+            summary.hidden = order.status !== 'cancelled';
+            summary.querySelector('p').textContent = summary.hidden ? ''
+                : order.cancelReason || order.timeline?.find(event => event.title === 'Hủy đơn')?.desc || 'Chưa ghi nhận lý do hủy';
         }
         state.selectedOrderId = order.id;
         sessionStorage.setItem('pawpal_admin_order_selected_id', order.id);
@@ -137,8 +127,8 @@
         const itemsTbody = document.getElementById('detailOrderItemsBody');
         if (itemsTbody) {
             itemsTbody.innerHTML = (order.products || []).map(p => `
-                <tr>
-                    <td>
+                <tr role="row">
+                    <td role="cell">
                         <div class="prod-item-row">
                             <img src="${escapeText(p.image)}" alt="${escapeText(p.name)}" class="prod-thumb" loading="lazy" decoding="async" onerror="this.style.display='none'">
                             <div class="prod-info-cell">
@@ -147,10 +137,10 @@
                             </div>
                         </div>
                     </td>
-                    <td><span class="admin-table-code" title="${escapeText(p.sku)}">${escapeText(p.sku)}</span></td>
-                    <td>${formatVND(p.price)}</td>
-                    <td style="text-align: center; font-weight: 600;">${p.quantity}</td>
-                    <td style="text-align: right; font-weight: 700; color: var(--text-heading);">${formatVND(p.total || (p.price * p.quantity))}</td>
+                    <td role="cell" data-label="Mã SKU"><span class="admin-table-code" title="${escapeText(p.sku)}">${escapeText(p.sku)}</span></td>
+                    <td role="cell" data-label="Đơn giá">${formatVND(p.price)}</td>
+                    <td role="cell" data-label="Số lượng" style="text-align: center; font-weight: 600;">${p.quantity}</td>
+                    <td role="cell" data-label="Thành tiền" style="text-align: right; font-weight: 700; color: var(--text-heading);">${formatVND(p.total || (p.price * p.quantity))}</td>
                 </tr>
             `).join('');
         }
@@ -164,14 +154,17 @@
 
         if (subtotalEl) subtotalEl.textContent = formatVND(order.subtotal);
         if (shipEl) shipEl.textContent = formatVND(order.shippingFee);
-        if (voucherEl) voucherEl.textContent = '- ' + formatVND(order.discount || 0);
-        if (pointsEl) pointsEl.textContent = '- ' + formatVND((order.pawPointsUsed || 0) * 100);
+        for (const [field, amount] of [[voucherEl, Number(order.discount || 0)], [pointsEl, Number(order.pawPointsUsed || 0) * 100]]) {
+            if (!field) continue;
+            field.closest('.summary-row').hidden = !amount;
+            field.textContent = amount ? '- ' + formatVND(amount) : '';
+        }
         if (totalEl) totalEl.textContent = formatVND(order.total);
 
         // Ghi chú
         const custNoteEl = document.getElementById('detailCustomerNote');
         const intNoteEl = document.getElementById('detailInternalNote');
-        if (custNoteEl) custNoteEl.textContent = order.customerNote ? `"${order.customerNote}"` : '(Không có ghi chú)';
+        if (custNoteEl) custNoteEl.textContent = order.customerNote || 'Chưa có ghi chú';
         if (intNoteEl) intNoteEl.textContent = order.internalNote || 'Chưa có ghi chú nội bộ.';
 
         // Giao nhận
