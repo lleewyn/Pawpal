@@ -2061,19 +2061,21 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
             updateBreadcrumb(null);
         }
 
+        let pending;
         if (subtabId === 'tab-service-bookings' && PawpalServices.subtabs.bookings) {
-            PawpalServices.subtabs.bookings.renderBookingsTable();
+            pending = PawpalServices.subtabs.bookings.renderBookingsTable();
             PawpalServices.subtabs.bookings.renderUpcomingBar();
             PawpalServices.subtabs.bookings.updateKPIs();
         } else if (subtabId === 'tab-service-catalog' && PawpalServices.subtabs.catalog) {
             const catalogRequest=loadCatalogData();
             PawpalServices.subtabs.catalog.renderCatalogTable();
-            catalogRequest.then(() => PawpalServices.subtabs.catalog?.renderCatalogTable());
+            pending = catalogRequest.then(() => PawpalServices.subtabs.catalog?.renderCatalogTable());
         } else if (subtabId === 'tab-service-reviews' && PawpalServices.subtabs.reviews) {
-            PawpalServices.subtabs.reviews.renderReviewsTable();
+            pending = PawpalServices.subtabs.reviews.renderReviewsTable();
         }
 
         if (window.lucide) lucide.createIcons();
+        return pending;
     }
     PawpalServices.switchSubtab = switchSubtab;
 
@@ -2092,8 +2094,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
     let _isServicesInit = false;
     async function initServicesModule() {
         if (_isServicesInit) {
-            switchSubtab(sessionStorage.getItem('pawpal_admin_services_active_subtab')||'tab-service-bookings',false);
-            return;
+            return switchSubtab(sessionStorage.getItem('pawpal_admin_services_active_subtab')||'tab-service-bookings',false);
         }
         _isServicesInit = true;
 
@@ -2120,13 +2121,9 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
         const savedSubtab = sessionStorage.getItem('pawpal_admin_services_active_subtab');
         const hashSubtab = window.location.hash ? window.location.hash.substring(1) : '';
 
-        if (validTabs.includes(hashSubtab)) {
-            switchSubtab(hashSubtab, false);
-        } else if (savedSubtab && validTabs.includes(savedSubtab)) {
-            switchSubtab(savedSubtab, false);
-        } else {
-            switchSubtab('tab-service-bookings', false);
-        }
+        const initialSubtab = validTabs.includes(hashSubtab) ? hashSubtab :
+            validTabs.includes(savedSubtab) ? savedSubtab : 'tab-service-bookings';
+        const pending = switchSubtab(initialSubtab, false);
 
         window.addEventListener('admin:subtab-change', (e) => {
             if (e.detail?.module === 'Dịch vụ' && validTabs.includes(e.detail.tabId)) {
@@ -2162,6 +2159,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
                 });
             }
         });
+        return pending;
     }
 
     let _servicesRealtimeChannel = null;

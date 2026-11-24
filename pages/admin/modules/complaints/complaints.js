@@ -1493,6 +1493,8 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
     async function initComplaintsModule(isCurrent = () => true) {
         const hasData = ((PawpalComplaints.state?.serviceComplaints?.length || 0) + (PawpalComplaints.state?.orderComplaints?.length || 0)) > 0;
         if (_isComplaintsInit && hasData) {
+            await loadComplaintsModuleData();
+            if (!isCurrent()) return;
             updateComplaintsKpis();
             renderComplaintsAlertBar();
             PawpalComplaints.subtabs.services?.renderServiceComplaintsTable?.();
@@ -2296,7 +2298,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
     PawpalComplaints.init = initComplaintsModule;
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initComplaintsModule);
+        document.addEventListener('DOMContentLoaded', () => initComplaintsModule());
     } else {
         initComplaintsModule();
     }

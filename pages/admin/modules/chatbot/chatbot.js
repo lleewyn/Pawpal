@@ -435,6 +435,7 @@ rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.inc
 
     // TIER 1: Tải tóm tắt danh sách hội thoại nhẹ (không join 8 bảng, không lấy raw_content)
     const inboxPages=new Map(),inboxRequests=new Map();
+    let displayedInboxKey;
     let inboxVersion=0;
     async function loadInboxSummary(options = {}) {
         const limit = options.limit || 50;
@@ -452,10 +453,14 @@ rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.inc
             // 1. Chỉ lấy các cột cần thiết từ chat_conversation (không join chat_message(*) toàn bộ)
             const args={p_query:(document.getElementById('inboxSearchInput')?.value||'').trim(),p_filter:PawpalChatbot.state.currentFilterTab||'all',p_page:options.page||PawpalChatbot.state.inboxPage?.page||1};
             const key=JSON.stringify(args);
-            if(!options.page)inboxPages.clear();
-            PawpalChatbot.state.liveLoaded=false;PawpalChatbot.state.liveLoadError=null;
-            PawpalChatbot.subtabs.live?.renderConversationsList?.();
+            if(!options.page&&!options.reuse)inboxPages.clear();
             let payload=inboxPages.get(key);
+            const sameView=displayedInboxKey===key&&PawpalChatbot.state.liveLoaded&&!PawpalChatbot.state.liveLoadError;
+            if(options.reuse&&sameView&&payload&&Date.now()-payload.at<30000)return;
+            if(!sameView){
+                PawpalChatbot.state.liveLoaded=false;PawpalChatbot.state.liveLoadError=null;
+                PawpalChatbot.subtabs.live?.renderConversationsList?.();
+            }
             if(!payload || Date.now()-payload.at>30000){
                 if(!inboxRequests.has(key))inboxRequests.set(key,supabase.rpc('get_admin_chat_inbox_view',args).then(result=>{if(result.error)throw result.error;return result.data;}).finally(()=>inboxRequests.delete(key)));
                 payload={at:Date.now(),data:await inboxRequests.get(key)};
@@ -467,6 +472,7 @@ rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.inc
             PawpalChatbot.state.liveLoadError = null;
 
             if (!dbConvs || dbConvs.length === 0) {
+                displayedInboxKey = key;
                 PawpalChatbot.state.liveConversations = [];
                 PawpalChatbot.state.currentConversation = null;
                 updateFilterBadges();
@@ -573,6 +579,7 @@ rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.inc
             });
 
             if(version!==inboxVersion)return;
+            displayedInboxKey = key;
             PawpalChatbot.state.liveConversations = realConvList;
 
             // Đồng bộ conversation đang chọn
@@ -786,6 +793,7 @@ rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.inc
 
             chatbotRealtimeChannel = supabase.channel('admin-chatbot-global-sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_conversation' }, payload => {
+                    inboxPages.clear();
                     const changedId=payload?.new?.id||payload?.old?.id;
                     for(const conversation of PawpalChatbot.state.liveConversations||[])if(!changedId||conversation.id===changedId)conversation.messagesLoaded=false;
                     const current=PawpalChatbot.state.currentConversation;
@@ -950,6 +958,12 @@ rowActions:{chat_queue:{enabled:()=>PawpalAdminAccess.state.user.permissions.inc
     // -------------------------------------------------------------
     setupChatbotRealtimeSync();
     loadInboxSummary();
+    window.addEventListener('admin:module-show', event => {
+        if (event.detail?.module === 'Chatbot' && event.detail.revisited &&
+            document.getElementById('subtab-tab-live-support')?.classList.contains('active')) {
+            loadInboxSummary({reuse:true});
+        }
+    });
 
     window.addEventListener('focus', () => {
         refreshInboxDebounced(150);

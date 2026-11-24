@@ -5,16 +5,24 @@
     let state = Object.freeze({ role: null, user: null, error: null });
     let pending, revision = 0, lastVerified;
     let signalChannel,signalOwner,signalTimer;
-    function stopSignals(){clearTimeout(signalTimer);if(signalChannel){try{window.getSupabaseClient?.()?.removeChannel(signalChannel);}catch{}}signalChannel=null;signalOwner=null;}
+    const navigationVerificationMs = 10_000;
+    let verifiedAt = 0, signalHealthy = false, signalRevision = 0;
+    function stopSignals(){clearTimeout(signalTimer);signalHealthy=false;if(signalChannel){try{window.getSupabaseClient?.()?.removeChannel(signalChannel);}catch{}}signalChannel=null;signalOwner=null;}
     function startSignals(context,user){
         if(context.workspace_signals!==true){stopSignals();return;}
         if(signalChannel&&signalOwner===user.auth_user_id)return;stopSignals();signalOwner=user.auth_user_id;
         let subscribed=false;const owner=signalOwner;
-        const refresh=()=>{if(signalOwner!==owner||state.user?.auth_user_id!==owner)return;window.PawpalDataStore?.clear();window.dispatchEvent(new CustomEvent('pawpal:workspace-invalidated'));verify().catch(()=>{});};
+        const refresh=()=>{if(signalOwner!==owner||state.user?.auth_user_id!==owner)return;verifiedAt=0;signalRevision++;window.PawpalDataStore?.clear();window.dispatchEvent(new CustomEvent('pawpal:workspace-invalidated'));verify().catch(()=>{});};
         signalChannel=window.getSupabaseClient().channel('workspace-'+owner).on('postgres_changes',{event:'*',schema:'public',table:'workspace_signal',filter:'auth_user_id=eq.'+owner},payload=>{
             const row=payload.new;if(signalOwner!==owner||state.user?.auth_user_id!==owner||row?.auth_user_id!==owner||typeof row.revision!=='string')return;
+            verifiedAt=0;
+            signalRevision++;
             clearTimeout(signalTimer);signalTimer=setTimeout(()=>{if(signalOwner!==owner)return;window.PawpalDataStore?.clear();window.dispatchEvent(new CustomEvent('pawpal:workspace-invalidated',{detail:{domain:row.domain}}));verify().catch(()=>{});},180);
-        }).subscribe(status=>{if(status==='SUBSCRIBED'){if(subscribed)refresh();subscribed=true;}});
+        }).subscribe(status=>{
+            if(signalOwner!==owner)return;
+            signalHealthy=status==='SUBSCRIBED';
+            if(signalHealthy){if(subscribed)refresh();subscribed=true;}
+        });
     }
 
     function clearDisplayIdentity() {
@@ -22,6 +30,7 @@
     }
     function invalidate(error) {
         stopSignals();
+        verifiedAt = 0;
         revision++;
         state = Object.freeze({ role: null, user: null, error });
         delete document.documentElement.dataset.adminRole;
@@ -41,6 +50,7 @@
         if (pending) return pending;
         pending = (async () => {
             const turn = revision;
+            const observedSignalRevision = signalRevision;
             const db = window.getSupabaseClient?.();
             if (!db) throw Error('Không thể kết nối hệ thống. Vui lòng thử lại.');
             const { data: sessionData, error: sessionError } = await db.auth.getSession();
@@ -62,7 +72,10 @@
                 name: staff.full_name, full_name: staff.full_name, phone: staff.phone_number || '', email: staff.email || '',
                 role: roles[0].toLowerCase(), system_role: roles[0], access_roles: [...roles],
                 position: staff.job_title || '', permissions: [...staff.permission_codes], _source: 'supabase_auth' });
-            if (previousRole && (previousRole !== roles[0] || previousUser.id !== user.id || previousUser.auth_user_id !== user.auth_user_id)) {
+            const previousPermissions = state.user?.permissions;
+            const permissionsChanged = previousPermissions &&
+                (previousPermissions.length !== user.permissions.length || previousPermissions.some(code => !user.permissions.includes(code)));
+            if (previousRole && (previousRole !== roles[0] || previousUser.id !== user.id || previousUser.auth_user_id !== user.auth_user_id || permissionsChanged)) {
                 const changed = Error('Quyền hoặc tài khoản đã thay đổi. Đang tải lại.');
                 invalidate(changed);
                 // Destroy old module objects as well as the visible state before using the new identity.
@@ -70,6 +83,7 @@
                 throw changed;
             }
             state = Object.freeze({ role: roles[0], user, error: null });
+            verifiedAt = observedSignalRevision === signalRevision ? Date.now() : 0;
             lastVerified = { role: state.role, user: { id: user.id, auth_user_id: user.auth_user_id } };
             for (const storage of [localStorage, sessionStorage]) storage.setItem('pawpal_admin_user', JSON.stringify(user));
             document.documentElement.dataset.adminRole = state.role;
@@ -81,6 +95,18 @@
             throw error;
         }).finally(() => { pending = null; });
         return pending;
+    }
+    async function verifyForNavigation() {
+        if (pending || state.role !== 'ADMIN' || !signalHealthy || Date.now() - verifiedAt >= navigationVerificationMs) {
+            return verify();
+        }
+        const verifiedState = state;
+        const { data, error } = await window.getSupabaseClient().auth.getSession();
+        if (!error && data?.session?.user?.id === verifiedState.user.auth_user_id && state === verifiedState &&
+            !pending && signalHealthy && Date.now() - verifiedAt < navigationVerificationMs) {
+            return state;
+        }
+        return verify();
     }
     function canModule(moduleName) {
         return state.role === 'ADMIN' || state.role === 'STAFF' && staffModules.has(moduleName);
@@ -173,7 +199,7 @@
         applyNavigation();
     }
     const ready = verify().catch(() => null);
-    window.PawpalAdminAccess = Object.freeze({ get state() { return state; }, ready, verify, canModule, applyNavigation, showError, closeWorkForms,
+    window.PawpalAdminAccess = Object.freeze({ get state() { return state; }, ready, verify, verifyForNavigation, canModule, applyNavigation, showError, closeWorkForms,
         isAdmin: () => state.role === 'ADMIN', isStaff: () => state.role === 'STAFF' });
     function recheck() {
         if (document.hidden) return;

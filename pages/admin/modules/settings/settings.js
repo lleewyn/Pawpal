@@ -1042,14 +1042,4 @@
         }
     });
 
-    window.addEventListener('admin:module-show', (e) => {
-        if (e.detail?.module === 'Cấu hình') {
-            const h = window.location.hash ? window.location.hash.replace('#', '') : '';
-            const s = sessionStorage.getItem('pawpal_admin_settings_subtab');
-            let t = 'tab-banner-promos';
-            if (VALID_SETTINGS_TABS.includes(h)) t = h;
-            else if (VALID_SETTINGS_TABS.includes(s)) t = s;
-            switchSubtab(t);
-        }
-    });
 })();

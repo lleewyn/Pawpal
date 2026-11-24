@@ -310,13 +310,30 @@
     // Nhóm không phụ thuộc bộ lọc thời gian (ảnh chụp trạng thái hiện tại)
     const SNAPSHOT_RESOURCES = new Set(['todayAppointments', 'backlogAppointments', 'actionOrders', 'openReturns', 'staff', 'inventory', 'reservations', 'salesVelocity', 'openTickets']);
 
-    async function loadResources(names, workboardFallback = false) {
+    async function loadResources(names, workboardFallback = false, reuse = false) {
         const client = getClient();
         const generation = state.generation;
         const period = state.period;
         // The server work page already reads pending appointments and active orders.
         const fallbackNames = ['backlogAppointments', 'actionOrders'];
         const list = [...new Set(names)].filter(name => workboardFallback || !fallbackNames.includes(name));
+        const store = window.PawpalDataStore;
+        const cacheKey = name => `dashboard:operations:${name}:` + store.buildKey('metrics', {
+            from: period.from, to: period.to, today: period.today,
+            scope: name === 'workboard' ? state.alertsScope : '',
+            kind: name === 'workboard' ? state.alertsKind : '',
+            page: name === 'workboard' ? state.alertsPage : name === 'logistics' ? state.logisticsPage : 1
+        });
+        const canRead = name => {
+            const access = window.PawpalAdminAccess;
+            return !access || access.isAdmin() && RESOURCE_PERMISSIONS[name].every(table => access.state.user?.permissions?.includes(`${table}.read`));
+        };
+        if (reuse && store) {
+            for (const name of list) {
+                const cached = store.peek(cacheKey(name));
+                if (cached?.hasLoaded && canRead(name)) state.data[name] = cached.data;
+            }
+        }
         const versions = new Map(list.map(name => { const version = (requestVersions.get(name) || 0) + 1; requestVersions.set(name, version); return [name, version]; }));
         list.forEach(name => state.loading.add(name));
         renderAll();
@@ -334,11 +351,11 @@
         await Promise.all(list.map(name => withSlot(async () => {
             if (generation !== state.generation || versions.get(name) !== requestVersions.get(name)) return;
             try {
-                const access = window.PawpalAdminAccess;
-                if (access && (!access.isAdmin() || RESOURCE_PERMISSIONS[name].some(table => !access.state.user?.permissions?.includes(`${table}.read`)))) {
-                    throw { code: '42501' };
-                }
-                const result = await LOADERS[name](client, period);
+                if (!canRead(name)) throw { code: '42501' };
+                const read = () => LOADERS[name](client, period);
+                const result = store ? await store.fetch(cacheKey(name), read, {
+                    force: !reuse, ttlMs: store.TTL_TIERS.OPERATIONAL, backgroundRevalidate: false
+                }) : await read();
                 if (generation !== state.generation || versions.get(name) !== requestVersions.get(name)) return;
                 state.data[name] = result;
                 delete state.errors[name];
@@ -365,7 +382,10 @@
 
     // Gom các yêu cầu tải lại: chỉ một lượt chạy cùng lúc, sự kiện tới giữa chừng sẽ được xử lý ở lượt kế tiếp.
     function requestReload(names) {
-        names.forEach(name => state.dirty.add(name));
+        names.forEach(name => {
+            state.dirty.add(name);
+            window.PawpalDataStore?.invalidate(`dashboard:operations:${name}:*`);
+        });
         clearTimeout(state.debounceTimer);
         state.debounceTimer = setTimeout(flushReload, REALTIME_DEBOUNCE_MS);
     }
@@ -1011,17 +1031,17 @@
     }
 
     // Đổi kỳ hoặc làm mới: tải lại toàn bộ, giữ khung cũ làm mờ trong lúc tải.
-    function reloadAll() {
+    function reloadAll(reuse = false) {
         const period = M().resolvePeriod(state.preset, new Date(), state.custom);
         if (period.ok) state.period = period;
         state.generation++;
         state.loading.clear();
         state.dirty.clear();
         allResourceNames().forEach(name => { delete state.errors[name]; });
-        loadResources(allResourceNames());
+        loadResources(allResourceNames(), false, reuse);
     }
 
-    function applyPeriod(preset, custom) {
+    function applyPeriod(preset, custom, reuse = false) {
         const period = M().resolvePeriod(preset, new Date(), custom);
         if (!period.ok) { showFilterError(period.error); return; }
         showFilterError('');
@@ -1030,7 +1050,7 @@
         state.period = period;
         state.alertsPage = 1;
         try { sessionStorage.setItem('pawpal_admin_ops_dashboard_range', JSON.stringify({ preset, custom: preset === 'custom' ? custom : null })); } catch (_) { /* bỏ qua */ }
-        reloadAll();
+        reloadAll(reuse);
     }
 
     function bindEvents() {
@@ -1175,7 +1195,7 @@
         subscribeRealtime();
         const preset = saved?.preset && ['today', '7d', '30d', '90d', 'custom'].includes(saved.preset) ? saved.preset : 'today';
         const period = M().resolvePeriod(preset, new Date(), saved?.custom || {});
-        applyPeriod(period.ok ? preset : 'today', saved?.custom || {});
+        applyPeriod(period.ok ? preset : 'today', saved?.custom || {}, true);
         state.clockTimer = setInterval(refreshClock, 60_000);
     }
 

@@ -625,7 +625,7 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
         },
         renderOrdersTable: function() {
             if (this.controllers.list?.renderOrdersTable) {
-                this.controllers.list.renderOrdersTable();
+                return this.controllers.list.renderOrdersTable();
             }
         },
         renderOrderDetail: function(id) {

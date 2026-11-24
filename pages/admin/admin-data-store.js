@@ -397,6 +397,7 @@
      */
     function handleRealtimeChange({ moduleName, invalidatePattern, onActiveRefresh, debounceMs = 300 }) {
         recordMetric('realtime');
+        window.dispatchEvent(new CustomEvent('pawpal:module-data-invalidated', { detail: { module: moduleName } }));
         
         // Luôn luôn invalidate cache key tương ứng trong DataStore (PERF-04.04)
         if (invalidatePattern) {

@@ -845,7 +845,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Version tĩnh cho cache-busting — cập nhật sau mỗi đợt deploy
-    const MODULE_SCRIPT_VERSION = '20261124_admin_loading_feedback';
+    const MODULE_SCRIPT_VERSION = '20261124_fast_navigation';
     const moduleHtmlRequests = new Map();
     const moduleScriptRequests = new Map();
     const prefetchedModuleScripts = new Set();
@@ -987,20 +987,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Dịch vụ':    {
             html: 'modules/services/services.html',
             scripts: ['modules/services/services.js', 'modules/services/subtabs/tab-service-bookings.js', 'modules/services/subtabs/tab-service-detail.js', 'modules/services/subtabs/tab-service-catalog.js', 'modules/services/subtabs/tab-service-reviews.js', 'modules/services/subtabs/tab-service-cashier.js', 'modules/services/subtabs/tab-service-support.js'],
-            postLoad: async (isCurrent) => {
+            postLoad: async () => {
                 await window.PawpalServices?.init?.();
-                if (!isCurrent()) return;
-                if (window.PawpalServices?.subtabs?.bookings?.renderBookingsTable) {
-                    window.PawpalServices.subtabs.bookings.renderBookingsTable();
-                    window.PawpalServices.subtabs.bookings.updateKPIs();
-                }
             }
         },
         'Bán hàng':   {
             html: 'modules/orders/orders.html',
             scripts: ['modules/orders/orders.js', 'modules/orders/subtabs/tab-order-list.js', 'modules/orders/subtabs/tab-order-detail.js', 'modules/orders/subtabs/tab-sales-replacements.js', 'modules/orders/subtabs/tab-order-products.js', 'modules/orders/subtabs/tab-order-promos.js'],
             postLoad: async () => {
-                if (window.PawpalOrders?.renderOrdersTable) window.PawpalOrders.renderOrdersTable();
+                const orders = window.PawpalOrders;
+                if (document.getElementById('subtab-tab-order-list')?.classList.contains('active')) await orders?.renderOrdersTable?.();
+                else if (document.getElementById('subtab-tab-order-products')?.classList.contains('active')) await orders?.fetchProductsData?.();
+                else if (document.getElementById('subtab-tab-order-promos')?.classList.contains('active')) await orders?.fetchVouchersData?.();
             }
         },
         'Nhân sự':    {
@@ -1046,6 +1044,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     let _activeModuleLoadId = 0;
+    const moduleDataViews = new Map();
+    const moduleReuseMs = 30_000;
+    window.addEventListener('pawpal:workspace-invalidated', () => moduleDataViews.clear());
+    window.addEventListener('pawpal:mutation', () => moduleDataViews.clear());
+    window.addEventListener('pawpal:module-data-invalidated', event => {
+        moduleDataViews.delete(event.detail?.module);
+    });
+
+    function refreshModuleView(moduleName, modCfg, root, isCurrent) {
+        const hash = window.location.hash;
+        const previous = moduleDataViews.get(moduleName);
+        const loading = root.querySelector('.subtab-content.active [data-loading-skeleton], .subtab-content.active [aria-busy="true"]');
+        if (moduleName !== 'Dashboard' && !/(?:profile|detail)(?:\?|$)/.test(hash) && previous?.root === root &&
+            previous.hash === hash && !loading && Date.now() - previous.updatedAt < moduleReuseMs) {
+            return;
+        }
+        const visit = { root, hash };
+        moduleDataViews.set(moduleName, visit);
+        return Promise.resolve().then(async () => {
+            if (!isCurrent()) return;
+            await modCfg.postLoad?.(isCurrent);
+            if (isCurrent() && window.location.hash === hash && moduleDataViews.get(moduleName) === visit) {
+                visit.updatedAt = Date.now();
+            }
+        });
+    }
 
     // Nạp module tương ứng — dùng DOM cache để chuyển tab tức thì 0ms (Zero-Wait)
     let moduleLoadRevision = 0;
@@ -1056,21 +1080,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         moduleLoadRevision++;
         _activeModuleLoadId++;
         _moduleDomCache.clear();
+        moduleDataViews.clear();
     });
     function loadModule(moduleName) {
         const requested = ++requestedModuleSequence;
+        if (!_moduleDomCache.has(moduleName)) prefetchModule(moduleName);
         // Keep a module's DOM attached until its scripts finish initializing.
         // Rapid navigation otherwise detaches forms while later scripts bind them.
         // Once the DOM and scripts are ready, the latest queued navigation can run.
         // Callers can still await data readiness for deep links.
         const activation = moduleActivation.catch(() => {}).then(() => {
             if (requested !== requestedModuleSequence) return;
-            return loadModuleNow(moduleName);
+            return loadModuleNow(moduleName, requested);
         });
         moduleActivation = activation;
         return activation.then(result => result?.dataReady);
     }
-    async function loadModuleNow(moduleName) {
+    async function loadModuleNow(moduleName, requested) {
         const loadRevision = ++moduleLoadRevision;
         if (!contentArea) return;
         const thisLoadId = ++_activeModuleLoadId;
@@ -1081,14 +1107,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             verifying.textContent = `Đang mở ${moduleName}`;
             contentArea.append(verifying);
             try {
-                await access.verify();
+                await access.verifyForNavigation();
             } catch (error) {
                 access.showError(error);
                 return;
             } finally {
                 verifying.remove();
             }
-            if (loadRevision !== moduleLoadRevision || thisLoadId !== _activeModuleLoadId) return;
+            if (requested !== requestedModuleSequence || loadRevision !== moduleLoadRevision || thisLoadId !== _activeModuleLoadId) return;
         }
         access.applyNavigation();
         if (!access.canModule(moduleName)) {
@@ -1161,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // Dispatch event để module JS biết tab đã active trở lại ngay lập tức
-            window.dispatchEvent(new CustomEvent('admin:module-show', { detail: { module: moduleName } }));
+            window.dispatchEvent(new CustomEvent('admin:module-show', { detail: { module: moduleName, revisited: true } }));
 
             // Tối ưu Giai đoạn 1 (PERF-01): Chạy postLoad trong nền (non-blocking) - KHÔNG AWAIT để chuyển tab tức thì 0ms!
             const modCfg = MODULE_CONFIG[moduleName];
@@ -1171,7 +1197,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     try {
                         await loadModuleScripts(modCfg.scripts);
                         if (thisLoadId !== _activeModuleLoadId) return;
-                        await modCfg.postLoad(() => thisLoadId === _activeModuleLoadId && cachedEl.parentNode === contentArea);
+                        await refreshModuleView(moduleName, modCfg, cachedEl,
+                            () => thisLoadId === _activeModuleLoadId && cachedEl.parentNode === contentArea);
                         if (thisLoadId === _activeModuleLoadId && moduleName !== 'Dashboard') {
                             syncActiveSubtabPane(cachedEl, moduleName);
                         }
@@ -1224,6 +1251,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (modCfg) {
             try {
                 const html = await fetchModuleHtml(modCfg.html);
+                if (requested !== requestedModuleSequence) return;
                 if (loadRevision !== moduleLoadRevision) return;
                 if (thisLoadId !== _activeModuleLoadId) return; // Bị hủy bởi thao tác chuyển phân hệ mới hơn
                 if (html) {
@@ -1253,12 +1281,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     }
                     if (loadRevision !== moduleLoadRevision) return;
-                    if (thisLoadId !== _activeModuleLoadId) return;
+                    if (requested !== requestedModuleSequence || thisLoadId !== _activeModuleLoadId) return;
                     const isCurrent = () => loadRevision === moduleLoadRevision &&
                         thisLoadId === _activeModuleLoadId && moduleWrapper.parentNode === contentArea;
                     const dataReady = Promise.resolve().then(async () => {
                         if (!isCurrent()) return;
-                        try { await modCfg.postLoad?.(isCurrent); }
+                        try { await refreshModuleView(moduleName, modCfg, moduleWrapper, isCurrent); }
                         catch (err) { console.warn(`[Admin] postLoad ${moduleName}:`, err); }
                         if (!isCurrent()) return;
                         syncActiveSubtabPane(moduleWrapper, moduleName);

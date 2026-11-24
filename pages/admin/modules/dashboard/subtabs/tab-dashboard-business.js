@@ -555,7 +555,7 @@
         $('[data-biz-refresh]').disabled = state.loading.size > 0;
     }
 
-    async function reload(requested = keys) {
+    async function reload(requested = keys, reuse = false) {
         if (!state.root?.isConnected || !state.range) return;
         if (requested.includes('analysis')) {
             state.drillGeneration++; state.drill = null;
@@ -563,6 +563,16 @@
         }
         const turn = ++state.generation, range = { ...state.range };
         const db = window.getSupabaseClient?.() || window.SupabaseClient;
+        const store = window.PawpalDataStore;
+        const cacheKey = key => `dashboard:business:${key}:` + store.buildKey('metrics', { from: range.from, to: range.to });
+        if (reuse && store) {
+            for (const key of requested) {
+                const cached = store.peek(cacheKey(key));
+                if (cached?.hasLoaded && permissions[key].every(code => window.PawpalAdminAccess?.state.user?.permissions?.includes(code))) {
+                    state.data[key] = cached.data;
+                }
+            }
+        }
         state.loading = new Set(requested);
         requested.forEach(key => { delete state.errors[key]; });
         render();
@@ -573,7 +583,10 @@
             try {
                 if (!access?.isAdmin() || !permissions[key].every(code => access.state.user.permissions.includes(code))) throw Object.assign(Error('forbidden'), { code: '42501' });
                 if (!db) throw Error('no_connection');
-                const data = await M.load(db, key, range);
+                const read = () => M.load(db, key, range);
+                const data = store ? await store.fetch(cacheKey(key), read, {
+                    force: !reuse, ttlMs: store.TTL_TIERS.OPERATIONAL, backgroundRevalidate: false
+                }) : await read();
                 if (turn === state.generation) { state.data[key] = data; state.updated = Date.now(); }
             } catch (error) {
                 if (turn === state.generation) { delete state.data[key]; state.errors[key] = safeError(error); }
@@ -595,7 +608,7 @@
         const to = new Date(Date.UTC(year, month + offset, 0)).toISOString().slice(0,10);
         return { from, to };
     }
-    function apply(from, to, isCustom = false) {
+    function apply(from, to, isCustom = false, reuse = false) {
         try {
             const range = M.period(from, to);
             state.range = range; state.data = {}; state.errors = {}; state.updated = null;
@@ -630,7 +643,7 @@
             if (customBox) customBox.hidden = !isCustom;
 
             sessionStorage.setItem('pawpal_admin_business_range', JSON.stringify({ from, to, isCustom }));
-            return reload();
+            return reload(keys, reuse);
         } catch (error) {
             $('[data-biz-error]').textContent = error.message;
             $('[data-biz-error]').hidden = false;
@@ -737,7 +750,7 @@
 
         const today = M.dayKey(new Date());
         state.timer = setInterval(() => { if (visible() && !state.pending) reload(); }, 300000);
-        await apply(saved?.from || M.shift(today, -29), saved?.to || today, !!saved?.isCustom);
+        await apply(saved?.from || M.shift(today, -29), saved?.to || today, !!saved?.isCustom, true);
     }
 
     function unmount() {
@@ -762,6 +775,8 @@
     let invalidationTimer;
     const pendingMetrics = new Set();
     function scheduleReload(metrics) {
+        const store = window.PawpalDataStore;
+        for (const key of metrics) store?.invalidate(`dashboard:business:${key}:*`);
         if (!state.root?.isConnected) return;
         for (const key of metrics) pendingMetrics.add(key);
         clearTimeout(invalidationTimer);

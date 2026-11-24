@@ -821,7 +821,7 @@ render:async(ctx)=>{if(ctx.kind!=='self')return false;const {el,date,money,statu
     window.initStaffModule = initStaffModule;
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initStaffModule);
+        document.addEventListener('DOMContentLoaded', () => initStaffModule());
     } else {
         initStaffModule();
     }
