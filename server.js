@@ -181,6 +181,17 @@ app.get('/admin.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/admi
 app.use('/modules', express.static(path.join(__dirname, 'pages/admin/modules')));
 
 // 3. Phục vụ các file tĩnh (html, css, js) từ thư mục gốc
+app.use((req, res, next) => {
+    let pathname;
+    try {
+        pathname = decodeURIComponent(req.path).replace(/\\/g, '/');
+    } catch {
+        return res.sendStatus(400);
+    }
+    const publicPath = path.posix.normalize(pathname);
+    if (/^\/data[. ]*(?:\/|$)/i.test(publicPath)) return res.sendStatus(404);
+    next();
+});
 app.use(express.static(path.join(__dirname, '.'), { extensions: ['html'] }));
 
 // Route cho API Chatbot (hỗ trợ tải động script AI)

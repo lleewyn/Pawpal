@@ -1,7 +1,6 @@
 
 (function () {
     const NOTI_KEY = 'pawpal_notifications';
-    const NOTI_SEED_URL = '/data/notifications.json';
 
     function getCurrentUser() {
         try {
