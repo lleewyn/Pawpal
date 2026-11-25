@@ -96,6 +96,8 @@ const {chromium} = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/p
             rgLastSearchState.orders[0].returns[0].request_status='received';
             renderResults([],rgLastSearchState.orders);
         });
+        await page.locator('.rg-tab[data-filter="order"]').click();
+        await page.locator('.rg-chip[data-status="returned"]').click();
         await page.getByRole('button',{name:'Xem phiếu đổi trả'}).click();
         await receipt.getByText('Đã nhận hàng trả',{exact:true}).waitFor();
         await page.screenshot({path:path.join(output,'04-return-receipt-mobile.png')});

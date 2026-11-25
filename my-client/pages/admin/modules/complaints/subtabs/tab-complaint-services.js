@@ -138,7 +138,8 @@
             return;
         }
         const byId=new Map((PawpalComplaints.state.serviceComplaints||[]).map(item=>[item.rawId,item]));
-        const filtered=serverPage.pageIds.map(id=>byId.get(id)).filter(Boolean);
+        const pageIds = Array.isArray(serverPage?.pageIds) ? serverPage.pageIds : [];
+        const filtered=pageIds.map(id=>byId.get(id)).filter(Boolean);
         lastFilteredServices = filtered;
 
         const totalPages = Math.ceil(serverPage.total / ITEMS_PER_PAGE);

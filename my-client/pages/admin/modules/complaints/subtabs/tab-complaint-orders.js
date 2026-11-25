@@ -160,7 +160,8 @@
             renderOrderPagination(0);
             return;
         }
-        const visible = (PawpalComplaints.state.orderComplaints || []).filter(item => serverPage.pageIds.includes(item.rawId));
+        const pageIds = Array.isArray(serverPage?.pageIds) ? serverPage.pageIds : [];
+        const visible = (PawpalComplaints.state.orderComplaints || []).filter(item => pageIds.includes(item.rawId));
         const filtered = visible.filter(item => {
             if (searchTerm) {
                 const match = (item.id && item.id.toLowerCase().includes(searchTerm)) ||

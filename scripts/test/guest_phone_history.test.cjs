@@ -15,14 +15,14 @@ test('verified history pages return 10/10/3 and reject altered or cross-phone gr
  for(const body of [{phone:'0908887766',historyPage:{grant:grant+'x',page:1}},{phone:'0908887765',historyPage:{grant,page:1}},{phone:'0908887766',historyPage:{grant,page:-1}}])assert.equal((await f.send(body)).code,400);
  assert.equal(f.reads.length,before);
 });
-function fixture({production=false,demo=true,member=false,locked=false,verifyFails=false,smsFails=false,otpPreviewOrigin=null,otpTestPhones=[],rowCount=1}={}){
+function fixture({production=false,demo=true,member=false,locked=false,verifyFails=false,smsFails=false,otpPreviewOrigin=null,otpTestPhones=[],rowCount=1,payments=[],total=100}={}){
  const challenges=new Map(),reads=[],sms=[],authChecks=[],writes=[];
  const store={async limit(){},async issue(value){assert.equal(challenges.has(value.id),false,'challenge IDs cannot be issued twice');challenges.set(value.id,{...value,status:'pending',attempts:0})},async activate(id,ok){challenges.get(id).status=ok?'active':'failed'},
   async claim(id,mode,hash,claimId){const c=challenges.get(id);if(!c||c.mode!==mode||c.status!=='active'||c.attempts>=5)throw Error('Expired challenge');c.attempts++;if(c.hash&&hash!==c.hash)throw Error('Wrong code');c.status='claimed';c.claimId=claimId;return c},
   async finish(id,claimId,ok){const c=challenges.get(id);assert.equal(c.claimId,claimId);c.status=ok?'consumed':'active'}};
  const admin={from(table){const read={table,filters:[]};reads.push(read);const q={select(){return q},eq(key,value){read.filters.push([key,value]);return q},in(key,value){read.filters.push([key,value]);read.ids=value;return q},order(){return q},
   async maybeSingle(){return {data:table==='customer_profile'?{full_name:'Khách thử nghiệm'}:{id:'customer-id',auth_user_id:member?'member-id':null,customer_status:locked?'locked':'active'}}},
-  range(start,end){read.range=[start,end];return q;},limit(count,opts){(read.limits??=[]).push({count,opts});return q;},then(resolve){return Promise.resolve({data:table==='customer'?(read.ids?read.ids.map(id=>({id,auth_user_id:member?'member-id':null,customer_status:locked?'locked':'active'})):[]):table==='customer_phone'?[{customer_id:'customer-id'}]:table==='staff'?[]:Array.from({length:rowCount},(_,i)=>({id:table==='sales_order'?(i===0?orderId:'00000000-0000-0000-0000-'+String(i+11).padStart(12,'0')):table+'-'+i})).slice(read.range?.[0]||0,(read.range?.[1]??(rowCount-1))+1)}).then(resolve)}};return q},
+  range(start,end){read.range=[start,end];return q;},limit(count,opts){(read.limits??=[]).push({count,opts});return q;},then(resolve){return Promise.resolve({data:table==='customer'?(read.ids?read.ids.map(id=>({id,auth_user_id:member?'member-id':null,customer_status:locked?'locked':'active'})):[]):table==='customer_phone'?[{customer_id:'customer-id'}]:table==='staff'?[]:table==='sales_order_totals'?read.ids.map(order_id=>({order_id,total_amount:total})):Array.from({length:rowCount},(_,i)=>table==='sales_order'?{id:i===0?orderId:'00000000-0000-0000-0000-'+String(i+11).padStart(12,'0'),payments}:{id:table+'-'+i}).slice(read.range?.[0]||0,(read.range?.[1]??(rowCount-1))+1)}).then(resolve)}};return q},
   async rpc(name,args){writes.push({name,args});return {data:args.p_id};}};
  const clientFactory=()=>({auth:{
   async signInWithOtp(value){sms.push(value);return smsFails?{error:Error('provider unavailable')}:{}},
@@ -33,6 +33,23 @@ function fixture({production=false,demo=true,member=false,locked=false,verifyFai
  async function send(body,cookie,overrideOrigin=origin){const res={code:200,headers:{},setHeader(k,v){this.headers[k]=v},status(c){this.code=c;return this},json(data){this.data=data;return this}};await handle({body,headers:{origin:overrideOrigin,cookie},socket:{remoteAddress:'test'}},res);return res;}
  return {send,reads,challenges,sms,authChecks,writes,async begin(){const res=await send({phone:'0908887766'});assert.equal(res.code,200);return {challengeId:res.data.challengeId,cookie:res.headers['Set-Cookie'].split(';')[0],res}}};
 }
+test('verified history uses the authoritative total and net collection without exposing payment rows',async()=>{
+ const collected={amount:120,transaction_status:'succeeded',method:{short_name:'COD'}};
+ for(const [payments,total,status] of [
+  [[collected],100,'paid'],
+  [[{...collected,refunds:[{refund_status:'succeeded',refunded_amount:30}]}],100,'partial'],
+  [[{...collected,refunds:[{refund_status:'succeeded',refunded_amount:120}]}],100,'refunded'],
+  [[{...collected,refunds:[{refund_status:'pending',refunded_amount:120}]}],100,'pending_refund'],
+  [[{...collected,transaction_status:'pending'}],100,'pending'],
+  [[],0,'not_required']
+ ]){
+  const f=fixture({payments,total}),{cookie,challengeId}=await f.begin();
+  const {data}=await f.send({phone:'0908887766',challengeId,code:'555666'},cookie);
+  assert.equal(data.orders[0].payment_status,status);
+  assert.equal(data.orders[0].total_amount,total);
+  assert.equal(Object.hasOwn(data.orders[0],'payments'),false);
+ }
+});
 test('legacy lookup requests a server challenge without reading history or creating a member',async()=>{
  const f=fixture(),{res}=await f.begin();assert.equal(res.data.requiresOtp,true);assert.equal(res.data.testCode,'555666');assert.equal(res.data.customer,undefined);assert.ok(!f.reads.some(r=>['appointment','sales_order','customer_profile'].includes(r.table)));assert.equal(f.sms.length,0);
 });

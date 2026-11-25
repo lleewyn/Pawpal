@@ -371,12 +371,15 @@
             }
         }
         const selectedValues = key => [...fields[key].querySelectorAll('input:checked')].map(input => input.value).join(', ');
-        const confirmation = el('label', null, 'workspace-intake-confirmation'), checkbox = el('input'); checkbox.type = 'checkbox'; checkbox.id = 'staffIntakeConfirmed'; confirmation.htmlFor = checkbox.id; confirmation.append(checkbox, el('span','Khách đã xác nhận thông tin tiếp nhận'));
+        const confirmation = el('label', null, 'workspace-intake-confirmation'), checkbox = el('input'); checkbox.type = 'checkbox'; checkbox.id = 'staffIntakeConfirmed'; checkbox.required = true; confirmation.htmlFor = checkbox.id;
+        const requiredMark = el('span', '*'); requiredMark.style.color = '#DC2626';
+        confirmation.append(checkbox, el('span','Khách đã xác nhận thông tin tiếp nhận'), requiredMark);
         const prior = el('p', '', 'workspace-intake-prior'), errorText = el('p', '', 'workspace-error'); errorText.setAttribute('role','alert');
         const mediaRoot=el('div');mediaRoot.id='staffIntakeMedia';
         const footer = el('div', null, 'workspace-modal-footer'), cancel = el('button','Hủy','admin-btn admin-btn-secondary'), save = el('button','Lưu và bắt đầu ca','admin-btn admin-btn-primary'); save.id = 'staffIntakeSave'; cancel.type = save.type = 'button'; cancel.dataset.closeModal = overlay.id; footer.append(cancel,save);
         form.append(header,summary,grid,mediaRoot,confirmation,prior,errorText,footer); card.append(form); overlay.append(card); document.body.append(overlay);
         const state = { overlay, form, fields, save, row: null, loading: true, saving: false, pending: null, recordId:null, media:null, generation: 0, onSaved: null, returnFocus: null };
+        fields.customerConfirmed = checkbox;
         Object.values(fields).forEach(input => input.addEventListener('input', () => { if(input.getAttribute('aria-invalid') === 'true') { input.removeAttribute('aria-invalid'); errorText.textContent=''; } }));
         function closeDialog() { state.generation++;state.media?.close(); overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); if(state.returnFocus?.isConnected)state.returnFocus.focus(); }
         overlay.addEventListener('click',event=>{if(event.target===overlay||event.target.closest('[data-close-modal="'+overlay.id+'"]'))closeDialog();});
@@ -394,6 +397,7 @@
             const weight=Number(fields.weight.value);
             if(!Number.isFinite(weight)||weight<=0||weight>1000||fields.weight.validity.badInput)return invalid('weight','Nhập cân nặng lớn hơn 0 và không quá 1000 kg.');
             for(const key of ['skin','eyes','wounds','temperament'])if(!selectedValues(key))return invalid(key,'Chọn đầy đủ tình trạng da và lông, mắt, mũi và tai, vết thương và tập tính.');
+            if(!checkbox.checked)return invalid('customerConfirmed',PawpalServices.errorMessage(Error('intake_customer_confirmation_required')));
             if(!allowed()){errorText.textContent='Bạn không có quyền tiếp nhận ca dịch vụ.';return;}
             const woundNote = selectedValues('wounds') === 'Không có vết thương cũ' ? '' : fields.woundNote.value.trim();
             const details={actualWeight:weight,staffId:PawpalAdminAccess.state.user.id,customerConfirmed:checkbox.checked,skinCoat:selectedValues('skin'),eyesEars:selectedValues('eyes'),wounds:woundNote ? `Có vết thương cũ: ${woundNote}` : selectedValues('wounds'),woundNote,temperament:selectedValues('temperament'),belongings:selectedValues('belongings'),belongingsNote:fields.note.value.trim()};
@@ -993,6 +997,7 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
             invalid_service_record:'Vui lòng kiểm tra nội dung biên bản.',
             intake_observations_required:'Vui lòng ghi nhận đủ cân nặng, da lông, mắt tai, vết thương và tập tính.',
             handover_confirmation_required:'Cần kiểm tra chất lượng, trả tư trang và ghi nhận xác nhận của khách trước khi bàn giao.',
+            intake_customer_confirmation_required:'Cần khách hàng xác nhận nội dung biên bản trước khi lưu.',
             confirmed_intake_required:'Biên bản tiếp nhận mới nhất chưa được khách xác nhận.',
             pending_service_adjustments:'Cần xử lý các đề xuất phụ phí còn chờ trước khi hoàn tất ca.',
             hotel_checkout_required:'Ca lưu trú cần hoàn tất thủ tục trả phòng trước khi bàn giao.',
@@ -1134,13 +1139,18 @@ rowActions:Object.fromEntries(['service_items','care_logs'].map(kind=>[kind,{ena
     };
     PawpalServices.saveBookingRecord=async function(booking,kind,record) {
         const {recordedAt,updatedAt,staffName,intakeRecordedAt,total,mediaRecordId,...details}=record;
+        if(kind==='intake'&&details.customerConfirmed!==true)throw Error('intake_customer_confirmation_required');
         const key=booking.dbId+':'+kind,id=mediaRecordId||requestId(key,details);
         await performBookingWrite(booking,async db=>{
             let rpcOk = false;
             try {
                 const {data,error}=await db.rpc('save_admin_service_record',{p_id:id,p_appointment_id:booking.dbId,p_expected_updated_at:booking.updatedAt,p_type:kind,p_details:details});
-                if(!error && data===id) rpcOk = true;
-            } catch (_) {}
+                if(error)throw error;
+                if(data!==id)throw Error('Không xác minh được biên bản đã lưu.');
+                rpcOk = true;
+            } catch (error) {
+                if(kind==='intake')throw error;
+            }
             if (!rpcOk) {
                 try {
                     const statusVal = kind === 'intake' ? 'dang_thuc_hien' : 'da_hoan_tat';

@@ -26,7 +26,7 @@
         if(id==='newBookingServiceSelect')id='newBookingServiceInput';
         const field=document.getElementById(id);if(!field)return;
         let node=document.getElementById(id+'Error');
-        if(!node){node=document.createElement('p');node.id=id+'Error';node.dataset.serviceError='true';node.setAttribute('role','alert');node.style.cssText='color:#DC2626;font-size:12px;margin:6px 0 0;background:transparent;border:none';const group=field.closest('.intake-check-section'),card=selectedCardForField(field);if(group)group.append(node);else (card|| (field._entityInput?field.parentElement:field.closest('.customer-autocomplete-wrapper')||field)).after(node);}
+        if(!node){node=document.createElement('p');node.id=id+'Error';node.dataset.serviceError='true';node.setAttribute('role','alert');node.style.cssText='color:#DC2626;font-size:12px;margin:6px 0 0;background:transparent;border:none';const group=field.closest('.intake-check-section'),card=selectedCardForField(field);if(group)group.append(node);else (card|| (field._entityInput?field.parentElement:field.closest('.customer-autocomplete-wrapper')||field.closest('.intake-check-item')||field)).after(node);}
         node.textContent=message;field.setAttribute('aria-invalid','true');field.setAttribute('aria-describedby',node.id);
         if(field._entityInput){field._entityInput.setAttribute('aria-invalid','true');field._entityInput.setAttribute('aria-describedby',node.id);}
     }
@@ -2190,6 +2190,7 @@
                 else if(document.getElementById('checkEyesEarsNormal')?.checked&&eyesEarsList.length>1)fieldError('checkEyesEarsNormal','Không chọn đồng thời bình thường và tình trạng bất thường.');
                 if(!woundsStr||woundNone&&document.getElementById('checkWoundExisting')?.checked)fieldError('checkWoundNone','Chọn đúng một tình trạng vết thương.');
                 if(!selectedTemp)fieldError('intakeTemperamentCalm','Chọn tình trạng tâm lý và tính khí.');
+                if(!document.getElementById('intakeCustomerConfirmed')?.checked)fieldError('intakeCustomerConfirmed','Cần khách hàng xác nhận nội dung biên bản trước khi lưu.');
                 if(modal.querySelector('[aria-invalid="true"]')){focusModalError(modal);return;}
 
                 if(btnConfirmIntake.disabled) return;
@@ -2212,9 +2213,9 @@
                     if(document.getElementById('checkSkinNormal')?.checked && skinList.length>1) throw new Error('Không chọn đồng thời da sạch và tình trạng bất thường.');
                     if(document.getElementById('checkEyesEarsNormal')?.checked && eyesEarsList.length>1) throw new Error('Không chọn đồng thời mắt tai bình thường và tình trạng bất thường.');
                     if(woundNone && document.getElementById('checkWoundExisting')?.checked) throw new Error('Vui lòng chọn đúng tình trạng vết thương.');
+                    modal.querySelectorAll('input,select,textarea').forEach(input=>{lockedFields.push([input,input.disabled]);input.disabled=true;});
                     await intakeMediaReady;
                     if(!intakeMediaEditor||mediaGeneration!==intakeMediaGeneration||!modal.classList.contains('active'))throw Error('Đã đóng biên bản tiếp nhận.');
-                    modal.querySelectorAll('input,select,textarea').forEach(input=>{lockedFields.push([input,input.disabled]);input.disabled=true;});
                     const assetIds=await intakeMediaEditor.prepare();
                     if(mediaGeneration!==intakeMediaGeneration||!modal.classList.contains('active'))throw Error('Đã hủy lưu biên bản tiếp nhận.');
                     await PawpalServices.saveBookingRecord(booking,'intake',{

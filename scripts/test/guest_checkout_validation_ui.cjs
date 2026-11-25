@@ -1,41 +1,57 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const os=require('node:os');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
- const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
- await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.origin!=='http://localhost')return route.abort();if(url.pathname==='/')return route.fulfill({contentType:'text/html',body:'<!doctype html><meta charset="utf-8"><style>.d-none{display:none}</style><main class="checkout-page"></main>'});if(!url.pathname.endsWith('.mjs'))return route.abort();return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(process.cwd(),url.pathname),'utf8')});});
+ const page=await browser.newPage(),errors=[],output=fs.mkdtempSync(path.join(os.tmpdir(),'pawpal-checkout-ui-'));page.on('pageerror',error=>errors.push(error.message));
+ const template=fs.readFileSync('my-client/pages/shop/checkout/checkout.html','utf8');
+ const start=template.indexOf('<div class="checkout-steps mb-4">');
+ const steps=template.slice(start,template.indexOf('<div class="row g-4">',start));
+ await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.origin!=='http://localhost')return route.abort();if(url.pathname==='/')return route.fulfill({contentType:'text/html',body:'<!doctype html><meta charset="utf-8"><style>.d-none{display:none}</style><main class="checkout-page">'+steps+'</main>'});if(url.pathname==='/assets/images/shop/products/placeholder.webp')return route.fulfill({contentType:'image/webp',body:fs.readFileSync('my-client/assets/images/shop/products/placeholder.webp')});if(!url.pathname.endsWith('.mjs'))return route.abort();return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(process.cwd(),'my-client',url.pathname),'utf8')});});
  await page.goto('http://localhost/');await page.evaluate(async()=>{
   window.variant='12345678-1234-4123-8123-123456789012';localStorage.setItem('pawpal_guest_cart_v1',JSON.stringify([{variant_id:variant,quantity:1}]));window.calls=[];window.created=false;window.failCreate=true;
   const {guestCommerce}=await import('/scripts/shared/guest-commerce-client.mjs');guestCommerce.request=async(action,body)=>{
    calls.push({action,body});if(action==='context')return {contact:null};
    if(action==='order-quote')return {quote:{version:'test-version',total:10000,shipping_fee:0,voucher_discount:0,lines:[{name:'Test product',quantity:1,unitPrice:10000}]}};
    if(action==='order-create'){if(failCreate)throw Object.assign(Error('Test uncertain failure'),{uncertain:true});if(window.holdCreate)await new Promise(resolve=>window.releaseCreate=resolve);created=true;return {};}
-   if(action==='order-receipt'){if(!created)throw Object.assign(Error('Not found'),{status:404});return {order:{code:'TEST-ORDER',status:'pending',total:10000,paymentStatus:'pending',lines:[{name:'Test product',quantity:1}]}};}
+   if(action==='order-receipt'){if(!created)throw Object.assign(Error('Not found'),{status:404});return {order:{code:'TEST-ORDER-'+[...new Set(calls.filter(call=>call.action==='order-create').map(call=>call.body.requestId))].indexOf(body.requestId),status:'pending',total:10000,paymentStatus:'pending',lines:[{name:'Test product',quantity:1}]}};}
    throw Error('Unexpected action');
   };
-  window.getSupabaseClient=()=>({rpc:()=>new Promise(resolve=>{window.finishOptions=()=>resolve({data:{delivery_options:[{id:'delivery',name:'Delivery test',fee:0}],payment_methods:[{id:'payment',name:'Payment test',short_name:'cod'}]}});})});
+  window.getSupabaseClient=()=>({rpc:()=>new Promise(resolve=>{window.finishOptions=()=>resolve({data:{delivery_options:[{id:'delivery',name:'Delivery test',fee:0}],payment_methods:[{id:'cod',name:'COD',short_name:'cod'},{id:'cash',name:'Cash',short_name:'cash'},{id:'qr',name:'VietQR',short_name:'VietQR'}]}});})});
   const {initGuestCheckout}=await import('/pages/shop/checkout/guest-checkout.mjs');window.started=initGuestCheckout();
  });
  assert.equal(await page.isDisabled('#guest-quote-button'),true);assert.equal(await page.isDisabled('#guest-place-order'),true);await page.evaluate(async()=>{finishOptions();await started;});
  assert.equal(await page.inputValue('#guest-delivery'),'');assert.equal(await page.inputValue('#guest-payment'),'');
  assert.equal(await page.getAttribute('#guest-delivery','required'),'');
  const check=async(id)=>{assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'true');assert.ok(await page.locator('#'+id+'-error').textContent());assert.equal(await page.getAttribute('#'+id,'aria-describedby'),id+'-error');};
- await page.click('#guest-place-order');await check('guest-name');await check('guest-phone');await check('guest-delivery');await check('guest-payment');assert.equal(await page.evaluate(()=>document.activeElement.id),'guest-name');
- await page.selectOption('#guest-payment','payment');
+ assert.equal(await page.isDisabled('#guest-place-order'),true);
+ await page.click('#guest-quote-button');await check('guest-name');await check('guest-phone');await check('guest-delivery');await check('guest-payment');assert.equal(await page.evaluate(()=>document.activeElement.id),'guest-name');
  await page.fill('#guest-name','   ');await page.fill('#guest-phone','123');await page.click('#guest-quote-button');await check('guest-name');await check('guest-phone');assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-quote').length),0);
- await page.fill('#guest-name','Test owner');await page.fill('#guest-phone','+84 (912) 345-678');await page.selectOption('#guest-delivery','delivery');await page.fill('#guest-receiver','   ');await page.fill('#guest-receiver-phone','123');await page.fill('#guest-street','   ');await page.click('#guest-quote-button');for(const id of ['guest-receiver','guest-receiver-phone','guest-street','guest-province'])await check(id);
- await page.selectOption('#guest-delivery','pickup');for(const id of ['guest-receiver','guest-receiver-phone','guest-street','guest-province'])assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'false');
+ await page.fill('#guest-name','Test owner');await page.fill('#guest-phone','+84 (912) 345-678');await page.locator('#guest-delivery-choices input[value="delivery"]').check();await page.fill('#guest-receiver','   ');await page.fill('#guest-receiver-phone','123');await page.fill('#guest-street','   ');await page.click('#guest-quote-button');for(const id of ['guest-receiver','guest-receiver-phone','guest-street','guest-province'])await check(id);
+ assert.equal(await page.inputValue('#guest-payment'),'cod');
+ await page.locator('#guest-delivery-choices input[value="pickup"]').check();for(const id of ['guest-receiver','guest-receiver-phone','guest-street','guest-province'])assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'false');
+ assert.equal(await page.inputValue('#guest-payment'),'cash');assert.equal(await page.locator('#guest-payment option[value="qr"]').count(),0);
  await page.evaluate(()=>{document.getElementById('guest-note').value='x'.repeat(4001);});await page.click('#guest-quote-button');await check('guest-note');assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-quote').length),0);await page.fill('#guest-note','Test note');
  await page.addStyleTag({content:fs.readFileSync('node_modules/bootstrap/dist/css/bootstrap.min.css','utf8')+fs.readFileSync('my-client/pages/shop/checkout/checkout.css','utf8')+fs.readFileSync('my-client/styles/transaction-receipt.css','utf8')});
  await page.setViewportSize({width:1280,height:1000});
+ assert.equal(await page.locator('#guest-checkout-steps .step.active').textContent().then(text=>text.includes('Thanh toán')),true);
+ assert.equal(await page.locator('.col-lg-7 .checkout-section').count(),3);
+ assert.equal(await page.locator('.col-lg-5 .order-summary-sticky #guest-voucher').count(),1);
+ assert.equal(await page.isDisabled('#guest-place-order'),true);
+ await page.click('#guest-quote-button');await page.waitForFunction(()=>!document.getElementById('guest-place-order').disabled);
+ assert.equal(await page.locator('#guest-quote-lines .order-item').count(),1);
+ assert.equal(await page.locator('#guest-payment-choices .payment-method-card.selected').count(),1);
  assert.equal(await page.isDisabled('#guest-place-order'),false);
- await page.screenshot({path:'docs/verification/guest-checkout-order-enabled.png',fullPage:true});
+ await page.screenshot({path:path.join(output,'guest-checkout-order-enabled.png'),fullPage:true});
+ await page.setViewportSize({width:390,height:844});
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await page.screenshot({path:path.join(output,'guest-checkout-order-mobile.png'),fullPage:true});
  await page.click('#guest-place-order');await page.waitForFunction(()=>document.getElementById('guest-checkout-feedback').textContent.includes('Chưa xác định'));
- assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-quote').length),1,'placing directly checks the current price automatically');
- assert.equal(await page.inputValue('#guest-name'),'Test owner');assert.equal(await page.inputValue('#guest-phone'),'+84 (912) 345-678');assert.equal(await page.inputValue('#guest-note'),'Test note');assert.equal(await page.isDisabled('#guest-place-order'),false);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('pawpal_guest_cart_v1'))[0].quantity),1);
+ assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-quote').length),1,'placing uses the reviewed quote');
+ assert.equal(await page.inputValue('#guest-name'),'Test owner');assert.equal(await page.inputValue('#guest-phone'),'+84 (912) 345-678');assert.equal(await page.inputValue('#guest-note'),'Test note');assert.equal(await page.isDisabled('#guest-place-order'),true);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('pawpal_guest_cart_v1'))[0].quantity),1);
  const request=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('pawpal_guest_order_request_v1')).id);assert.equal(await page.evaluate(()=>JSON.stringify(sessionStorage).includes('Test owner')),false);
  await page.evaluate(()=>{window.failCreate=false;window.holdCreate=true;});await page.click('#guest-quote-button');await page.waitForFunction(()=>!document.getElementById('guest-place-order').disabled);await page.click('#guest-place-order');await page.waitForFunction(()=>Boolean(window.releaseCreate));
  assert.equal(await page.isDisabled('#guest-place-order'),true);assert.equal(await page.locator('#guest-place-order').textContent(),'Đang xử lý…');
- await page.screenshot({path:'docs/verification/guest-checkout-order-busy.png',fullPage:true});
+ await page.screenshot({path:path.join(output,'guest-checkout-order-busy.png'),fullPage:true});
  await page.evaluate(()=>document.getElementById('guest-place-order').click());assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-create').length),2);
  await page.evaluate(()=>{window.holdCreate=false;releaseCreate();});await page.waitForFunction(()=>!document.getElementById('guest-order-result').classList.contains('d-none'));
  assert.deepEqual(await page.evaluate(()=>calls.filter(c=>c.action==='order-create').map(c=>c.body.requestId)),[request,request]);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('pawpal_guest_cart_v1')).length),0);assert.match(await page.locator('#guest-order-result').textContent(),/TEST-ORDER/);assert.match(await page.getByRole('link',{name:'Tra cứu đơn hàng',exact:true}).getAttribute('href'),/return-guest\?order=/);
@@ -48,11 +64,39 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  for(const width of [1280,390]){
   await page.setViewportSize({width,height:1000});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-  await page.screenshot({path:`docs/verification/guest-checkout-receipt-${width}.png`,fullPage:true});
+  await page.screenshot({path:path.join(output,`guest-checkout-receipt-${width}.png`),fullPage:true});
  }
  await page.evaluate(async()=>{delete document.querySelector('.checkout-page').dataset.guestReady;const {initGuestCheckout}=await import('/pages/shop/checkout/guest-checkout.mjs');await initGuestCheckout();});
  await checkActivation();assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-create').length),2);
- await page.evaluate(async()=>{sessionStorage.removeItem('pawpal_guest_order_request_v1');localStorage.setItem('pawpal_guest_cart_v1',JSON.stringify([{variant_id:variant,quantity:1}]));delete document.querySelector('.checkout-page').dataset.guestReady;const {guestCommerce}=await import('/scripts/shared/guest-commerce-client.mjs');const previous=guestCommerce.request;window.boundContact={name:'Bound owner',phone:'0912345678'};guestCommerce.request=async(action,body)=>{if(action==='context')return {contact:boundContact};if(action==='profile-read')return {contact:{...boundContact,revision:'a'.repeat(32)}};if(action==='profile-update'){boundContact=body.contact;return {requestId:body.requestId,rotated:true};}return previous(action,body);};const {initGuestCheckout}=await import('/pages/shop/checkout/guest-checkout.mjs');window.second=initGuestCheckout();});await page.evaluate(async()=>{finishOptions();await second;});
+ await page.setViewportSize({width:1280,height:1000});
+ await page.screenshot({path:path.join(output,'01-order-a-receipt.png'),fullPage:true});
+ await page.evaluate(async()=>{history.pushState(null,'','/checkout');localStorage.setItem('pawpal_guest_cart_v1',JSON.stringify([{variant_id:variant,quantity:1}]));delete document.querySelector('.checkout-page').dataset.guestReady;const {guestCommerce}=await import('/scripts/shared/guest-commerce-client.mjs');const previous=guestCommerce.request;window.boundContact={name:'Bound owner',phone:'0912345678'};guestCommerce.request=async(action,body)=>{if(action==='context')return {contact:boundContact};if(action==='profile-read')return {contact:{...boundContact,revision:'a'.repeat(32)}};if(action==='profile-update'){boundContact=body.contact;return {requestId:body.requestId,rotated:true};}return previous(action,body);};const {initGuestCheckout}=await import('/pages/shop/checkout/guest-checkout.mjs');window.second=initGuestCheckout();});await page.evaluate(async()=>{finishOptions();await second;});
  assert.equal(await page.locator('#guest-name').evaluate(input=>input.readOnly),true);await page.getByRole('button',{name:'Sửa liên hệ',exact:true}).click();await page.waitForSelector('#guestEditName');assert.equal(await page.locator('#guest-checkout-form form').count(),0);await page.fill('#guestEditName','Edited checkout owner');await page.click('#guestEditSave');await page.waitForFunction(()=>document.getElementById('guest-name').value==='Edited checkout owner');assert.equal(await page.isDisabled('#guest-quote-button'),false);assert.deepEqual(errors,[]);
- console.log('PASS checkout actual module: initialization lock, field errors/ARIA/focus, blank/phone/address/length rejected without quote, pickup ignores hidden fields, uncertain failure retains form/cart/request, recheck/retry same ID and receipt cleanup. Fixture API only; no Cloud.');
+ assert.equal(await page.locator('#guest-order-result').isVisible(),false);
+ await page.locator('#guest-delivery-choices input[value="pickup"]').check();
+ await page.click('#guest-quote-button');await page.waitForFunction(()=>!document.getElementById('guest-place-order').disabled);
+ await page.screenshot({path:path.join(output,'02-order-b-checkout.png'),fullPage:true});
+ await page.click('#guest-place-order');await page.waitForSelector('#guest-order-result .receipt-reference');
+ await page.screenshot({path:path.join(output,'03-order-b-receipt.png'),fullPage:true});
+ const nextRequest=await page.evaluate(()=>calls.filter(call=>call.action==='order-create').at(-1).body.requestId);
+ assert.notEqual(nextRequest,request);
+ await page.evaluate(async()=>{
+  history.pushState(null,'','/checkout?buynow=true');
+  sessionStorage.setItem('pawpal_buynow_cart',JSON.stringify([{variantId:variant,quantity:1}]));
+  delete document.querySelector('.checkout-page').dataset.guestReady;
+  const {initGuestCheckout}=await import('/pages/shop/checkout/guest-checkout.mjs');
+  window.buyNow=initGuestCheckout();
+ });
+ await page.evaluate(async()=>{finishOptions();await buyNow;});
+ assert.equal(await page.locator('#guest-order-result').isVisible(),false);
+ assert.equal(await page.isDisabled('#guest-quote-button'),false);
+ await page.locator('#guest-delivery-choices input[value="pickup"]').check();
+ await page.click('#guest-quote-button');await page.waitForFunction(()=>!document.getElementById('guest-place-order').disabled);
+ await page.screenshot({path:path.join(output,'04-buy-now-checkout.png'),fullPage:true});
+ await page.click('#guest-place-order');await page.waitForSelector('#guest-order-result .receipt-reference');
+ await page.screenshot({path:path.join(output,'05-buy-now-receipt.png'),fullPage:true});
+ const buyNowRequest=await page.evaluate(()=>calls.filter(call=>call.action==='order-create').at(-1).body.requestId);
+ assert.notEqual(buyNowRequest,nextRequest);
+ assert.deepEqual(errors,[]);
+ console.log('PASS repeat guest orders via cart and buy now. PASS checkout actual module: validation, reviewed quote, COD/cash, uncertain retry with same ID, receipt and responsive layout. Fixture API only; no Cloud.',output);
 }finally{await browser.close();}})().catch(error=>{console.error(error);process.exitCode=1;});

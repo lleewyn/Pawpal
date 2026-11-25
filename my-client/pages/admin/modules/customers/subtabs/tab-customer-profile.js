@@ -333,7 +333,7 @@
                 placeholder.setAttribute('aria-busy', String(loading));
                 if (!loading) placeholder.textContent = state.listLoadStatus === 'error'
                     ? 'Không thể tải hồ sơ khách hàng. Vui lòng tải lại trang.'
-                    : 'Không tìm thấy hồ sơ khách hàng.';
+                    : (!custId ? 'Chọn một khách hàng ở danh sách để xem hồ sơ 360°.' : 'Không tìm thấy hồ sơ khách hàng.');
             }
             PawpalCustomers.updateBreadcrumb(null);
             return;

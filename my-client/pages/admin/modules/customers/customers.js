@@ -615,6 +615,8 @@ toolbars:{"customers":(ctx)=>{const {el,go,tools}=ctx;
                 const firstId = Object.keys(PawpalCustomers.state.customerDatabase || {})[0];
                 if (firstId) sessionStorage.setItem('pawpal_admin_customer_id', firstId);
             }
+            const activeCustId = sessionStorage.getItem('pawpal_admin_customer_id');
+            if (!activeCustId) PawpalCustomers.subtabs.profile?.renderDrawerCustomerProfile?.(null);
             PawpalCustomers.subtabs.profile?.switchDrawerTab(sessionStorage.getItem('pawpal_admin_customer_drawertab') || 'dtab-personal');
         }
         if (targetSubtab === 'tab-pawpoint') PawpalCustomers.subtabs.pawpoint?.renderPawpointHistory();

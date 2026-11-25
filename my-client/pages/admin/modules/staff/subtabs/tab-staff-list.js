@@ -404,7 +404,8 @@
         const posSelect = document.getElementById('staffInputPosition');
         if (posSelect) {
             const titles=new Map();
-            for(const title of jobTitles.map(row=>row.title).concat((PawpalStaff.state.staff||[]).map(person=>PawpalStaff.formatJobTitle(person.position))))if(title&&!/^(?:—|unknown|null|undefined|chưa rõ|chưa cập nhật|\d+)$/i.test(title.trim()))titles.set(title,title);
+            const safeJobTitles=Array.isArray(jobTitles)?jobTitles:[];
+            for(const title of safeJobTitles.map(row=>row.title).concat((PawpalStaff.state.staff||[]).map(person=>PawpalStaff.formatJobTitle(person.position))))if(title&&!/^(?:—|unknown|null|undefined|chưa rõ|chưa cập nhật|\d+)$/i.test(title.trim()))titles.set(title,title);
             if(staff?.raw.job_title)titles.set(PawpalStaff.formatJobTitle(staff.raw.job_title),staff.raw.job_title);
             posSelect.replaceChildren(new Option('Chọn chức vụ', ''), ...[...titles].map(([label,value]) => new Option(label,value)));
             PawpalStaff.enhanceEntitySelect(posSelect);

@@ -603,7 +603,15 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
 
             PawpalComplaints.state.serverPages ||= {};
             PawpalComplaints.state.serverStats = cachedPayload.pageMeta.stats;
-            PawpalComplaints.state.serverPages[request.kind] = { ...cachedPayload.pageMeta, requestKey, context, loadedAt: Date.now() };
+            PawpalComplaints.state.serverPages[request.kind] = {
+                ...cachedPayload.pageMeta,
+                pageIds: Array.isArray(cachedPayload.pageMeta?.pageIds) ? cachedPayload.pageMeta.pageIds : [],
+                page: Number(cachedPayload.pageMeta?.page) || 1,
+                total: Number(cachedPayload.pageMeta?.total) || 0,
+                requestKey,
+                context,
+                loadedAt: Date.now()
+            };
             const tickets = cachedPayload.tickets || [];
             const messages = []; // Tải on-demand theo ticket_id khi mở chi tiết khiếu nại (PERF-03.K02)
             const customers = cachedPayload.customers || [];
@@ -1047,7 +1055,7 @@ rowAlerts:{complaints:row=>row.priority==='urgent'?'urgent':null}});
         if (PawpalComplaints.state.lastPageRequest?.kind === kind && existing?.requestKey === key && Date.now() - existing.loadedAt < 30000 && !PawpalComplaints.state.loadError) return existing;
         await loadComplaintsModuleData({ pageRequest: request });
         if (PawpalComplaints.state.loadError) throw new Error(PawpalComplaints.state.loadError);
-        return PawpalComplaints.state.serverPages[kind];
+        return PawpalComplaints.state.serverPages?.[kind] || { page: 1, total: 0, pageIds: [] };
     };
     PawpalComplaints.exportComplaintRows = async function(kind, filters) {
         const client = getComplaintsDbClient();

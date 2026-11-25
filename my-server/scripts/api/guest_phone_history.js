@@ -27,7 +27,7 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
  function historyGrant(c,phone){const payload=Buffer.from(JSON.stringify({id:c.id,scope:digest(c.ids.join(',')),phone,snapshotOnly:!!c.snapshotOnly,expires:Math.floor(now()/1000)+900})).toString('base64url');return payload+'.'+signHistory(payload);}
  async function historyRows(c,phone,page){
     let bookingQuery=admin.from('appointment').select('id,appointment_code,scheduled_start_at,scheduled_end_at,appointment_status,note,change_count,updated_at,appointment_item(id,unit_price,quantity,discount_amount,name_snapshot),pet_profile(id,pet_name)').in('customer_id',c.ids);
-    let orderQuery=admin.from('sales_order').select('id,order_code,order_status,cancel_reason,shipping_fee_snapshot,receiver_name_snapshot,receiver_phone_snapshot,street_address_snapshot,province_snapshot,created_at,updated_at,delivered_at,note,sales_order_detail(id,quantity,unit_price,discount_amount,product_name_snapshot,sku_snapshot,product_variant(id,product(id,product_media(image_url,is_thumbnail)))),returns:return_request!sales_order_id(id,request_status,created_at,lines:return_request_detail(sales_order_detail_id,quantity))').in('customer_id',c.ids);
+    let orderQuery=admin.from('sales_order').select('id,order_code,order_status,cancel_reason,shipping_fee_snapshot,receiver_name_snapshot,receiver_phone_snapshot,street_address_snapshot,province_snapshot,created_at,updated_at,delivered_at,note,sales_order_detail(id,quantity,unit_price,discount_amount,product_name_snapshot,sku_snapshot,product_variant(id,product(id,product_media(image_url,is_thumbnail)))),returns:return_request!sales_order_id(id,request_status,created_at,lines:return_request_detail(sales_order_detail_id,quantity)),payments:payment(amount,transaction_status,method:payment_method_config_id(short_name),refunds:refund_transaction(refund_status,refunded_amount))').in('customer_id',c.ids);
     if(c.snapshotOnly){bookingQuery=bookingQuery.eq('booking_contact_phone',phone);orderQuery=orderQuery.eq('receiver_phone_snapshot',phone);}
     const [bookings,orders,profile]=await Promise.all([
      bookingQuery.order('scheduled_start_at',{ascending:false}).order('id',{ascending:false}).range(page*10,page*10+10),
@@ -36,7 +36,21 @@ function createGuestPhoneHistory({admin,secret,production=true,store=createSupab
     ]);
     if(bookings.error||orders.error||profile.error)throw Error('Chưa tải được lịch sử. Vui lòng thử lại.');
     const expires=Math.floor(now()/1000)+900;
-    const verifiedOrders=(orders.data||[]).slice(0,10).map(row=>({...row,return_grant:expires+'.'+signReturn(row.id+'.'+phone+'.'+expires),cancel_grant:expires+'.'+signCancel(row.id+'.'+phone+'.'+expires)}));
+    const pageOrders=(orders.data||[]).slice(0,10);
+    const totals=pageOrders.length?await admin.from('sales_order_totals').select('order_id,total_amount').in('order_id',pageOrders.map(row=>row.id)):{data:[]};
+    if(totals.error)throw Error('Chưa tải được tổng tiền đơn hàng. Vui lòng thử lại.');
+    const dueByOrder=new Map((totals.data||[]).map(row=>[row.order_id,Number(row.total_amount)]));
+    const verifiedOrders=pageOrders.map(({payments=[],...row})=>{
+     const successful=payments.filter(payment=>payment.transaction_status==='succeeded');
+     const refunds=successful.flatMap(payment=>payment.refunds||[]);
+     const collected=successful.reduce((sum,payment)=>sum+Number(payment.amount||0),0);
+     const refunded=refunds.filter(refund=>refund.refund_status==='succeeded').reduce((sum,refund)=>sum+Number(refund.refunded_amount||0),0);
+     const paid=Math.max(0,collected-refunded),total=dueByOrder.get(row.id);
+     const payment_status=refunds.some(refund=>['pending','processing'].includes(refund.refund_status))?'pending_refund':
+      total===0?'not_required':total>0&&paid>=total?'paid':paid>0?'partial':refunded>0?'refunded':total===undefined?'unknown':'pending';
+     return {...row,total_amount:total,payment_status,payment_method:(successful[0]||payments[0])?.method?.short_name||null,
+      return_grant:expires+'.'+signReturn(row.id+'.'+phone+'.'+expires),cancel_grant:expires+'.'+signCancel(row.id+'.'+phone+'.'+expires)};
+    });
     return {success:true,customer:{name:profile.data?.full_name||'',phone},bookings:(bookings.data||[]).slice(0,10),orders:verifiedOrders,pagination:{page,hasMore:(bookings.data||[]).length>10||(orders.data||[]).length>10,grant:historyGrant(c,phone)}};
  }
  async function customer(phone){

@@ -184,8 +184,10 @@ function mapSupabaseOrderRow(row) {
 
     const itemsSubtotal = products.reduce((acc, p) => acc + p.total, 0);
     const shippingFee = Number(row.shipping_fee_snapshot || 0);
-    const grandTotal = itemsSubtotal + shippingFee;
+    const grandTotal = row.total_amount == null ? itemsSubtotal + shippingFee : Number(row.total_amount);
     const payRow = (Array.isArray(row.payment) ? row.payment[0] : row.payment) || {};
+    const paymentStatus = String(row.payment_status || payRow.payment_status || 'unknown').toLowerCase();
+    const paymentMethod = String(row.payment_method || payRow.payment_method || '').toLowerCase();
 
     return {
         id: row.order_code || row.id,
@@ -197,18 +199,18 @@ function mapSupabaseOrderRow(row) {
         cancelGrant: row.cancel_grant || null,
         deliveredAt: row.delivered_at || null,
         status: mapOrderStatus(row.order_status),
-        paymentStatus: String(payRow.payment_status || (row.order_status === 'da_xac_nhan' ? 'da_thanh_toan' : 'chua_thanh_toan')).toLowerCase(),
-        paymentMethod: payRow.payment_method || 'cod',
+        paymentStatus,
+        paymentMethod,
         products,
         pricing: {
             subtotal: itemsSubtotal,
             shippingFee: shippingFee,
-            discount: 0,
+            discount: Math.max(0, itemsSubtotal + shippingFee - grandTotal),
             total: grandTotal,
         },
         payment: {
-            method: payRow.payment_method || 'cod',
-            status: payRow.payment_status || (row.order_status === 'da_xac_nhan' ? 'da_thanh_toan' : 'pending')
+            method: paymentMethod,
+            status: paymentStatus
         },
         delivery: {
             name: row.receiver_name_snapshot || '',
@@ -310,7 +312,7 @@ function renderResults(bookings, orders) {
             { id: 'pending', label: 'Chờ xác nhận', statuses: ['pending'] },
             { id: 'processing', label: 'Đang thực hiện / Giao hàng', statuses: ['confirmed', 'accepted', 'in-progress', 'preparing', 'shipping'] },
             { id: 'completed', label: 'Đã hoàn thành', statuses: ['completed', 'delivered'] },
-            { id: 'cancelled', label: 'Đã hủy', statuses: ['cancelled', 'returned', 'return_pending'] },
+            { id: 'cancelled', label: 'Đã hủy', statuses: ['cancelled'] },
         ],
         booking: [
             { id: 'all', label: 'Tất cả dịch vụ' },
@@ -345,7 +347,8 @@ function renderResults(bookings, orders) {
             const typeMatch = (currentTab === 'all' || itemType === currentTab);
             let statusMatch = true;
             if (currentStatus !== 'all' && matchStatuses) {
-                statusMatch = matchStatuses.includes(itemStatus);
+                statusMatch = matchStatuses.includes(itemStatus) ||
+                    (currentStatus === 'returned' && item.dataset.hasReturn === 'true');
             }
 
             const visible = typeMatch && statusMatch;
@@ -633,7 +636,7 @@ function buildOrderCard(o) {
     const rawOrderId = String(o.id || '');
     const shortOrderCode = rawOrderId.length > 18 ? (rawOrderId.startsWith('ORD-') ? 'ORD-' + rawOrderId.slice(4, 12).toUpperCase() : rawOrderId.slice(0, 8).toUpperCase()) : rawOrderId;
 
-    const isPaid = o.paymentStatus === 'paid' || o.payment?.status === 'paid';
+    const isPaid = ['paid','da_thanh_toan'].includes(o.paymentStatus) || o.payment?.status === 'paid';
     const isPendingRefund = o.paymentStatus === 'pending_refund';
     const isRefunded = o.paymentStatus === 'refunded';
     let paymentLabel, paymentColor;
@@ -646,6 +649,15 @@ function buildOrderCard(o) {
     } else if (isPaid) {
         paymentLabel = 'Đã thanh toán';
         paymentColor = 'rg-text-success';
+    } else if (o.paymentStatus === 'partial') {
+        paymentLabel = 'Đã thanh toán một phần';
+        paymentColor = 'text-warning';
+    } else if (o.paymentStatus === 'not_required') {
+        paymentLabel = 'Không cần thanh toán';
+        paymentColor = 'text-muted';
+    } else if (o.paymentStatus === 'unknown') {
+        paymentLabel = 'Chưa có thông tin thanh toán';
+        paymentColor = 'text-muted';
     } else {
         paymentLabel = 'Chưa thanh toán';
         paymentColor = 'rg-text-inherit';
@@ -668,7 +680,7 @@ function buildOrderCard(o) {
     const cancelClass = normalizedStatus === 'cancelled' ? ' rg-item-cancelled' : '';
 
     return `
-    <div class="rg-item${cancelClass}" data-type="order" data-status="${normalizedStatus}">
+    <div class="rg-item${cancelClass}" data-type="order" data-status="${normalizedStatus}" data-has-return="${Boolean(o.returns?.length)}">
         ${normalizedStatus === 'cancelled' ? `<section class="rg-cancellation-summary" style="margin-bottom:16px;white-space:pre-wrap;overflow-wrap:anywhere"><h3 style="font-size:16px;color:#236B48">Lý do hủy đơn hàng</h3><p>${esc(o.cancelReason || o.cancel_reason || 'Chưa ghi nhận lý do hủy')}</p></section>` : ''}
         <div class="rg-item-header">
             <div>

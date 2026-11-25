@@ -553,7 +553,8 @@
   font-weight: 800;
 }
 
-#btn-checkout {
+#btn-checkout,
+#guest-place-order {
   background: #236B48 !important;
   border-color: #236B48 !important;
   border-radius: 9px !important;
@@ -928,4 +929,10 @@ body.checkout-public-page{background:#fff;color:#274b39;font-family:Inter,system
 .checkout-public-page .btn-secondary,.checkout-public-page .btn-outline-primary,.checkout-public-page .btn-modal-cancel{background:#f1f5ed;border:1px solid #d5e0d0;border-radius:9px;color:#31553f;font-family:Inter,system-ui,sans-serif;font-size:13px;box-shadow:none}
 .checkout-public-page .form-check-input:checked{background-color:#315d46;border-color:#315d46}
 .checkout-public-page .grand-total,.checkout-public-page .total-amount{color:#315d46}
+#guest-checkout-fields{min-width:0}
+#guest-voucher{border-radius:9px!important}
+#guest-quote-button{color:#236B48;background:#fff;border:1px solid #236B48;border-radius:9px;padding:10px 14px}
+#guest-quote-button:hover:not(:disabled){background:#F4FAF6}
+#guest-place-order:hover:not(:disabled){background:#1A5438!important;border-color:#1A5438!important}
+#guest-quote-lines .order-item-price{flex-shrink:0}
 @media(max-width:760px){.checkout-public-page .checkout-main-container{padding:22px 18px 40px}.checkout-public-page .checkout-section{padding:22px 18px}.checkout-public-page .checkout-section .section-title{font-size:21px}}
