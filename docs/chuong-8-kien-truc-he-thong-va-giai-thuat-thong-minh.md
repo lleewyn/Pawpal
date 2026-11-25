@@ -32,7 +32,7 @@ Hệ thống Pawpal triển khai trên nền tảng điện toán đám mây ph�
 
 Quy trình giao tiếp giữa các thành phần diễn ra theo trình tự kiểm soát nhiều bước. Khi người dùng nhập tin nhắn, trình duyệt gửi yêu cầu kèm chuỗi mã xác thực người dùng đối với nhân viên và thành viên, hoặc chuỗi mã định danh phiên tạm thời đối với khách vãng lai. Cổng dịch vụ trung gian kiểm tra tính hợp lệ của tài khoản và kiểm tra tần suất gửi tin nhắn trong phiên.
 
-Sau khi tin nhắn vượt qua bộ lọc ngôn từ, cổng dịch vụ gửi yêu cầu xin cấp khóa truy cập tạm thời có hiệu lực tối đa tám giây xuống cơ sở dữ liệu qua hàm `acquire_admin_chat_read`. Cơ chế này nhằm giới hạn tài nguyên truy vấn của từng phiên trò chuyện. Dựa trên quyền của người gọi, máy chủ thực thi các hàm thủ tục đọc dữ liệu tương ứng và loại bỏ các mã định danh kỹ thuật nội bộ. Nếu câu hỏi yêu cầu dữ liệu có sẵn như bảng giá hoặc lịch làm việc, máy chủ định dạng câu trả lời trả về ngay cho người dùng mà không gọi qua mô hình trí tuệ nhân tạo. Nếu câu hỏi cần diễn đạt tự nhiên hoặc soạn văn bản hướng dẫn, dữ liệu đã làm sạch được chuyển tiếp đến mô hình ngôn ngữ lớn để tạo nội dung trả lời.
+Sau khi tin nhắn vượt qua bộ lọc ngôn từ, cổng dịch vụ gửi yêu cầu xin cấp khóa truy cập tạm thời có hiệu lực tối đa tám giây xuống cơ sở dữ liệu thông qua thủ tục bảo mật phiên nội bộ. Cơ chế này nhằm giới hạn tài nguyên truy vấn của từng phiên trò chuyện. Dựa trên quyền của người gọi, máy chủ thực thi các hàm thủ tục đọc dữ liệu tương ứng và loại bỏ các mã định danh kỹ thuật nội bộ. Nếu câu hỏi yêu cầu dữ liệu có sẵn như bảng giá hoặc lịch làm việc, máy chủ định dạng câu trả lời trả về ngay cho người dùng mà không gọi qua mô hình trí tuệ nhân tạo. Nếu câu hỏi cần diễn đạt tự nhiên hoặc soạn văn bản hướng dẫn, dữ liệu đã làm sạch được chuyển tiếp đến mô hình ngôn ngữ lớn để tạo nội dung trả lời.
 
 ![Luồng giao tiếp bảo mật giữa các thành phần](figures/chuong-08/hinh-08-02-luong-giao-tiep-bao-mat.png)
 
@@ -50,7 +50,7 @@ Hệ thống quản lý định danh người dùng theo hai nhóm đối tượ
 
 Đối với khách vãng lai chưa tạo tài khoản, hệ thống tạo một chuỗi ký tự ngẫu nhiên có độ dài từ 32 đến 512 ký tự lưu tại trình duyệt máy khách. Khi gửi lên máy chủ, chuỗi ký tự này được băm bằng giải thuật mã hóa một chiều trước khi đối chiếu với bảng phiên khách vãng lai. Khách vãng lai chỉ được phép tạo cuộc trò chuyện tạm thời, hỏi thông tin dịch vụ công khai và không thể truy cập dữ liệu cá nhân của người dùng khác.
 
-Khi khách vãng lai quyết định đăng nhập hoặc đăng ký tài khoản thành viên trong lúc đang trò chuyện, hệ thống thực hiện chuyển quyền sở hữu cuộc trò chuyện sang tài khoản mới qua hàm thủ tục `claim_public_chat`. Quá trình này đòi hỏi xác thực đồng thời chuỗi mã băm của phiên khách vãng lai và mã phiên của tài khoản đăng nhập, đảm bảo lịch sử hội thoại được kế thừa liên tục mà không làm lộ dữ liệu sang tài khoản khác.
+Khi khách vãng lai quyết định đăng nhập hoặc đăng ký tài khoản thành viên trong lúc đang trò chuyện, hệ thống thực hiện chuyển quyền sở hữu cuộc trò chuyện sang tài khoản mới thông qua thủ tục kế thừa và chuyển giao phiên hội thoại. Quá trình này đòi hỏi xác thực đồng thời chuỗi mã băm của phiên khách vãng lai và mã phiên của tài khoản đăng nhập, đảm bảo lịch sử hội thoại được kế thừa liên tục mà không làm lộ dữ liệu sang tài khoản khác.
 
 ---
 
@@ -60,7 +60,7 @@ Pawpal áp dụng cơ chế phân quyền theo vai trò kết hợp chính sách
 
 Tại cổng dịch vụ trung gian, hệ thống kiểm tra vai trò và danh sách quyền hạn được gắn với phiên làm việc. Khi tài khoản có vai trò kỹ thuật viên gửi câu lệnh yêu cầu xem doanh thu hoặc báo cáo tài chính của cửa hàng, cổng dịch vụ sẽ từ chối ngay lập tức và trả về mã lỗi 403 cấm truy cập mà không chuyển lệnh xuống cơ sở dữ liệu.
 
-Tại cơ sở dữ liệu, toàn bộ các bảng nghiệp vụ như khách hàng, đơn hàng, lịch hẹn và giao dịch thanh toán đều được kích hoạt chính sách an toàn cấp dòng dữ liệu. Các truy vấn từ trợ lý chỉ được phép thực hiện thông qua các hàm thủ tục nội bộ gồm `run_admin_chat_read`, `run_admin_chat_customer_case` và `run_staff_copilot_read`. Quyền hạn của người gọi được thẩm định lại độc lập bên trong từng hàm, ngăn chặn tình trạng sửa đổi tham số từ phía trình duyệt.
+Tại cơ sở dữ liệu, toàn bộ các bảng nghiệp vụ như khách hàng, đơn hàng, lịch hẹn và giao dịch thanh toán đều được kích hoạt chính sách an toàn cấp dòng dữ liệu. Các truy vấn từ trợ lý chỉ được phép thực hiện thông qua các hàm thủ tục nội bộ chuyên trách gồm thủ tục đọc dữ liệu hội thoại, thủ tục tra cứu hồ sơ khách hàng và thủ tục tra cứu tác vụ vận hành. Quyền hạn của người gọi được thẩm định lại độc lập bên trong từng hàm, ngăn chặn tình trạng sửa đổi tham số từ phía trình duyệt.
 
 **Bảng 8.1. Ma trận quyền truy cập theo vai trò trong hệ thống Pawpal**
 
@@ -233,14 +233,14 @@ Trợ lý hỗ trợ tra cứu lịch hẹn dịch vụ làm đẹp, khách sạ
 
 | Tên công cụ nội bộ | Quyền hạn yêu cầu (Nhân viên) | Quyền hạn yêu cầu (Quản lý) | Nguồn dữ liệu trong cơ sở dữ liệu | Kết quả nghiệp vụ trả về |
 | :--- | :--- | :--- | :--- | :--- |
-| **Tra cứu khách hàng** | Xem khách hàng theo phạm vi ca làm | Toàn quyền xem hồ sơ khách hàng | Bảng `customer`, `customer_profile` | Thông tin định danh, số điện thoại, hạng thành viên |
-| **Tra cứu thú cưng** | Xem hồ sơ thú cưng theo ca làm | Toàn quyền xem hồ sơ thú cưng | Bảng `pet_profile`, `pet_breed` | Tên bé, giống loài, giới tính, trạng thái hoạt động |
-| **Lịch dịch vụ làm đẹp** | Xem lịch được giao phụ trách | Toàn quyền xem lịch hẹn toàn tiệm | Bảng `appointment`, `appointment_item` | Danh sách lịch hẹn theo ngày, trạng thái, tên thú cưng |
-| **Cảnh báo tồn kho thấp** | Xem kho theo phạm vi được giao | Toàn quyền xem kho và sản phẩm | Bảng `product_variant`, `product` | Danh sách sản phẩm có tồn kho nhỏ hơn mức tối thiểu |
-| **Kiểm tra phòng khách sạn** | Xem lịch đặt lưu trú được giao | Toàn quyền xem phòng và lưu trú | Bảng `hotel_room`, `hotel_booking` | Tình trạng phòng trống theo khoảng thời gian yêu cầu |
-| **Tra cứu lịch trực nhân sự** | Xem ca trực cá nhân của mình | Toàn quyền xem lịch trực toàn tiệm | Bảng `staff`, `staff_schedule` | Lịch trực cá nhân hoặc danh sách nhân sự trực theo ngày |
-| **Đối soát đơn hàng lẻ** | Thu tiền tại quầy theo ca làm | Toàn quyền xem đơn và thanh toán | Bảng `sales_order`, `payment` | Tiền đã thu, đã hoàn và số tiền còn thiếu của đơn hàng |
-| **Tổng hợp thực thu** | Bị từ chối (Không có quyền) | Quyền xem thanh toán và hoàn tiền | Sổ cái thanh toán và hoàn tiền | Tổng tiền thu, tổng tiền hoàn và thực thu theo ngày |
+| **Tra cứu khách hàng** | Xem khách hàng theo phạm vi ca làm | Toàn quyền xem hồ sơ khách hàng | Dữ liệu khách hàng và hồ sơ chủ nuôi | Thông tin định danh, số điện thoại, hạng thành viên |
+| **Tra cứu thú cưng** | Xem hồ sơ thú cưng theo ca làm | Toàn quyền xem hồ sơ thú cưng | Dữ liệu hồ sơ thú cưng và giống loài | Tên bé, giống loài, giới tính, trạng thái hoạt động |
+| **Lịch dịch vụ làm đẹp** | Xem lịch được giao phụ trách | Toàn quyền xem lịch hẹn toàn tiệm | Dữ liệu lịch hẹn và dịch vụ chăm sóc | Danh sách lịch hẹn theo ngày, trạng thái, tên thú cưng |
+| **Cảnh báo tồn kho thấp** | Xem kho theo phạm vi được giao | Toàn quyền xem kho và sản phẩm | Dữ liệu biến thể sản phẩm và kho hàng | Danh sách sản phẩm có tồn kho nhỏ hơn mức tối thiểu |
+| **Kiểm tra phòng khách sạn** | Xem lịch đặt lưu trú được giao | Toàn quyền xem phòng và lưu trú | Dữ liệu phòng khách sạn và lịch lưu trú | Tình trạng phòng trống theo khoảng thời gian yêu cầu |
+| **Tra cứu lịch trực nhân sự** | Xem ca trực cá nhân của mình | Toàn quyền xem lịch trực toàn tiệm | Dữ liệu nhân sự và lịch trực ca | Lịch trực cá nhân hoặc danh sách nhân sự trực theo ngày |
+| **Đối soát đơn hàng lẻ** | Thu tiền tại quầy theo ca làm | Toàn quyền xem đơn và thanh toán | Dữ liệu đơn hàng và giao dịch thanh toán | Tiền đã thu, đã hoàn và số tiền còn thiếu của đơn hàng |
+| **Tổng hợp thực thu** | Bị từ chối (Không có quyền) | Quyền xem thanh toán và hoàn tiền | Dữ liệu tổng hợp thanh toán và hoàn tiền | Tổng tiền thu, tổng tiền hoàn và thực thu theo ngày |
 
 ---
 
@@ -254,7 +254,7 @@ Nhân viên kỹ thuật và cấp quản lý sử dụng Copilot trong mục Tr
 
 Theo lưu đồ tại Hình 8.6, khi nhân viên gửi yêu cầu, hệ thống tiến hành kiểm tra mã xác thực phiên làm việc. Nếu hợp lệ, bộ phân tích cú pháp tiếp nhận và phân loại tác vụ.
 
-Khi có yêu cầu xem doanh thu hoặc báo cáo tài chính, hệ thống kiểm tra vai trò người gọi: nếu là nhân viên kỹ thuật, cơ chế phân quyền từ chối yêu cầu và trả về mã lỗi 403; nếu là quản lý hệ thống, yêu cầu được chấp thuận và trả về số liệu thực thu. Đối với yêu cầu xem hồ sơ khách hàng, hệ thống liên kết ba nguồn dữ liệu gồm thông tin chủ nuôi, danh sách thú cưng và đơn hàng gần nhất. Đối với yêu cầu kiểm tra hàng tồn kho hoặc lịch hẹn, hệ thống truy vấn bảng dữ liệu tương ứng. Toàn bộ câu hỏi và kết quả tra cứu được ghi nhật ký kiểm toán trong bảng `admin_copilot_history` để giám sát nội bộ.
+Khi có yêu cầu xem doanh thu hoặc báo cáo tài chính, hệ thống kiểm tra vai trò người gọi: nếu là nhân viên kỹ thuật, cơ chế phân quyền từ chối yêu cầu và trả về mã lỗi 403; nếu là quản lý hệ thống, yêu cầu được chấp thuận và trả về số liệu thực thu. Đối với yêu cầu xem hồ sơ khách hàng, hệ thống liên kết ba nguồn dữ liệu gồm thông tin chủ nuôi, danh sách thú cưng và đơn hàng gần nhất. Đối với yêu cầu kiểm tra hàng tồn kho hoặc lịch hẹn, hệ thống truy vấn bảng dữ liệu tương ứng. Toàn bộ câu hỏi và kết quả tra cứu được ghi nhật ký kiểm toán trong bảng nhật ký trợ lý để phục vụ giám sát nội bộ.
 
 ![Giao diện tương tác thực tế Copilot](figures/chuong-08/hinh-08-07-copilot-quan-ly.png)
 
@@ -314,7 +314,7 @@ Cấp 1 là tin nhắn chào hỏi hoặc cảm ơn thông thường, trợ lý 
 
 ### 8.6.3. Cổng truy vấn dữ liệu an toàn chỉ đọc
 
-Cơ chế cổng truy vấn dữ liệu an toàn chỉ đọc được thiết lập tại tệp mã nguồn `scripts/api/chat_read_tools.js` và hàm cơ sở dữ liệu `acquire_admin_chat_read`.
+Cơ chế cổng truy vấn dữ liệu an toàn chỉ đọc được thiết lập tại lớp điều phối công cụ tra cứu của máy chủ trung gian kết hợp với thủ tục cấp mã khóa truy cập tạm thời của cơ sở dữ liệu.
 
 Khi nhận lệnh từ Trợ lý Copilot, cổng dịch vụ tạo mã yêu cầu duy nhất và gửi lệnh xin cấp mã khóa truy cập tạm thời từ cơ sở dữ liệu. Mã khóa này có thời hạn sống tính bằng giây và được lưu trong bảng trạng thái tạm thời. Khi thực thi các hàm đọc dữ liệu, cơ sở dữ liệu kiểm tra tính hợp lệ của mã khóa; các yêu cầu dùng lại mã khóa hết hạn đều bị từ chối với mã lỗi bảo mật.
 
@@ -344,7 +344,7 @@ Kịch bản thứ ba kiểm tra khả năng nhận diện cảm xúc lo lắng 
 
 **Hình 8.11.** Kết quả thử nghiệm nhận diện cảm xúc lo lắng và phản hồi xoa dịu tự nhiên qua các lượt trao đổi tiếp nối.
 
-Kịch bản thứ tư kiểm tra khả năng liên kết dữ liệu hồ sơ khách hàng đầy đủ của Trợ lý Copilot. Khi tài khoản quản lý gửi câu lệnh: *“Xem hồ sơ khách hàng 360° theo số điện thoại: 0901234567”*, hệ thống gọi hàm `run_admin_chat_customer_case` và liên kết thông tin chủ nuôi Lê Lệ Quyên, danh sách hai thú cưng gồm mèo Lala và cún Corgi Milu, cùng đơn hàng gần nhất có mã `ORD-20260707-973249` như thể hiện tại Hình 8.12.
+Kịch bản thứ tư kiểm tra khả năng liên kết dữ liệu hồ sơ khách hàng đầy đủ của Trợ lý Copilot. Khi tài khoản quản lý gửi câu lệnh: *“Xem hồ sơ khách hàng 360° theo số điện thoại: 0901234567”*, hệ thống kích hoạt thủ tục tổng hợp hồ sơ đa chiều và liên kết thông tin chủ nuôi Lê Lệ Quyên, danh sách hai thú cưng gồm mèo Lala và cún Corgi Milu, cùng đơn hàng gần nhất có mã `ORD-20260707-973249` như thể hiện tại Hình 8.12.
 
 ![Tổng hợp hồ sơ khách hàng 360 độ](figures/chuong-08/hinh-08-12-ho-so-khach-360.png)
 
@@ -370,13 +370,13 @@ Chương 8 đã trình bày kiến trúc phân tầng hệ thống và các gi�
 
 ---
 
-### Mã nguồn tham chiếu
+### Các phân hệ thành phần chính
 
-Các thành phần giải thuật và cơ chế kiến trúc trình bày trong chương được triển khai tại các tệp mã nguồn chính:
-* **Cổng điều phối trung tâm và xử lý luồng trí tuệ nhân tạo**: [api/admin-chat.js](../api/admin-chat.js)
-* **Bộ định tuyến Chatbot khách hàng công cộng**: [scripts/api/chat_public_guest.js](../scripts/api/chat_public_guest.js)
-* **Bộ tra cứu dữ liệu thành viên**: [scripts/api/chat_member.js](../scripts/api/chat_member.js)
-* **Giải thuật kiểm duyệt từ ngữ và phân cấp cảm xúc**: [scripts/api/chat_moderation.js](../scripts/api/chat_moderation.js)
-* **Cơ chế duy trì ngữ cảnh hội thoại tiếp nối**: [scripts/api/chat_public_continuity.js](../scripts/api/chat_public_continuity.js)
-* **Bộ xử lý tác vụ Trợ lý Copilot nội bộ**: [scripts/api/admin_copilot.js](../scripts/api/admin_copilot.js)
-* **Danh mục công cụ truy vấn dữ liệu an toàn chỉ đọc**: [scripts/api/chat_read_tools.js](../scripts/api/chat_read_tools.js)
+Các giải thuật và cơ chế kiến trúc trình bày trong chương được tổ chức tại các phân hệ xử lý chuyên trách:
+* **Cổng điều phối trung tâm và xử lý luồng trí tuệ nhân tạo**: Đảm nhận tiếp nhận yêu cầu, kiểm soát giới hạn tài nguyên và truyền phản hồi thời gian thực.
+* **Phân hệ trợ lý hỗ trợ khách hàng công cộng**: Đảm nhận định tuyến hội thoại, cung cấp thông tin dịch vụ và bảng giá cho khách vãng lai.
+* **Phân hệ tra cứu dữ liệu thành viên**: Đảm nhận đối chiếu dữ liệu cá nhân, lịch sử đơn hàng và hồ sơ cho tài khoản đã đăng nhập.
+* **Phân hệ kiểm duyệt từ ngữ và phân cấp cảm xúc**: Đảm nhận lọc nội dung vi phạm, nhận diện trạng thái tâm lý sáu cấp độ và đưa ra phản hồi thấu cảm.
+* **Phân hệ duy trì ngữ cảnh hội thoại tiếp nối**: Đảm nhận lưu vết ngữ cảnh, liên kết các lượt trao đổi liên tiếp trong cùng phiên trò chuyện.
+* **Phân hệ trợ lý điều hành nội bộ**: Đảm nhận tổng hợp hồ sơ 360 độ, phát hiện sản phẩm chạm ngưỡng tồn kho và hỗ trợ vận hành.
+* **Phân hệ cổng truy vấn dữ liệu an toàn chỉ đọc**: Đảm nhận cấp mã khóa tạm thời, kiểm soát thời hạn truy cập và chặn quyền ghi từ phía trợ lý.
