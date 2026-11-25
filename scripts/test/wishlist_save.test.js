@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 function fixture({failAuth=false,failRpc=false,foreign=false}={}){
  const calls=[],events=[];
  const db={auth:{getUser:async()=>({})},rpc:async(name,args)=>{calls.push({name,args});return {data:name==='own_wishlist_snapshot'?{customer_id:foreign?'other':'owner',productIds:[],serviceIds:[]}:args.p_saved,error:failRpc?Error('Rejected'):null};}};
- const context={window:{getSupabaseClient:()=>db},document:{dispatchEvent:event=>events.push(event)},CustomEvent:class{},wishlistIntents:new Map(),resolveCustomerId:async()=>{if(failAuth)throw Error('Denied');return 'owner';}};
+ const context={window:{getSupabaseClient:()=>db},document:{dispatchEvent:event=>events.push(event)},CustomEvent:class{},wishlistIntents:new Map(),invalidateCustomerCache:()=>{},resolveCustomerId:async()=>{if(failAuth)throw Error('Denied');return 'owner';}};
  const source=fs.readFileSync('my-client/scripts/api/api.js','utf8');vm.runInNewContext('globalThis.api={'+source.slice(source.indexOf('    async getUserWishlist('),source.indexOf('    async getUserById('))+'};',context);
  return {api:context.api,calls,events};
 }

@@ -2,7 +2,23 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
+const staffAuthPath = require.resolve('../../my-server/scripts/api/staff_auth.js');
 const chatApi = require('../../my-server/scripts/api/chat.js');
+
+async function withAuthorizedStaff(fn) {
+    const staffAuth = require(staffAuthPath);
+    const origVerify = staffAuth.verifyStaffCaller;
+    staffAuth.verifyStaffCaller = async () => ({
+        authorized: true,
+        status: 200,
+        staff: { id: '00000000-0000-4000-8000-000000000001', role: 'admin', full_name: 'Test Admin' }
+    });
+    try {
+        return await fn();
+    } finally {
+        staffAuth.verifyStaffCaller = origVerify;
+    }
+}
 
 test('PAWPAL AI API & ADMIN OVERLOAD RESILIENCE TEST SUITE', async (t) => {
 
@@ -74,111 +90,128 @@ test('PAWPAL AI API & ADMIN OVERLOAD RESILIENCE TEST SUITE', async (t) => {
     });
 
     await t.test('G2-01 (B01, B02, B03): Fast-Paths hiện hữu không qua Gemini model-call', async () => {
-        // Test B01: Lịch hẹn hôm nay
-        let resData = null;
-        const mockRes = {
+        // Unauthenticated direct call must fail closed with 401
+        let unauthData = null;
+        const mockUnauthRes = {
             status(code) { this.statusCode = code; return this; },
-            json(data) { resData = data; return this; },
+            json(data) { unauthData = data; return this; },
             setHeader() {}
         };
-
-        const mockReqB01 = {
+        await chatApi({
             ip: '127.0.0.1',
             _isDirectTestCall: true,
             headers: {},
-            body: {
-                isCopilot: true,
-                messages: [{ role: 'user', content: 'Có bao nhiêu lịch hẹn hôm nay?' }]
-            }
-        };
+            body: { isCopilot: true, messages: [{ role: 'user', content: 'Có bao nhiêu lịch hẹn hôm nay?' }] }
+        }, mockUnauthRes);
+        assert.equal(mockUnauthRes.statusCode, 401);
+        assert.ok(unauthData?.error);
 
-        await chatApi(mockReqB01, mockRes);
-        assert.equal(mockRes.statusCode, 200);
-        assert.equal(resData.ok, true);
-        assert.equal(resData.done, true);
-        assert.equal(resData.router, 'deterministic_appointments', 'B01 phải khớp router deterministic_appointments (0 model-call)');
+        await withAuthorizedStaff(async () => {
+            // Test B01: Lịch hẹn hôm nay
+            let resData = null;
+            const mockRes = {
+                status(code) { this.statusCode = code; return this; },
+                json(data) { resData = data; return this; },
+                setHeader() {}
+            };
 
-        // Test B03: Tồn kho thấp dưới 5 món
-        let resDataB03 = null;
-        const mockResB03 = {
-            status(code) { this.statusCode = code; return this; },
-            json(data) { resDataB03 = data; return this; },
-            setHeader() {}
-        };
-        const mockReqB03 = {
-            ip: '127.0.0.1',
-            _isDirectTestCall: true,
-            headers: {},
-            body: {
-                isCopilot: true,
-                messages: [{ role: 'user', content: 'Liệt kê sản phẩm tồn kho dưới 5 món.' }]
-            }
-        };
+            const mockReqB01 = {
+                ip: '127.0.0.1',
+                headers: {},
+                body: {
+                    isCopilot: true,
+                    messages: [{ role: 'user', content: 'Có bao nhiêu lịch hẹn hôm nay?' }]
+                }
+            };
 
-        await chatApi(mockReqB03, mockResB03);
-        assert.equal(mockResB03.statusCode, 200);
-        assert.equal(resDataB03.ok, true);
-        assert.equal(resDataB03.router, 'deterministic_inventory', 'B03 phải khớp router deterministic_inventory (0 model-call)');
+            await chatApi(mockReqB01, mockRes);
+            assert.equal(mockRes.statusCode, 200);
+            assert.equal(resData.ok, true);
+            assert.equal(resData.done, true);
+            assert.equal(resData.router, 'deterministic_appointments', 'B01 phải khớp router deterministic_appointments (0 model-call)');
+
+            // Test B03: Tồn kho thấp dưới 5 món
+            let resDataB03 = null;
+            const mockResB03 = {
+                status(code) { this.statusCode = code; return this; },
+                json(data) { resDataB03 = data; return this; },
+                setHeader() {}
+            };
+            const mockReqB03 = {
+                ip: '127.0.0.1',
+                headers: {},
+                body: {
+                    isCopilot: true,
+                    messages: [{ role: 'user', content: 'Liệt kê sản phẩm tồn kho dưới 5 món.' }]
+                }
+            };
+
+            await chatApi(mockReqB03, mockResB03);
+            assert.equal(mockResB03.statusCode, 200);
+            assert.equal(resDataB03.ok, true);
+            assert.equal(resDataB03.router, 'deterministic_inventory', 'B03 phải khớp router deterministic_inventory (0 model-call)');
+        });
     });
 
     await t.test('G2-02: Fast-Paths mới (deterministic_orders & deterministic_queue) hoạt động chuẩn xác', async () => {
-        // Test Fast-Path đơn hàng chờ xử lý
-        let resDataOrders = null;
-        const mockResOrders = {
-            status(code) { this.statusCode = code; return this; },
-            json(data) { resDataOrders = data; return this; },
-            setHeader() {}
-        };
-        const mockReqOrders = {
-            ip: '127.0.0.1',
-            _isDirectTestCall: true,
-            headers: {},
-            body: {
-                isCopilot: true,
-                messages: [{ role: 'user', content: 'Có bao nhiêu đơn hàng chờ xử lý hôm nay?' }]
-            }
-        };
+        await withAuthorizedStaff(async () => {
+            // Test Fast-Path đơn hàng chờ xử lý
+            let resDataOrders = null;
+            const mockResOrders = {
+                status(code) { this.statusCode = code; return this; },
+                json(data) { resDataOrders = data; return this; },
+                setHeader() {}
+            };
+            const mockReqOrders = {
+                ip: '127.0.0.1',
+                headers: {},
+                body: {
+                    isCopilot: true,
+                    messages: [{ role: 'user', content: 'Có bao nhiêu đơn hàng chờ xử lý hôm nay?' }]
+                }
+            };
 
-        await chatApi(mockReqOrders, mockResOrders);
-        assert.equal(mockResOrders.statusCode, 200);
-        assert.equal(resDataOrders.ok, true);
-        assert.equal(resDataOrders.router, 'deterministic_orders', 'Phải khớp router deterministic_orders (0 model-call)');
-        assert.ok(typeof resDataOrders.reply === 'string' && resDataOrders.reply.length > 0);
+            await chatApi(mockReqOrders, mockResOrders);
+            assert.equal(mockResOrders.statusCode, 200);
+            assert.equal(resDataOrders.ok, true);
+            assert.equal(resDataOrders.router, 'deterministic_orders', 'Phải khớp router deterministic_orders (0 model-call)');
+            assert.ok(typeof resDataOrders.reply === 'string' && resDataOrders.reply.length > 0);
 
-        // Test Fast-Path hàng đợi chat chờ tiếp nhận
-        let resDataQueue = null;
-        const mockResQueue = {
-            status(code) { this.statusCode = code; return this; },
-            json(data) { resDataQueue = data; return this; },
-            setHeader() {}
-        };
-        const mockReqQueue = {
-            ip: '127.0.0.1',
-            _isDirectTestCall: true,
-            headers: {},
-            body: {
-                isCopilot: true,
-                messages: [{ role: 'user', content: 'Hiện tại có bao nhiêu ca chat trong hàng đợi chờ tiếp nhận?' }]
-            }
-        };
+            // Test Fast-Path hàng đợi chat chờ tiếp nhận
+            let resDataQueue = null;
+            const mockResQueue = {
+                status(code) { this.statusCode = code; return this; },
+                json(data) { resDataQueue = data; return this; },
+                setHeader() {}
+            };
+            const mockReqQueue = {
+                ip: '127.0.0.1',
+                headers: {},
+                body: {
+                    isCopilot: true,
+                    messages: [{ role: 'user', content: 'Hiện tại có bao nhiêu ca chat trong hàng đợi chờ tiếp nhận?' }]
+                }
+            };
 
-        await chatApi(mockReqQueue, mockResQueue);
-        assert.equal(mockResQueue.statusCode, 200);
-        assert.equal(resDataQueue.ok, true);
-        assert.equal(resDataQueue.router, 'deterministic_queue', 'Phải khớp router deterministic_queue (0 model-call)');
-        assert.ok(typeof resDataQueue.reply === 'string' && resDataQueue.reply.length > 0);
+            await chatApi(mockReqQueue, mockResQueue);
+            assert.equal(mockResQueue.statusCode, 200);
+            assert.equal(resDataQueue.ok, true);
+            assert.equal(resDataQueue.router, 'deterministic_queue', 'Phải khớp router deterministic_queue (0 model-call)');
+            assert.ok(typeof resDataQueue.reply === 'string' && resDataQueue.reply.length > 0);
+        });
     });
 
-    await t.test('G2-07: Client Copilot cắt gọn copilotHistory xuống 10 tin nhắn trước khi fetch', () => {
+    await t.test('G2-07: Client Copilot không gửi toàn bộ lịch sử thô và server giới hạn 10 tin nhắn', () => {
         const copilotCode = fs.readFileSync(path.join(__dirname, '../../my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js'), 'utf-8');
-        assert.ok(copilotCode.includes('slice(-10)'), 'tab-chatbot-copilot.js phải cắt 10 tin nhắn gần nhất trước khi gửi');
-        assert.ok(copilotCode.includes('payloadMessages'), 'tab-chatbot-copilot.js phải dùng payloadMessages cắt gọn thay vì copilotHistory thô');
+        const serverChatCode = fs.readFileSync(path.join(__dirname, '../../my-server/scripts/api/chat.js'), 'utf-8');
+        assert.ok(!copilotCode.includes('copilotHistory'), 'tab-chatbot-copilot.js không được gửi mảng copilotHistory thô từ client');
+        assert.ok(serverChatCode.includes('messages.slice(-10)'), 'chat.js phải cắt 10 tin nhắn gần nhất');
     });
 
     await t.test('G3-08: Admin Live upload ảnh Storage lỗi thì báo lỗi trung thực, không nhét base64 vào DB', () => {
         const liveCode = fs.readFileSync(path.join(__dirname, '../../my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js'), 'utf-8');
-        assert.ok(!liveCode.includes('pendingAdminAttachment.dataUrl : `[Ảnh đính kèm'), 'Không được fallback nhét base64 dataUrl vào chat_message khi upload storage lỗi');
-        assert.ok(liveCode.includes('Không thể tải tệp đính kèm lên máy chủ lưu trữ'), 'Phải thông báo lỗi trung thực cho CSKH khi upload storage lỗi');
+        assert.ok(!liveCode.includes('pendingAdminAttachment.dataUrl'), 'Không được fallback nhét base64 dataUrl vào chat_message khi upload storage lỗi');
+        assert.ok(liveCode.includes('Chưa xác nhận gửi ảnh. Giữ nguyên bản nháp và thử lại.'), 'Phải thông báo lỗi trung thực cho CSKH khi upload ảnh lỗi');
     });
 
     await t.test('G4-06 (B08): Khi tắt copilot_ai_enabled, Fast-Path vẫn chạy 100%, câu tự do trả fallback an toàn', async () => {
@@ -189,37 +222,39 @@ test('PAWPAL AI API & ADMIN OVERLOAD RESILIENCE TEST SUITE', async (t) => {
             // Tắt cờ copilot_ai_enabled
             chatConfig.updateChatConfig({ copilot_ai_enabled: false });
 
-            // 1. Fast-path vẫn phải chạy 100%
-            let resFast = null;
-            const mockResFast = {
-                status(code) { this.statusCode = code; return this; },
-                json(data) { resFast = data; return this; },
-                setHeader() {}
-            };
-            const reqFast = {
-                ip: '127.0.0.1',
-                _isDirectTestCall: true,
-                body: { isCopilot: true, messages: [{ role: 'user', content: 'Có bao nhiêu lịch hẹn hôm nay?' }] }
-            };
-            await chatApi(reqFast, mockResFast);
-            assert.equal(mockResFast.statusCode, 200);
-            assert.equal(resFast.router, 'deterministic_appointments', 'Fast-Path vẫn hoạt động khi tắt AI Copilot');
+            await withAuthorizedStaff(async () => {
+                // 1. Fast-path vẫn phải chạy 100%
+                let resFast = null;
+                const mockResFast = {
+                    status(code) { this.statusCode = code; return this; },
+                    json(data) { resFast = data; return this; },
+                    setHeader() {}
+                };
+                const reqFast = {
+                    ip: '127.0.0.1',
+                    headers: {},
+                    body: { isCopilot: true, messages: [{ role: 'user', content: 'Có bao nhiêu lịch hẹn hôm nay?' }] }
+                };
+                await chatApi(reqFast, mockResFast);
+                assert.equal(mockResFast.statusCode, 200);
+                assert.equal(resFast.router, 'deterministic_appointments', 'Fast-Path vẫn hoạt động khi tắt AI Copilot');
 
-            // 2. Câu tự do trả về copilot_disabled_fallback mà không gọi Gemini
-            let resDisabled = null;
-            const mockResDisabled = {
-                status(code) { this.statusCode = code; return this; },
-                json(data) { resDisabled = data; return this; },
-                setHeader() {}
-            };
-            const reqDisabled = {
-                ip: '127.0.0.1',
-                _isDirectTestCall: true,
-                body: { isCopilot: true, messages: [{ role: 'user', content: 'Phân tích chiến lược kinh doanh quý 4 giúp anh' }] }
-            };
-            await chatApi(reqDisabled, mockResDisabled);
-            assert.equal(mockResDisabled.statusCode, 200);
-            assert.equal(resDisabled.router, 'copilot_disabled_fallback', 'Câu tự do trả fallback khi copilot_ai_enabled = false');
+                // 2. Câu tự do trả về copilot_disabled_fallback mà không gọi Gemini
+                let resDisabled = null;
+                const mockResDisabled = {
+                    status(code) { this.statusCode = code; return this; },
+                    json(data) { resDisabled = data; return this; },
+                    setHeader() {}
+                };
+                const reqDisabled = {
+                    ip: '127.0.0.1',
+                    headers: {},
+                    body: { isCopilot: true, messages: [{ role: 'user', content: 'Phân tích chiến lược kinh doanh quý 4 giúp anh' }] }
+                };
+                await chatApi(reqDisabled, mockResDisabled);
+                assert.equal(mockResDisabled.statusCode, 200);
+                assert.equal(resDisabled.router, 'copilot_disabled_fallback', 'Câu tự do trả fallback khi copilot_ai_enabled = false');
+            });
         } finally {
             // Khôi phục cấu hình ban đầu
             chatConfig.updateChatConfig(origConfig);
