@@ -1,3 +1,0 @@
-PASS: Actual staffSalesModal product picker with live read-only scoped stock RPC.
-PASS: Next page stays open and shows page-2 SKUs; previous restores page-1 SKUs; next again stays open; page-2 product selected into cart; outside click still closes list; aria-expanded correct; no JavaScript errors.
-Desktop/mobile screenshots reviewed separately. No customer, quote, order creation, payment or database writes. No complete testcase replay.

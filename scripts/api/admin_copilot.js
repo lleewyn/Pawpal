@@ -20,7 +20,7 @@ function plan(question,now=new Date(),readContext={}){
  if(pageSuffix){const previous=plan(String(question).slice(0,pageSuffix.index),now,readContext);if(readTools.definitions[previous.intent]?.keys.includes('page'))return {...previous,filters:{...previous.filters,page:pageSuffix[1]}};return previous.intent==='refuse.write'?previous:{intent:'clarify',answer:'Tra cứu này chưa hỗ trợ chuyển trang. Hãy nêu lại phạm vi cần xem.'};}
  const q=normalize(question).trim().replace(/\s+/g,' ').replace(/\blich henh\b/g,'lich hen').replace(/\bton kh0\b/g,'ton kho');
  if(isToolGuide(question))return {intent:'workflow.guide'};
- const write=/\b(tu dong|hay|giup toi|thuc hien|tien hanh)\b.*\b(cong diem|tang diem|hoan tien|gui tin|xoa|sua don|dat lich|chuyen ca)\b/.test(q)||/^(cong diem|tang diem|hoan tien|gui tin|xoa|sua don|dat lich|chuyen ca)\b/.test(q);
+ const write=/\b(tu dong|hay|giup toi|thuc hien|tien hanh)\b.*\b((?:cong|tang)(?:\s+\d+(?:[.,]\d+)?)?\s+diem|hoan tien|gui tin|xoa|sua don|dat lich|chuyen ca)\b/.test(q)||/^((?:cong|tang)(?:\s+\d+(?:[.,]\d+)?)?\s+diem|hoan tien|gui tin|xoa|sua don|dat lich|chuyen ca)\b/.test(q);
  if(write&&/nhu the nao|lam sao/.test(q))return {intent:'workflow.guide'};
  if(write&&!/soan|huong dan|quy trinh|cach |mau |nhap/.test(q))return {intent:'refuse.write'};
  // A target or forecast is not a request for today's recorded cashflow.

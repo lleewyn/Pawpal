@@ -1,3 +1,0 @@
-PASS: Actual rename sub-modal, real Admin RPC; successful rename updates parent options, retains old-name alias, preserves STAFF account role, writes one audit event. Trial rename and audit rolled back.
-Backend checks: STAFF denied, duplicate/stale names rejected, identical request idempotent, staff profile data unchanged.
-Schema/RPC applied on Supabase; no existing job title renamed permanently, no account created.

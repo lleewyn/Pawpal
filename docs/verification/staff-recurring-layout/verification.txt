@@ -1,4 +1,0 @@
-PASS: Actual recurring schedule component and staff selector; real schedules under Admin RLS, read-only transaction.
-PASS: Desktop form width <=600px, 16px between adjacent start/end fields; 7-column saved-schedule table, at most 10 records; edit fills original staff/time/weekdays; reset clears edit.
-PASS: Mobile single-column form, no outer horizontal overflow, schedule table scrolls to action column. No JavaScript errors.
-No schedule save, assignment, permission or database changes.

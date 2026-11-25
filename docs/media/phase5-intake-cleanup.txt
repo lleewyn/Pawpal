@@ -1,7 +1,0 @@
-{
-  "status": "PASS",
-  "exactOwnFilesAndChunksRemoved": 1,
-  "quotaReleasedBytes": 196843,
-  "unrelatedFilesDeleted": 0,
-  "productionDeploymentChanged": false
-}

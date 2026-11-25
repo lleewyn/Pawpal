@@ -1,5 +1,0 @@
-{
-  "scope": "API literal RPCs plus admission and dynamic registry gateways, existence only",
-  "checked": 24,
-  "missing": []
-}

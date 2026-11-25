@@ -74,7 +74,7 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
     });
 
     const folded = lower.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/\s+/g, ' ').trim();
-    const socialIntent = /^(?:xin chao|chao(?: ban| pawpal)?|hello|hi)[!.?\s]*$/.test(folded) ? 'greeting'
+    const socialIntent = /^(?:(?:xin )?chao(?: ban| pawpal)?|hello|hi)[!.?\s]*$/.test(folded) ? 'greeting'
         : /^(?:cam on|cam on ban|cam on pawpal)[!.?\s]*$/.test(folded) ? 'thanks' : null;
 
     // A standalone greeting starts at level 1. Configured triggers may raise it.

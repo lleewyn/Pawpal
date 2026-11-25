@@ -1,4 +1,0 @@
-PASS: Actual Add staff form loads job titles from live admin_staff_job_title_options catalog. Includes driver, hotel care and hotel cleaning without requiring existing staff in those positions.
-PASS: No ADMIN/cham_soc_thu_cung technical labels; custom existing job titles retained; driver selection produces natural Vietnamese value; selecting manager job title leaves fixed account role STAFF unchanged.
-PASS: Editing existing cham_soc_thu_cung profile preserves original raw value while showing Chăm sóc thú cưng.
-Desktop/mobile screenshots; no profile, account or role changes saved.

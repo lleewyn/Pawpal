@@ -1,4 +1,0 @@
-PASS: Actual staff workspace, actual order-profile renderer, live read-only scoped orders and order_lines.
-PASS: Label/value alignment, 12px action gaps, wrapping without summary overflow at 1100px and 390px, no JavaScript errors.
-PASS: Product table fills container, left-aligned headings, padded cells; horizontal scroll exposes remaining columns on mobile.
-No order creation, payment, data changes, or testcase replay. Screenshots show local changes.

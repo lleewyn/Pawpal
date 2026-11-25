@@ -1,3 +1,0 @@
-PASS: Actual STAFF intake form with live role-scoped read-only database context.
-PASS: 17 matching Admin choices; no preselected observations; normal/abnormal exclusivity; multiple abnormal observations; reset on reopen; Escape and cancel; no horizontal mobile overflow; no JavaScript errors.
-No save RPC called, no database writes, no complete testcase replay. Screenshots document local form changes, not deployed production behavior.

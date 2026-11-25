@@ -1,1 +1,0 @@
-﻿{"status":"ROLLBACK CHECK PASSED","alreadyInstalled":true,"checks":{"rpc_exists":true,"admin_rpc":true,"anon_blocked":true,"money_guard_preserved":true,"refund_cap":true,"loyalty_preserved":true}}

@@ -261,6 +261,10 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     if(neutralSupport){
      evaluation.shouldHandover=false;evaluation.detectedLevel=Math.min(evaluation.detectedLevel,2);
     }
+    const privateRefusal=!requestedStaff&&!evaluation.isToxic&&evaluation.riskType==='none'&&!evaluation.isHighlyUpset&&!evaluation.isImplicitlyUpset&&memberHelp.plan(question)?.understood===false;
+    if(privateRefusal){
+     evaluation.shouldHandover=false;evaluation.detectedLevel=Math.min(evaluation.detectedLevel,2);
+    }
     const continuation=useTurnHistory&&!neutralSupport&&!refundLookup
      ? publicContinuity.findContinuation(question,evaluation,rules.data.recent_questions||[]) : null;
     const urgentHealth=evaluation.riskType==='medical_emergency'||continuation?.topic==='urgent_health';
