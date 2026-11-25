@@ -1,6 +1,6 @@
 # Chương 8. Kiến trúc hệ thống và giải thuật thông minh
 
-Chương này trình bày kiến trúc kỹ thuật và các giải thuật xử lý thông minh trong hệ thống Pawpal. Hệ thống được chia thành hai phân hệ trợ lý gồm Trợ lý trò chuyện phục vụ khách hàng trên website công khai và Trợ lý điều phối hỗ trợ nhân viên kỹ thuật cùng cấp quản lý trong giao diện quản trị nội bộ. Các cơ chế vận hành được thiết kế dựa trên nguyên tắc gắn kết dữ liệu thực tế, kiểm soát phân quyền chặt chẽ và xử lý ngôn ngữ tự nhiên tiếng Việt.
+Chương này trình bày kiến trúc kỹ thuật và các giải thuật xử lý thông minh trong hệ thống Pawpal. Hệ thống được chia thành hai phân hệ trợ lý gồm Trợ lý trò chuyện phục vụ khách hàng trên website công khai và Trợ lý điều phối hỗ trợ nhân viên cùng cấp quản lý trong giao diện quản trị nội bộ. Các cơ chế vận hành được thiết kế dựa trên nguyên tắc gắn kết dữ liệu thực tế, kiểm soát phân quyền chặt chẽ và xử lý ngôn ngữ tự nhiên tiếng Việt.
 
 ---
 
@@ -10,7 +10,7 @@ Chương này trình bày kiến trúc kỹ thuật và các giải thuật xử
 
 Kiến trúc phần mềm của Pawpal được xây dựng theo mô hình phân tầng hướng dịch vụ gồm bốn tầng chức năng riêng biệt nhằm đảm bảo tính độc lập và khả năng bảo trì.
 
-Tầng giao diện người dùng tiếp nhận tương tác từ các nhóm người dùng. Kênh khách hàng công cộng là ứng dụng web một trang, cung cấp thông tin dịch vụ, quy trình đặt lịch làm đẹp và chăm sóc, dịch vụ khách sạn thú cưng, dịch vụ xe đưa đón thú cưng, danh mục sản phẩm và khung trò chuyện trực tiếp với Trợ lý Pawpal. Kênh thành viên đã đăng nhập cho phép khách hàng theo dõi hồ sơ thú cưng, lịch hẹn cá nhân, tình trạng đơn hàng, điểm tích lũy và lịch sử khiếu nại. Kênh quản trị nội bộ là giao diện làm việc dành cho nhân viên kỹ thuật và cấp quản lý, tích hợp các bảng theo dõi ca làm việc, quản lý kho hàng và khung giao tiếp với Trợ lý điều phối.
+Tầng giao diện người dùng tiếp nhận tương tác từ các nhóm người dùng. Kênh khách hàng công cộng là ứng dụng web một trang, cung cấp thông tin dịch vụ, quy trình đặt lịch làm đẹp và chăm sóc, dịch vụ khách sạn thú cưng, dịch vụ xe đưa đón thú cưng, danh mục sản phẩm và khung trò chuyện trực tiếp với Trợ lý Pawpal. Kênh thành viên đã đăng nhập cho phép khách hàng theo dõi hồ sơ thú cưng, lịch hẹn cá nhân, tình trạng đơn hàng, điểm tích lũy và lịch sử khiếu nại. Kênh quản trị nội bộ là giao diện làm việc dành cho nhân viên và cấp quản lý, tích hợp các bảng theo dõi ca làm việc, quản lý kho hàng và khung giao tiếp với Trợ lý điều phối.
 
 Tầng cổng dịch vụ trung gian tiếp nhận và xử lý tập trung các yêu cầu gửi đến điểm cuối `/api/admin-chat`. Cổng dịch vụ thực hiện kiểm tra tính hợp lệ của phiên làm việc, xác định vai trò người dùng, áp dụng hạn mức gửi tối đa mười tin nhắn trong một phút cho mỗi phiên, kiểm duyệt từ ngữ vi phạm và ngăn chặn các câu lệnh tiêm nhiễm nguy hiểm. Tầng này cũng phân tích nội dung câu hỏi để quyết định đọc dữ liệu có sẵn từ cơ sở dữ liệu hay chuyển tiếp ngữ cảnh sang mô hình trí tuệ nhân tạo.
 
@@ -46,9 +46,9 @@ Hình 8.2 biểu diễn luồng tương tác giữa trình duyệt, máy chủ �
 
 ### 8.2.1. Cơ chế xác thực và quản lý định danh người dùng
 
-Hệ thống quản lý định danh người dùng theo hai nhóm đối tượng. Đối với thành viên và nhân viên nội bộ, quá trình đăng nhập và xác thực được quản lý tập trung bằng chuỗi mã xác thực có thời hạn ngắn kết hợp mã làm mới phiên. Khi gửi câu hỏi đến trợ lý, mã này được đính kèm trong phần tiêu đề xác thực mạng. Máy chủ tiến hành giải mã, kiểm tra chữ ký số và đối chiếu trạng thái hoạt động của tài khoản trong bảng dữ liệu khách hàng hoặc bảng nhân viên.
+Hệ thống quản lý định danh người dùng theo hai nhóm đối tượng. Đối với thành viên và nhân viên nội bộ, quá trình đăng nhập và xác thực được quản lý tập trung bằng chuỗi mã xác thực có thời hạn ngắn kết hợp mã làm mới phiên. Khi gọi API yêu cầu đăng nhập, trình duyệt gửi mã trong tiêu đề xác thực. Máy chủ tiến hành giải mã, kiểm tra chữ ký số và đối chiếu trạng thái hoạt động của tài khoản trong bảng dữ liệu khách hàng hoặc bảng nhân viên.
 
-Đối với khách vãng lai chưa tạo tài khoản, hệ thống tạo một chuỗi ký tự ngẫu nhiên có độ dài từ 32 đến 512 ký tự lưu tại trình duyệt máy khách. Khi gửi lên máy chủ, chuỗi ký tự này được băm bằng giải thuật mã hóa một chiều trước khi đối chiếu với bảng phiên khách vãng lai. Khách vãng lai chỉ được phép tạo cuộc trò chuyện tạm thời, hỏi thông tin dịch vụ công khai và không thể truy cập dữ liệu cá nhân của người dùng khác.
+Đối với khách vãng lai chưa tạo tài khoản, hệ thống tạo một chuỗi ký tự ngẫu nhiên có độ dài từ 32 đến 512 ký tự lưu tại trình duyệt máy khách. Khi gửi lên máy chủ, chuỗi ký tự này được băm bằng giải thuật mã hóa một chiều trước khi đối chiếu với bảng phiên khách vãng lai. Phiên vãng lai cho phép xem danh mục, mua hàng, đặt lịch và trò chuyện với Chatbot. Khi cần tra cứu lịch sử giao dịch, khách xác thực số điện thoại theo luồng riêng.
 
 Khi khách vãng lai quyết định đăng nhập hoặc đăng ký tài khoản thành viên trong lúc đang trò chuyện, hệ thống thực hiện chuyển quyền sở hữu cuộc trò chuyện sang tài khoản mới thông qua thủ tục kế thừa và chuyển giao phiên hội thoại. Quá trình này đòi hỏi xác thực đồng thời chuỗi mã băm của phiên khách vãng lai và mã phiên của tài khoản đăng nhập, đảm bảo lịch sử hội thoại được kế thừa liên tục mà không làm lộ dữ liệu sang tài khoản khác.
 
@@ -56,26 +56,39 @@ Khi khách vãng lai quyết định đăng nhập hoặc đăng ký tài khoả
 
 ### 8.2.2. Kiểm soát phân quyền đa tầng và bảo vệ dữ liệu nghiệp vụ
 
-Pawpal áp dụng cơ chế phân quyền theo vai trò kết hợp chính sách an toàn cấp dòng dữ liệu trong hệ quản trị cơ sở dữ liệu PostgreSQL.
+Pawpal kiểm soát quyền truy cập ở ba tầng. Quyền của khách hàng phụ thuộc vào trạng thái xác thực và quyền sở hữu dữ liệu. Trang quản trị có hai vai trò nội bộ là Nhân viên (`STAFF`) và Quản lý (`ADMIN`). Với công việc có người phụ trách, hệ thống kiểm tra thêm quan hệ phân công.
 
-Tại cổng dịch vụ trung gian, hệ thống kiểm tra vai trò và danh sách quyền hạn được gắn với phiên làm việc. Khi tài khoản có vai trò kỹ thuật viên gửi câu lệnh yêu cầu xem doanh thu hoặc báo cáo tài chính của cửa hàng, cổng dịch vụ sẽ từ chối ngay lập tức và trả về mã lỗi 403 cấm truy cập mà không chuyển lệnh xuống cơ sở dữ liệu.
+- **Tầng giao diện.** Website hiển thị chức năng phù hợp với phiên khách vãng lai hoặc tài khoản thành viên. Trang quản trị hiển thị màn hình và nút thao tác theo vai trò. Nhân viên xem công việc cá nhân và các tác vụ được giao. Quản lý có thêm chức năng điều phối, phê duyệt và cấu hình.
+- **Tầng dịch vụ.** API xác thực phiên và kiểm tra quyền đối với từng thao tác. Luồng vãng lai xác thực số điện thoại để tra cứu lịch sử. Các quy trình đổi/trả, hoàn tiền và duyệt bồi hoàn còn kiểm tra trạng thái hồ sơ hoặc giao dịch.
+- **Tầng dữ liệu.** PostgreSQL áp dụng chính sách bảo mật cấp dòng (RLS) để giới hạn bản ghi theo người dùng. Các hàm nghiệp vụ kiểm tra thêm vai trò, quyền thao tác và điều kiện phân công. Chẳng hạn, Nhân viên có quyền cập nhật hồ sơ ca dịch vụ vẫn phải được phân công ca đó.
 
-Tại cơ sở dữ liệu, toàn bộ các bảng nghiệp vụ như khách hàng, đơn hàng, lịch hẹn và giao dịch thanh toán đều được kích hoạt chính sách an toàn cấp dòng dữ liệu. Các truy vấn từ trợ lý chỉ được phép thực hiện thông qua các hàm thủ tục nội bộ chuyên trách gồm thủ tục đọc dữ liệu hội thoại, thủ tục tra cứu hồ sơ khách hàng và thủ tục tra cứu tác vụ vận hành. Quyền hạn của người gọi được thẩm định lại độc lập bên trong từng hàm, ngăn chặn tình trạng sửa đổi tham số từ phía trình duyệt.
+Bảng 8.1 ánh xạ các quyền nghiệp vụ chính của bốn nhóm người dùng trên website và trang quản trị Pawpal.
 
 **Bảng 8.1. Ma trận quyền truy cập theo vai trò trong hệ thống Pawpal**
 
-| Dữ liệu và chức năng nghiệp vụ | Khách vãng lai | Thành viên đăng nhập | Nhân viên kỹ thuật | Quản lý hệ thống |
-| :--- | :---: | :---: | :---: | :---: |
-| Tra cứu danh mục dịch vụ và bảng giá công khai | Cho phép | Cho phép | Cho phép | Cho phép |
-| Tra cứu hồ sơ khách hàng và đơn hàng cá nhân | Bị từ chối (Yêu cầu đăng nhập) | Cho phép (Chỉ dữ liệu chính chủ) | Theo phạm vi phân công ca làm | Toàn quyền tra cứu hồ sơ đầy đủ |
-| Yêu cầu kết nối gặp nhân viên hỗ trợ trực tiếp | Hướng dẫn đăng nhập tài khoản | Cho phép (Tài khoản thành viên) | Tiếp nhận ca theo danh sách phân công | Điều phối ca và theo dõi toàn bộ tiệm |
-| Đính kèm hình ảnh trong cuộc trò chuyện | Bị từ chối | Tối đa 3 ảnh trong một tin nhắn | Theo quyền xử lý ca trò chuyện | Toàn quyền kiểm tra và lưu trữ ảnh |
-| Tiếp nhận và trao đổi trực tiếp trong ca chat | Không áp dụng | Không áp dụng | Cho phép trong ca được giao | Toàn quyền tiếp quản mọi ca |
-| Thêm ghi chú nội bộ cho ca dịch vụ | Không áp dụng | Không áp dụng | Cho phép trong phạm vi ca trực | Toàn quyền ghi chú và đánh giá |
-| Tra cứu ca làm việc và lịch trực cá nhân | Không áp dụng | Không áp dụng | Cho phép xem lịch cá nhân | Tra cứu lịch trực toàn bộ nhân viên |
-| Cảnh báo hàng tồn kho dưới ngưỡng an toàn | Không áp dụng | Không áp dụng | Cho phép khi có quyền xem kho | Toàn quyền xem số lượng tồn kho |
-| Báo cáo doanh thu và thực thu tài chính | Không áp dụng | Không áp dụng | Bị từ chối (Mã lỗi 403) | Toàn quyền xem theo khoảng ngày |
-| Cấu hình quy tắc kiểm duyệt và mẫu phản hồi | Không áp dụng | Không áp dụng | Không áp dụng | Toàn quyền chỉnh sửa quy tắc |
+| Chức năng hoặc thao tác | Khách vãng lai | Thành viên đã đăng nhập | Nhân viên (`STAFF`) | Quản lý (`ADMIN`) |
+| :--- | :--- | :--- | :--- | :--- |
+| Xem sản phẩm, dịch vụ và giá công khai | Được xem | Được xem | Được xem | Được xem |
+| Hồ sơ chủ nuôi và thú cưng | Cung cấp thông tin khi mua hàng hoặc đặt lịch | Xem và cập nhật hồ sơ chính chủ | Tra cứu, thêm và cập nhật theo quyền nghiệp vụ | Quản lý hồ sơ khách hàng và thú cưng |
+| Pawpoint và hạng thành viên | Không áp dụng | Xem điểm, hạng và lịch sử điểm của mình | Tra cứu số dư phục vụ hỗ trợ khách | Quản lý hạng và điều chỉnh điểm |
+| Đặt lịch dịch vụ | Đặt lịch theo luồng vãng lai | Đặt lịch cho thú cưng của mình | Tạo lịch cho khách | Tạo và quản lý lịch hẹn |
+| Tra cứu lịch hẹn | Tra cứu lịch sử sau xác thực số điện thoại | Xem lịch hẹn của mình | Xem các ca được giao | Xem lịch hẹn toàn cửa hàng |
+| Điều phối và thực hiện ca dịch vụ | Không áp dụng | Xem tiến trình chăm sóc của mình khi có dữ liệu | Tiếp nhận, thực hiện và ghi nhật ký ca được giao | Phân công, điều phối và theo dõi ca |
+| Mua hàng và tạo đơn | Mua hàng theo luồng vãng lai | Mua hàng bằng tài khoản | Báo giá và tạo đơn tại quầy | Tạo và quản lý đơn hàng |
+| Tra cứu đơn hàng | Tra cứu lịch sử sau xác thực số điện thoại | Xem đơn hàng của mình | Tra cứu theo quyền bán hàng | Xem hồ sơ và lịch sử đơn hàng |
+| Thanh toán và thu ngân | Thanh toán giao dịch của mình | Thanh toán giao dịch của mình | Kiểm tra thanh toán và thu tiền theo đơn hoặc ca trong phạm vi được cấp | Quản lý và đối soát thanh toán |
+| Đổi/trả hàng | Gửi yêu cầu cho đơn đủ điều kiện qua luồng xác thực vãng lai | Gửi yêu cầu cho đơn chính chủ đủ điều kiện | Không có quyền xử lý đổi/trả trên trang quản trị | Tiếp nhận, kiểm tra và xử lý yêu cầu đổi/trả |
+| Thực hiện hoàn tiền | Không áp dụng | Không áp dụng | Không có quyền thực hiện | Hoàn tiền khi giao dịch đủ điều kiện |
+| Sản phẩm, tồn kho và ưu đãi | Xem thông tin được công bố | Xem và sử dụng ưu đãi đủ điều kiện | Tra cứu giá bán, tồn kho và ưu đãi | Quản lý sản phẩm, điều chỉnh kho và cấu hình khuyến mãi |
+| Gửi và theo dõi yêu cầu hỗ trợ | Gửi thông tin qua trang Liên hệ | Gửi và theo dõi yêu cầu của mình | Tạo phiếu tiếp nhận và theo dõi phiếu được giao | Theo dõi danh sách phiếu và phân công xử lý |
+| Xử lý khiếu nại và duyệt bồi hoàn | Không áp dụng | Bổ sung thông tin cho phiếu của mình | Xử lý phiếu được giao và đề xuất phương án | Điều phối và duyệt phương án bồi hoàn |
+| Hồ sơ, lịch làm việc và đánh giá nhân sự | Không áp dụng | Không áp dụng | Xem hồ sơ, lịch và kết quả cá nhân | Quản lý hồ sơ, phân ca và đánh giá nhân sự |
+| Tài khoản và phân quyền nội bộ | Không áp dụng | Không áp dụng | Quản lý mật khẩu của mình | Quản lý tài khoản và vai trò nhân sự |
+| Báo cáo kinh doanh và thực thu | Không áp dụng | Không áp dụng | Không có quyền xem báo cáo tài chính toàn cửa hàng | Xem báo cáo kinh doanh và thực thu theo kỳ |
+| Chatbot, hội thoại hỗ trợ và Copilot | Hỏi thông tin công khai | Tra cứu dữ liệu chính chủ, chuyển sang nhân viên và gửi ảnh khi đủ điều kiện | Nhận hội thoại từ hàng chờ, hỗ trợ hội thoại mình phụ trách và dùng Copilot theo quyền | Điều phối hội thoại, sử dụng Copilot và cấu hình Chatbot |
+| Nội dung, cấu hình và nhật ký hệ thống | Xem nội dung công bố | Xem nội dung công bố | Không có quyền quản trị phân hệ Cấu hình | Quản lý banner, bài viết và cấu hình, xem nhật ký hệ thống |
+
+Khách vãng lai tra cứu lịch sử đơn hàng và lịch hẹn qua luồng xác thực số điện thoại của website. Để chuyển hội thoại sang nhân viên hoặc gửi ảnh trong Chatbot, khách cần đăng nhập bằng tài khoản đang hoạt động và đã thiết lập mật khẩu. Bảng 8.2 trình bày các tính năng của Chatbot và Copilot theo từng nhóm người dùng.
 
 ---
 
@@ -146,7 +159,7 @@ Tầng thứ ba là Tầng nhận diện cảm xúc và phân luồng xử lý. 
 
 Tầng thứ tư là Tầng cổng truy vấn dữ liệu an toàn chỉ đọc. Toàn bộ các thao tác đọc dữ liệu của trợ lý được quản lý trong danh mục công cụ cố định. Máy chủ cấp một mã khóa truy cập tạm thời có thời hạn tối đa tám giây. Các hàm thủ tục cơ sở dữ liệu chỉ hoạt động khi nhận đúng mã khóa hợp lệ và tự động hủy quyền khi hoàn tất tác vụ đọc. Cơ chế này ngăn chặn việc thay đổi dữ liệu đơn hàng hay lịch hẹn từ luồng trò chuyện.
 
-Tầng thứ năm là Tầng kiểm soát quyền hạn và bảo vệ dữ liệu. Hệ thống kiểm tra quyền hạn của người gọi theo bốn vai trò gồm khách vãng lai, thành viên đã đăng nhập, nhân viên kỹ thuật và quản lý hệ thống. Nếu nhân viên kỹ thuật gửi câu hỏi về doanh thu cửa hàng, chốt chặn bảo mật sẽ trả về mã lỗi 403 cấm truy cập. Đồng thời, hệ thống loại bỏ các mã số kỹ thuật, tên cột cơ sở dữ liệu và thông tin cá nhân của khách hàng khác trước khi đưa dữ liệu vào ngữ cảnh trả lời, yêu cầu mô hình chỉ trả lời dựa trên thông tin thực tế đã được cung cấp.
+Tầng thứ năm là Tầng kiểm soát quyền hạn và bảo vệ dữ liệu. Hệ thống kiểm tra quyền hạn của người gọi theo bốn vai trò gồm khách vãng lai, thành viên đã đăng nhập, nhân viên và quản lý hệ thống. Nếu nhân viên gửi câu hỏi về doanh thu cửa hàng, chốt chặn bảo mật sẽ trả về mã lỗi 403 cấm truy cập. Đồng thời, hệ thống loại bỏ các mã số kỹ thuật, tên cột cơ sở dữ liệu và thông tin cá nhân của khách hàng khác trước khi đưa dữ liệu vào ngữ cảnh trả lời, yêu cầu mô hình chỉ trả lời dựa trên thông tin thực tế đã được cung cấp.
 
 Tầng thứ sáu là Tầng suy luận mô hình và truyền dữ liệu thời gian thực. Hệ thống điều phối các khóa kết nối của mô hình Gemini 2.5 Flash và áp dụng cơ chế tạm ngắt mạch khi cổng kết nối bị quá tải. Mô hình tạo câu trả lời bằng tiếng Việt bám sát dữ liệu đã được làm sạch. Dữ liệu được đẩy về màn hình theo luồng một chiều liên tục giúp giảm độ trễ hiển thị từ đầu tiên xuống dưới một giây. Trước khi hiển thị, nội dung được kiểm tra lại để đảm bảo đúng quy chuẩn xưng hô của Pawpal: xưng là Pawpal, gọi người dùng là bạn và gọi thú cưng là bé.
 
@@ -168,17 +181,23 @@ Hệ thống đặt an toàn sức khỏe của thú cưng lên hàng đầu và
 
 Hệ thống phân định rõ ràng giữa kênh tư vấn chung và kênh tiếp nhận khiếu nại. Đối với các phản ánh về sự cố dịch vụ hoặc trừ tiền giao dịch, trợ lý hướng dẫn khách hàng tạo yêu cầu chính thức trong mục Hỗ trợ để nhân viên tiếp nhận, lưu trữ chứng từ và xử lý theo đúng quy trình.
 
-**Bảng 8.2. Phân định phạm vi hỗ trợ giữa Chatbot công chúng và Copilot quản trị**
+**Bảng 8.2. Ma trận tính năng và phạm vi hỗ trợ của trợ lý thông minh theo đối tượng người dùng**
 
-| Nhu cầu nghiệp vụ cần xử lý | Trợ lý Chatbot (Khách vãng lai) | Trợ lý Chatbot (Thành viên đăng nhập) | Trợ lý Copilot (Nhân viên kỹ thuật) | Trợ lý Copilot (Quản lý hệ thống) |
+| Tính năng hỗ trợ | Khách vãng lai · Chatbot | Thành viên · Chatbot | Nhân viên · Copilot | Quản lý · Copilot |
 | :--- | :--- | :--- | :--- | :--- |
-| Tra cứu bảng giá dịch vụ làm đẹp | Báo giá theo cân nặng thực tế | Báo giá theo cân nặng thực tế | Tra cứu bảng giá theo phân công | Toàn quyền xem ma trận giá và phụ phí |
-| Kiểm tra phòng khách sạn thú cưng | Giới thiệu loại phòng ở bước đặt | Giới thiệu loại phòng ở bước đặt | Kiểm tra phòng theo ngày được giao | Tra cứu phòng và tình trạng lưu trú toàn tiệm |
-| Tra cứu đơn hàng và điểm tích lũy | Hướng dẫn đăng nhập tài khoản | Xem đơn hàng và điểm tích lũy chính chủ | Tra cứu đơn hàng phục vụ giao nhận | Toàn quyền tra cứu lịch sử mua hàng |
-| Đính kèm hình ảnh trong cuộc trò chuyện | Yêu cầu đăng nhập tài khoản | Cho phép gửi tối đa 3 ảnh minh chứng | Tra cứu ảnh phục vụ xử lý ca làm việc | Toàn quyền kiểm tra và lưu trữ hình ảnh |
-| Tra cứu ca làm việc và lịch trực cá nhân | Không hỗ trợ | Không hỗ trợ | Xem ca trực cá nhân được phân công | Tra cứu bảng phân ca toàn bộ nhân sự |
-| Cảnh báo sản phẩm tồn kho dưới mức tối thiểu | Không hỗ trợ | Không hỗ trợ | Xem danh sách trong kho được giao | Tổng hợp sản phẩm tồn kho thấp toàn cơ sở |
-| Báo cáo doanh thu và thực thu tài chính | Không hỗ trợ | Không hỗ trợ | Bị từ chối (Khóa chặn mã lỗi 403) | Xem doanh thu và tiền hoàn theo khoảng ngày |
+| Tư vấn dịch vụ và tra cứu giá | Báo giá tắm hoặc cắt tỉa theo cân nặng, tra giá sản phẩm và gửi liên kết phù hợp | Tư vấn giá và dẫn đến bước đặt lịch hoặc mua hàng | Tra cứu giá theo gói, cân nặng hoặc quãng đường để tư vấn | Tra cứu bảng giá, điều kiện áp dụng và phụ phí |
+| Hướng dẫn khi thú cưng có dấu hiệu bất thường | Gợi ý theo dõi và hướng dẫn liên hệ bác sĩ thú y khi cần | Gợi ý theo dõi và hướng dẫn liên hệ bác sĩ thú y khi cần | Không áp dụng | Không áp dụng |
+| Tra cứu lịch hẹn và tiến trình chăm sóc | Hướng dẫn đăng nhập khi khách hỏi về lịch hoặc tiến trình riêng | Xem lịch hẹn và nhật ký chăm sóc của mình | Xem lịch được giao, tra cứu ca lưu trú hoặc chuyến đưa đón phụ trách | Tra cứu lịch hẹn toàn cửa hàng theo ngày, dịch vụ và trạng thái |
+| Hỗ trợ nhu cầu lưu trú | Giới thiệu loại phòng và dẫn đến bước đặt lịch | Giới thiệu loại phòng và tra cứu lượt lưu trú của mình | Kiểm tra phòng trống theo khoảng ngày để hỗ trợ đặt lịch | Tra cứu thông tin loại phòng và lịch hẹn lưu trú để điều phối |
+| Tra cứu hồ sơ và Pawpoint | Hướng dẫn đăng nhập khi khách hỏi về dữ liệu cá nhân | Xem hồ sơ thú cưng, số dư điểm, hạng và lịch sử điểm của mình | Tra thông tin liên hệ, thú cưng và số dư điểm phục vụ công việc | Tra cứu hồ sơ chủ nuôi cùng thú cưng, đơn hàng liên quan và thông tin điểm |
+| Tra cứu đơn hàng và thanh toán | Hướng dẫn đăng nhập khi khách hỏi trạng thái đơn riêng | Xem trạng thái và chi tiết đơn hàng của mình | Tra trạng thái theo mã đơn. Đối soát thanh toán cần quyền thu ngân | Tra cứu đơn, số tiền đã thu, đã hoàn và số tiền còn thiếu |
+| Hỗ trợ phản ánh và khiếu nại | Hướng dẫn kênh liên hệ hoặc đăng nhập để gửi yêu cầu hỗ trợ | Hướng dẫn gửi yêu cầu và tra cứu tình trạng phiếu của mình | Tra cứu phiếu được giao và dẫn đến màn hình xử lý | Tra cứu phiếu và theo dõi các yêu cầu đang chờ xử lý |
+| Hỗ trợ chuyển giao và tra cứu hội thoại | Hướng dẫn đăng nhập hoặc hoàn tất thiết lập tài khoản | Chuyển hội thoại sang nhân viên khi đủ điều kiện thành viên | Tra cứu hàng chờ và nội dung hội thoại mình phụ trách | Tra cứu danh sách và nội dung hội thoại phục vụ điều phối |
+| Tra cứu sản phẩm sắp hết hàng | Không hỗ trợ dữ liệu tồn kho nội bộ | Không hỗ trợ dữ liệu tồn kho nội bộ | Liệt kê mặt hàng dưới ngưỡng theo quyền tra cứu kho | Liệt kê mặt hàng dưới ngưỡng tồn kho của cửa hàng |
+| Tra cứu lịch làm việc | Không áp dụng | Không áp dụng | Xem lịch làm việc của mình | Tra cứu lịch làm việc của nhân sự |
+| Tổng hợp doanh thu và thực thu | Không áp dụng | Không áp dụng | Không hỗ trợ tổng hợp toàn cửa hàng | Tổng hợp số tiền đã thu, đã hoàn và thực thu theo khoảng ngày |
+
+Chatbot hỗ trợ tư vấn và tra cứu trên website. Copilot tra cứu dữ liệu nội bộ và cung cấp đường dẫn đến màn hình nghiệp vụ khi có. Người dùng thực hiện các thao tác như đặt lịch, cập nhật hồ sơ hoặc duyệt hoàn tiền trên màn hình tương ứng.
 
 ---
 
@@ -194,7 +213,7 @@ Theo lưu đồ tại Hình 8.4, quy trình xử lý một lượt trò chuyện
 
 Nếu nội dung hợp lệ, hệ thống kiểm tra dấu hiệu sức khỏe của thú cưng. Khi khách hàng bày tỏ sự lo lắng vì bé mệt mỏi hoặc biếng ăn sau dịch vụ, hệ thống kích hoạt luồng xoa dịu tâm lý, giải thích nguyên nhân và hướng dẫn chăm sóc ban đầu an toàn.
 
-Nếu không có vấn đề sức khỏe khẩn cấp, hệ thống chuyển sang phân loại ý định. Khi khách hỏi giá làm đẹp, hệ thống đọc bảng giá theo cân nặng trong cơ sở dữ liệu và gửi liên kết đặt lịch. Khi khách tra cứu đơn hàng hoặc thông tin cá nhân, hệ thống kiểm tra trạng thái đăng nhập: khách vãng lai sẽ nhận lời mời đăng nhập tài khoản, còn thành viên sẽ nhận được thông tin đơn hàng chính chủ. Khi có phản ánh sự cố hoặc yêu cầu bồi hoàn, hệ thống kích hoạt cờ chuyển giao cho nhân viên và hướng dẫn gửi yêu cầu trong mục Hỗ trợ. Với các câu hỏi thông tin chung, hệ thống truy vấn danh mục câu hỏi thường gặp để phản hồi trực tiếp.
+Nếu không có vấn đề sức khỏe khẩn cấp, hệ thống chuyển sang phân loại ý định. Khi khách hỏi giá làm đẹp, hệ thống đọc bảng giá theo cân nặng trong cơ sở dữ liệu và gửi liên kết đặt lịch. Khi khách tra cứu đơn hàng hoặc thông tin cá nhân, hệ thống kiểm tra trạng thái đăng nhập: khách vãng lai sẽ nhận lời mời đăng nhập tài khoản, còn thành viên sẽ nhận được thông tin đơn hàng chính chủ. Khi có phản ánh sự cố hoặc yêu cầu bồi hoàn, Chatbot hướng dẫn gửi yêu cầu trong mục Hỗ trợ. Hệ thống chỉ đưa hội thoại vào hàng chờ nhân viên khi khách đáp ứng điều kiện thành viên. Với các câu hỏi thông tin chung, hệ thống truy vấn danh mục câu hỏi thường gặp để phản hồi trực tiếp.
 
 ![Giao diện tương tác thực tế Chatbot](figures/chuong-08/hinh-08-05-chatbot-cong-khai.png)
 
@@ -221,32 +240,32 @@ Hình 8.5 ghi nhận phản hồi của Chatbot khi khách vãng lai hỏi: *"Xi
 
 ### 8.5.1. Mục tiêu và giá trị hỗ trợ đội ngũ vận hành
 
-Trợ lý Pawpal Copilot hỗ trợ nhân viên kỹ thuật và cấp quản lý tra cứu thông tin nhanh chóng, giảm thiểu thao tác thủ công qua nhiều màn hình quản trị.
+Trợ lý Pawpal Copilot hỗ trợ nhân viên và cấp quản lý tra cứu thông tin nhanh chóng, giảm thiểu thao tác thủ công qua nhiều màn hình quản trị.
 
 Trợ lý cho phép tổng hợp hồ sơ khách hàng đầy đủ từ một câu lệnh chứa số điện thoại hoặc mã khách hàng, liên kết thông tin chủ nuôi, danh sách thú cưng và các đơn hàng gần nhất.
 
 Hệ thống cung cấp tính năng cảnh báo tồn kho tự động bằng cách so sánh số lượng tồn kho thực tế của từng mã sản phẩm với định mức tối thiểu, đưa ra danh mục các mặt hàng cần nhập thêm.
 
-Trợ lý hỗ trợ tra cứu lịch hẹn dịch vụ làm đẹp, khách sạn và xe đưa đón trong ngày, giúp nhân viên chủ động chuẩn bị ca làm việc. Ngoài ra, cơ chế phân quyền đảm bảo nhân viên kỹ thuật không thể xem được các báo cáo tài chính và doanh thu của cửa hàng.
+Trợ lý hỗ trợ tra cứu lịch hẹn dịch vụ làm đẹp, khách sạn và xe đưa đón trong ngày, giúp nhân viên chủ động chuẩn bị ca làm việc. Ngoài ra, cơ chế phân quyền đảm bảo nhân viên không thể xem được các báo cáo tài chính và doanh thu của cửa hàng.
 
 **Bảng 8.4. Danh mục các công cụ tra cứu dữ liệu an toàn tiêu biểu của Trợ lý Copilot**
 
 | Tên công cụ nội bộ | Quyền hạn yêu cầu (Nhân viên) | Quyền hạn yêu cầu (Quản lý) | Nguồn dữ liệu trong cơ sở dữ liệu | Kết quả nghiệp vụ trả về |
 | :--- | :--- | :--- | :--- | :--- |
-| **Tra cứu khách hàng** | Xem khách hàng theo phạm vi ca làm | Toàn quyền xem hồ sơ khách hàng | Dữ liệu khách hàng và hồ sơ chủ nuôi | Thông tin định danh, số điện thoại, hạng thành viên |
-| **Tra cứu thú cưng** | Xem hồ sơ thú cưng theo ca làm | Toàn quyền xem hồ sơ thú cưng | Dữ liệu hồ sơ thú cưng và giống loài | Tên bé, giống loài, giới tính, trạng thái hoạt động |
+| **Tra cứu khách hàng** | Tra cứu thông tin liên hệ theo quyền nghiệp vụ | Toàn quyền xem hồ sơ khách hàng | Dữ liệu khách hàng và hồ sơ chủ nuôi | Thông tin định danh, số điện thoại, hạng thành viên |
+| **Tra cứu thú cưng** | Tra cứu hồ sơ theo quyền nghiệp vụ | Toàn quyền xem hồ sơ thú cưng | Dữ liệu hồ sơ thú cưng và giống loài | Tên bé, giống loài, giới tính, trạng thái hoạt động |
 | **Lịch dịch vụ làm đẹp** | Xem lịch được giao phụ trách | Toàn quyền xem lịch hẹn toàn tiệm | Dữ liệu lịch hẹn và dịch vụ chăm sóc | Danh sách lịch hẹn theo ngày, trạng thái, tên thú cưng |
-| **Cảnh báo tồn kho thấp** | Xem kho theo phạm vi được giao | Toàn quyền xem kho và sản phẩm | Dữ liệu biến thể sản phẩm và kho hàng | Danh sách sản phẩm có tồn kho nhỏ hơn mức tối thiểu |
-| **Kiểm tra phòng khách sạn** | Xem lịch đặt lưu trú được giao | Toàn quyền xem phòng và lưu trú | Dữ liệu phòng khách sạn và lịch lưu trú | Tình trạng phòng trống theo khoảng thời gian yêu cầu |
+| **Cảnh báo tồn kho thấp** | Có quyền tra cứu tồn kho | Toàn quyền xem kho và sản phẩm | Dữ liệu biến thể sản phẩm và kho hàng | Danh sách sản phẩm có tồn kho nhỏ hơn mức tối thiểu |
+| **Kiểm tra phòng khách sạn** | Có quyền tạo lịch hẹn | Có quyền tra cứu phòng và lưu trú | Dữ liệu phòng khách sạn và lịch lưu trú | Tình trạng phòng trống theo khoảng thời gian yêu cầu |
 | **Tra cứu lịch trực nhân sự** | Xem ca trực cá nhân của mình | Toàn quyền xem lịch trực toàn tiệm | Dữ liệu nhân sự và lịch trực ca | Lịch trực cá nhân hoặc danh sách nhân sự trực theo ngày |
-| **Đối soát đơn hàng lẻ** | Thu tiền tại quầy theo ca làm | Toàn quyền xem đơn và thanh toán | Dữ liệu đơn hàng và giao dịch thanh toán | Tiền đã thu, đã hoàn và số tiền còn thiếu của đơn hàng |
+| **Đối soát đơn hàng lẻ** | Tra cứu theo mã đơn bằng quyền thu ngân | Toàn quyền xem đơn và thanh toán | Dữ liệu đơn hàng và giao dịch thanh toán | Tiền đã thu, đã hoàn và số tiền còn thiếu của đơn hàng |
 | **Tổng hợp thực thu** | Bị từ chối (Không có quyền) | Quyền xem thanh toán và hoàn tiền | Dữ liệu tổng hợp thanh toán và hoàn tiền | Tổng tiền thu, tổng tiền hoàn và thực thu theo ngày |
 
 ---
 
 ### 8.5.2. Cách thức nhân viên khai thác và sử dụng Copilot
 
-Nhân viên kỹ thuật và cấp quản lý sử dụng Copilot trong mục Trợ lý trí tuệ nhân tạo trên thanh điều hướng trang quản trị. Giao diện hiển thị danh sách các phiên trò chuyện bên trái và khung trao đổi nghiệp vụ bên phải, kèm các nút tác vụ nhanh như xem lịch hẹn hôm nay, kiểm tra hàng sắp hết hoặc xem các khiếu nại chưa xử lý.
+Nhân viên và cấp quản lý sử dụng Copilot trong mục Trợ lý trí tuệ nhân tạo trên thanh điều hướng trang quản trị. Giao diện hiển thị danh sách các phiên trò chuyện bên trái và khung trao đổi nghiệp vụ bên phải, kèm các nút tác vụ nhanh như xem lịch hẹn hôm nay, kiểm tra hàng sắp hết hoặc xem các khiếu nại chưa xử lý.
 
 ![Lưu đồ xử lý tác vụ và kiểm tra quyền Copilot](figures/chuong-08/hinh-08-06-luong-copilot.png)
 
@@ -254,7 +273,7 @@ Nhân viên kỹ thuật và cấp quản lý sử dụng Copilot trong mục Tr
 
 Theo lưu đồ tại Hình 8.6, khi nhân viên gửi yêu cầu, hệ thống tiến hành kiểm tra mã xác thực phiên làm việc. Nếu hợp lệ, bộ phân tích cú pháp tiếp nhận và phân loại tác vụ.
 
-Khi có yêu cầu xem doanh thu hoặc báo cáo tài chính, hệ thống kiểm tra vai trò người gọi: nếu là nhân viên kỹ thuật, cơ chế phân quyền từ chối yêu cầu và trả về mã lỗi 403; nếu là quản lý hệ thống, yêu cầu được chấp thuận và trả về số liệu thực thu. Đối với yêu cầu xem hồ sơ khách hàng, hệ thống liên kết ba nguồn dữ liệu gồm thông tin chủ nuôi, danh sách thú cưng và đơn hàng gần nhất. Đối với yêu cầu kiểm tra hàng tồn kho hoặc lịch hẹn, hệ thống truy vấn bảng dữ liệu tương ứng. Toàn bộ câu hỏi và kết quả tra cứu được ghi nhật ký kiểm toán trong bảng nhật ký trợ lý để phục vụ giám sát nội bộ.
+Khi có yêu cầu xem doanh thu hoặc báo cáo tài chính, hệ thống kiểm tra vai trò người gọi: nếu là nhân viên, cơ chế phân quyền từ chối yêu cầu và trả về mã lỗi 403; nếu là quản lý hệ thống, yêu cầu được chấp thuận và trả về số liệu thực thu. Đối với yêu cầu xem hồ sơ khách hàng, hệ thống liên kết ba nguồn dữ liệu gồm thông tin chủ nuôi, danh sách thú cưng và đơn hàng gần nhất. Đối với yêu cầu kiểm tra hàng tồn kho hoặc lịch hẹn, hệ thống truy vấn bảng dữ liệu tương ứng. Toàn bộ câu hỏi và kết quả tra cứu được ghi nhật ký kiểm toán trong bảng nhật ký trợ lý để phục vụ giám sát nội bộ.
 
 ![Giao diện tương tác thực tế Copilot](figures/chuong-08/hinh-08-07-copilot-quan-ly.png)
 
@@ -356,11 +375,11 @@ Kịch bản thứ năm kiểm tra giải thuật rà soát sản phẩm tồn k
 
 **Hình 8.13.** Kết quả thử nghiệm cảnh báo các mặt hàng tồn kho chạm ngưỡng an toàn.
 
-Kịch bản thứ sáu kiểm tra cơ chế ngăn chặn nhân viên kỹ thuật xem doanh thu cửa hàng. Khi tài khoản nhân viên kỹ thuật gửi câu lệnh: *“Thực thu hôm nay bao nhiêu?”*, cổng dịch vụ phát hiện tài khoản không có quyền đọc dữ liệu thanh toán và hoàn tiền, từ chối thực hiện yêu cầu với mã lỗi 403. Màn hình Copilot tại Hình 8.14 hiển thị thông báo: *"Chưa có quyền đọc dữ liệu hoặc dùng nguồn này."*, đảm bảo số liệu tài chính không bị lộ ra ngoài.
+Kịch bản thứ sáu kiểm tra cơ chế ngăn chặn nhân viên xem doanh thu cửa hàng. Khi tài khoản nhân viên gửi câu lệnh: *“Thực thu hôm nay bao nhiêu?”*, cổng dịch vụ phát hiện vai trò Nhân viên không có quyền tổng hợp thực thu toàn cửa hàng, từ chối thực hiện yêu cầu với mã lỗi 403. Màn hình Copilot tại Hình 8.14 hiển thị thông báo: *"Chưa có quyền đọc dữ liệu hoặc dùng nguồn này."*, đảm bảo số liệu tài chính không bị lộ ra ngoài.
 
 ![Chốt chặn nhân viên xem doanh thu](figures/chuong-08/hinh-08-14-gioi-han-quyen-nhan-vien.png)
 
-**Hình 8.14.** Kết quả thử nghiệm cơ chế chốt chặn nhân viên kỹ thuật xem doanh thu trái phép.
+**Hình 8.14.** Kết quả thử nghiệm cơ chế chốt chặn nhân viên xem thực thu toàn cửa hàng.
 
 ---
 

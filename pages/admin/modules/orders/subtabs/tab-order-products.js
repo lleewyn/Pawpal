@@ -781,6 +781,16 @@
             PawpalOrdersModule.openGoodsReceiptModal();
         });
 
+        document.getElementById('btnOpenStocktakeModal')?.addEventListener('click', async event => {
+            const button = event.currentTarget;
+            button.disabled = true;
+            try {
+                await PawpalOrdersModule.openStocktakeModal();
+            } finally {
+                button.disabled = false;
+            }
+        });
+
         // Nút thêm dòng sản phẩm vào phiếu nhập
         document.getElementById('btnGrnAddItem')?.addEventListener('click',()=>{
             const id=document.getElementById('grnProductPicker').value,v=inventoryVariants().find(v=>v.id===id);if(!v)return;
@@ -1153,8 +1163,8 @@
     };
 
     function inventoryVariants(){return state.inventoryChoices||[];}
-    async function loadInventoryChoices(){
-        try{state.inventoryChoices=await window.PawpalOrderV1.inventoryChoices();return true;}
+    async function loadInventoryChoices(options){
+        try{state.inventoryChoices=await window.PawpalOrderV1.inventoryChoices(options);return true;}
         catch(error){showToast('Không thể tải danh sách biến thể kho. Vui lòng thử lại.','warning');return false;}
     }
     window.PawpalOrdersModule.openGoodsReceiptModal = async function(prefillSku){
@@ -1218,7 +1228,7 @@
         for(const [label,page] of [['<',state.stocktakePage-1],[String(state.stocktakePage),state.stocktakePage],['>',state.stocktakePage+1]]){const button=document.createElement('button');button.type='button';button.className='btn-pagination'+(label!=='<'&&label!=='>'?' active':'');button.textContent=label;button.disabled=page<1||page>Math.max(1,Math.ceil(filtered.length/10));button.onclick=()=>{state.stocktakePage=page;renderStocktakePage();};pager.append(button);}
     }
     window.PawpalOrdersModule.openStocktakeModal = async function(){
-        if(!await loadInventoryChoices())return;
+        if(!await loadInventoryChoices({force:true}))return;
         document.getElementById('formStocktake').reset();state.stocktakeRequestId=crypto.randomUUID();state.stocktakeCounts=new Map();state.stocktakeSnapshot=structuredClone(inventoryVariants());state.stocktakePage=1;
         state.stocktakeFilter='';
         let search=document.getElementById('salesStocktakeSearch');

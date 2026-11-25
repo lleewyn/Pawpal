@@ -374,7 +374,7 @@ toolbars:{"orders":(ctx)=>{const {el,go,tools}=ctx;
   customers:(options={})=>cached('customers:detail:'+options.id,()=>customers(options),{ttlMs:30000,...options}),
   searchCustomers:query=>cached('customers:search:'+query,async()=>{const {data,error}=await db().rpc('search_admin_sales_customers',{p_query:query});if(error)throw error;return data;},{ttlMs:30000}),
   searchVariants:query=>cached('products:search:'+query,async()=>{const {data,error}=await db().rpc('search_admin_sales_variants',{p_query:query});if(error)throw error;return data;},{ttlMs:30000}),
-  inventoryChoices:()=>cached('products:inventory',async()=>{const {data,error}=await db().rpc('get_admin_sales_inventory_choices');if(error)throw error;return data;}),
+  inventoryChoices:options=>cached('products:inventory',async()=>{const {data,error}=await db().rpc('get_admin_sales_inventory_choices');if(error)throw error;return data;},options),
   stockLogPage:(productId,page=1,options)=>cached('stock-logs:'+productId+':'+page,async()=>{const {data,error}=await db().rpc('get_admin_sales_stock_history_page',{p_product_id:productId,p_page:page});if(error)throw error;if(!data||!Array.isArray(data.rows)||data.rows.length>10)throw Error('invalid_stock_history_page');return data;},options),one,net};
 })();
 
