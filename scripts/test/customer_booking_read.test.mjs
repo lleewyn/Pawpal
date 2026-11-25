@@ -27,7 +27,7 @@ test('summary errors and missing amounts are not replaced with guessed totals',a
 });
 test('elapsed time never completes or checks in a confirmed appointment',()=>{
     for(const file of ['bookings.js','booking-detail.js']){
-        const text=fs.readFileSync('pages/user/modules/bookings/'+file,'utf8');
+        const text=fs.readFileSync('my-client/pages/user/modules/bookings/'+file,'utf8');
         const fn=text.slice(text.indexOf('function resolveBookingStatus(booking)'),text.indexOf('function getBookingScheduledAt(booking)'));
         const context={};vm.runInNewContext(fn+';globalThis.resolve=resolveBookingStatus;',context);
         assert.equal(context.resolve({status:'confirmed',date:'2020-01-01',time:'08:00'}),'confirmed');
@@ -41,7 +41,7 @@ test('booking mapping keeps Vietnam date/time across UTC midnight',async()=>{
 
 test('list/detail action windows use authoritative timestamp or Vietnam wall clock',()=>{
     for(const file of ['bookings.js','booking-detail.js']){
-        const text=fs.readFileSync('pages/user/modules/bookings/'+file,'utf8');
+        const text=fs.readFileSync('my-client/pages/user/modules/bookings/'+file,'utf8');
         const start=text.indexOf('function getBookingScheduledAt(booking)');
         const context={parseVietnamDateTimeInput};vm.runInNewContext(text.slice(start,text.indexOf('\n}',start)+2)+';globalThis.read=getBookingScheduledAt;',context);
         assert.equal(context.read({date:'2031-01-01',time:'00:30'}).toISOString(),'2030-12-31T17:30:00.000Z');

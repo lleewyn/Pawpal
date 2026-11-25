@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function run(domain,activeTab){
- const source=fs.readFileSync('pages/admin/modules/'+domain+'/'+domain+'.js','utf8');
+ const source=fs.readFileSync('my-client/pages/admin/modules/'+domain+'/'+domain+'.js','utf8');
  const setup=source.indexOf(domain==='orders'?'function setupOrdersRealtimeSync':'function setupServicesRealtimeSync');
  const start=source.indexOf('const dirty',setup),end=source.indexOf(domain==='orders'?'const triggerOrderSync':'const triggerServiceSync',start);
  const storage=new Map([['pawpal_admin_active_module',domain==='orders'?'Bán hàng':'Dịch vụ'],[domain==='orders'?'pawpal_admin_order_subtab':'pawpal_admin_services_active_subtab',activeTab]]),calls=[];

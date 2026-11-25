@@ -15,7 +15,7 @@ for(const fail of [false,true])test(fail?'ledger error stops automatic retry and
   return loads===1?fetcher():[];
  }}};
  const context=vm.createContext({window,document,console:{warn(){},error(){},log(){}},sessionStorage:{getItem(){return null;}}});
- for(const file of ['customers.js','subtabs/tab-customer-pawpoint.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../../pages/admin/modules/customers',file),'utf8'),context);
+ for(const file of ['customers.js','subtabs/tab-customer-pawpoint.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../../my-client/pages/admin/modules/customers',file),'utf8'),context);
  window.PawpalCustomers.state.hasLoadedCustomers=true;
  window.PawpalCustomers.subtabs.pawpoint.renderPawpointHistory();
  await new Promise(resolve=>setImmediate(resolve));

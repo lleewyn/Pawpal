@@ -42,5 +42,5 @@ test('header template does not advertise a hardcoded promotion before Cloud load
  const html=fs.readFileSync('my-client/components/header/header.html','utf8');assert.equal(html.includes('PAWFIRST10'),false);assert.equal(html.includes('class="notification-bar"'),false);
  const path=require('node:path');
  const visit=dir=>{for(const item of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,item.name);if(item.isDirectory())visit(file);else if(file.endsWith('.html'))assert.equal(fs.readFileSync(file,'utf8').includes('PAWFIRST10'),false,file);}};
- visit('pages');assert.equal(fs.readFileSync('my-client/index.html','utf8').includes('PAWFIRST10'),false);
+ visit('my-client/pages');assert.equal(fs.readFileSync('my-client/index.html','utf8').includes('PAWFIRST10'),false);
 });
