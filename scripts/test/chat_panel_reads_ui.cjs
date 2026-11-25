@@ -4,8 +4,8 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const page=await browser.newPage({viewport:{width:1440,height:1050}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',route=>route.fulfill({contentType:'text/html',body:'<body></body>'}));await page.goto('http://localhost:3001/');
- await page.setContent(fs.readFileSync('pages/admin/modules/chatbot/chatbot.html','utf8'));
- for(const f of ['pages/admin/admin.css','pages/admin/modules/chatbot/chatbot.css'])await page.addStyleTag({content:fs.readFileSync(f,'utf8')});
+ await page.setContent(fs.readFileSync('my-client/pages/admin/modules/chatbot/chatbot.html','utf8'));
+ for(const f of ['my-client/pages/admin/admin.css','my-client/pages/admin/modules/chatbot/chatbot.css'])await page.addStyleTag({content:fs.readFileSync(f,'utf8')});
  await page.evaluate(()=>{
   sessionStorage.setItem('pawpal_admin_active_module','Chatbot');window.reads=[];window.mode='ok';
   const row={id:'10000000-0000-4000-8000-000000000001',customer_id:'customer-a',customer_profile:{full_name:'QA panel',email:'qa@example.invalid',phone:'0900000000'},status:'agent_handling',created_at:'2026-10-28T00:00:00Z',updated_at:'2026-10-28T00:00:00Z'};
@@ -17,7 +17,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
    channel(){const q={on:()=>q,subscribe:()=>q};return q;},removeChannel(){}
   });
  });
- await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/chatbot/chatbot.js','utf8')});await page.waitForFunction(()=>PawpalChatbot.state.liveLoaded);
+ await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/chatbot/chatbot.js','utf8')});await page.waitForFunction(()=>PawpalChatbot.state.liveLoaded);
  assert.equal(await page.evaluate(()=>reads.filter(r=>r.name==='get_admin_chat_inbox_view').length),1);assert.equal(await page.evaluate(()=>PawpalChatbot.state.liveConversations[0].customerName),'QA panel');
  await page.evaluate(()=>Promise.all([PawpalChatbot.loadCustomerContext('customer-a'),PawpalChatbot.loadCustomerContext('customer-a')]));
  assert.equal(await page.evaluate(()=>reads.filter(r=>r.name==='get_admin_chat_customer_panel').length),1);
@@ -26,7 +26,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  await page.evaluate(()=>{Date.now=clockNow;mode='defer';window.stale=PawpalChatbot.loadCustomerContext('customer-b');});await page.waitForFunction(()=>Boolean(window.completePanel));
  const stale=await page.evaluate(async()=>{PawpalChatbot.invalidateCustomerCache('customer-b');mode='ok';completePanel();return stale;});assert.equal(stale.error,true);
  await page.evaluate(()=>PawpalChatbot.loadCustomerContext('customer-b'));assert.equal(await page.evaluate(()=>reads.filter(r=>r.name==='get_admin_chat_customer_panel').length),4);
- await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js','utf8')});
+ await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js','utf8')});
  await page.evaluate(async()=>{const c=PawpalChatbot.state.liveConversations[0];c.messagesLoaded=true;PawpalChatbot.state.currentConversation=c;await PawpalChatbot.loadConversationDetails(c);PawpalChatbot.subtabs.live.renderCustomerInfoPanel();});
  await page.evaluate(()=>{PawpalChatbot.invalidateCustomerCache('customer-a');mode='defer';const c=PawpalChatbot.state.currentConversation;c.contextLoaded=false;window.oldDetails=PawpalChatbot.loadConversationDetails(c);});
  await page.waitForFunction(()=>Boolean(window.completePanel));

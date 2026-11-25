@@ -2,12 +2,12 @@
 // One-shot cleanup of the two precisely recorded product acceptance files. No generic public delete route.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {runCli}=require('./media_vercel_preview.cjs');
-const {readMediaMongoConfig}=require('../api/media_mongodb.cjs');
+const {readMediaMongoConfig}=require('../../my-server/scripts/api/media_mongodb.cjs');
 (async()=>{let db,request,deploymentId=null;try{
  const careMode=process.argv[2]==='--care-execute';
  if(process.argv[2]!=='--execute'&&!careMode)throw Error('EXECUTE_REQUIRED');
  let scope,candidates;
- db=await require('../database/v1/service_import_connection.cjs').connect();await db.query('BEGIN');
+ db=await require('../../my-server/scripts/database/v1/service_import_connection.cjs').connect();await db.query('BEGIN');
  if(careMode){
   const baseline=JSON.parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/media/phase4-care-e2e-before.private.json'));
   if(!/^MEDIA-ACCEPTANCE-[a-f0-9]{12}$/.test(baseline.marker))throw Error('TEST_MARKER_SCOPE');
@@ -44,7 +44,7 @@ const {readMediaMongoConfig}=require('../api/media_mongodb.cjs');
  for(const folder of ['api','scripts/api','.vercel'])fs.mkdirSync(path.join(artifact,folder),{recursive:true});
  fs.writeFileSync(path.join(artifact,'.vercel/project.json'),JSON.stringify(linked));fs.writeFileSync(path.join(artifact,'package.json'),JSON.stringify({private:true,dependencies:{mongodb:'6.21.0',sharp:'0.34.5',busboy:'1.6.0'}}));
  fs.writeFileSync(path.join(artifact,'vercel.json'),JSON.stringify({framework:null,buildCommand:'',outputDirectory:'.',functions:{'api/media-cleanup.js':{maxDuration:30}}}));
- fs.writeFileSync(path.join(artifact,'index.html'),'<title>PawPal private cleanup</title>');
+ fs.writeFileSync(path.join(artifact,'my-client/index.html'),'<title>PawPal private cleanup</title>');
  for(const file of ['media_mongodb.cjs','media_gridfs.cjs','media_files.cjs'])fs.copyFileSync('scripts/api/'+file,path.join(artifact,'scripts/api',file));
  const endpoint=`const {timingSafeEqual}=require('node:crypto'),{ObjectId}=require('mongodb'),{getMediaMongoResources}=require('../scripts/api/media_mongodb.cjs'),{createGridfsStore}=require('../scripts/api/media_gridfs.cjs');const claims=${JSON.stringify(claims)};module.exports=async(req,res)=>{res.setHeader('Cache-Control','no-store');const expected=process.env.MEDIA_CLEANUP_TOKEN,got=req.headers['x-pawpal-cleanup'];if(process.env.VERCEL_ENV!=='preview'||req.method!=='POST'||!expected||typeof got!=='string'||got.length!==expected.length||!timingSafeEqual(Buffer.from(got),Buffer.from(expected)))return res.status(403).json({ok:false});try{const resources=await getMediaMongoResources(),store=createGridfsStore(async()=>resources);for(const c of claims){const id=new ObjectId(c.mongo_file_id),file=await resources.bucket.find({_id:id}).limit(1).next();if(file&&(file.metadata?.sessionId!==c.session_id||file.metadata?.sha256!==c.sha256))throw Error();await store.removeClaimed(c);if(await resources.bucket.find({_id:id}).limit(1).next()||await resources.db.collection(resources.bucketName+'.chunks').countDocuments({files_id:id}))throw Error();}return res.status(200).json({ok:true,deleted:claims.length});}catch{return res.status(503).json({ok:false});}};`;
  fs.writeFileSync(path.join(artifact,'api/media-cleanup.js'),endpoint);

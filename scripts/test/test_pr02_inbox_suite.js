@@ -9,8 +9,8 @@ const path = require('path');
 function testStaticCodeCompliance() {
     console.log('1. Kiểm tra tuân thủ mã nguồn tĩnh (Static Analysis)...');
 
-    const chatbotJsPath = path.resolve(__dirname, '../../pages/admin/modules/chatbot/chatbot.js');
-    const liveJsPath = path.resolve(__dirname, '../../pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js');
+    const chatbotJsPath = path.resolve(__dirname, '../../my-client/pages/admin/modules/chatbot/chatbot.js');
+    const liveJsPath = path.resolve(__dirname, '../../my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js');
 
     const chatbotJs = fs.readFileSync(chatbotJsPath, 'utf8');
     const liveJs = fs.readFileSync(liveJsPath, 'utf8');

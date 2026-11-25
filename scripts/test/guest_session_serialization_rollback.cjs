@@ -1,6 +1,6 @@
 // Two real database connections; bounded lock check, never commits fixtures.
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--verify-cloud')){console.log('Use --verify-cloud for two-writer rollback checks.');process.exit(0);}
 (async()=>{
  const clients=[];let pending;const checks=[];

@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),{plan,contextualPlan,answer}=require('../api/admin_copilot.js'),{definitions,prepare,createReadBudget}=require('../api/chat_read_tools.js');
+const {test}=require('node:test'),assert=require('node:assert/strict'),{plan,contextualPlan,answer}=require('../../my-server/scripts/api/admin_copilot.js'),{definitions,prepare,createReadBudget}=require('../../my-server/scripts/api/chat_read_tools.js');
 const now=new Date('2026-10-28T03:00:00Z'),id='10000000-0000-4000-8000-000000000001',base=definitions['appointment.search'].permissions;
 test('named staff plans preserve name and scope time before the staff marker',()=>{
  for(const q of ['Lịch Spa chiều mai theo KTV: Nguyễn Sáng','Lich Spa chieu mai cua KTV Nguyen Sang','Lịch Spa chiều mai KTV: Nguyễn Sáng']){const p=plan(q,now);assert.equal(p.intent,'appointment.search');assert.equal(p.filters.start_at,'2026-10-28T17:00:00.000Z');assert.equal(p.filters.day_part,'afternoon');assert.ok(p.filters.staff_query.endsWith('Sáng')||p.filters.staff_query.endsWith('Sang'));}

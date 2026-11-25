@@ -3,7 +3,7 @@
 require('dotenv').config({quiet:true});
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),express=require('express');
 const {createClient}=require('@supabase/supabase-js');
-const {createStaffAuthHandlers}=require('../api/staff_auth.js');
+const {createStaffAuthHandlers}=require('../../my-server/scripts/api/staff_auth.js');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 async function main(){
  const config={url:process.env.PAWPAL_ADMIN_SUPABASE_URL,anonKey:process.env.PAWPAL_ADMIN_SUPABASE_ANON_KEY,serviceKey:process.env.PAWPAL_ADMIN_SUPABASE_SERVICE_ROLE_KEY};
@@ -11,7 +11,7 @@ async function main(){
  const signed=await client.auth.signInWithPassword({email:credentials.match(/^Email: (.+)$/m)[1].trim(),password:credentials.match(/^Password: (.+)$/m)[1].trim()});assert.equal(signed.error,null);
  const app=express();app.get('/api/admin-config',require('../../api/admin-config.js'));
  app.use('/api',(req,res)=>res.status(405).json({success:false,message:'Read-only proof: account mutations disabled'}));
- app.get('/admin',(req,res)=>res.sendFile(path.resolve('pages/admin/index.html')));app.get('/admin/login',(req,res)=>res.sendFile(path.resolve('pages/admin/login/login.html')));app.use(express.static(process.cwd(),{dotfiles:'deny'}));
+ app.get('/admin',(req,res)=>res.sendFile(path.resolve('my-client/pages/admin/index.html')));app.get('/admin/login',(req,res)=>res.sendFile(path.resolve('my-client/pages/admin/login/login.html')));app.use(express.static(process.cwd(),{dotfiles:'deny'}));
  const server=await new Promise(resolve=>{const value=app.listen(0,'127.0.0.1',()=>resolve(value));});const origin='http://127.0.0.1:'+server.address().port;
  const browser=await chromium.launch({channel:'chrome',headless:true}),folder='docs/verification/staff-account-session',eyeFolder='docs/verification/password-eye-controls';fs.mkdirSync(folder,{recursive:true});fs.mkdirSync(eyeFolder,{recursive:true});
  try{
@@ -71,7 +71,7 @@ async function main(){
   await page.locator('#adminOwnPasswordcurrent').fill(temporary);await page.locator('#adminOwnPasswordModal [aria-controls="adminOwnPasswordcurrent"]').click();await page.keyboard.press('Escape');await page.evaluate(()=>PawpalOwnPassword.open());assert.equal(await page.locator('#adminOwnPasswordcurrent').inputValue(),'');assert.equal(await page.locator('#adminOwnPasswordcurrent').getAttribute('type'),'password');assert.equal(await page.locator('#adminOwnPasswordModal [aria-pressed="true"]').count(),0);
   fs.writeFileSync(eyeFolder+'/verification.txt','PASS: Actual staff account form and personal password modal, eye controls inside all four inputs on desktop/mobile; show/hide retains field value; labels and pressed state update; no separate text button row.\nPASS: Personal password close/reopen clears values and returns to hidden state. Temporary visibility input never persisted to localStorage/sessionStorage.\nNo password submitted, account created, role or password changed. No QA password included in screenshots or report.\n');
   if(process.argv.includes('--job-title-rename')){
-   const {connect}=require('../database/v1/service_import_connection.cjs'),db=await connect(),renameFolder='docs/verification/staff-job-title-rename';fs.mkdirSync(renameFolder,{recursive:true});
+   const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs'),db=await connect(),renameFolder='docs/verification/staff-job-title-rename';fs.mkdirSync(renameFolder,{recursive:true});
    try{
     await db.query('BEGIN');await db.query("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role','authenticated',true)",[signed.data.user.id]);await db.query('SET LOCAL ROLE authenticated');
     await page.exposeFunction('jobTitleProbeRpc',async(name,args)=>{

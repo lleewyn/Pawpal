@@ -9,13 +9,13 @@ const holdRetry=process.argv.includes('--hold-retry');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const p=await browser.newPage({viewport:{width:1280,height:1000}});
  await p.route('**/*',r=>r.abort());await p.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<html><body></body></html>'}));await p.goto('http://localhost:3001/');
- await p.setContent(fs.readFileSync('pages/services/booking/booking.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''));
+ await p.setContent(fs.readFileSync('my-client/pages/services/booking/booking.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''));
  await p.addStyleTag({content:fs.readFileSync('node_modules/bootstrap/dist/css/bootstrap.min.css','utf8')});
- await p.addStyleTag({content:fs.readFileSync('styles/style.css','utf8').replace(/@import[^;]+;/g,'')});
- await p.addStyleTag({content:fs.readFileSync('pages/services/booking/booking.css','utf8')});
- let source=fs.readFileSync('pages/services/booking/booking.js','utf8').replace(/^import .*;\r?\n/gm,'');
+ await p.addStyleTag({content:fs.readFileSync('my-client/styles/style.css','utf8').replace(/@import[^;]+;/g,'')});
+ await p.addStyleTag({content:fs.readFileSync('my-client/pages/services/booking/booking.css','utf8')});
+ let source=fs.readFileSync('my-client/pages/services/booking/booking.js','utf8').replace(/^import .*;\r?\n/gm,'');
  source=source.slice(0,source.lastIndexOf("if(document.readyState==='loading')"));
- await p.addScriptTag({content:fs.readFileSync('pages/services/booking/booking-staff-slots.mjs','utf8').replace('export function','function')});
+ await p.addScriptTag({content:fs.readFileSync('my-client/pages/services/booking/booking-staff-slots.mjs','utf8').replace('export function','function')});
  await p.addScriptTag({content:`const vietnamDateTimeInput=value=>new Date(new Date(value).getTime()+7*3600000).toISOString().slice(0,16);const parseVietnamDateTimeInput=value=>value?new Date(value+':00+07:00'):null;class GuestCommerceError extends Error{};\n`+source+`
  window.fixture={state,renderPets,renderSchedule,renderConfirmation,renderHold,show,details};
  state.pet={id:'pet',name:'Bé kiểm thử',weight:4.5,species:'Mèo'};state.service={id:'svc',name:'Tắm spa vệ sinh toàn diện',category:'grooming_spa'};

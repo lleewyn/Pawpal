@@ -1,5 +1,5 @@
 'use strict';
-const fs=require('node:fs'),path='pages/user/modules/orders/return-handler.js';
+const fs=require('node:fs'),path='my-client/pages/user/modules/orders/return-handler.js';
 let s=fs.readFileSync(path,'utf8').replace(/\r\n/g,'\n');
 const once=(a,b)=>{if(s.split(a).length!==2)throw Error('SOURCE_DRIFT '+a);s=s.replace(a,()=>b);};
 once("import { API } from '/scripts/api/api.js';","import { API } from '/scripts/api/api.js';\nimport {createEvidenceMediaEditor} from '/scripts/shared/evidence-media.mjs';");

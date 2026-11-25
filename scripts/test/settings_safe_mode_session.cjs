@@ -2,8 +2,8 @@
 // No live policy, notice or database changes.
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 (async()=>{
- const system=fs.readFileSync('pages/admin/modules/settings/subtabs/tab-settings-system.js','utf8');
- const core=fs.readFileSync('pages/admin/modules/settings/settings.js','utf8');
+ const system=fs.readFileSync('my-client/pages/admin/modules/settings/subtabs/tab-settings-system.js','utf8');
+ const core=fs.readFileSync('my-client/pages/admin/modules/settings/settings.js','utf8');
  const a=system.indexOf('        const handleSafeModeToggle = () => {'),b=system.indexOf('        // Render ban đầu',a);
  const c=core.indexOf('    async function persistSystemConfig(newCfg)'),d=core.indexOf('    function updateSafeModeUI()',c);
  const storage=()=>{const values=new Map();return {getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k),clear:()=>values.clear()};};

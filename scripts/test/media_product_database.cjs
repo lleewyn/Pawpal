@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('node:fs'), cp = require('node:child_process'), crypto = require('node:crypto');
-const file = 'scripts/database/v1/189_product_media.sql';
+const file = 'my-server/scripts/database/v1/189_product_media.sql';
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 (async () => {
     let cloud;
@@ -11,7 +11,7 @@ const digest = value => crypto.createHash('sha256').update(value).digest('hex');
         if (process.argv[2] === 'apply') {
             const tested = JSON.parse(fs.readFileSync(reportFile));
             if (tested.status !== 'PASS' || tested.checksum !== digest(migration)) throw Error('TEST_REQUIRED');
-            cloud = await require('../database/v1/service_import_connection.cjs').connect();
+            cloud = await require('../../my-server/scripts/database/v1/service_import_connection.cjs').connect();
             const original = JSON.parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/media/phase4/functions.private.json'));
             for (const [name, definition] of Object.entries(original)) {
                 const result = await cloud.query("SELECT pg_get_functiondef(p.oid) definition FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname=$1", [name]);
@@ -24,7 +24,7 @@ const digest = value => crypto.createHash('sha256').update(value).digest('hex');
             const run = input => cp.execFileSync('docker', ['exec', '-i', 'supabase-db', 'psql', '-U', 'supabase_admin', '-d', manifest.database, '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-f', '-'], { input, encoding: 'utf8', windowsHide: true, timeout: 60000 });
             const owner = run("SELECT shobj_description(oid,'pg_database') FROM pg_database WHERE datname=current_database();").trim();
             if (owner !== manifest.owner) throw Error('OWNERSHIP');
-            run(fs.readFileSync('scripts/database/v1/099_product_catalog_final.sql','utf8'));
+            run(fs.readFileSync('my-server/scripts/database/v1/099_product_catalog_final.sql','utf8'));
             run(migration);
             let checks = fs.readFileSync('scripts/test/media_stage3_checks.sql','utf8');
             checks = checks.replace("ROLLBACK;\nSELECT 'MEDIA_DATABASE_CHECKS_PASS';", fs.readFileSync('scripts/test/media_product_checks.sql','utf8') + "\nROLLBACK;\nSELECT 'MEDIA_PRODUCT_CHECKS_PASS';");

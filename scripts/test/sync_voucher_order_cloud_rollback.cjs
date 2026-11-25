@@ -1,6 +1,6 @@
 // One synthetic voucher order/SKU, transaction-only fixtures. No actual money or delivery.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded voucher checkout checks; otherwise no network.');process.exit(0);}
 (async()=>{const db=await connect();let queries=0;
  const report={environment:'Supabase Cloud cpzuvaplseielhgcnqrn',timestamp:new Date().toISOString(),scope:'One synthetic COD order/SKU; RPC/RLS only; always ROLLBACK; no Logs',checks:[]};

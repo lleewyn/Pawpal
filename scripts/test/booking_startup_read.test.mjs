@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {loadBookingRead} from '../../pages/services/booking/booking-loading.mjs';
+import {loadBookingRead} from '../../my-client/pages/services/booking/booking-loading.mjs';
 
 test('startup reads recover once from transient auth, transport and gateway failures', async () => {
  for (const error of [{name:'AbortError'}, {message:'AbortError: signal is aborted without reason'}, {name:'NavigatorLockAcquireTimeoutError'}, {message:'TypeError: Failed to fetch'}, {status:503}]) {

@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {createStaffAuthHandlers}=require('../api/staff_auth.js');
+const {createStaffAuthHandlers}=require('../../my-server/scripts/api/staff_auth.js');
 const id='16500000-0000-4000-8000-000000000001';
 function fixture(roles=['STAFF'],permissions=['work.self.read'],overrides={}){
  const calls=[];

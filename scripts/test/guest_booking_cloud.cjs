@@ -1,9 +1,9 @@
 // Loopback HTTP -> installed-on-transaction guest RPCs. No fixture committed.
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),express=require('express');
-const {connect}=require('../database/v1/service_import_connection.cjs');
-const {createGuestCommerce}=require('../api/guest_commerce');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
+const {createGuestCommerce}=require('../../my-server/scripts/api/guest_commerce');
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
-const file='scripts/database/v1/114_guest_booking.sql',source=fs.readFileSync(file,'utf8');
+const file='my-server/scripts/database/v1/114_guest_booking.sql',source=fs.readFileSync(file,'utf8');
 const installed=process.argv.includes('--verify-installed');
 if(!installed&&!process.argv.includes('--verify-cloud')){console.log('Use --verify-installed for current Cloud RPC checks, or --verify-cloud before migration installation.');process.exit(0);}
 const signatures=['pawpal_private.guest_booking_availability(uuid,jsonb)','pawpal_private.guest_booking_quote_core(uuid,jsonb)','pawpal_private.require_guest_booking_session(text)','public.guest_booking_quote(text,jsonb)','public.guest_booking_create(text,uuid,text,jsonb)','public.guest_booking_receipt(text,uuid)'];
@@ -86,7 +86,7 @@ const signatures=['pawpal_private.guest_booking_availability(uuid,jsonb)','pawpa
   await send('end',{},a);r=await send('booking-receipt',{requestId:saved[0]},a);assert.equal(r.status,401);pass('Revoked session cannot access previously created booking');
   await q('RESET ROLE');for(const f of baseline.sources)assert.equal(hash((await q('SELECT pg_get_functiondef($1::regprocedure) value',[f.signature])).rows[0].value.replaceAll('\r\n','\n')),f.sha256);pass('Original member quote/availability definitions remain unchanged');
   await q('ROLLBACK');assert.equal((await q('SELECT count(*)::int n FROM public.appointment WHERE id=ANY($1::uuid[])',[saved])).rows[0].n,0);for(const signature of signatures){const value=(await q('SELECT to_regprocedure($1)::text value',[signature])).rows[0].value;if(installed)assert.ok(value);else assert.equal(value,null);}pass('All fixture bookings/logistics/audit rolled back; installed RPCs preserved');
-  fs.writeFileSync('docs/verification/sync/'+(installed?'guest-booking-installed-rollback.txt':'guest-booking-rollback.txt'),JSON.stringify({timestamp:new Date().toISOString(),status:'PASS',installed,migrationSha256:hash(source),handlerSha256:hash(fs.readFileSync('scripts/api/guest_commerce.js','utf8')),queries,checks,scope:'Actual loopback HTTP -> real Cloud SQL service_role RPC/rate limit in rollback transaction; synthetic services/rooms/prices/guest profiles only; no real customer/config mutations, no commit/Realtime/UI, no full-slot/two-writer concurrency or member Auth quote parity acceptance'},null,2)+'\n');
+  fs.writeFileSync('docs/verification/sync/'+(installed?'guest-booking-installed-rollback.txt':'guest-booking-rollback.txt'),JSON.stringify({timestamp:new Date().toISOString(),status:'PASS',installed,migrationSha256:hash(source),handlerSha256:hash(fs.readFileSync('my-server/scripts/api/guest_commerce.js','utf8')),queries,checks,scope:'Actual loopback HTTP -> real Cloud SQL service_role RPC/rate limit in rollback transaction; synthetic services/rooms/prices/guest profiles only; no real customer/config mutations, no commit/Realtime/UI, no full-slot/two-writer concurrency or member Auth quote parity acceptance'},null,2)+'\n');
   console.log('PASS',checks.length,'booking checks;',queries,'SQL; all fixtures and DDL rolled back.');
  }catch(e){await db.query('RESET ROLE').catch(()=>{});await db.query('ROLLBACK').catch(()=>{});throw e;}
  finally{if(server)await new Promise(resolve=>server.close(resolve));await db.end();}

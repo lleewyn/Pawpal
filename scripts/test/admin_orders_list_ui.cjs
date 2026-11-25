@@ -6,8 +6,8 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  const page=await browser.newPage();
  await page.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));
  await page.goto('http://localhost:3001/');
- await page.setContent(fs.readFileSync('pages/admin/modules/orders/orders.html','utf8'),{waitUntil:'domcontentloaded'});
- const source=fs.readFileSync('pages/admin/modules/orders/subtabs/tab-order-list.js','utf8');
+ await page.setContent(fs.readFileSync('my-client/pages/admin/modules/orders/orders.html','utf8'),{waitUntil:'domcontentloaded'});
+ const source=fs.readFileSync('my-client/pages/admin/modules/orders/subtabs/tab-order-list.js','utf8');
  const start=source.indexOf('    const ORDERS_PER_PAGE');
  const end=source.indexOf('    let activePosCustomer',start);
  const selectionStart=source.indexOf("        document.getElementById('checkSelectAllOrders')?.addEventListener");

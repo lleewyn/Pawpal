@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict');
-const {prepareStaff,createReadBudget}=require('../api/chat_read_tools.js');
+const {prepareStaff,createReadBudget}=require('../../my-server/scripts/api/chat_read_tools.js');
 const id='16500000-0000-4000-8000-000000000020';
 const principal={system_role:'STAFF',permissions:['work.copilot.use','work.chat.handle','work.service.perform']};
 const dto=(intent,items)=>({intent,items,audience:'staff',total_is_page:true,page_size:10,total:items.length});

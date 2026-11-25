@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
-const {createGuestPhoneHistory}=require('../api/guest_phone_history');
-const {createGuestCommerce}=require('../api/guest_commerce');
+const {createGuestPhoneHistory}=require('../../my-server/scripts/api/guest_phone_history');
+const {createGuestCommerce}=require('../../my-server/scripts/api/guest_commerce');
 const secret='cancellation-test-secret-at-least-32-bytes',orderId=crypto.randomUUID(),id=crypto.randomUUID(),phone='0950000001';
 const response=()=>({headers:{},statusCode:200,setHeader(k,v){this.headers[k]=v;},status(n){this.statusCode=n;return this;},json(v){this.data=v;return this;}});
 test('OTP cancellation proof is bound to order, phone, action and expiry',async()=>{

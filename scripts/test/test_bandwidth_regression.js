@@ -42,7 +42,7 @@ async function testFetch() {
     let reply = () => new Response('[{"id":1}]');
     ctx.window.fetch = async input => { calls++; await tick(); return reply(input); };
     ctx.window.supabase = { createClient(url, optionsKey, options) { fetchOptions = options; return {}; } };
-    load(ctx, 'scripts/api/supabase-client.js');
+    load(ctx, 'my-client/scripts/api/supabase-client.js');
     assert.equal(ctx.window.SupabaseClientConfig.url, 'https://cpzuvaplseielhgcnqrn.supabase.co', 'Obsolete browser configuration must not select the retired local/Cloud backend');
     const fetch = fetchOptions.global.fetch;
     const url = `${ctx.window.SupabaseClientConfig.url}/rest/v1/customer?select=id`;
@@ -106,7 +106,7 @@ async function testDataStore() {
     const ctx = browserContext();
     let now = 1000;
     ctx.Date = class extends Date { static now() { return now; } };
-    load(ctx, 'pages/admin/admin-data-store.js');
+    load(ctx, 'my-client/pages/admin/admin-data-store.js');
     const cache = ctx.window.PawpalDataStore;
     const policy = { staleTimeMs: 10, gcTimeMs: 50 };
     let calls = 0, finishRefresh;

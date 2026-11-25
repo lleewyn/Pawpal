@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const admission=require('../api/chat_read_admission.js'),tools=require('../api/chat_read_tools.js');
+const admission=require('../../my-server/scripts/api/chat_read_admission.js'),tools=require('../../my-server/scripts/api/chat_read_tools.js');
 test('STAFF admission binds request/session/question to a closed RPC and rejects malformed lease responses',async()=>{
  const request={requestId:randomUUID(),sessionId:randomUUID(),question:'Current work'},lease=randomUUID(),calls=[];
  const data={lease,scope_token:'a'.repeat(32),scope_version:1,expires_at:new Date().toISOString()};

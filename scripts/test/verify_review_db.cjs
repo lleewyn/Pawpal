@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
-const { connect } = require('../database/v1/service_import_connection.cjs');
+const { connect } = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 
 const TARGET_URL = 'https://pawpalgr3-5bph12hep-llwyns-projects.vercel.app';
 const CUSTOMER_PHONE = '0834562948';

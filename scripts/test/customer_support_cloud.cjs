@@ -1,6 +1,6 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings,infra}=require('../database/v1/cloud_connection.cjs'),{config}=settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
+const {settings,infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs'),{config}=settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
 const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,options);
 const ok=async p=>{const r=await p;if(r.error)throw Error(r.error.message);return r.data;};
 const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.randomBytes(20).toString('hex')+'!';
@@ -12,7 +12,7 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
  aid=crypto.randomUUID();await ok(service.from('appointment').insert({id:aid,appointment_code:'TEST-'+aid,customer_id:cid,pet_id:pet,scheduled_start_at:new Date(Date.now()-172800000).toISOString(),scheduled_end_at:new Date(Date.now()-169200000).toISOString(),appointment_status:'completed'}));
  await ok(service.from('appointment_item').insert({appointment_id:aid,service_id:svc.id,is_primary:true,name_snapshot:svc.service_name,quantity:1,unit_price:100,duration_minutes:60,status:'completed'}));
  browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1440,height:1050}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- if(!process.argv.includes('--deployed'))for(const path of ['scripts/shared/support-handler.js','pages/user/modules/support/support-create.js','pages/user/modules/support/support-create.html','pages/user/modules/support/support.js','pages/user/modules/support/support.html'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':'application/javascript',body:fs.readFileSync(path,'utf8')}));
+ if(!process.argv.includes('--deployed'))for(const path of ['my-client/scripts/shared/support-handler.js','my-client/pages/user/modules/support/support-create.js','my-client/pages/user/modules/support/support-create.html','my-client/pages/user/modules/support/support.js','my-client/pages/user/modules/support/support.html'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':'application/javascript',body:fs.readFileSync(path,'utf8')}));
  await page.goto('https://pawpalgr3.vercel.app/login');await page.locator('#loginPhone').fill(phone);await page.locator('#btnLoginContinue').click();await page.locator('#loginPassword').fill(password);await page.locator('#btnLoginSubmit').click();await page.waitForURL(/\/user\/?/,{timeout:45000});await page.waitForFunction(()=>Boolean(window.API?.getUserBookings));
  await page.evaluate(id=>{location.hash='booking-detail?id='+id;},aid);await page.locator('#btnServiceComplaintDetail').waitFor();await page.locator('#btnServiceComplaintDetail').click();
  await page.waitForFunction(id=>document.querySelector('#serviceBookingSelect')?.value===id,aid);

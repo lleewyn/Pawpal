@@ -10,8 +10,8 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'D:/Aboutme/Pawpal
         await page.route('**/*', r => r.fulfill({ contentType: 'text/html', body: '<!doctype html><body class="admin-body dashboard-active"></body>' }));
         await page.goto('http://localhost:3000/dashboard-finance-test');
         await page.setContent('<body class="admin-body dashboard-active"><div style="height:100vh;overflow:auto"><section class="dashboard-module dash-page admin-ui-standard admin-ui-customer-reference business-dash" data-business-root></section></div></body>');
-        for (const file of ['pages/admin/admin.css', 'pages/admin/modules/dashboard/dashboard.css', 'pages/admin/admin-shell-v7.css', 'pages/admin/admin-components.css', 'pages/admin/admin-typography.css']) await page.addStyleTag({ content: fs.readFileSync(file, 'utf8') });
-        await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/subtabs/business-metrics.js', 'utf8') });
+        for (const file of ['my-client/pages/admin/admin.css', 'my-client/pages/admin/modules/dashboard/dashboard.css', 'my-client/pages/admin/admin-shell-v7.css', 'my-client/pages/admin/admin-components.css', 'my-client/pages/admin/admin-typography.css']) await page.addStyleTag({ content: fs.readFileSync(file, 'utf8') });
+        await page.addScriptTag({ content: fs.readFileSync('my-client/pages/admin/modules/dashboard/subtabs/business-metrics.js', 'utf8') });
         await page.addScriptTag({ content: 'window.dashboardTestAnalysis = ' + require('./dashboard_completion_fixture.cjs').toString() });
         await page.evaluate(() => {
             window.fixturePlan = null; window.fixtureError = null; window.fixtureNegative = false; window.saves = [];
@@ -31,7 +31,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'D:/Aboutme/Pawpal
                 return {data:values[args.p_key]};
             } });
         });
-        await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/subtabs/tab-dashboard-business.js', 'utf8') });
+        await page.addScriptTag({ content: fs.readFileSync('my-client/pages/admin/modules/dashboard/subtabs/tab-dashboard-business.js', 'utf8') });
         await page.evaluate(() => PawpalBusinessDashboard.init());
         assert.equal(await page.locator('.biz-finance-values').count(), 0, 'no fabricated costs from old localStorage');
         assert.match(await page.locator('[data-biz-panel="profit"]').innerText(), /Chưa có kế hoạch/);

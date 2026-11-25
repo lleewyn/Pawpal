@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),{plan,contextualPlan,answer}=require('../api/admin_copilot.js'),{definitions,prepare,createReadBudget}=require('../api/chat_read_tools.js');
+const {test}=require('node:test'),assert=require('node:assert/strict'),{plan,contextualPlan,answer}=require('../../my-server/scripts/api/admin_copilot.js'),{definitions,prepare,createReadBudget}=require('../../my-server/scripts/api/chat_read_tools.js');
 const now=new Date('2026-10-28T03:00:00Z'),lease='10000000-0000-4000-8000-000000000001';
 test('all legacy list tools expose validated pages without changing their intent',async()=>{
  for(const [q,intent]of [['Sản phẩm: SKU-VIET trang 2','catalog.product'],['Khách hàng: CUS-001 trang 2','customer.lookup'],['Đơn hàng: ORD-001 trang 2','order.lookup'],['Tồn kho dưới ngưỡng trang 2','inventory.low_stock'],['Khiếu nại chưa xử lý trang 2','ticket.open'],['Lịch Spa hôm nay trang 2','appointment.list'],['Dịch vụ: tắm trang 2','catalog.service'],['Giá dịch vụ Spa trang 2','catalog.service_price']]){

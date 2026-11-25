@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {createGuestCommerce}=require('../api/guest_commerce');
+const {createGuestCommerce}=require('../../my-server/scripts/api/guest_commerce');
 test('cookie history reads only 11 IDs per group and hydrates 10 receipts per page',async()=>{
  const f=fixture({rowCount:23}),cookie=await f.cookie();
  for(const [page,count] of [[0,10],[1,10],[2,3]]){
@@ -51,7 +51,7 @@ test('matching phone filters transactions by cookie owner and rechecks each rece
 });
 
 test('guest receipts use original result cards with local dates and server statuses',async()=>{
- const {mapGuestReceipts}=await import('../../pages/public/return-guest/guest-phone-lookup.mjs');
+ const {mapGuestReceipts}=await import('../../my-client/pages/public/return-guest/guest-phone-lookup.mjs');
  const results=mapGuestReceipts({bookings:[{id:'booking-id',code:'LH-1',status:'confirmed',start_at:'2026-10-28T18:30:00Z',end_at:'2026-10-28T19:30:00Z',total:120000}],orders:[{id:'order-id',code:'DH-1',status:'packing',total:80000,paymentStatus:'paid',receiver:{name:'Test',address:'A',province:'B'},lines:[{name:'Item',quantity:2,unitPrice:40000}]}]});
  assert.equal(results.bookings[0].date,'2026-10-29');assert.equal(results.bookings[0].timeStart,'01:30');
  assert.equal(results.bookings[0].status,'confirmed');assert.equal(results.bookings[0]._receiptOnly,true);

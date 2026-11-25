@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {plan}=require('../api/admin_copilot.js');
+const {plan}=require('../../my-server/scripts/api/admin_copilot.js');
 test('financial forecasts never silently become today cashflow queries',()=>{
     for(const question of ['trong 5 năm có thể đạt doanh thu 7 tỷ không?','Dự báo doanh thu năm sau','Mục tiêu doanh số 7 tỷ có thể đạt không?','Lợi nhuận năm tới sẽ đạt bao nhiêu?']){
         const result=plan(question);assert.equal(result.intent,'clarify',question);

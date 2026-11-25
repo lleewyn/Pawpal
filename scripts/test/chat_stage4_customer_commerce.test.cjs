@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {plan,answer}=require('../api/admin_copilot.js'),{definitions,createReadBudget,prepare}=require('../api/chat_read_tools.js');
+const {plan,answer}=require('../../my-server/scripts/api/admin_copilot.js'),{definitions,createReadBudget,prepare}=require('../../my-server/scripts/api/chat_read_tools.js');
 const id='10000000-0000-4000-8000-000000000001',other='10000000-0000-4000-8000-000000000002',now='2026-10-29T03:00:00Z',question='Khách này có thú cưng và đơn hàng mới nhất?';
 const rights=[...new Set(['internal.customer_resolve','internal.customer_pets','internal.customer_latest_order'].flatMap(tool=>definitions[tool].permissions))];
 function data(tool,filters){return {intent:tool,total:1,items:tool==='internal.customer_resolve'?[{id,code:'CUS-QA',name:'QA'}]:tool==='internal.customer_pets'?[{customer_id:id,code:'PET-QA',name:'QA pet',status:'active',breed:'QA breed',species:'QA species',created_at:now}]:[{customer_id:id,code:'ORD-QA',status:'cancelled',created_at:now}],scope:filters,source:'QA scoped',as_of:now};}

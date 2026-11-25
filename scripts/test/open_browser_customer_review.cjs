@@ -3,13 +3,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const { connect } = require('../database/v1/service_import_connection.cjs');
+const { connect } = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 
 const TARGET_URL = 'https://pawpalgr3-5bph12hep-llwyns-projects.vercel.app';
 const CUSTOMER_PHONE = '0834562948';
 const CUSTOMER_PASSWORD = process.env.CUSTOMER_PASSWORD || 'Customer@Pawpal2026!';
 const ORDER_ID = '39a8a012-3774-4fe3-afb9-cac63a5c5d81';
-const REVIEW_IMAGE_PATH = path.resolve('assets/images/publics/dogcute8.jpg');
+const REVIEW_IMAGE_PATH = path.resolve('my-client/assets/images/publics/dogcute8.jpg');
 
 (async () => {
     console.log('=== KHỞI CHẠY TRÌNH DUYỆT TRỰC QUAN (VISIBLE CHROME) ===');

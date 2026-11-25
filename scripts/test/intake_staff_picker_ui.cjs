@@ -7,8 +7,8 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  page.on('request', request=>requests.push(new URL(request.url()).pathname));
  await page.route('**/*',route=>{
   const u=new URL(route.request().url());if(u.origin!=='http://localhost')return route.abort();
-  if(u.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><body class="admin-body"><meta charset="utf-8"><link rel="stylesheet" href="/pages/admin/admin.css"><link rel="stylesheet" href="/pages/admin/modules/services/services.css"><link rel="stylesheet" href="/pages/admin/modules/services/services-v8.css">'+fs.readFileSync('pages/admin/modules/services/services.html','utf8')});
-  const file=path.join(process.cwd(),decodeURIComponent(u.pathname));if(!fs.existsSync(file))return route.abort();
+  if(u.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><body class="admin-body"><meta charset="utf-8"><link rel="stylesheet" href="/pages/admin/admin.css"><link rel="stylesheet" href="/pages/admin/modules/services/services.css"><link rel="stylesheet" href="/pages/admin/modules/services/services-v8.css">'+fs.readFileSync('my-client/pages/admin/modules/services/services.html','utf8')});
+  const file=path.join(process.cwd(),'my-client',decodeURIComponent(u.pathname));if(!fs.existsSync(file))return route.abort();
   return route.fulfill({contentType:u.pathname.endsWith('.css')?'text/css':'text/javascript',body:fs.readFileSync(file,'utf8')});
  });
  await page.goto('http://localhost/');

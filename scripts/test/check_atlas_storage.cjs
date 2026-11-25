@@ -1,4 +1,4 @@
-const { getMediaMongoResources } = require('../api/media_mongodb.cjs');
+const { getMediaMongoResources } = require('../../my-server/scripts/api/media_mongodb.cjs');
 
 (async () => {
     const { db } = await getMediaMongoResources();

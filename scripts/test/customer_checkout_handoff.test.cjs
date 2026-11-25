@@ -2,7 +2,7 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const source = fs.readFileSync('pages/admin/modules/orders/subtabs/tab-order-list.js', 'utf8');
+const source = fs.readFileSync('my-client/pages/admin/modules/orders/subtabs/tab-order-list.js', 'utf8');
 const select = source.slice(source.indexOf('    async function selectPosCustomer('), source.indexOf('    function renderPosCartTable('));
 const handoff = source.slice(source.indexOf('    async function openCreateOrderModal('), source.indexOf('    // Khởi tạo các sự kiện giao diện cho Subtab List'));
 

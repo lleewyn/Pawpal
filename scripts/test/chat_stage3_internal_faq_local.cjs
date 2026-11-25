@@ -1,5 +1,5 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto'),jwt=require('jsonwebtoken'),{execFileSync}=require('node:child_process');
-const {answer}=require('../api/admin_copilot.js');
+const {answer}=require('../../my-server/scripts/api/admin_copilot.js');
 if(!process.argv.includes('--local-fixtures')){console.log('No changes. Pass --local-fixtures.');process.exit(0);}
 const out='docs/chatbot/stage3-faq-internal-2026-10-29',env=JSON.parse(fs.readFileSync(out+'/local-environment.txt','utf8'));
 assert.equal(env.status,'READY');assert.match(env.database,/^pawpal_chatbot_g0_[a-f0-9]{12}$/);assert.equal(env.ownerMarker,'pawpal-chatbot-g0-'+env.database.slice('pawpal_chatbot_g0_'.length));

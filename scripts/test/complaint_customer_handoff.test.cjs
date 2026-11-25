@@ -2,7 +2,7 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const source = fs.readFileSync('pages/admin/modules/complaints/complaints.js','utf8');
+const source = fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.js','utf8');
 const start = source.indexOf('        if (presetCustomerId) {');
 const block = source.slice(start, source.indexOf('        if (targetRefId && contentInput)', start));
 

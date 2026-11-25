@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "buildCommand": "",
-  "outputDirectory": ".",
+  "outputDirectory": "my-client",
   "cleanUrls": false,
   "functions": {
     "api/admin-chat.js": {

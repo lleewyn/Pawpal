@@ -1,7 +1,7 @@
 // Live UI navigation/prefill and transaction-bound real Supabase completion; no mocked business data.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--run'))process.exit(0);
 const ticket='7f126cf4-027c-4084-9f61-50cc0a084f0b',original='b291cffd-0487-4fdd-8647-bcde6e9ce8ed',other='a2a90a14-c19a-4348-ba28-e529ab80d38d';
 (async()=>{const db=await connect(),browser=await chromium.launch({channel:'chrome',headless:true}),folder='docs/verification/complaint-service-redo';fs.mkdirSync(folder,{recursive:true});let tx=false,page;const checks=[],errors=[],pass=s=>{checks.push(s);console.log('PASS',s);};

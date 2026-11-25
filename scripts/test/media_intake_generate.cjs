@@ -80,11 +80,11 @@ END $$;
 REVOKE ALL ON FUNCTION public.list_intake_media(uuid) FROM PUBLIC,anon,authenticated,service_role;
 GRANT EXECUTE ON FUNCTION public.list_intake_media(uuid) TO authenticated;
 `;
-fs.writeFileSync('scripts/database/v1/193_intake_media.sql',"BEGIN;\nSET LOCAL lock_timeout='3s';\n"+ddl+[manage,prepare,resolve,cleanup,release,save].map(x=>x+';').join('\n')+`
+fs.writeFileSync('my-server/scripts/database/v1/193_intake_media.sql',"BEGIN;\nSET LOCAL lock_timeout='3s';\n"+ddl+[manage,prepare,resolve,cleanup,release,save].map(x=>x+';').join('\n')+`
 REVOKE ALL ON FUNCTION public.prepare_intake_media_upload(uuid,uuid,uuid,bigint,text,text) FROM PUBLIC,anon,authenticated,service_role;
 GRANT EXECUTE ON FUNCTION public.prepare_intake_media_upload(uuid,uuid,uuid,bigint,text,text) TO authenticated;
 COMMIT;\n`);
-fs.writeFileSync('scripts/database/v1/193_intake_media.rollback.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/193_intake_media.rollback.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 LOCK TABLE public.media_upload_session,public.appointment_record_media IN ACCESS EXCLUSIVE MODE;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.media_upload_session WHERE purpose='intake_image') OR EXISTS(SELECT 1 FROM public.appointment_record_media) THEN RAISE EXCEPTION 'intake_media_rollback_requires_empty_foundation'; END IF; END $$;

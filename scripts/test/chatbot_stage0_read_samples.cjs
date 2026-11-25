@@ -1,6 +1,6 @@
 // Three bounded read-only SQL samples; not an authenticated HTTP or load benchmark.
 const fs=require('node:fs');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')){console.log('No connection: pass --cloud for three read-only samples.');process.exit(0);}
 (async()=>{
  let db;const report={capturedAt:new Date().toISOString(),scope:'SQL authenticated role with existing active ADMIN claims; read-only; no HTTP JWT, AI, writes or Logs',samples:[]};

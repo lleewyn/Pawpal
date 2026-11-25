@@ -1,12 +1,12 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
-const file='scripts/database/v1/115_guest_sales.sql',reverseFile='scripts/database/v1/115_guest_sales_rollback.sql';
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
+const file='my-server/scripts/database/v1/115_guest_sales.sql',reverseFile='my-server/scripts/database/v1/115_guest_sales_rollback.sql';
 const source=fs.readFileSync(file,'utf8'),reverse=fs.readFileSync(reverseFile,'utf8'),hash=s=>crypto.createHash('sha256').update(s).digest('hex'),body=s=>s.replace(/^BEGIN;\s*$/m,'').replace(/^COMMIT;\s*$/m,'');
 const apply=process.argv.includes('--apply-cloud');
 if(!apply&&!process.argv.includes('--verify-reverse')){console.log('Use --verify-reverse for DDL roundtrip, --apply-cloud after matching HTTP/SQL PASS.');process.exit(0);}
 const signatures=['pawpal_private.quote_guest_sales_core(uuid,jsonb,jsonb)','pawpal_private.create_guest_sales_core(uuid,uuid,text,jsonb,jsonb)','pawpal_private.validate_guest_sales_input(jsonb,jsonb)','public.guest_sales_quote(text,jsonb,jsonb)','public.guest_sales_create(text,timestamptz,uuid,text,jsonb,jsonb,jsonb,uuid)','public.guest_sales_receipt(text,uuid)'];
 (async()=>{const db=await connect();try{
- const report=JSON.parse(fs.readFileSync('docs/verification/sync/guest-sales-rollback.txt'));assert.equal(report.status,'PASS');assert.equal(report.checks.length,24);assert.equal(report.migrationSha256,hash(source));assert.equal(report.handlerSha256,hash(fs.readFileSync('scripts/api/guest_commerce.js','utf8')));
+ const report=JSON.parse(fs.readFileSync('docs/verification/sync/guest-sales-rollback.txt'));assert.equal(report.status,'PASS');assert.equal(report.checks.length,24);assert.equal(report.migrationSha256,hash(source));assert.equal(report.handlerSha256,hash(fs.readFileSync('my-server/scripts/api/guest_commerce.js','utf8')));
  const baseline=JSON.parse(fs.readFileSync('docs/verification/sync/guest-sales-source-baseline.txt')),originals=[];
  await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='2s'");
  for(const f of baseline.sources){const definition=(await db.query('SELECT pg_get_functiondef($1::regprocedure) value',[f.signature])).rows[0].value;assert.equal(hash(definition.replaceAll('\r\n','\n')),f.sha256);originals.push({...f,definition});}

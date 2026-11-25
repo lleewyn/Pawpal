@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {plan,formatFacts}=require('../api/admin_copilot.js');
+const {plan,formatFacts}=require('../../my-server/scripts/api/admin_copilot.js');
 test('natural staff-existence questions preserve the requested name',()=>{
     for(const [question,name] of [
         ['công ty có ai tên Thi không?','Thi'],

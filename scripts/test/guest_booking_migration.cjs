@@ -1,13 +1,13 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
-const file='scripts/database/v1/114_guest_booking.sql',reverseFile='scripts/database/v1/114_guest_booking_rollback.sql';
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
+const file='my-server/scripts/database/v1/114_guest_booking.sql',reverseFile='my-server/scripts/database/v1/114_guest_booking_rollback.sql';
 const source=fs.readFileSync(file,'utf8'),reverse=fs.readFileSync(reverseFile,'utf8');
 const body=s=>s.replace(/^BEGIN;\s*$/m,'').replace(/^COMMIT;\s*$/m,''),hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 const apply=process.argv.includes('--apply-cloud');
 if(!apply&&!process.argv.includes('--verify-reverse')){console.log('Use --verify-reverse for additive DDL roundtrip, --apply-cloud after matching PASS.');process.exit(0);}
 const signatures=['pawpal_private.guest_booking_availability(uuid,jsonb)','pawpal_private.guest_booking_quote_core(uuid,jsonb)','pawpal_private.require_guest_booking_session(text)','public.guest_booking_quote(text,jsonb)','public.guest_booking_create(text,uuid,text,jsonb)','public.guest_booking_receipt(text,uuid)'];
 (async()=>{const db=await connect();try{
- const proof=JSON.parse(fs.readFileSync('docs/verification/sync/guest-booking-rollback.txt','utf8'));assert.equal(proof.status,'PASS');assert.equal(proof.checks.length,31);assert.equal(proof.migrationSha256,hash(source));assert.equal(proof.handlerSha256,hash(fs.readFileSync('scripts/api/guest_commerce.js','utf8')));
+ const proof=JSON.parse(fs.readFileSync('docs/verification/sync/guest-booking-rollback.txt','utf8'));assert.equal(proof.status,'PASS');assert.equal(proof.checks.length,31);assert.equal(proof.migrationSha256,hash(source));assert.equal(proof.handlerSha256,hash(fs.readFileSync('my-server/scripts/api/guest_commerce.js','utf8')));
  const baseline=JSON.parse(fs.readFileSync('docs/verification/sync/guest-booking-source-baseline.txt','utf8')),originals=[];
  await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='2s'");
  for(const f of baseline.sources){const definition=(await db.query('SELECT pg_get_functiondef($1::regprocedure) value',[f.signature])).rows[0].value;assert.equal(hash(definition.replaceAll('\r\n','\n')),f.sha256);originals.push({...f,definition});}

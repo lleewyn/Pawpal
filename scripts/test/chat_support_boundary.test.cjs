@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const {createHandler}=require('../../api/admin-chat.js');
-const {needsSupportRequest}=require('../api/chat_support_boundary.js');
+const {needsSupportRequest}=require('../../my-server/scripts/api/chat_support_boundary.js');
 test('complaints and compensation route to Support; ordinary consultation stays available',()=>{
  for(const text of ['Tôi muốn khiếu nại','Tôi muốn bồi thường','Yêu cầu hoàn tiền','Đền bù cho tôi'])assert.ok(needsSupportRequest(text));
  for(const text of ['Tư vấn gói tắm cho mèo','Tôi muốn gặp CSKH','Điểm Pawpoint dùng thế nào?'])assert.equal(needsSupportRequest(text),false);

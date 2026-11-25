@@ -7,7 +7,7 @@ const runSQL=(database,input)=>docker(['exec','-i','supabase-db','psql','-U','su
 assert.equal(runSQL(env.database,"SELECT shobj_description(oid,'pg_database') FROM pg_database WHERE datname=current_database()"),env.marker);
 const database='pawpal_access_http_'+crypto.randomBytes(6).toString('hex'),marker=env.marker+'-http';
 const sql=input=>runSQL(database,input);
-const report={capturedAt:new Date().toISOString(),migrationSha256:crypto.createHash('sha256').update(fs.readFileSync('scripts/database/v1/165_admin_fixed_roles.sql')).digest('hex'),scope:'Real local PostgREST verifies task-signed JWTs; no Auth sign-in, browser, model or Cloud writes',checks:[],status:'INCOMPLETE'};
+const report={capturedAt:new Date().toISOString(),migrationSha256:crypto.createHash('sha256').update(fs.readFileSync('my-server/scripts/database/v1/165_admin_fixed_roles.sql')).digest('hex'),scope:'Real local PostgREST verifies task-signed JWTs; no Auth sign-in, browser, model or Cloud writes',checks:[],status:'INCOMPLETE'};
 const id=n=>'16500000-0000-4000-8000-'+String(n).padStart(12,'0');
 let container,privateEnvFile;
 (async()=>{try{

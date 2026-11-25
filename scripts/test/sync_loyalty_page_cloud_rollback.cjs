@@ -1,7 +1,7 @@
 // Bounded integration only: synthetic actors/voucher, always ROLLBACK; no Logs.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs');
 if(!process.argv.includes('--cloud')){console.log('No network. Use --cloud for rollback-only loyalty checks.');process.exit(0);}
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{
  const db=await connect();let queries=0;const [a,b,ca,cb,sa,staff,voucher,request,adjust]=Array.from({length:9},()=>randomUUID()),checks=[];
  const q=async(sql,args)=>{queries++;return db.query(sql,args);};
@@ -13,7 +13,7 @@ const {connect}=require('../database/v1/service_import_connection.cjs');
  const version=async()=>(await q('SELECT md5(to_jsonb(v)::text) value FROM public.voucher v WHERE id=$1',[voucher])).rows[0].value;
  try{
   await q("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
-  await q(fs.readFileSync('scripts/database/v1/104_customer_loyalty_page.sql','utf8').replace(/^.*\r?\nBEGIN;/,'').replace(/COMMIT;\s*$/,''));
+  await q(fs.readFileSync('my-server/scripts/database/v1/104_customer_loyalty_page.sql','utf8').replace(/^.*\r?\nBEGIN;/,'').replace(/COMMIT;\s*$/,''));
   await q('INSERT INTO auth.users(id) VALUES($1),($2),($3)',[a,b,sa]);
   await q("INSERT INTO public.customer(id,auth_user_id,customer_code,customer_status) VALUES($1,$2,$3,'active'),($4,$5,$6,'active')",[ca,a,'E2E-LOYAL-A-'+ca,cb,b,'E2E-LOYAL-B-'+cb]);
   await q("INSERT INTO public.customer_profile(customer_id,full_name) VALUES($1,'E2E Loyalty A'),($2,'E2E Loyalty B') ON CONFLICT(customer_id) DO UPDATE SET full_name=excluded.full_name",[ca,cb]);

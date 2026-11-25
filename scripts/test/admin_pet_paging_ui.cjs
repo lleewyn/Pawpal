@@ -13,7 +13,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
         await page.route(/\.css(?:\?|$)/, route => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(path.join(process.cwd(), new URL(route.request().url()).pathname), 'utf8') }));
         await page.goto('http://localhost:3000/');
         await page.setContent('<link rel="stylesheet" href="/pages/admin/admin.css"><link rel="stylesheet" href="/pages/admin/modules/pets/pets.css"><div class="admin-module-wrapper">'
-            + fs.readFileSync('pages/admin/modules/pets/pets.html', 'utf8') + '</div>');
+            + fs.readFileSync('my-client/pages/admin/modules/pets/pets.html', 'utf8') + '</div>');
         await page.evaluate(() => {
             window._pawpalAdminLoaded = true;
             window.PawpalAdminAccess={isAdmin:()=>true,isStaff:()=>false,state:{user:{id:'paging-actor',permissions:[]}}};

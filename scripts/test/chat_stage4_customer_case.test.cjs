@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {plan,answer}=require('../api/admin_copilot.js'),{prepare,definitions,createReadBudget}=require('../api/chat_read_tools.js');
+const {plan,answer}=require('../../my-server/scripts/api/admin_copilot.js'),{prepare,definitions,createReadBudget}=require('../../my-server/scripts/api/chat_read_tools.js');
 const id='10000000-0000-4000-8000-000000000001',other='10000000-0000-4000-8000-000000000002',now='2026-10-29T03:00:00Z';
 const permissions=[...new Set(['internal.customer_resolve','internal.customer_appointment','internal.customer_tickets'].flatMap(t=>definitions[t].permissions))];
 const question='Khách này có lịch sắp tới và khiếu nại nào còn mở?';

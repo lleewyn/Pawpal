@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const load=()=>import('../../pages/public/return-guest/guest-booking-lookup.mjs');
+const load=()=>import('../../my-client/pages/public/return-guest/guest-booking-lookup.mjs');
 const id='12345678-1234-4123-8123-123456789012';
 const valid=()=>({id,code:'BKG-PROBE',status:'pending',start_at:'2026-11-10T04:00:00Z',end_at:'2026-11-10T04:30:00Z',total:80000});
 test('Explicit booking link takes precedence over journal; phone alone never selects a receipt',async()=>{

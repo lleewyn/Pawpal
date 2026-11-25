@@ -2,7 +2,7 @@
 // Credentials stay in memory; an external-webroot recovery manifest contains only QA IDs.
 const fs=require('node:fs'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {createClient}=require('@supabase/supabase-js'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings}=require('../database/v1/cloud_connection.cjs'),{connect}=require('../database/v1/service_import_connection.cjs');
+const {settings}=require('../../my-server/scripts/database/v1/cloud_connection.cjs'),{connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const {config}=settings(),service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 const deployed=process.argv.includes('--deployed'),base=deployed?'https://pawpalgr3.vercel.app':'http://localhost:4000',out=deployed?'docs/chatbot/member-vercel-2026-11-01':'docs/chatbot/member-phase2-2026-10-31';
 const fixture=[],checks=[],tag=crypto.randomUUID(),manifest='D:/Aboutme/Pawpal-infra/browser-check/member-accounts-'+tag+'.private.txt';

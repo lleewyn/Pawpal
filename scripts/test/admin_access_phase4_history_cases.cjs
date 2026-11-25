@@ -1,9 +1,9 @@
 // Real local Auth/PostgREST only. The service caller never leaves this test process.
 const fs=require('node:fs'),assert=require('node:assert/strict'),crypto=require('node:crypto');
-const tools=require('../api/chat_read_tools.js');
+const tools=require('../../my-server/scripts/api/chat_read_tools.js');
 module.exports=async({session,sql,id,authId,authCredentials,origin,pass,serviceCaller})=>{
  const legacy=()=>sql("SELECT md5(string_agg(pg_get_functiondef(p.oid),E'\\n' ORDER BY p.oid)) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname NOT LIKE '%staff_copilot%'");
- const before=legacy();sql(fs.readFileSync('scripts/database/v1/177_staff_copilot_reads.sql','utf8'));sql(fs.readFileSync('scripts/database/v1/178_staff_copilot_history.sql','utf8'));assert.equal(legacy(),before);
+ const before=legacy();sql(fs.readFileSync('my-server/scripts/database/v1/177_staff_copilot_reads.sql','utf8'));sql(fs.readFileSync('my-server/scripts/database/v1/178_staff_copilot_history.sql','utf8'));assert.equal(legacy(),before);
  sql(`INSERT INTO public.admin_copilot_history(session_id,staff_id,role,content) VALUES ('${id(4100)}','${id(1)}','assistant','LEGACY_ADMIN_HISTORY_CANARY')`);
  pass('Migrations 177/178 compile without changing existing public functions');
  const contexts=[];
@@ -81,6 +81,6 @@ module.exports=async({session,sql,id,authId,authCredentials,origin,pass,serviceC
  const captured=budget.snapshot().staff_scope_refs;assert.ok(captured.some(r=>r.kind==='appointment'&&r.id===id(20)));assert.ok(captured.some(r=>r.kind==='conversation'&&r.id===id(30)));assert.ok(!captured.some(r=>r.kind==='appointment'&&r.id===id(21)));assert.ok(Object.isFrozen(captured));await ok(save({p_scope_refs:captured}));
  pass('Read-budget provenance is captured from trusted prepared tools and actual scoped SQL results, including the conversation identity rather than message IDs');
  for(const context of contexts)await context.close();
- sql(fs.readFileSync('scripts/database/v1/178_staff_copilot_history.rollback.sql','utf8'));assert.equal(sql("SELECT to_regclass('pawpal_private.staff_copilot_exchange') IS NULL"),'t');assert.equal(sql("SELECT to_regprocedure('public.read_staff_copilot(text,jsonb,integer)') IS NOT NULL"),'t');assert.equal(legacy(),before);assert.equal(sql('SELECT count(*) FROM public.admin_copilot_history'),oldHistory);
+ sql(fs.readFileSync('my-server/scripts/database/v1/178_staff_copilot_history.rollback.sql','utf8'));assert.equal(sql("SELECT to_regclass('pawpal_private.staff_copilot_exchange') IS NULL"),'t');assert.equal(sql("SELECT to_regprocedure('public.read_staff_copilot(text,jsonb,integer)') IS NOT NULL"),'t');assert.equal(legacy(),before);assert.equal(sql('SELECT count(*) FROM public.admin_copilot_history'),oldHistory);
  pass('Rollback 178 removes only the new private history surface and preserves gateway 177 and all legacy functions/history');
 };

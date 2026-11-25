@@ -1,6 +1,6 @@
-const fs=require('node:fs');const{connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('node:fs');const{connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
- const migration=fs.readFileSync('scripts/database/v1/239_customer_history_pages.sql','utf8');
+ const migration=fs.readFileSync('my-server/scripts/database/v1/239_customer_history_pages.sql','utf8');
  if(process.argv.includes('--apply')){await db.query(migration);console.log('Applied owner history paging RPC.');return;}
  await db.query(migration.replace(/COMMIT;\s*$/,'')+`
  DO $$ DECLARE u uuid:=gen_random_uuid();other uuid:=gen_random_uuid();c uuid:=gen_random_uuid();oc uuid:=gen_random_uuid();p uuid:=gen_random_uuid();prefix text:=gen_random_uuid()::text;r jsonb;first_ids jsonb;BEGIN

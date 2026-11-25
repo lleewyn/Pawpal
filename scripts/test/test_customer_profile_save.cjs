@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createCustomerProfileService } = require('../api/customer_profile_persistence');
+const { createCustomerProfileService } = require('../../my-server/scripts/api/customer_profile_persistence');
 
 function fixture() {
     const state = { customer: { id: 'customer-1', phone_main: '0900000000', email: null },
@@ -81,7 +81,7 @@ test('addresses require street, district and province before any profile write',
 });
 
 test('address normalization, duplicates and length boundaries', async () => {
-    const { normalizeAddress, validateAddress, addressKey } = await import('../shared/address-validation.mjs');
+    const { normalizeAddress, validateAddress, addressKey } = await import('../../my-client/scripts/shared/address-validation.mjs');
     assert.equal(addressKey({ street_address: '12 Nguyễn Trãi', district: 'Quận 1', province: 'Hà Nội' }),
         addressKey({ street_address: '  12   NGUYỄN TRÃI '.normalize('NFD'), district: ' QUẬN 1 ', province: ' HÀ NỘI ' }));
     assert.equal(normalizeAddress({ street_address: '  12   Nguyễn Trãi  ' }).street_address, '12 Nguyễn Trãi');

@@ -1,7 +1,7 @@
 const fs=require('node:fs'),http=require('node:http'),assert=require('node:assert/strict');
-const {createHandler}=require('../../api/admin-chat.js'),{createStaffAuthHandlers}=require('../api/staff_auth.js');
+const {createHandler}=require('../../api/admin-chat.js'),{createStaffAuthHandlers}=require('../../my-server/scripts/api/staff_auth.js');
 module.exports=async({session,sql,id,authId,origin,pass,serviceCaller})=>{
- sql(fs.readFileSync('scripts/database/v1/178_staff_copilot_history.sql','utf8'));
+ sql(fs.readFileSync('my-server/scripts/database/v1/178_staff_copilot_history.sql','utf8'));
  const credentials=createStaffAuthHandlers({url:origin,anonKey:serviceCaller.supabaseKey,serviceKey:serviceCaller.supabaseKey});
  let mutateAfterRead=null;
  const handler=createHandler({verify:async(req,required)=>{const auth=await credentials.verifyStaffCaller(req,required);if(auth.authorized&&mutateAfterRead){const original=auth.caller.rpc.bind(auth.caller);auth.caller.rpc=async(name,args)=>{const result=await original(name,args);if(name==='staff_copilot_history_page'&&mutateAfterRead){const action=mutateAfterRead;mutateAfterRead=null;sql(action);}return result;};}return auth;},serviceClient:{from(){throw Error('Legacy service history must not be used');}},generateReply:async()=>{throw Error('Model must remain disabled');}});

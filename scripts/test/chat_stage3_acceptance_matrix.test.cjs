@@ -1,6 +1,6 @@
 // Curated offline acceptance matrix. Fixtures exist only in tests, never runtime.
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {plan,answer,formatFacts}=require('../api/admin_copilot.js'),{definitions,createReadBudget}=require('../api/chat_read_tools.js');
+const {plan,answer,formatFacts}=require('../../my-server/scripts/api/admin_copilot.js'),{definitions,createReadBudget}=require('../../my-server/scripts/api/chat_read_tools.js');
 const now=new Date('2026-10-29T03:00:00Z'),lease='10000000-0000-4000-8000-000000000001';
 const permissions=[...new Set([...Object.values(definitions).flatMap(t=>t.permissions),'service_price_matrix.read','hotel_room_type.read','taxi_price_rule.read','service_addon.read'])];
 const id='10000000-0000-4000-8000-000000000002',revision='a'.repeat(32);

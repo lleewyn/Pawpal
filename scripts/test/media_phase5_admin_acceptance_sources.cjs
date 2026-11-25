@@ -1,6 +1,6 @@
 'use strict';
 // Read-only preflight: reuse each record's exact original image, without inventing business content.
-const fs=require('fs'),path=require('path'),{verifyImage}=require('../api/media_files.cjs');
+const fs=require('fs'),path=require('path'),{verifyImage}=require('../../my-server/scripts/api/media_files.cjs');
 const dir='D:/Aboutme/Pawpal-infra/media/phase5-remaining';
 async function bytesFor(source){
  if(source.startsWith('/assets/')){const file=path.resolve('.'+source),root=path.resolve('assets')+path.sep;if(!file.startsWith(root))throw Error('LOCAL_SOURCE_SCOPE');return fs.readFileSync(file);}
@@ -10,7 +10,7 @@ async function bytesFor(source){
  return Buffer.concat(chunks,size);
 }
 (async()=>{let db;try{
- db=await require('../database/v1/service_import_connection.cjs').connect();const result={};
+ db=await require('../../my-server/scripts/database/v1/service_import_connection.cjs').connect();const result={};
  for(const [kind,table,column,asset]of [['pet_avatar','pet_profile','avatar_url','avatar_media_asset_id'],['banner_image','banner','image_url','image_media_asset_id'],['blog_thumbnail','blog_post','thumbnail_url','thumbnail_media_asset_id']]){
   const rows=(await db.query(`SELECT to_jsonb(t) snapshot FROM public.${table} t WHERE ${column} IS NOT NULL AND ${asset} IS NULL ORDER BY length(${column}),id LIMIT 5`)).rows;
   for(const {snapshot}of rows){try{const bytes=await bytesFor(snapshot[column]);if(!bytes.length||bytes.length>3145728)continue;let mime,proof;

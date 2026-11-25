@@ -10,7 +10,7 @@ const root = 'pages/admin/modules/dashboard/';
   await page.route('**/*', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><body></body>' }));
   await page.goto('http://completion.test/');
   await page.setContent('<body class="admin-body"><main class="admin-main"><div style="height:100vh;overflow:auto;padding:16px"><section class="dashboard-module dash-page business-dash admin-ui-standard admin-ui-customer-reference" data-business-root></section></div></main></body>');
-  for (const file of ['pages/admin/admin.css', root+'dashboard.css', 'pages/admin/admin-components.css', 'pages/admin/admin-typography.css', 'pages/admin/admin-pagination.css']) await page.addStyleTag({ content: fs.readFileSync(file,'utf8') });
+  for (const file of ['my-client/pages/admin/admin.css', root+'dashboard.css', 'my-client/pages/admin/admin-components.css', 'my-client/pages/admin/admin-typography.css', 'my-client/pages/admin/admin-pagination.css']) await page.addStyleTag({ content: fs.readFileSync(file,'utf8') });
   await page.addScriptTag({ content: fs.readFileSync(root+'subtabs/business-metrics.js','utf8') });
   await page.addScriptTag({ content: 'window.dashboardTestAnalysis = ' + require('./dashboard_completion_fixture.cjs').toString() });
   await page.evaluate(() => {

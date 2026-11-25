@@ -3,15 +3,15 @@ const root=process.cwd(),folder='D:/Aboutme/Pawpal-infra/supabase-local/verifica
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const p=await browser.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));
  await p.route('**/*',r=>{const u=new URL(r.request().url());if(u.origin==='http://localhost:3001'&&u.pathname==='/')return r.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'});if(u.origin==='http://localhost:3001'&&u.pathname.endsWith('.css'))return r.fulfill({contentType:'text/css',body:fs.readFileSync(path.join(root,u.pathname),'utf8')});return r.abort()});await p.goto('http://localhost:3001/');
- let shell=fs.readFileSync('pages/admin/index.html','utf8').replace(/<script\b[\s\S]*?<\/script>/gi,'');
- const customer=fs.readFileSync('pages/admin/modules/customers/customers.html','utf8'),orders=fs.readFileSync('pages/admin/modules/orders/orders.html','utf8');
+ let shell=fs.readFileSync('my-client/pages/admin/index.html','utf8').replace(/<script\b[\s\S]*?<\/script>/gi,'');
+ const customer=fs.readFileSync('my-client/pages/admin/modules/customers/customers.html','utf8'),orders=fs.readFileSync('my-client/pages/admin/modules/orders/orders.html','utf8');
  const read=async selector=>p.locator(selector).first().evaluate(e=>{const c=getComputedStyle(e);return Object.fromEntries(['fontFamily','fontSize','lineHeight','paddingTop','paddingBottom','paddingLeft','height','borderRadius','backgroundColor','color'].map(k=>[k,c[k]]))});
  async function show(module){await p.evaluate(html=>{document.getElementById('contentArea').innerHTML='<div class="admin-module-wrapper">'+html+'</div>';},module);await p.waitForTimeout(30)}
  async function seedCustomer(){await p.evaluate(()=>document.querySelector('#customerDataTable tbody').innerHTML=Array.from({length:8},(_,i)=>'<tr><td>CUS-2026-'+i+'</td><td><span class="user-name-link">Customer '+i+'</span><div class="user-sub-cell">customer@example.test</div></td><td>0901234567</td><td>Pet</td><td>50</td><td>—</td><td><span class="admin-badge badge-success">Active</span></td><td><button type="button" class="btn-action-more">•••</button></td></tr>').join(''))}
  for(const width of [1280,1440,1680]){
   await p.setViewportSize({width,height:1000});await p.setContent(shell.replace(/<link[^>]+admin-components\.css[^>]*>/,''),{waitUntil:'domcontentloaded'});await show(customer);await seedCustomer();
   const reference={th:await read('#customerDataTable th'),td:await read('#customerDataTable td'),status:await read('#customerDataTable .admin-badge'),input:await read('#subtab-tab-list .admin-input'),button:await read('#subtab-tab-list .admin-btn')};
-  await p.addStyleTag({content:fs.readFileSync('pages/admin/admin-components.css','utf8')});
+  await p.addStyleTag({content:fs.readFileSync('my-client/pages/admin/admin-components.css','utf8')});
   assert.deepEqual({th:await read('#customerDataTable th'),td:await read('#customerDataTable td'),status:await read('#customerDataTable .admin-badge'),input:await read('#subtab-tab-list .admin-input'),button:await read('#subtab-tab-list .admin-btn')},reference,'Customer reference changed');
   await p.screenshot({path:folder+'/standards-customer-'+width+'.png'});
   await show(orders);

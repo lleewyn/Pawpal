@@ -2,7 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-const source=fs.readFileSync('pages/admin/modules/customers/subtabs/tab-customer-pawpoint.js','utf8');
+const source=fs.readFileSync('my-client/pages/admin/modules/customers/subtabs/tab-customer-pawpoint.js','utf8');
 const handler=source.slice(source.indexOf('    async function handleAdjustPointsSubmit('),source.indexOf('    let _hasAttachedPawpointDelegates'));
 function fixture(){
     const storage=new Map(),calls=[],toasts=[];

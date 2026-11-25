@@ -3,7 +3,7 @@ const crypto = require('crypto');
 require('dotenv').config();
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-const chatHandler = require('../api/chat.js');
+const chatHandler = require('../../my-server/scripts/api/chat.js');
 
 async function runG4TestSuite() {
     console.log('=== BẮT ĐẦU KIỂM THỬ TOÀN DIỆN GIAI ĐOẠN 4 (G4 — THAO TÁC CÓ XÁC NHẬN) ===\n');

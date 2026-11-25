@@ -1,6 +1,6 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js');
-const {settings}=require('../database/v1/cloud_connection.cjs');
+const {settings}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 (async()=>{
  const {config}=settings();const credentials=fs.readFileSync('D:/Aboutme/Pawpal-infra/supabase-local/PAWPAL-ADMIN.private.txt','utf8');
  let calls=0,bytes=0;const minimalFetch=async(...args)=>{calls++;if(calls>8)throw Error('Verification request cap exceeded');const response=await fetch(...args);bytes+=(await response.clone().arrayBuffer()).byteLength;return response;};

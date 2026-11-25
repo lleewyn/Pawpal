@@ -1,7 +1,7 @@
 // Read-only Cloud catalogue and local browser verification. No Cloud Logs or fixtures.
 const assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {infra}=require('../database/v1/cloud_connection.cjs');
+const {infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 (async()=>{
  const browser=await chromium.launch({channel:'chrome',headless:true});
  try{

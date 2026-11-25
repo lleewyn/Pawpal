@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync('pages/user/modules/diary/diary.js','utf8');
+const source=fs.readFileSync('my-client/pages/user/modules/diary/diary.js','utf8');
 function fixture({error=null,appointments=[],logs=[]}={}){
  const calls=[];
  const db={from(table){const q={select(){return q;},eq(k,v){calls.push([table,k,v]);return q;},in(){return q;},order(){return q;},then(resolve){return Promise.resolve({data:table==='appointment'?appointments:logs,error}).then(resolve);}};return q;}};

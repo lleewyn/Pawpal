@@ -1,11 +1,11 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID:id}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect(),checks=[];try{
  await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
- await db.query(fs.readFileSync('scripts/database/v1/127_staff_validation_search.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
- await db.query(fs.readFileSync('scripts/database/v1/128_staff_name_validation.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
- await db.query(fs.readFileSync('scripts/database/v1/129_staff_phone_required.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
- await db.query(fs.readFileSync('scripts/database/v1/130_staff_phone_duplicate.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+ await db.query(fs.readFileSync('my-server/scripts/database/v1/127_staff_validation_search.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+ await db.query(fs.readFileSync('my-server/scripts/database/v1/128_staff_name_validation.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+ await db.query(fs.readFileSync('my-server/scripts/database/v1/129_staff_phone_required.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+ await db.query(fs.readFileSync('my-server/scripts/database/v1/130_staff_phone_duplicate.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
  const user=id(),employeeUser=id(),actor=id(),employee=id(),shift=id(),request=id();
  await db.query('INSERT INTO auth.users(id) VALUES($1),($2)',[user,employeeUser]);
  await db.query("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password,phone_number) VALUES($1,$2,'QA staff reviewer','QA','active',false,'0912345679')",[actor,user]);await db.query("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[actor]);

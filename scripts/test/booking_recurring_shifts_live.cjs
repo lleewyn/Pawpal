@@ -2,11 +2,11 @@ const fs = require('node:fs');
 const assert = require('node:assert/strict');
 const {randomUUID} = require('node:crypto');
 const {chromium} = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {connect} = require('../database/v1/service_import_connection.cjs');
+const {connect} = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 
 const read = file => fs.readFileSync(file, 'utf8');
 const folder = 'docs/verification/booking-recurring-shifts';
-const adminStyles = ['pages/admin/admin.css', 'pages/admin/admin-components.css', 'pages/admin/admin-typography.css'];
+const adminStyles = ['my-client/pages/admin/admin.css', 'my-client/pages/admin/admin-components.css', 'my-client/pages/admin/admin-typography.css'];
 
 async function mount(browser, markup, styles) {
  const page = await browser.newPage({viewport:{width:1280,height:1000},locale:'vi-VN',timezoneId:'Asia/Bangkok'});
@@ -23,7 +23,7 @@ async function main() {
  try {
   await db.query("BEGIN; SET LOCAL statement_timeout='20s'");
   if (process.argv.includes('--preflight')) {
-   await db.query(read('scripts/database/v1/287_staff_recurring_shift_generation.sql').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+   await db.query(read('my-server/scripts/database/v1/287_staff_recurring_shift_generation.sql').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
   }
   const rows = async (sql, values) => (await db.query(sql,values)).rows;
   const actor = async uid => {
@@ -128,8 +128,8 @@ async function main() {
   const data = schedules.map(row=>row.value);
   const coverageRows = await rows('SELECT recurring_schedule_id,generated_through::text FROM public.staff_recurring_shift_coverage($1)',[data.map(row=>row.id)]);
   const roster = await mount(browser,'<!doctype html><html lang="vi"><body class="admin-body"><main style="padding:24px"><div class="staff-module admin-ui-standard"><section id="recurring" class="staff-recurring-panel"></section></div></main></body></html>',
-   [...adminStyles,'pages/admin/modules/staff/staff.css']);
-  await roster.addScriptTag({content:read('pages/admin/modules/staff/staff-recurring.mjs').replace('export async function','async function')});
+   [...adminStyles,'my-client/pages/admin/modules/staff/staff.css']);
+  await roster.addScriptTag({content:read('my-client/pages/admin/modules/staff/staff-recurring.mjs').replace('export async function','async function')});
   await roster.evaluate(async ({data,coverageRows,staff})=>{
    const q={select:()=>q,order:()=>q,range:async()=>({data,count:data.length})};
    await mountRecurringSchedule(document.querySelector('#recurring'),{staff,client:{from:()=>q,rpc:async()=>({data:coverageRows})}});
@@ -148,11 +148,11 @@ async function main() {
 }
 
 async function captureCustomer(browser,pairs,empty,day) {
- const page = await mount(browser,read('pages/services/booking/booking.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''),
-  ['node_modules/bootstrap/dist/css/bootstrap.min.css','pages/services/booking/booking.css']);
- const booking = read('pages/services/booking/booking.js').replace(/^import .*;\r?\n/gm,'');
- await page.addStyleTag({content:read('styles/style.css').replace(/@import[^;]+;/g,'')});
- await page.addScriptTag({content:read('pages/services/booking/booking-staff-slots.mjs').replace('export function','function')});
+ const page = await mount(browser,read('my-client/pages/services/booking/booking.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''),
+  ['node_modules/bootstrap/dist/css/bootstrap.min.css','my-client/pages/services/booking/booking.css']);
+ const booking = read('my-client/pages/services/booking/booking.js').replace(/^import .*;\r?\n/gm,'');
+ await page.addStyleTag({content:read('my-client/styles/style.css').replace(/@import[^;]+;/g,'')});
+ await page.addScriptTag({content:read('my-client/pages/services/booking/booking-staff-slots.mjs').replace('export function','function')});
  await page.addScriptTag({content:`const vietnamDateTimeInput=value=>new Date(+new Date(value)+25200000).toISOString().slice(0,16);
   const parseVietnamDateTimeInput=value=>value?new Date(value+':00+07:00'):null;
   class GuestCommerceError extends Error {}
@@ -181,7 +181,7 @@ async function captureCustomer(browser,pairs,empty,day) {
 
 async function captureEmployee(browser,pair,day) {
  const page = await mount(browser,'<!doctype html><html lang="vi"><body class="admin-body admin-ui-standard"></body></html>',adminStyles);
- const source = read('pages/admin/modules/services/services.js');
+ const source = read('my-client/pages/admin/modules/services/services.js');
  const mark = source.indexOf('    const instant = value');
  await page.addScriptTag({content:source.slice(source.lastIndexOf('(function () {',mark),source.indexOf('})();',source.indexOf('window.PawpalStaffBooking=',mark))+5)});
  await page.evaluate(pair=>{

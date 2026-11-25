@@ -6,7 +6,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   const page=await browser.newPage({timezoneId:'UTC'}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',route=>{
    const url=new URL(route.request().url());if(url.origin!=='http://pawpal.test')return route.abort();
-   if(url.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:fs.readFileSync('pages/user/modules/orders/return-detail.html','utf8')});
+   if(url.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:fs.readFileSync('my-client/pages/user/modules/orders/return-detail.html','utf8')});
    if(url.pathname==='/scripts/api/api.js')return route.fulfill({contentType:'text/javascript',body:'export const API={initData:async()=>{}};'});
    const file=path.join(process.cwd(),url.pathname);if(!fs.existsSync(file))return route.abort();
    return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(file,'utf8')});
@@ -36,7 +36,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   assert.match(await page.locator('#rma-timeline').innerText(),/Đơn gửi bù/);assert.match(await page.locator('#rma-timeline').innerText(),/Đang giao/);assert.match(await page.locator('#rma-timeline').innerText(),/Không thu thêm tiền/);assert.equal(await page.locator('#rma-timeline img').count(),0);assert.ok(!(await page.locator('#rma-timeline').innerText()).includes('Vui lòng gửi hàng về shop'));
   assert.equal(await page.locator('#rma-timeline a').getAttribute('href'),'#order-detail?id=replacement');
   await page.waitForFunction(()=>!document.querySelector('.return-detail-skeleton'));
-  for(const file of ['pages/user/modules/orders/order-detail.css','pages/user/modules/orders/return-detail.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8').replace(/^@import[^;]+;/gm,'')});
+  for(const file of ['my-client/pages/user/modules/orders/order-detail.css','my-client/pages/user/modules/orders/return-detail.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8').replace(/^@import[^;]+;/gm,'')});
   await page.locator('#rma-timeline').screenshot({path:'docs/verification/sync/sales-replacement-customer-offline.png'});
   await page.evaluate(()=>{row.request_status='completed';row.replacement.order.order_status='completed';window.lastRealtime();});await page.waitForFunction(()=>document.getElementById('rma-status-badge').textContent==='Hoàn tất');
   assert.match(await page.locator('#rma-timeline').innerText(),/Đã giao/);assert.equal(await page.evaluate(()=>window.channels),1,'Existing channel is reused for replacement status');

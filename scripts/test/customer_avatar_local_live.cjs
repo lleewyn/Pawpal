@@ -1,7 +1,7 @@
 // Isolated temporary account, actual local HTTP/media store, deterministic cleanup.
 const fs=require('node:fs'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {createClient}=require('@supabase/supabase-js'),sharp=require('sharp');
-const {settings}=require('../database/v1/cloud_connection.cjs'),{connect}=require('../database/v1/service_import_connection.cjs');
+const {settings}=require('../../my-server/scripts/database/v1/cloud_connection.cjs'),{connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const {config}=settings(),options={auth:{persistSession:false,autoRefreshToken:false}},service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,options),db=await connect();let auth,cid,sid,asset;
 try{
  const email='avatar-'+crypto.randomUUID()+'@example.invalid',password=crypto.randomBytes(24).toString('hex')+'!';
@@ -23,7 +23,7 @@ try{
  if(auth){
   await db.query('UPDATE public.customer_profile SET avatar_media_asset_id=NULL WHERE customer_id=$1',[cid]).catch(()=>{});
   const rows=(await db.query('SELECT id,mongo_file_id FROM public.media_upload_session WHERE created_by=$1',[auth])).rows;
-  if(rows.length){require('node:dns').setServers(['1.1.1.1','8.8.8.8']);const env=require('dotenv').parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/media/atlas.private.env'));const store=require('../api/media_mongodb.cjs').createMediaMongoStore({env});try{const {bucket}=await store.resources();for(const row of rows){try{await bucket.delete(new(require('mongodb').ObjectId)(row.mongo_file_id));}catch(e){if(e.code!=='ENOENT'&&!/File not found/.test(e.message))throw e;}}}finally{await store.close();}
+  if(rows.length){require('node:dns').setServers(['1.1.1.1','8.8.8.8']);const env=require('dotenv').parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/media/atlas.private.env'));const store=require('../../my-server/scripts/api/media_mongodb.cjs').createMediaMongoStore({env});try{const {bucket}=await store.resources();for(const row of rows){try{await bucket.delete(new(require('mongodb').ObjectId)(row.mongo_file_id));}catch(e){if(e.code!=='ENOENT'&&!/File not found/.test(e.message))throw e;}}}finally{await store.close();}
    await db.query('DELETE FROM public.media_asset WHERE session_id=ANY($1::uuid[])',[rows.map(r=>r.id)]);await db.query('DELETE FROM public.media_upload_session WHERE id=ANY($1::uuid[])',[rows.map(r=>r.id)]);
   }
   await db.query('DELETE FROM public.customer_profile WHERE customer_id=$1',[cid]);await db.query('DELETE FROM public.customer WHERE id=$1',[cid]);await service.auth.admin.deleteUser(auth);console.log('Temporary account/media cleanup completed.');

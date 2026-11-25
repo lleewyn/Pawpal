@@ -1,4 +1,4 @@
-const fs=require('fs'),crypto=require('crypto'),assert=require('node:assert/strict');const {createClient}=require('@supabase/supabase-js');const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');const {settings}=require('../database/v1/cloud_connection.cjs');
+const fs=require('fs'),crypto=require('crypto'),assert=require('node:assert/strict');const {createClient}=require('@supabase/supabase-js');const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');const {settings}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const {config}=settings(),service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}}),ok=async promise=>{const r=await promise;if(r.error)throw Error(r.error.message);return r.data;};
 (async()=>{let uid,cid,ticket,browser,page;const phone='095'+crypto.randomInt(1000000,10000000),password=crypto.randomBytes(20).toString('hex')+'!';try{
  uid=(await ok(service.auth.admin.createUser({email:'contact-claim-'+crypto.randomUUID()+'@example.invalid',phone:'+84'+phone.slice(1),phone_confirm:true,email_confirm:true,password,app_metadata:{pawpal_test:true,user_type:'CUSTOMER'}}))).user.id;
@@ -10,7 +10,7 @@ const {config}=settings(),service=createClient(config.DESTINATION_SUPABASE_URL,c
  const original=await ok(service.from('support_ticket').select('customer_id,ticket_code').eq('id',ticket).single());assert.equal(original.customer_id,null);
  if(process.argv.includes('--admin')){
   const adminContext=await browser.newContext({viewport:{width:1400,height:1000},locale:'vi-VN'});try{
-   const adminPage=await adminContext.newPage(),{infra}=require('../database/v1/cloud_connection.cjs'),credentials=fs.readFileSync(infra+'/PAWPAL-ADMIN.private.txt','utf8');
+   const adminPage=await adminContext.newPage(),{infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs'),credentials=fs.readFileSync(infra+'/PAWPAL-ADMIN.private.txt','utf8');
    await adminPage.goto('http://localhost:4000/admin/login');await adminPage.locator('#inputAdminEmail').fill(credentials.match(/^Email: (.+)$/m)[1].trim());await adminPage.locator('#inputAdminPassword').fill(credentials.match(/^Password: (.+)$/m)[1].trim());await adminPage.locator('#btnSubmitAdminLogin').click();await adminPage.waitForURL(u=>!u.pathname.includes('/login'));
    await adminPage.evaluate(()=>{location.hash='tab-complaint-services';});await adminPage.locator('#serviceSearchInput').fill(original.ticket_code);
    await adminPage.getByText(original.ticket_code,{exact:true}).first().waitFor({timeout:30000});

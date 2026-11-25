@@ -1,7 +1,7 @@
 // Two disposable Auth customers. Public catalog is read only; no Cloud Logs.
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings,infra}=require('../database/v1/cloud_connection.cjs'),{config}=settings();
+const {settings,infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs'),{config}=settings();
 const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 const ok=async promise=>{const r=await promise;if(r.error)throw Error(r.error.message);return r.data;};
 (async()=>{const fixtures=[];let browser,page,step='setup';try{
@@ -12,7 +12,7 @@ const ok=async promise=>{const r=await promise;if(r.error)throw Error(r.error.me
  }
  const product=(await ok(service.from('product').select('id').eq('status','active').limit(1)))[0],svc=(await ok(service.from('service').select('id').eq('service_code','SPA01').single()));
  browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1440,height:1050}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- if(!process.argv.includes('--deployed'))for(const path of ['scripts/api/api.js','scripts/shared/main.js','pages/user/user.js','pages/shop/shop.js','pages/user/modules/wishlist/wishlist.js','pages/shop/product-detail/product-detail.js','pages/services/service-detail/service-detail.js'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:'application/javascript',body:fs.readFileSync(path,'utf8')}));
+ if(!process.argv.includes('--deployed'))for(const path of ['my-client/scripts/api/api.js','my-client/scripts/shared/main.js','my-client/pages/user/user.js','my-client/pages/shop/shop.js','my-client/pages/user/modules/wishlist/wishlist.js','my-client/pages/shop/product-detail/product-detail.js','my-client/pages/services/service-detail/service-detail.js'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:'application/javascript',body:fs.readFileSync(path,'utf8')}));
  async function login(fixture){await page.goto('https://pawpalgr3.vercel.app/login');await page.locator('#loginPhone').fill(fixture.phone);await page.locator('#btnLoginContinue').click();await page.locator('#loginPassword').fill(fixture.password);await page.locator('#btnLoginSubmit').click();await page.waitForURL(/\/user\/?/,{timeout:45000});}
  async function wishlist(){await page.goto('https://pawpalgr3.vercel.app/user#wishlist');await page.waitForFunction(()=>document.querySelector('.wishlist-module-container')?.getAttribute('aria-busy')==='false');}
  step='product load';await login(fixtures[0]);await page.goto('https://pawpalgr3.vercel.app/pages/shop/product-detail?id='+product.id);await page.waitForFunction(id=>typeof currentLoadedProduct!=='undefined'&&currentLoadedProduct?.id===id,product.id);

@@ -1,7 +1,7 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings,infra}=require('../database/v1/cloud_connection.cjs');
+const {settings,infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const {config}=settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
 const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,options);
 const ok=async promise=>{const r=await promise;if(r.error)throw Error(r.error.message);return r.data;};
@@ -31,7 +31,7 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
   }
   browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1440,height:1050}});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  if(!process.argv.includes('--deployed'))for(const path of ['scripts/api/api.js','scripts/shared/customer-identity.mjs','scripts/shared/customer-realtime.mjs','scripts/shared/customer-booking.mjs','pages/user/modules/bookings/bookings.js','pages/user/modules/bookings/booking-detail.js']){
+  if(!process.argv.includes('--deployed'))for(const path of ['my-client/scripts/api/api.js','my-client/scripts/shared/customer-identity.mjs','my-client/scripts/shared/customer-realtime.mjs','my-client/scripts/shared/customer-booking.mjs','my-client/pages/user/modules/bookings/bookings.js','my-client/pages/user/modules/bookings/booking-detail.js']){
    await page.route('**/'+path+'*',route=>route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path,'utf8')}));
   }
   await page.goto('https://pawpalgr3.vercel.app/login');await page.locator('#loginPhone').fill(phone);await page.locator('#btnLoginContinue').click();

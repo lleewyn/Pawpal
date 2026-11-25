@@ -1,12 +1,12 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--apply-cloud')){console.log('Use --apply-cloud only after matching HTTP/SQL rollback PASS.');process.exit(0);}
-const file='scripts/database/v1/113_guest_commerce_api.sql',reverseFile='scripts/database/v1/113_guest_commerce_api_rollback.sql';
+const file='my-server/scripts/database/v1/113_guest_commerce_api.sql',reverseFile='my-server/scripts/database/v1/113_guest_commerce_api_rollback.sql';
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex'),source=fs.readFileSync(file,'utf8');
 const signatures=['public.guest_commerce_context(text,integer)','public.guest_commerce_save_pet(text,timestamptz,uuid,text,text,jsonb)','public.guest_commerce_end(text)'];
 (async()=>{const db=await connect();try{
  const report=JSON.parse(fs.readFileSync('docs/verification/sync/guest-commerce-api-rollback.txt','utf8'));
- assert.equal(report.status,'PASS');assert.equal(report.migrationSha256,hash(source));assert.equal(report.handlerSha256,hash(fs.readFileSync('scripts/api/guest_commerce.js','utf8')));assert.equal(report.checks.length,24);
+ assert.equal(report.status,'PASS');assert.equal(report.migrationSha256,hash(source));assert.equal(report.handlerSha256,hash(fs.readFileSync('my-server/scripts/api/guest_commerce.js','utf8')));assert.equal(report.checks.length,24);
  await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='2s'");
  const before=[];for(const signature of signatures){const value=(await db.query('SELECT to_regprocedure($1)::text value',[signature])).rows[0].value;assert.equal(value,null,'Refuse overwrite or partial install');before.push({signature,definition:value});}
  const folder='D:/Aboutme/Pawpal-infra/supabase-local/backups/guest-commerce-113';fs.mkdirSync(folder,{recursive:true});

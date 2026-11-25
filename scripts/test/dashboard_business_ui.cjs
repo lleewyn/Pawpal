@@ -11,9 +11,9 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         await page.route('**/*', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><head></head><body></body></html>' }));
         await page.goto('http://dashboard.test');
         await page.setContent('<style>body{margin:16px}*{box-sizing:border-box}</style><section class="dashboard-module dash-page admin-ui-standard admin-ui-customer-reference business-dash" data-business-root></section>');
-        await page.addStyleTag({ content: fs.readFileSync('pages/admin/modules/dashboard/dashboard.css', 'utf8') });
-        await page.addStyleTag({ content: fs.readFileSync('pages/admin/admin-components.css', 'utf8') });
-        await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/subtabs/business-metrics.js', 'utf8') });
+        await page.addStyleTag({ content: fs.readFileSync('my-client/pages/admin/modules/dashboard/dashboard.css', 'utf8') });
+        await page.addStyleTag({ content: fs.readFileSync('my-client/pages/admin/admin-components.css', 'utf8') });
+        await page.addScriptTag({ content: fs.readFileSync('my-client/pages/admin/modules/dashboard/subtabs/business-metrics.js', 'utf8') });
         await page.addScriptTag({ content: 'window.dashboardTestAnalysis = ' + require('./dashboard_completion_fixture.cjs').toString() });
         await page.evaluate(() => {
             window.requests = []; window.fixtureFailure = null;
@@ -39,7 +39,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
                 }
             });
         });
-        await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/subtabs/tab-dashboard-business.js', 'utf8') });
+        await page.addScriptTag({ content: fs.readFileSync('my-client/pages/admin/modules/dashboard/subtabs/tab-dashboard-business.js', 'utf8') });
         await page.evaluate(() => {
             PawpalAdminAccess.state.user.permissions.push('finance.read');
             window.financeMounts = 0;
@@ -141,7 +141,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         await page.evaluate(async () => { PawpalDashboardOverview.unmount(); await PawpalDashboardOverview.init(); });
         assert.equal(await page.evaluate(() => sessionStorage.getItem('pawpal_admin_business_range')), saved);
         await page.evaluate(() => { window._pawpalAdminLoaded = true; window.opsMounts = 0; window.PawpalDashboard.subtabs.operations = { mount: async () => { window.opsMounts++; }, unmount() {} }; });
-        await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/dashboard/dashboard.js', 'utf8') });
+        await page.addScriptTag({ content: fs.readFileSync('my-client/pages/admin/modules/dashboard/dashboard.js', 'utf8') });
         await page.evaluate(() => {
             const root = document.createElement('section'); root.id = 'subtab-tab-dashboard-operations'; document.body.append(root);
             window.dispatchEvent(new CustomEvent('admin:subtab-change', { detail: { module: 'Dashboard', tabId: 'tab-dashboard-operations' } }));

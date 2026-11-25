@@ -1,6 +1,6 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings,infra,sql}=require('../database/v1/cloud_connection.cjs');const{config}=settings();
+const {settings,infra,sql}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');const{config}=settings();
 const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 const ok=async task=>{const r=await task;if(r.error)throw Error(r.error.message);return r.data;};
 const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.randomBytes(20).toString('hex')+'!';
@@ -25,7 +25,7 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
   }
   browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1440,height:1100},locale:'vi-VN'});
   const errors=[],legacy=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(new URL(r.url()).pathname.startsWith('/data/'))legacy.push(r.url());});
-  if(!process.argv.includes('--deployed'))for(const path of ['pages/services/booking/booking.js','pages/services/booking/booking.css','pages/services/booking-success/booking-success.html','pages/services/booking-success/booking-success.js','pages/user/modules/bookings/booking-detail.js','pages/user/modules/bookings/booking-detail.html','scripts/shared/customer-realtime.mjs'])await page.route('**/'+path+'*',route=>route.fulfill({contentType:path.endsWith('.html')?'text/html':path.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path,'utf8')}));
+  if(!process.argv.includes('--deployed'))for(const path of ['my-client/pages/services/booking/booking.js','my-client/pages/services/booking/booking.css','my-client/pages/services/booking-success/booking-success.html','my-client/pages/services/booking-success/booking-success.js','my-client/pages/user/modules/bookings/booking-detail.js','my-client/pages/user/modules/bookings/booking-detail.html','my-client/scripts/shared/customer-realtime.mjs'])await page.route('**/'+path+'*',route=>route.fulfill({contentType:path.endsWith('.html')?'text/html':path.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path,'utf8')}));
   await page.goto('https://pawpalgr3.vercel.app/login');await page.locator('#loginPhone').fill(phone);await page.locator('#btnLoginContinue').click();await page.locator('#loginPassword').fill(password);await page.locator('#btnLoginSubmit').click();
   await page.waitForURL(/\/user\/?/,{timeout:45000});await page.waitForFunction(()=>Boolean(window.API?.getUserBookings));
   const day=new Date(Date.now()+3*86400000).toISOString().slice(0,10),nextDay=new Date(Date.now()+4*86400000).toISOString().slice(0,10);

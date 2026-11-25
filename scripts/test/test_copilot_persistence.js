@@ -7,7 +7,7 @@
 require('dotenv').config();
 const http = require('http');
 const { createClient } = require('@supabase/supabase-js');
-const { signStaffToken } = require('../api/staff_auth.js');
+const { signStaffToken } = require('../../my-server/scripts/api/staff_auth.js');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY);
 let validStaffToken = '';

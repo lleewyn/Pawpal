@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {createGuestCommerce}=require('../api/guest_commerce');
+const {createGuestCommerce}=require('../../my-server/scripts/api/guest_commerce');
 test('Canonical legacy catalog UUIDs reach RPC without requiring RFC version bits',async()=>{
  let args;
  const handler=createGuestCommerce({admin:{rpc:async(name,values)=>{assert.equal(name,'guest_booking_quote');args=values;return {data:{version:'a'.repeat(32),total:80000}};}},secret:'test-secret-with-at-least-32-bytes-long',origins:['https://pawpal.test'],production:true,limit:async()=>{}});

@@ -1,12 +1,12 @@
 'use strict';
 const fs=require('node:fs'),cp=require('node:child_process'),crypto=require('node:crypto');
-const migrationFile='scripts/database/v1/190_care_log_media.sql',reportFile='docs/media/phase4-care-database.txt';
+const migrationFile='my-server/scripts/database/v1/190_care_log_media.sql',reportFile='docs/media/phase4-care-database.txt';
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 (async()=>{let cloud;try{
  const migration=fs.readFileSync(migrationFile,'utf8');
  if(process.argv[2]==='apply'){
   const tested=JSON.parse(fs.readFileSync(reportFile));if(tested.status!=='PASS'||tested.checksum!==hash(migration))throw Error('TEST_REQUIRED');
-  cloud=await require('../database/v1/service_import_connection.cjs').connect();
+  cloud=await require('../../my-server/scripts/database/v1/service_import_connection.cjs').connect();
   const original=JSON.parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/media/phase4-care/functions.private.json'))[0];
   const actual=await cloud.query("SELECT pg_get_functiondef(p.oid) definition FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname='save_admin_service_care_log'");
   if(actual.rows.length!==1||actual.rows[0].definition!==original.definition)throw Error('FUNCTION_DRIFT');

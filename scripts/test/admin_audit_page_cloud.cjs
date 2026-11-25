@@ -1,6 +1,6 @@
 // Scoped business-function checks. Never reads Supabase infrastructure Logs.
 const fs=require('node:fs');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();const sql=query=>db.query(query);try{
 if(process.argv.includes('--schema')){
  console.log((await sql("SELECT column_name,data_type,is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name='audit_log' ORDER BY ordinal_position")).rows);

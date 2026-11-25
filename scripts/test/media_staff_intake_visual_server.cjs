@@ -1,10 +1,10 @@
 'use strict';
 // Isolated browser harness for the actual STAFF intake closure. No Cloud credentials or writes.
 const fs=require('node:fs'),path=require('node:path'),express=require('express');
-const source=fs.readFileSync('pages/admin/modules/services/services.js','utf8');
+const source=fs.readFileSync('my-client/pages/admin/modules/services/services.js','utf8');
 const marker=source.indexOf("overlay.id = 'staffIntakeModal'"),start=source.lastIndexOf('(function () {',marker),finish=source.indexOf('})();',source.indexOf('window.PawpalStaffIntake=Object.freeze',marker))+5;
 if(start<0||finish<start)throw Error('STAFF_INTAKE_SCOPE');
-const links=[...fs.readFileSync('pages/admin/index.html','utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x=>x[0]).join('\n');
+const links=[...fs.readFileSync('my-client/pages/admin/index.html','utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x=>x[0]).join('\n');
 const html=`<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${links}<title>Kiểm thử riêng ảnh tiếp nhận nhân viên</title><body class="admin-body"><script>
 window.probe={calls:[],saves:[],acceptSave:false};
 window.PawpalAdminAccess={isStaff:()=>true,state:{user:{id:'20000000-0000-0000-0000-000000000002',name:'Nhân viên kiểm thử riêng',permissions:['work.service.perform']}}};

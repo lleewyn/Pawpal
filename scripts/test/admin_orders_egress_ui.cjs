@@ -8,8 +8,8 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   window.calls={orders:0,products:0,queries:[],rpc:[]};window.events={};
   window.getSupabaseClient=()=>({rpc:async(name,args)=>{calls.rpc.push({name,args});return {data:name==='get_admin_sales_stock_history_page'?{rows:[],total:0,page:1}:{ids:[],total:0,page:1,counts:{}}}},from:table=>{const query={table};const builder={};for(const name of ['select','order','not','eq','gt','in'])builder[name]=(...args)=>{query[name]=args;return builder};builder.range=async()=>{calls.queries.push(query);return {data:[],error:null}};return builder},channel:()=>({on(type,filter,callback){events[filter.table]=callback;return this},subscribe(){return this}}),removeChannel(){}});
  });
- await p.addScriptTag({content:fs.readFileSync('pages/admin/admin-data-store.js','utf8')});
- let core=fs.readFileSync('pages/admin/modules/orders/orders.js','utf8');core=core.slice(0,core.lastIndexOf('    setTimeout(() => {'))+'window.setupOrdersTest=setupOrdersRealtimeSync;})();';await p.addScriptTag({content:core});
+ await p.addScriptTag({content:fs.readFileSync('my-client/pages/admin/admin-data-store.js','utf8')});
+ let core=fs.readFileSync('my-client/pages/admin/modules/orders/orders.js','utf8');core=core.slice(0,core.lastIndexOf('    setTimeout(() => {'))+'window.setupOrdersTest=setupOrdersRealtimeSync;})();';await p.addScriptTag({content:core});
  await p.evaluate(()=>{PawpalOrderV1.orders=async()=>{calls.orders++;return []};PawpalOrderV1.products=async()=>{calls.products++;return {products:[],categories:[]}}});
  await p.evaluate(()=>Promise.all([PawpalOrders.fetchOrdersData(),PawpalOrders.fetchOrdersData(),PawpalOrders.fetchProductsData(),PawpalOrders.fetchProductsData()]));
  assert.deepEqual(await p.evaluate(()=>[calls.orders,calls.products,calls.queries.length]),[1,1,0]);
@@ -29,8 +29,8 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  await p.evaluate(()=>{sessionStorage.setItem('pawpal_admin_active_module','other');events.payment()});await p.waitForTimeout(600);assert.equal(await p.evaluate(()=>calls.orders),2);
  await p.evaluate(()=>{sessionStorage.setItem('pawpal_admin_active_module','B\u00e1n h\u00e0ng');return PawpalOrders.fetchOrdersData()});assert.equal(await p.evaluate(()=>calls.orders),3);
  await p.evaluate(()=>{sessionStorage.setItem('pawpal_admin_user',JSON.stringify({id:'actor-b'}));return PawpalOrders.fetchOrdersData()});assert.equal(await p.evaluate(()=>calls.orders),4);
- await p.setContent(fs.readFileSync('pages/admin/modules/orders/orders.html','utf8'),{waitUntil:'domcontentloaded'});
- const productSource=fs.readFileSync('pages/admin/modules/orders/subtabs/tab-order-products.js','utf8');
+ await p.setContent(fs.readFileSync('my-client/pages/admin/modules/orders/orders.html','utf8'),{waitUntil:'domcontentloaded'});
+ const productSource=fs.readFileSync('my-client/pages/admin/modules/orders/subtabs/tab-order-products.js','utf8');
  const modalStart=productSource.lastIndexOf("(function(){");await p.addScriptTag({content:productSource.slice(modalStart)});
  await p.evaluate(()=>{
   PawpalOrders.state.products=[{id:'product-a',sku:'SKU-A',name:'Product A',stock:5,minStock:1,variants:[{id:'variant-a',sku:'SKU-A'}]}];

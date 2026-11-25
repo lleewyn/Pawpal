@@ -8,16 +8,16 @@ const guest=process.argv.includes('--guest');
   const page=await browser.newPage({viewport:{width:1280,height:1000}});pages.push(page);
   await page.route('**/*',r=>r.abort());await page.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<body></body>'}));await page.goto('http://localhost:3001/');
   await page.clock.install({time:new Date(initial)});
-  await page.setContent(fs.readFileSync('pages/services/booking/booking.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''));
-  for(const file of ['node_modules/bootstrap/dist/css/bootstrap.min.css','styles/style.css','pages/services/booking/booking.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8').replace(/@import[^;]+;/g,'')});
+  await page.setContent(fs.readFileSync('my-client/pages/services/booking/booking.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''));
+  for(const file of ['node_modules/bootstrap/dist/css/bootstrap.min.css','my-client/styles/style.css','my-client/pages/services/booking/booking.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8').replace(/@import[^;]+;/g,'')});
   await page.exposeFunction('testRpc',async(name,args)=>{
    if(name==='own_booking_day_slots'){reads++;const free=!lease||lease.expires<=now||lease.owner===owner;return {data:{open:'08:00',close:'20:00',slots:[{start_at:start,available:free,staff:free?[{id:'worker',name:'KTV kiểm thử'}]:[]}]}};}
    if(name==='hold_own_service_booking'){lease={owner,expires:now+900000};return {data:{id:args.p_id,expires_at:new Date(lease.expires).toISOString(),server_now:new Date(now).toISOString()}};}
    if(name==='release_own_booking_hold'&&lease?.owner===owner)lease=null;
    return {data:null};
   });
-  let source=fs.readFileSync('pages/services/booking/booking.js','utf8').replace(/^import .*;\r?\n/gm,'');source=source.slice(0,source.lastIndexOf("if(document.readyState==='loading')"));
-  await page.addScriptTag({content:fs.readFileSync('pages/services/booking/booking-staff-slots.mjs','utf8').replace('export function','function')});
+  let source=fs.readFileSync('my-client/pages/services/booking/booking.js','utf8').replace(/^import .*;\r?\n/gm,'');source=source.slice(0,source.lastIndexOf("if(document.readyState==='loading')"));
+  await page.addScriptTag({content:fs.readFileSync('my-client/pages/services/booking/booking-staff-slots.mjs','utf8').replace('export function','function')});
   await page.addScriptTag({content:`const vietnamDateTimeInput=v=>new Date(new Date(v).getTime()+7*3600000).toISOString().slice(0,16);const parseVietnamDateTimeInput=v=>v?new Date(v+':00+07:00'):null;class GuestCommerceError extends Error{};\n`+source+`
    window.fixture={state};state.guest=${guest};state.pet={id:'pet',name:'Bé kiểm thử',weight:5};state.service={id:'svc',name:'Tắm spa',category:'grooming_spa'};state.profile={name:'Khách kiểm thử',phone:'0900000000'};
    db={rpc:window.testRpc};const guestCommerce={request:async(action,args)=>action==='booking-slots'?{availability:(await testRpc('own_booking_day_slots',{})).data}:action==='booking-hold'?{hold:(await testRpc('hold_own_service_booking',{p_id:args.requestId})).data}:testRpc('release_own_booking_hold',{})};

@@ -1,7 +1,7 @@
 // Synthetic fixtures only, no COMMIT, no Logs or external delivery.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs');
 if(!process.argv.includes('--cloud')){console.log('No network. Use --cloud for rollback-only notification checks.');process.exit(0);}
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{
  const db=await connect();let queries=0;const ids=Array.from({length:7},()=>randomUUID());
  const [a,b,ca,cb,n1,n2,nb]=ids,checks=[];
@@ -13,7 +13,7 @@ const {connect}=require('../database/v1/service_import_connection.cjs');
  const mark=async(id,before,owner)=>(await q('SELECT public.mark_own_notifications_read($1,$2,$3) value',[id,before,owner])).rows[0].value;
  try{
   await q("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
-  const migration=fs.readFileSync('scripts/database/v1/103_customer_notification_page.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');await q(migration);
+  const migration=fs.readFileSync('my-server/scripts/database/v1/103_customer_notification_page.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');await q(migration);
   await q('INSERT INTO auth.users(id) VALUES($1),($2)',[a,b]);
   await q("INSERT INTO public.customer(id,auth_user_id,customer_code,customer_status) VALUES($1,$2,$3,'active'),($4,$5,$6,'active')",[ca,a,'E2E-NOTI-A-'+ca,cb,b,'E2E-NOTI-B-'+cb]);
   await q("INSERT INTO public.customer_profile(customer_id,full_name) VALUES($1,'E2E Notice A'),($2,'E2E Notice B') ON CONFLICT(customer_id) DO UPDATE SET full_name=excluded.full_name",[ca,cb]);

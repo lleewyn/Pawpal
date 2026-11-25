@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {plan,contextualPlan,answer,formatFacts}=require('../api/admin_copilot.js'),{period}=require('../api/chat_stage3_planner.js'),{definitions,prepare,createReadBudget}=require('../api/chat_read_tools.js');
+const {plan,contextualPlan,answer,formatFacts}=require('../../my-server/scripts/api/admin_copilot.js'),{period}=require('../../my-server/scripts/api/chat_stage3_planner.js'),{definitions,prepare,createReadBudget}=require('../../my-server/scripts/api/chat_read_tools.js');
 const now=new Date('2026-10-28T03:00:00Z');
 test('stage3 covers all curated domains without enabling writes',()=>{
  for(const [q,intent]of [

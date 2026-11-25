@@ -1,7 +1,7 @@
-const fs=require('node:fs'),{connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('node:fs'),{connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  await db.query("BEGIN;SET LOCAL statement_timeout='25s';SET LOCAL lock_timeout='4s'");
- await db.query(fs.readFileSync(require.resolve('../database/v1/212_future_staff_booking.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
+ await db.query(fs.readFileSync(require.resolve('../../my-server/scripts/database/v1/212_future_staff_booking.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
  await db.query('SAVEPOINT fixtures');
  const source=fs.readFileSync(require.resolve('./customer_booking_availability.cjs'),'utf8');
  const fixture=source.split('const query=`')[1].split(' -- No shifts:')[0].replace(/^BEGIN;/,'')

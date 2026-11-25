@@ -1,7 +1,7 @@
 // Read-only committed-state verification for the isolated MCP UI fixture.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{createClient}=require('@supabase/supabase-js');
 const phase=process.argv[2];if(!['published','hidden','transfer'].includes(phase)){console.log('No network. Specify published, hidden or transfer.');process.exit(0);}
-const f=JSON.parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/browser-check/two-portal.private.json','utf8')),{config}=require('../database/v1/cloud_connection.cjs').settings();
+const f=JSON.parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/browser-check/two-portal.private.json','utf8')),{config}=require('../../my-server/scripts/database/v1/cloud_connection.cjs').settings();
 const options={auth:{persistSession:false,autoRefreshToken:false}},anon=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_ANON_KEY,options),service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,options),ok=async p=>{const r=await p;if(r.error)throw r.error;return r.data;};
 (async()=>{
  const result={phase,timestamp:new Date().toISOString()};

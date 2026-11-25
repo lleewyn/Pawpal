@@ -58,11 +58,11 @@ CREATE TRIGGER media_service_reference_release AFTER DELETE OR UPDATE OF media_a
 `;
 const view=get('public_service_directory');
 const catalog=once(view,'jsonb_agg(i.image_url ORDER BY',"jsonb_agg(COALESCE(i.image_url, '/api/media?action=read&id='::text || i.media_asset_id::text) ORDER BY");
-fs.writeFileSync('scripts/database/v1/192_service_media.sql',"BEGIN;\nSET LOCAL lock_timeout='3s';\n"+ddl+[prepare,sync,release,cleanup,resolve,save].map(x=>x+';').join('\n')+`\nREVOKE ALL ON FUNCTION public.prepare_service_media_upload(uuid,uuid,uuid,bigint,text,text),pawpal_private.sync_service_media(uuid,jsonb) FROM PUBLIC,anon,authenticated,service_role;
+fs.writeFileSync('my-server/scripts/database/v1/192_service_media.sql',"BEGIN;\nSET LOCAL lock_timeout='3s';\n"+ddl+[prepare,sync,release,cleanup,resolve,save].map(x=>x+';').join('\n')+`\nREVOKE ALL ON FUNCTION public.prepare_service_media_upload(uuid,uuid,uuid,bigint,text,text),pawpal_private.sync_service_media(uuid,jsonb) FROM PUBLIC,anon,authenticated,service_role;
 GRANT EXECUTE ON FUNCTION public.prepare_service_media_upload(uuid,uuid,uuid,bigint,text,text),pawpal_private.sync_service_media(uuid,jsonb) TO authenticated;
 ${catalog};
 COMMIT;\n`);
-fs.writeFileSync('scripts/database/v1/192_service_media.rollback.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/192_service_media.rollback.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 LOCK TABLE public.media_upload_session,public.service_image IN ACCESS EXCLUSIVE MODE;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.media_upload_session WHERE purpose='service_image') OR EXISTS(SELECT 1 FROM public.service_image WHERE media_asset_id IS NOT NULL) THEN RAISE EXCEPTION 'service_media_rollback_requires_empty_foundation'; END IF; END $$;

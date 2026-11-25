@@ -12,7 +12,7 @@ const {variantArtwork,productArtwork}=require('./product_variant_artwork.cjs');
   const backup=path.join(os.tmpdir(),'pawpal-backpack-media-'+Date.now()+'.private.txt');fs.writeFileSync(backup,JSON.stringify({variants:before,parent:parentBefore},null,2));
   for(const v of rows){
    const images=variantArtwork[v.sku_variant];assert.ok(images?.length);
-   for(const image of images)assert.ok(fs.existsSync(path.resolve(__dirname,'../../..','.'+image)));
+   for(const image of images)assert.ok(fs.existsSync(path.resolve(__dirname,'../../../../my-client','.'+image)));
    await db.query('DELETE FROM public.product_variant_media WHERE product_variant_id=$1',[v.id]);
    await db.query('INSERT INTO public.product_variant_media(product_variant_id,image_url,display_order,is_thumbnail) SELECT $1,url,ord-1,ord=1 FROM unnest($2::text[]) WITH ORDINALITY t(url,ord)',[v.id,images]);
   }

@@ -1,9 +1,9 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
-const { signStaffToken } = require('../api/staff_auth.js');
+const { signStaffToken } = require('../../my-server/scripts/api/staff_auth.js');
 const chatHandler = require('../../api/chat.js');
-const chatActionsHandler = require('../api/chat_actions.js');
-const { evaluateToxicAndSentiment, adminDbTools } = require('../api/chat.js');
+const chatActionsHandler = require('../../my-server/scripts/api/chat_actions.js');
+const { evaluateToxicAndSentiment, adminDbTools } = require('../../my-server/scripts/api/chat.js');
 
 const anonClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 const adminClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -161,8 +161,8 @@ async function runChatF01ToF14TestSuite() {
         // Kiểm tra tĩnh tab-chatbot-live.js và chatbot.js
         const fs = require('fs');
         const path = require('path');
-        const liveJs = fs.readFileSync(path.resolve(__dirname, '../../pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js'), 'utf8');
-        const chatbotJs = fs.readFileSync(path.resolve(__dirname, '../../pages/admin/modules/chatbot/chatbot.js'), 'utf8');
+        const liveJs = fs.readFileSync(path.resolve(__dirname, '../../my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js'), 'utf8');
+        const chatbotJs = fs.readFileSync(path.resolve(__dirname, '../../my-client/pages/admin/modules/chatbot/chatbot.js'), 'utf8');
 
         const hasAntiChurn = liveJs.includes('subscribedConversationId === convId && currentAdminRoomChannel');
         const hasCoalescing = chatbotJs.includes('inFlightPromise') || chatbotJs.includes('loadInboxSummary');
@@ -315,7 +315,7 @@ async function runChatF01ToF14TestSuite() {
         };
 
         const ticketRes = await mockReqRes(createTicketReq, { authorization: 'Bearer ' + staffToken }, 'POST', async (req, res) => {
-            const { verifyStaffCaller } = require('../api/staff_auth.js');
+            const { verifyStaffCaller } = require('../../my-server/scripts/api/staff_auth.js');
             const auth = await verifyStaffCaller(req);
             if (!auth.authorized) return res.status(auth.status).json({ error: auth.message });
             return chatActionsHandler.handleCreateTicket(req, res, auth.staff);
@@ -472,7 +472,7 @@ async function runChatF01ToF14TestSuite() {
         // CHAT-F13 [P1]: Tải ảnh/bằng chứng chat qua Storage có giới hạn và quyền, không nhúng base64 quá nặng
         // -------------------------------------------------------------
         console.log('\n13. [CHAT-F13] Kiểm tra chính sách lưu trữ hình ảnh Storage & chặn nhúng base64...');
-        const clientChatJs = fs.readFileSync(path.resolve(__dirname, '../../pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js'), 'utf8');
+        const clientChatJs = fs.readFileSync(path.resolve(__dirname, '../../my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js'), 'utf8');
         const hasStorageUpload = clientChatJs.includes('supabase.storage.from') || clientChatJs.includes('chat-attachments');
         const hasSizeLimit = clientChatJs.includes('5 * 1024 * 1024') || clientChatJs.includes('5MB') || clientChatJs.includes('maxSize') || clientChatJs.includes('storage');
 
@@ -501,7 +501,7 @@ async function runChatF01ToF14TestSuite() {
             idempotency_key: 'qa_pts_' + Date.now()
         };
         const cskhOverRes = await mockReqRes(cskhOverLimitReq, { authorization: 'Bearer ' + staffToken }, 'POST', async (req, res) => {
-            const { verifyStaffCaller } = require('../api/staff_auth.js');
+            const { verifyStaffCaller } = require('../../my-server/scripts/api/staff_auth.js');
             const auth = await verifyStaffCaller(req);
             if (!auth.authorized) return res.status(auth.status).json({ error: auth.message });
             return chatActionsHandler.handleCompensatePoints(req, res, auth.staff);
@@ -516,7 +516,7 @@ async function runChatF01ToF14TestSuite() {
             idempotency_key: 'qa_pts_admin_' + Date.now()
         };
         const adminOverRes = await mockReqRes(adminOverLimitReq, { authorization: 'Bearer ' + adminToken }, 'POST', async (req, res) => {
-            const { verifyStaffCaller } = require('../api/staff_auth.js');
+            const { verifyStaffCaller } = require('../../my-server/scripts/api/staff_auth.js');
             const auth = await verifyStaffCaller(req);
             if (!auth.authorized) return res.status(auth.status).json({ error: auth.message });
             return chatActionsHandler.handleCompensatePoints(req, res, auth.staff);

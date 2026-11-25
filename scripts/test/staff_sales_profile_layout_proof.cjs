@@ -2,7 +2,7 @@
 // Actual staff workspace and order renderer, read-only live context. No checkout or testcase replay.
 const fs = require('node:fs'), assert = require('node:assert/strict');
 const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const { connect } = require('../database/v1/service_import_connection.cjs');
+const { connect } = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 async function main() {
     const db = await connect(), browser = await chromium.launch({ channel: 'chrome', headless: true });
     const folder = 'docs/verification/staff-sales-profile-layout'; fs.mkdirSync(folder, { recursive: true });
@@ -27,8 +27,8 @@ async function main() {
             window.PawpalAdminAccess = { isStaff: () => true, state: { user: { id, permissions: ['work.sales.read','work.cashier.collect','work.complaint.handle'] } } };
             window.getSupabaseClient = () => ({ rpc: (name, args) => readRpc(name, args) });
         }, actor.id);
-        const core = fs.readFileSync('pages/admin/admin.js','utf8'); await page.addScriptTag({ content: core.slice(0, core.indexOf('})();') + 5) });
-        const domain = fs.readFileSync('pages/admin/modules/orders/orders.js','utf8'), start = domain.indexOf('(function registerRoleViews()');
+        const core = fs.readFileSync('my-client/pages/admin/admin.js','utf8'); await page.addScriptTag({ content: core.slice(0, core.indexOf('})();') + 5) });
+        const domain = fs.readFileSync('my-client/pages/admin/modules/orders/orders.js','utf8'), start = domain.indexOf('(function registerRoleViews()');
         await page.addScriptTag({ content: domain.slice(start, domain.indexOf('})();',start) + 5) });
         await page.evaluate(() => PawpalAdminViews.mount('Bán hàng',document.querySelector('main')));
         assert.equal(await page.locator('.workspace-order-actions button').count(),3);

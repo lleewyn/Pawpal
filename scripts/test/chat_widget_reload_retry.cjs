@@ -6,11 +6,11 @@ let browser;
  browser=await chromium.launch({channel:'chrome',headless:true});
  for(const failAction of ['public_open','public_send']){
   const page=await browser.newPage();let owner='A',fail=true,calls=[];
-  await page.route('**/*',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html><body>'+fs.readFileSync('components/fab/fab.html','utf8')+'</body></html>'}));
+  await page.route('**/*',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html><body>'+fs.readFileSync('my-client/components/fab/fab.html','utf8')+'</body></html>'}));
   await page.exposeFunction('qaSession',()=>({data:{session:{user:{id:owner},access_token:'token-'+owner}}}));
   await page.exposeFunction('qaCall',body=>{calls.push(body);if(fail&&body.action===failAction){fail=false;return {failed:true};}return {ok:true,...(body.action==='public_read'?{status:'bot_handling',updatedAt:'v1',messages:[]}:{})};});
   await page.addInitScript(()=>{window.getSupabaseClient=()=>({auth:{getSession:()=>qaSession(),onAuthStateChange(){}}});window.fetch=async(_url,init)=>{const body=await qaCall(JSON.parse(init.body));if(body.failed)throw new TypeError('network ack lost');return {ok:true,json:async()=>body};};});
-  const load=async()=>{await page.addScriptTag({content:fs.readFileSync('components/fab/fab.js','utf8')});await page.waitForTimeout(60);};
+  const load=async()=>{await page.addScriptTag({content:fs.readFileSync('my-client/components/fab/fab.js','utf8')});await page.waitForTimeout(60);};
   await page.goto('http://localhost:3001/');await load();await page.fill('#fabChatInput','pending private question');await page.click('#fabChatSend');
   await page.waitForFunction(()=>!document.getElementById('fabChatSend').disabled);
   const before=calls.length;await page.reload();await load();

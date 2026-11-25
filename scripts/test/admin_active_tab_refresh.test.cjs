@@ -25,7 +25,7 @@ test('sales realtime never reloads other tabs that happen to have been visited',
  h.calls.length=0;h.storage.set('pawpal_admin_active_module','Dashboard');h.probe.dirty.add('list');await h.probe.flush();assert.equal(h.calls.length,0);assert.equal(h.probe.dirty.size,1);
 });
 test('catalogue ratings use aggregate metadata without downloading review details',async()=>{
- const source=fs.readFileSync('pages/admin/modules/services/services.js','utf8'),start=source.indexOf('const readRatings=async()=>'),end=source.indexOf('return PawpalServices.state.servicesData;',start)+'return PawpalServices.state.servicesData;'.length;
+ const source=fs.readFileSync('my-client/pages/admin/modules/services/services.js','utf8'),start=source.indexOf('const readRatings=async()=>'),end=source.indexOf('return PawpalServices.state.servicesData;',start)+'return PawpalServices.state.servicesData;'.length;
  let calls=0,fail=false;
  const context=vm.createContext({window:{getSupabaseClient:()=>({rpc:async name=>{assert.equal(name,'admin_service_review_summary');calls++;return fail?{error:Error('offline')}:{data:[{service_id:'a',review_count:1234,average_rating:4.5}]};},from(){throw Error('Unnecessary detail query');}})},PawpalServices:{state:{servicesData:[{dbId:'a'},{dbId:'b'}]}}});
  vm.runInContext('globalThis.run=async function(force=false){'+source.slice(start,end)+'};',context);

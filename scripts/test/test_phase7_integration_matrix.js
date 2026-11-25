@@ -43,7 +43,7 @@ global.localStorage = {
 };
 
 // Require DataStore
-const PawpalDataStore = require('../../pages/admin/admin-data-store.js');
+const PawpalDataStore = require('../../my-client/pages/admin/admin-data-store.js');
 
 async function runMatrix() {
     console.log('================================================================');

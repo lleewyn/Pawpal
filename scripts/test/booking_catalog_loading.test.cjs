@@ -2,7 +2,7 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const source = fs.readFileSync('pages/admin/modules/services/subtabs/tab-service-bookings.js', 'utf8');
+const source = fs.readFileSync('my-client/pages/admin/modules/services/subtabs/tab-service-bookings.js', 'utf8');
 const loader = source.slice(source.indexOf('        let bookingCatalogRequest ='), source.indexOf('        // Modal Thêm lịch hẹn mới'));
 const filter = source.slice(source.indexOf('        function getServicesForCategory('), source.indexOf('        function renderServiceAutocomplete('));
 

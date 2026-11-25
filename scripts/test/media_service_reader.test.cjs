@@ -1,7 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict');
 test('service thumbnails authenticate hidden images, bound concurrency and retry denied reads',async()=>{
-    const {createServiceMediaReader}=await import('../shared/service-media-reader.mjs');
+    const {createServiceMediaReader}=await import('../../my-client/scripts/shared/service-media-reader.mjs');
     let session=null,calls=0,active=0,peak=0,denied=true;
     const reader=createServiceMediaReader({db:{auth:{getSession:async()=>({data:{session}})}},fetchImpl:async(url,options)=>{
         calls++;assert.equal(options.headers.Authorization,'Bearer '+session.access_token);

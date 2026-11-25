@@ -2,10 +2,10 @@
 // Focused assignment boundary: real existing tickets and staff, all business writes rolled back.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 async function main(){
  const db=await connect(),browser=await chromium.launch({channel:'chrome',headless:true}),folder='docs/verification/complaint-assignment-work-handler';fs.mkdirSync(folder,{recursive:true});
- const signature='public.assign_admin_complaint(uuid,uuid,timestamptz,uuid,text)',migration=fs.readFileSync('scripts/database/v1/282_complaint_assignment_work_handler.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
+ const signature='public.assign_admin_complaint(uuid,uuid,timestamptz,uuid,text)',migration=fs.readFileSync('my-server/scripts/database/v1/282_complaint_assignment_work_handler.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
  try{
   await db.query("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");
   const originalDefinition=(await db.query('SELECT pg_get_functiondef($1::regprocedure) body',[signature])).rows[0].body;
@@ -26,12 +26,12 @@ async function main(){
   await page.route('http://localhost/**',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html lang="vi"></html>'}));await page.goto('http://localhost/');
   await page.exposeFunction('liveRpc',rpc);
   await page.exposeFunction('reloadTicket',async()=>{await db.query('RESET ROLE');const row=(await db.query('SELECT to_jsonb(t) value FROM public.support_ticket t WHERE id=$1',[ticket.id])).rows[0].value;await as(admin);return row;});
-  const html=fs.readFileSync('pages/admin/modules/complaints/complaints.html','utf8'),start=html.indexOf('<div class="admin-modal-overlay" id="assignHandlerModalOverlay">'),end=html.indexOf('<!-- MODAL: YÊU CẦU',start);
+  const html=fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.html','utf8'),start=html.indexOf('<div class="admin-modal-overlay" id="assignHandlerModalOverlay">'),end=html.indexOf('<!-- MODAL: YÊU CẦU',start);
   await page.setContent('<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body class="admin-body"><main class="complaints-module">'+html.slice(start,end)+'</main></body></html>');
-  for(const file of ['pages/admin/admin.css','pages/admin/admin-components.css','pages/admin/admin-typography.css','pages/admin/modules/complaints/complaints.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+  for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/admin-components.css','my-client/pages/admin/admin-typography.css','my-client/pages/admin/modules/complaints/complaints.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
   await page.evaluate(ticket=>{window.PawpalComplaints={state:{serviceComplaints:[{...ticket,rawId:ticket.id}],orderComplaints:[],currentTicketId:ticket.id},escapeHtml:value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),getDbClient:()=>({rpc:(name,args)=>liveRpc(name,args)}),errorMessage:error=>error.message,loadComplaintsModuleData:async()=>{window.updatedTicket=await reloadTicket();}};},ticket);
-  const core=fs.readFileSync('pages/admin/modules/complaints/complaints.js','utf8');await page.addScriptTag({content:core.slice(core.indexOf('    function showToast('),core.indexOf('    PawpalComplaints.showToast ='))+'PawpalComplaints.showToast=showToast;'});
-  const source=fs.readFileSync('pages/admin/modules/complaints/subtabs/tab-complaint-detail.js','utf8');
+  const core=fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.js','utf8');await page.addScriptTag({content:core.slice(core.indexOf('    function showToast('),core.indexOf('    PawpalComplaints.showToast ='))+'PawpalComplaints.showToast=showToast;'});
+  const source=fs.readFileSync('my-client/pages/admin/modules/complaints/subtabs/tab-complaint-detail.js','utf8');
   const bindings=source.slice(source.indexOf("  bind('btnConfirmAssignHandler',async()=>{"),source.indexOf("  bind('btnSendRequestInfo'"));
   await page.addScriptTag({content:'(()=>{'+source.slice(source.indexOf(" 'use strict';"),source.indexOf(' let renderVersion'))+source.slice(source.indexOf(' function captureModal('),source.indexOf(' async function act('))+source.slice(source.indexOf(' async function openAssignHandlerModal('),source.indexOf(' function openRequestMoreInfoModal('))+"const bind=(id,fn)=>document.getElementById(id).onclick=fn;"+bindings+'window.openAssign=openAssignHandlerModal;})();'});
   await page.evaluate(()=>openAssign());await page.locator('#searchAssignStaff').fill(recipient.full_name);await page.locator('[data-staff-id="'+recipient.id+'"]').click();await page.locator('#inputAssignNote').fill('Bàn giao xử lý');
@@ -48,7 +48,7 @@ async function main(){
   await as(admin);const inactive=(await db.query("SELECT id FROM public.staff WHERE employment_status<>'active' LIMIT 1")).rows[0];if(inactive)assert.equal((await rpc('assign_admin_complaint',{...args(after),p_staff_id:inactive.id})).error?.message,'complaint_handler_unavailable');
   assert.deepEqual(errors,[]);await db.query('ROLLBACK');
   for(const original of tickets)assert.deepEqual((await db.query('SELECT to_jsonb(t) value FROM public.support_ticket t WHERE id=$1',[original.id])).rows[0].value,original);
-  if(process.argv.includes('--apply-cloud')){const backup='scripts/database/v1/282_complaint_assignment_work_handler.rollback.sql';if(!fs.existsSync(backup))fs.writeFileSync(backup,'BEGIN;\n'+originalDefinition+';\nNOTIFY pgrst,\'reload schema\';\nCOMMIT;\n');await db.query('BEGIN');await db.query(migration);await db.query('COMMIT');}
+  if(process.argv.includes('--apply-cloud')){const backup='my-server/scripts/database/v1/282_complaint_assignment_work_handler.rollback.sql';if(!fs.existsSync(backup))fs.writeFileSync(backup,'BEGIN;\n'+originalDefinition+';\nNOTIFY pgrst,\'reload schema\';\nCOMMIT;\n');await db.query('BEGIN');await db.query(migration);await db.query('COMMIT');}
   fs.writeFileSync(folder+'/verification.txt','PASS: Recipient Nguyễn Thị Test has fixed STAFF work.complaint.handle, without support_ticket.write.\nBefore: '+(before.error?.message||'already patched')+'\nAfter: Actual management modal saves assignment; staff reads assigned ticket; staff cannot assign; inactive recipient rejected; ticket fields, resolution and approval unchanged.\nPriorities checked: '+tickets.map(row=>row.priority).join(', ')+'\nBusiness writes rolled back; original tickets verified unchanged. Only migration committed: '+process.argv.includes('--apply-cloud')+'. No role/permission grants or chat changes; no full testcase replay.\n');
   console.log('PASS: recipient work permission, real assignment modal, staff scope, management restrictions, rollback; migration applied='+process.argv.includes('--apply-cloud'));
  }finally{await db.query('ROLLBACK');await db.end();await browser.close();}

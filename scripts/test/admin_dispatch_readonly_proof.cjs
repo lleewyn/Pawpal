@@ -2,7 +2,7 @@
 // Evidence for the reported appointment only. No assignment, shift changes or testcase replay.
 const fs = require('node:fs'), assert = require('node:assert/strict');
 const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const { connect } = require('../database/v1/service_import_connection.cjs');
+const { connect } = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 async function main() {
     const db = await connect(), browser = await chromium.launch({ channel: 'chrome', headless: true });
     const folder = 'docs/verification/admin-dispatch-readonly'; fs.mkdirSync(folder, { recursive: true });
@@ -24,10 +24,10 @@ async function main() {
         const page = await browser.newPage({ viewport: { width: 1100, height: 950 } }), errors = [];
         page.on('pageerror', error => errors.push(error.message));
         await page.exposeFunction('liveRpc', rpc);
-        await page.setContent(fs.readFileSync('pages/admin/modules/services/services.html', 'utf8'));
+        await page.setContent(fs.readFileSync('my-client/pages/admin/modules/services/services.html', 'utf8'));
         await page.evaluate(() => document.body.className = 'admin-body admin-ui-standard');
-        for (const file of ['pages/admin/admin.css','pages/admin/admin-components.css','pages/admin/admin-typography.css','pages/admin/modules/services/services.css']) await page.addStyleTag({ content: fs.readFileSync(file, 'utf8') });
-        const source = fs.readFileSync('pages/admin/modules/services/subtabs/tab-service-bookings.js', 'utf8'), core = fs.readFileSync('pages/admin/modules/services/services.js', 'utf8');
+        for (const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/admin-components.css','my-client/pages/admin/admin-typography.css','my-client/pages/admin/modules/services/services.css']) await page.addStyleTag({ content: fs.readFileSync(file, 'utf8') });
+        const source = fs.readFileSync('my-client/pages/admin/modules/services/subtabs/tab-service-bookings.js', 'utf8'), core = fs.readFileSync('my-client/pages/admin/modules/services/services.js', 'utf8');
         await page.evaluate(() => {
             window.PawpalServices = { state: { bookingsData: [], liveStaffList: [] }, errorMessage: error => error.message };
             window.getSupabaseClient = () => ({ rpc: (name, args) => liveRpc(name, args) });

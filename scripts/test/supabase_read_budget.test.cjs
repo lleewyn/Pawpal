@@ -4,7 +4,7 @@ function harness(fetchImpl){
  let fetcher;
  const window={fetch:fetchImpl,location:{pathname:'/admin/'},__PAWPAL_SUPABASE_CONFIG__:{url:'https://test.supabase.co',anonKey:'test'},
   supabase:{createClient(_url,_key,options){fetcher=options.global.fetch;return {};}}};
- vm.runInNewContext(fs.readFileSync('scripts/api/supabase-client.js','utf8'),{window,Headers,Response,URL,DOMException,setTimeout,console:{log(){},error(){}}});
+ vm.runInNewContext(fs.readFileSync('my-client/scripts/api/supabase-client.js','utf8'),{window,Headers,Response,URL,DOMException,setTimeout,console:{log(){},error(){}}});
  return fetcher;
 }
 test('read bursts use at most four active requests and drain every queued read',async()=>{

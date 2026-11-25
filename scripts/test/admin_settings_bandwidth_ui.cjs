@@ -7,7 +7,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'}));
   await page.goto('http://pawpal.test/');
-  await page.setContent(fs.readFileSync('pages/admin/modules/settings/settings.html','utf8'));
+  await page.setContent(fs.readFileSync('my-client/pages/admin/modules/settings/settings.html','utf8'));
   await page.evaluate(()=>{
    sessionStorage.setItem('pawpal_admin_active_module','Cấu hình');
    sessionStorage.setItem('pawpal_admin_user',JSON.stringify({id:'test-admin'}));
@@ -16,8 +16,8 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
     channel(){return {on(_type,filter,fn){handlers[filter.table]=fn;return this;},subscribe(){return this;}};},removeChannel(){}};
    window.getSupabaseClient=()=>client;
   });
-  await page.addScriptTag({content:fs.readFileSync('pages/admin/admin-data-store.js','utf8')});
-  await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/settings/settings.js','utf8')});
+  await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/admin-data-store.js','utf8')});
+  await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/settings/settings.js','utf8')});
   await page.evaluate(()=>PawpalSettings.init());
   let reads=await page.evaluate(()=>window.reads);
   assert.ok(reads.includes('admin_promos_page'));assert.ok(!reads.includes('admin_audit_page'));assert.ok(!reads.includes('admin_article_page'));

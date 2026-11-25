@@ -1,7 +1,7 @@
 // Explicit opt-in. Creates only tagged test records on the new Cloud project and removes them afterwards.
 const assert=require('node:assert/strict'),fs=require('node:fs'),{randomUUID}=require('node:crypto');
 const {createClient}=require('@supabase/supabase-js');
-const {settings,infra}=require('../database/v1/cloud_connection.cjs');
+const {settings,infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 if(process.argv[2]!=='run')throw Error('Use run to explicitly verify Production');
 const base='https://pawpalgr3.vercel.app';

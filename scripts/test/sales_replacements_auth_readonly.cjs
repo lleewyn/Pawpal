@@ -15,7 +15,7 @@ if(!process.argv.includes('--cloud')){console.log('Use --cloud for actual Admin 
   const pathname=new URL(req.url,'http://127.0.0.1').pathname;
   if(pathname==='/api/admin-config')return config(req,res);
   if(pathname==='/admin'){res.writeHead(200,{'Content-Type':'text/html'});return res.end('<!doctype html><html><body><p>Admin read-only verification</p><script>window.__PAWPAL_SUPABASE_CONFIG__={required:true}</script><script src="/scripts/vendor/supabase.js"></script><script src="/api/admin-config"></script><script src="/scripts/api/supabase-client.js"></script></body></html>');}
-  const file=pathname==='/admin/login'?'pages/admin/login/login.html':files.has(pathname)?pathname.slice(1):null;
+  const file=pathname==='/admin/login'?'my-client/pages/admin/login/login.html':files.has(pathname)?pathname.slice(1):null;
   if(!file){res.writeHead(404);return res.end();}res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':'text/javascript'});res.end(fs.readFileSync(file));
  });
  try{

@@ -49,6 +49,6 @@ let catalog = original.customer_shop_catalog;
 const from = 'jsonb_agg(image_url ORDER BY is_thumbnail DESC,display_order,id)';
 if (catalog.split(from).length !== 3) throw Error('MEDIA_CATALOG_DRIFT');
 catalog = catalog.replace(from, "jsonb_agg(coalesce(image_url,'/api/media?action=read&id='||media_asset_id::text) ORDER BY is_thumbnail DESC,display_order,id)");
-fs.writeFileSync('scripts/database/v1/189_product_media.sql', "-- Product editor media sources; exact existing business functions retained outside the image reconciliation block.\nBEGIN;\nSET LOCAL lock_timeout='3s';\n" + save + ';\n' + catalog + ';\nCOMMIT;\n');
+fs.writeFileSync('my-server/scripts/database/v1/189_product_media.sql', "-- Product editor media sources; exact existing business functions retained outside the image reconciliation block.\nBEGIN;\nSET LOCAL lock_timeout='3s';\n" + save + ';\n' + catalog + ';\nCOMMIT;\n');
 fs.writeFileSync('D:/Aboutme/Pawpal-infra/media/phase4/rollback.private.sql', 'BEGIN;\n' + original.save_admin_sales_product + ';\n' + original.customer_shop_catalog + ';\nCOMMIT;\n');
 console.log('PRODUCT_MEDIA_MIGRATION_GENERATED');

@@ -1,7 +1,7 @@
 // Bounded Cloud metadata/aggregate inspection. Never reads Supabase Logs or returns media URLs.
 const fs = require('node:fs');
 const path = require('node:path');
-const { connect } = require('../database/v1/service_import_connection.cjs');
+const { connect } = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const tables = ['product_media','product_variant_media','service_image','care_log_media',
  'return_request_evidence','review_media','support_ticket_message_attachment','pet_profile',
  'banner','blog_post','support_ticket_message','appointment_record','appointment','appointment_adjustment'];

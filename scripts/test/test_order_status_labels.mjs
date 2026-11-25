@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeOrderStatus, getStatusLabel } from '../shared/order-status.mjs';
+import { normalizeOrderStatus, getStatusLabel } from '../../my-client/scripts/shared/order-status.mjs';
 
 for (const [source, status, label] of [
     ['delivering', 'shipping', 'Đang giao'],

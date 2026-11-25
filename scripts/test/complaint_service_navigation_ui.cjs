@@ -1,9 +1,9 @@
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
 const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const core = fs.readFileSync('pages/admin/modules/services/services.js', 'utf8');
-const admin = fs.readFileSync('pages/admin/admin.js', 'utf8');
-const detail = fs.readFileSync('pages/admin/modules/services/subtabs/tab-service-detail.js', 'utf8');
+const core = fs.readFileSync('my-client/pages/admin/modules/services/services.js', 'utf8');
+const admin = fs.readFileSync('my-client/pages/admin/admin.js', 'utf8');
+const detail = fs.readFileSync('my-client/pages/admin/modules/services/subtabs/tab-service-detail.js', 'utf8');
 const switchCode = core.slice(core.indexOf('    let bookingDetailVersion ='), core.indexOf('    function openBookingDetail(bookingId)', core.indexOf('    let bookingDetailVersion =')));
 const initCode = core.slice(core.indexOf('    let _isServicesInit ='), core.indexOf('    let _servicesRealtimeChannel ='));
 const config = admin.slice(admin.indexOf("        'Dịch vụ':    {"), admin.indexOf("        'Bán hàng':", admin.indexOf("        'Dịch vụ':    {")));

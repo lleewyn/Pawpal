@@ -25,13 +25,13 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
         await page.goto('http://localhost:3001/');
 
         const cssFiles = [
-            'pages/admin/admin.css',
-            'pages/admin/admin-shell-v7.css',
-            'pages/admin/admin-components.css',
-            'pages/admin/modules/staff/staff.css'
+            'my-client/pages/admin/admin.css',
+            'my-client/pages/admin/admin-shell-v7.css',
+            'my-client/pages/admin/admin-components.css',
+            'my-client/pages/admin/modules/staff/staff.css'
         ];
 
-        const staffHtml = fs.readFileSync('pages/admin/modules/staff/staff.html', 'utf8');
+        const staffHtml = fs.readFileSync('my-client/pages/admin/modules/staff/staff.html', 'utf8');
         await page.setContent(`
             <!doctype html>
             <html lang="vi">
@@ -75,7 +75,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
             };
         });
 
-        let code = fs.readFileSync('pages/admin/modules/staff/subtabs/tab-staff-list.js', 'utf8');
+        let code = fs.readFileSync('my-client/pages/admin/modules/staff/subtabs/tab-staff-list.js', 'utf8');
         code = code.slice(0, code.lastIndexOf("    if (document.readyState === 'loading')")) + '})();';
         await page.addScriptTag({ content: code });
 

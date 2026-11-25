@@ -5,7 +5,7 @@ function fixture(){
  class EditorMap extends Map{constructor(...args){super(...args);state.editors=this;}}
  const form={querySelector:()=>state.busy?{}:null,querySelectorAll:()=>state.fields};
  const window={};
- vm.runInNewContext(fs.readFileSync('pages/user/modules/orders/review-handler.js','utf8'),{window,Map:EditorMap,document:{getElementById:()=>form}});
+ vm.runInNewContext(fs.readFileSync('my-client/pages/user/modules/orders/review-handler.js','utf8'),{window,Map:EditorMap,document:{getElementById:()=>form}});
  return {state,handler:window.ReviewHandler};
 }
 test('an image-only review draft remains dirty during background refresh, even without typed text',()=>{

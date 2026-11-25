@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const M = require('../../pages/admin/modules/dashboard/subtabs/business-metrics.js');
+const M = require('../../my-client/pages/admin/modules/dashboard/subtabs/business-metrics.js');
 
 test('estimates require an explicit plan for the exact period and preserve negative receipts', () => {
     const range = { from: '2026-11-01', to: '2026-11-07' };

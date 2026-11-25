@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import { normalizeCartItems, voucherBelongsToUser } from '../shared/cart-state.mjs';
+import { normalizeCartItems, voucherBelongsToUser } from '../../my-client/scripts/shared/cart-state.mjs';
 
 function fixture(initial = [{ id: 'row-1', cart_id: 'cart-1', product_id: 'SP01', quantity: 33, unit_price: 100 }], stock = 1000) {
     let rows = structuredClone(initial), fail = '', nextId = 2;
@@ -54,7 +54,7 @@ function fixture(initial = [{ id: 'row-1', cart_id: 'cart-1', product_id: 'SP01'
         };
         return query;
     } };
-    const source = fs.readFileSync('scripts/api/api.js', 'utf8');
+    const source = fs.readFileSync('my-client/scripts/api/api.js', 'utf8');
     const queue = source.slice(source.indexOf('let cartWriteQueue'), source.indexOf('const resolveCustomerId'));
     const methods = source.slice(source.indexOf('    async getUserCart('), source.indexOf('    async updateCartItemQuantity('));
     const context = {
@@ -194,7 +194,7 @@ test('personal vouchers match ownerPhone only for the active member', () => {
 test('publishing a committed cart emits cart_updated once for its owner and ignores stale account responses', () => {
     const values=new Map([['pawpal_current_user',JSON.stringify({id:'B'})]]),events=[];
     const context={localStorage:{getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value)},document:{dispatchEvent:event=>events.push(event)},CustomEvent:class{constructor(type,options){this.type=type;this.detail=options.detail}}};
-    vm.runInNewContext(fs.readFileSync('scripts/shared/cart-state.mjs','utf8').replaceAll('export function','function'),context);
+    vm.runInNewContext(fs.readFileSync('my-client/scripts/shared/cart-state.mjs','utf8').replaceAll('export function','function'),context);
     context.publishCart([{id:'SP01',quantity:9}],'A');
     assert.equal(events.length,0);assert.equal(values.has('pawpal_cart'),false);
     context.publishCart([{id:'SP02',quantity:3,qty:1}],'B');

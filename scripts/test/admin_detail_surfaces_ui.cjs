@@ -3,7 +3,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const page=await browser.newPage();
  await page.route('**/*',r=>{const u=new URL(r.request().url());if(u.hostname!=='localhost')return r.abort();const file=path.join(process.cwd(),u.pathname);if(fs.existsSync(file)&&fs.statSync(file).isFile())return r.fulfill({contentType:file.endsWith('.css')?'text/css':file.endsWith('.html')?'text/html':'image/webp',body:fs.readFileSync(file)});return r.fulfill({body:'<!doctype html><body></body>',contentType:'text/html'});});
- const css=[...fs.readFileSync('pages/admin/index.html','utf8').matchAll(/<link[^>]+href="([^"#]+\.css[^"#]*)"[^>]*>/g)].map(m=>'<link rel="stylesheet" href="'+m[1]+'">').join('');
+ const css=[...fs.readFileSync('my-client/pages/admin/index.html','utf8').matchAll(/<link[^>]+href="([^"#]+\.css[^"#]*)"[^>]*>/g)].map(m=>'<link rel="stylesheet" href="'+m[1]+'">').join('');
  const cases=[
   {name:'orders',tab:'subtab-tab-order-detail',header:'.order-detail-header-bar',actions:'.order-action-bar-top'},
   {name:'services',tab:'subtab-tab-service-detail',header:'.service-detail-header-bar',actions:'.service-action-bar-top'},

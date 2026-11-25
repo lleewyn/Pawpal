@@ -1,7 +1,7 @@
 const fs=require('node:fs');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
- const migration=fs.readFileSync('scripts/database/v1/240_context_read_budget.sql','utf8');
+ const migration=fs.readFileSync('my-server/scripts/database/v1/240_context_read_budget.sql','utf8');
  if(process.argv.includes('--apply')){await db.query(migration);console.log('Applied context read budget RPCs.');return;}
  await db.query('BEGIN;'+migration.replace(/^BEGIN;\s*|^COMMIT;\s*$/gm,''));
  await db.query(`DO $$ DECLARE u uuid:=gen_random_uuid();s uuid:=gen_random_uuid();r jsonb; BEGIN

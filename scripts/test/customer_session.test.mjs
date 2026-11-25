@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {verifyCustomerSession} from '../shared/customer-session.mjs';
+import {verifyCustomerSession} from '../../my-client/scripts/shared/customer-session.mjs';
 const stores=user=>{
  const make=()=>{const data=new Map([['pawpal_current_user',JSON.stringify(user)],['pawpal_admin_supabase_auth','admin-session']]);return {getItem:key=>data.get(key)||null,setItem:(key,value)=>data.set(key,value),removeItem:key=>data.delete(key)};};
  return {storage:make(),tabStorage:make()};

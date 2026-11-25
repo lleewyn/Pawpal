@@ -2,7 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-const source=fs.readFileSync('pages/admin/modules/customers/customers.js','utf8');
+const source=fs.readFileSync('my-client/pages/admin/modules/customers/customers.js','utf8');
 const context={PawpalCustomers:{}};vm.createContext(context);
 vm.runInContext(source.slice(source.indexOf('    PawpalCustomers.isTicketClosed ='),source.indexOf('    PawpalCustomers.ticketSummary =')),context);
 test('completed and terminal ticket statuses never remain open in the customer warning',()=>{

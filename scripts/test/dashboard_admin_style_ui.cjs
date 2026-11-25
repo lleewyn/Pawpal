@@ -14,9 +14,9 @@ const dashboard = 'pages/admin/modules/dashboard/';
         page.on('pageerror', error => errors.push(error.message));
         await page.route('**/*', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><head></head><body></body></html>' }));
         await page.goto('http://dashboard-style.test/');
-        const customerHtml = read('pages/admin/modules/customers/customers.html');
+        const customerHtml = read('my-client/pages/admin/modules/customers/customers.html');
         await page.setContent(`<body class="admin-body"><div class="admin-layout sidebar-collapsed"><main class="admin-main"><header class="admin-header"><div class="admin-header-left"><div class="header-subtabs-group"><button class="header-subtab-btn active">Khách hàng</button></div></div><div class="admin-header-right"><button class="btn-header-refresh">Làm mới</button><span class="header-user-tag">Quản trị viên</span></div></header><div class="admin-preview-content" id="contentArea"><div class="admin-module-wrapper" data-customer-reference>${customerHtml}</div><div class="admin-module-wrapper" data-dashboard-reference hidden>${read(dashboard + 'dashboard.html')}</div></div></main></div></body>`);
-        const styles = [...read('pages/admin/index.html').matchAll(/<link[^>]+href="(\/pages\/admin\/[^"?]+\.css)(?:\?[^" ]*)?"/g)].map(match => match[1]);
+        const styles = [...read('my-client/pages/admin/index.html').matchAll(/<link[^>]+href="(\/pages\/admin\/[^"?]+\.css)(?:\?[^" ]*)?"/g)].map(match => match[1]);
         for (const file of styles) await page.addStyleTag({ content: read('.' + file) });
         await page.addScriptTag({ content: 'window.dashboardTestAnalysis = ' + require('./dashboard_completion_fixture.cjs').toString() });
         await page.evaluate(() => {
@@ -117,7 +117,7 @@ const dashboard = 'pages/admin/modules/dashboard/';
         assert(await page.locator('.biz-group > .biz-panel').evaluateAll(nodes => nodes.every(node => {
             const s = getComputedStyle(node); return s.backgroundColor === 'rgba(0, 0, 0, 0)' && s.borderTopWidth === '0px' && s.backdropFilter === 'none';
         })));
-        const adminSource = read('pages/admin/admin.js');
+        const adminSource = read('my-client/pages/admin/admin.js');
         const modalStart = adminSource.indexOf('    // Global Modal Handler:');
         const modalEnd = adminSource.indexOf('    // Khởi tạo Lucide', modalStart);
         await page.addScriptTag({ content: adminSource.slice(modalStart, modalEnd) });

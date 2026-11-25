@@ -2,7 +2,7 @@
 // Existing QA Admin authors immutable audit events; temporary recipient only reads.
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{createClient}=require('@supabase/supabase-js');
 if(!process.argv.includes('--cloud')){console.log('No network. Use --cloud for isolated committed chat transfer checks.');process.exit(0);}
-const {config}=require('../database/v1/cloud_connection.cjs').settings(),checks=[],trace=[],clients=[],users=[],auditIds=[];
+const {config}=require('../../my-server/scripts/database/v1/cloud_connection.cjs').settings(),checks=[],trace=[],clients=[],users=[],auditIds=[];
 const conversation=crypto.randomUUID(),staff=crypto.randomUUID();let customerId,failed;
 const report={timestamp:new Date().toISOString(),scope:'Actual Auth, public Vercel chat gateway, committed Admin transfer RPC and recipient Realtime. No AI inference, real customer edits, uploads, Storage, Logs or stress tests.',checks};
 const transport=async(input,init={})=>{const r=await fetch(input,{...init,signal:AbortSignal.any([init.signal,AbortSignal.timeout(12000)].filter(Boolean))});trace.push({path:new URL(typeof input==='string'?input:input.url).pathname,method:init.method||'GET',status:r.status});return r;};

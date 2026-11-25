@@ -1,5 +1,5 @@
 // Short post-install guard probe. All synthetic rows/side effects are rolled back.
-const fs=require('node:fs'),{connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('node:fs'),{connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--verify-cloud')){console.log('Use --verify-cloud for synthetic transaction rollback checks.');process.exit(0);}
 (async()=>{const db=await connect();try{
  await db.query("BEGIN; SET LOCAL statement_timeout='8s'; SET LOCAL lock_timeout='2s'");

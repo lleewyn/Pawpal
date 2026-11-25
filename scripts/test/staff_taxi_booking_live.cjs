@@ -1,5 +1,5 @@
 // Actual staff Taxi form with live scoped RPCs. Every fixture and booking rolls back.
-const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');const {connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')&&!process.argv.includes('--apply-cloud'))process.exit(0);
 (async()=>{const db=await connect(),browser=await chromium.launch({channel:'chrome',headless:true}),folder='docs/verification/staff-taxi-booking';fs.mkdirSync(folder,{recursive:true});let page;const checks=[],pass=s=>{checks.push(s);console.log('PASS',s);};
  try{
@@ -12,7 +12,7 @@ if(!process.argv.includes('--cloud')&&!process.argv.includes('--apply-cloud'))pr
   for(const [id,name,species]of [[dog,'QA Chó A','Chó'],[rabbit,'QA Thỏ B',unsupported]]){const breed=(await db.query('SELECT b.id FROM public.pet_breed b JOIN public.pet_species s ON s.id=b.species_id WHERE s.species_name=$1 AND b.is_active AND s.is_active LIMIT 1',[species])).rows[0].id;await db.query("INSERT INTO public.pet_profile(id,pet_code,customer_id,pet_name,breed_id,gender) VALUES($1,$2,$3,$4,$5,'unknown')",[id,'QA-'+id.slice(0,8),owner,name,breed]);await db.query('INSERT INTO public.pet_weight_history(pet_id,weight,recorded_by) VALUES($1,5,$2)',[id,actor.id]);}
   await db.query("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role','authenticated',true)",[actor.auth_user_id]);await db.query('SET LOCAL ROLE authenticated');
   let chain=Promise.resolve(),creates=0;const run=async(name,args={})=>{const keys=({get_staff_workspace:['p_kind','p_query','p_id','p_page'],get_staff_booking_catalog:['p_kind','p_service_id','p_query','p_page'],get_staff_booking_services:['p_category','p_pet_id','p_query','p_page'],create_admin_logistics_booking:['p_id','p_details']})[name];assert.ok(keys);if(name==='create_admin_logistics_booking')creates++;await db.query('SAVEPOINT rpc');try{const data=(await db.query(`SELECT public.${name}(${keys.map((k,i)=>k+'=> $'+(i+1)).join(',')}) value`,keys.map(k=>args[k]&&typeof args[k]==='object'?JSON.stringify(args[k]):args[k]))).rows[0].value;await db.query('RELEASE SAVEPOINT rpc');return {data,error:null};}catch(e){await db.query('ROLLBACK TO SAVEPOINT rpc');await db.query('RELEASE SAVEPOINT rpc');return {data:null,error:{code:e.code,message:e.message}};}};const rpc=(n,a)=>{const work=chain.then(()=>run(n,a));chain=work.catch(()=>{});return work;};
-  const {estimatedTaxiDistance}=await import('../shared/taxi-distance.mjs');
+  const {estimatedTaxiDistance}=await import('../../my-client/scripts/shared/taxi-distance.mjs');
   assert.equal(estimatedTaxiDistance('','Bình Thạnh'),null);assert.equal(estimatedTaxiDistance(' Thủ   Đức ','thủ đức'),0);
   const km=estimatedTaxiDistance('Thủ Đức','Bình Thạnh');assert.equal(km,estimatedTaxiDistance(' bình thạnh ','THỦ ĐỨC'));assert.ok(km>=1&&km<=30);pass('Shared customer/staff distance simulation normalizes addresses and is symmetric');
   const taxi='c0000000-0000-0000-0000-000000000023';
@@ -21,11 +21,11 @@ if(!process.argv.includes('--cloud')&&!process.argv.includes('--apply-cloud'))pr
   assert.equal((await rpc('create_admin_logistics_booking',{p_id:randomUUID(),p_details:invalidDetails})).error.message,'service_species_not_supported');pass('Database rejects unsupported species for Taxi');
   page=await browser.newPage({viewport:{width:1100,height:1200}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('http://localhost/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'}));
-  await page.route('http://localhost/scripts/shared/taxi-distance.mjs',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync('scripts/shared/taxi-distance.mjs','utf8')}));
+  await page.route('http://localhost/scripts/shared/taxi-distance.mjs',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync('my-client/scripts/shared/taxi-distance.mjs','utf8')}));
   await page.goto('http://localhost/');await page.exposeFunction('liveRpc',rpc);await page.setContent('<body class="admin-body admin-ui-standard" style="background:#F4F9F6"></body>');
-  for(const file of ['pages/admin/admin.css','pages/admin/admin-components.css','pages/admin/admin-typography.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+  for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/admin-components.css','my-client/pages/admin/admin-typography.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
   await page.evaluate(()=>{window.PawpalAdminAccess={isStaff:()=>true,state:{user:{permissions:['work.booking.create']}}};window.getSupabaseClient=()=>({rpc:(name,args)=>liveRpc(name,args||{})});});
-  const source=fs.readFileSync('pages/admin/modules/services/services.js','utf8'),mark=source.indexOf('    const instant = value'),begin=source.lastIndexOf('(function () {',mark),end=source.indexOf('})();',source.indexOf('window.PawpalStaffBooking=',mark))+5;await page.addScriptTag({content:source.slice(begin,end)});
+  const source=fs.readFileSync('my-client/pages/admin/modules/services/services.js','utf8'),mark=source.indexOf('    const instant = value'),begin=source.lastIndexOf('(function () {',mark),end=source.indexOf('})();',source.indexOf('window.PawpalStaffBooking=',mark))+5;await page.addScriptTag({content:source.slice(begin,end)});
   const save=page.locator('#staffBookingModal .admin-btn-primary'),message=page.locator('#staffBookingModal .workspace-error');
   async function openTaxi(){
    await page.evaluate(()=>PawpalStaffBooking.open());assert.equal(await message.textContent(),'');assert.equal(await page.locator('#staffBookingModal [aria-invalid=true]').count(),0);

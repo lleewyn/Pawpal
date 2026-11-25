@@ -1,8 +1,8 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
-const { signStaffToken } = require('../api/staff_auth.js');
-const { adminDbTools } = require('../api/chat.js');
-const chatActionsHandler = require('../api/chat_actions.js');
+const { signStaffToken } = require('../../my-server/scripts/api/staff_auth.js');
+const { adminDbTools } = require('../../my-server/scripts/api/chat.js');
+const chatActionsHandler = require('../../my-server/scripts/api/chat_actions.js');
 
 const adminClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 

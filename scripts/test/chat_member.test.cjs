@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const member=require('../api/chat_member.js'),{createHandler}=require('../../api/admin-chat.js');
+const member=require('../../my-server/scripts/api/chat_member.js'),{createHandler}=require('../../api/admin-chat.js');
 test('member needs use closed scopes; public policy/questions do not trigger private reads',()=>{
  for(const [q,kind]of [['Tôi có lịch nào sắp tới?','appointments'],['Lịch hẹn của tôi hôm nay','appointments'],['Đơn hàng của tôi đang ở đâu?','orders'],['Tôi có những bé nào?','pets'],['Thông tin bé Miu','pets'],['Tôi còn bao nhiêu Paw Points?','loyalty'],['Tôi đang hạng nào?','loyalty']])assert.equal(member.plan(q).request.kind,kind,q);
  for(const q of ['Paw Points là gì?','Cần bao nhiêu điểm để lên hạng?','Giá tắm bé 7kg','PawPal ở đâu?'])assert.equal(member.plan(q),null,q);

@@ -16,7 +16,7 @@ module.exports=async function evidence(before,after){
  });
  const baseStyles='<meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css"><link rel="stylesheet" href="/styles/style.css">';
  async function user(){
-  await page.goto('http://localhost/?id='+receipt.id);await page.setContent(baseStyles+'<link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/orders/order-detail.css">'+fs.readFileSync('pages/user/modules/orders/order-detail.html','utf8'));
+  await page.goto('http://localhost/?id='+receipt.id);await page.setContent(baseStyles+'<link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/orders/order-detail.css">'+fs.readFileSync('my-client/pages/user/modules/orders/order-detail.html','utf8'));
   await page.evaluate(()=>document.body.className='user-portal-body');
   await page.addStyleTag({content:'body{padding:30px;background:#f4f9f6;font-family:Arial,sans-serif}.order-detail-module-container{max-width:1250px;margin:auto}'});
   await page.evaluate(async()=>{localStorage.setItem('pawpal_current_user',JSON.stringify({id:'rollback-verification'}));window.SupabaseClient={channel:()=>({on(){return this;},subscribe(){return this;}}),removeChannel(){}};const m=await import('/pages/user/modules/orders/order-detail.js');await m.init();});
@@ -50,14 +50,14 @@ module.exports=async function evidence(before,after){
  await page.waitForSelector('[data-cancellation-summary] p');assert.equal(await page.locator('[data-cancellation-summary] p').textContent(),after.cancelReason);await page.screenshot({path:dir+'/guest-receipt-cancelled.png'});
  await page.goto('http://localhost/');await page.setContent(baseStyles+'<link rel="stylesheet" href="/pages/public/return-guest/return-guest.css"><main id="proof" style="max-width:1100px;padding:30px;margin:auto"></main>');
  await page.evaluate(()=>document.body.className='lookup-public-page');
- await page.addScriptTag({content:fs.readFileSync('pages/public/return-guest/return-guest.js','utf8')});
+ await page.addScriptTag({content:fs.readFileSync('my-client/pages/public/return-guest/return-guest.js','utf8')});
  await page.evaluate(receipt=>{const mapped={id:receipt.code,_supabaseId:receipt.id,status:receipt.status,cancelReason:receipt.cancelReason,pricing:{total:receipt.total},products:receipt.lines.map(l=>({name:l.name,quantity:l.quantity,price:l.unitPrice})),delivery:{name:receipt.receiver?.name}};document.querySelector('#proof').innerHTML=buildOrderCard(mapped);},receipt);
  assert.match(await page.locator('#proof').innerText(),/Tôi muốn thay đổi địa chỉ giao hàng/);await page.screenshot({path:dir+'/lookup-cancelled.png'});
- await page.goto('http://localhost/');await page.setContent('<link rel="stylesheet" href="/pages/admin/admin.css"><link rel="stylesheet" href="/pages/admin/admin-components.css"><link rel="stylesheet" href="/pages/admin/modules/orders/orders.css"><link rel="stylesheet" href="/pages/admin/modules/orders/orders-v8.css">'+fs.readFileSync('pages/admin/modules/orders/orders.html','utf8'));
+ await page.goto('http://localhost/');await page.setContent('<link rel="stylesheet" href="/pages/admin/admin.css"><link rel="stylesheet" href="/pages/admin/admin-components.css"><link rel="stylesheet" href="/pages/admin/modules/orders/orders.css"><link rel="stylesheet" href="/pages/admin/modules/orders/orders-v8.css">'+fs.readFileSync('my-client/pages/admin/modules/orders/orders.html','utf8'));
  const model={id:receipt.code,rawId:receipt.id,status:receipt.status,cancelReason:receipt.cancelReason,customerType:'guest',customerName:'Kiểm chứng hủy đơn (hoàn tác)',phone:'0950000001',createdAt:new Date().toISOString(),products:order().products,timeline:[],total:receipt.total,subtotal:receipt.total};
- await page.addScriptTag({content:fs.readFileSync('scripts/shared/customer-identity.js','utf8')});
+ await page.addScriptTag({content:fs.readFileSync('my-client/scripts/shared/customer-identity.js','utf8')});
  await page.evaluate(model=>{window.PawpalOrdersModule={escapeHtml:v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))};window.PawpalOrders={controllers:{},state:{ordersLoaded:true,orders:[model]},helpers:{formatVND:v=>Number(v||0).toLocaleString('vi-VN')+' đ',formatDateTime:v=>String(v),formatTime:String,showToast(){}}};},model);
- let src=fs.readFileSync('pages/admin/modules/orders/subtabs/tab-order-detail.js','utf8');src=src.slice(0,src.indexOf('\n})();')+6);await page.addScriptTag({content:src});
+ let src=fs.readFileSync('my-client/pages/admin/modules/orders/subtabs/tab-order-detail.js','utf8');src=src.slice(0,src.indexOf('\n})();')+6);await page.addScriptTag({content:src});
  await page.evaluate(id=>{document.querySelectorAll('.subtab-content').forEach(e=>e.style.display='none');const content=document.getElementById('orderDetailData');for(let p=content;p;p=p.parentElement){p.style.display='block';p.hidden=false;}window.PawpalOrdersModule.renderOrderDetail(id);},receipt.code);
  await page.addStyleTag({content:'body{padding:28px;background:#f4f9f6;font-family:Arial,sans-serif}#orderDetailData{max-width:1280px;margin:auto}'});
  assert.equal(await page.locator('#detailOrderCancellation p').textContent(),after.cancelReason);await page.locator('#orderDetailData').screenshot({path:dir+'/admin-cancelled.png'});

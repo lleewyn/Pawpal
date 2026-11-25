@@ -18,7 +18,7 @@ function fixture(user = null) {
         },
         setTimeout: (callback, delay) => { timers.push({ callback, delay }); return timers.length; },
     };
-    const source = fs.readFileSync('scripts/shared/cart-access.mjs', 'utf8').replaceAll('export function', 'function');
+    const source = fs.readFileSync('my-client/scripts/shared/cart-access.mjs', 'utf8').replaceAll('export function', 'function');
     vm.runInNewContext(source, context);
     return { context, nodes, timers, redirects, staleModal, removedClasses, ensure: () => context.ensureCartAccess() };
 }

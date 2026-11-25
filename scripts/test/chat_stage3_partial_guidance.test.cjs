@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {answer}=require('../api/admin_copilot.js');
-const {definitions,createReadBudget,prepare}=require('../api/chat_read_tools.js');
+const {answer}=require('../../my-server/scripts/api/admin_copilot.js');
+const {definitions,createReadBudget,prepare}=require('../../my-server/scripts/api/chat_read_tools.js');
 const lease='11111111-1111-4111-8111-111111111111',now=new Date('2026-10-29T03:00:00Z');
 const question='Hướng dẫn xử lý đơn hàng: ORD-001';
 const facts={intent:'order.lookup',total:1,items:[{code:'ORD-001',status:'pending'}],scope:{query:'ORD-001'},source:'sales_order',as_of:now.toISOString()};

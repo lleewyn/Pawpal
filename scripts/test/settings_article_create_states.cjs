@@ -6,7 +6,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  try{
   const p=await browser.newPage();await p.route('**/*',r=>r.abort());
   await p.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));await p.goto('http://localhost:3001/');
-  await p.setContent(fs.readFileSync('pages/admin/modules/settings/settings.html','utf8'),{waitUntil:'domcontentloaded'});
+  await p.setContent(fs.readFileSync('my-client/pages/admin/modules/settings/settings.html','utf8'),{waitUntil:'domcontentloaded'});
   await p.evaluate(()=>{
    const category='11111111-1111-4111-8111-111111111111';window.saved=[];window.notices=[];
    window.PawpalSettings={state:{isLoaded:true,isSafeModeLocked:false,articlesList:[],blogCategoriesList:[{id:category,category_name:'Chó'}]},subtabs:{},escapeHtml:s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),getSupabaseClient:()=>({}),showToast:(m,t)=>notices.push({m,t}),
@@ -14,7 +14,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
     saveRecord:async(table,id,values)=>{if(window.failSave)throw Error('QA save failed');saved.push(structuredClone(values));return values;},
     loadSettingsModuleData:async()=>{PawpalSettings.state.articlesList=saved.map((v,i)=>({...v,id:String(i),category:'Chó',status:({da_xuat_ban:'published',nhap:'draft',da_an:'hidden'})[v.status],ragSynced:false,views:0,author:'QA',updatedAt:'27/10/2026'}));}};
   });
-  await p.addScriptTag({content:fs.readFileSync('pages/admin/modules/settings/subtabs/tab-settings-content.js','utf8')});
+  await p.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/settings/subtabs/tab-settings-content.js','utf8')});
   const fill=async(status,title)=>{await p.evaluate(()=>document.getElementById('btnOpenCreateArticleModal').click());await p.locator('#inputArticleTitle').fill(title);await p.locator('#inputArticleSummary').fill('QA summary');await p.locator('#inputArticleContent').fill('QA content');await p.selectOption('#inputArticleStatus',status);};
   for(const [status,db,label] of [['published','da_xuat_ban','Công khai'],['draft','nhap','Bản nháp'],['hidden','da_an','Tạm ẩn']]){
    await fill(status,'QA-'+status);await p.evaluate(()=>document.getElementById('btnSaveArticle').click());
@@ -28,7 +28,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   console.log('PASS real article UI handlers: published/draft/hidden payloads, list titles/categories/statuses, safe lock and failed-save retention. Isolated transport.');
  }finally{await browser.close();}
  if(!process.argv.includes('--cloud'))return;
- const {connect}=require('../database/v1/service_import_connection.cjs');const db=await connect();
+ const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');const db=await connect();
  const report={timestamp:new Date().toISOString(),scope:'Three synthetic posts through existing RPC; anonymous visibility; all data ROLLBACK; no Logs',checks:[]};
  try{
   await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");

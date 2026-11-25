@@ -2,7 +2,7 @@
 // Focused actual picker checks with live read-only stock. No customer selection, quote, order or payment writes.
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 async function main(){
  const db=await connect(),browser=await chromium.launch({channel:'chrome',headless:true});
  const folder='docs/verification/staff-sales-picker-paging';fs.mkdirSync(folder,{recursive:true});
@@ -21,7 +21,7 @@ async function main(){
   });
   for(const file of ['admin.css','admin-components.css','admin-typography.css','admin-shell-v7.css'])await page.addStyleTag({content:fs.readFileSync('pages/admin/'+file,'utf8')});
   await page.evaluate(id=>{window.PawpalAdminAccess={isStaff:()=>true,state:{user:{id,permissions:['work.sales.create']}}};window.getSupabaseClient=()=>({rpc:(name,args)=>liveRpc(name,args)});},actor.id);
-  const source=fs.readFileSync('pages/admin/modules/orders/orders.js','utf8');await page.addScriptTag({content:source.slice(0,source.indexOf('})();')+5)});
+  const source=fs.readFileSync('my-client/pages/admin/modules/orders/orders.js','utf8');await page.addScriptTag({content:source.slice(0,source.indexOf('})();')+5)});
   await page.evaluate(()=>PawpalStaffSales.open());
   const input=page.locator('#staffSalesproduct'),menu=page.locator('#staffSalesproductOptions');
   const waitPage=async number=>{

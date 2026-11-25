@@ -1,9 +1,9 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='15s';SET LOCAL lock_timeout='3s'");
  const legacy=Number((await db.query("SELECT count(*) count FROM public.pet_profile WHERE status IN ('inactive','disabled','archived')")).rows[0].count);
- if(!process.argv.includes('--installed'))await db.query(fs.readFileSync(require.resolve('../database/v1/206_pet_archive_clock.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
+ if(!process.argv.includes('--installed'))await db.query(fs.readFileSync(require.resolve('../../my-server/scripts/database/v1/206_pet_archive_clock.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
  await db.query('SAVEPOINT fixtures');
  const actor=randomUUID(),pet=randomUUID(),phone='099'+String(Math.floor(Math.random()*1e7)).padStart(7,'0');
  await db.query('INSERT INTO auth.users(id,phone,phone_confirmed_at) VALUES($1,$2,now())',[actor,'84'+phone.slice(1)]);

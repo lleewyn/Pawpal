@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {plan,formatFacts}=require('../api/admin_copilot.js');
+const {plan,formatFacts}=require('../../my-server/scripts/api/admin_copilot.js');
 test('inventory questions mentioning configuration keep the inventory context',()=>{
     for(const question of [
         'Kiểm tra tồn kho theo ngưỡng tối thiểu đã cấu hình, nêu rõ phạm vi dữ liệu được xem',

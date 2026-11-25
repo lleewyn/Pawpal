@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { safeLoginTarget, consumeLoginTarget } from '../shared/login-redirect.mjs';
+import { safeLoginTarget, consumeLoginTarget } from '../../my-client/scripts/shared/login-redirect.mjs';
 test('settings survives login and the saved target is consumed', () => {
     const values = new Map([['pawpal_redirect_after_login', '/pages/user/#settings']]);
     const storage = { getItem: k => values.get(k), removeItem: k => values.delete(k) };

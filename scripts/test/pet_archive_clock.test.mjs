@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {petArchiveDeadline,petArchiveCountdown,petArchiveCanRestore} from '../shared/pet-archive.mjs';
+import {petArchiveDeadline,petArchiveCountdown,petArchiveCanRestore} from '../../my-client/scripts/shared/pet-archive.mjs';
 test('archive clock uses the persisted timestamp across reloads and reaches expiry without negative time',()=>{
  const start='2026-11-09T03:00:00Z',deadline=petArchiveDeadline(start);
  assert.equal(deadline,Date.parse('2026-12-09T03:00:00Z'));

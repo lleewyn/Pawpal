@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync('pages/admin/modules/complaints/complaints.js','utf8');
+const source=fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.js','utf8');
 const ctx={PawpalComplaints:{}};vm.createContext(ctx);
 vm.runInContext(source.slice(source.indexOf('    PawpalComplaints.validateCompensation ='),source.indexOf('    function getCurrentStaffName()')),ctx);
 const mod=ctx.PawpalComplaints;

@@ -6,7 +6,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  await page.route('**/*',route=>{
   const u=new URL(route.request().url());
   if(u.origin!=='http://localhost')return route.abort();
-  if(u.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><head><meta charset="utf-8"><link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/pets/pets.css"><style>.d-none{display:none!important}</style></head><body>'+fs.readFileSync('pages/user/modules/pets/pets.html','utf8')+'</body>'});
+  if(u.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><head><meta charset="utf-8"><link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/pets/pets.css"><style>.d-none{display:none!important}</style></head><body>'+fs.readFileSync('my-client/pages/user/modules/pets/pets.html','utf8')+'</body>'});
   if(u.pathname==='/scripts/api/api.js')return route.fulfill({contentType:'text/javascript',body:'export const API={initData:async()=>{},getUserBookings:async()=>[]};'});
   if(u.pathname==='/scripts/api/petService.js')return route.fulfill({contentType:'text/javascript',body:'export const getPets=(...a)=>window.getPetsForTest(...a);export const savePets=(...a)=>window.savePetsForTest(...a);export const deletePet=async()=>true;export const restorePet=async()=>true;'});
   if(u.pathname.startsWith('/assets/'))return route.fulfill({status:204});

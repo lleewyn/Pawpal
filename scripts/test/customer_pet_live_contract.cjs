@@ -3,7 +3,7 @@ function fixture({error=null,rows=[],taxonomy=false}={}){
  const calls=[];let writes=0;
  const db={async rpc(name,args){calls.push([name,args]);return {data:args.p_id,error};},from(table){const q={select(){return q;},order(k,options){calls.push(['order',{k,...options}]);return q;},limit(n,options){calls.push(['limit',{n,...options}]);return q;},eq(k,v){calls.push([k,v]);return q;},update(){writes++;return q;},single(){return q;},then(resolve){const data=taxonomy?(table==='pet_species'?[{id:'species',species_name:'Chó',is_active:true}]:[{id:'breed',species_id:'species',breed_name:'Known breed',is_active:true}]):rows;return Promise.resolve({data,error}).then(resolve);}};return q;}};
  const context={console,crypto:require('node:crypto').webcrypto,petArchiveDeadline:time=>time?new Date(time).getTime()+30*86400000:null,resolveCustomerPetImages:async()=>{},uploadCustomerPetImage:async(db,file,id,kind)=>{calls.push(['image-upload',{id,kind}]);return kind+'-asset';},localStorage:{getItem(k){return k==='pawpal_current_user'?JSON.stringify({id:'11111111-1111-4111-8111-111111111111',name:'Fixture'}):JSON.stringify([{name:'Cached ghost'}]);},setItem(){throw Error('Unexpected business cache write');}},window:{SupabaseClient:db}};
- vm.createContext(context);vm.runInContext(fs.readFileSync('scripts/api/petService.js','utf8').replace(/^import .*$/gm,'').replace(/^export /gm,''),context);
+ vm.createContext(context);vm.runInContext(fs.readFileSync('my-client/scripts/api/petService.js','utf8').replace(/^import .*$/gm,'').replace(/^export /gm,''),context);
  return {context,calls,get writes(){return writes;}};
 }
 test('empty Cloud result never resurrects cached pets',async()=>{

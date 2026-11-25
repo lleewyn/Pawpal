@@ -1,4 +1,4 @@
-const {sql}=require('../database/v1/cloud_connection.cjs');
+const {sql}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 console.log(sql(`BEGIN;
 DO $$ DECLARE u uuid:=gen_random_uuid(); s uuid:=gen_random_uuid(); p uuid:=gen_random_uuid(); v uuid:=gen_random_uuid(); w uuid:=gen_random_uuid(); c uuid; color uuid:=gen_random_uuid(); BEGIN
 INSERT INTO auth.users(id) VALUES(u);

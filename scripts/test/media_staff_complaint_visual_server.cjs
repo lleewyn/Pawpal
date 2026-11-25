@@ -1,8 +1,8 @@
 'use strict';
 const fs=require('node:fs'),express=require('express'),path=require('node:path');
-const source=fs.readFileSync('pages/admin/modules/complaints/complaints.js','utf8');
+const source=fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.js','utf8');
 const end=source.indexOf('})();',source.indexOf('window.PawpalStaffComplaintMessage'))+5;if(end<5)throw Error('STAFF_MESSAGE_SCOPE');
-const links=[...fs.readFileSync('pages/admin/index.html','utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x=>x[0]).join('\n');
+const links=[...fs.readFileSync('my-client/pages/admin/index.html','utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x=>x[0]).join('\n');
 const html=`<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${links}<title>Kiểm thử riêng ảnh trao đổi STAFF</title><body class="admin-body"><script>
 window.probe={calls:[],saves:[],acceptSave:false};
 window.PawpalAdminAccess={isStaff:()=>true,state:{user:{id:'20000000-0000-0000-0000-000000000002',permissions:['work.complaint.handle']}}};

@@ -3,7 +3,7 @@ const fs=require('node:fs');
 const backup=JSON.parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/media/phase5-remaining/domain-before.private.json'));
 const get=name=>{const r=backup.defs.filter(x=>x.proname===name);if(r.length!==1)throw Error('FUNCTION_SCOPE '+name);return r[0].definition;};
 const once=(s,a,b)=>{if(s.split(a).length!==2)throw Error('SOURCE_DRIFT '+a);return s.replace(a,b);};
-let prepare=fs.readFileSync('scripts/database/v1/196_pet_avatar_media.sql','utf8').match(/CREATE OR REPLACE FUNCTION public.prepare_pet_media_upload[\s\S]*?END \$function\$/)[0];
+let prepare=fs.readFileSync('my-server/scripts/database/v1/196_pet_avatar_media.sql','utf8').match(/CREATE OR REPLACE FUNCTION public.prepare_pet_media_upload[\s\S]*?END \$function\$/)[0];
 prepare=once(prepare,'public.prepare_pet_media_upload(p_request uuid, p_pet uuid, p_size bigint, p_mime text, p_name text)','public.prepare_evidence_media_upload(p_request uuid, p_purpose text, p_target uuid, p_context uuid, p_size bigint, p_mime text, p_name text)');
 prepare=once(prepare,"p_purpose constant text:='pet_avatar'; p_appointment uuid:=null;",'p_appointment uuid:=null;');
 prepare=once(prepare,'pawpal_private.media_manage(auth.uid(),p_purpose,p_product,p_appointment)','coalesce(pawpal_private.evidence_access(auth.uid(),p_purpose,p_target,p_context,true),false)');
@@ -36,13 +36,13 @@ GRANT EXECUTE ON FUNCTION public.prepare_evidence_media_upload(uuid,text,uuid,uu
 `;
 const old=backup.constraints.find(x=>x.conname==='media_upload_session_check').definition;
 const scope=`product_id IS NULL AND appointment_id IS NULL AND draft_id IS NULL AND variant_id IS NULL AND service_id IS NULL AND record_id IS NULL AND adjustment_id IS NULL AND pet_id IS NULL`;
-fs.writeFileSync('scripts/database/v1/198_private_evidence_media.sql',`BEGIN;\nSET LOCAL lock_timeout='3s';\n`+fs.readFileSync('scripts/test/media_evidence_core.sql','utf8')+`
+fs.writeFileSync('my-server/scripts/database/v1/198_private_evidence_media.sql',`BEGIN;\nSET LOCAL lock_timeout='3s';\n`+fs.readFileSync('scripts/test/media_evidence_core.sql','utf8')+`
 ALTER TABLE public.media_upload_session DROP CONSTRAINT media_upload_session_check,DROP CONSTRAINT media_upload_session_purpose_check;
 ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_purpose_check CHECK(purpose IN ('product_image','care_log_image','product_variant_image','service_image','intake_image','handover_image','adjustment_image','pet_avatar','ticket_image','return_image'));
 ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_check CHECK((ticket_id IS NULL AND support_message_id IS NULL AND return_id IS NULL AND sales_order_id IS NULL AND (${old.slice(7,-1)})) OR (${scope} AND ((purpose='ticket_image' AND ticket_id IS NOT NULL AND support_message_id IS NOT NULL AND return_id IS NULL AND sales_order_id IS NULL) OR (purpose='return_image' AND return_id IS NOT NULL AND sales_order_id IS NOT NULL AND ticket_id IS NULL AND support_message_id IS NULL))));
 `+[prepare,...functions].map(x=>x+';').join('\n')+wrappers+'\nCOMMIT;\n');
 console.log('PRIVATE_EVIDENCE_MIGRATION_GENERATED');
-fs.writeFileSync('scripts/database/v1/198_private_evidence_media.rollback.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/198_private_evidence_media.rollback.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 LOCK TABLE public.media_upload_session IN ACCESS EXCLUSIVE MODE;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.media_upload_session WHERE purpose IN ('ticket_image','return_image')) THEN RAISE EXCEPTION 'evidence_rollback_requires_no_sessions';END IF;END $$;

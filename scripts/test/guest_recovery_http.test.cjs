@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict');const {createGuestCommerce}=require('../api/guest_commerce');
+const {test}=require('node:test'),assert=require('node:assert/strict');const {createGuestCommerce}=require('../../my-server/scripts/api/guest_commerce');
 test('Saved recovery code grants only its exact receipt without a cookie; tampering, wrong type and expiry denied',async()=>{
  let clock=1800000000000,calls=[];const handler=createGuestCommerce({admin:{rpc:async(name,args)=>{calls.push({name,args});return {data:{id:args.p_request,code:'TEST',total:0,status:'pending'}};}},secret:'recovery-http-test-secret-at-least-32-bytes',origins:['https://test.pawpal'],now:()=>clock,limit:async()=>{}});
  const send=async(action,body={},cookie)=>{const res={headers:{},statusCode:200,setHeader(k,v){this.headers[k]=v;},status(n){this.statusCode=n;return this;},json(data){this.data=data;return this;}};await handler({method:'POST',headers:{origin:'https://test.pawpal','content-type':'application/json',cookie},body},res,action);return res;};

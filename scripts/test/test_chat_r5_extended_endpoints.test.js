@@ -10,8 +10,8 @@ const {
     handleCsat,
     dbTools,
     toolsDeclaration
-} = require('../api/chat.js');
-const { getJwtSigningSecret } = require('../api/staff_auth.js');
+} = require('../../my-server/scripts/api/chat.js');
+const { getJwtSigningSecret } = require('../../my-server/scripts/api/staff_auth.js');
 
 test('R5 - Endpoint /api/chat/session: Cấp phát signed session token cho khách vãng lai', async () => {
     let statusCode = null;

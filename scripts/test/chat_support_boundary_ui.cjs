@@ -1,10 +1,10 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {supportReply}=require('../api/chat_support_boundary.js');
+const {supportReply}=require('../../my-server/scripts/api/chat_support_boundary.js');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const p=await browser.newPage({viewport:{width:1200,height:900}});
  await p.route('**/*',r=>{const u=new URL(r.request().url());if(u.hostname!=='localhost')return r.abort();const file=path.join(process.cwd(),u.pathname);if(fs.existsSync(file)&&fs.statSync(file).isFile())return r.fulfill({contentType:u.pathname.endsWith('.css')?'text/css':'text/html',body:fs.readFileSync(file)});return r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'});});
- await p.goto('http://localhost/');await p.setContent('<meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/components/fab/fab.css">'+fs.readFileSync('components/fab/fab.html','utf8'));
+ await p.goto('http://localhost/');await p.setContent('<meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/components/fab/fab.css">'+fs.readFileSync('my-client/components/fab/fab.html','utf8'));
  await p.evaluate(reply=>{
   window.calls=[];window.mode='bot_handling';window.setInterval=()=>1;window.failMode=false;
   window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:{user:{id:'ui-member'},access_token:'offline'}}}),onAuthStateChange(){}}});
@@ -14,7 +14,7 @@ const {supportReply}=require('../api/chat_support_boundary.js');
    if(b.action==='public_mode')window.mode=b.mode;
    return {ok:true,status:200,json:async()=>({ok:true,conversationId:'10000000-0000-4000-8000-000000000001',messages:rows,hasMore:false,status:window.mode,updatedAt:String(calls.length)})};};
  },supportReply);
- await p.addScriptTag({content:fs.readFileSync('components/fab/fab.js','utf8')});await p.click('#fabAiBtn');
+ await p.addScriptTag({content:fs.readFileSync('my-client/components/fab/fab.js','utf8')});await p.click('#fabAiBtn');
  await p.fill('#fabChatInput','Tôi muốn khiếu nại dịch vụ');await p.click('#fabChatSend');
  await p.waitForSelector('.fab-answer-unhelpful:not([disabled])');
  assert.equal(await p.locator('#fabSupportRequestLink').getAttribute('href'),'/user#support-create');
@@ -31,9 +31,9 @@ const {supportReply}=require('../api/chat_support_boundary.js');
  await p.screenshot({path:dir+'/chat-handoff-mobile.png'});
  assert.ok(await p.evaluate(()=>calls.every(c=>!/(?:ticket|refund|compens|points)/.test(c.action))));
  await p.click('#fabSupportRequestLink');await p.waitForURL(/\/user#support-create$/);
- await p.goto('http://localhost/');await p.setContent('<link rel="stylesheet" href="/components/fab/fab.css">'+fs.readFileSync('components/fab/fab.html','utf8'));
+ await p.goto('http://localhost/');await p.setContent('<link rel="stylesheet" href="/components/fab/fab.css">'+fs.readFileSync('my-client/components/fab/fab.html','utf8'));
  await p.evaluate(()=>{window.setInterval=()=>1;window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange(){}}});});
- await p.addScriptTag({content:fs.readFileSync('components/fab/fab.js','utf8')});await p.click('#fabAiBtn');await p.click('#fabSupportRequestLink');await p.waitForURL(/\/login$/);
+ await p.addScriptTag({content:fs.readFileSync('my-client/components/fab/fab.js','utf8')});await p.click('#fabAiBtn');await p.click('#fabSupportRequestLink');await p.waitForURL(/\/login$/);
  assert.equal(await p.evaluate(()=>sessionStorage.getItem('pawpal_redirect_after_login')),'/user#support-create');
  console.log('PASS actual FAB: visible Support boundary/link, linked bot answer, one-click staff handoff, truthful pending/error states, retained draft, Support form navigation, desktop/mobile evidence. Isolated API transport; no Cloud writes.');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

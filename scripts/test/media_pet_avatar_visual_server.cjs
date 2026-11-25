@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),express=require('express');
-const links=[...fs.readFileSync('pages/admin/index.html','utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x=>x[0]).join('\n');
+const links=[...fs.readFileSync('my-client/pages/admin/index.html','utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x=>x[0]).join('\n');
 const html=`<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${links}<title>Kiểm thử riêng ảnh hồ sơ</title><body class="admin-body"><script type="module">
 import {openPetAvatarDialog} from '/scripts/shared/pet-avatar-dialog.mjs';
 window.probe={calls:[],saves:[],acceptSave:false};

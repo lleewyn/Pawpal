@@ -1,6 +1,6 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded notification RPC/RLS rollback checks.');process.exit(0);}
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();let queries=0;const checks=[];const [a,b,u,ca,cb,staff,ticket,pet,booking,item,review]=Array.from({length:11},()=>randomUUID());
  const q=async(sql,args)=>{queries++;return db.query(sql,args);};const pass=name=>checks.push({name,status:'PASS'});
  const actor=async(id,role='authenticated')=>{await q('RESET ROLE');await q("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role',$2,true)",[id,role]);await q('SET LOCAL ROLE '+role);};
@@ -9,7 +9,7 @@ const {connect}=require('../database/v1/service_import_connection.cjs');
  const revision=async(table,id)=>(await q('SELECT updated_at::text value FROM public.'+table+' WHERE id=$1',[id])).rows[0].value;
  try{
   await q("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
-  const migration=fs.readFileSync('scripts/database/v1/110_customer_event_notifications.sql','utf8').replace(/^BEGIN;/,'').replace('COMMIT;','');assert.ok(!/\b(?:BEGIN|COMMIT)\s*;/i.test(migration));await q(migration);
+  const migration=fs.readFileSync('my-server/scripts/database/v1/110_customer_event_notifications.sql','utf8').replace(/^BEGIN;/,'').replace('COMMIT;','');assert.ok(!/\b(?:BEGIN|COMMIT)\s*;/i.test(migration));await q(migration);
   await q('INSERT INTO auth.users(id) VALUES($1),($2),($3)',[a,b,u]);await q('INSERT INTO public.customer(id,auth_user_id,customer_code) VALUES($1,$2,$3),($4,$5,$6)',[ca,a,'E2E-NOTIFY-'+ca,cb,b,'E2E-NOTIFY-'+cb]);
   await q("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES($1,$2,'E2E Notification Admin','QA','active',false)",[staff,u]);await q("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[staff]);
   await actor(a);await q("SELECT public.create_own_support_ticket($1,'other','E2E Notification','E2E customer question',NULL,NULL,NULL)",[ticket]);assert.equal((await snapshot()).total,0);pass('Customer opening own ticket does not notify themselves');

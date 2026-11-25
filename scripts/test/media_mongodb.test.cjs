@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { createMediaMongoStore, readMediaMongoConfig } = require('../api/media_mongodb.cjs');
+const { createMediaMongoStore, readMediaMongoConfig } = require('../../my-server/scripts/api/media_mongodb.cjs');
 const { gridfsCollectionNames } = require('./media_mongodb_preflight.cjs');
 
 const validEnv = () => ({ MONGODB_URI: 'mongodb+srv://media_user:test-secret@cluster.example.mongodb.net/?retryWrites=true&w=majority', MONGODB_DB: 'pawpal_media' });

@@ -1,7 +1,7 @@
 // Disposable Cloud fixture; never queries Cloud Logs or prints credentials/data.
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings,infra}=require('../database/v1/cloud_connection.cjs'),{config}=settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
+const {settings,infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs'),{config}=settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
 const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,options);
 const ok=async promise=>{const r=await promise;if(r.error)throw Error(r.error.message);return r.data;};
 const phone='095'+crypto.randomInt(1000000,10000000),password=crypto.randomBytes(20).toString('hex')+'!',newPassword=crypto.randomBytes(20).toString('hex')+'!';
@@ -10,7 +10,7 @@ const phone='095'+crypto.randomInt(1000000,10000000),password=crypto.randomBytes
  cid=await ok(service.rpc('complete_customer_auth',{p_auth_id:uid,p_phone:phone,p_name:'Settings verification'}));
  const breed=(await ok(service.from('pet_breed').select('id').limit(1)))[0];pet=crypto.randomUUID();await ok(service.from('pet_profile').insert({id:pet,customer_id:cid,pet_code:'TEST-'+pet,pet_name:'Export verification pet',breed_id:breed.id}));
  browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1440,height:1050},acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- if(!process.argv.includes('--deployed'))for(const path of ['pages/user/modules/settings/settings.js','pages/user/modules/settings/settings.html'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':'application/javascript',body:fs.readFileSync(path,'utf8')}));
+ if(!process.argv.includes('--deployed'))for(const path of ['my-client/pages/user/modules/settings/settings.js','my-client/pages/user/modules/settings/settings.html'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':'application/javascript',body:fs.readFileSync(path,'utf8')}));
  await page.goto('https://pawpalgr3.vercel.app/login');await page.locator('#loginPhone').fill(phone);await page.locator('#btnLoginContinue').click();await page.locator('#loginPassword').fill(password);await page.locator('#btnLoginSubmit').click();await page.waitForURL(/\/user\/?/,{timeout:45000});await page.evaluate(()=>{location.hash='settings';});await page.locator('#btnExportUserData').waitFor();
  assert.equal(await page.locator('#btnDeactivateAccount,.social-link-item-custom,#languageSelect,#unitLbBtn').count(),0);assert.ok(await page.locator('#notifyEmail').isDisabled());assert.ok(await page.locator('#notifySMS').isDisabled());
  await page.evaluate(()=>{for(const key of ['pawpal_pets','pawpal_bookings','pawpal_orders'])localStorage.setItem(key,JSON.stringify([{id:'POISON-LOCAL'}]));});

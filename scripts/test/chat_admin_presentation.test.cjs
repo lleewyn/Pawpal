@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),{formatFacts}=require('../api/admin_copilot.js');
+const {test}=require('node:test'),assert=require('node:assert/strict'),{formatFacts}=require('../../my-server/scripts/api/admin_copilot.js');
 const scope={start_at:'2026-11-01T17:00:00Z',end_at:'2026-11-02T17:00:00Z'},base={scope,as_of:'2026-11-01T02:00:00Z',page:1,pages:1,limitations:['Source scope remains in metadata']};
 test('empty staff schedule is scoped and helpful, without a fake numeric summary or single-page footer',()=>{const s=formatFacts({...base,intent:'staff.schedule',total:0,items:[]});assert.match(s,/Mình chưa tìm thấy lịch trực phù hợp/);assert.match(s,/phạm vi bạn được xem/);assert.match(s,/Lịch làm việc/);assert.doesNotMatch(s,/0 kết quả|Trang 1\/1|\*\*\*\*/);});
 const room=(code,available=true)=>({code,name:'Phòng thử',capacity:2,reserved:!available,occupied:false,available});

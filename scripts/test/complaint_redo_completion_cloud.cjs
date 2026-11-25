@@ -1,10 +1,10 @@
 // Bounded live SQL checks. Complaint and synthetic appointment changes always roll back.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const ticket='7f126cf4-027c-4084-9f61-50cc0a084f0b',original='b291cffd-0487-4fdd-8647-bcde6e9ce8ed',wrong='53d78b09-9837-46b5-a5a3-57bc963d49f6';
 if(!process.argv.includes('--cloud')&&!process.argv.includes('--apply-cloud'))process.exit(0);
 (async()=>{const db=await connect(),checks=[],pass=name=>{checks.push(name);console.log('PASS',name);};
- const migration=fs.readFileSync('scripts/database/v1/274_complaint_service_completion.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
+ const migration=fs.readFileSync('my-server/scripts/database/v1/274_complaint_service_completion.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
  const snapshot=async()=>(await db.query('SELECT to_jsonb(t) value FROM public.support_ticket t WHERE id=$1',[ticket])).rows[0].value;
  try{
   const before=await snapshot();assert.ok(before);

@@ -1,11 +1,11 @@
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const fs=require('node:fs'),assert=require('node:assert/strict');
 (async()=>{const db=await connect();try{
  if(process.argv.includes('--inspect')){
   const r=await db.query("SELECT pg_get_functiondef('public.create_own_service_booking(uuid,text,jsonb)'::regprocedure) body");console.log(r.rows[0].body);return;
  }
  await db.query('BEGIN');
- const migration=fs.readFileSync(require.resolve('../database/v1/209_member_booking_hold.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'');
+ const migration=fs.readFileSync(require.resolve('../../my-server/scripts/database/v1/209_member_booking_hold.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'');
  await db.query(migration);
  await db.query('SAVEPOINT fixtures');
  const source=fs.readFileSync(require.resolve('./customer_booking_availability.cjs'),'utf8');

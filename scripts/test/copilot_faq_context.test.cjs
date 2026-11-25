@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {plan,formatFacts}=require('../api/admin_copilot.js');
+const {plan,formatFacts}=require('../../my-server/scripts/api/admin_copilot.js');
 test('service availability question uses FAQ and retains the actual question',()=>{
     for(const question of ['PawPal có dịch vụ tiêm phòng không?','Có dịch vụ khám thú cưng không?']){
         const route=plan(question);

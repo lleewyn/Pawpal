@@ -13,7 +13,7 @@ const save=once(get('save_admin_service_record'),"  IF p_type<>'intake' THEN RAI
 const check=backup.constraints.find(c=>c.conname==='media_upload_session_check');
 if(!check)throw Error('CHECK_SCOPE');
 const expanded=once(check.definition,"purpose = 'intake_image'::text","purpose IN ('intake_image'::text,'handover_image'::text)");
-fs.writeFileSync('scripts/database/v1/194_handover_media.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/194_handover_media.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 ALTER TABLE public.media_upload_session DROP CONSTRAINT media_upload_session_check,DROP CONSTRAINT media_upload_session_purpose_check;
 ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_purpose_check CHECK(purpose IN ('product_image','care_log_image','product_variant_image','service_image','intake_image','handover_image'));
@@ -22,7 +22,7 @@ ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_chec
 REVOKE ALL ON FUNCTION public.prepare_handover_media_upload(uuid,uuid,uuid,bigint,text,text),public.list_handover_media(uuid),pawpal_private.attach_handover_media(uuid,jsonb) FROM PUBLIC,anon,authenticated,service_role;
 GRANT EXECUTE ON FUNCTION public.prepare_handover_media_upload(uuid,uuid,uuid,bigint,text,text),public.list_handover_media(uuid) TO authenticated;
 COMMIT;\n`);
-fs.writeFileSync('scripts/database/v1/194_handover_media.rollback.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/194_handover_media.rollback.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 LOCK TABLE public.media_upload_session IN ACCESS EXCLUSIVE MODE;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.media_upload_session WHERE purpose='handover_image') THEN RAISE EXCEPTION 'handover_rollback_requires_no_sessions'; END IF; END $$;

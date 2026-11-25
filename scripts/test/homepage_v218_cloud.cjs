@@ -1,7 +1,7 @@
 // Read-only live business data and browser checks; never queries Cloud Logs.
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {infra}=require('../database/v1/cloud_connection.cjs');
+const {infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const base=process.argv.includes('--deployed')?'https://pawpalgr3.vercel.app':'http://localhost:3000';
 (async()=>{
  let browser,page;const errors=[],dataFiles=[],queries=[];

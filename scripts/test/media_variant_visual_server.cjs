@@ -1,7 +1,7 @@
 'use strict';
 // Actual product modal and handlers; empty isolated state, no Cloud connection or business writes.
 const fs=require('node:fs'),path=require('node:path'),express=require('express');
-const source=fs.readFileSync('pages/admin/modules/orders/orders.html','utf8'),shell=fs.readFileSync('pages/admin/index.html','utf8');
+const source=fs.readFileSync('my-client/pages/admin/modules/orders/orders.html','utf8'),shell=fs.readFileSync('my-client/pages/admin/index.html','utf8');
 const links=[...shell.matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x=>x[0]).join('\n');
 const html=`<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${links}<title>Kiểm tra ảnh biến thể</title><body class="admin-body">${source}<script>
 window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:null}})},rpc:async()=>({error:{message:'Isolated layout test: no business writes'}})});

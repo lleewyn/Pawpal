@@ -2,13 +2,13 @@
 // One-shot cleanup of the exactly recorded variant acceptance file. No generic public delete route.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {runCli}=require('./media_vercel_preview.cjs');
-const {readMediaMongoConfig}=require('../api/media_mongodb.cjs');
+const {readMediaMongoConfig}=require('../../my-server/scripts/api/media_mongodb.cjs');
 (async()=>{let db,request,deploymentId=null;try{
  if(process.argv[2]!=='--variant-execute')throw Error('EXECUTE_REQUIRED');
  const scope=JSON.parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/media/phase5-variant/cleanup-scope.private.json'));
  if(scope.product_id!=='a0000000-0000-0000-0000-000000000001'||scope.variant_id!=='9b8b1913-f21e-4e3a-8afa-4f6c63fd63e3'||scope.asset_id!=='f469e848-836f-4018-abbf-23c3b26d1a71')throw Error('EXACT_ACCEPTANCE_SCOPE');
  const candidates=[{id:scope.id}];
- db=await require('../database/v1/service_import_connection.cjs').connect();await db.query('BEGIN');
+ db=await require('../../my-server/scripts/database/v1/service_import_connection.cjs').connect();await db.query('BEGIN');
  const claims=[];
  for(const candidate of candidates){
   const row=(await db.query(`SELECT s.id,s.mongo_file_id,s.created_by,s.product_id,s.variant_id,s.appointment_id,s.purpose,s.state,a.legal_hold,a.size_bytes,a.sha256 FROM public.media_upload_session s JOIN public.media_asset a ON a.session_id=s.id WHERE s.id=$1 FOR UPDATE OF s,a`,[candidate.id])).rows[0];
@@ -27,7 +27,7 @@ const {readMediaMongoConfig}=require('../api/media_mongodb.cjs');
  for(const folder of ['api','scripts/api','.vercel'])fs.mkdirSync(path.join(artifact,folder),{recursive:true});
  fs.writeFileSync(path.join(artifact,'.vercel/project.json'),JSON.stringify(linked));fs.writeFileSync(path.join(artifact,'package.json'),JSON.stringify({private:true,dependencies:{mongodb:'6.21.0',sharp:'0.34.5',busboy:'1.6.0'}}));
  fs.writeFileSync(path.join(artifact,'vercel.json'),JSON.stringify({framework:null,buildCommand:'',outputDirectory:'.',functions:{'api/media-cleanup.js':{maxDuration:30}}}));
- fs.writeFileSync(path.join(artifact,'index.html'),'<title>PawPal private cleanup</title>');
+ fs.writeFileSync(path.join(artifact,'my-client/index.html'),'<title>PawPal private cleanup</title>');
  for(const file of ['media_mongodb.cjs','media_gridfs.cjs','media_files.cjs'])fs.copyFileSync('scripts/api/'+file,path.join(artifact,'scripts/api',file));
  const endpoint=`const {timingSafeEqual}=require('node:crypto'),{ObjectId}=require('mongodb'),{getMediaMongoResources}=require('../scripts/api/media_mongodb.cjs'),{createGridfsStore}=require('../scripts/api/media_gridfs.cjs');const claims=${JSON.stringify(claims)};module.exports=async(req,res)=>{res.setHeader('Cache-Control','no-store');const expected=process.env.MEDIA_CLEANUP_TOKEN,got=req.headers['x-pawpal-cleanup'];if(process.env.VERCEL_ENV!=='preview'||req.method!=='POST'||!expected||typeof got!=='string'||got.length!==expected.length||!timingSafeEqual(Buffer.from(got),Buffer.from(expected)))return res.status(403).json({ok:false});try{const resources=await getMediaMongoResources(),store=createGridfsStore(async()=>resources);for(const c of claims){const id=new ObjectId(c.mongo_file_id),file=await resources.bucket.find({_id:id}).limit(1).next();if(file&&(file.metadata?.sessionId!==c.session_id||file.metadata?.sha256!==c.sha256))throw Error();await store.removeClaimed(c);if(await resources.bucket.find({_id:id}).limit(1).next()||await resources.db.collection(resources.bucketName+'.chunks').countDocuments({files_id:id}))throw Error();}return res.status(200).json({ok:true,deleted:claims.length});}catch{return res.status(503).json({ok:false});}};`;
  fs.writeFileSync(path.join(artifact,'api/media-cleanup.js'),endpoint);

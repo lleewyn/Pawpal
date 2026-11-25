@@ -1,6 +1,6 @@
 // One synthetic order/SKU, transaction-only fixtures. No actual money or delivery.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')){console.log('Use --cloud for two-browser HTTP/Cloud-SQL rollback integration. No real Auth or committed fixtures.');process.exit(0);}
 const http=require('node:http'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const db=await connect();let queries=0,server,browser,queue=Promise.resolve(),stopping=false;
@@ -61,7 +61,7 @@ const http=require('node:http'),{chromium}=require('D:/Aboutme/Pawpal-infra/brow
    try{
     if(stopping)return send(503,{error:{message:'stopping'}});
     if(req.method==='GET'){
-     let file;if(url.pathname==='/admin')file='pages/admin/modules/orders/orders.html';else if(url.pathname==='/customer')file='pages/user/modules/orders/return-detail.html';else if(assets.has(url.pathname))file=url.pathname.slice(1);
+     let file;if(url.pathname==='/admin')file='my-client/pages/admin/modules/orders/orders.html';else if(url.pathname==='/customer')file='my-client/pages/user/modules/orders/return-detail.html';else if(assets.has(url.pathname))file=url.pathname.slice(1);
      if(url.pathname==='/scripts/api/api.js'){res.writeHead(200,{'Content-Type':'text/javascript'});return res.end('export const API={initData:async()=>{}};');}
      if(!file){res.writeHead(404);return res.end();}res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':'text/javascript'});return res.end(fs.readFileSync(file));
     }
@@ -100,12 +100,12 @@ const http=require('node:http'),{chromium}=require('D:/Aboutme/Pawpal-infra/brow
   const loadCustomer=page=>page.evaluate(async()=>{window.module=await import('/pages/user/modules/orders/return-detail.js');await window.module.init();});
   await loadCustomer(customer);assert.match(await customer.locator('#rma-status-badge').textContent(),/Đã nhận/);pass('Customer module reads inspected return through HTTP and Cloud RLS');
   await loadCustomer(other);assert.match(await other.locator('.return-detail-module-container').textContent(),/Không tìm thấy/);pass('Other customer sees empty owner-scoped result over HTTP');
-  for(const file of ['pages/admin/admin.css','pages/admin/modules/orders/orders.css'])await admin.addStyleTag({url:base+'/'+file});
+  for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/modules/orders/orders.css'])await admin.addStyleTag({url:base+'/'+file});
   await admin.evaluate(async()=>{
    const {data}=await testRequest('/__test/read',{view:'model'});window.current=data;
    window.PawpalOrders={state:{orders:[data]},helpers:{showToast:()=>{}},ensureOrder:async()=>{const result=await testRequest('/__test/read',{view:'model'});window.current=result.data;return result.data;}};
   });
-  const detailSource=fs.readFileSync('pages/admin/modules/orders/subtabs/tab-order-detail.js','utf8'),receiptAnchor=detailSource.indexOf(" const modal=document.createElement('div');modal.id='modalSalesReturnReceipt'");assert.ok(receiptAnchor>0);
+  const detailSource=fs.readFileSync('my-client/pages/admin/modules/orders/subtabs/tab-order-detail.js','utf8'),receiptAnchor=detailSource.indexOf(" const modal=document.createElement('div');modal.id='modalSalesReturnReceipt'");assert.ok(receiptAnchor>0);
   await admin.addScriptTag({content:detailSource.slice(detailSource.lastIndexOf('(function(){',receiptAnchor))});await admin.addScriptTag({url:base+'/pages/admin/modules/orders/subtabs/tab-sales-replacements.js'});
   await admin.evaluate(()=>PawpalOrders.openSalesReplacement(current,current.returnRequests[0]));await admin.locator('#salesReplacementReason').fill('Đổi hàng đã kiểm định qua kiểm thử HTTP');await admin.locator('#salesReplacementConfirmed').check();
   await admin.evaluate(()=>{const button=document.getElementById('btnSaveSalesReplacement');button.click();button.click();});await admin.waitForFunction(()=>!!window.current.returnRequests[0].replacement);

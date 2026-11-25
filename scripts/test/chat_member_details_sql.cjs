@@ -1,8 +1,8 @@
 // Six advanced scopes, real PostgreSQL/RLS and isolated rollback fixtures. No Logs/AI.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect(),checks=[];try{
- const sql=fs.readFileSync('scripts/database/v1/161_member_chat_details.sql','utf8');assert.equal((await db.query("SELECT to_regprocedure('public.read_member_chat_details(jsonb)') AS fn")).rows[0].fn,null);
+ const sql=fs.readFileSync('my-server/scripts/database/v1/161_member_chat_details.sql','utf8');assert.equal((await db.query("SELECT to_regprocedure('public.read_member_chat_details(jsonb)') AS fn")).rows[0].fn,null);
  await db.query('BEGIN');await db.query(sql.replace(/^BEGIN;\s*/,'').replace(/COMMIT;\s*$/,''));checks.push('161 compiles');
  const ua=randomUUID(),ub=randomUUID(),a=randomUUID(),b=randomUUID(),species=randomUUID(),breed=randomUUID(),pet=randomUUID(),type=randomUUID(),room=randomUUID(),voucher=randomUUID(),tag=randomUUID().slice(0,8);
  await db.query("INSERT INTO auth.users(id,aud,role,email) VALUES($1,'authenticated','authenticated',$2),($3,'authenticated','authenticated',$4)",[ua,ua+'@example.invalid',ub,ub+'@example.invalid']);await db.query('INSERT INTO public.customer(id,auth_user_id,customer_code) VALUES($1,$2,$3),($4,$5,$6)',[a,ua,'QA-DETAIL-'+a,b,ub,'QA-DETAIL-'+b]);

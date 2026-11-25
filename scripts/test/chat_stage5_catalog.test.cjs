@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),{plan,format}=require('../api/chat_public_catalog.js');
+const {test}=require('node:test'),assert=require('node:assert/strict'),{plan,format}=require('../../my-server/scripts/api/chat_public_catalog.js');
 test('public price routes use closed categories, accents and exact product query',()=>{
  for(const [q,kind]of [['Giá tắm','grooming_spa'],['Gia cat tia','grooming_spa'],['Giá Pet Hotel','pet_hotel'],['Giá khách sạn','pet_hotel'],['Gia taxi','pet_taxi']])assert.deepEqual(plan(q),{kind,query:''});
  assert.deepEqual(plan('Giá sản phẩm Royal Canin?'),{kind:'product',query:'Royal Canin'});assert.deepEqual(plan('Giá SKU FOOD-001'),{kind:'product',query:'FOOD-001'});
@@ -22,7 +22,7 @@ test('service price bands keep open upper bounds and taxi surcharge without mult
  for(const kind of ['grooming_spa','pet_taxi','pet_hotel']){const r={kind,query:''},d={...r,items:[{name:'QA',price:100,weight_from:0,weight_to:null,distance_from:0,distance_to:5,surcharge:10}],as_of:data.as_of};assert.match(format(d,r).reply,/chưa phải báo giá xác nhận/);}
 });
 test('explicit staff requests recognized without using AI or treating ordinary staff policy as a request',()=>{
- const {requestsStaff}=require('../api/chat_public_catalog.js');for(const q of ['Tôi muốn gặp nhân viên','Chuyen sang chuyen vien','Cần nhân viên hỗ trợ','Tôi muốn nói chuyện trực tiếp với nhân viên'])assert.equal(requestsStaff(q),true);
+ const {requestsStaff}=require('../../my-server/scripts/api/chat_public_catalog.js');for(const q of ['Tôi muốn gặp nhân viên','Chuyen sang chuyen vien','Cần nhân viên hỗ trợ','Tôi muốn nói chuyện trực tiếp với nhân viên'])assert.equal(requestsStaff(q),true);
  assert.equal(requestsStaff('Nhân viên làm việc mấy giờ?'),false);
  assert.equal(requestsStaff('Không cần nhân viên'),false);
  assert.equal(requestsStaff('Kết nối nhân viên'),true);
@@ -43,7 +43,7 @@ test('guest public explanations are allowed while actual balances and records st
  assert.equal(plan('Tư vấn sản phẩm sữa tắm'),null);
 });
 test('guest purchase and booking directions reach their FAQ, and price questions keep only relevant details',()=>{
- const guest=require('../api/chat_public_guest.js');
+ const guest=require('../../my-server/scripts/api/chat_public_guest.js');
  assert.equal(guest.plan('Tôi mua ở đâu?').topic,'buy');
  assert.equal(guest.plan('Đặt lịch ở đâu?',['Sản phẩm cho mèo']).topic,'booking');
  assert.equal(guest.plan('PawPal ở đâu?').request.kind,'store');

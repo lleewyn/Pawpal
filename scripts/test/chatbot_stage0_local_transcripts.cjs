@@ -47,7 +47,7 @@ async function serve(req,res){
   const response=await fetch(upstream,{method:req.method,headers,...(body.length?{body:Buffer.concat(body)}:{}),signal:AbortSignal.timeout(10000)});
   res.writeHead(response.status,{'Content-Type':response.headers.get('content-type')||'application/json'});return res.end(Buffer.from(await response.arrayBuffer()));
  }
- if(u.pathname==='/widget'){res.writeHead(200,{'Content-Type':'text/html'});return res.end('<!doctype html><html><body>'+fs.readFileSync('components/fab/fab.html','utf8')+'</body></html>');}
+ if(u.pathname==='/widget'){res.writeHead(200,{'Content-Type':'text/html'});return res.end('<!doctype html><html><body>'+fs.readFileSync('my-client/components/fab/fab.html','utf8')+'</body></html>');}
  res.writeHead(404);res.end();
 }
 (async()=>{
@@ -82,14 +82,14 @@ async function serve(req,res){
  browser=await chromium.launch({channel:'chrome',headless:true});
  for(const c of contexts){
   const page=await browser.newPage();await page.route('**/*',route=>new URL(route.request().url()).origin===config.api?route.continue():route.abort());await page.goto(config.api+'/widget');
-  await page.addScriptTag({content:fs.readFileSync('scripts/vendor/supabase.js','utf8')});
+  await page.addScriptTag({content:fs.readFileSync('my-client/scripts/vendor/supabase.js','utf8')});
   await page.evaluate(async({url,key,c,session})=>{
    const client=supabase.createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});window.getSupabaseClient=()=>client;
    if(session){const r=await client.auth.setSession(session);if(r.error)throw Error('local_browser_auth_failed');}
    if(c.sessionToken){localStorage.setItem('pawpal_chat_guest_v1',c.sessionToken);localStorage.setItem('pawpal_chat_guest_v1_at',Date.now());}
    sessionStorage.setItem('pawpal_chat_active_'+(session?.user.id||'guest'),c.conversation);
   },{url:config.api,key:anon,c,session:c.token?a.session:null});
-  const before=metrics.length;await page.addScriptTag({content:fs.readFileSync('components/fab/fab.js','utf8')});await page.evaluate(()=>initFab());await page.locator('#fabAiBtn').click();
+  const before=metrics.length;await page.addScriptTag({content:fs.readFileSync('my-client/components/fab/fab.js','utf8')});await page.evaluate(()=>initFab());await page.locator('#fabAiBtn').click();
   await page.waitForFunction(()=>document.querySelectorAll('.fab-chat-bubble').length===30,{},{timeout:15000});
   await page.waitForTimeout(11000);
   const rows=metrics.slice(before),warmRead=rows.filter(r=>r.internal.length===(c.name==='guest'?2:3)).length;

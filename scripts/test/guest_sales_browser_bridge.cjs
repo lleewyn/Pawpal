@@ -1,8 +1,8 @@
 // Browser -> installed checkout SQL with transaction-only catalog/stock/voucher fixtures.
 require('dotenv').config();
 const express=require('express'),fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
-const {createGuestCommerce,cookieConfiguration}=require('../api/guest_commerce');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
+const {createGuestCommerce,cookieConfiguration}=require('../../my-server/scripts/api/guest_commerce');
 if(!process.argv.includes('--bridge')){console.log('Use --bridge for a temporary localhost:4003 rollback bridge.');process.exit(0);}
 (async()=>{
  const db=await connect(),app=express(),orders=new Set(),hashes=new Set(),calls={};let queue=Promise.resolve(),server,closing=false,queries=0;

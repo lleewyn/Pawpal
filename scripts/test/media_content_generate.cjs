@@ -14,7 +14,7 @@ let resolve=once(get('resolve_media_asset'),' allowed:=public_read;',` public_re
 const cleanup=once(get('claim_media_cleanup'),'OR EXISTS(SELECT 1 FROM public.review_media WHERE media_asset_id=a.id))','OR EXISTS(SELECT 1 FROM public.review_media WHERE media_asset_id=a.id) OR EXISTS(SELECT 1 FROM public.banner WHERE image_media_asset_id=a.id) OR EXISTS(SELECT 1 FROM public.blog_post WHERE thumbnail_media_asset_id=a.id))');
 const release=once(get('release_media_reference'),' THEN\n  UPDATE public.media_asset',' AND NOT EXISTS(SELECT 1 FROM public.banner WHERE image_media_asset_id=OLD.media_asset_id) AND NOT EXISTS(SELECT 1 FROM public.blog_post WHERE thumbnail_media_asset_id=OLD.media_asset_id) THEN\n  UPDATE public.media_asset');
 const old=b.constraints.find(c=>c.conname==='media_upload_session_check').definition;
-fs.writeFileSync('scripts/database/v1/201_content_media.sql',`BEGIN;\nSET LOCAL lock_timeout='3s';\n`+fs.readFileSync('scripts/test/media_content_core.sql','utf8')+`
+fs.writeFileSync('my-server/scripts/database/v1/201_content_media.sql',`BEGIN;\nSET LOCAL lock_timeout='3s';\n`+fs.readFileSync('scripts/test/media_content_core.sql','utf8')+`
 ALTER TABLE public.media_upload_session DROP CONSTRAINT media_upload_session_check,DROP CONSTRAINT media_upload_session_purpose_check;
 ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_purpose_check CHECK(purpose IN ('product_image','care_log_image','product_variant_image','service_image','intake_image','handover_image','adjustment_image','pet_avatar','ticket_image','return_image','review_image','banner_image','blog_thumbnail'));
 ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_check CHECK((content_id IS NULL AND (${old.slice(7,-1)})) OR (purpose IN ('banner_image','blog_thumbnail') AND content_id IS NOT NULL AND product_id IS NULL AND appointment_id IS NULL AND draft_id IS NULL AND variant_id IS NULL AND service_id IS NULL AND record_id IS NULL AND adjustment_id IS NULL AND pet_id IS NULL AND ticket_id IS NULL AND support_message_id IS NULL AND return_id IS NULL AND sales_order_id IS NULL AND review_id IS NULL AND review_line_id IS NULL AND review_kind IS NULL));
@@ -23,7 +23,7 @@ REVOKE ALL ON FUNCTION public.prepare_content_media_upload(uuid,text,uuid,bigint
 GRANT EXECUTE ON FUNCTION public.prepare_content_media_upload(uuid,text,uuid,bigint,text,text) TO authenticated;
 COMMIT;
 `);
-fs.writeFileSync('scripts/database/v1/201_content_media.rollback.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/201_content_media.rollback.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 LOCK TABLE public.media_upload_session IN ACCESS EXCLUSIVE MODE;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.media_upload_session WHERE purpose IN ('banner_image','blog_thumbnail')) THEN RAISE EXCEPTION 'content_rollback_requires_no_sessions';END IF;END $$;

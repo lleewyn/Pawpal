@@ -51,5 +51,5 @@ END $$;
 REVOKE ALL ON FUNCTION public.list_care_log_media(uuid) FROM PUBLIC,anon,authenticated,service_role;
 GRANT EXECUTE ON FUNCTION public.list_care_log_media(uuid) TO authenticated;
 `;
-fs.writeFileSync('scripts/database/v1/190_care_log_media.sql','BEGIN;\nSET LOCAL lock_timeout=\'3s\';\n'+definition+';\n'+reader+'\nCOMMIT;\n');
+fs.writeFileSync('my-server/scripts/database/v1/190_care_log_media.sql','BEGIN;\nSET LOCAL lock_timeout=\'3s\';\n'+definition+';\n'+reader+'\nCOMMIT;\n');
 console.log('CARE_MEDIA_MIGRATION_GENERATED');

@@ -5,8 +5,8 @@ test('public review readers request only published metadata, preserve safe links
  const db={rpc:async()=>({data:[{id,rating:5,review_content:'Published review'}]}),from:table=>{
   assert.equal(table,'review_media');const q={select:s=>{assert.match(s,/review_id!inner\(review_status\)/);return q;},in:(key,value)=>{filters.push({key,value});return q;},order:async()=>({data:[{review_id:id,media_asset_id:asset},{review_id:id,image_url:'https://example.test/safe.jpg'},{review_id:id,image_url:'javascript:alert(1)'},{review_id:id,image_url:'https://example.test/unsafe\".jpg'},{review_id:id,image_url:'https://example.test/dual.jpg',media_asset_id:asset}]})};return q;
  }};
- const win={SupabaseClient:db,getSupabaseClient:()=>db},file=pathToFileURL(path.resolve('scripts/shared/media-source.mjs')).href;
- const source=fs.readFileSync('scripts/shared/data-loader.js','utf8').replace("import('/scripts/shared/media-source.mjs')",'import('+JSON.stringify(file)+')');
+ const win={SupabaseClient:db,getSupabaseClient:()=>db},file=pathToFileURL(path.resolve('my-client/scripts/shared/media-source.mjs')).href;
+ const source=fs.readFileSync('my-client/scripts/shared/data-loader.js','utf8').replace("import('/scripts/shared/media-source.mjs')",'import('+JSON.stringify(file)+')');
  new Function('window',source)(win);
  const product=await win.DataLoader.getProductReviews('product'),service=await win.DataLoader.getServiceReviews('service');
  const expected=['/api/media?action=read&id='+asset,'https://example.test/safe.jpg'];

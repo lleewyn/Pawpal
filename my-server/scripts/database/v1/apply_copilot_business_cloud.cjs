@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto');
 const {connect}=require('./service_import_connection.cjs');
-const root=path.resolve(__dirname,'../../..');
+const root=path.resolve(__dirname,'../../../..');
 (async()=>{const db=await connect(),apply=process.argv.includes('--apply');
  const folder=path.join(os.tmpdir(),'pawpal-copilot-business-'+Date.now());fs.mkdirSync(folder,{recursive:true});
  try{

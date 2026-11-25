@@ -8,7 +8,7 @@ test('history pages hydrate only selected IDs and reuse their scoped totals with
   throw Error('Unexpected full read '+name);
  }};
  const ctx=vm.createContext({window:{getSupabaseClient:()=>db},console,normalizeOrderStatus:s=>s,resolveAuthenticatedCustomerId:async(_db,u)=>typeof u==='string'?u:u.id,vietnamDateTimeInput:v=>v});
- const code=fs.readFileSync('scripts/api/api.js','utf8').replace(/^import .*;\r?$/gm,'').replace('export const API =','const API =');vm.runInContext(code+'\nglobalThis.API=API;',ctx);
+ const code=fs.readFileSync('my-client/scripts/api/api.js','utf8').replace(/^import .*;\r?$/gm,'').replace('export const API =','const API =');vm.runInContext(code+'\nglobalThis.API=API;',ctx);
  const orders=await ctx.API.getUserOrderPage('owner',{page:2});assert.equal(orders.rows.length,2);assert.equal(orders.meta.counts.all,23);assert.deepEqual(reads[0].ids,['id-11','id-12']);
  const bookings=await ctx.API.getUserBookingPage({id:'owner'},{page:2});assert.equal(bookings.rows.length,2);assert.deepEqual(reads[1].ids,['id-11','id-12']);assert.ok(!calls.includes('own_service_booking_summary'));assert.ok(!calls.includes('own_sales_order_totals'));
  wrongOwner=true;await assert.rejects(()=>ctx.API.getUserOrderPage('owner'),/trang lịch sử/);assert.equal(reads.length,2);
@@ -23,7 +23,7 @@ test('context selectors use metadata and a single order reads only its scoped fi
   throw Error('Unexpected full history read '+name);
  }};
  const ctx=vm.createContext({window:{getSupabaseClient:()=>db},console,normalizeOrderStatus:s=>s,resolveAuthenticatedCustomerId:async()=> 'owner'});
- const code=fs.readFileSync('scripts/api/api.js','utf8').replace(/^import .*;\r?$/gm,'').replace('export const API =','const API =');vm.runInContext(code+'\nglobalThis.API=API;',ctx);
+ const code=fs.readFileSync('my-client/scripts/api/api.js','utf8').replace(/^import .*;\r?$/gm,'').replace('export const API =','const API =');vm.runInContext(code+'\nglobalThis.API=API;',ctx);
  const choices=await ctx.API.getContextChoices('owner','orders',{query:'OLD-23'});assert.equal(choices[0]._supabaseId,'one');assert.equal(filters.length,0);
  await ctx.API.getUserOrders('owner',{id:'OLD-23'});assert.ok(filters.some(f=>f[1]==='order_code'&&f[2]==='OLD-23'));assert.equal(JSON.stringify(calls.find(c=>c.name==='own_context_financials').args),JSON.stringify({p_kind:'orders',p_ids:['one']}));
  wrongOwner=true;await assert.rejects(()=>ctx.API.getContextChoices('owner','orders'),/tài khoản/);

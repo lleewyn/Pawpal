@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const load=()=>import('../shared/guest-checkout-preferences.mjs');
+const load=()=>import('../../my-client/scripts/shared/guest-checkout-preferences.mjs');
 const a='12345678-1234-4123-8123-123456789012',b='22345678-1234-4123-8123-123456789012';
 function memory(){const values=new Map();return {values,getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value),removeItem:key=>values.delete(key)};}
 test('Checkout preference survives reload with only voucher and cart scope, no contact/prices',async()=>{

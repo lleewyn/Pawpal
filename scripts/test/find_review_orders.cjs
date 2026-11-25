@@ -1,4 +1,4 @@
-const { connect } = require('../database/v1/service_import_connection.cjs');
+const { connect } = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 
 (async () => {
     const db = await connect();

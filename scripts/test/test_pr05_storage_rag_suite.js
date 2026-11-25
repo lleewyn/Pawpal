@@ -45,7 +45,7 @@ async function runAllTests() {
     // TEST 1: CB-23 — TỒN KHO THẤP LỌC VÀ ĐẾM TRỰC TIẾP TRÊN DATABASE
     // --------------------------------------------------------------------------
     await runAsyncTest('CB-23: get_low_stock_products lọc và đếm chính xác trên PostgreSQL (100 sp thiếu hàng -> trả tổng 100, trang đầu <= 20)', async () => {
-        const chatScript = fs.readFileSync(path.join(__dirname, '../api/chat.js'), 'utf8');
+        const chatScript = fs.readFileSync(path.join(__dirname, '../../my-server/scripts/api/chat.js'), 'utf8');
 
         // Kiểm tra xem chat.js có dùng count: 'exact' và lte('quantity_in_stock', ...) trực tiếp trên DB không
         assert(chatScript.includes("count: 'exact'"), 'LỖI: get_low_stock_products chưa dùng count exact trên DB');
@@ -109,7 +109,7 @@ async function runAllTests() {
     // TEST 2: CB-17 — TÍNH ĐIỂM AUTHORITATIVE TỪ CUSTOMER_MEMBERSHIP
     // --------------------------------------------------------------------------
     await runAsyncTest('CB-17: Đọc số dư authoritative từ customer_membership thay vì tải toàn bộ sổ cái paw_point_transaction', async () => {
-        const chatScript = fs.readFileSync(path.join(__dirname, '../api/chat.js'), 'utf8');
+        const chatScript = fs.readFileSync(path.join(__dirname, '../../my-server/scripts/api/chat.js'), 'utf8');
 
         // Kiểm tra chat.js không còn dùng .from('paw_point_transaction').select('points').eq('customer_id')
         assert(!chatScript.includes("supabase.from('paw_point_transaction').select('points').eq('customer_id'"),
@@ -123,7 +123,7 @@ async function runAllTests() {
         assert(chatScript.includes('customerVipCache'), 'LỖI: Thiếu customerVipCache để tránh lặp DB mỗi tin nhắn');
 
         // Kiểm tra frontend chatbot.js cũng được cập nhật
-        const chatbotJs = fs.readFileSync(path.join(__dirname, '../../pages/admin/modules/chatbot/chatbot.js'), 'utf8');
+        const chatbotJs = fs.readFileSync(path.join(__dirname, '../../my-client/pages/admin/modules/chatbot/chatbot.js'), 'utf8');
         assert(chatbotJs.includes("from('customer_membership').select('total_paw_points')"),
             'LỖI: chatbot.js chưa đọc customer_membership.total_paw_points');
         assert(!chatbotJs.includes("pointsRes.data.forEach(pt => {"),
@@ -134,7 +134,7 @@ async function runAllTests() {
     // TEST 3: CB-16 — RAG QUERY SANITIZATION & SHORT-CIRCUITING
     // --------------------------------------------------------------------------
     await runAsyncTest('CB-16: Làm sạch ký tự PostgREST và ưu tiên FAQ, không gọi embedding khi FAQ đủ chính xác', async () => {
-        const chatScript = fs.readFileSync(path.join(__dirname, '../api/chat.js'), 'utf8');
+        const chatScript = fs.readFileSync(path.join(__dirname, '../../my-server/scripts/api/chat.js'), 'utf8');
 
         // Kiểm tra cơ chế làm sạch từ khóa trước PostgREST .or()
         assert(chatScript.includes("replace(/[^\\p{L}\\p{N}\\s]/gu"),
@@ -164,8 +164,8 @@ async function runAllTests() {
     // TEST 4: CB-13 — TẢI ẢNH LÊN SUPABASE STORAGE BUCKET 'chat-attachments'
     // --------------------------------------------------------------------------
     runTest('CB-13: UI Chatbot tải ảnh lên Supabase Storage thay vì nhúng chuỗi base64 khổng lồ vào tin nhắn', () => {
-        const fabJs = fs.readFileSync(path.join(__dirname, '../../components/fab/fab.js'), 'utf8');
-        const liveJs = fs.readFileSync(path.join(__dirname, '../../pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js'), 'utf8');
+        const fabJs = fs.readFileSync(path.join(__dirname, '../../my-client/components/fab/fab.js'), 'utf8');
+        const liveJs = fs.readFileSync(path.join(__dirname, '../../my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js'), 'utf8');
 
         // Kiểm tra fab.js
         assert(fabJs.includes("uploadAttachmentToStorage"), 'LỖI: fab.js thiếu helper uploadAttachmentToStorage');
@@ -191,7 +191,7 @@ async function runAllTests() {
     // TEST 5: KỊCH BẢN DI TRÚ BATCH MIGRATION & ROLLBACK (migrate_chat_images_to_storage.js)
     // --------------------------------------------------------------------------
     await runAsyncTest('PR-05 Migration Script: Hỗ trợ chuyển đổi base64 cũ, kiểm tra SHA-256 và Rollback an toàn', async () => {
-        const migrationScript = fs.readFileSync(path.join(__dirname, '../db/migrate_chat_images_to_storage.js'), 'utf8');
+        const migrationScript = fs.readFileSync(path.join(__dirname, '../../my-server/scripts/db/migrate_chat_images_to_storage.js'), 'utf8');
 
         assert(migrationScript.includes("crypto.createHash('sha256')"), 'LỖI: Migration script phải băm SHA-256 kiểm tra tính toàn vẹn');
         assert(migrationScript.includes("BACKUP_LOG_FILE"), 'LỖI: Migration script phải lưu backup log để rollback');
@@ -215,7 +215,7 @@ async function runAllTests() {
     // TEST 6: FILE MIGRATION CHỈ MỤC DATABASE VÀ STORAGE BUCKET (20261017_pr05_indexes_and_storage.sql)
     // --------------------------------------------------------------------------
     runTest('PR-05 SQL Migration: Chứa đầy đủ chỉ mục hiệu năng cao và cấu hình Storage bucket', () => {
-        const sqlPath = path.join(__dirname, '../database/20261017_pr05_indexes_and_storage.sql');
+        const sqlPath = path.join(__dirname, '../../my-server/scripts/database/20261017_pr05_indexes_and_storage.sql');
         assert(fs.existsSync(sqlPath), 'LỖI: Chưa tạo file migration 20261017_pr05_indexes_and_storage.sql');
 
         const sqlContent = fs.readFileSync(sqlPath, 'utf8');

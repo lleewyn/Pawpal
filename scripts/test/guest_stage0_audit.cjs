@@ -2,7 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { connect } = require('../database/v1/service_import_connection.cjs');
+const { connect } = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if (!process.argv.includes('--cloud-readonly')) {
     console.log('Use --cloud-readonly to save a private schema catalog snapshot and public audit metadata.');
     process.exit(0);

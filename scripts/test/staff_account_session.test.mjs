@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {requestStaffAccount} from '../shared/staff-account-request.mjs';
+import {requestStaffAccount} from '../../my-client/scripts/shared/staff-account-request.mjs';
 const body={requestId:'session-retry-request',staffId:'same-new-staff',roles:['STAFF'],permissions:[]};
 const reply=(status,value={success:false,message:'Không thể lưu.'})=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json'}});
 function fixture(responses,refresh={data:{session:{access_token:'fresh',user:{id:'admin'}}}}){

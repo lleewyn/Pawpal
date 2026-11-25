@@ -1,7 +1,7 @@
 // Live read-only business verification: open the actual order's form, never submit.
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js');
-const {settings}=require('../database/v1/cloud_connection.cjs');
+const {settings}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 const origin=process.env.PAWPAL_RETURN_TEST_ORIGIN||'http://localhost:4000';
 const folder='docs/verification/return-lookup-live';

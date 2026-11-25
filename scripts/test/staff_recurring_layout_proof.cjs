@@ -2,7 +2,7 @@
 // Actual recurring form and table; live read-only schedules, no saves or shift changes.
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 async function main(){
  const db=await connect(),browser=await chromium.launch({channel:'chrome',headless:true}),folder=process.env.PAWPAL_RECURRING_PROOF_DIR||'docs/verification/staff-recurring-layout';fs.mkdirSync(folder,{recursive:true});
  try{
@@ -18,10 +18,10 @@ async function main(){
    reads.push(rows);return {data:rows,count,error:null};
   });
   await page.exposeFunction('readCoverage',async ids=>({data:(await db.query('SELECT recurring_schedule_id,generated_through::text FROM public.staff_recurring_shift_coverage($1)',[ids])).rows}));
-  for(const file of ['pages/admin/admin.css','pages/admin/admin-components.css','pages/admin/admin-typography.css','pages/admin/admin-shell-v7.css','pages/admin/modules/staff/staff.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
-  const staffSource=fs.readFileSync('pages/admin/modules/staff/staff.js','utf8'),enhancer=staffSource.slice(staffSource.indexOf('    PawpalStaff.enhanceEntitySelect=function'),staffSource.indexOf('    function readStaffResource('));
+  for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/admin-components.css','my-client/pages/admin/admin-typography.css','my-client/pages/admin/admin-shell-v7.css','my-client/pages/admin/modules/staff/staff.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+  const staffSource=fs.readFileSync('my-client/pages/admin/modules/staff/staff.js','utf8'),enhancer=staffSource.slice(staffSource.indexOf('    PawpalStaff.enhanceEntitySelect=function'),staffSource.indexOf('    function readStaffResource('));
   await page.addScriptTag({content:'window.PawpalStaff={};'+enhancer});
-  await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/staff/staff-recurring.mjs','utf8').replace('export async function','async function')});
+  await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/staff/staff-recurring.mjs','utf8').replace('export async function','async function')});
   await page.evaluate(async staff=>{const client={from(table){if(table!=='staff_recurring_schedule')throw Error('unexpected table');const q={select(){return q;},order(){return q;},range(from,to){return readSchedules(from,to);}};return q;},rpc(name,args){if(name!=='staff_recurring_shift_coverage')throw Error('unexpected RPC');return readCoverage(args.p_ids);}};window.disposeRecurring=await mountRecurringSchedule(document.getElementById('recurring'),{staff,client,enhanceSelect:PawpalStaff.enhanceEntitySelect});},staff);
   assert.ok(reads[0].length>0);assert.equal(await page.locator('.staff-recurring-table th').count(),8);assert.ok(await page.locator('[data-edit]').count()<=10);
   const bounds=await page.locator('.staff-recurring-fields').evaluate(node=>{const start=node.querySelector('[name="start"]').getBoundingClientRect(),end=node.querySelector('[name="end"]').getBoundingClientRect();return {width:node.getBoundingClientRect().width,gap:end.left-start.right,top:Math.abs(start.top-end.top)};});assert.ok(bounds.width<=600&&Math.abs(bounds.gap-16)<1&&bounds.top<1);

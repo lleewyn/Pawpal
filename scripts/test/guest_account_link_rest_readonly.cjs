@@ -1,6 +1,6 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{createClient}=require('@supabase/supabase-js');
 if(!process.argv.includes('--cloud-readonly')){console.log('Use --cloud-readonly for two negative account-link REST probes.');process.exit(0);}
-(async()=>{const {config}=require('../database/v1/cloud_connection.cjs').settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
+(async()=>{const {config}=require('../../my-server/scripts/database/v1/cloud_connection.cjs').settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
  const args={p_hash:crypto.randomBytes(32).toString('hex'),p_auth_id:crypto.randomUUID(),p_phone:'0950000001',p_name:null};
  const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,options),anon=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_ANON_KEY,options);
  const unverified=await service.rpc('complete_guest_customer_auth',args);assert.equal(unverified.error?.code,'42501');assert.equal(unverified.data,null);

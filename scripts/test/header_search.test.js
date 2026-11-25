@@ -9,7 +9,7 @@ function fixture(value) {
     const icon = { style: {}, addEventListener: (name, fn) => { iconEvents[name] = fn; } };
     const bar = { dataset: {}, querySelector: name => name === 'input' ? input : icon };
     const location = { href: '/#current-position' };
-    const source = fs.readFileSync('components/header/header.js', 'utf8');
+    const source = fs.readFileSync('my-client/components/header/header.js', 'utf8');
     const start = source.indexOf('    function setupHeaderSearch()');
     const end = source.indexOf('\n    // -------------------------------------------------------------', start);
     const context = { window: { location }, document: { querySelectorAll: () => [bar] } };

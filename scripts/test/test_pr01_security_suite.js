@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
-const { signStaffToken, verifyStaffCaller } = require('../api/staff_auth');
+const { signStaffToken, verifyStaffCaller } = require('../../my-server/scripts/api/staff_auth');
 const chatHandler = require('../../api/chat');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);

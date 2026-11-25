@@ -1,8 +1,8 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const page=await browser.newPage({viewport:{width:1366,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'}));await page.goto('http://localhost/');
- await page.setContent(fs.readFileSync('pages/admin/modules/orders/orders.html','utf8'),{waitUntil:'domcontentloaded'});
- for(const file of ['pages/admin/admin.css','pages/admin/modules/orders/orders.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+ await page.setContent(fs.readFileSync('my-client/pages/admin/modules/orders/orders.html','utf8'),{waitUntil:'domcontentloaded'});
+ for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/modules/orders/orders.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
  await page.evaluate(()=>{
   window.PAWPAL_SALES_REPLACEMENTS_ENABLED=true;window.calls=[];window.searches=[];window.fail=true;window.hold=false;
   window.order={id:'E2E-ORDER',rawId:'original',address:'E2E address'};
@@ -10,7 +10,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=requ
   window.PawpalOrders={helpers:{showToast:()=>{}},ensureOrder:async()=>order,renderSalesReturns:()=>{window.refreshed=true;}};
   window.PawpalOrderV1={searchVariants:async text=>{searches.push(text);return [{variantId:'alternative',name:'E2E Alternative <img src=x>'}];}};
   window.getSupabaseClient=()=>({rpc:async(name,args)=>{calls.push({name,...args});if(hold)await new Promise(r=>window.release=r);return fail?{error:{message:'offline_failure'}}:{data:args.p_request_id};}});
- });await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/orders/subtabs/tab-sales-replacements.js','utf8')});
+ });await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/orders/subtabs/tab-sales-replacements.js','utf8')});
  await page.evaluate(()=>PawpalOrders.openSalesReplacement(order,rma));await page.locator('#btnSaveSalesReplacement').click();assert.equal(await page.evaluate(()=>calls.length),0);
  const input=page.locator('#salesReplacementLines input');await input.fill('a');await page.waitForTimeout(350);assert.equal(await page.evaluate(()=>searches.length),0);
  await input.fill('E2');await input.fill('E2E');await page.locator('#salesReplacementLines button').waitFor();assert.equal(await page.evaluate(()=>searches.length),1);assert.equal(await page.locator('#salesReplacementLines img').count(),0);

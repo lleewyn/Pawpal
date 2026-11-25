@@ -1,8 +1,8 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect(),q=(s,a)=>db.query(s,a);let checks=0;try{
  await q("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");
- await q(fs.readFileSync('scripts/database/v1/233_complaint_execution_gate.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+ await q(fs.readFileSync('my-server/scripts/database/v1/233_complaint_execution_gate.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
  const roles=(await q("SELECT s.id,s.auth_user_id,r.role_code FROM public.staff s JOIN public.staff_role r ON r.staff_id=s.id JOIN auth.users u ON u.id=s.auth_user_id WHERE s.employment_status='active' AND NOT s.must_change_password AND coalesce(u.banned_until<=now(),true) AND r.role_code IN ('ADMIN','STAFF') ORDER BY s.id")).rows;
  const manager=roles.find(r=>r.role_code==='ADMIN'),staff=roles.find(r=>r.role_code==='STAFF');assert.ok(manager&&staff);
  const auth=randomUUID(),customer=randomUUID(),order=randomUUID(),ticket=randomUUID(),rejected=randomUUID(),simple=randomUUID();

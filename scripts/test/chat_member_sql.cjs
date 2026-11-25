@@ -1,10 +1,10 @@
 // Real Cloud PostgreSQL/RLS, task-owned transaction fixtures only, rolled back. No Logs or model.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect(),checks=[];const pass=name=>checks.push(name);try{
  const existing=(await db.query("SELECT to_regprocedure('public.read_member_chat_context(jsonb)') AS fn")).rows[0].fn;
  if(existing){const applied=JSON.parse(fs.readFileSync('docs/chatbot/member-phase1-2026-10-31/migration-apply.txt','utf8'));assert.equal(applied.applied,true);assert.equal(process.argv.includes('--apply'),false,'Update existing source only through reviewed apply script');}
- const sql=fs.readFileSync('scripts/database/v1/160_member_chat_context.sql','utf8');
+ const sql=fs.readFileSync('my-server/scripts/database/v1/160_member_chat_context.sql','utf8');
  await db.query('BEGIN');await db.query(sql.replace(/^BEGIN;\s*/,'').replace(/COMMIT;\s*$/,''));pass('Migration compiles');
  const ua=randomUUID(),ub=randomUUID(),a=randomUUID(),b=randomUUID(),tag=randomUUID().slice(0,8),species=randomUUID(),breed=randomUUID();
  for(const uid of [ua,ub])await db.query("INSERT INTO auth.users(id,aud,role,email,encrypted_password,email_confirmed_at) VALUES($1,'authenticated','authenticated',$2,'',now())",[uid,'member-qa-'+uid+'@example.invalid']);

@@ -1,4 +1,4 @@
-const fs=require('node:fs'),assert=require('node:assert/strict');const {createClient}=require('@supabase/supabase-js');const {settings}=require('../database/v1/cloud_connection.cjs');
+const fs=require('node:fs'),assert=require('node:assert/strict');const {createClient}=require('@supabase/supabase-js');const {settings}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 (async()=>{const {config}=settings(),credentials=fs.readFileSync('D:/Aboutme/Pawpal-infra/supabase-local/PAWPAL-ADMIN.private.txt','utf8');let requests=0,bytes=0;
  const options={auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},global:{fetch:async(...args)=>{if(++requests>7)throw Error('Request cap');const response=await fetch(...args);bytes+=(await response.clone().arrayBuffer()).byteLength;return response;}}};
  const client=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_ANON_KEY,options);

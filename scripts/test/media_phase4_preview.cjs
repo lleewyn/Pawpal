@@ -2,7 +2,7 @@
 // Full UI Preview. Upload requires the explicit user-authorized --upload-preview flag.
 const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_process');
 const {runCli}=require('./media_vercel_preview.cjs');
-const {readMediaMongoConfig}=require('../api/media_mongodb.cjs');
+const {readMediaMongoConfig}=require('../../my-server/scripts/api/media_mongodb.cjs');
 const dotenv=require('dotenv');
 (async()=>{let deploymentId=null;try{
  const linked=JSON.parse(fs.readFileSync('.vercel/project.json'));
@@ -27,10 +27,10 @@ const dotenv=require('dotenv');
   PAWPAL_ADMIN_SUPABASE_URL:cloud.DESTINATION_SUPABASE_URL,PAWPAL_ADMIN_SUPABASE_ANON_KEY:cloud.DESTINATION_SUPABASE_ANON_KEY,PAWPAL_ADMIN_SUPABASE_SERVICE_ROLE_KEY:cloud.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,MEDIA_UPLOAD_ENABLED:process.argv.includes('--upload-preview')?'true':'false',MEDIA_VIDEO_ENABLED:'false'};
  const artifact=path.resolve('D:/Aboutme/Pawpal-infra/media/phase4-full-preview-'+Date.now());fs.mkdirSync(artifact,{recursive:true});
  const filter=file=>!/(?:^|[\\/])(?:\.env[^\\/]*|[^\\/]*\.private\.[^\\/]*|node_modules|\.git)(?:[\\/]|$)/i.test(file);
- for(const folder of ['api','assets','components','pages','styles','data','scripts/api','scripts/shared','scripts/vendor','scripts/rag'])fs.cpSync(folder,path.join(artifact,folder),{recursive:true,filter});
- for(const file of ['index.html','package.json','package-lock.json','vercel.json','.vercelignore'])fs.copyFileSync(file,path.join(artifact,file));
+ for(const folder of ['api','my-client','my-server'])fs.cpSync(folder,path.join(artifact,folder),{recursive:true,filter});
+ for(const file of ['package.json','package-lock.json','vercel.json','.vercelignore'])fs.copyFileSync(file,path.join(artifact,file));
  // The unrelated FAB edit belongs to the user and is excluded from this media Preview.
- fs.writeFileSync(path.join(artifact,'components/fab/fab.html'),cp.execFileSync('git',['show','HEAD:components/fab/fab.html'],{windowsHide:true}));
+ fs.writeFileSync(path.join(artifact,'my-client/components/fab/fab.html'),cp.execFileSync('git',['show','HEAD:my-client/components/fab/fab.html'],{windowsHide:true}));
  fs.mkdirSync(path.join(artifact,'.vercel'));fs.writeFileSync(path.join(artifact,'.vercel/project.json'),JSON.stringify(linked));
  const cache=path.join(process.env.LOCALAPPDATA,'npm-cache/_npx');
  const packages=fs.readdirSync(cache).map(name=>path.join(cache,name,'node_modules/vercel/package.json')).filter(file=>fs.existsSync(file)).sort((a,b)=>fs.statSync(b).mtimeMs-fs.statSync(a).mtimeMs);
@@ -39,6 +39,7 @@ const dotenv=require('dotenv');
  const urls=result.output.match(/https:\/\/[a-z0-9-]+\.vercel\.app/g)||[];if(!urls.length)throw Error('DEPLOYMENT_FAILED');
  const preview=await request('/v13/deployments/'+new URL(urls[0]).hostname);deploymentId=preview.id;if(preview.target==='production')throw Error('TARGET_SCOPE');
  const report={status:'BUILDING',previewUrl:'https://'+preview.url,deploymentId,uploadEnabled:values.MEDIA_UPLOAD_ENABLED==='true',productionChanged:false,projectEnvironmentChanged:false,unrelatedFabEditExcluded:true,sourceDirectory:artifact};
+ fs.mkdirSync(path.dirname(reportFile),{recursive:true});
  fs.writeFileSync(reportFile,JSON.stringify({...report,sourceDirectory:undefined},null,2));
  fs.writeFileSync(stateFile,JSON.stringify({artifact,deploymentId,previewUrl:report.previewUrl,originalBypasses:previous?.originalBypasses||Object.keys(before.protectionBypass||{}),generatedBypass:previous?.generatedBypass,previousDeployments:[...(previous?.previousDeployments||[]),...(previous?[{deploymentId:previous.deploymentId,previewUrl:previous.previewUrl}]:[])]}));
  console.log(JSON.stringify(report));

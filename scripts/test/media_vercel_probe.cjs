@@ -2,7 +2,7 @@
 // Temporary protected Preview probe, copied to a private deployment artifact only.
 // Not mounted by the PawPal server and not placed under the repository's api/ directory.
 const { timingSafeEqual } = require('node:crypto');
-const { getMediaMongoResources } = require('../api/media_mongodb.cjs');
+const { getMediaMongoResources } = require('../../my-server/scripts/api/media_mongodb.cjs');
 
 function createProbe({ env = process.env, resources = getMediaMongoResources } = {}) {
     return async function probe(req, res) {

@@ -101,12 +101,12 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION pawpal_private.sync_variant_media(uuid,uuid,jsonb) FROM PUBLIC,anon,authenticated,service_role;
 `;
-fs.writeFileSync('scripts/database/v1/191_variant_media.sql','BEGIN;\nSET LOCAL lock_timeout=\'3s\';\n'+foundation+'\n'+[prepare,release,cleanup,resolve,save,catalog].map(value=>value+';').join('\n')+`\nREVOKE ALL ON FUNCTION public.prepare_variant_media_upload(uuid,uuid,uuid,uuid,bigint,text,text) FROM PUBLIC,anon,authenticated,service_role;
+fs.writeFileSync('my-server/scripts/database/v1/191_variant_media.sql','BEGIN;\nSET LOCAL lock_timeout=\'3s\';\n'+foundation+'\n'+[prepare,release,cleanup,resolve,save,catalog].map(value=>value+';').join('\n')+`\nREVOKE ALL ON FUNCTION public.prepare_variant_media_upload(uuid,uuid,uuid,uuid,bigint,text,text) FROM PUBLIC,anon,authenticated,service_role;
 GRANT EXECUTE ON FUNCTION public.prepare_variant_media_upload(uuid,uuid,uuid,uuid,bigint,text,text) TO authenticated;
 COMMIT;\n`);
 console.log('VARIANT_MEDIA_MIGRATION_GENERATED');
 const oldShape=backup.constraints.filter(c=>['media_upload_session_purpose_check','media_upload_session_check'].includes(c.conname));
-fs.writeFileSync('scripts/database/v1/191_variant_media.rollback.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/191_variant_media.rollback.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 LOCK TABLE public.media_upload_session,public.product_variant_media IN ACCESS EXCLUSIVE MODE;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.media_upload_session WHERE variant_id IS NOT NULL) OR EXISTS(SELECT 1 FROM public.product_variant_media WHERE media_asset_id IS NOT NULL) THEN RAISE EXCEPTION 'variant_media_rollback_requires_empty_foundation'; END IF; END $$;

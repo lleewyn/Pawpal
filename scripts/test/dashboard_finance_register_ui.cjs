@@ -8,8 +8,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'D:/Aboutme/Pawpal-infra
   page.on('pageerror',error=>errors.push(error.message));
   await page.route('**/*',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'}));await page.goto('https://finance-register.test');
   await page.setContent('<body class="admin-body"><main class="admin-main"><div class="admin-preview-content business-dash admin-ui-standard admin-ui-customer-reference" style="height:100vh;overflow:auto;padding:16px"><div class="biz-grid"><section class="admin-card admin-workspace-card biz-panel biz-wide" data-finance-root></section></div></div></main></body>');
-  for(const file of ['pages/admin/admin.css','pages/admin/modules/dashboard/dashboard.css','pages/admin/admin-components.css','pages/admin/admin-typography.css','pages/admin/admin-pagination.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
-  await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/dashboard/subtabs/business-metrics.js','utf8')});
+  for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/modules/dashboard/dashboard.css','my-client/pages/admin/admin-components.css','my-client/pages/admin/admin-typography.css','my-client/pages/admin/admin-pagination.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+  await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/dashboard/subtabs/business-metrics.js','utf8')});
   await page.evaluate(()=>{
    window.PawpalAdminAccess={isAdmin:()=>true,state:{user:{permissions:['finance.read','finance.write']}}};
    window.finFixture={accounts:[],entries:[],movements:[],posts:[],requests:new Map(),fail:null,uncertain:false,reportCalls:[],serviceRecorded:false};
@@ -41,7 +41,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'D:/Aboutme/Pawpal-infra
     throw Error('Unexpected finance fixture RPC');
    }});
   });
-  await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/dashboard/subtabs/dashboard-finance.js','utf8')});
+  await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/dashboard/subtabs/dashboard-finance.js','utf8')});
   await page.evaluate(()=>PawpalDashboardFinance.mount(document.querySelector('[data-finance-root]'),{from:'2026-11-01',to:'2026-11-22'}));
   await page.waitForFunction(()=>!PawpalDashboardFinance.getState().loading);
   assert.match(await page.locator('[data-fin-summary]').innerText(),/Chưa đủ dữ liệu/);

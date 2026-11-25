@@ -20,7 +20,7 @@ let resolve=once(get('resolve_media_asset'),"  IF NOT allowed AND a.status='atta
 const cleanup=once(get('claim_media_cleanup'),'OR EXISTS(SELECT 1 FROM public.appointment_record_media WHERE media_asset_id=a.id))','OR EXISTS(SELECT 1 FROM public.appointment_record_media WHERE media_asset_id=a.id) OR EXISTS(SELECT 1 FROM public.appointment_adjustment_media WHERE media_asset_id=a.id))');
 const release=once(get('release_media_reference'),' THEN\n  UPDATE public.media_asset',' AND NOT EXISTS(SELECT 1 FROM public.appointment_adjustment_media WHERE media_asset_id=OLD.media_asset_id) THEN\n  UPDATE public.media_asset');
 const shape=backup.constraints.find(c=>c.conname==='media_upload_session_check').definition;
-fs.writeFileSync('scripts/database/v1/195_adjustment_media.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/195_adjustment_media.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 ALTER TABLE public.media_upload_session ADD COLUMN adjustment_id uuid;
 ALTER TABLE public.media_upload_session DROP CONSTRAINT media_upload_session_check,DROP CONSTRAINT media_upload_session_purpose_check;
@@ -34,7 +34,7 @@ REVOKE ALL ON public.appointment_adjustment_media FROM PUBLIC,anon,authenticated
 REVOKE ALL ON FUNCTION public.prepare_adjustment_media_upload(uuid,uuid,uuid,bigint,text,text),public.list_adjustment_media(uuid),pawpal_private.attach_adjustment_media(uuid,jsonb) FROM PUBLIC,anon,authenticated,service_role;
 GRANT EXECUTE ON FUNCTION public.prepare_adjustment_media_upload(uuid,uuid,uuid,bigint,text,text),public.list_adjustment_media(uuid),pawpal_private.attach_adjustment_media(uuid,jsonb) TO authenticated;
 COMMIT;\n`);
-fs.writeFileSync('scripts/database/v1/195_adjustment_media.rollback.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/195_adjustment_media.rollback.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 LOCK TABLE public.media_upload_session,public.appointment_adjustment_media IN ACCESS EXCLUSIVE MODE;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.media_upload_session WHERE purpose='adjustment_image') OR EXISTS(SELECT 1 FROM public.appointment_adjustment_media) THEN RAISE EXCEPTION 'adjustment_rollback_requires_no_sessions'; END IF; END $$;

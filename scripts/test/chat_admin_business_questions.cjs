@@ -11,4 +11,4 @@ const questions=[
  ['A19','Hotline cửa hàng']
 ];
 module.exports=questions;
-if(require.main===module){const {plan}=require('../api/admin_copilot.js');for(const [group,question]of questions)console.log(JSON.stringify({group,question,...plan(question,new Date('2026-11-01T02:00:00Z'))}));}
+if(require.main===module){const {plan}=require('../../my-server/scripts/api/admin_copilot.js');for(const [group,question]of questions)console.log(JSON.stringify({group,question,...plan(question,new Date('2026-11-01T02:00:00Z'))}));}

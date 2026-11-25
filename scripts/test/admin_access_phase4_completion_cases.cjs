@@ -1,6 +1,6 @@
 // Final phase-4 boundaries, using the same owned real Auth/REST/Realtime database.
 const fs=require('node:fs'),assert=require('node:assert/strict');
-const {createHandler}=require('../../api/admin-chat.js'),{createStaffAuthHandlers}=require('../api/staff_auth.js');
+const {createHandler}=require('../../api/admin-chat.js'),{createStaffAuthHandlers}=require('../../my-server/scripts/api/staff_auth.js');
 module.exports=async({session,sql,id,authId,origin,folder,pass,serviceCaller,installAssistantHandler})=>{
  const contexts=[],pages=[];let sequence=18000;
  // The schema-only review clone omits the two configuration rows seeded by migration 136.
@@ -10,7 +10,7 @@ module.exports=async({session,sql,id,authId,origin,folder,pass,serviceCaller,ins
  const readySignal=p=>p.waitForFunction(()=>window.getSupabaseClient?.()?.getChannels().some(c=>c.topic.startsWith('realtime:workspace-')&&c.state==='joined'));
  const staff=await open(1),peer=await open(2),manager=await open(3);
  const originalAccess=sql("SELECT pg_get_functiondef('public.set_admin_staff_access(uuid,uuid,timestamptz,text[],text[],text)'::regprocedure)");
- sql(fs.readFileSync('scripts/database/v1/184_staff_access_audit.sql','utf8'));
+ sql(fs.readFileSync('my-server/scripts/database/v1/184_staff_access_audit.sql','utf8'));
  const change=async(role)=>{const request=id(sequence++),version=sql(`SELECT updated_at FROM public.staff WHERE id='${id(1)}'`);const result=await rpc(manager,'set_admin_staff_access',{p_request_id:request,p_staff_id:id(1),p_expected_updated_at:version,p_roles:[role],p_permissions:[],p_reason:'Phase 4 isolated acceptance'});assert.equal(result.error,null,JSON.stringify(result));return {request,version};};
  try{
   const rawTables=['staff','staff_schedule','payment','refund_transaction','product_variant','audit_log','notification','admin_copilot_history','chat_message'];
@@ -92,7 +92,7 @@ module.exports=async({session,sql,id,authId,origin,folder,pass,serviceCaller,ins
   const moneyExport=await fresh.evaluate(async()=>{const db=getSupabaseClient(),rows=await db.from('payment').select('id,amount'),count=await db.from('payment').select('*',{count:'exact',head:true}),csv=await db.from('payment').select('id,amount').csv();return {rows:rows.data,count:count.count,countStatus:count.status,csv:csv.data};});assert.deepEqual(moneyExport.rows,[]);assert.ok(moneyExport.count===0||moneyExport.countStatus===403);assert.ok(!String(moneyExport.csv||'').includes('123456')&&!String(moneyExport.csv||'').includes('777777'));
   pass('PQ-22: populated real payment canaries remain absent from STAFF JSON, exact counts and CSV while ADMIN revenue reads both under date filtering');
   const clearOwn=await rpc(fresh,'delete_staff_copilot_session',{p_session:id(18900)});assert.equal(clearOwn.error,null);
-  sql(fs.readFileSync('scripts/database/v1/184_staff_access_audit.rollback.sql','utf8'));assert.equal(sql("SELECT pg_get_functiondef('public.set_admin_staff_access(uuid,uuid,timestamptz,text[],text[],text)'::regprocedure)"),originalAccess);assert.equal(sql("SELECT count(*) FROM public.audit_log WHERE action='STAFF_ACCESS_CHANGE'"),auditCount);
+  sql(fs.readFileSync('my-server/scripts/database/v1/184_staff_access_audit.rollback.sql','utf8'));assert.equal(sql("SELECT pg_get_functiondef('public.set_admin_staff_access(uuid,uuid,timestamptz,text[],text[],text)'::regprocedure)"),originalAccess);assert.equal(sql("SELECT count(*) FROM public.audit_log WHERE action='STAFF_ACCESS_CHANGE'"),auditCount);
   pass('Rollback 184 restores the exact access workflow while retaining immutable role-change evidence');
  }finally{installAssistantHandler(null);for(const context of contexts)await context.close();}
 };

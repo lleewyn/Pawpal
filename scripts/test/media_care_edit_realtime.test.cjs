@@ -1,6 +1,6 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync('pages/admin/modules/services/subtabs/tab-service-detail.js','utf8');
+const source=fs.readFileSync('my-client/pages/admin/modules/services/subtabs/tab-service-detail.js','utf8');
 const start=source.indexOf('    async function openEditCarelogStepModal('),end=source.indexOf('    function renderDetailCareLogs(',start);
 function setup(changeSelection=false){
  const opened=[],reads=[];const state={selectedBookingId:'selected',bookingsData:[]};

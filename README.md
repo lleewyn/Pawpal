@@ -2,14 +2,14 @@
 
 Website quản lý dịch vụ chăm sóc thú cưng và bán sản phẩm, gồm cổng khách hàng và hệ thống quản trị Pawpal-er.
 
-**Website:** [pawpalgr3.vercel.app](https://pawpalgr3.vercel.app/) · **Tài liệu:** [docs/README.md](docs/README.md)
+**Website:** [pawpalgr3.vercel.app](https://pawpalgr3.vercel.app/)
 
 ## Chạy dự án
 
 Yêu cầu Node.js và npm.
 
 ```sh
-npm install
+npm ci
 npm start
 ```
 
@@ -22,7 +22,7 @@ Mở địa chỉ được in trong terminal (mặc định [localhost:3000](htt
 
 Các URL phải trỏ tới project hiện tại `cpzuvaplseielhgcnqrn`. Giữ khóa đặc quyền ở phía máy chủ, không đưa `.env` hoặc thông tin đăng nhập vào Git.
 
-Web chạy trên máy và Vercel đều dùng Supabase Cloud. Các script CSDL local cũ đã được gỡ; dự án không còn phụ thuộc Docker. Công cụ SQL Cloud dùng PostgreSQL client trực tiếp (`psql`, `pg_dump` trong PATH hoặc thư mục `PAWPAL_PG_BIN`); đây là công cụ kết nối Cloud, không phải CSDL local. Xem [hướng dẫn CSDL](scripts/database/v1/README.md).
+Web chạy trên máy và Vercel đều dùng Supabase Cloud. Các script CSDL local cũ đã được gỡ; dự án không còn phụ thuộc Docker. Công cụ SQL Cloud dùng PostgreSQL client trực tiếp (`psql`, `pg_dump` trong PATH hoặc thư mục `PAWPAL_PG_BIN`); đây là công cụ kết nối Cloud, không phải CSDL local. Xem [hướng dẫn CSDL](my-server/scripts/database/v1/README.md).
 
 ## Chức năng
 
@@ -30,34 +30,18 @@ Web chạy trên máy và Vercel đều dùng Supabase Cloud. Các script CSDL l
 - Quản trị: Dashboard, Khách hàng, Thú cưng, Dịch vụ, Bán hàng, Nhân sự, Khiếu nại, Chatbot và Cấu hình.
 - Dữ liệu nghiệp vụ đọc/ghi qua Supabase Cloud và đồng bộ Realtime theo các luồng đã nghiệm thu.
 
-Phạm vi, kết quả kiểm thử và các phần đã hoãn được ghi tại [nghiệm thu tổng hợp](docs/acceptance/PAWPAL_DICH_VU_V1_NGHIEM_THU.md).
-
 ## Cấu trúc chính
 
-```text
-api/                  API triển khai trên Vercel
-assets/               Ảnh, biểu tượng và tài nguyên tĩnh
-components/           Header, footer và thành phần dùng chung
-docs/                 Tài liệu, nghiệm thu và mục lưu trữ
-pages/admin/          Giao diện quản trị
-pages/user/           Cổng khách hàng
-pages/public/         Các trang công khai
-pages/services/       Danh mục, chi tiết và đặt dịch vụ
-pages/shop/           Cửa hàng, giỏ hàng và thanh toán
-scripts/api/          API và kết nối dữ liệu
-scripts/database/     Migrations và công cụ CSDL
-scripts/shared/       Mã dùng chung
-scripts/test/         Kiểm thử offline và tích hợp
-server.js             Máy chủ phát triển local
-```
+- **my-client/** chứa giao diện khách hàng, quản trị và tài nguyên tĩnh.
+- **my-server/** chứa máy chủ Express, API, migration và công cụ CSDL. Hai CSV nhập danh mục nằm trong my-server/data/.
+- **api/** chứa các điểm vào Vercel dùng chung handler với Express.
+- **scripts/test/** chứa các bài kiểm thử offline và tích hợp.
 
-## Tài liệu thường dùng
+Express phục vụ tệp tĩnh từ my-client/. Trình duyệt gọi API trên cùng tên miền qua /api/. Cấu hình Vercel dùng my-client làm thư mục đầu ra tĩnh.
 
-- [Mục lục tài liệu](docs/README.md)
-- [Thiết kế CSDL 3NF V1](docs/database/PAWPAL_THIET_KE_DATABASE_3NF_V1.md)
-- [Bảng CSDL trên Cloud hiện tại](docs/database/PAWPAL_CSDL_CLOUD_MOI_HIEN_TAI_DANG_BANG.md)
-- [Nghiệm thu và kiểm tra liên thông](docs/acceptance/PAWPAL_DICH_VU_V1_NGHIEM_THU.md)
+## Tài liệu
 
-Tài liệu Cloud cũ/self-host và kế hoạch đã hoàn tất nằm trong `docs/archive/`. Việc sắp xếp tài liệu không xóa project hay dữ liệu Supabase nào.
+- [Quy chuẩn giao diện Admin](docs/design/ADMIN_DESIGN_SYSTEM.md)
+- [Hướng dẫn ảnh và MongoDB](docs/Guide-Upload-Images-MongoDB.md)
 
 Bản quyền © 2026 PawPal Team.

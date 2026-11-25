@@ -5,7 +5,7 @@ const fs=require('node:fs');
  const before=JSON.parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/media/phase4-product-e2e-before.private.json'));
  const after=JSON.parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/media/phase4-product-e2e-after.private.json'));
  if(before.product.id!==after.product.id||before.media.some(row=>row.media_asset_id)||after.media.length!==1||!after.media[0].media_asset_id)throw Error('RESTORE_SCOPE');
- db=await require('../database/v1/service_import_connection.cjs').connect();await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='3s'");
+ db=await require('../../my-server/scripts/database/v1/service_import_connection.cjs').connect();await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='3s'");
  const product=(await db.query('SELECT * FROM public.product WHERE id=$1 FOR UPDATE',[before.product.id])).rows[0];
  const media=(await db.query('SELECT * FROM public.product_media WHERE product_id=$1 ORDER BY id FOR UPDATE',[before.product.id])).rows;
  if(JSON.stringify(product)!==JSON.stringify(after.product)||media.length!==1||media[0].id!==after.media[0].id||media[0].media_asset_id!==after.media[0].media_asset_id)throw Error('CONCURRENT_PRODUCT_CHANGE');

@@ -1,10 +1,10 @@
 'use strict';
 const fs=require('fs'),cp=require('child_process'),crypto=require('crypto');
 (async()=>{let db;try{
- const sql=fs.readFileSync('scripts/database/v1/197_review_media_privacy.sql','utf8'),hash=crypto.createHash('sha256').update(sql).digest('hex');
+ const sql=fs.readFileSync('my-server/scripts/database/v1/197_review_media_privacy.sql','utf8'),hash=crypto.createHash('sha256').update(sql).digest('hex');
  if(process.argv[2]==='apply'){
   const tested=JSON.parse(fs.readFileSync('docs/media/phase5-review-privacy-database.txt'));if(tested.checksum!==hash||tested.status!=='PASS')throw Error('TEST_REQUIRED');
-  db=await require('../database/v1/service_import_connection.cjs').connect();
+  db=await require('../../my-server/scripts/database/v1/service_import_connection.cjs').connect();
   const original=JSON.parse(fs.readFileSync('D:/Aboutme/Pawpal-infra/media/phase5-remaining/domain-before.private.json')).policies;
   const current=(await db.query("SELECT * FROM pg_policies WHERE schemaname='public' AND tablename='review_media'")).rows;
   if(JSON.stringify(current)!==JSON.stringify(original))throw Error('POLICY_DRIFT');

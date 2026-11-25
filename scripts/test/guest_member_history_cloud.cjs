@@ -1,8 +1,8 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const apply=process.argv.includes('--apply-cloud');
 if(!apply&&!process.argv.includes('--verify-cloud'))throw Error('Use --verify-cloud (rollback) or --apply-cloud.');
-const migration='scripts/database/v1/272_guest_member_history.sql',source=fs.readFileSync(migration,'utf8');
+const migration='my-server/scripts/database/v1/272_guest_member_history.sql',source=fs.readFileSync(migration,'utf8');
 const report='docs/verification/guest-member-history/database-check.txt';
 const sha=value=>crypto.createHash('sha256').update(value).digest('hex');
 const signature='public.complete_guest_customer_auth(text,uuid,text,text)';

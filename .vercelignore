@@ -1,13 +1,12 @@
 .env
 .env.*
 scripts/test/
-scripts/dev/
-scripts/server/
+my-server/scripts/dev/
 *.private.*
 .tmp-*
 PAWPAL_*.md
-scripts/database/
-data/
+my-server/scripts/database/
+my-server/data/
 docs/
 PAWPAL_PUBLIC_HTML_V218_VA_7_TRANG/
-scripts/migrate_customer_auth.js
+my-server/scripts/migrate_customer_auth.js

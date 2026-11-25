@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const load=()=>import('../../pages/services/booking/booking-guest-pets.mjs');
+const load=()=>import('../../my-client/pages/services/booking/booking-guest-pets.mjs');
 test('Guest breed picker excludes inactive species and meaningless autocomplete labels',async()=>{
  const {cleanGuestBreeds}=await load();const valid={id:'breed',breed_name:'Poodle',species_id:'dog',pet_species:{is_active:true,species_name:'Chó'}};
  const rows=[valid,...['','  ','7','unknown','null','undefined','Chưa rõ','Chưa cập nhật'].map(breed_name=>({...valid,breed_name})),{...valid,pet_species:{is_active:false}}];assert.deepEqual(cleanGuestBreeds(rows),[valid]);

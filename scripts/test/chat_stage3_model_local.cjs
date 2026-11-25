@@ -14,12 +14,12 @@ async function hold(statement){const child=spawn('docker',['exec','-i','supabase
 // Real provider, existing local environment credential only. Never print a key or provider error body.
 const modelReport={scope:'Real production generator/Gemini, active FAQ from owned local clone, no customer data or Cloud DB',model:process.env.PAWPAL_COPILOT_MODEL||'gemini-2.5-flash',maxGenerations:3,generations:0,cases:[],status:'INCOMPLETE'};
 (async()=>{
- const {sanitizeModelData}=require('../api/chat_model_privacy.js'),payloadFile=out+'/model-request.txt';
+ const {sanitizeModelData}=require('../../my-server/scripts/api/chat_model_privacy.js'),payloadFile=out+'/model-request.txt';
  if(process.argv.includes('--prepare-local')){
   assert.ok(!fs.existsSync(payloadFile),'prepared_payload_already_exists');
   const updated=process.argv.includes('--updated-faq');
   const hotelOnly=process.argv.includes('--hotel-only');assert.ok(!hotelOnly||updated,'hotel_only_requires_updated_faq');
-  const prepared={version:2,destination:'https://generativelanguage.googleapis.com',operation:'generateContent',model:modelReport.model,maxGenerations:hotelOnly?1:3,history:[],audience:'staff',promptImplementation:'Existing requestGemini staff system instruction in api/admin-chat.js',generatorSha256:crypto.createHash('sha256').update(fs.readFileSync('api/admin-chat.js')).digest('hex'),sanitizerSha256:crypto.createHash('sha256').update(fs.readFileSync('scripts/api/chat_model_privacy.js')).digest('hex'),cases:[]};
+  const prepared={version:2,destination:'https://generativelanguage.googleapis.com',operation:'generateContent',model:modelReport.model,maxGenerations:hotelOnly?1:3,history:[],audience:'staff',promptImplementation:'Existing requestGemini staff system instruction in api/admin-chat.js',generatorSha256:crypto.createHash('sha256').update(fs.readFileSync('api/admin-chat.js')).digest('hex'),sanitizerSha256:crypto.createHash('sha256').update(fs.readFileSync('my-server/scripts/api/chat_model_privacy.js')).digest('hex'),cases:[]};
   for(const [group,pattern]of [['A','lịch|hẹn|khiếu nại|hoàn tiền|hủy|hỗ trợ'],['B','giá|sản phẩm|Pawpoint|ưu đãi|voucher|phí'],['C','nhân sự|lịch trực|phân ca|bài viết|cấu hình|báo cáo|đánh giá nhân viên']]){
    if(hotelOnly&&group!=='B')continue;
    const table=updated&&group==='C'?'admin_chat_knowledge_faq':'chatbot_knowledge_faq';
@@ -33,7 +33,7 @@ const modelReport={scope:'Real production generator/Gemini, active FAQ from owne
  }
  const hashIndex=process.argv.indexOf('--approved-payload-sha256');if(hashIndex<0){modelReport.status='AWAITING_APPROVAL';modelReport.reason='Explicit approval of the prepared payload and destination is required';return;}
  const bytes=fs.readFileSync(payloadFile),hash=crypto.createHash('sha256').update(bytes).digest('hex');assert.equal(hash,process.argv[hashIndex+1]);const prepared=JSON.parse(bytes);assert.equal(prepared.destination,'https://generativelanguage.googleapis.com');assert.equal(prepared.model,modelReport.model);assert.ok(prepared.cases.length<=3);modelReport.payloadSha256=hash;
- if(prepared.version===2){assert.equal(prepared.generatorSha256,crypto.createHash('sha256').update(fs.readFileSync('api/admin-chat.js')).digest('hex'),'generator_changed_review_required');assert.equal(prepared.sanitizerSha256,crypto.createHash('sha256').update(fs.readFileSync('scripts/api/chat_model_privacy.js')).digest('hex'),'sanitizer_changed_review_required');}
+ if(prepared.version===2){assert.equal(prepared.generatorSha256,crypto.createHash('sha256').update(fs.readFileSync('api/admin-chat.js')).digest('hex'),'generator_changed_review_required');assert.equal(prepared.sanitizerSha256,crypto.createHash('sha256').update(fs.readFileSync('my-server/scripts/api/chat_model_privacy.js')).digest('hex'),'sanitizer_changed_review_required');}
  if(prepared.version===2){assert.ok(Number.isInteger(prepared.maxGenerations)&&prepared.maxGenerations>=1&&prepared.maxGenerations<=3);assert.ok(prepared.cases.filter(c=>c.status==='READY').length<=prepared.maxGenerations);modelReport.maxGenerations=prepared.maxGenerations;}
  const readline=require('node:readline');let key=process.env.GEMINI_API_KEY;
  if(!key)for(const file of ['.env.local','.env']){if(!fs.existsSync(file))continue;const stream=fs.createReadStream(file,{encoding:'utf8'}),rl=readline.createInterface({input:stream,crlfDelay:Infinity});for await(const line of rl){const m=line.match(/^\s*(?:export\s+)?GEMINI_API_KEY\s*=\s*(?:"([^"]*)"|'([^']*)'|([^#\s]+))/);if(m){key=m[1]??m[2]??m[3];rl.close();stream.destroy();break;}}if(key)break;}

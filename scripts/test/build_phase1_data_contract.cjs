@@ -32,7 +32,7 @@ async function main() {
   const metadata = await response.json();
   if (!metadata.definitions) throw new Error('No definitions');
   const defs = metadata.definitions;
-  const frontend = fs.readFileSync(path.join(root, 'scripts/api/supabase-client.js'), 'utf8');
+  const frontend = fs.readFileSync(path.join(root, 'my-client/scripts/api/supabase-client.js'), 'utf8');
   const fallback = frontend.match(/const FALLBACK_URL\s*=\s*'([^']+)'/)?.[1];
   const matches = fallback && new URL(fallback).origin === new URL(url).origin;
   const lines = ['# Từ điển dữ liệu giai đoạn 1 — thiết kế và metadata', '',

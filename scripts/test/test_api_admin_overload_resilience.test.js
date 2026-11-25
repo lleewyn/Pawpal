@@ -2,12 +2,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const chatApi = require('../api/chat.js');
+const chatApi = require('../../my-server/scripts/api/chat.js');
 
 test('PAWPAL AI API & ADMIN OVERLOAD RESILIENCE TEST SUITE', async (t) => {
 
     await t.test('G1-01 (P0-01): server.js không chứa bất kỳ delete require.cache nào trong runtime routes', () => {
-        const serverCode = fs.readFileSync(path.join(__dirname, '../../server.js'), 'utf-8');
+        const serverCode = fs.readFileSync(path.join(__dirname, '../../my-server/server.js'), 'utf-8');
         const matches = serverCode.match(/delete\s+require\.cache/g);
         assert.equal(matches, null, 'server.js tuyệt đối không được dùng delete require.cache trong route phục vụ request');
     });
@@ -170,19 +170,19 @@ test('PAWPAL AI API & ADMIN OVERLOAD RESILIENCE TEST SUITE', async (t) => {
     });
 
     await t.test('G2-07: Client Copilot cắt gọn copilotHistory xuống 10 tin nhắn trước khi fetch', () => {
-        const copilotCode = fs.readFileSync(path.join(__dirname, '../../pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js'), 'utf-8');
+        const copilotCode = fs.readFileSync(path.join(__dirname, '../../my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js'), 'utf-8');
         assert.ok(copilotCode.includes('slice(-10)'), 'tab-chatbot-copilot.js phải cắt 10 tin nhắn gần nhất trước khi gửi');
         assert.ok(copilotCode.includes('payloadMessages'), 'tab-chatbot-copilot.js phải dùng payloadMessages cắt gọn thay vì copilotHistory thô');
     });
 
     await t.test('G3-08: Admin Live upload ảnh Storage lỗi thì báo lỗi trung thực, không nhét base64 vào DB', () => {
-        const liveCode = fs.readFileSync(path.join(__dirname, '../../pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js'), 'utf-8');
+        const liveCode = fs.readFileSync(path.join(__dirname, '../../my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js'), 'utf-8');
         assert.ok(!liveCode.includes('pendingAdminAttachment.dataUrl : `[Ảnh đính kèm'), 'Không được fallback nhét base64 dataUrl vào chat_message khi upload storage lỗi');
         assert.ok(liveCode.includes('Không thể tải tệp đính kèm lên máy chủ lưu trữ'), 'Phải thông báo lỗi trung thực cho CSKH khi upload storage lỗi');
     });
 
     await t.test('G4-06 (B08): Khi tắt copilot_ai_enabled, Fast-Path vẫn chạy 100%, câu tự do trả fallback an toàn', async () => {
-        const chatConfig = require('../api/chat_config.js');
+        const chatConfig = require('../../my-server/scripts/api/chat_config.js');
         const origConfig = chatConfig.getChatConfig();
 
         try {

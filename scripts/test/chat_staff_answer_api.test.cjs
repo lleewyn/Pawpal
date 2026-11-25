@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {createHandler}=require('../../api/admin-chat.js'),copilot=require('../api/admin_copilot.js'),tools=require('../api/chat_read_tools.js');
+const {createHandler}=require('../../api/admin-chat.js'),copilot=require('../../my-server/scripts/api/admin_copilot.js'),tools=require('../../my-server/scripts/api/chat_read_tools.js');
 const dto=(intent,items=[],scope={})=>({intent,items,audience:'staff',total:items.length,total_is_page:true,page:1,page_size:10,scope,as_of:'2026-11-06T03:00:00Z'});
 function fixture(options={}){
  const staffId=randomUUID(),userId=randomUUID(),requestId=randomUUID(),sessionId=randomUUID(),conversationId=randomUUID(),lease=randomUUID(),calls=[],saved=[];

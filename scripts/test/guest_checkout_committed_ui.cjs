@@ -1,6 +1,6 @@
 // Real UI and committed Cloud, scoped to one synthetic order; never collect/ship stock.
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');const {connect}=require('../database/v1/service_import_connection.cjs');
+const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const file='D:/Aboutme/Pawpal-infra/browser-check/guest-sales-committed.private.json',guestState='D:/Aboutme/Pawpal-infra/browser-check/guest-sales-browser.private.json';
 if(!process.argv.includes('--run'))process.exit(0);
 (async()=>{const db=await connect(),browser=await chromium.launch({channel:'chrome',headless:true});let f,admin,guest;

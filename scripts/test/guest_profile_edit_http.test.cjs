@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {createGuestCommerce}=require('../api/guest_commerce');
+const {createGuestCommerce}=require('../../my-server/scripts/api/guest_commerce');
 test('Profile rotation repeats deterministically after lost response and does not extend cookie expiry',async()=>{
  const calls=[];const handler=createGuestCommerce({admin:{rpc:async(name,args)=>{calls.push({name,args});return {data:{requestId:args.p_request,rotated:true}};}},secret:'profile-http-test-secret-at-least-32-bytes',origins:['https://test.pawpal'],now:()=>1800000000000,limit:async()=>{}});
  const send=async(action,body={},cookie)=>{const res={headers:{},statusCode:200,setHeader(k,v){this.headers[k]=v;},status(n){this.statusCode=n;return this;},json(data){this.data=data;return this;}};await handler({method:'POST',headers:{origin:'https://test.pawpal','content-type':'application/json',cookie},body},res,action);return res;};

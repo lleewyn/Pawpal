@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {plan,answer}=require('../api/admin_copilot.js'),{planComparison}=require('../api/chat_stage4_compare.js'),{createReadBudget,prepare}=require('../api/chat_read_tools.js');
+const {plan,answer}=require('../../my-server/scripts/api/admin_copilot.js'),{planComparison}=require('../../my-server/scripts/api/chat_stage4_compare.js'),{createReadBudget,prepare}=require('../../my-server/scripts/api/chat_read_tools.js');
 const now=new Date('2026-10-29T03:00:00Z'),lease='10000000-0000-4000-8000-000000000001',permissions=['payment.read','refund_transaction.read'];
 function source(filters,collected=100,refunded=20){return {intent:'revenue.summary',total:1,items:[],collected,refunded,net:collected-refunded,scope:filters,source:'payment, refund_transaction',as_of:now.toISOString()};}
 async function invoke({question='Tuần này thực thu so tuần trước?',rights=permissions,readBudget=createReadBudget({lease}),run}={}){

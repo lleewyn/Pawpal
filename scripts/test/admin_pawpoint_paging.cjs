@@ -1,4 +1,4 @@
-﻿const {sql}=require('../database/v1/cloud_connection.cjs');
+﻿const {sql}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 console.log(sql(`BEGIN;
 DO $$ DECLARE u uuid:=gen_random_uuid(); s uuid:=gen_random_uuid(); c uuid:=gen_random_uuid(); r jsonb; BEGIN
 INSERT INTO auth.users(id) VALUES(u);INSERT INTO public.staff(id,full_name,job_title,auth_user_id,employment_status,must_change_password) VALUES(s,'Paging verification','QA',u,'active',false);INSERT INTO public.staff_role(staff_id,role_code) VALUES(s,'ADMIN');

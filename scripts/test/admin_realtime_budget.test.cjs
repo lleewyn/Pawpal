@@ -5,7 +5,7 @@ function setup(){
  const doc=new EventTarget();doc.hidden=false;
  const client={channel(name){const c={name,handlers:[],on(type,filter,callback){c.handlers.push({type,filter,callback});return c;},subscribe(callback){c.callback=callback;callback?.('SUBSCRIBED');return c;}};natives.push(c);return c;},removeChannel(c){removed.push(c);c.callback?.('CLOSED');return Promise.resolve('ok');},removeAllChannels(){return Promise.resolve([]);}};
  const window=new EventTarget();window.getSupabaseClient=()=>client;
- vm.runInNewContext(fs.readFileSync('scripts/shared/admin-realtime-budget.js','utf8'),{window,document:doc,sessionStorage:{getItem:k=>storage.get(k)},console,Promise});
+ vm.runInNewContext(fs.readFileSync('my-client/scripts/shared/admin-realtime-budget.js','utf8'),{window,document:doc,sessionStorage:{getItem:k=>storage.get(k)},console,Promise});
  return {client,natives,removed,doc,window,setModule(name){storage.set('pawpal_admin_active_module',name);window.dispatchEvent(new Event('admin:module-changing'));}};
 }
 test('inactive module channels consume no native subscription; returning triggers one catch-up and drops old events',async()=>{

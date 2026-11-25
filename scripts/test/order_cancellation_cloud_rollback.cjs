@@ -1,8 +1,8 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();const q=(s,a)=>db.query(s,a);try{
  await q("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");
- await q(fs.readFileSync('scripts/database/v1/231_sales_cancellation_reason.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+ await q(fs.readFileSync('my-server/scripts/database/v1/231_sales_cancellation_reason.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
  const variant=(await q("SELECT v.id FROM public.product_variant v JOIN public.product p ON p.id=v.product_id JOIN public.inventory i ON i.product_variant_id=v.id WHERE lower(v.status)='active' AND lower(p.status)='active' AND i.quantity_in_stock>20 ORDER BY v.id LIMIT 1")).rows[0];assert.ok(variant);
  const hash=crypto.randomBytes(32).toString('hex'),other=crypto.randomBytes(32).toString('hex'),id=crypto.randomUUID(),request=crypto.randomUUID();
  const method=crypto.randomUUID();

@@ -1,10 +1,10 @@
 // Real STAFF RPCs and actual edit form; isolated customer/pet/history fixtures always roll back.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')&&!process.argv.includes('--apply-cloud'))process.exit(0);
 (async()=>{const db=await connect(),browser=await chromium.launch({channel:'chrome',headless:true}),folder='docs/verification/staff-pet-care-edit';fs.mkdirSync(folder,{recursive:true});let page;const checks=[],pass=s=>{checks.push(s);console.log('PASS',s);};
- const migration=fs.readFileSync('scripts/database/v1/276_pet_legacy_gender.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
+ const migration=fs.readFileSync('my-server/scripts/database/v1/276_pet_legacy_gender.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
  try{
   await db.query("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");await db.query(migration);await db.query(migration);
   const owner=randomUUID(),pet=randomUUID(),oldWeight=randomUUID();
@@ -21,10 +21,10 @@ if(!process.argv.includes('--cloud')&&!process.argv.includes('--apply-cloud'))pr
    catch(e){await db.query('ROLLBACK TO SAVEPOINT call_rpc');await db.query('RELEASE SAVEPOINT call_rpc');return {data:null,error:{message:e.message,code:e.code}};}
   };
   page=await browser.newPage({viewport:{width:1100,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('http://localhost/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'}));await page.goto('http://localhost/');await page.exposeFunction('liveRpc',rpc);
-  const source=fs.readFileSync('pages/admin/modules/pets/pets.js','utf8');
+  const source=fs.readFileSync('my-client/pages/admin/modules/pets/pets.js','utf8');
   const mount=async()=>{
    await page.setContent('<body class="admin-body admin-ui-standard" style="background:#F4F9F6"><main class="staff-workspace" style="padding:24px"></main></body>');
-   for(const file of ['pages/admin/admin.css','pages/admin/admin-components.css','pages/admin/admin-typography.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+   for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/admin-components.css','my-client/pages/admin/admin-typography.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
    await page.evaluate(()=>{window.PawpalAdminAccess={state:{user:{permissions:['work.pet.write']}},isStaff:()=>true};window.getSupabaseClient=()=>({rpc:(name,args)=>liveRpc(name,args||{})});});
    await page.addScriptTag({content:source.slice(0,source.indexOf('// Role-scoped screens'))});
    await page.evaluate(pet=>PawpalPetsStaff.editPet({petId:pet,onCreated:()=>window.saved=true}),pet);

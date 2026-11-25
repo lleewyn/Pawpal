@@ -2,7 +2,7 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings,infra}=require('../database/v1/cloud_connection.cjs');
+const {settings,infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const {config}=settings(),phone='096'+String(crypto.randomInt(1000000,10000000));
 const password=crypto.randomBytes(20).toString('hex')+'!';
 const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});

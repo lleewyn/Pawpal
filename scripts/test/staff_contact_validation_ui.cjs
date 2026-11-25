@@ -2,9 +2,9 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{
  const p=await b.newPage({viewport:{width:1440,height:1000}});await p.route('**/*',r=>r.abort());await p.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));await p.goto('http://localhost:3001/');
- await p.setContent(fs.readFileSync('pages/admin/modules/staff/staff.html','utf8'));
+ await p.setContent(fs.readFileSync('my-client/pages/admin/modules/staff/staff.html','utf8'));
  await p.evaluate(()=>{window.PawpalStaff={state:{staff:[],isLoaded:false,shiftRequests:[],assessments:[],schedules:[]},subtabs:{},showToast:()=>{}};});
- let code=fs.readFileSync('pages/admin/modules/staff/subtabs/tab-staff-list.js','utf8');code=code.slice(0,code.lastIndexOf("    if (document.readyState === 'loading')"))+'})();';await p.addScriptTag({content:code});
+ let code=fs.readFileSync('my-client/pages/admin/modules/staff/subtabs/tab-staff-list.js','utf8');code=code.slice(0,code.lastIndexOf("    if (document.readyState === 'loading')"))+'})();';await p.addScriptTag({content:code});
  await p.evaluate(()=>{PawpalStaff.subtabs.list.init();window.writes=0;window.payloads=[];PawpalStaff.createStaffAccount=async profile=>{writes++;payloads.push(profile);throw Object.assign(Error('QA valid payload reached provisioning'),{staffAccountError:true});};document.getElementById('staffModalOverlay').classList.add('active');});
  await p.click('#btnSaveStaff');await p.waitForFunction(()=>!document.getElementById('btnSaveStaff').disabled);
  for(const field of ['staffInputName','staffInputPosition','staffInputPhone'])assert.equal(await p.locator('#'+field).getAttribute('aria-invalid'),'true');

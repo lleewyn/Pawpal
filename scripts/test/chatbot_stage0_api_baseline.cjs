@@ -1,14 +1,14 @@
 // Five sequential local-handler GETs and five Production GETs. No AI/business writes.
 const fs=require('node:fs'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
 const {createClient}=require('@supabase/supabase-js');
-const {settings,infra}=require('../database/v1/cloud_connection.cjs');
-const {createStaffAuthHandlers}=require('../api/staff_auth.js');
+const {settings,infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
+const {createStaffAuthHandlers}=require('../../my-server/scripts/api/staff_auth.js');
 const {createHandler}=require('../../api/admin-chat.js');
 if(!process.argv.includes('--read-cloud')&&!process.argv.includes('--finalize-evidence')){console.log('No connection. Pass --read-cloud for bounded GET measurements.');process.exit(0);}
 const report={capturedAt:new Date().toISOString(),scope:'Existing QA staff JWT; read-only history session page; five sequential samples each, not load or capacity test. Auth sign-in only; no model calls or business writes.',local:[],production:[]};
 const hash=v=>crypto.createHash('sha256').update(v).digest('hex');
 const stable=v=>Array.isArray(v)?v.map(stable):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,stable(v[k])])):v;
-function sourceComparison(deployment){return ['api/admin-chat.js','scripts/api/admin_copilot.js','scripts/api/chat_understanding.js','scripts/api/staff_auth.js'].map(file=>{
+function sourceComparison(deployment){return ['api/admin-chat.js','my-server/scripts/api/admin_copilot.js','my-server/scripts/api/chat_understanding.js','my-server/scripts/api/staff_auth.js'].map(file=>{
  const local=fs.readFileSync(file);let deployed;
  try{deployed=execFileSync('git',['show',deployment+':'+file],{windowsHide:true,stdio:['ignore','pipe','ignore']});}catch{return {file,localSourceSha256:hash(local),existsInDeploymentCommit:false,matchesLocal:false};}
  return {file,deploymentSourceSha256:hash(deployed),localSourceSha256:hash(local),existsInDeploymentCommit:true,matchesLocal:hash(deployed)===hash(local)};

@@ -38,7 +38,7 @@ function createCustomerProfileService(admin, writer = admin) {
         const before = await snapshot(customerId);
         if (before.revision !== input.revision) throw new Error('Hồ sơ đã thay đổi. Vui lòng mở lại form trước khi lưu.');
         if (!Array.isArray(input.addresses) || input.addresses.length > 20) throw new Error('Chỉ lưu tối đa 20 địa chỉ.');
-        const { normalizeAddress, validateAddress, addressKey } = await import('../shared/address-validation.mjs');
+        const { normalizeAddress, validateAddress, addressKey } = await import('../../../my-client/scripts/shared/address-validation.mjs');
         const addresses = input.addresses.map(normalizeAddress);
         const existing = new Map(before.addresses.map(a => [a.id, a]));
         const ids = new Set();

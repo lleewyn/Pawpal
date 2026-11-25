@@ -1,5 +1,5 @@
 // Read-only metadata/aggregate audit; never applies migration 111 or changes customers.
-const fs=require('node:fs'),{connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('node:fs'),{connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud-readonly')){console.log('No connection. Use --cloud-readonly for metadata/aggregate reads.');process.exit(0);}
 (async()=>{const db=await connect();try{
  await db.query("BEGIN READ ONLY;SET LOCAL statement_timeout='8s'");

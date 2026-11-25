@@ -1,7 +1,7 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings,infra}=require('../database/v1/cloud_connection.cjs');
+const {settings,infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const {config}=settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
 const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,options);
 const ok=async promise=>{const r=await promise;if(r.error)throw Error(r.error.message);return r.data;};
@@ -17,12 +17,12 @@ const phone='095'+String(crypto.randomInt(1000000,10000000)),password=crypto.ran
   uid=(await ok(service.auth.admin.createUser({email:'sales-'+crypto.randomUUID()+'@example.invalid',email_confirm:true,phone:'+84'+phone.slice(1),phone_confirm:true,password,app_metadata:{pawpal_test:true,user_type:'CUSTOMER'}}))).user.id;
   cid=await ok(service.rpc('complete_customer_auth',{p_auth_id:uid,p_phone:phone,p_name:'Sales verification'}));
   browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1440,height:1050}});
-  const paths=['scripts/api/api.js','scripts/shared/cart-state.mjs','scripts/shared/data-loader.js','pages/shop/cart/cart.js','pages/shop/checkout/checkout.js','pages/shop/product-detail/product-detail.js','pages/shop/shop.js','pages/user/modules/orders/orders.js','pages/user/modules/orders/return-handler.js'];
-  paths.push('pages/user/modules/orders/return-detail.css','pages/user/modules/orders/return-detail.js');
-  paths.push('pages/user/modules/orders/order-detail.js','scripts/shared/customer-realtime.mjs');
-  paths.push('pages/user/modules/orders/review-handler.js');
-  paths.push('pages/shop/payment-success/payment-success.js','pages/shop/vnpay-sandbox/vnpay-sandbox.js');
-  paths.push('pages/shop/payment-success/payment-success.html','pages/shop/vnpay-sandbox/vnpay-sandbox.html');
+  const paths=['my-client/scripts/api/api.js','my-client/scripts/shared/cart-state.mjs','my-client/scripts/shared/data-loader.js','my-client/pages/shop/cart/cart.js','my-client/pages/shop/checkout/checkout.js','my-client/pages/shop/product-detail/product-detail.js','my-client/pages/shop/shop.js','my-client/pages/user/modules/orders/orders.js','my-client/pages/user/modules/orders/return-handler.js'];
+  paths.push('my-client/pages/user/modules/orders/return-detail.css','my-client/pages/user/modules/orders/return-detail.js');
+  paths.push('my-client/pages/user/modules/orders/order-detail.js','my-client/scripts/shared/customer-realtime.mjs');
+  paths.push('my-client/pages/user/modules/orders/review-handler.js');
+  paths.push('my-client/pages/shop/payment-success/payment-success.js','my-client/pages/shop/vnpay-sandbox/vnpay-sandbox.js');
+  paths.push('my-client/pages/shop/payment-success/payment-success.html','my-client/pages/shop/vnpay-sandbox/vnpay-sandbox.html');
   if(!process.argv.includes('--deployed'))for(const path of paths)await page.route('**/'+path+'*',route=>route.fulfill({contentType:path.endsWith('.html')?'text/html':path.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path,'utf8')}));
   const pageErrors=[];
   page.on('pageerror',e=>{pageErrors.push(e.message);fs.appendFileSync(infra+'/verification/customer-sales-js-error.private.txt',e.stack+'\n');});

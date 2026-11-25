@@ -21,7 +21,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   assert.equal(await p.evaluate(()=>requests.at(-1).page),3);
   if(kind==='orders')assert.equal((await p.locator('#total-spent').textContent()).replace(/\D/g,''),'2300');
   if(kind==='bookings'){
-   await p.addStyleTag({content:fs.readFileSync('pages/user/user.css','utf8')+'\n'+fs.readFileSync('pages/user/modules/bookings/bookings.css','utf8')+'\nbody{font-family:Arial,sans-serif}.d-none{display:none!important}'});
+   await p.addStyleTag({content:fs.readFileSync('my-client/pages/user/user.css','utf8')+'\n'+fs.readFileSync('my-client/pages/user/modules/bookings/bookings.css','utf8')+'\nbody{font-family:Arial,sans-serif}.d-none{display:none!important}'});
    await p.setViewportSize({width:390,height:900});
    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
    await p.screenshot({path:'D:/Aboutme/Pawpal-infra/verification/customer-booking-pages.private.png',fullPage:true});

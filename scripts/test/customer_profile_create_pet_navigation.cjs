@@ -3,8 +3,8 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=re
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{
  const p=await b.newPage({viewport:{width:1440,height:1000}});await p.route('**/*',r=>r.abort());await p.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));await p.goto('http://localhost:3001/');
- await p.setContent('<button class="sidebar-menu-btn" data-title="Bán hàng">Bán hàng</button><button class="sidebar-menu-btn" data-title="Dịch vụ">Dịch vụ</button>'+fs.readFileSync('pages/admin/modules/customers/customers.html','utf8'));
- const shell=fs.readFileSync('pages/admin/index.html','utf8');for(const match of shell.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/[^"?]+)[^"]*"[^>]*>/g))await p.addStyleTag({content:fs.readFileSync(match[1].slice(1),'utf8')});
+ await p.setContent('<button class="sidebar-menu-btn" data-title="Bán hàng">Bán hàng</button><button class="sidebar-menu-btn" data-title="Dịch vụ">Dịch vụ</button>'+fs.readFileSync('my-client/pages/admin/modules/customers/customers.html','utf8'));
+ const shell=fs.readFileSync('my-client/pages/admin/index.html','utf8');for(const match of shell.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/[^"?]+)[^"]*"[^>]*>/g))await p.addStyleTag({content:fs.readFileSync(match[1].slice(1),'utf8')});
  await p.evaluate(()=>{
   document.body.className='admin-body';window.calls=[];window.petArgs=[];window.created=[];
   window.getSupabaseClient=()=>({from:table=>{const q={select:()=>q,eq:()=>q,order:()=>q,then:resolve=>resolve({data:table==='pet_species'?[{id:'species-cat',species_name:'Mèo'}]:[{id:'breed-cat',species_id:'species-cat',breed_name:'Anh lông ngắn'}],error:null})};return q;},rpc:async(name,args)=>{petArgs.push(args);created=[{id:'PET-QA',dbId:args.p_pet_id,name:args.p_name,species:'Mèo',breed:'Anh lông ngắn',weight:args.p_weight,allergy:args.p_allergy,status:'active'}];return {data:args.p_pet_id,error:null};}});
@@ -37,7 +37,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  console.log('PASS actual modern add-pet form binds captured owner, species/breed, 6.5kg and allergy; refresh adds pet card; order/booking handlers route exact IDs for cold and warm modules. Isolated transport.');
  }finally{await b.close();}
  if(!process.argv.includes('--cloud'))return;
- const {connect}=require('../database/v1/service_import_connection.cjs');const db=await connect();try{
+ const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');const db=await connect();try{
   await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
   const user=randomUUID(),staff=randomUUID(),owner=randomUUID(),other=randomUUID(),pet=randomUUID();
   await db.query('INSERT INTO auth.users(id) VALUES($1)',[user]);await db.query("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES($1,$2,'QA pet rollback','QA','active',false)",[staff,user]);await db.query("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[staff]);

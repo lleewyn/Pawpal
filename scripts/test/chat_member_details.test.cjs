@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const member=require('../api/chat_member.js');
+const member=require('../../my-server/scripts/api/chat_member.js');
 test('neutral support lookup is distinguished narrowly from real complaint/escalation',()=>{assert.equal(member.neutralSupport('Yêu cầu hỗ trợ của tôi xử lý đến đâu?'),true);for(const q of ['Yêu cầu hỗ trợ vì bé chảy máu','Tôi muốn gặp nhân viên về yêu cầu hỗ trợ','Yêu cầu hỗ trợ của tôi: giao sai hàng'])assert.equal(member.neutralSupport(q),false);});
 test('six advanced member needs route to one closed private scope, public advice stays public',()=>{
  const cases=[['Lịch sử điểm của tôi','point_history'],['Ví ưu đãi của tôi','wallet'],['Voucher của tôi còn hạn không?','wallet'],['Nhật ký chăm sóc của tôi','care'],['Hotel của tôi đã đặt thế nào?','hotel'],['Taxi của tôi đón ở đâu?','taxi'],['Yêu cầu hỗ trợ của tôi xử lý đến đâu?','support'],['Nhật ký BKG-ABC','care'],['Hotel BKG-ABC','hotel'],['Taxi BKG-ABC','taxi'],['Xem TKT-ABC','support']];

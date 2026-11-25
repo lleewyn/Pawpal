@@ -7,7 +7,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',route=>{
   const u=new URL(route.request().url());if(u.origin!=='http://localhost')return route.abort();
-  if(u.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/pets/pets.css"><style>.d-none{display:none!important}</style>'+fs.readFileSync('pages/user/modules/pets/pets.html','utf8')});
+  if(u.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/pets/pets.css"><style>.d-none{display:none!important}</style>'+fs.readFileSync('my-client/pages/user/modules/pets/pets.html','utf8')});
   if(u.pathname==='/api/media'){
    requests.push({action:u.searchParams.get('action'),id:u.searchParams.get('id'),authorization:route.request().headers().authorization,...(u.searchParams.get('action')==='prepare'?{body:route.request().postDataJSON()}:{})});
    if(u.searchParams.get('action')==='read')return route.fulfill({contentType:'image/png',body:image});

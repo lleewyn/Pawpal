@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {plan,answer}=require('../api/admin_copilot.js'),{definitions,createReadBudget,prepare}=require('../api/chat_read_tools.js');
+const {plan,answer}=require('../../my-server/scripts/api/admin_copilot.js'),{definitions,createReadBudget,prepare}=require('../../my-server/scripts/api/chat_read_tools.js');
 const now=new Date('2026-10-29T03:00:00Z'),lease='10000000-0000-4000-8000-000000000001',question='Việc cần kiểm tra hôm nay';
 const rights=[...new Set(['order.refund_pending','appointment.search'].flatMap(k=>definitions[k].permissions))];
 function data(tool,filters){return {intent:tool,total:1,items:tool==='order.refund_pending'?[{code:'ORD-QA',collected:100,refunded:50,net:50,pending_refunds:1}]:[{code:'APT-QA',status:'confirmed',scheduled_at:'2026-10-29T04:00:00Z',services:'QA Spa'}],scope:{...filters,time_zone:'Asia/Ho_Chi_Minh'},source:tool,as_of:now.toISOString(),page:1,pages:1,limitations:[]};}

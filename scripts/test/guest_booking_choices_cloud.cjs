@@ -1,8 +1,8 @@
-const fs=require('node:fs'),{connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('node:fs'),{connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  await db.query("BEGIN;SET LOCAL statement_timeout='15s';SET LOCAL lock_timeout='3s'");
- await db.query(fs.readFileSync(require.resolve('../database/v1/210_guest_booking_choices.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
- await db.query(fs.readFileSync(require.resolve('../database/v1/211_guest_activation_demo_date.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
+ await db.query(fs.readFileSync(require.resolve('../../my-server/scripts/database/v1/210_guest_booking_choices.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
+ await db.query(fs.readFileSync(require.resolve('../../my-server/scripts/database/v1/211_guest_activation_demo_date.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
  await db.query('SAVEPOINT fixtures');
  const source=fs.readFileSync(require.resolve('./customer_booking_availability.cjs'),'utf8');
  const fixture=source.split('const query=`')[1].split(' -- No shifts:')[0].replace(/^BEGIN;/,'')

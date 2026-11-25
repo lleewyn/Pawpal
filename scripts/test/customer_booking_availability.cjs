@@ -1,4 +1,4 @@
-﻿const {sql}=require('../database/v1/cloud_connection.cjs');
+﻿const {sql}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const query=`BEGIN;
 DO $$ DECLARE uid uuid:=gen_random_uuid(); cid uuid:=gen_random_uuid(); pid uuid:=gen_random_uuid(); sid uuid:=gen_random_uuid(); worker uuid:=gen_random_uuid(); worker_auth uuid:=gen_random_uuid(); aid uuid:=gen_random_uuid(); breed uuid; species uuid; cat uuid; level_id uuid; payload jsonb; result jsonb; q jsonb; starts timestamptz:=(((now() AT TIME ZONE 'Asia/Bangkok')::date+45)+time '09:00') AT TIME ZONE 'Asia/Bangkok'; BEGIN
  INSERT INTO auth.users(id) VALUES(uid),(worker_auth);

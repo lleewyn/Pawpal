@@ -2,9 +2,9 @@
 // Small, reversible provider integration test. No Supabase business records or broad collection deletion.
 const fs = require('node:fs'), crypto = require('node:crypto'), assert = require('node:assert/strict');
 const { ObjectId } = require('mongodb');
-const { createMediaMongoStore } = require('../api/media_mongodb.cjs');
-const { createGridfsStore } = require('../api/media_gridfs.cjs');
-const { verifyImage } = require('../api/media_files.cjs');
+const { createMediaMongoStore } = require('../../my-server/scripts/api/media_mongodb.cjs');
+const { createGridfsStore } = require('../../my-server/scripts/api/media_gridfs.cjs');
+const { verifyImage } = require('../../my-server/scripts/api/media_files.cjs');
 (async () => {
     let connection, claim, resources, cleaned = false;
     try {

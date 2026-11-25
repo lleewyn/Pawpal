@@ -19,7 +19,7 @@ let resolve=once(get('resolve_media_asset'),"  IF NOT allowed AND a.status='atta
   IF NOT allowed AND a.status='attached' AND s.purpose='care_log_image'`);
 const cleanup=once(get('claim_media_cleanup'),'OR EXISTS(SELECT 1 FROM public.appointment_adjustment_media WHERE media_asset_id=a.id))','OR EXISTS(SELECT 1 FROM public.appointment_adjustment_media WHERE media_asset_id=a.id) OR EXISTS(SELECT 1 FROM public.pet_profile WHERE avatar_media_asset_id=a.id))');
 const shape=backup.constraints.find(c=>c.conname==='media_upload_session_check').definition;
-fs.writeFileSync('scripts/database/v1/196_pet_avatar_media.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/196_pet_avatar_media.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 ALTER TABLE public.media_upload_session ADD COLUMN pet_id uuid REFERENCES public.pet_profile(id);
 ALTER TABLE public.media_upload_session DROP CONSTRAINT media_upload_session_check,DROP CONSTRAINT media_upload_session_purpose_check;
@@ -68,7 +68,7 @@ REVOKE ALL ON FUNCTION public.prepare_pet_media_upload(uuid,uuid,bigint,text,tex
 GRANT EXECUTE ON FUNCTION public.prepare_pet_media_upload(uuid,uuid,bigint,text,text) TO authenticated;
 COMMIT;\n`);
 console.log('PET_AVATAR_MIGRATION_GENERATED');
-fs.writeFileSync('scripts/database/v1/196_pet_avatar_media.rollback.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/196_pet_avatar_media.rollback.sql',`BEGIN;
 LOCK TABLE public.media_upload_session,public.pet_profile IN ACCESS EXCLUSIVE MODE;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.media_upload_session WHERE purpose='pet_avatar') OR EXISTS(SELECT 1 FROM public.pet_profile WHERE avatar_media_asset_id IS NOT NULL) THEN RAISE EXCEPTION 'pet_avatar_rollback_requires_no_sessions'; END IF; END $$;
 `+['resolve_media_asset','claim_media_cleanup'].map(n=>get(n)+';').join('\n')+`

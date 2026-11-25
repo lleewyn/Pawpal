@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict');
-const {createCustomerSupportService}=require('../api/customer_support');
+const {createCustomerSupportService}=require('../../my-server/scripts/api/customer_support');
 const ticketId='10000000-0000-4000-8000-000000000001',requestId='20000000-0000-4000-8000-000000000001';
 function fixture(error=null,ack=requestId){const calls=[];const service=createCustomerSupportService({
  from(){throw Error('Direct table access forbidden');},async rpc(name,args){calls.push({name,args});return {data:ack,error};}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {cancelCustomerBooking} from '../shared/customer-booking.mjs';
+import {cancelCustomerBooking} from '../../my-client/scripts/shared/customer-booking.mjs';
 const booking={_supabaseId:'booking-id',updatedAt:'2026-10-23T00:00:00Z'};
 test('cancellation uses the versioned RPC and stable request ID, with no direct write',async()=>{
     let payload;

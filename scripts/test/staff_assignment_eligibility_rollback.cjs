@@ -1,6 +1,6 @@
-const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID:id}=require('node:crypto');const {connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID:id}=require('node:crypto');const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect(),checks=[];try{
- await db.query("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");await db.query(fs.readFileSync('scripts/database/v1/131_staff_assignment_eligibility.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+ await db.query("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");await db.query(fs.readFileSync('my-server/scripts/database/v1/131_staff_assignment_eligibility.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
  const actor=id(),worker=id(),u=id(),v=id();await db.query('INSERT INTO auth.users(id) VALUES($1),($2)',[u,v]);
  await db.query("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,phone_number,must_change_password) VALUES($1,$2,'QA eligibility reviewer','QA','0999123401',false),($3,$4,'QA eligibility worker','QA','0999123402',false)",[actor,u,worker,v]);await db.query("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[actor]);await db.query("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role','authenticated',true)",[u]);
  const allowed=async()=>(await db.query('SELECT pawpal_private.staff_skill_allows_assignment($1) ok',[worker])).rows[0].ok;

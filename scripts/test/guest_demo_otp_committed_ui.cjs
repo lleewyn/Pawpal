@@ -2,8 +2,8 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{spawn}=require('node:child_process');
 const {createClient}=require('@supabase/supabase-js');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {connect}=require('../database/v1/service_import_connection.cjs');
-const {config}=require('../database/v1/cloud_connection.cjs').settings();
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
+const {config}=require('../../my-server/scripts/database/v1/cloud_connection.cjs').settings();
 if(!process.argv.includes('--run')){console.log('Use --run for bounded committed UI/Cloud checks and exact fixture cleanup.');process.exit(0);}
 const origin='http://localhost:4012',phone='09'+crypto.randomInt(10000000,99999999),name='QA Demo Link '+crypto.randomUUID().slice(0,8),password=crypto.randomBytes(24).toString('hex')+'!';
 const privateFile='D:/Aboutme/Pawpal-infra/browser-check/guest-demo-link.private.json';
@@ -12,7 +12,7 @@ const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SU
  const save=()=>fs.writeFileSync(privateFile,JSON.stringify(f));const pass=message=>{checks.push(message);console.log('PASS:',message);};save();
  try{
   assert.equal((await db.query("SELECT 1 FROM public.customer_phone WHERE phone_number=$1 UNION ALL SELECT 1 FROM auth.users WHERE phone=ANY($2::text[])",[phone,[phone,'84'+phone.slice(1),'+84'+phone.slice(1)]])).rowCount,0);
-  server=spawn(process.execPath,['server.js'],{cwd:process.cwd(),windowsHide:true,stdio:'ignore',env:{...process.env,PORT:'4012',SUPABASE_URL:config.DESTINATION_SUPABASE_URL,SUPABASE_ANON_KEY:config.DESTINATION_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY:config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,PAWPAL_SMS_MODE:'demo'}});
+  server=spawn(process.execPath,['my-server/server.js'],{cwd:process.cwd(),windowsHide:true,stdio:'ignore',env:{...process.env,PORT:'4012',SUPABASE_URL:config.DESTINATION_SUPABASE_URL,SUPABASE_ANON_KEY:config.DESTINATION_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY:config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,PAWPAL_SMS_MODE:'demo'}});
   let ready=false;for(let i=0;i<40;i++){try{if((await fetch(origin+'/login')).ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,250));}assert.ok(ready,'Owned server did not start');
   browser=await chromium.launch({channel:'chrome',headless:true});const context=await browser.newContext(),page=await context.newPage();page.setDefaultTimeout(18000);
   const duplicate=async(endpoint,key)=>{await page.route('**/api/customer/guest/'+endpoint,async route=>{

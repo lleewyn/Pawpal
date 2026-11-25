@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY);
-const chatHandler = require('../api/chat.js');
+const chatHandler = require('../../my-server/scripts/api/chat.js');
 
 async function runG3TestSuite() {
     console.log('=== BẮT ĐẦU KIỂM THỬ TOÀN DIỆN GIAI ĐOẠN 3 (G3 — ADMIN COPILOT) ===\n');
@@ -21,7 +21,7 @@ async function runG3TestSuite() {
     }
     const testStaff = staffList[0];
     console.log(`   -> Nhân sự: ${testStaff.full_name} (${testStaff.system_role}, ID: ${testStaff.id})`);
-    const { signStaffToken } = require('../api/staff_auth.js');
+    const { signStaffToken } = require('../../my-server/scripts/api/staff_auth.js');
     const validToken = signStaffToken(testStaff);
     const validAuthHeader = `Bearer ${validToken}`;
 

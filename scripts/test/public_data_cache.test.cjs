@@ -2,7 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
-const source=fs.readFileSync('scripts/shared/data-loader.js','utf8');
+const source=fs.readFileSync('my-client/scripts/shared/data-loader.js','utf8');
 function harness(storage=new Map()) {
     let now=100000, calls=0, fail=false;
     const chain={select(){return this;},in(){return this;},eq(){return this;},order(){return this;},limit(){return this;},

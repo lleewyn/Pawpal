@@ -1,6 +1,6 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
- async function mount(){const page=await browser.newPage({viewport:{width:1440,height:1050}});await page.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<body></body>'}));await page.goto('http://localhost:3001/');await page.setContent(fs.readFileSync('components/fab/fab.html','utf8'));await page.addStyleTag({content:fs.readFileSync('components/fab/fab.css','utf8')});
+ async function mount(){const page=await browser.newPage({viewport:{width:1440,height:1050}});await page.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<body></body>'}));await page.goto('http://localhost:3001/');await page.setContent(fs.readFileSync('my-client/components/fab/fab.html','utf8'));await page.addStyleTag({content:fs.readFileSync('my-client/components/fab/fab.css','utf8')});
   await page.evaluate(()=>{window.session={user:{id:'A'},access_token:'token-A'};window.calls=[];window.mode='normal';window.version=1;window.deferPart=false;window.failPart=false;window.held=[];
    window.full='😀 á <img src=x onerror="window.injected=true"> '.repeat(100);window.chars=Array.from(full);window.preview=chars.slice(0,1200).join('');
    const long={id:'long',sender_type:'bot',content:preview,content_partial:true,content_offset:1200,content_revision:'a'.repeat(32),metadata:{},created_at:'2026-10-28T01:00:20Z'};
@@ -17,7 +17,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=requ
     else {messages=[long,...[10,9,8,7,6,5].map(row)];hasMore=true;}
     return {ok:true,json:async()=>({ok:true,messages,hasMore,status:'bot_handling',updatedAt:'v'+version})};
    };
-  });await page.addScriptTag({content:fs.readFileSync('components/fab/fab.js','utf8')});await page.waitForFunction(()=>typeof changeAuth==='function');await page.click('#fabAiBtn');await page.waitForFunction(()=>document.querySelectorAll('.fab-chat-bubble').length===7);return page;
+  });await page.addScriptTag({content:fs.readFileSync('my-client/components/fab/fab.js','utf8')});await page.waitForFunction(()=>typeof changeAuth==='function');await page.click('#fabAiBtn');await page.waitForFunction(()=>document.querySelectorAll('.fab-chat-bubble').length===7);return page;
  }
  let p=await mount();await p.fill('#fabChatInput','Bản nháp đang soạn');assert.equal(await p.evaluate(()=>calls.filter(c=>c.body.action==='public_read_part').length),0);
  await p.getByRole('button',{name:'Tin nhắn trước',exact:true}).click();await p.waitForFunction(()=>document.querySelectorAll('.fab-chat-bubble').length===12);assert.equal(await p.evaluate(()=>calls.filter(c=>c.body.beforeId).at(-1).body.beforeId),'id-5');assert.equal(await p.getByRole('button',{name:'Tin nhắn trước',exact:true}).count(),0);

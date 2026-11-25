@@ -1,7 +1,7 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const apply=process.argv.includes('--apply-cloud');if(!apply&&!process.argv.includes('--verify-cloud')){console.log('Use --verify-cloud or --apply-cloud after matching rollback PASS.');process.exit(0);}
-const forward=fs.readFileSync('scripts/database/v1/119_admin_guest_search.sql','utf8'),reverse=fs.readFileSync('scripts/database/v1/119_admin_guest_search_rollback.sql','utf8');
+const forward=fs.readFileSync('my-server/scripts/database/v1/119_admin_guest_search.sql','utf8'),reverse=fs.readFileSync('my-server/scripts/database/v1/119_admin_guest_search_rollback.sql','utf8');
 const bodies=s=>[...s.matchAll(/AS \$\$([\s\S]*?)\$\$;/g)].map(m=>m[1].replaceAll('\r\n','\n').trim()),sha=s=>crypto.createHash('sha256').update(s).digest('hex');
 const signatures=['public.search_admin_sales_customers(text)','public.get_admin_sales_order_page(jsonb,integer)','public.get_admin_service_booking_page(jsonb,integer,boolean)'];
 const report='docs/verification/sync/admin-guest-search-rollback.txt';

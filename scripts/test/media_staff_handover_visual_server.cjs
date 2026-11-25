@@ -1,10 +1,10 @@
 'use strict';
 // Isolated browser harness for the actual STAFF intake closure. No Cloud credentials or writes.
 const fs=require('node:fs'),path=require('node:path'),express=require('express');
-const source=fs.readFileSync('pages/admin/modules/services/services.js','utf8');
+const source=fs.readFileSync('my-client/pages/admin/modules/services/services.js','utf8');
 const marker=source.indexOf("overlay.id = 'staffHandoverModal'"),start=source.lastIndexOf('(function () {',marker),finish=source.indexOf('})();',source.indexOf('window.PawpalStaffHandover = Object.freeze',marker))+5;
 if(start<0||finish<start)throw Error('STAFF_HANDOVER_SCOPE');
-const links=[...fs.readFileSync('pages/admin/index.html','utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x=>x[0]).join('\n');
+const links=[...fs.readFileSync('my-client/pages/admin/index.html','utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x=>x[0]).join('\n');
 const html=`<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${links}<title>Kiểm thử riêng ảnh tiếp nhận nhân viên</title><body class="admin-body"><script>
 window.probe={calls:[],saves:[],acceptSave:false};
 window.PawpalAdminAccess={isStaff:()=>true,state:{user:{id:'20000000-0000-0000-0000-000000000002',name:'Nhân viên kiểm thử riêng',permissions:['work.service.perform']}}};
@@ -19,7 +19,7 @@ ${source.slice(start,finish)}
 PawpalStaffHandover.open({appointmentId:'70000000-0000-0000-0000-000000000001'});
 </script></body></html>`;
 const app=express();app.get('/',(req,res)=>res.type('html').send(html));
-app.get('/api/media',(req,res)=>res.type('image/jpeg').sendFile(path.resolve('assets/images/services/spa/process/spa04.webp')));
+app.get('/api/media',(req,res)=>res.type('image/jpeg').sendFile(path.resolve('my-client/assets/images/services/spa/process/spa04.webp')));
 app.post('/api/media',express.raw({type:()=>true,limit:'4mb'}),(req,res)=>{
  if(req.query.action==='prepare')return res.json({ok:true,session_id:'22222222-2222-4222-8222-222222222222'});
  if(req.query.action==='upload')return res.status(201).json({ok:true,asset_id:'44444444-4444-4444-8444-444444444444'});

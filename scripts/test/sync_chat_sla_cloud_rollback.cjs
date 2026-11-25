@@ -1,7 +1,7 @@
 // One synthetic conversation, rule fixtures and agents. Always rollback; no real messages.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs');
 if(!process.argv.includes('--cloud')){console.log('No network. Use --cloud for rollback-only SLA rule checks.');process.exit(0);}
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();let queries=0;const checks=[];
  const [a,u,ca,staff,chat,slow,fast,inactive,unrelated]=Array.from({length:9},()=>randomUUID());
  const q=async(sql,args)=>{queries++;return db.query(sql,args);};
@@ -31,7 +31,7 @@ const {connect}=require('../database/v1/service_import_connection.cjs');
    await q('SAVEPOINT reproduce');await q("INSERT INTO public.chatbot_handover_rule(id,condition_name,trigger_type,threshold_value,auto_assign_role,sla_seconds) VALUES($1,'E2E direct rule','direct_request',0,'ADMIN',120)",[fast]);
    await mode('waiting_agent');assert.equal((await row()).deadline,null);baseline='REPRODUCED: active direct_request rule did not set SLA before migration';await q('ROLLBACK TO SAVEPOINT reproduce');await q('RELEASE SAVEPOINT reproduce');
   }
-  await q('RESET ROLE');const migration=fs.readFileSync('scripts/database/v1/109_chat_handoff_sla.sql','utf8').replace(/^BEGIN;/,'').replace('COMMIT;','');assert.ok(!/\b(?:BEGIN|COMMIT)\s*;/i.test(migration));await q(migration);
+  await q('RESET ROLE');const migration=fs.readFileSync('my-server/scripts/database/v1/109_chat_handoff_sla.sql','utf8').replace(/^BEGIN;/,'').replace('COMMIT;','');assert.ok(!/\b(?:BEGIN|COMMIT)\s*;/i.test(migration));await q(migration);
   await actor('','service_role');let c=await handoff();assert.equal(await expected(),initial);pass('Inactive and unrelated rules do not create a fallback SLA; no configuration stays NULL');
   await mode('bot_handling');assert.equal((await row()).deadline,null);pass('Returning to bot clears stale SLA');
   await q("INSERT INTO public.chatbot_handover_rule(id,condition_name,trigger_type,threshold_value,auto_assign_role,sla_seconds) VALUES($1,'E2E slow direct','direct_request',0,'ADMIN',300),($2,'E2E fast direct','direct_request',0,'ADMIN',120)",[slow,fast]);

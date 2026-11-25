@@ -1,4 +1,4 @@
-const fs=require('fs'),assert=require('node:assert/strict'),{randomUUID}=require('crypto');const {connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('fs'),assert=require('node:assert/strict'),{randomUUID}=require('crypto');const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  await db.query("BEGIN;SET LOCAL statement_timeout='15s';SET LOCAL lock_timeout='4s'");
  const uid=randomUUID(),otherUid=randomUUID(),cid=randomUUID(),other=randomUUID(),ticket=randomUUID(),legacy=randomUUID(),proof=randomUUID();
@@ -8,7 +8,7 @@ const fs=require('fs'),assert=require('node:assert/strict'),{randomUUID}=require
  await db.query("select set_config('request.jwt.claim.role','service_role',true)");
  const create=()=>db.query("select create_claimable_guest_contact_ticket($1,'Contact verification',$2,'Contact support verification','other','Please check my request',$3)",[ticket,phone,proof]);await create();await create();
  await db.query("insert into support_ticket(id,ticket_code,channel,type,category,status,priority,subject,description) values($1,$2,'contact','contact','other','pending','normal','Legacy claim verification',$3)",[legacy,'VERIFY-'+legacy,'Họ và tên: Contact verification\nSố điện thoại: '+phone+'\nLegacy request']);
- const migration=fs.readFileSync('scripts/database/v1/258_contact_support_claim.sql','utf8');await db.query(migration.slice(migration.indexOf('UPDATE public.support_ticket t SET guest_contact_name'),migration.indexOf('CREATE OR REPLACE FUNCTION public.claim_own_guest_contact_ticket')));
+ const migration=fs.readFileSync('my-server/scripts/database/v1/258_contact_support_claim.sql','utf8');await db.query(migration.slice(migration.indexOf('UPDATE public.support_ticket t SET guest_contact_name'),migration.indexOf('CREATE OR REPLACE FUNCTION public.claim_own_guest_contact_ticket')));
  await db.query("insert into support_ticket_message(ticket_id,sender_type,content,is_internal,sender_account_id) values($1,'staff','Public reply from support',false,(select auth_user_id from staff where auth_user_id is not null limit 1))",[ticket]);
  const before=(await db.query('select id,content from support_ticket_message where ticket_id=$1 order by id',[ticket])).rows;
  const actor=async user=>{await db.query('RESET ROLE');await db.query("select set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role','authenticated',true)",[user]);await db.query('SET LOCAL ROLE authenticated');};

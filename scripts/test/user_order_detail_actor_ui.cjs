@@ -4,7 +4,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',route=>{
   const url=new URL(route.request().url());if(url.origin!=='http://pawpal.test')return route.abort();
-  if(url.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:fs.readFileSync('pages/user/modules/orders/order-detail.html','utf8')});
+  if(url.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:fs.readFileSync('my-client/pages/user/modules/orders/order-detail.html','utf8')});
   if(url.pathname==='/scripts/api/api.js')return route.fulfill({contentType:'text/javascript',body:'export const API={getUserOrders:async user=>{const owner=user.id;window.reads++;if(window.hold)await new Promise(r=>window.release=r);return [{id:"PRIVATE-"+owner,status:"completed",paymentStatus:"paid",createdAt:"2026-10-26T03:00:00Z",pricing:{grandTotal:100000},total:100000,products:[]}];}};'});
   if(/\/(return-handler|review-handler)\.js$/.test(url.pathname))return route.fulfill({contentType:'text/javascript',body:''});
   const file=path.join(process.cwd(),url.pathname);if(!fs.existsSync(file))return route.abort();return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(file,'utf8')});

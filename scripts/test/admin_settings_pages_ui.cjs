@@ -1,6 +1,6 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');const{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
- const p=await browser.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'}));await p.goto('http://settings.test/');await p.setContent(fs.readFileSync('pages/admin/modules/settings/settings.html','utf8'));
+ const p=await browser.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'}));await p.goto('http://settings.test/');await p.setContent(fs.readFileSync('my-client/pages/admin/modules/settings/settings.html','utf8'));
  await p.evaluate(()=>{
   sessionStorage.setItem('pawpal_admin_active_module','Cấu hình');sessionStorage.setItem('pawpal_admin_user',JSON.stringify({id:'admin'}));window.requests=[];window.detailReads=0;
   const articles=Array.from({length:23},(_,i)=>({id:'article-'+i,title:'Bài '+i,summary:'Tóm tắt',slug:'bai-'+i,category_id:'cat',status:'PUBLISHED',view_count:10,updated_at:'2026-11-13T02:00:00Z',created_at:'2026-11-13T02:00:00Z'}));
@@ -13,7 +13,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict');const{chromium}
    throw Error('Unexpected RPC');
   },from(table){let id;const q={};for(const name of ['select','order','range','limit'])q[name]=()=>q;q.eq=(key,value)=>{if(key==='id')id=value;return q;};q.single=async()=>{if(table!=='blog_post')throw Error('Unexpected detail');detailReads++;return {data:{...articles.find(a=>a.id===id),...(window.detailChanged?{title:'changed'}:{}),content:'Nội dung đầy đủ'}};};q.then=resolve=>Promise.resolve({data:[]}).then(resolve);return q;},channel:()=>({on(){return this;},subscribe(){return this;}}),removeChannel(){}});
  });
- for(const file of ['pages/admin/admin-data-store.js','pages/admin/modules/settings/settings.js','pages/admin/modules/settings/subtabs/tab-settings-banners.js','pages/admin/modules/settings/subtabs/tab-settings-content.js'])await p.addScriptTag({content:fs.readFileSync(file,'utf8')});
+ for(const file of ['my-client/pages/admin/admin-data-store.js','my-client/pages/admin/modules/settings/settings.js','my-client/pages/admin/modules/settings/subtabs/tab-settings-banners.js','my-client/pages/admin/modules/settings/subtabs/tab-settings-content.js'])await p.addScriptTag({content:fs.readFileSync(file,'utf8')});
  await p.evaluate(()=>PawpalSettings.init());
  assert.equal(await p.locator('#vouchersTableBody tr').count(),10);assert.equal(await p.locator('#statTotalVouchers').textContent(),'23');
  await p.locator('[data-voucher-page="3"]').click();await p.waitForFunction(()=>document.querySelectorAll('#vouchersTableBody tr').length===3);

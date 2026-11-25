@@ -2,7 +2,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const page=await browser.newPage({viewport:{width:1440,height:1050}});
- for(const file of ['scripts/shared/data-loader.js','pages/shop/product-detail/product-detail.js','pages/shop/product-detail/product-detail.css'])await page.route('**/'+file+'*',r=>r.fulfill({contentType:file.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(file,'utf8')}));
+ for(const file of ['my-client/scripts/shared/data-loader.js','my-client/pages/shop/product-detail/product-detail.js','my-client/pages/shop/product-detail/product-detail.css'])await page.route('**/'+file+'*',r=>r.fulfill({contentType:file.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(file,'utf8')}));
  await page.goto('https://pawpalgr3.vercel.app/pages/shop/product-detail/product-detail.html?id=a0000000-0000-0000-0000-000000000032');
  await page.waitForSelector('.pd-variant-chip');
  const gallery=()=>page.locator('#thumbnails img').evaluateAll(es=>es.map(e=>e.getAttribute('src')));

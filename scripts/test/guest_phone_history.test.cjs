@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {createGuestPhoneHistory}=require('../api/guest_phone_history');
-const {hashOtp}=require('../api/customer_auth_store');
+const {createGuestPhoneHistory}=require('../../my-server/scripts/api/guest_phone_history');
+const {hashOtp}=require('../../my-server/scripts/api/customer_auth_store');
 const orderId='00000000-0000-0000-0000-000000000011';
 test('verified history pages return 10/10/3 and reject altered or cross-phone grants',async()=>{
  const f=fixture({rowCount:23}),{cookie,challengeId}=await f.begin();

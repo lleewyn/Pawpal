@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const load=()=>import('../shared/guest-commerce-client.mjs');
+const load=()=>import('../../my-client/scripts/shared/guest-commerce-client.mjs');
 const id='12345678-1234-4123-8123-123456789012';
 const response=(data={success:true},status=200)=>({ok:status>=200&&status<300,status,json:async()=>data});
 function serialLocks(){let tail=Promise.resolve();return {request(_name,fn){const operation=tail.then(fn);tail=operation.catch(()=>{});return operation;}};}

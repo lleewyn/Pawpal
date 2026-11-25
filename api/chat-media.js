@@ -1,2 +1,1 @@
-module.exports = require('../scripts/api/media.cjs').createMediaHandler({ chat: true });
-module.exports.config = { api: { bodyParser: false } };
+module.exports = require('../my-server/api/chat-media.js');

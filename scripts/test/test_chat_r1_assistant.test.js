@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 require('dotenv').config();
-const { dbTools } = require('../api/chat.js');
+const { dbTools } = require('../../my-server/scripts/api/chat.js');
 
 test('R1 - GĐ-04: get_services_price trả về dữ liệu bảng giá theo khoảng cân nặng', async () => {
     const res = await dbTools.get_services_price();

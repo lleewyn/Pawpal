@@ -25,7 +25,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  await page.fill('#guest-name','Test owner');await page.fill('#guest-phone','+84 (912) 345-678');await page.selectOption('#guest-delivery','delivery');await page.fill('#guest-receiver','   ');await page.fill('#guest-receiver-phone','123');await page.fill('#guest-street','   ');await page.click('#guest-quote-button');for(const id of ['guest-receiver','guest-receiver-phone','guest-street','guest-province'])await check(id);
  await page.selectOption('#guest-delivery','pickup');for(const id of ['guest-receiver','guest-receiver-phone','guest-street','guest-province'])assert.equal(await page.getAttribute('#'+id,'aria-invalid'),'false');
  await page.evaluate(()=>{document.getElementById('guest-note').value='x'.repeat(4001);});await page.click('#guest-quote-button');await check('guest-note');assert.equal(await page.evaluate(()=>calls.filter(c=>c.action==='order-quote').length),0);await page.fill('#guest-note','Test note');
- await page.addStyleTag({content:fs.readFileSync('node_modules/bootstrap/dist/css/bootstrap.min.css','utf8')+fs.readFileSync('pages/shop/checkout/checkout.css','utf8')+fs.readFileSync('styles/transaction-receipt.css','utf8')});
+ await page.addStyleTag({content:fs.readFileSync('node_modules/bootstrap/dist/css/bootstrap.min.css','utf8')+fs.readFileSync('my-client/pages/shop/checkout/checkout.css','utf8')+fs.readFileSync('my-client/styles/transaction-receipt.css','utf8')});
  await page.setViewportSize({width:1280,height:1000});
  assert.equal(await page.isDisabled('#guest-place-order'),false);
  await page.screenshot({path:'docs/verification/guest-checkout-order-enabled.png',fullPage:true});
@@ -44,7 +44,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   const url=new URL(await link.getAttribute('href'),'http://localhost');assert.equal(url.pathname,'/login');assert.equal(url.searchParams.get('action'),'guest-activate');assert.equal(url.searchParams.get('redirect'),'/user#orders');assert.equal(url.searchParams.has('phone'),false);
  };
  await checkActivation();
- await page.addStyleTag({content:fs.readFileSync('node_modules/bootstrap/dist/css/bootstrap.min.css','utf8')+fs.readFileSync('pages/shop/checkout/checkout.css','utf8')+fs.readFileSync('styles/transaction-receipt.css','utf8')});
+ await page.addStyleTag({content:fs.readFileSync('node_modules/bootstrap/dist/css/bootstrap.min.css','utf8')+fs.readFileSync('my-client/pages/shop/checkout/checkout.css','utf8')+fs.readFileSync('my-client/styles/transaction-receipt.css','utf8')});
  for(const width of [1280,390]){
   await page.setViewportSize({width,height:1000});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);

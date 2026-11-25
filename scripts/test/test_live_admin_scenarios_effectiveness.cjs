@@ -11,8 +11,8 @@ async function runAdminEffectivenessTests() {
     console.log('=== BẮT ĐẦU KIỂM THỬ THỰC TẾ ĐỘ HIỆU QUẢ CỦA PHÂN HỆ CHATBOT ADMIN ===');
 
     const app = express();
-    const links = [...fs.readFileSync('pages/admin/index.html', 'utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x => x[0]).join('\n');
-    let chatbotHtml = fs.readFileSync('pages/admin/modules/chatbot/chatbot.html', 'utf8');
+    const links = [...fs.readFileSync('my-client/pages/admin/index.html', 'utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x => x[0]).join('\n');
+    let chatbotHtml = fs.readFileSync('my-client/pages/admin/modules/chatbot/chatbot.html', 'utf8');
 
     // Mặc định bật active cho subtab Copilot để test ngay
     chatbotHtml = chatbotHtml.replace('id="subtab-tab-live-support" class="subtab-content active"', 'id="subtab-tab-live-support" class="subtab-content"');

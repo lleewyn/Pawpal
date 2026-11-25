@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const load=()=>import('../shared/guest-cart.mjs');
+const load=()=>import('../../my-client/scripts/shared/guest-cart.mjs');
 const a='12345678-1234-4123-8123-123456789012',b='22345678-1234-4123-8123-123456789012';
 test('Switch preserves quantity, merges an existing target and reads latest locked quantities',async()=>{
  const {createGuestCart}=await load(),f=fixture(),one=createGuestCart(f),two=createGuestCart(f);

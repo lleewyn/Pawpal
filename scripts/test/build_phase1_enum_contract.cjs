@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'../..');
 const dictionary=fs.readFileSync(path.join(root,'docs/testing/generated/PAWPAL_GD1_TU_DIEN_DU_LIEU.md'),'utf8');
-const sql=fs.readFileSync(path.join(root,'scripts/database/20261019_migrate_enums_to_vietnamese.sql'),'utf8');
+const sql=fs.readFileSync(path.join(root,'my-server/scripts/database/20261019_migrate_enums_to_vietnamese.sql'),'utf8');
 const enums=new Map();let table;
 for(const line of dictionary.split('\n')){
  if(line.startsWith('### '))table=line.slice(4).trim();

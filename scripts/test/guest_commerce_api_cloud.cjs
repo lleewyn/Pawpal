@@ -1,8 +1,8 @@
 // Real HTTP handler -> PostgreSQL service RPC, all fixtures/DDL rolled back.
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),express=require('express');
-const {connect}=require('../database/v1/service_import_connection.cjs');
-const {createGuestCommerce,normalizePhone}=require('../api/guest_commerce');
-const file='scripts/database/v1/113_guest_commerce_api.sql',source=fs.readFileSync(file,'utf8');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
+const {createGuestCommerce,normalizePhone}=require('../../my-server/scripts/api/guest_commerce');
+const file='my-server/scripts/database/v1/113_guest_commerce_api.sql',source=fs.readFileSync(file,'utf8');
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 const body=source.replace(/^BEGIN;\s*$/m,'').replace(/^COMMIT;\s*$/m,'');
 if(!process.argv.includes('--verify-cloud')){console.log('Use --verify-cloud for HTTP->Cloud SQL rollback verification.');process.exit(0);}
@@ -58,14 +58,14 @@ if(!process.argv.includes('--verify-cloud')){console.log('Use --verify-cloud for
   result=await send('end',{},a);assert.equal(result.status,200);assert.ok(result.cookie.includes('Max-Age=0'));result=await send('context',{},a);assert.equal(result.status,401);pass('End revokes server binding; copied old cookie cannot regain access');
   assert.equal(normalizePhone('0084 950 000 001'),'0950000001');assert.throws(()=>normalizePhone('0950000001 extension2'));pass('Phone normalization accepts supported country forms and rejects text');
   await q('RESET ROLE');
-  await q(fs.readFileSync('scripts/database/v1/113_guest_commerce_api_rollback.sql','utf8').replace(/^BEGIN;\s*$/m,'').replace(/^COMMIT;\s*$/m,''));
+  await q(fs.readFileSync('my-server/scripts/database/v1/113_guest_commerce_api_rollback.sql','utf8').replace(/^BEGIN;\s*$/m,'').replace(/^COMMIT;\s*$/m,''));
   for(const signature of signatures)assert.equal((await q('SELECT to_regprocedure($1)::text value',[signature])).rows[0].value,null);
   assert.equal((await q('SELECT count(*)::int n FROM public.pet_profile WHERE id=ANY($1::uuid[])',[[requestA,requestB,next]])).rows[0].n,3);pass('SQL reverse removes only API definitions and preserves saved pet records');
   await q('ROLLBACK');
   assert.equal((await q('SELECT count(*)::int n FROM public.pet_profile WHERE id=ANY($1::uuid[])',[[requestA,requestB,next]])).rows[0].n,0);
   for(const signature of signatures)assert.equal((await q('SELECT to_regprocedure($1)::text value',[signature])).rows[0].value,null);
   pass('All RPC definitions, sessions, contacts, pets and weights rolled back');
-  fs.writeFileSync('docs/verification/sync/guest-commerce-api-rollback.txt',JSON.stringify({timestamp:new Date().toISOString(),status:'PASS',migrationSha256:hash(source),handlerSha256:hash(fs.readFileSync('scripts/api/guest_commerce.js','utf8')),queries,checks,scope:'Actual loopback HTTP handler and real Cloud SQL RPC/rate limiter under service_role inside rollback; signed cookie tests, SQL anon/customer roles; no real Auth/REST service request, no concurrency/transaction booking/checkout/UI acceptance, no Logs/SMS'},null,2)+'\n');
+  fs.writeFileSync('docs/verification/sync/guest-commerce-api-rollback.txt',JSON.stringify({timestamp:new Date().toISOString(),status:'PASS',migrationSha256:hash(source),handlerSha256:hash(fs.readFileSync('my-server/scripts/api/guest_commerce.js','utf8')),queries,checks,scope:'Actual loopback HTTP handler and real Cloud SQL RPC/rate limiter under service_role inside rollback; signed cookie tests, SQL anon/customer roles; no real Auth/REST service request, no concurrency/transaction booking/checkout/UI acceptance, no Logs/SMS'},null,2)+'\n');
   console.log('PASS',checks.length,'checks;',queries,'SQL; HTTP->Cloud RPC fixtures/DDL rolled back.');
  }catch(e){await db.query('RESET ROLE').catch(()=>{});await db.query('ROLLBACK').catch(()=>{});throw e;}
  finally{if(server)await new Promise(resolve=>server.close(resolve));await db.end();}

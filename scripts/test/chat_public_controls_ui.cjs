@@ -7,7 +7,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   const p=await browser.newPage();
   await p.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<body></body>'}));
   await p.goto('http://localhost:4000/');
-  await p.setContent(fs.readFileSync('components/fab/fab.html','utf8'));
+  await p.setContent(fs.readFileSync('my-client/components/fab/fab.html','utf8'));
   await p.evaluate(()=>{
    window.calls=[];window.serverMode='bot_handling';window.failMode=false;
    window.setInterval=()=>1;
@@ -19,7 +19,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
     return {ok:true,status:200,json:async()=>({ok:true,conversationId:b.conversationId,messages:[],hasMore:false,status:serverMode,updatedAt:String(calls.length)})};
    };
   });
-  await p.addScriptTag({content:fs.readFileSync('components/fab/fab.js','utf8')});
+  await p.addScriptTag({content:fs.readFileSync('my-client/components/fab/fab.js','utf8')});
   await p.click('#fabAiBtn');await p.fill('#fabChatInput','Giá Pet Hotel');await p.click('#fabChatSend');
   await p.waitForFunction(()=>calls.includes('public_send')&&calls.includes('public_read')&&!document.querySelector('#fabChatSend').disabled);
   assert.equal(await p.locator('#fabHandoverBtn').isEnabled(),true,'handover must unlock without waiting for the next poll');

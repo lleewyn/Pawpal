@@ -7,10 +7,10 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
     auth: { autoRefreshToken: false, persistSession: false }
 });
 
-const chatHandler = require('../api/chat.js');
-const chatActionsApi = require('../api/chat_actions.js');
-const chatEvaluationsApi = require('../api/chat_evaluations.js');
-const { getChatConfig, updateChatConfig } = require('../api/chat_config.js');
+const chatHandler = require('../../my-server/scripts/api/chat.js');
+const chatActionsApi = require('../../my-server/scripts/api/chat_actions.js');
+const chatEvaluationsApi = require('../../my-server/scripts/api/chat_evaluations.js');
+const { getChatConfig, updateChatConfig } = require('../../my-server/scripts/api/chat_config.js');
 
 // Mock Express req/res
 function mockReqRes(handler, body = {}, headers = {}) {

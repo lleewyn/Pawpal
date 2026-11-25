@@ -8,9 +8,9 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   await page.route('**/*',r=>r.abort());
   await page.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));
   await page.goto('http://localhost:3001/');
-  await page.setContent(fs.readFileSync('pages/admin/modules/orders/orders.html','utf8'),{waitUntil:'domcontentloaded'});
+  await page.setContent(fs.readFileSync('my-client/pages/admin/modules/orders/orders.html','utf8'),{waitUntil:'domcontentloaded'});
   // Mirror the complete Admin stylesheet cascade and body scope for visual evidence.
-  const shell=fs.readFileSync('pages/admin/index.html','utf8');
+  const shell=fs.readFileSync('my-client/pages/admin/index.html','utf8');
   for(const match of shell.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/[^"?]+)[^"]*"[^>]*>/g))await page.addStyleTag({content:fs.readFileSync(match[1].slice(1),'utf8')});
   await page.evaluate(()=>{document.body.className='admin-body';document.documentElement.lang='vi';});
   await page.evaluate(()=>{
@@ -20,7 +20,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
    window.PawpalOrderV1={rows:async()=>[{id:'provider',provider_name:'J&T Express'}]};
    window.getSupabaseClient=()=>({from:()=>{const q={};for(const k of ['select','eq','order'])q[k]=()=>q;return q;},rpc:async(name,args)=>{calls.push({name,args});return {error:null};}});
   });
-  const source=fs.readFileSync('pages/admin/modules/orders/subtabs/tab-order-list.js','utf8').replace(/\r\n/g,'\n');
+  const source=fs.readFileSync('my-client/pages/admin/modules/orders/subtabs/tab-order-list.js','utf8').replace(/\r\n/g,'\n');
   await page.addScriptTag({content:source.slice(0,source.indexOf('})();')+5)});
   const enhanceStart=source.indexOf('    m.enhanceEntitySelects = function()');
   await page.addScriptTag({content:'const m=window.PawpalOrders;'+source.slice(enhanceStart,source.indexOf('\n    };',enhanceStart)+7)});
@@ -54,7 +54,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   assert.equal(await page.locator('#modalCancelOrder').evaluate(e=>e.classList.contains('active')),false);
   // Verify actual detail actions on incomplete and valid shipped orders.
   await page.evaluate(()=>{const m=PawpalOrders;m.controllers={};m.state.ordersLoaded=true;m.state.selectedOrderId='ORD-QA';m.state.orders[0].status='shipping';m.state.orders[0].providerId=null;m.renderSalesReturns=()=>{};m.helpers.formatDateTime=String;});
-  await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/orders/subtabs/tab-order-detail.js','utf8')});
+  await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/orders/subtabs/tab-order-detail.js','utf8')});
   await page.evaluate(()=>PawpalOrders.controllers.detail.renderOrderDetail('ORD-QA'));
   assert.ok(!(await page.locator('#detailOrderActionButtons').textContent()).includes('Đã giao hàng thành công'));
   await page.evaluate(()=>{PawpalOrders.state.orders[0].providerId='provider';PawpalOrders.controllers.detail.renderOrderDetail('ORD-QA');});

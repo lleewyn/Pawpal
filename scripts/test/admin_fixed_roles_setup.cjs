@@ -1,7 +1,7 @@
 // Owned local clone only. Cloud connection is READ ONLY for function/schema metadata.
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
-const {connect}=require('../database/v1/service_import_connection.cjs');
-const {settings}=require('../database/v1/cloud_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
+const {settings}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const out='docs/security/phase2';fs.mkdirSync(out,{recursive:true});
 const database='pawpal_access_'+crypto.randomBytes(6).toString('hex'),marker='pawpal-fixed-roles-'+database;
 const sql=(name,input)=>execFileSync('docker',['exec','-i','supabase-db','psql','-U','supabase_admin','-d',name,'-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-f','-'],{input,encoding:'utf8',windowsHide:true,maxBuffer:32*1024*1024,timeout:60000}).trim();

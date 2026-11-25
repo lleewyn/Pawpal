@@ -13,7 +13,7 @@ test('late legacy product load cannot replace landing cards or their buy-now but
         setupFilterInteractions() { throw new Error('Legacy filters must not run'); },
         console,
     };
-    const source = fs.readFileSync('scripts/shared/main.js', 'utf8');
+    const source = fs.readFileSync('my-client/scripts/shared/main.js', 'utf8');
     const start = source.indexOf('function initShopFilter()');
     const end = source.indexOf('function setupShopLandingActions(', start);
     vm.runInNewContext(source.slice(start, end) + '\ninitShopFilter();', context);

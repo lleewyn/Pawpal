@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {loadCustomerBookingMoveServices,loadCustomerBookingMoveDaySlots} from '../shared/customer-booking.mjs';
+import {loadCustomerBookingMoveServices,loadCustomerBookingMoveDaySlots} from '../../my-client/scripts/shared/customer-booking.mjs';
 const user={id:'owner'},booking={_supabaseId:'booking'};
 function client(rpc){return {auth:{getUser:async()=>({data:{user:{id:'auth'}}})},from(){const q={select(){return q},eq(){return q},maybeSingle:async()=>({data:{id:'owner',customer_status:'active'}})};return q;},rpc};}
 test('day lookup sends only booking, service and day; server prices and quote versions are preserved',async()=>{

@@ -1,8 +1,8 @@
 'use strict';
 // Temporary protected Preview only. Every test image is read back and deleted in the same invocation.
 const {randomUUID,timingSafeEqual}=require('node:crypto'),{ObjectId}=require('mongodb');
-const {readImageUpload,verifyImage}=require('../api/media_files.cjs');
-const {createGridfsStore}=require('../api/media_gridfs.cjs');
+const {readImageUpload,verifyImage}=require('../../my-server/scripts/api/media_files.cjs');
+const {createGridfsStore}=require('../../my-server/scripts/api/media_gridfs.cjs');
 module.exports=async(req,res)=>{
  res.setHeader('Cache-Control','private, no-store');
  const expected=process.env.MEDIA_PREFLIGHT_TOKEN,received=req.headers['x-pawpal-media-probe'];

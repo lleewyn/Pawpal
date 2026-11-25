@@ -1,7 +1,7 @@
 // Disposable fixture only. No Cloud Logs; original business rows are never modified.
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings,infra,sql}=require('../database/v1/cloud_connection.cjs'),{config}=settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
+const {settings,infra,sql}=require('../../my-server/scripts/database/v1/cloud_connection.cjs'),{config}=settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
 const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,options);
 const ok=async promise=>{const r=await promise;if(r.error)throw Error(r.error.message);return r.data;};
 const phone='095'+crypto.randomInt(1000000,10000000),password=crypto.randomBytes(20).toString('hex')+'!';

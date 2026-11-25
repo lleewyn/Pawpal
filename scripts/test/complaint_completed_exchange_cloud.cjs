@@ -1,4 +1,4 @@
-const assert=require('node:assert/strict'),{randomUUID}=require('crypto');const {connect}=require('../database/v1/service_import_connection.cjs');
+const assert=require('node:assert/strict'),{randomUUID}=require('crypto');const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const ticket='7c55ce88-ed57-4a93-b09f-9b28ad2adadf',returned='ab677a20-1b8e-4c4c-920b-ca0dd492c0c0',replacement='7f53383f-65f5-49dc-a78a-79e6f26195cb';
 (async()=>{const db=await connect();try{
  const before=(await db.query('select row_to_json(t) data from support_ticket t where id=$1',[ticket])).rows[0].data;

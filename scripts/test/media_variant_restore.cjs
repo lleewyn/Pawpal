@@ -8,7 +8,7 @@ const stable=value=>JSON.stringify(JSON.parse(JSON.stringify(value)),(key,item)=
  const after=JSON.parse(fs.readFileSync(root+'e2e-after.private.json'));
  const assets=after.media.filter(row=>row.media_asset_id);
  if(before.product.id!=='a0000000-0000-0000-0000-000000000001'||after.product.id!==before.product.id||assets.length!==1||before.media.some(row=>row.media_asset_id))throw Error('SCOPE');
- db=await require('../database/v1/service_import_connection.cjs').connect();
+ db=await require('../../my-server/scripts/database/v1/service_import_connection.cjs').connect();
  await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='3s'");
  const product=(await db.query('SELECT * FROM public.product WHERE id=$1 FOR UPDATE',[before.product.id])).rows[0];
  const variants=(await db.query('SELECT * FROM public.product_variant WHERE product_id=$1 ORDER BY id FOR UPDATE',[before.product.id])).rows;

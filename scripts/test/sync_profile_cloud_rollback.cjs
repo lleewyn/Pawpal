@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const {randomUUID} = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const {connect} = require('../database/v1/service_import_connection.cjs');
+const {connect} = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if (!process.argv.includes('--cloud')) {
     console.log('Use --cloud for the bounded, rollback-only profile integration check. No network used.');
     process.exit(0);

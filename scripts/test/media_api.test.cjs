@@ -3,8 +3,8 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { Readable } = require('node:stream');
 const sharp = require('sharp');
-const { createMediaHandler } = require('../api/media.cjs');
-const { readImageUpload, verifyImage, MAX_BODY_BYTES } = require('../api/media_files.cjs');
+const { createMediaHandler } = require('../../my-server/scripts/api/media.cjs');
+const { readImageUpload, verifyImage, MAX_BODY_BYTES } = require('../../my-server/scripts/api/media_files.cjs');
 const actor = '11111111-1111-4111-8111-111111111111';
 const session = '22222222-2222-4222-8222-222222222222';
 const lease = '33333333-3333-4333-8333-333333333333';
@@ -248,7 +248,7 @@ test('private reads are checked before storage, never shared-cache, and public c
 });
 
 test('media source keeps old links and rejects mixed sources or unsafe schemes', async () => {
-    const { mediaSource, loadMediaSource } = await import('../shared/media-source.mjs');
+    const { mediaSource, loadMediaSource } = await import('../../my-client/scripts/shared/media-source.mjs');
     assert.equal(mediaSource({ url: 'https://example.test/image.jpg' }).url, 'https://example.test/image.jpg');
     assert.equal(mediaSource({ url: 'assets/image.jpg' }).url, '/assets/image.jpg');
     assert.throws(() => mediaSource({ url: 'javascript:alert(1)' }));

@@ -1,8 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 require('dotenv').config();
-const { evaluateToxicAndSentiment, dbTools } = require('../api/chat.js');
-const { isFeatureEnabled } = require('../api/chat_config.js');
+const { evaluateToxicAndSentiment, dbTools } = require('../../my-server/scripts/api/chat.js');
+const { isFeatureEnabled } = require('../../my-server/scripts/api/chat_config.js');
 
 test('R3 - GĐ-11: Feature Flag config hoạt động ổn định', () => {
     assert.equal(typeof isFeatureEnabled('ai_bot_reply_enabled'), 'boolean', 'ai_bot_reply_enabled phải trả về boolean');

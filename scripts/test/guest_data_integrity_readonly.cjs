@@ -1,6 +1,6 @@
 // Aggregate-only guest identity preflight; no phone, names or customer IDs exported.
 const fs = require('node:fs');
-const { connect } = require('../database/v1/service_import_connection.cjs');
+const { connect } = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if (!process.argv.includes('--cloud-readonly')) {
     console.log('Use --cloud-readonly for aggregate checks. No migration or data writes.');
     process.exit(0);

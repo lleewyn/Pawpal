@@ -131,7 +131,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
                     removeChannel() {}
                 });
             });
-            await page.addScriptTag({ content: fs.readFileSync('pages/admin/admin-data-store.js', 'utf8') });
+            await page.addScriptTag({ content: fs.readFileSync('my-client/pages/admin/admin-data-store.js', 'utf8') });
             let source = fs.readFileSync(`pages/admin/modules/${module}/${module}.js`, 'utf8');
             source = source.slice(0, source.lastIndexOf("    if (document.readyState === 'loading')"));
             source += module === 'staff'
@@ -195,7 +195,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
                 });
                 await page.waitForTimeout(450);
                 assert.deepEqual((await page.evaluate(() => reads)).sort(), ['admin_complaint_page', 'customer_profile']);
-                await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/complaints/subtabs/tab-complaint-detail.js', 'utf8') });
+                await page.addScriptTag({ content: fs.readFileSync('my-client/pages/admin/modules/complaints/subtabs/tab-complaint-detail.js', 'utf8') });
                 await page.evaluate(async () => {
                     reads.length = 0;
                     PawpalComplaints.state.serviceComplaints = [{ id: 'TICKET-code', rawId: 'ticket-uuid', status: 'new', title: 'Test', customerName: 'Test', priority: 'low' }];
@@ -313,7 +313,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
                 await page.evaluate(() => PawpalStaff.subtabs.schedule.renderLeaveRequestsList('PENDING'));
                 await page.waitForFunction(() => document.querySelectorAll('#leaveRequestsListContainer .leave-request-card').length === 10);
                 assert.equal(await page.locator('#leaveRequestsListContainer .badge-success').count(), 0);
-                await page.addScriptTag({ content: fs.readFileSync('pages/admin/modules/staff/subtabs/tab-staff-list.js', 'utf8') });
+                await page.addScriptTag({ content: fs.readFileSync('my-client/pages/admin/modules/staff/subtabs/tab-staff-list.js', 'utf8') });
                 await page.evaluate(async () => {
                     window.staffDirectory.push(...Array.from({ length: 22 }, (_, i) => ({ staff_record: {
                         id: 'person-' + i, full_name: 'Person ' + i, employment_status: 'active'

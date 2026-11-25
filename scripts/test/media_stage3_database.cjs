@@ -1,8 +1,8 @@
 'use strict';
 // Cloud backup -> owned isolated PostgreSQL rehearsal -> optional guarded additive Cloud migration.
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os'), crypto = require('node:crypto'), cp = require('node:child_process');
-const { settings } = require('../database/v1/cloud_connection.cjs');
-const migration = path.resolve('scripts/database/v1/188_media_foundation.sql');
+const { settings } = require('../../my-server/scripts/database/v1/cloud_connection.cjs');
+const migration = path.resolve('my-server/scripts/database/v1/188_media_foundation.sql');
 const pointer = path.resolve('docs/media/phase3-database.private.txt');
 const action = process.argv[2] || 'snapshot';
 const checksum = () => crypto.createHash('sha256').update(fs.readFileSync(migration)).digest('hex');
@@ -41,7 +41,7 @@ const unchangedSql = `SELECT jsonb_build_object('product_media_count',(SELECT co
     } else if (action === 'snapshot') {
         const privateDir = 'D:/Aboutme/Pawpal-infra/media/stage3-' + new Date().toISOString().replace(/[:.]/g, '-');
         fs.mkdirSync(privateDir, { recursive: true });
-        const db = await require('../database/v1/service_import_connection.cjs').connect();
+        const db = await require('../../my-server/scripts/database/v1/service_import_connection.cjs').connect();
         let before;
         try {
             await db.query('BEGIN READ ONLY'); await db.query("SET LOCAL statement_timeout='10s'");
@@ -90,7 +90,7 @@ const unchangedSql = `SELECT jsonb_build_object('product_media_count',(SELECT co
             if (!manifest.rehearsed || manifest.checksum !== checksum()) throw Error('MEDIA_REHEARSAL_REQUIRED');
             const result = local(manifest.database, fs.readFileSync('scripts/test/media_stage3_checks.sql', 'utf8'));
             if (!result.includes('MEDIA_DATABASE_CHECKS_PASS')) throw Error('MEDIA_DATABASE_CHECKS_FAILED');
-            local(manifest.database, fs.readFileSync('scripts/database/v1/188_media_foundation_rollback.sql', 'utf8'));
+            local(manifest.database, fs.readFileSync('my-server/scripts/database/v1/188_media_foundation_rollback.sql', 'utf8'));
             if (local(manifest.database, "SELECT to_regclass('public.media_asset') IS NULL;").trim() !== 't') throw Error('MEDIA_ROLLBACK_FAILED');
             local(manifest.database, fs.readFileSync(migration, 'utf8'));
             if (!local(manifest.database, fs.readFileSync('scripts/test/media_stage3_checks.sql', 'utf8')).includes('MEDIA_DATABASE_CHECKS_PASS')) throw Error('MEDIA_REAPPLY_FAILED');

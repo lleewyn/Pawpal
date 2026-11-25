@@ -2,7 +2,7 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{createClient}=require('@supabase/supabase-js');
 const secretPath='D:/Aboutme/Pawpal-infra/browser-check/two-portal.private.json';
 if(!process.argv.includes('--setup')&&!process.argv.includes('--cleanup')){console.log('No network. Use --setup or --cleanup explicitly.');process.exit(0);}
-const {config}=require('../database/v1/cloud_connection.cjs').settings();
+const {config}=require('../../my-server/scripts/database/v1/cloud_connection.cjs').settings();
 const db=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 const ok=async p=>{const r=await p;if(r.error)throw r.error;return r.data;};
 (async()=>{

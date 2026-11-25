@@ -4,7 +4,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const dotenv = require('dotenv');
-const { createMediaMongoStore, readMediaMongoConfig } = require('../api/media_mongodb.cjs');
+const { createMediaMongoStore, readMediaMongoConfig } = require('../../my-server/scripts/api/media_mongodb.cjs');
 
 async function gridfsCollectionNames(db, bucket) {
     // Atlas shared tiers can reject operator filters ($in) in listCollections.

@@ -9,9 +9,9 @@ async function main(){
   page.on('pageerror',error=>console.error(error.message));
   await page.clock.setFixedTime(new Date('2026-11-23T12:00:00+07:00'));
   await page.route('http://localhost/**',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html lang="vi"><meta charset="utf-8"><body class="admin-body"><main class="dashboard-module dash-page admin-ui-standard admin-ui-customer-reference business-dash" data-business-root></main></body></html>'}));await page.goto('http://localhost/');
-  for(const file of ['pages/admin/admin.css','pages/admin/admin-components.css','pages/admin/admin-typography.css','pages/admin/modules/dashboard/dashboard.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
-  await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/dashboard/subtabs/business-metrics.js','utf8')});
-  const source=fs.readFileSync('pages/admin/modules/dashboard/subtabs/tab-dashboard-business.js','utf8');
+  for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/admin-components.css','my-client/pages/admin/admin-typography.css','my-client/pages/admin/modules/dashboard/dashboard.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+  await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/dashboard/subtabs/business-metrics.js','utf8')});
+  const source=fs.readFileSync('my-client/pages/admin/modules/dashboard/subtabs/tab-dashboard-business.js','utf8');
   const shell=source.slice(source.indexOf('    const panel ='),source.indexOf('    function status('));
   const handlers=source.slice(source.indexOf('    function monthRange('),source.indexOf('    async function init('));
   await page.addScriptTag({content:`(()=>{const M=PawpalBusinessMetrics,state={root:document.querySelector('[data-business-root]'),drillGeneration:0},$=selector=>state.root.querySelector(selector),date=value=>value.split('-').reverse().join('/');let financeMountedRoot;const reload=()=>Promise.resolve();${shell}${handlers}shell();state.root.addEventListener('click',click);window.inspectPeriod=()=>state.range;})();`});

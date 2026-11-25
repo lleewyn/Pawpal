@@ -6,7 +6,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
 // Isolated presentation fixture: no Admin scripts or Supabase connections.
 const root = process.cwd();
 const output = path.join(root, 'scratch', 'orders-kpi-verification');
-const shell = fs.readFileSync('pages/admin/index.html', 'utf8').replace(/<script\b[\s\S]*?<\/script>/gi, '');
+const shell = fs.readFileSync('my-client/pages/admin/index.html', 'utf8').replace(/<script\b[\s\S]*?<\/script>/gi, '');
 const html = name => fs.readFileSync(`pages/admin/modules/${name}/${name}.html`, 'utf8');
 const properties = ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'color'];
 
@@ -54,7 +54,7 @@ const properties = ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'lette
                 card: await cardStyles('#subtab-tab-list .kpi-card'),
                 surface: await surfaceStyles('#subtab-tab-list .customers-kpi-grid')
             };
-            await page.addStyleTag({ content: fs.readFileSync('pages/admin/admin-components.css', 'utf8') });
+            await page.addStyleTag({ content: fs.readFileSync('my-client/pages/admin/admin-components.css', 'utf8') });
             assert.deepEqual({
                 label: await styles('#subtab-tab-list .kpi-label'),
                 value: await styles('#subtab-tab-list .kpi-val'),

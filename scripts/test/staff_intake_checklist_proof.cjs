@@ -2,7 +2,7 @@
 // Focused form evidence only: real scoped reads, no service-record writes or testcase replay.
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const { connect } = require('../database/v1/service_import_connection.cjs');
+const { connect } = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 async function main() {
     const db = await connect(), browser = await chromium.launch({ channel: 'chrome', headless: true });
     const folder = 'docs/verification/staff-intake-checklist'; fs.mkdirSync(folder, { recursive: true });
@@ -19,7 +19,7 @@ async function main() {
         await db.query('SET LOCAL ROLE authenticated');
         const page = await browser.newPage({ viewport: { width: 1100, height: 1280 } }), errors = [];
         page.on('pageerror', error => errors.push(error.message));
-        const source = fs.readFileSync('pages/admin/modules/services/services.js', 'utf8');
+        const source = fs.readFileSync('my-client/pages/admin/modules/services/services.js', 'utf8');
         const marker = source.indexOf("overlay.id = 'staffIntakeModal'"), start = source.lastIndexOf('(function () {', marker), end = source.indexOf('})();', source.indexOf('window.PawpalStaffIntake=Object.freeze', marker)) + 5;
         await page.route('http://localhost/**', async route => {
             const name = decodeURIComponent(new URL(route.request().url()).pathname);

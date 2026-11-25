@@ -6,7 +6,7 @@ const {
     dbTools,
     checkRateLimit,
     rateLimiterCache
-} = require('../../scripts/api/chat.js');
+} = require('../../my-server/scripts/api/chat.js');
 
 test('PAWPAL AI MANUAL QA CHECKLIST AUTOMATED VERIFICATION SUITE', async (t) => {
 

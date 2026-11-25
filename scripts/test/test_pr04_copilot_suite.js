@@ -8,8 +8,8 @@ const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 );
-const chatHandler = require('../api/chat.js');
-const { signStaffToken } = require('../api/staff_auth.js');
+const chatHandler = require('../../my-server/scripts/api/chat.js');
+const { signStaffToken } = require('../../my-server/scripts/api/staff_auth.js');
 
 // Mock HTTP Response
 function mockResponse() {

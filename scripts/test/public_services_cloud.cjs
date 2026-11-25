@@ -1,6 +1,6 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings,infra}=require('../database/v1/cloud_connection.cjs'),{config}=settings();
+const {settings,infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs'),{config}=settings();
 const db=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_ANON_KEY,{auth:{persistSession:false}});
 (async()=>{let browser,page;try{
  const {data:catalog,error}=await db.rpc('public_service_directory');if(error)throw Error(error.message);assert.ok(catalog.length>0);
@@ -13,7 +13,7 @@ const db=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABAS
   page.on('request',r=>{if(new URL(r.url()).hostname==='127.0.0.1')retiredRequests.push(r.url());});
  }
  page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(new URL(r.url()).pathname.startsWith('/data/'))files.push(r.url());});
- if(!process.argv.includes('--deployed'))for(const path of ['scripts/api/supabase-client.js','scripts/shared/data-loader.js','pages/services/services.js','pages/services/services.css','pages/services/service-detail/service-detail.js','pages/services/service-detail/service-detail.html'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':path.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path,'utf8')}));
+ if(!process.argv.includes('--deployed'))for(const path of ['my-client/scripts/api/supabase-client.js','my-client/scripts/shared/data-loader.js','my-client/pages/services/services.js','my-client/pages/services/services.css','my-client/pages/services/service-detail/service-detail.js','my-client/pages/services/service-detail/service-detail.html'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':path.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path,'utf8')}));
  await page.goto('https://pawpalgr3.vercel.app/services');await page.waitForFunction(()=>document.querySelectorAll('.service-card').length>0);
  // Pagination shows at most the configured page; all identities come from the live directory.
  const codes=await page.locator('.service-card').evaluateAll(cards=>cards.map(c=>c.dataset.id));assert.ok(codes.every(code=>catalog.some(s=>s.service_code===code)));

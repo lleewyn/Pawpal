@@ -1,6 +1,6 @@
 // One support ticket, synthetic actors and order references; always ROLLBACK.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded support RPC/RLS checks; otherwise no network.');process.exit(0);}
 (async()=>{const db=await connect();let queries=0;
  const report={environment:'Supabase Cloud cpzuvaplseielhgcnqrn',timestamp:new Date().toISOString(),scope:'One synthetic ticket and order references; RPC/RLS only; rollback; no Logs',checks:[]};
@@ -12,7 +12,7 @@ if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded suppo
  const own=async id=>(await q("SELECT public.own_support_tickets(1,'all',$1,1) value",[id])).rows[0].value.rows.find(t=>t.id===id);
  try{
   await q("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
-  await q(fs.readFileSync('scripts/database/v1/105_customer_support_page.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+  await q(fs.readFileSync('my-server/scripts/database/v1/105_customer_support_page.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
   const a=randomUUID(),b=randomUUID(),sa=randomUUID(),staff=randomUUID(),ca=randomUUID(),cb=randomUUID(),oa=randomUUID(),ob=randomUUID(),ticket=randomUUID();
   report.fixtureIds={customerA:ca,customerB:cb,ticket,orderA:oa,orderB:ob};
   await q('INSERT INTO auth.users(id) VALUES($1),($2),($3)',[a,b,sa]);

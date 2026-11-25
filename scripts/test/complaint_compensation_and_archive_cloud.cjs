@@ -1,4 +1,4 @@
-const assert=require('node:assert/strict'),{randomUUID}=require('crypto');const {connect}=require('../database/v1/service_import_connection.cjs');
+const assert=require('node:assert/strict'),{randomUUID}=require('crypto');const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  await db.query("BEGIN;SET LOCAL statement_timeout='15s';SET LOCAL lock_timeout='4s'");
  const actor=(await db.query("select s.id,s.auth_user_id from staff s join staff_role r on r.staff_id=s.id where r.role_code='ADMIN' and s.employment_status='active' and not s.must_change_password limit 1")).rows[0];

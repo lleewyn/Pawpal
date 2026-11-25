@@ -1,5 +1,5 @@
 ﻿const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync('pages/public/return-guest/return-guest.js','utf8');
+const source=fs.readFileSync('my-client/pages/public/return-guest/return-guest.js','utf8');
 async function run(user, rows=[]) {
  const timeline={dataset:{},setAttribute(){},innerHTML:''},title={};let queried=false,projection='';
  const query={select(value){projection=value;return this},eq(){return this},async order(){return {data:rows,error:null}}};

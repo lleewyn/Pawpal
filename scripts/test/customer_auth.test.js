@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { createCustomerAuth, validPassword, runtimeMode } = require('../api/customer_auth');
+const { createCustomerAuth, validPassword, runtimeMode } = require('../../my-server/scripts/api/customer_auth');
 const { createTestStore } = require('./auth_store_fixture');
 
 function fixture({ simulated = true, locked = false, staff = false, temporary = false, realAccount = false, mode = simulated ? 'console' : 'supabase', allowedPhones = ['0912345678'], guestLink, unlinkedGuest = false } = {}) {

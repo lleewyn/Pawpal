@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { refundLoyaltyPreview as preview } from '../shared/refund-loyalty.mjs';
+import { refundLoyaltyPreview as preview } from '../../my-client/scripts/shared/refund-loyalty.mjs';
 const payment = () => ({amount:100,eligible_spend_amount:90,transaction_status:'succeeded',refunds:[],loyalty:{reward_points:7,reversed_points:0,points_balance:7,history_conflict:false}});
 test('cumulative rounding recovers every reward and eligible unit over three refunds',()=>{
  const p=payment();let points=0,eligible=0;

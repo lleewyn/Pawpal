@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const load=()=>import('../shared/guest-session-boundary.mjs');
+const load=()=>import('../../my-client/scripts/shared/guest-session-boundary.mjs');
 const storage=initial=>{const map=new Map(Object.entries(initial||{}));return {getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,String(value)),removeItem:key=>map.delete(key)}};
 const response=(success=true)=>({ok:success,json:async()=>({success})});
 function locks(){let tail=Promise.resolve();return {request(_key,fn){const next=tail.then(fn);tail=next.catch(()=>{});return next}};}
@@ -18,7 +18,7 @@ test('identity boundary clears guest journals synchronously, revokes once and ke
 });
 
 test('failed cleanup blocks guest bootstrap and retries before a new context can be requested',async()=>{
- const {createGuestSessionBoundary,GUEST_RESET_PENDING}=await load();const {createGuestCommerceClient}=await import('../shared/guest-commerce-client.mjs');
+ const {createGuestSessionBoundary,GUEST_RESET_PENDING}=await load();const {createGuestCommerceClient}=await import('../../my-client/scripts/shared/guest-commerce-client.mjs');
  const local=storage(),events=[];let offline=true;
  const boundary=createGuestSessionBoundary({storage:local,tabStorage:storage(),fetcher:async()=>{events.push('end');if(offline)throw Error('offline');return response();}});
  await assert.rejects(boundary.reset(),/offline/);assert.ok(local.getItem(GUEST_RESET_PENDING));
@@ -28,7 +28,7 @@ test('failed cleanup blocks guest bootstrap and retries before a new context can
 });
 
 test('cleanup and first-cookie creation across tabs share the same lock',async()=>{
- const {createGuestSessionBoundary}=await load();const {createGuestCommerceClient}=await import('../shared/guest-commerce-client.mjs');
+ const {createGuestSessionBoundary}=await load();const {createGuestCommerceClient}=await import('../../my-client/scripts/shared/guest-commerce-client.mjs');
  const local=storage(),shared=locks(),events=[];let release;
  const first=createGuestSessionBoundary({storage:local,tabStorage:storage(),locks:shared,fetcher:async()=>{events.push('end-start');await new Promise(r=>release=r);events.push('end-done');return response();}});
  const pending=first.reset();while(!release)await new Promise(r=>setImmediate(r));
@@ -39,7 +39,7 @@ test('cleanup and first-cookie creation across tabs share the same lock',async()
 });
 
 test('a queued old payload cannot run after the identity changes while cleanup is pending',async()=>{
- const {createGuestCommerceClient}=await import('../shared/guest-commerce-client.mjs');let release,calls=0;
+ const {createGuestCommerceClient}=await import('../../my-client/scripts/shared/guest-commerce-client.mjs');let release,calls=0;
  const client=createGuestCommerceClient({locks:locks(),ensureBoundary:()=>new Promise(r=>release=r),fetcher:async()=>{calls++;return response();}});
  const pending=client.request('pets',{requestId:'11111111-1111-4111-8111-111111111111',contact:{name:'Previous owner'}});
  client.invalidate();release();await assert.rejects(pending,e=>e.status===401);assert.equal(calls,1); // Only the safe empty bootstrap; no old payload.

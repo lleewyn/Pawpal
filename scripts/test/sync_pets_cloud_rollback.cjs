@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict');
 const {randomUUID}=require('node:crypto');
 const fs=require('node:fs'),path=require('node:path');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')){console.log('Use --cloud for the rollback-only pet integration check. No network used.');process.exit(0);}
 (async()=>{
  const db=await connect();let queries=0;

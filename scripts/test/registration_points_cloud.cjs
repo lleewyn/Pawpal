@@ -1,11 +1,11 @@
-const {connect} = require('../database/v1/service_import_connection.cjs');
+const {connect} = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
 const {randomUUID} = require('node:crypto');
 (async () => {
     const client = await connect();
     try {
-        const migration = fs.readFileSync(require.resolve('../database/v1/204_registration_welcome_points.sql'), 'utf8');
+        const migration = fs.readFileSync(require.resolve('../../my-server/scripts/database/v1/204_registration_welcome_points.sql'), 'utf8');
         await client.query('BEGIN');
         await client.query("SET LOCAL statement_timeout='20s'");
         await client.query(migration.replace(/^BEGIN;$/m, '').replace(/^COMMIT;$/m, ''));

@@ -1,6 +1,6 @@
 // API signal/context tests and optional rollback-only SQL counter/routing verification.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {createHandler}=require('../../api/admin-chat.js'),{parseCustomerReply}=require('../api/chat_understanding.js');
+const {createHandler}=require('../../api/admin-chat.js'),{parseCustomerReply}=require('../../my-server/scripts/api/chat_understanding.js');
 (async()=>{
  assert.equal(parseCustomerReply('Tôi chưa đủ thông tin để trả lời câu hỏi của bạn.').understood,false);
  assert.equal(parseCustomerReply('Bạn muốn hỏi về điều gì?').understood,false);
@@ -19,9 +19,9 @@ const {createHandler}=require('../../api/admin-chat.js'),{parseCustomerReply}=re
  const answered=await invoke('thì sao');assert.equal(answered.p_understood,true);assert.equal(answered.p_reply,'Dịch vụ tắm có trong danh mục.');assert.deepEqual(generated.at(-1)[2],[{role:'user',content:'Tôi muốn hỏi dịch vụ tắm.'},{role:'model',content:'Bạn muốn hỏi về dịch vụ nào?'}]);
  console.log('PASS structured/legacy understanding signals, punctuation-only clarification without AI, malformed output handling, last 8 turns in correct order, follow-up context and understood RPC flag. No external AI calls.');
  if(!process.argv.includes('--cloud'))return;
- const {connect}=require('../database/v1/service_import_connection.cjs');const db=await connect();const checks=[];
+ const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');const db=await connect();const checks=[];
  try{
-  await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");await db.query(fs.readFileSync('scripts/database/v1/125_chat_unhandled_handoff.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+  await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");await db.query(fs.readFileSync('my-server/scripts/database/v1/125_chat_unhandled_handoff.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
   const user=randomUUID(),owner=randomUUID();await db.query('INSERT INTO auth.users(id) VALUES($1)',[user]);await db.query('INSERT INTO public.customer(id,auth_user_id,customer_code) VALUES($1,$2,$3)',[owner,user,'QA-LOOP-'+owner]);
   // Isolate a threshold-policy branch inside this transaction; no rule changes are committed.
   await db.query("UPDATE public.chatbot_handover_rule SET is_active=false WHERE trigger_type='bot_loop' AND is_active");await db.query('SET LOCAL ROLE service_role');

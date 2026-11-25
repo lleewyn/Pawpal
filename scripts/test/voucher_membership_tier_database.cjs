@@ -1,8 +1,8 @@
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 async function main(){
- const db=await connect(),migration=fs.readFileSync('scripts/database/v1/285_voucher_membership_tier.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
+ const db=await connect(),migration=fs.readFileSync('my-server/scripts/database/v1/285_voucher_membership_tier.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
  try{
   await db.query("BEGIN;SET LOCAL statement_timeout='10s'");await db.query(migration);await db.query(migration);
   const tiers=(await db.query('SELECT id,tier_name,is_active FROM public.membership_tier ORDER BY minimum_expenditure')).rows,gold=tiers.find(t=>t.tier_name==='Vàng'),inactive=tiers.find(t=>!t.is_active);

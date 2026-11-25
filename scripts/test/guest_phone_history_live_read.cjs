@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),crypto=require('node:crypto');
-const {createClient}=require('@supabase/supabase-js');const {settings}=require('../database/v1/cloud_connection.cjs');
-const {createGuestPhoneHistory}=require('../api/guest_phone_history');
+const {createClient}=require('@supabase/supabase-js');const {settings}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
+const {createGuestPhoneHistory}=require('../../my-server/scripts/api/guest_phone_history');
 (async()=>{
  const {config}=settings();const admin=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}});
  // Read real records; OTP challenges are simulated in memory and no database writes are made.

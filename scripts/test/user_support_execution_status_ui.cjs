@@ -6,7 +6,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   if(u.pathname==='/scripts/shared/support-handler.js')return r.fulfill({contentType:'text/javascript',body:''});
   const f=path.join(process.cwd(),u.pathname);if(fs.existsSync(f)&&fs.statSync(f).isFile())return r.fulfill({contentType:f.endsWith('.css')?'text/css':/\.m?js$/.test(f)?'text/javascript':'text/html',body:fs.readFileSync(f)});return r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'});
  });
- await p.goto('http://localhost/#support');await p.setContent('<link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css"><link rel="stylesheet" href="/styles/style.css"><link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/support/support.css">'+fs.readFileSync('pages/user/modules/support/support.html','utf8'));
+ await p.goto('http://localhost/#support');await p.setContent('<link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css"><link rel="stylesheet" href="/styles/style.css"><link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/support/support.css">'+fs.readFileSync('my-client/pages/user/modules/support/support.html','utf8'));
  await p.evaluate(async()=>{
   document.body.className='user-portal-body';localStorage.setItem('pawpal_current_user',JSON.stringify({id:'ui-owner'}));
   const statuses=['waiting_manager_approval','pending','processing','waiting_customer','resolved'],titles=['Đề xuất đang chờ quản lý duyệt','Đã duyệt, chưa thông báo và bắt đầu','Đã thông báo và bắt đầu thực hiện','Cần khách bổ sung thông tin','Đã phản hồi giải thích'];

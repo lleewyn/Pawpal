@@ -8,9 +8,9 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),crypto=require(
   else data={ok:true,history:[{id,role:'user',content:preview,content_partial:true,content_offset:1200,content_revision:revision,created_at:'2026-10-28T00:00:00Z'}],hasMore:false};
   return route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
  });
- await page.goto('http://localhost:3001/');await page.setContent(fs.readFileSync('pages/admin/modules/chatbot/chatbot.html','utf8'));
+ await page.goto('http://localhost:3001/');await page.setContent(fs.readFileSync('my-client/pages/admin/modules/chatbot/chatbot.html','utf8'));
  await page.evaluate(()=>{sessionStorage.setItem('pawpal_admin_active_module','Chatbot');document.getElementById('subtab-tab-ai-copilot').classList.add('active');window.PawpalChatbot={subtabs:{},showToast(){}};window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:{access_token:'offline',user:{id:'actor'}}}})}});});
- await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js','utf8')});const more=page.getByRole('button',{name:'Đọc tiếp tin nhắn',exact:true});await more.waitFor();assert.equal(requests.length,0);
+ await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js','utf8')});const more=page.getByRole('button',{name:'Đọc tiếp tin nhắn',exact:true});await more.waitFor();assert.equal(requests.length,0);
  await more.click();await page.waitForFunction(()=>!Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Đọc tiếp tin nhắn').disabled);assert.equal(await page.locator('.copilot-msg-bubble').textContent(),preview);
  while(await more.count()){await more.click();await page.waitForFunction(()=>{const b=Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Đọc tiếp tin nhắn');return !b||!b.disabled;});}
  assert.equal(await page.locator('.copilot-msg-bubble').textContent(),complete);assert.deepEqual(requests,[1200,1200,3200,5200]);assert.equal(await page.locator('.copilot-msg-bubble img').count(),0);assert.equal(await page.evaluate(()=>Boolean(window.injected)),false);assert.deepEqual(errors,[]);

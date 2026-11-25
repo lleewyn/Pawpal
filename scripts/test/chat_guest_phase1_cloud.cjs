@@ -3,7 +3,7 @@ if(!process.argv.includes('--cloud-public-smoke')){console.log('No changes. Use 
 require('dotenv').config({quiet:true});
 const fs=require('fs'),assert=require('assert/strict'),{randomUUID}=require('crypto');
 const {createClient}=require('@supabase/supabase-js'),{createHandler}=require('../../api/admin-chat.js');
-const {plan}=require('../api/chat_public_guest.js');
+const {plan}=require('../../my-server/scripts/api/chat_public_guest.js');
 const service=createClient(process.env.PAWPAL_ADMIN_SUPABASE_URL,process.env.PAWPAL_ADMIN_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 let modelCalls=0;const handler=createHandler({serviceClient:service,generateReply:async()=>{modelCalls++;throw Error('Model forbidden in phase1 technical checks');}});
 const token=randomUUID()+randomUUID(),checks=[];

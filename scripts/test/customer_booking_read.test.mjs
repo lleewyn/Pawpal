@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {vietnamDateTimeInput,parseVietnamDateTimeInput} from '../shared/booking-time.mjs';
-const source=fs.readFileSync('scripts/api/api.js','utf8');
+import {vietnamDateTimeInput,parseVietnamDateTimeInput} from '../../my-client/scripts/shared/booking-time.mjs';
+const source=fs.readFileSync('my-client/scripts/api/api.js','utf8');
 const method=source.slice(source.indexOf('    async getUserBookings('),source.indexOf('    async getUserAppointments('));
 function fixture(total,paid,fail=false,starts='2026-10-23T08:00:00+07:00'){
     const db={from(){return {select(){return this;},eq(){return this;},async order(){return {data:[{id:'booking',appointment_code:'BKG',scheduled_start_at:starts,appointment_status:'checked_in',appointment_item:[{id:'line',quantity:1,unit_price:100,is_primary:true}]}]};}};},

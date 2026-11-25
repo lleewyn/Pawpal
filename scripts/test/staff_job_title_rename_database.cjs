@@ -1,8 +1,8 @@
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 async function main(){
- const db=await connect(),migration=fs.readFileSync('scripts/database/v1/284_staff_job_title_rename.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
+ const db=await connect(),migration=fs.readFileSync('my-server/scripts/database/v1/284_staff_job_title_rename.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
  try{
   await db.query("BEGIN;SET LOCAL statement_timeout='10s'");
   const staffHash=async()=>(await db.query("SELECT md5(string_agg(id::text||job_title,',' ORDER BY id)) value FROM public.staff")).rows[0].value,before=await staffHash();

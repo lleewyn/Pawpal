@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
-const { settings } = require('../database/v1/cloud_connection.cjs');
+const { settings } = require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const { createClient } = require('@supabase/supabase-js');
 
 const TARGET_URL = 'https://pawpalgr3-5bph12hep-llwyns-projects.vercel.app';

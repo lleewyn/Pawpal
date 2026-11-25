@@ -5,7 +5,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  const page=await browser.newPage({viewport:{width:1440,height:1050},timezoneId:'UTC'}),errors=[],dialogs=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',async d=>{dialogs.push(d.message());await d.dismiss();});
  await page.route('**/*',route=>{
   const u=new URL(route.request().url());if(u.origin!=='http://localhost')return route.abort();
-  if(u.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/support/support.css"><style>.d-none{display:none!important}</style>'+fs.readFileSync('pages/user/modules/support/support.html','utf8')});
+  if(u.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/support/support.css"><style>.d-none{display:none!important}</style>'+fs.readFileSync('my-client/pages/user/modules/support/support.html','utf8')});
   if(u.pathname.startsWith('/assets/'))return route.fulfill({status:204});
   return route.fulfill({contentType:u.pathname.endsWith('.css')?'text/css':'text/javascript',body:fs.readFileSync(path.join(process.cwd(),decodeURIComponent(u.pathname)),'utf8')});
  });

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {readCheckoutRequest,writeCheckoutRequest,clearCheckoutRequest} from '../shared/checkout-request.mjs';
+import {readCheckoutRequest,writeCheckoutRequest,clearCheckoutRequest} from '../../my-client/scripts/shared/checkout-request.mjs';
 const id='10000000-0000-4000-8000-000000000001';
 const storage=()=>{const values=new Map();return {getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};};
 
@@ -22,7 +22,7 @@ test('corrupted or unavailable recovery storage cannot silently start a new requ
 });
 
 function apiFixture(result){
- const calls=[];const source=fs.readFileSync('scripts/api/api.js','utf8');
+ const calls=[];const source=fs.readFileSync('my-client/scripts/api/api.js','utf8');
  const methods=source.slice(source.indexOf('    async prepareOwnOrder('),source.indexOf('    async updateOrderPaymentStatus('));
  const context={window:{getSupabaseClient:()=>({rpc:async(name,args)=>{calls.push({name,args});return name==='quote_own_sales_order'?{data:{version:'quote',total:105000}}:{data:result};}})}};
  vm.runInNewContext('globalThis.api={'+methods+'};',context);return {api:context.api,calls};

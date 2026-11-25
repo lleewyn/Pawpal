@@ -1,6 +1,6 @@
 // Authorized phase-6 smoke. No emails sent, existing passwords reset, financial writes or Cloud Logs.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {createClient}=require('@supabase/supabase-js'),{settings}=require('../database/v1/cloud_connection.cjs');
+const {createClient}=require('@supabase/supabase-js'),{settings}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 const folder='docs/security/phase6',site='https://pawpalgr3.vercel.app',report={capturedAt:new Date().toISOString(),checks:[],status:'INCOMPLETE',scope:'Actual deployed Vercel API/browser and Supabase Auth/RPC with one temporary STAFF identity; no Cloud Logs or financial mutations'};
 const pass=name=>{report.checks.push({name,status:'PASS'});console.log('PASS '+name);};

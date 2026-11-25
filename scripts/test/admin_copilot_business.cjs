@@ -1,6 +1,6 @@
 // Offline business/API tests. Never call Cloud, Gemini, Logs or production writes.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {plan,answer,formatFacts}=require('../api/admin_copilot.js');
+const {plan,answer,formatFacts}=require('../../my-server/scripts/api/admin_copilot.js');
 const {createHandler}=require('../../api/admin-chat.js');
 const readPermissions=['inventory.read','product_variant.read','product.read'];
 const now=new Date('2026-10-24T18:30:00Z'); // 01:30 on 25/10 in Vietnam.

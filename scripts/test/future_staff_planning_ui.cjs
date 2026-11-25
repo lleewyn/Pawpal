@@ -8,7 +8,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   const file=path.join(process.cwd(),url.pathname);if(!fs.existsSync(file))return route.fulfill({status:404,body:''});
   return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(file,'utf8')});
  });await page.goto('http://localhost/');
- for(const file of ['pages/admin/admin.css','pages/admin/modules/staff/staff.css','pages/admin/modules/services/services.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+ for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/modules/staff/staff.css','my-client/pages/admin/modules/services/services.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
  await page.evaluate(async()=>{
   const {mountRecurringSchedule}=await import('/pages/admin/modules/staff/staff-recurring.mjs');window.rows=[];window.calls=[];
   const client={from:()=>{const query={select:()=>query,order:()=>query,range:async()=>({data:rows})};return query;},rpc:async(name,args)=>{calls.push({name,args});rows=[{id:args.p_id,...args.p_details,updated_at:new Date().toISOString()}];return {data:args.p_id};}};

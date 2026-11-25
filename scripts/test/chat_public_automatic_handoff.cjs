@@ -30,10 +30,10 @@ const {createHandler}=require('../../api/admin-chat.js');
  }
  console.log('PASS 9 public gateway cases: financial/lost-money/MoMo/VNPay/delivery/damage/emergency/human request send handoff flag without FAQ/AI; ordinary FAQ stays automatic and source-free.');
  if(!process.argv.includes('--cloud'))return;
- const {connect}=require('../database/v1/service_import_connection.cjs');const db=await connect();let count=0;
+ const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');const db=await connect();let count=0;
  try{
   await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
-  await db.query(fs.readFileSync('scripts/database/v1/124_chat_automatic_handoff.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+  await db.query(fs.readFileSync('my-server/scripts/database/v1/124_chat_automatic_handoff.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
   const user=randomUUID(),staffUser=randomUUID(),owner=randomUUID(),staff=randomUUID();await db.query('INSERT INTO auth.users(id) VALUES($1),($2)',[user,staffUser]);await db.query('INSERT INTO public.customer(id,auth_user_id,customer_code) VALUES($1,$2,$3)',[owner,user,'QA-HANDOFF-'+owner]);
   await db.query("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES($1,$2,'QA handoff staff','QA','active',false)",[staff,staffUser]);await db.query('SET LOCAL ROLE service_role');
   const row=async id=>(await db.query('SELECT status,is_urgent,assigned_staff_id,sla_deadline::text,updated_at::text FROM public.chat_conversation WHERE id=$1',[id])).rows[0];

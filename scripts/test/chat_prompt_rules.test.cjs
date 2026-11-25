@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const {selectPromptRules,MAX_RULE_CHARACTERS,PRIORITY_KEYS}=require('../api/chat_prompt_rules.js');
+const {selectPromptRules,MAX_RULE_CHARACTERS,PRIORITY_KEYS}=require('../../my-server/scripts/api/chat_prompt_rules.js');
 
 test('all twenty configured rule roles fit and survive arbitrary source order',()=>{
  const rows=PRIORITY_KEYS.map(key=>({prompt_key:key,content:('Rule '+key+' ').repeat(10)}));
@@ -18,7 +18,7 @@ test('empty, inactive and duplicate keys do not enter the selected prompt',()=>{
  assert.deepEqual(selectPromptRules(rows),[{prompt_key:'bot_role',content:'A'}]);
 });
 test('loader remains cached and uses a bounded deterministic web query',async()=>{
- const source=fs.readFileSync('scripts/api/chat.js','utf8');const start=source.indexOf('async function getActiveSystemPrompts()');const end=source.indexOf("const { evaluateToxicAndSentiment }",start);
+ const source=fs.readFileSync('my-server/scripts/api/chat.js','utf8');const start=source.indexOf('async function getActiveSystemPrompts()');const end=source.indexOf("const { evaluateToxicAndSentiment }",start);
  let calls=0;const ops=[];const query={select(v){ops.push(['select',v]);return this;},eq(k,v){ops.push(['eq',k,v]);return this;},order(k,v){ops.push(['order',k,v]);return this;},limit(v){ops.push(['limit',v]);return Promise.resolve({data:[{prompt_key:'privacy_security',content:'Protect customer data.'}],error:null});}};
  const context={supabase:{from(table){calls++;assert.equal(table,'chatbot_system_prompt');return query;}},selectPromptRules,cachedSystemPrompts:null,lastPromptsFetchTime:0,CACHE_TTL_RULES:300000,Date,console};
  vm.createContext(context);vm.runInContext(source.slice(start,end),context);

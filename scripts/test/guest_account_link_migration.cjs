@@ -1,10 +1,10 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
-const file='scripts/database/v1/116_guest_account_link.sql',reverseFile='scripts/database/v1/116_guest_account_link_rollback.sql',signature='public.complete_guest_customer_auth(text,uuid,text,text)';
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
+const file='my-server/scripts/database/v1/116_guest_account_link.sql',reverseFile='my-server/scripts/database/v1/116_guest_account_link_rollback.sql',signature='public.complete_guest_customer_auth(text,uuid,text,text)';
 const source=fs.readFileSync(file,'utf8'),reverse=fs.readFileSync(reverseFile,'utf8'),hash=s=>crypto.createHash('sha256').update(s).digest('hex'),body=s=>s.replace(/^BEGIN;\s*$/m,'').replace(/^COMMIT;\s*$/m,'');
 const apply=process.argv.includes('--apply-cloud');if(!apply&&!process.argv.includes('--verify-reverse')){console.log('Use --verify-reverse for DDL roundtrip, --apply-cloud after matching link rollback PASS.');process.exit(0);}
 (async()=>{const db=await connect();try{
- const report=JSON.parse(fs.readFileSync('docs/verification/sync/guest-account-link-rollback.txt'));assert.equal(report.status,'PASS');assert.equal(report.checks.length,22);assert.equal(report.migrationSha256,hash(source));assert.equal(report.authHandlerSha256,hash(fs.readFileSync('scripts/api/customer_auth.js','utf8')));assert.equal(report.guestHandlerSha256,hash(fs.readFileSync('scripts/api/guest_commerce.js','utf8')));
+ const report=JSON.parse(fs.readFileSync('docs/verification/sync/guest-account-link-rollback.txt'));assert.equal(report.status,'PASS');assert.equal(report.checks.length,22);assert.equal(report.migrationSha256,hash(source));assert.equal(report.authHandlerSha256,hash(fs.readFileSync('my-server/scripts/api/customer_auth.js','utf8')));assert.equal(report.guestHandlerSha256,hash(fs.readFileSync('my-server/scripts/api/guest_commerce.js','utf8')));
  await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='2s'");
  const original=(await db.query("SELECT pg_get_functiondef('public.complete_customer_auth(uuid,text,text)'::regprocedure) value")).rows[0].value;assert.equal(hash(original),report.legacyLinkSha256);
  assert.equal((await db.query('SELECT to_regprocedure($1)::text value',[signature])).rows[0].value,null,'Refuse overwrite or partial install');

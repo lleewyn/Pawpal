@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { saveCustomerProfile, applyProfileSnapshot } from '../shared/customer-profile.mjs';
-import { resolveAuthenticatedCustomerId } from '../shared/customer-identity.mjs';
-import { createLatestRenderer } from '../shared/latest-render.mjs';
-import { updateCustomerBooking } from '../shared/customer-booking.mjs';
+import { saveCustomerProfile, applyProfileSnapshot } from '../../my-client/scripts/shared/customer-profile.mjs';
+import { resolveAuthenticatedCustomerId } from '../../my-client/scripts/shared/customer-identity.mjs';
+import { createLatestRenderer } from '../../my-client/scripts/shared/latest-render.mjs';
+import { updateCustomerBooking } from '../../my-client/scripts/shared/customer-booking.mjs';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
@@ -32,7 +32,7 @@ test('profile UI keeps the editor open and browser cache unchanged when saving f
         localStorage: { getItem: () => JSON.stringify(user), setItem: () => { throw new Error('Cache must not change'); } },
         sessionStorage: {}, saveCustomerProfile: async () => { throw new Error('Lưu bị từ chối'); } };
     vm.createContext(context);
-    const source = fs.readFileSync('pages/user/modules/profile/profile.js', 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '');
+    const source = fs.readFileSync('my-client/pages/user/modules/profile/profile.js', 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '');
     vm.runInContext(source, context);
     vm.runInContext('globalThis.toasts=[];showToast=(type,message)=>toasts.push({type,message});', context);
     context.user = user;

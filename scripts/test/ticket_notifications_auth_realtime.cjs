@@ -2,7 +2,7 @@
 // Business audit events are immutable and intentionally retained; never disable triggers.
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{createClient}=require('@supabase/supabase-js');
 if(!process.argv.includes('--cloud')){console.log('No network. Use --cloud for live isolated Auth/ticket/notification checks with scoped cleanup.');process.exit(0);}
-const {settings}=require('../database/v1/cloud_connection.cjs'),{config}=settings();
+const {settings}=require('../../my-server/scripts/database/v1/cloud_connection.cjs'),{config}=settings();
 const trace=[],fixtures=[],clients=[],checks=[],auditIds=[],ticket=crypto.randomUUID();let failure,cleanupFailure;
 const reviewOnly=process.argv.includes('--review-only'),reviewFixture={pet:crypto.randomUUID(),booking:crypto.randomUUID(),item:crypto.randomUUID(),review:crypto.randomUUID()};
 const report={timestamp:new Date().toISOString(),environment:'Supabase Cloud cpzuvaplseielhgcnqrn',scope:'Actual synthetic customer/Admin Auth, PostgREST committed ticket RPCs and Realtime; no production UI, review publication, money, upload, Storage or Logs. Immutable test audit rows retained.',checks};

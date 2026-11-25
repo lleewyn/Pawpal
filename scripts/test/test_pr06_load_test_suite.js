@@ -7,7 +7,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
-const { updateChatConfig, isFeatureEnabled, getChatConfig } = require('../api/chat_config.js');
+const { updateChatConfig, isFeatureEnabled, getChatConfig } = require('../../my-server/scripts/api/chat_config.js');
 
 console.log('================================================================');
 console.log('PAWPAL TEST SUITE: PR-06 (LOAD TEST, BENCHMARKING & FEATURE FLAGS)');
@@ -164,7 +164,7 @@ async function runAllTests() {
         assert.strictEqual(isFeatureEnabled('ai_bot_reply_enabled'), false, 'Cờ ai_bot_reply_enabled phải là false');
 
         // Đọc mã nguồn chat.js xác nhận có logic fallback handover khi cờ tắt
-        const chatSource = fs.readFileSync(path.join(__dirname, '../api/chat.js'), 'utf8');
+        const chatSource = fs.readFileSync(path.join(__dirname, '../../my-server/scripts/api/chat.js'), 'utf8');
         assert(chatSource.includes("!isFeatureEnabled('ai_bot_reply_enabled')"), 'chat.js thiếu kiểm tra ai_bot_reply_enabled');
         assert(chatSource.includes("status: 'waiting_agent'"), 'chat.js phải chuyển phiên sang waiting_agent');
         assert(chatSource.includes("handover: true"), 'chat.js phản hồi cờ handover khi bot AI tắt');
@@ -185,7 +185,7 @@ async function runAllTests() {
     // TEST 5: REQUEST TRACING & STRUCTURED METRICS
     // --------------------------------------------------------------------------
     runTest('PR-06 Tracing: Request ID xuyên suốt và độ trễ duration_ms đính kèm phản hồi', () => {
-        const chatSource = fs.readFileSync(path.join(__dirname, '../api/chat.js'), 'utf8');
+        const chatSource = fs.readFileSync(path.join(__dirname, '../../my-server/scripts/api/chat.js'), 'utf8');
 
         assert(chatSource.includes("req.headers['x-request-id']"), 'LỖI: chat.js chưa đọc x-request-id từ client');
         assert(chatSource.includes("res.setHeader('X-Request-Id', requestId)"), 'LỖI: chat.js chưa gán X-Request-Id vào header phản hồi');

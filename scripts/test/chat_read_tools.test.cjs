@@ -1,9 +1,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {prepare,createReadBudget}=require('../api/chat_read_tools.js');
+const {prepare,createReadBudget}=require('../../my-server/scripts/api/chat_read_tools.js');
 const permissions=['inventory.read','product_variant.read','product.read'];
 const facts={intent:'inventory.low_stock',total:0,items:[],scope:{},as_of:'2026-10-28T00:00:00Z'};
 test('question variants and selected context preserve intent without arbitrary query tools',()=>{
- const {plan,contextualPlan}=require('../api/admin_copilot.js'),now=new Date('2026-10-28T03:00:00Z');
+ const {plan,contextualPlan}=require('../../my-server/scripts/api/admin_copilot.js'),now=new Date('2026-10-28T03:00:00Z');
  assert.equal(plan('lich henh spa hom nay cho phuc vu',now).intent,'appointment.list');
  assert.equal(plan('ton kh0 duoi nguong',now).intent,'inventory.low_stock');
  assert.equal(plan('Khách hàng tên Nguyễn An',now).filters.query,'Nguyễn An');

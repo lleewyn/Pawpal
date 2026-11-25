@@ -1,7 +1,7 @@
 // Recover only the result of the explicitly approved one-question diagnostic.
 // No Cloud Logs, no AI call, no broad transcript read, no private business data.
 const fs=require('node:fs'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  const since=fs.statSync('scripts/test/chat_public_stream_model_browser.js').mtime;
  await db.query('BEGIN READ ONLY');await db.query("SET LOCAL statement_timeout='5s'");

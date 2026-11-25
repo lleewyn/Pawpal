@@ -1,9 +1,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),{createRequire}=require('node:module');
-const {replyPrefix,createPublicStream}=require('../api/chat_public_stream.js');
+const {replyPrefix,createPublicStream}=require('../../my-server/scripts/api/chat_public_stream.js');
 const {createHandler}=require('../../api/admin-chat.js');
-const {friendly}=require('../api/chat_public_guest.js');
-test('Vietnamese cắt tỉa does not silently select English cat species',()=>{const {plan}=require('../api/chat_public_guest.js');assert.equal(plan('Giá cắt tỉa bé 7kg').request.pet,undefined);assert.equal(plan('Giá grooming cho cat 7kg').request.pet,'cat');assert.equal(plan('Cắt tỉa cho mèo 7kg').request.pet,'cat');assert.equal(plan('Cắt tỉa cho chó 7kg').request.pet,'dog');});
+const {friendly}=require('../../my-server/scripts/api/chat_public_guest.js');
+test('Vietnamese cắt tỉa does not silently select English cat species',()=>{const {plan}=require('../../my-server/scripts/api/chat_public_guest.js');assert.equal(plan('Giá cắt tỉa bé 7kg').request.pet,undefined);assert.equal(plan('Giá grooming cho cat 7kg').request.pet,'cat');assert.equal(plan('Cắt tỉa cho mèo 7kg').request.pet,'cat');assert.equal(plan('Cắt tỉa cho chó 7kg').request.pet,'dog');});
 test('structured reply prefixes decode split escapes/Unicode without leaking JSON fields',()=>{
  for(const value of ['PawPal gửi bạn nhé.','Bé 🐾\n"VIP" \\ thử', '<img src=x>']){
   for(const object of [{reply:value,understood:true},{understood:false,reply:value}]){
@@ -18,7 +18,7 @@ test('stream opt-in caps draft content bytes and keeps legacy JSON clients uncha
  const frames=chunks.map(x=>({type:x.match(/event: (\w+)/)[1],data:JSON.parse(x.match(/data: (.*)/)[1])}));assert.equal(headers['Content-Type'],'text/event-stream; charset=utf-8');assert.ok(frames.filter(x=>x.type==='delta').reduce((n,x)=>n+Buffer.byteLength(x.data.text),0)<=32768);assert.equal(frames.at(-1).type,'done');assert.equal(createPublicStream({body:{action:'public_send'}},res).enabled,false);
 });
 test('actual SDK streaming branch emits before completed response, using the same bounded generation',async()=>{
- const apiFile=path.resolve('api/admin-chat.js'),realRequire=createRequire(apiFile);let release,finish,finished=false,calls=0;const deltas=[];
+ const apiFile=path.resolve('my-server/api/admin-chat.js'),realRequire=createRequire(apiFile);let release,finish,finished=false,calls=0;const deltas=[];
  const aggregate=new Promise(r=>finish=r),gate=new Promise(r=>release=r);
  const sdk={GoogleGenerativeAI:class{getGenerativeModel(config){assert.match(config.systemInstruction,/Xưng là PawPal/);assert.match(config.systemInstruction,/không tự đoán tuổi/);return {generateContentStream:async()=>{calls++;return {stream:(async function*(){yield {text:()=>'{"reply":"PawPal '};await gate;yield {text:()=> 'gửi bạn nhé.","understood":true}'};finish({text:()=>'{"reply":"PawPal gửi bạn nhé.","understood":true}'});})(),response:aggregate};}};}}};
  const module={exports:{}};vm.runInNewContext(fs.readFileSync(apiFile,'utf8'),{module,exports:module.exports,require:name=>name==='@google/generative-ai'?sdk:realRequire(name),process:{env:{}},console,setTimeout,clearTimeout},{filename:apiFile});

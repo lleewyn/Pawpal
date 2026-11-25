@@ -4,7 +4,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
 let browser;
 async function mount(options={}){
  const page=await browser.newPage();await page.route('**/*',route=>route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));await page.goto('http://localhost:3001/');
- await page.setContent(fs.readFileSync('components/fab/fab.html','utf8'));
+ await page.setContent(fs.readFileSync('my-client/components/fab/fab.html','utf8'));
  await page.evaluate(options=>{
   window.session={user:{id:'A'},access_token:'token-A'};window.calls=[];window.held=[];window.hold=new Set(options.hold||[]);
   window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session}}),onAuthStateChange(cb){window.changeAuth=next=>{session={user:{id:next},access_token:'token-'+next};cb('SIGNED_IN',session);};}}});
@@ -19,7 +19,7 @@ async function mount(options={}){
   };
   if(options.fastTimeout){const native=setTimeout;window.setTimeout=(fn,ms,...args)=>native(fn,ms===30000?25:ms,...args);}
  },options);
- await page.addScriptTag({content:fs.readFileSync('components/fab/fab.js','utf8')});await page.waitForFunction(()=>typeof changeAuth==='function');await page.waitForTimeout(30);return page;
+ await page.addScriptTag({content:fs.readFileSync('my-client/components/fab/fab.js','utf8')});await page.waitForFunction(()=>typeof changeAuth==='function');await page.waitForTimeout(30);return page;
 }
 const message=text=>({id:'fixture-'+text,sender_type:'bot',content:text,metadata:{},created_at:'2026-10-28T01:00:00Z'});
 (async()=>{

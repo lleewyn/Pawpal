@@ -3,7 +3,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
 const base='http://localhost:4567';
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const page=await browser.newPage({viewport:{width:1440,height:1000},timezoneId:'UTC'}),errors=[];page.on('pageerror',e=>errors.push(e.message));
- const html='<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css"><link rel="stylesheet" href="/styles/style.css"><link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/bookings/bookings.css"><body class="user-portal-body"><main style="max-width:1100px;margin:40px auto;padding:20px">'+fs.readFileSync('pages/user/modules/bookings/bookings.html','utf8')+'</main></body>';
+ const html='<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css"><link rel="stylesheet" href="/styles/style.css"><link rel="stylesheet" href="/pages/user/user.css"><link rel="stylesheet" href="/pages/user/modules/bookings/bookings.css"><body class="user-portal-body"><main style="max-width:1100px;margin:40px auto;padding:20px">'+fs.readFileSync('my-client/pages/user/modules/bookings/bookings.html','utf8')+'</main></body>';
  await page.route('**/*',route=>{
   const url=new URL(route.request().url());if(url.origin!==base)return route.abort();
   if(url.pathname==='/')return route.fulfill({contentType:'text/html',body:html});

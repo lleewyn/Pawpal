@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { withDeadline } from '../shared/request-deadline.mjs';
+import { withDeadline } from '../../my-client/scripts/shared/request-deadline.mjs';
 test('successful request returns its confirmed result', async () => {
     assert.deepEqual(await withDeadline(() => Promise.resolve({ success: true }), 100, 'timeout'), { success: true });
 });

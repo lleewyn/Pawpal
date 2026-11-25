@@ -1,9 +1,9 @@
 // Transactional schema/ownership regression. Synthetic records are always rolled back.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='15s';SET LOCAL lock_timeout='3s'");
- const sql=fs.readFileSync(require.resolve('../database/v1/205_customer_pet_profile.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'');
+ const sql=fs.readFileSync(require.resolve('../../my-server/scripts/database/v1/205_customer_pet_profile.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'');
  if(!process.argv.includes('--installed'))await db.query(sql);
  console.log('Database upload gate enabled:',(await db.query('SELECT enabled FROM pawpal_private.media_settings WHERE singleton')).rows[0]?.enabled);
  await db.query('SAVEPOINT fixtures');

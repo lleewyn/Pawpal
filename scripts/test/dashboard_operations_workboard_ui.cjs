@@ -15,7 +15,7 @@ const root = 'pages/admin/modules/dashboard/';
         await page.clock.install({ time: new Date('2026-11-21T03:00:00Z') });
         await page.setContent('<style>*{box-sizing:border-box}body{margin:0;padding:20px;background:#F4F9F6}.subtab-content{display:none}.subtab-content.active{display:block}</style><nav><button class="sidebar-menu-btn" data-title="Dịch vụ">Dịch vụ</button><button class="sidebar-menu-btn" data-title="Bán hàng">Bán hàng</button><button class="sidebar-menu-btn" data-title="Khiếu nại">Khiếu nại</button></nav>' + fs.readFileSync(root + 'dashboard.html', 'utf8'));
         await page.addStyleTag({ content: fs.readFileSync(root + 'dashboard.css', 'utf8') });
-        await page.addStyleTag({ content: fs.readFileSync('pages/admin/admin-components.css', 'utf8') });
+        await page.addStyleTag({ content: fs.readFileSync('my-client/pages/admin/admin-components.css', 'utf8') });
         await page.addScriptTag({ content: fs.readFileSync(root + 'subtabs/operations-metrics.js', 'utf8') });
         await page.evaluate(() => {
             window.reads = []; window.failedTable = null; window.removedChannels = 0; window.realtimeHandlers = {};
@@ -146,7 +146,7 @@ const root = 'pages/admin/modules/dashboard/';
         await tasks.first().getByRole('button', { name: 'Mở lịch hẹn' }).click();
         assert.equal(await page.evaluate(() => PawpalServices.state.selectedBookingId), appointmentId.split(':')[1]);
         await page.locator('[data-ops-task-kind]').selectOption('ticket');
-        const adminSource = fs.readFileSync('pages/admin/admin.js', 'utf8');
+        const adminSource = fs.readFileSync('my-client/pages/admin/admin.js', 'utf8');
         const deepLinkLoader = adminSource.slice(adminSource.indexOf('    function handleEntityDeepLink('), adminSource.indexOf('    function getTargetHashForModule('));
         await page.addScriptTag({ content: `const access = { isAdmin: () => true }; ${deepLinkLoader}
             window.PawpalComplaints = { state: { currentTicketId: 'previous', currentActiveTicket: { id: 'previous' } },

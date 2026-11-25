@@ -2,7 +2,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
- const p=await browser.newPage();await p.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<body></body>'}));await p.goto('http://localhost:4000/');await p.setContent(fs.readFileSync('components/fab/fab.html','utf8'));
+ const p=await browser.newPage();await p.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<body></body>'}));await p.goto('http://localhost:4000/');await p.setContent(fs.readFileSync('my-client/components/fab/fab.html','utf8'));
  await p.evaluate(()=>{
   window.setInterval=()=>1;window.saved=[];window.mode='stream';window.sends=[];
   window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange(){}}});
@@ -16,7 +16,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
    return new Response(JSON.stringify({ok:true,messages:saved.slice().reverse(),hasMore:false,status:'bot_handling',updatedAt:String(sends.length)}),{headers:{'Content-Type':'application/json'}});
   };
   window.emit=(type,data)=>streamController.enqueue(new TextEncoder().encode('event: '+type+'\ndata: '+JSON.stringify(data)+'\n\n'));
- });await p.addScriptTag({content:fs.readFileSync('components/fab/fab.js','utf8')});await p.click('#fabAiBtn');await p.fill('#fabChatInput','Dịch vụ công khai');await p.click('#fabChatSend');await p.waitForFunction(()=>!!window.streamController);
+ });await p.addScriptTag({content:fs.readFileSync('my-client/components/fab/fab.js','utf8')});await p.click('#fabAiBtn');await p.fill('#fabChatInput','Dịch vụ công khai');await p.click('#fabChatSend');await p.waitForFunction(()=>!!window.streamController);
  await p.evaluate(()=>{emit('reset',{});emit('delta',{text:'PawPal gửi bạn '});});await p.waitForFunction(()=>document.querySelector('.fab-stream-content')?.textContent==='PawPal gửi bạn ');
  assert.equal(await p.locator('#fabChatSend').isDisabled(),true);assert.equal(await p.locator('.fab-chat-bubble--user').count(),1);assert.equal(await p.evaluate(()=>sends[0].stream),true);
  await p.fill('#fabChatInput','Nháp tiếp theo');

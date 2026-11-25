@@ -2,7 +2,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{
- const p=await b.newPage();await p.route('**/*',r=>r.abort());await p.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));await p.goto('http://localhost:3001/');await p.setContent(fs.readFileSync('pages/admin/modules/customers/customers.html','utf8'));
+ const p=await b.newPage();await p.route('**/*',r=>r.abort());await p.route('http://localhost:3001/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));await p.goto('http://localhost:3001/');await p.setContent(fs.readFileSync('my-client/pages/admin/modules/customers/customers.html','utf8'));
  await p.evaluate(()=>{
   window.requests=[];window.transactions=new Map();window.balance=100;window.holdRpc=false;window.holdRefresh=false;window.failAfterCommit=false;window.toasts=[];
   window.PawpalCustomers={state:{customerDatabase:{QA:{id:'CUS-QA',dbId:'customer-qa',name:'QA',phone:'0901234567',points:100,tierName:'Bạc'}}},subtabs:{},escapeHtml:v=>String(v??''),showToast:(...args)=>toasts.push(args),
@@ -14,7 +14,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
    return {data:transactions.get(args.p_request_id),error:null};
   }});
  });
- await p.addScriptTag({content:fs.readFileSync('pages/admin/modules/customers/subtabs/tab-customer-pawpoint.js','utf8')});
+ await p.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/customers/subtabs/tab-customer-pawpoint.js','utf8')});
  await p.evaluate(()=>{PawpalCustomers.subtabs.pawpoint.init();PawpalCustomers.subtabs.pawpoint.init();});
  const prepare=async(type,points)=>{await p.evaluate(()=>PawpalCustomers.subtabs.pawpoint.openAdjustPointsModal('CUS-QA'));await p.selectOption('#adjustType',type);await p.locator('#adjustPointsVal').fill(String(points));await p.locator('#adjustReason').fill('Bù sự cố dịch vụ');};
  const clickMany=()=>p.evaluate(()=>{for(let i=0;i<12;i++)document.getElementById('btnSubmitAdjustPoints').click();document.getElementById('formAdjustPoints').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
@@ -28,7 +28,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  console.log('PASS actual UI: 12 clicks plus form submit issue one request, guarded during RPC/refresh; +50 and -20 once; lost-response retry reuses request ID; new intentional adjustment gets a new ID. Isolated transport.');
  }finally{await b.close();}
  if(!process.argv.includes('--cloud'))return;
- const {connect}=require('../database/v1/service_import_connection.cjs');const db=await connect();try{
+ const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');const db=await connect();try{
   await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
   const user=randomUUID(),staff=randomUUID(),owner=randomUUID();await db.query('INSERT INTO auth.users(id) VALUES($1)',[user]);await db.query("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES($1,$2,'QA duplicate points','QA','active',false)",[staff,user]);await db.query("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[staff]);await db.query('INSERT INTO public.customer(id,customer_code) VALUES($1,$2)',[owner,'QA-POINT-'+owner]);
   await db.query("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role','authenticated',true)",[user]);await db.query('SET LOCAL ROLE authenticated');

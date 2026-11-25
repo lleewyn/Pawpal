@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),{plan,answer}=require('../api/admin_copilot.js');
+const {test}=require('node:test'),assert=require('node:assert/strict'),{plan,answer}=require('../../my-server/scripts/api/admin_copilot.js');
 test('how-to questions about write operations remain read-only guidance, direct commands stay refused',()=>{
  for(const question of ['Đặt lịch PawPal như thế nào?','Hoàn tiền cho khách như thế nào?','Xóa đơn như thế nào?'])assert.equal(plan(question).intent,'workflow.guide',question);
  for(const question of ['Đặt lịch cho khách','Tự động hoàn tiền cho khách','Xóa đơn này'])assert.equal(plan(question).intent,'refuse.write',question);

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {demoActivationLink,expiredDemoActivation,ACTIVATION_DEMO_TTL} from '../shared/guest-activation-demo.mjs';
+import {demoActivationLink,expiredDemoActivation,ACTIVATION_DEMO_TTL} from '../../my-client/scripts/shared/guest-activation-demo.mjs';
 test('demo invitation expires exactly 48 hours after the persisted booking date',()=>{
  const created='2026-11-09T10:00:00Z',issued=Date.parse(created),target='/user#bookings';
  const first=demoActivationLink(created,target,issued),later=demoActivationLink(created,target,issued+86400000);

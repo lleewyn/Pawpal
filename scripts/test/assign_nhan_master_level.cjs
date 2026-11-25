@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { connect } = require('../database/v1/service_import_connection.cjs');
+const { connect } = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 
 const STAFF_ID = '4145890a-4023-4135-8703-274538d4a5d9';
 const ADMIN_STAFF_ID = 'c28ca283-2c81-4c53-82d0-4b173754ca6d';

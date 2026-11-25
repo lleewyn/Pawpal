@@ -1,9 +1,9 @@
 // Live assignment RPC + actual dispatch modal. All fixture assignments and shifts roll back.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');const {connect}=require('../database/v1/service_import_connection.cjs');
+const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')&&!process.argv.includes('--apply-cloud'))process.exit(0);
 (async()=>{const db=await connect(),browser=await chromium.launch({channel:'chrome',headless:true}),folder='docs/verification/admin-dispatch-eligibility';fs.mkdirSync(folder,{recursive:true});let page;const checks=[],pass=s=>{checks.push(s);console.log('PASS',s);};
- const migration=fs.readFileSync('scripts/database/v1/278_staff_dispatch_eligibility.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
+ const migration=fs.readFileSync('my-server/scripts/database/v1/278_staff_dispatch_eligibility.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
  try{
   await db.query("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");await db.query(migration);await db.query(migration);
   const actual='b7ca3485-64a1-4998-ab71-ea393bccdfe8',fixture=randomUUID(),busy=randomUUID(),workers=[randomUUID(),randomUUID(),randomUUID()],starts='2026-12-07T05:00:00Z',ends='2026-12-07T06:00:00Z';
@@ -24,9 +24,9 @@ if(!process.argv.includes('--cloud')&&!process.argv.includes('--apply-cloud'))pr
   await db.query('SAVEPOINT required_level');await db.query('RESET ROLE');await db.query("UPDATE public.appointment_item SET service_id='c0000000-0000-0000-0000-000000000005' WHERE appointment_id=$1",[fixture]);await db.query('SET LOCAL ROLE authenticated');assert.ok(!(await rpc('admin_service_booking_staff_choices',{p_id:fixture})).data.some(p=>p.id===workers[0]));await db.query('ROLLBACK TO SAVEPOINT required_level');pass('Service requiring technician level still excludes staff without that level');
   const revision=(await db.query('SELECT updated_at::text FROM public.appointment WHERE id=$1',[fixture])).rows[0].updated_at;
   const rejected=await rpc('update_admin_service_booking',{p_id:fixture,p_expected_updated_at:revision,p_action:'assign',p_value:workers[1],p_reason:'Kiểm chứng chống trùng lịch'});assert.equal(rejected.error.message,'staff_not_available');pass('Server rejects forced assignment to busy staff');
-  page=await browser.newPage({viewport:{width:1100,height:950}});await page.exposeFunction('liveRpc',rpc);await page.setContent(fs.readFileSync('pages/admin/modules/services/services.html','utf8'));await page.evaluate(()=>document.body.className='admin-body admin-ui-standard');
-  for(const file of ['pages/admin/admin.css','pages/admin/admin-components.css','pages/admin/admin-typography.css','pages/admin/modules/services/services.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
-  const source=fs.readFileSync('pages/admin/modules/services/subtabs/tab-service-bookings.js','utf8'),core=fs.readFileSync('pages/admin/modules/services/services.js','utf8');
+  page=await browser.newPage({viewport:{width:1100,height:950}});await page.exposeFunction('liveRpc',rpc);await page.setContent(fs.readFileSync('my-client/pages/admin/modules/services/services.html','utf8'));await page.evaluate(()=>document.body.className='admin-body admin-ui-standard');
+  for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/admin-components.css','my-client/pages/admin/admin-typography.css','my-client/pages/admin/modules/services/services.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+  const source=fs.readFileSync('my-client/pages/admin/modules/services/subtabs/tab-service-bookings.js','utf8'),core=fs.readFileSync('my-client/pages/admin/modules/services/services.js','utf8');
   await page.evaluate(()=>{window.PawpalServices={state:{bookingsData:[],liveStaffList:[]},errorMessage:e=>e.message};window.getSupabaseClient=()=>({rpc:(name,args)=>liveRpc(name,args)});});
   await page.addScriptTag({content:'const PawpalServices=window.PawpalServices;'+source.slice(source.indexOf('    function clearModalErrors('),source.indexOf('    function fieldError('))+source.slice(source.indexOf('    function modalError('),source.indexOf('    function syncBookingKpis('))+core.slice(core.indexOf('    PawpalServices.enhanceEntitySelects ='),core.indexOf('    function assertHandoverReady('))+source.slice(source.indexOf('    function openChangeStaffModal('),source.indexOf('    function openSurchargeModal('))+'window.openDispatch=openChangeStaffModal;'});
   const model={id:'QA-DISPATCH-'+fixture.slice(0,8),dbId:fixture,status:'pending',staffId:null,petName:'Heo',time:'12:00',date:'2026-12-07'};

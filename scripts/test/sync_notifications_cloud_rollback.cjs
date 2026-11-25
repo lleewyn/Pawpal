@@ -1,7 +1,7 @@
 // Synthetic fixtures only, no COMMIT, no Logs or external delivery.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs');
 if(!process.argv.includes('--cloud')){console.log('No network. Use --cloud for rollback-only notification checks.');process.exit(0);}
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{
  const db=await connect();let queries=0;const ids=Array.from({length:7},()=>randomUUID());
  const [a,b,ca,cb,n1,n2,nb]=ids,checks=[];

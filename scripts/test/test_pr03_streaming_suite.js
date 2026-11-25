@@ -8,7 +8,7 @@ const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 );
-const chatHandler = require('../api/chat.js');
+const chatHandler = require('../../my-server/scripts/api/chat.js');
 
 // Mock SSE response collector
 function mockSSEResponse() {
@@ -301,7 +301,7 @@ async function runPR03StreamingSuite() {
         // TEST 6: Phía giao diện Widget: Khóa nút khi gửi và giữ draft (CB-20 / CB-07)
         // -------------------------------------------------------------
         console.log('\n[Test 6] Kiểm tra kiểm soát giao diện phía khách: fab.js...');
-        const fabCode = fs.readFileSync(path.join(__dirname, '../../components/fab/fab.js'), 'utf8');
+        const fabCode = fs.readFileSync(path.join(__dirname, '../../my-client/components/fab/fab.js'), 'utf8');
 
         const hasSendingGuard = fabCode.includes('isSendingCustomerMsg') && fabCode.includes('sendBtn.disabled = true');
         const hasDraftPreservation = fabCode.includes('savedDraft') && fabCode.includes('input.value = savedDraft');

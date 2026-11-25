@@ -1,11 +1,11 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
- const page=await browser.newPage();await page.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<body></body>'}));await page.goto('http://localhost:4000');await page.setContent(fs.readFileSync('components/fab/fab.html','utf8'));
+ const page=await browser.newPage();await page.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<body></body>'}));await page.goto('http://localhost:4000');await page.setContent(fs.readFileSync('my-client/components/fab/fab.html','utf8'));
  await page.evaluate(()=>{
   window.clock=Date.now();Date.now=()=>clock;window.calls=[];window.replyMode='temporary';window.setInterval=fn=>{window.tick=fn;return 1;};sessionStorage.setItem('pawpal_chat_active_guest','10000000-0000-4000-8000-000000000001');
   window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange(){}}});
   window.fetch=async(_url,init)=>{const b=JSON.parse(init.body);calls.push({action:b.action,at:clock});if(replyMode==='healthy')return {ok:true,status:200,json:async()=>({ok:true,messages:[],hasMore:false,status:'bot_handling',updatedAt:'v1'})};return {ok:false,status:503,json:async()=>({ok:false,error:'Chat chưa sẵn sàng',...(replyMode==='missing'?{retryable:false}:{})})};};
- });await page.addScriptTag({content:fs.readFileSync('components/fab/fab.js','utf8')});await page.click('#fabAiBtn');await page.waitForFunction(()=>calls.length===1&&document.querySelector('#fabChatStatus').textContent.includes('chưa'));await page.fill('#fabChatInput','Giá Pet Hotel');
+ });await page.addScriptTag({content:fs.readFileSync('my-client/components/fab/fab.js','utf8')});await page.click('#fabAiBtn');await page.waitForFunction(()=>calls.length===1&&document.querySelector('#fabChatStatus').textContent.includes('chưa'));await page.fill('#fabChatInput','Giá Pet Hotel');
  const count=()=>page.evaluate(()=>calls.length),tick=ms=>page.evaluate(async ms=>{clock+=ms;await tick();},ms);
  await tick(10000);await tick(10000);assert.equal(await count(),1);await tick(10000);assert.equal(await count(),2);
  await tick(30000);assert.equal(await count(),2);await tick(30000);assert.equal(await count(),3);await tick(60000);assert.equal(await count(),3);await tick(60000);assert.equal(await count(),4);

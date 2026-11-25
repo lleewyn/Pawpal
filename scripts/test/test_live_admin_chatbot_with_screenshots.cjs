@@ -12,8 +12,8 @@ async function runAdminChatbotVisualTest() {
     
     // Khởi tạo máy chủ isolated render giao diện Admin Chatbot với đầy đủ stylesheet
     const app = express();
-    const links = [...fs.readFileSync('pages/admin/index.html', 'utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x => x[0]).join('\n');
-    const chatbotHtml = fs.readFileSync('pages/admin/modules/chatbot/chatbot.html', 'utf8');
+    const links = [...fs.readFileSync('my-client/pages/admin/index.html', 'utf8').matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x => x[0]).join('\n');
+    const chatbotHtml = fs.readFileSync('my-client/pages/admin/modules/chatbot/chatbot.html', 'utf8');
 
     const conversationFixture = {
         id: '92000000-0000-0000-0000-000000000001',

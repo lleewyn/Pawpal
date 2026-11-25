@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 const root=path.resolve(__dirname,'../..'),out=path.join(root,'docs/verification/services-final');
-const overrides=['scripts/shared/data-loader.js','pages/services/services.js','pages/services/service-detail/service-detail.js','pages/services/booking/booking.js','pages/admin/modules/services/services.js','pages/admin/modules/services/services.html','pages/admin/modules/services/services.css','pages/admin/modules/services/subtabs/tab-service-catalog.js','pages/admin/modules/services/subtabs/tab-service-bookings.js'];
+const overrides=['my-client/scripts/shared/data-loader.js','my-client/pages/services/services.js','my-client/pages/services/service-detail/service-detail.js','my-client/pages/services/booking/booking.js','my-client/pages/admin/modules/services/services.js','my-client/pages/admin/modules/services/services.html','my-client/pages/admin/modules/services/services.css','my-client/pages/admin/modules/services/subtabs/tab-service-catalog.js','my-client/pages/admin/modules/services/subtabs/tab-service-bookings.js'];
 (async()=>{
  fs.mkdirSync(out,{recursive:true});const browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage({viewport:{width:1440,height:1050}});const errors=[],dataFiles=[],writes=[];
  try{

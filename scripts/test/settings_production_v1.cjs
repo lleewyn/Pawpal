@@ -1,5 +1,5 @@
 // Explicit opt-in. No edits to the operating configuration: only future-dated/private test records.
-const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');const {createClient}=require('@supabase/supabase-js');const {settings,infra}=require('../database/v1/cloud_connection.cjs');const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');const {createClient}=require('@supabase/supabase-js');const {settings,infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 if(process.argv[2]!=='run')throw Error('Use run to explicitly verify Production');
 async function ok(p){const r=await p;if(r.error)throw Error(r.error.message);return r.data;}
 (async()=>{

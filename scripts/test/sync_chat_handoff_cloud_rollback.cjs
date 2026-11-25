@@ -1,7 +1,7 @@
 // One synthetic conversation; all writes rolled back. Never sends real messages.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs');
 if(!process.argv.includes('--cloud')){console.log('No network. Use --cloud for rollback-only chat checks.');process.exit(0);}
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();let queries=0;const checks=[];
  const [a,b,ca,cb,s1,s2,u1,u2,chat,msg]=Array.from({length:10},()=>randomUUID());
  const q=async(sql,args)=>{queries++;return db.query(sql,args);};

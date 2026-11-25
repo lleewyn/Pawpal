@@ -1,6 +1,6 @@
 // Offline transport contract: no database, network or credentials are accessed.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
-const source=fs.readFileSync(path.join(__dirname,'../database/v1/cloud_connection.cjs'),'utf8');
+const source=fs.readFileSync(path.join(__dirname,'../../my-server/scripts/database/v1/cloud_connection.cjs'),'utf8');
 const config={DESTINATION_DATABASE_URL:'postgres://postgres.cpzuvaplseielhgcnqrn@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres',DESTINATION_DATABASE_PASSWORD:'offline-test-password',DESTINATION_SUPABASE_URL:'https://cpzuvaplseielhgcnqrn.supabase.co'};
 let calls=[],logs=[],reply={status:0,stdout:'  ok\n'};
 const context={module:{exports:{}},URL,process:{platform:'win32',env:{}},require(name){

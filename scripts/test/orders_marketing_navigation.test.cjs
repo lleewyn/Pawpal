@@ -4,8 +4,8 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 test('marketing shortcut loads Settings through the router and keeps its tabs in Settings', async () => {
-    const promos = fs.readFileSync('pages/admin/modules/orders/subtabs/tab-order-promos.js', 'utf8');
-    const shell = fs.readFileSync('pages/admin/admin.js', 'utf8');
+    const promos = fs.readFileSync('my-client/pages/admin/modules/orders/subtabs/tab-order-promos.js', 'utf8');
+    const shell = fs.readFileSync('my-client/pages/admin/admin.js', 'utf8');
     const shortcutStart = promos.indexOf('    window.PawpalOrdersModule.navigateToSettingsMarketing = function()');
     const shortcut = promos.slice(shortcutStart, promos.indexOf('\n    };', shortcutStart) + 7);
     const routerStart = shell.indexOf("    window.addEventListener('hashchange', () => {");

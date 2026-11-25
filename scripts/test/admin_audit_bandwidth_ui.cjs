@@ -4,7 +4,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'}));await page.goto('http://audit.test/');
- await page.setContent(fs.readFileSync('pages/admin/modules/settings/settings.html','utf8'));
+ await page.setContent(fs.readFileSync('my-client/pages/admin/modules/settings/settings.html','utf8'));
  await page.evaluate(()=>{
   sessionStorage.setItem('pawpal_admin_active_module','Cấu hình');sessionStorage.setItem('pawpal_admin_user',JSON.stringify({id:'admin-a'}));
   window.requests=[];window.detailReads=0;window.failAudit=false;
@@ -18,7 +18,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
    return {data:{rows:matched.slice((p-1)*10,p*10),total:matched.length,page:p,stats:{total:1000,synced:200,lastModule:'Bán hàng'}}};
   },from(table){const q={};for(const name of ['select','eq','order','range','limit'])q[name]=()=>q;q.single=async()=>{if(table!=='audit_log')throw Error('Unexpected detail');detailReads++;return {data:{description:'Chi tiết riêng'}};};q.then=resolve=>Promise.resolve({data:[]}).then(resolve);return q;},channel(){return {on(){return this;},subscribe(){return this;}};},removeChannel(){}});
  });
- for(const file of ['pages/admin/admin-data-store.js','pages/admin/modules/settings/settings.js','pages/admin/modules/settings/subtabs/tab-settings-audit.js'])await page.addScriptTag({content:fs.readFileSync(file,'utf8')});
+ for(const file of ['my-client/pages/admin/admin-data-store.js','my-client/pages/admin/modules/settings/settings.js','my-client/pages/admin/modules/settings/subtabs/tab-settings-audit.js'])await page.addScriptTag({content:fs.readFileSync(file,'utf8')});
  await page.evaluate(()=>PawpalSettings.switchSubtab('tab-audit-logs'));
  assert.equal(await page.locator('#auditLogTableBody tr').count(),10);assert.equal(await page.locator('#statTotalAuditLogs').textContent(),'1000');assert.equal(await page.evaluate(()=>detailReads),0);
  await page.locator('#auditPaginationControls [data-p="3"]').click();await page.waitForFunction(()=>document.querySelectorAll('#auditLogTableBody details').length===3);

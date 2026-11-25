@@ -1,7 +1,7 @@
 // Bounded integration only: synthetic actors/voucher, always ROLLBACK; no Logs.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs');
 if(!process.argv.includes('--cloud')){console.log('No network. Use --cloud for rollback-only loyalty checks.');process.exit(0);}
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{
  const db=await connect();let queries=0;const [a,b,ca,cb,sa,staff,voucher,request,adjust]=Array.from({length:9},()=>randomUUID()),checks=[];
  const q=async(sql,args)=>{queries++;return db.query(sql,args);};

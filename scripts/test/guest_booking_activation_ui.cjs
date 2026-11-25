@@ -6,7 +6,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  try{
   const page=await browser.newPage({viewport:{width:1280,height:1000}}),errors=[];
   page.on('pageerror',error=>errors.push(error.message));
-  const authHtml=fs.readFileSync('pages/public/login/login.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
+  const authHtml=fs.readFileSync('my-client/pages/public/login/login.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
   await page.route('**/*',route=>{
    const url=new URL(route.request().url());if(url.origin!=='http://localhost')return route.abort();
    if(url.pathname==='/')return route.fulfill({contentType:'text/html',body:'<!doctype html><meta charset="utf-8"><div id="receipt"></div>'});
@@ -21,7 +21,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   });
   await page.goto('http://localhost/');
   await page.evaluate(async()=>{const m=await import('/pages/services/booking/booking.js');m.state.guest=true;await m.renderBookingReceipt(document.getElementById('receipt'),'11111111-1111-4111-8111-111111111111');});
-  await page.addStyleTag({content:fs.readFileSync('pages/services/booking/booking.css','utf8')+fs.readFileSync('styles/transaction-receipt.css','utf8')+'body{margin:0;padding:36px 18px;background:#fcfdfb}'});
+  await page.addStyleTag({content:fs.readFileSync('my-client/pages/services/booking/booking.css','utf8')+fs.readFileSync('my-client/styles/transaction-receipt.css','utf8')+'body{margin:0;padding:36px 18px;background:#fcfdfb}'});
   const recovery=page.locator('details.receipt-recovery');
   assert.equal(await recovery.getAttribute('open'),null);
   for(const width of [1280,390]){

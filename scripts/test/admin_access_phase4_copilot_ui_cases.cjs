@@ -1,5 +1,5 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
-const {createHandler}=require('../../api/admin-chat.js'),{createStaffAuthHandlers}=require('../api/staff_auth.js');
+const {createHandler}=require('../../api/admin-chat.js'),{createStaffAuthHandlers}=require('../../my-server/scripts/api/staff_auth.js');
 module.exports=async({session,sql,id,authId,origin,folder,pass,serviceCaller,installAssistantHandler,migrationsApplied=false})=>{
  if(!migrationsApplied)for(const name of ['177_staff_copilot_reads','178_staff_copilot_history','179_staff_copilot_customer_relations','180_staff_copilot_booking_reads','181_staff_copilot_request_budget','182_staff_copilot_source_validation'])sql(fs.readFileSync('scripts/database/v1/'+name+'.sql','utf8'));
  const auth=createStaffAuthHandlers({url:origin,anonKey:serviceCaller.supabaseKey,serviceKey:serviceCaller.supabaseKey});let modelText='Nội dung nháp cho hội thoại được giao.',mutateAfterModel=null;const posts=[];

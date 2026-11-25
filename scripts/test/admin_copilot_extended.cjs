@@ -1,5 +1,5 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {plan,contextualPlan,answer,formatFacts}=require('../api/admin_copilot.js');
+const {plan,contextualPlan,answer,formatFacts}=require('../../my-server/scripts/api/admin_copilot.js');
 const readPermissions=['appointment.read','appointment_item.read','service.read','service_category.read','support_ticket.read','chatbot_knowledge_faq.read','payment.read','refund_transaction.read','service_price_matrix.read','taxi_price_rule.read','hotel_room_type.read'];
 (async()=>{
  const now=new Date('2026-10-27T12:00:00Z'),history=[{role:'user',content:'Hôm nay có bao nhiêu lịch hẹn Spa đang chờ phục vụ?'},{role:'assistant',content:'Không có lịch.'}];
@@ -21,9 +21,9 @@ const readPermissions=['appointment.read','appointment_item.read','service.read'
  await assert.rejects(()=>answer({question:'Tóm tắt doanh thu hôm nay',now,staff:{permissions:readPermissions},caller:{rpc:async()=>({error:{code:'42501'}})}}),e=>e.code==='42501');
  console.log('PASS multi-turn exact two-day counts, service/Taxi pricing routing, knowledge/revenue routes, natural zero-stock reply, draft metadata once, numeric facts bypass AI and permission denial retained.');
  if(!process.argv.includes('--cloud'))return;
- const {connect}=require('../database/v1/service_import_connection.cjs');const db=await connect();const checks=[];
+ const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');const db=await connect();const checks=[];
  try{
-  await db.query("BEGIN ISOLATION LEVEL REPEATABLE READ;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");await db.query(fs.readFileSync('scripts/database/v1/126_copilot_extended_facts.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+  await db.query("BEGIN ISOLATION LEVEL REPEATABLE READ;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");await db.query(fs.readFileSync('my-server/scripts/database/v1/126_copilot_extended_facts.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
   const user=randomUUID(),staff=randomUUID(),customer=randomUUID(),product=randomUUID(),variant=randomUUID(),service=randomUUID(),faq=randomUUID(),order=randomUUID(),payment=randomUUID(),refund=randomUUID();
   await db.query('INSERT INTO auth.users(id) VALUES($1)',[user]);await db.query("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES($1,$2,'QA copilot extended','QA','active',false)",[staff,user]);await db.query("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[staff]);
   await db.query('INSERT INTO public.customer(id,customer_code) VALUES($1,$2)',[customer,'QA-COP-'+customer]);

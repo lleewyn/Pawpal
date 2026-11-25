@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 require('dotenv').config();
-const { dbTools, toolsDeclaration } = require('../api/chat.js');
+const { dbTools, toolsDeclaration } = require('../../my-server/scripts/api/chat.js');
 
 test('R2 - GĐ-10: get_loyalty_summary_own từ chối khi không có userId', async () => {
     const res = await dbTools.get_loyalty_summary_own(null);

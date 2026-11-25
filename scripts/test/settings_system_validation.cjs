@@ -4,14 +4,14 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
 (async()=>{
  const browser=await chromium.launch({channel:'chrome',headless:true});let samples;
  try{
-  const p=await browser.newPage();await p.route('**/*',r=>r.abort());await p.setContent(fs.readFileSync('pages/admin/modules/settings/settings.html','utf8'),{waitUntil:'domcontentloaded'});
+  const p=await browser.newPage();await p.route('**/*',r=>r.abort());await p.setContent(fs.readFileSync('my-client/pages/admin/modules/settings/settings.html','utf8'),{waitUntil:'domcontentloaded'});
   await p.evaluate(()=>{
    window.impacts=[];window.writes=[];window.shippingWrites=[];window.notices=[];
    window.PawpalSettings={state:{isLoaded:true,isSafeModeLocked:false,systemConfig:{storeInfo:{},paymentMethods:{},shippingPolicy:{},operatingHours:{},hotelRules:{},bookingPolicy:{}},deliveryOptions:[{id:'11111111-1111-4111-8111-111111111111',name:'QA delivery',fee:25000,available:true}]},subtabs:{},
     showToast:(message,type)=>notices.push({message,type}),getSupabaseClient:()=>({}),openModal(){},closeModal(){},updateSafeModeUI(){},
     openImpactConfirmationModal:opts=>impacts.push(opts),persistSystemConfig:async cfg=>writes.push(structuredClone(cfg)),saveShipping:async(options,cfg)=>shippingWrites.push({options:structuredClone(options),cfg:structuredClone(cfg)}),loadSettingsModuleData:async()=>{}};
   });
-  await p.addScriptTag({content:fs.readFileSync('pages/admin/modules/settings/subtabs/tab-settings-system.js','utf8')});
+  await p.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/settings/subtabs/tab-settings-system.js','utf8')});
   const values=async data=>p.evaluate(data=>{for(const [id,value] of Object.entries(data))document.getElementById(id).value=value;},data);
   let checks=0;
   const submit=async(id,allowed)=>{await p.evaluate(()=>{impacts.length=0;notices.length=0;});await p.evaluate(id=>document.getElementById(id).click(),id);assert.equal(await p.evaluate(()=>impacts.length),allowed?1:0,id);if(!allowed)assert.ok(await p.evaluate(()=>notices.length)>0);else await p.evaluate(()=>impacts[0].onConfirm());checks++;};
@@ -36,10 +36,10 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   console.log('PASS '+checks+' real form validation cases; invalid data blocked, decimal fees preserved; partner token control remains disabled. Isolated transport.');
  }finally{await browser.close();}
  if(!process.argv.includes('--cloud'))return;
- const {connect}=require('../database/v1/service_import_connection.cjs');const db=await connect();let checks=0;
+ const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');const db=await connect();let checks=0;
  try{
   await db.query("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
-  await db.query(fs.readFileSync('scripts/database/v1/123_settings_validation.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+  await db.query(fs.readFileSync('my-server/scripts/database/v1/123_settings_validation.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
   const user=randomUUID(),staff=randomUUID();await db.query('INSERT INTO auth.users(id) VALUES($1)',[user]);
   await db.query("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,employment_status,must_change_password) VALUES($1,$2,'QA settings rollback','QA','active',false)",[staff,user]);await db.query("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[staff]);
   await db.query("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role','authenticated',true)",[user]);await db.query('SET LOCAL ROLE authenticated');

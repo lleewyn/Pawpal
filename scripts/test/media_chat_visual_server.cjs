@@ -1,7 +1,7 @@
 'use strict';
 // Isolated browser harness only. No Cloud connection or business writes.
 const fs=require('fs'),path=require('path'),express=require('express');
-const html=`<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/components/fab/fab.css"><body style="margin:0;font-family:Arial;background:#EEF5F1"><h1>Kiểm thử ảnh chat riêng</h1>${fs.readFileSync('components/fab/fab.html','utf8')}<script>
+const html=`<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/components/fab/fab.css"><body style="margin:0;font-family:Arial;background:#EEF5F1"><h1>Kiểm thử ảnh chat riêng</h1>${fs.readFileSync('my-client/components/fab/fab.html','utf8')}<script>
 window.probe={calls:[],sends:[],accept:false,messages:[]};const member=new URLSearchParams(location.search).has('member');
 window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:member?{user:{id:'10000000-0000-0000-0000-000000000003'},access_token:'isolated-member'}:null}}),onAuthStateChange(){}}});
 const native=fetch.bind(window),asset='44444444-4444-4444-8444-444444444444';
@@ -12,4 +12,4 @@ window.fetch=async(url,options={})=>{
  return native(url,options);
 };
 </script><script src="/components/fab/fab.js"></script></body></html>`;
-const app=express();app.get('/',(req,res)=>res.type('html').send(html));app.get('/test-image',(req,res)=>res.type('image/jpeg').sendFile(path.resolve('assets/images/services/spa/process/spa04.webp')));for(const dir of ['components/fab','scripts/shared'])app.use('/'+dir,express.static(path.resolve(dir)));app.listen(3138,'127.0.0.1',()=>console.log('CHAT_MEDIA_ISOLATED_READY_3138'));
+const app=express();app.get('/',(req,res)=>res.type('html').send(html));app.get('/test-image',(req,res)=>res.type('image/jpeg').sendFile(path.resolve('my-client/assets/images/services/spa/process/spa04.webp')));for(const dir of ['components/fab','scripts/shared'])app.use('/'+dir,express.static(path.resolve(dir)));app.listen(3138,'127.0.0.1',()=>console.log('CHAT_MEDIA_ISOLATED_READY_3138'));

@@ -2,11 +2,11 @@
 // Focused search checks and actual workspace screenshots. No business data writes.
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 async function main(){
  const db=await connect(),browser=await chromium.launch({channel:'chrome',headless:true});
  const folder='docs/verification/staff-order-search';fs.mkdirSync(folder,{recursive:true});
- const migration=fs.readFileSync('scripts/database/v1/281_staff_order_search.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
+ const migration=fs.readFileSync('my-server/scripts/database/v1/281_staff_order_search.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
  try{
   await db.query("BEGIN;SET LOCAL statement_timeout='10s'");
   const original=(await db.query("SELECT pg_get_functiondef('public.get_staff_workspace(text,text,uuid,integer)'::regprocedure) body")).rows[0].body;
@@ -29,8 +29,8 @@ async function main(){
   for(const file of ['admin.css','admin-components.css','admin-typography.css','admin-shell-v7.css'])await page.addStyleTag({content:fs.readFileSync('pages/admin/'+file,'utf8')});
   await page.addStyleTag({content:'body.admin-body{background:#F4F8F6}#headerSubtabsGroup{display:flex;gap:8px;align-items:center;height:56px;padding:0 20px;background:#fff}main.admin-preview-content{position:static;height:calc(100vh - 56px);padding:20px;overflow:auto}'});
   await page.evaluate(id=>{window.PawpalAdminAccess={isStaff:()=>true,state:{user:{id,permissions:['work.sales.read','work.cashier.collect','work.complaint.handle']}}};window.getSupabaseClient=()=>({rpc:(name,args)=>readRpc(name,args)});},actor.id);
-  const core=fs.readFileSync('pages/admin/admin.js','utf8');await page.addScriptTag({content:core.slice(0,core.indexOf('})();')+5)});
-  const domain=fs.readFileSync('pages/admin/modules/orders/orders.js','utf8'),start=domain.indexOf('(function registerRoleViews()');await page.addScriptTag({content:domain.slice(start,domain.indexOf('})();',start)+5)});
+  const core=fs.readFileSync('my-client/pages/admin/admin.js','utf8');await page.addScriptTag({content:core.slice(0,core.indexOf('})();')+5)});
+  const domain=fs.readFileSync('my-client/pages/admin/modules/orders/orders.js','utf8'),start=domain.indexOf('(function registerRoleViews()');await page.addScriptTag({content:domain.slice(start,domain.indexOf('})();',start)+5)});
   await page.evaluate(()=>{window.addEventListener('hashchange',async()=>{const query=new URLSearchParams(location.hash.split('?')[1]||'').get('q');await PawpalAdminViews.mount('Bán hàng',document.querySelector('main'));window.completedSearch=query;});return PawpalAdminViews.mount('Bán hàng',document.querySelector('main'));});
   for(const [query,label]of [[queries[0],'partial-code'],[order.full_name,'customer-name']]){
    await page.getByRole('searchbox').fill(query);await page.getByRole('button',{name:'Tìm kiếm',exact:true}).click();
@@ -44,7 +44,7 @@ async function main(){
   assert.deepEqual(errors,[]);
   await db.query('ROLLBACK');
   if(process.argv.includes('--apply-cloud')){
-   const backup='scripts/database/v1/281_staff_order_search.rollback.sql';if(!fs.existsSync(backup))fs.writeFileSync(backup,'BEGIN;\n'+original+';\nNOTIFY pgrst,\'reload schema\';\nCOMMIT;\n');
+   const backup='my-server/scripts/database/v1/281_staff_order_search.rollback.sql';if(!fs.existsSync(backup))fs.writeFileSync(backup,'BEGIN;\n'+original+';\nNOTIFY pgrst,\'reload schema\';\nCOMMIT;\n');
    await db.query('BEGIN');await db.query(migration);await db.query('COMMIT');
   }
   fs.writeFileSync(folder+'/verification.txt','PASS: focused live STAFF search RPC and actual search form.\nBefore: '+before.map(row=>row.query+'='+row.found).join('; ')+'\nAfter: partial code (3 characters), longer code, full code, UUID and customer name find reported order; missing query empty; short query rejected; ID detail lookup preserved; at most 10 rows.\nUI: search button, result, opening profile; 3 staff actions; no price/refund management buttons; no JavaScript errors.\nNo order/payment writes; no full testcase replay.\nMigration applied: '+process.argv.includes('--apply-cloud')+'\n');

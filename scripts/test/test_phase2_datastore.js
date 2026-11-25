@@ -33,7 +33,7 @@ global.localStorage = {
 };
 
 // Require admin-data-store
-const PawpalDataStore = require('../../pages/admin/admin-data-store.js');
+const PawpalDataStore = require('../../my-client/pages/admin/admin-data-store.js');
 
 async function runTests() {
     console.log('=== BẮT ĐẦU KIỂM THỬ GIAI ĐOẠN 2: DATA STORE & SINGLE-FLIGHT CACHE ===\n');

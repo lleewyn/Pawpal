@@ -1,9 +1,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),{createRequire}=require('node:module'),path=require('node:path');
-const {answer}=require('../api/admin_copilot.js');
+const {answer}=require('../../my-server/scripts/api/admin_copilot.js');
 
 test('actual Gemini request config requires explicit missing information and audience boundaries, offline',async()=>{
- const filename=path.resolve('api/admin-chat.js'),localRequire=createRequire(filename),captured=[];
+ const filename=path.resolve('my-server/api/admin-chat.js'),localRequire=createRequire(filename),captured=[];
  const sdk={GoogleGenerativeAI:class{
   getGenerativeModel(config){captured.push(config);return {generateContent:async(body)=>{
    const payload=JSON.parse(body);assert.equal(payload.context.faq[0].answer,'Chỉ giới thiệu các loại phòng.');

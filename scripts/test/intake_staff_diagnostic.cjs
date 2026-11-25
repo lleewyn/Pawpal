@@ -1,4 +1,4 @@
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  console.log((await db.query("SELECT pg_get_functiondef('public.admin_service_staff_candidates()'::regprocedure) definition")).rows[0].definition);
  console.log('Staff eligibility counts:',(await db.query(`SELECT count(*) total,count(*) FILTER(WHERE employment_status='active') active,

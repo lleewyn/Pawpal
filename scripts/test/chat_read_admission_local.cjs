@@ -12,7 +12,7 @@ async function main(){
  for(const key of ['auth','rest'])assert.equal(new URL(cfg[key]).hostname,'127.0.0.1');
  const sql=s=>execFileSync('docker',['exec','-i','supabase-db','psql','-U','supabase_admin','-d',env.database,'-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-f','-'],{input:s,encoding:'utf8',windowsHide:true,stdio:['pipe','pipe','pipe']}).trim();
  assert.equal(sql("SELECT shobj_description(oid,'pg_database') FROM pg_database WHERE datname=current_database()"),env.ownerMarker);
- sql(fs.readFileSync('scripts/database/v1/136_chat_read_admission.sql','utf8'));
+ sql(fs.readFileSync('my-server/scripts/database/v1/136_chat_read_admission.sql','utf8'));
  sql('ALTER TABLE public.product_variant ADD COLUMN IF NOT EXISTS catalog_retired boolean NOT NULL DEFAULT false;');
  const report={scope:'Marker-owned local PostgREST v14 only; no Cloud/model',checks:[],status:'INCOMPLETE'},workers=[],pending=new Map();let seq=0,original;
  const pass=name=>{report.checks.push({name,status:'PASS'});console.log('PASS '+name);};

@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {createGuestCommerce}=require('../api/guest_commerce'),{normalizeVietnamPhone}=require('../shared/phone-normalization.cjs'),{phoneLocal}=require('../api/customer_auth');
-const {createGuestAccountLink}=require('../api/guest_account_link');
+const {createGuestCommerce}=require('../../my-server/scripts/api/guest_commerce'),{normalizeVietnamPhone}=require('../../my-server/scripts/shared/phone-normalization.cjs'),{phoneLocal}=require('../../my-server/scripts/api/customer_auth');
+const {createGuestAccountLink}=require('../../my-server/scripts/api/guest_account_link');
 test('Automatic link discovery uses only matching cookie context, skips absent/other-phone sessions and fails closed on DB errors',async()=>{
  const secret='cookie-test-secret-with-at-least-32-characters',origins=['https://pawpal.test'];let fail=false,calls=0;
  const admin={rpc:async()=>{calls++;return fail?{error:{message:'private'}}:{data:{initialized:true,contact:{phone:'0912345678'}}};}};

@@ -11,10 +11,10 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   return route.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'});
  });
  await page.goto('http://localhost:4567/');
- const css=[...fs.readFileSync('pages/admin/index.html','utf8').matchAll(/<link[^>]+href="([^"#]+\.css[^"#]*)"[^>]*>/g)].map(m=>'<link rel="stylesheet" href="'+m[1]+'">').join('');
- await page.setContent(css+fs.readFileSync('pages/admin/modules/services/services.html','utf8'));
+ const css=[...fs.readFileSync('my-client/pages/admin/index.html','utf8').matchAll(/<link[^>]+href="([^"#]+\.css[^"#]*)"[^>]*>/g)].map(m=>'<link rel="stylesheet" href="'+m[1]+'">').join('');
+ await page.setContent(css+fs.readFileSync('my-client/pages/admin/modules/services/services.html','utf8'));
  await page.evaluate(()=>{window.PawpalAdminAccess={isAdmin:()=>true,isStaff:()=>false,state:{user:{permissions:['appointment.write','staff_schedule.write']}}};});
- let core=fs.readFileSync('pages/admin/modules/services/services.js','utf8');core=core.slice(0,core.lastIndexOf("    if (document.readyState === 'loading')"))+'})();})();';await page.addScriptTag({content:core});
+ let core=fs.readFileSync('my-client/pages/admin/modules/services/services.js','utf8');core=core.slice(0,core.lastIndexOf("    if (document.readyState === 'loading')"))+'})();})();';await page.addScriptTag({content:core});
  await page.evaluate(()=>{
   window.calls=[];window.toasts=[];window.invalidations=[];window.PawpalDataStore={invalidate:key=>invalidations.push(key)};
   window.getSupabaseClient=()=>({rpc:async(name,args)=>{calls.push({name,args});if(['admin_service_staff_candidates','admin_service_booking_staff_choices'].includes(name))return {data:[{id:'new-worker',full_name:'Nhân viên thay thế',employment_status:'active'}]};return {data:'booking-id'};}});
@@ -23,7 +23,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   PawpalServices.state.liveStaffList=[];PawpalServices.showToast=(text,type)=>toasts.push({text,type});
   PawpalServices.loadServicesData=async()=>{};PawpalServices.ensureBooking=async()=>{};
  });
- await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/services/subtabs/tab-service-bookings.js','utf8')});
+ await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/services/subtabs/tab-service-bookings.js','utf8')});
  await page.evaluate(()=>PawpalServices.subtabs.bookings.openChangeStaffModal('BKG-TEST'));
  const modal=page.locator('#modalChangeStaff');
  await page.waitForFunction(()=>document.getElementById('changeStaffSelect').options.length>1);

@@ -1,6 +1,6 @@
 // Cloud SQL fixtures in one rollback transaction. No real business rows modified, Logs or AI.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect(),checks=[];try{
  const migrations=['162_admin_chat_logistics.sql','163_admin_chat_hotel_units.sql','164_admin_chat_hotel_price_scope.sql'];
  await db.query('BEGIN');for(const file of migrations)await db.query(fs.readFileSync('scripts/database/v1/'+file,'utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));checks.push('162/163/164 compile with existing gateway guards');

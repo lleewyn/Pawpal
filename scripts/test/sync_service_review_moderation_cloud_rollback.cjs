@@ -1,6 +1,6 @@
 // Single booking fixture; synthetic service/actors; always rollback. Not HTTP/UI E2E.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded service review RPC checks; otherwise no network.');process.exit(0);}
 (async()=>{const db=await connect();let queries=0;
  const report={environment:'Supabase Cloud cpzuvaplseielhgcnqrn',timestamp:new Date().toISOString(),scope:'Single Spa booking; RPC/RLS only; synthetic actors; rollback; no Logs',checks:[]};
@@ -11,7 +11,7 @@ if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded servi
  const read=async id=>(await q('SELECT id,customer_id,pet_id,appointment_status,scheduled_start_at::text,updated_at::text,change_count FROM public.appointment WHERE id=$1',[id])).rows[0];
  try{
   await q("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
-  const migration=fs.readFileSync('scripts/database/v1/106_admin_service_review_moderation.sql','utf8').replace(/^BEGIN;/,'').replace('COMMIT;','');
+  const migration=fs.readFileSync('my-server/scripts/database/v1/106_admin_service_review_moderation.sql','utf8').replace(/^BEGIN;/,'').replace('COMMIT;','');
   assert.ok(!/\b(?:BEGIN|COMMIT)\s*;/i.test(migration),'Migration wrapper must be removed before rollback test');
   await q(migration);
   const a=randomUUID(),b=randomUUID(),sa=randomUUID(),staff=randomUUID(),ca=randomUUID(),cb=randomUUID(),pet=randomUUID(),svc=randomUUID(),booking=randomUUID();

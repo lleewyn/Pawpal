@@ -6,7 +6,7 @@ const {createClient}=require('@supabase/supabase-js'),{chromium}=require('D:/Abo
 async function main(){
  const client=createClient(process.env.PAWPAL_ADMIN_SUPABASE_URL,process.env.PAWPAL_ADMIN_SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false}}),credentials=fs.readFileSync('D:/Aboutme/Pawpal-infra/supabase-local/PAWPAL-ADMIN.private.txt','utf8');
  const signed=await client.auth.signInWithPassword({email:credentials.match(/^Email: (.+)$/m)[1].trim(),password:credentials.match(/^Password: (.+)$/m)[1].trim()});assert.equal(signed.error,null);
- const app=express();app.get('/api/admin-config',require('../../api/admin-config.js'));app.use('/api',(req,res)=>res.status(405).json({success:false,message:'Writes disabled for UI verification'}));app.get('/admin',(req,res)=>res.sendFile(path.resolve('pages/admin/index.html')));app.use(express.static(process.cwd(),{dotfiles:'deny'}));
+ const app=express();app.get('/api/admin-config',require('../../api/admin-config.js'));app.use('/api',(req,res)=>res.status(405).json({success:false,message:'Writes disabled for UI verification'}));app.get('/admin',(req,res)=>res.sendFile(path.resolve('my-client/pages/admin/index.html')));app.use(express.static(process.cwd(),{dotfiles:'deny'}));
  const server=await new Promise(resolve=>{const value=app.listen(0,'127.0.0.1',()=>resolve(value));}),origin='http://127.0.0.1:'+server.address().port,browser=await chromium.launch({channel:'chrome',headless:true}),folder='docs/verification/settings-voucher-tier-layout';fs.mkdirSync(folder,{recursive:true});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:1050}}),errors=[];page.on('pageerror',error=>errors.push(error.message));

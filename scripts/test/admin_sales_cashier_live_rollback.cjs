@@ -1,7 +1,7 @@
 // Real Admin UI + Supabase SQL transaction. All test money/returns are rolled back.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--run'))process.exit(0);
 (async()=>{
  const db=await connect(),browser=await chromium.launch({channel:'chrome',headless:true});

@@ -1,8 +1,8 @@
 'use strict';
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {connect}=require('../database/v1/service_import_connection.cjs');
-const file='pages/admin/modules/settings/subtabs/tab-settings-audit.js',source=fs.readFileSync(file,'utf8');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
+const file='my-client/pages/admin/modules/settings/subtabs/tab-settings-audit.js',source=fs.readFileSync(file,'utf8');
 const sandbox={window:{},document:{readyState:'loading',addEventListener(){}}};vm.runInNewContext(source,sandbox);
 const format=sandbox.window.PawpalSettings.subtabs.audit.formatAuditDescription;
 assert.equal(format('Đã cập nhật hồ sơ.'),'Đã cập nhật hồ sơ.');
@@ -26,9 +26,9 @@ async function main(){
    assert.ok(({audit_log:'description',staff:'full_name',staff_level:'level_name'})[table]===column);
    return {data:(await db.query(`SELECT ${column} FROM public.${table} WHERE id=$1`,[id])).rows[0]||null,error:null};
   });
-  const html=fs.readFileSync('pages/admin/modules/settings/settings.html','utf8'),start=html.indexOf('<section class="subtab-content" id="subtab-tab-audit-logs">'),end=html.indexOf('</section>',start)+10;
+  const html=fs.readFileSync('my-client/pages/admin/modules/settings/settings.html','utf8'),start=html.indexOf('<section class="subtab-content" id="subtab-tab-audit-logs">'),end=html.indexOf('</section>',start)+10;
   await page.setContent('<div class="settings-module-wrapper admin-ui-standard admin-ui-customer-reference">'+html.slice(start,end).replace('class="subtab-content"','class="subtab-content active"')+'</div>');
-  for(const file of ['pages/admin/admin.css','pages/admin/admin-components.css','pages/admin/admin-typography.css','pages/admin/admin-shell-v7.css','pages/admin/modules/settings/settings.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+  for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/admin-components.css','my-client/pages/admin/admin-typography.css','my-client/pages/admin/admin-shell-v7.css','my-client/pages/admin/modules/settings/settings.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
   await page.addStyleTag({content:'body.admin-body{overflow:auto!important;position:static!important;background:#F4F8F6}.settings-module-wrapper{padding:20px}#subtab-tab-audit-logs{display:block}'});
   await page.evaluate(()=>{window.PawpalSettings={state:{auditLogsList:[],isSafeModeLocked:true},escapeHtml:value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),getSupabaseClient:()=>({from(table){let column,id;const q={select(value){column=value;return q;},eq(key,value){if(key!=='id')throw Error('unexpected filter');id=value;return q;},single(){return liveRead(table,column,id);},maybeSingle(){return liveRead(table,column,id);}};return q;}})};});
   await page.addScriptTag({content:source});

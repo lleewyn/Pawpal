@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),{plan,answer,formatFacts}=require('../api/admin_copilot.js'),{definitions,prepare,createReadBudget}=require('../api/chat_read_tools.js');
+const {test}=require('node:test'),assert=require('node:assert/strict'),{plan,answer,formatFacts}=require('../../my-server/scripts/api/admin_copilot.js'),{definitions,prepare,createReadBudget}=require('../../my-server/scripts/api/chat_read_tools.js');
 const now=new Date('2026-10-28T03:00:00Z'),id='10000000-0000-4000-8000-000000000001',revision='a'.repeat(32);
 test('long content and price-row requests use closed plans and validated cursors',()=>{
  assert.equal(plan('Nội dung bài viết: bài mẫu',now).intent,'content.read');assert.equal(plan('Nội dung đánh giá: '+id,now).intent,'review.read');

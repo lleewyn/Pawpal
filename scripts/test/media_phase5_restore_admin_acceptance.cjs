@@ -3,7 +3,7 @@ const fs=require('fs'),path=require('path'),dir='D:/Aboutme/Pawpal-infra/media/p
 (async()=>{let db;try{
  const kind=process.argv[2];if(!['pet_avatar','blog_thumbnail','banner_image'].includes(kind))throw Error('KIND_SCOPE');
  const source=JSON.parse(fs.readFileSync(path.join(dir,'admin-media-sources.private.json')))[kind];if(!source)throw Error('SOURCE_SCOPE');
- db=await require('../database/v1/service_import_connection.cjs').connect();await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='3s'");
+ db=await require('../../my-server/scripts/database/v1/service_import_connection.cjs').connect();await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='3s'");
  const current=(await db.query(`SELECT to_jsonb(t) snapshot FROM public.${source.table} t WHERE id=$1 FOR UPDATE`,[source.snapshot.id])).rows[0]?.snapshot;
  const asset=current?.[source.assetColumn];if(!asset||current[source.column]!==null)throw Error('CURRENT_ASSET_SCOPE');
  const allowed=[source.column,source.assetColumn,'updated_at'];

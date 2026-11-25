@@ -1,12 +1,12 @@
 'use strict';
 // Layout-only harness using the exact product modal and real styles. No business data, no auth bypass.
 const fs=require('node:fs'), express=require('express'), path=require('node:path');
-const source=fs.readFileSync('pages/admin/modules/orders/orders.html','utf8');
+const source=fs.readFileSync('my-client/pages/admin/modules/orders/orders.html','utf8');
 const start=source.indexOf('    <div class="admin-modal-overlay" id="modalAddProduct">');
 const end=source.indexOf('    <!-- ====================================================================',start+1);
 if(start<0||end<0)throw Error('MODAL_SCOPE');
 const modal=source.slice(start,end).replace('class="admin-modal-overlay"','class="admin-modal-overlay active"');
-const index=fs.readFileSync('pages/admin/index.html','utf8');
+const index=fs.readFileSync('my-client/pages/admin/index.html','utf8');
 const links=[...index.matchAll(/<link[^>]+rel="stylesheet"[^>]*>/g)].map(x=>x[0]).join('\n');
 // Admin injects orders.html after the shell styles; its module stylesheet must come last here too.
 const moduleStyles=source.match(/^<link[^>]+>/)?.[0]||'';

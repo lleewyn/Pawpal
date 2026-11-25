@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const {sanitizeModelData}=require('../api/chat_model_privacy.js'),{createGenerator}=require('../../api/admin-chat.js'),{answer}=require('../api/admin_copilot.js');
+const {sanitizeModelData}=require('../../my-server/scripts/api/chat_model_privacy.js'),{createGenerator}=require('../../api/admin-chat.js'),{answer}=require('../../my-server/scripts/api/admin_copilot.js');
 test('model boundary removes sensitive fields and masks contact/secrets in all text sources',async()=>{
  const secret='Bearer eyJsecret.token.signature',phone='0912345678',email='qa@example.invalid';let captured;
  const generate=createGenerator({serviceClient:{rpc:async()=>({data:{configured:false}})},environmentKey:()=> 'offline-key',request:async(_key,payload)=>{captured=payload;return 'Đã hiểu';}});
@@ -14,6 +14,6 @@ test('injected user instructions cannot turn deterministic facts into model SQL 
  assert.equal(calls.length,1);assert.equal(calls[0].name,'admin_copilot_facts');assert.ok(!JSON.stringify(calls[0].args).includes('DROP TABLE'));assert.ok(r.reply.includes('0'));
 });
 test('actual Copilot renderer escapes malicious HTML, including table cells',()=>{
- const source=fs.readFileSync('pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js','utf8'),start=source.indexOf(' function renderMarkdown('),end=source.indexOf(' async function typewriteText',start),context={};vm.createContext(context);vm.runInContext(source.slice(start,end)+';this.render=renderMarkdown;',context);
+ const source=fs.readFileSync('my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js','utf8'),start=source.indexOf(' function renderMarkdown('),end=source.indexOf(' async function typewriteText',start),context={};vm.createContext(context);vm.runInContext(source.slice(start,end)+';this.render=renderMarkdown;',context);
  const html=context.render('<img src=x onerror="alert(1)">\n\n| Cột |\n| --- |\n| <script>alert(1)</script> |');assert.ok(!html.includes('<img'));assert.ok(!html.includes('<script'));assert.ok(html.includes('&lt;img'));assert.ok(html.includes('&lt;script'));
 });

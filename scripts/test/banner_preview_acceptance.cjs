@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const { connect } = require('../database/v1/service_import_connection.cjs');
+const { connect } = require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 
 const TARGET_URL = 'https://pawpalgr3-5bph12hep-llwyns-projects.vercel.app';
 const credentials = fs.readFileSync('D:/Aboutme/Pawpal-infra/supabase-local/PAWPAL-ADMIN.private.txt', 'utf8');
@@ -11,7 +11,7 @@ const ADMIN_EMAIL = credentials.match(/^Email: (.+)$/m)[1].trim();
 const ADMIN_PASSWORD = credentials.match(/^Password: (.+)$/m)[1].trim();
 
 const BANNER_ID = 'df11737a-4655-404f-9cba-3f9b6b363561'; // Pet Hotel - An tâm khi bạn vắng nhà
-const BANNER_IMAGE_PATH = path.resolve('assets/images/banners/hotel_animation.png');
+const BANNER_IMAGE_PATH = path.resolve('my-client/assets/images/banners/hotel_animation.png');
 
 (async () => {
     console.log('=== KHỞI CHẠY NGHIỆM THU BANNER TRÊN VERCEL PREVIEW ===');
@@ -134,7 +134,7 @@ const BANNER_IMAGE_PATH = path.resolve('assets/images/banners/hotel_animation.pn
                 sizeBytes: dbRecord.size_bytes,
                 mimeType: dbRecord.mime_type,
                 provider: dbRecord.provider,
-                sourceFile: 'assets/images/banners/hotel_animation.png'
+                sourceFile: 'my-client/assets/images/banners/hotel_animation.png'
             },
             notes: 'Hoàn thành nghiệm thu Admin thay thế ảnh Banner thật bằng tệp hotel_animation.png (<= 3 MiB) lưu trữ vào MongoDB GridFS trên Vercel Preview.'
         };

@@ -4,7 +4,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
 (async()=>{
  const browser=await chromium.launch({channel:'chrome',headless:true});
  try{
-  const p=await browser.newPage();await p.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<body></body>'}));await p.goto('http://localhost:4000/');await p.setContent(fs.readFileSync('components/fab/fab.html','utf8'));
+  const p=await browser.newPage();await p.route('**/*',r=>r.fulfill({contentType:'text/html',body:'<body></body>'}));await p.goto('http://localhost:4000/');await p.setContent(fs.readFileSync('my-client/components/fab/fab.html','utf8'));
   await p.evaluate(()=>{
    window.calls=[];window.saved=[];window.hold=true;window.failSend=false;window.failRead=false;window.release=null;window.session=null;
    window.setInterval=()=>1;
@@ -20,7 +20,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
     return {ok:true,status:200,json:async()=>({ok:true,status:'bot_handling',messages:saved.slice().reverse(),hasMore:false,updatedAt:String(calls.length)})};
    };
   });
-  await p.addScriptTag({content:fs.readFileSync('components/fab/fab.js','utf8')});await p.click('#fabAiBtn');
+  await p.addScriptTag({content:fs.readFileSync('my-client/components/fab/fab.js','utf8')});await p.click('#fabAiBtn');
   await p.fill('#fabChatInput','Câu hỏi đầu');await p.click('#fabChatSend');await p.waitForFunction(()=>!!release);
   assert.equal(await p.locator('.fab-chat-bubble--user').innerText().then(t=>t.includes('Câu hỏi đầu')),true);
   assert.equal(await p.inputValue('#fabChatInput'),'');assert.match(await p.locator('.fab-send-state').innerText(),/đang trả lời/);

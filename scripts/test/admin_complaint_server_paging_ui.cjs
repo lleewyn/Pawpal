@@ -10,7 +10,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
         page.on('pageerror', error => errors.push(error.message));
         await page.route('**/*', route => route.fulfill({ contentType: 'text/html', body: '<body></body>' }));
         await page.goto('http://localhost:3001/');
-        await page.setContent('<div class="admin-module-wrapper">' + fs.readFileSync('pages/admin/modules/complaints/complaints.html', 'utf8') + '</div>');
+        await page.setContent('<div class="admin-module-wrapper">' + fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.html', 'utf8') + '</div>');
         await page.evaluate(() => {
             sessionStorage.clear();
             sessionStorage.setItem('pawpal_admin_user', JSON.stringify({ id: 'actor' }));
@@ -57,8 +57,8 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
             });
         });
         await page.evaluate(()=>{window.PawpalAdminAccess={isAdmin:()=>true,isStaff:()=>false,state:{user:{id:'paging-actor',permissions:[]}}};});
-        await page.addScriptTag({ content: fs.readFileSync('pages/admin/admin-data-store.js', 'utf8') });
-        let core = fs.readFileSync('pages/admin/modules/complaints/complaints.js', 'utf8');
+        await page.addScriptTag({ content: fs.readFileSync('my-client/pages/admin/admin-data-store.js', 'utf8') });
+        let core = fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.js', 'utf8');
         core = core.slice(0, core.lastIndexOf("    if (document.readyState === 'loading')")) + '})();})();';
         await page.addScriptTag({ content: core });
         await page.evaluate(() => PawpalComplaints.loadComplaintsModuleData({ force: true }));

@@ -1,6 +1,6 @@
 // One support ticket, synthetic actors and order references; always ROLLBACK.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded support RPC/RLS checks; otherwise no network.');process.exit(0);}
 (async()=>{const db=await connect();let queries=0;
  const report={environment:'Supabase Cloud cpzuvaplseielhgcnqrn',timestamp:new Date().toISOString(),scope:'One synthetic ticket and order references; RPC/RLS only; rollback; no Logs',checks:[]};

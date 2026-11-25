@@ -34,7 +34,7 @@ const modules={Dashboard:['tab-dashboard'], 'Khách hàng':['tab-list','tab-prof
    });
    await page.route('**/*',async route=>{
     const req=route.request(),u=new URL(req.url());const method=req.method();
-    if(process.argv.includes('--workspace-complaints')&&u.pathname==='/pages/admin/modules/complaints/complaints.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync('pages/admin/modules/complaints/complaints.js','utf8')});
+    if(process.argv.includes('--workspace-complaints')&&u.pathname==='/pages/admin/modules/complaints/complaints.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.js','utf8')});
     const readRpc=method==='POST'&&u.pathname.startsWith('/rest/v1/rpc/')&&/\/(get_|check_|search_|list_)/.test(u.pathname);
     if(!['GET','HEAD','OPTIONS'].includes(method)&&!readRpc){if(current)current.blockedWrites.push({path:u.pathname,method});return route.fulfill({status:409,contentType:'application/json',body:'{"error":"Read-only audit: write blocked"}'});}
     await route.continue();

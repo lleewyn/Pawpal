@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync('pages/admin/modules/chatbot/chatbot.js','utf8');
+const source=fs.readFileSync('my-client/pages/admin/modules/chatbot/chatbot.js','utf8');
 const context={window:{}};vm.runInNewContext(source.slice(0,source.indexOf('// Role-specific operations')),context);
 const find=text=>Array.from(context.window.PawpalChatTemplateGuard.find(text));
 test('unfilled customer, pet and order fields are detected before sending',()=>{
@@ -14,7 +14,7 @@ test('repeated checks stay deterministic and duplicate fields appear once',()=>{
  assert.deepEqual(find(null),[]);
 });
 test('admin composer preserves unfinished draft and does not call the send operation',async()=>{
- const live=fs.readFileSync('pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js','utf8');
+ const live=fs.readFileSync('my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-live.js','utf8');
  const start=live.indexOf('async function sendLiveMsg()'),end=live.indexOf('let isLiveChatEventsInitialized',start);
  let sends=0,focused=false;const input={value:'Xin chào [Tên khách hàng]',disabled:false,focus(){focused=true;}},button={disabled:false};
  const conversation={id:'conversation-test'};

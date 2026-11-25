@@ -1,6 +1,6 @@
-const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID:id,randomInt}=require('node:crypto');const {connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID:id,randomInt}=require('node:crypto');const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
- await db.query("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");await db.query(fs.readFileSync('scripts/database/v1/133_service_booking_search.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+ await db.query("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");await db.query(fs.readFileSync('my-server/scripts/database/v1/133_service_booking_search.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
  const user=id(),actor=id(),customer=id(),pet=id(),prefix='QA-TODAY-'+id();await db.query('INSERT INTO auth.users(id) VALUES($1)',[user]);
  await db.query("INSERT INTO public.staff(id,auth_user_id,full_name,job_title,phone_number,must_change_password) VALUES($1,$2,'QA booking day reviewer','QA',$3,false)",[actor,user,'09'+randomInt(10000000,99999999)]);await db.query("INSERT INTO public.staff_role(staff_id,role_code) VALUES($1,'ADMIN')",[actor]);
  await db.query('INSERT INTO public.customer(id,customer_code) VALUES($1,$2)',[customer,'QA-'+customer]);await db.query("INSERT INTO public.pet_profile(id,customer_id,pet_code,pet_name,breed_id) VALUES($1,$2,$3,'QA day pet',(SELECT id FROM public.pet_breed ORDER BY id LIMIT 1))",[pet,customer,'QA-'+pet]);

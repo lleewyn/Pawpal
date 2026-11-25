@@ -1,7 +1,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
- const page=await browser.newPage();await page.setContent(fs.readFileSync('pages/admin/modules/complaints/complaints.html','utf8'));
- const core=fs.readFileSync('pages/admin/modules/complaints/complaints.js','utf8'),detail=fs.readFileSync('pages/admin/modules/complaints/subtabs/tab-complaint-detail.js','utf8');
+ const page=await browser.newPage();await page.setContent(fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.html','utf8'));
+ const core=fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.js','utf8'),detail=fs.readFileSync('my-client/pages/admin/modules/complaints/subtabs/tab-complaint-detail.js','utf8');
  await page.addScriptTag({content:`window.PawpalComplaints={};${core.slice(core.indexOf('    PawpalComplaints.validateCompensation ='),core.indexOf('    function getCurrentStaffName()'))}
  const mod=PawpalComplaints,$=id=>document.getElementById(id),text=(id,v)=>$(id).textContent=v,show=(id,v)=>$(id).style.display=v?'':'none',directAward=t=>['points','voucher'].includes(t),hasAmount=t=>['points','refund','rma_refund'].includes(t);
  window.ticket={};const current=()=>ticket,bind=(id,fn)=>$(id).onclick=fn;window.writes=[];const act=(action,details)=>writes.push({action,details});

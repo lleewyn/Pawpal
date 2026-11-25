@@ -2,7 +2,7 @@ const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:a
 const {createClient}=require('@supabase/supabase-js');
 if(!process.argv.includes('--cloud-readonly')){console.log('Use --cloud-readonly for two context-only REST probes.');process.exit(0);}
 (async()=>{
- const {config}=require('../database/v1/cloud_connection.cjs').settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
+ const {config}=require('../../my-server/scripts/database/v1/cloud_connection.cjs').settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
  const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,options);
  const anon=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_ANON_KEY,options);
  const args={p_hash:crypto.randomBytes(32).toString('hex'),p_page:1};

@@ -1,8 +1,8 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID:id}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  await db.query("BEGIN;SET LOCAL statement_timeout='12s';SET LOCAL lock_timeout='3s'");
- if(!process.argv.includes('--installed'))await db.query(fs.readFileSync(require.resolve('../database/v1/214_intake_staff_eligibility.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
+ if(!process.argv.includes('--installed'))await db.query(fs.readFileSync(require.resolve('../../my-server/scripts/database/v1/214_intake_staff_eligibility.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,''));
  await db.query('SAVEPOINT fixtures');
  const actor=id(),auth=id(),qualified=id(),low=id(),missing=id(),level=id(),lower=id(),svc=id(),customer=id(),pet=id(),appointment=id();
  const qualifiedAuth=id(),lowAuth=id(),missingAuth=id();

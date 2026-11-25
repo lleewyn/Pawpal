@@ -1,6 +1,6 @@
 // One synthetic order/SKU, transaction-only fixtures. No actual money or delivery.
 const assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded refund ledger boundary checks; otherwise no network.');process.exit(0);}
 (async()=>{const db=await connect();let queries=0;
  const report={environment:'Supabase Cloud cpzuvaplseielhgcnqrn',timestamp:new Date().toISOString(),scope:'One synthetic COD order/SKU; RPC/RLS only; always ROLLBACK; no Logs',checks:[]};
@@ -11,7 +11,7 @@ if(!process.argv.includes('--cloud')){console.log('Use --cloud for bounded refun
  const order=async id=>(await q('SELECT id,customer_id,order_status,shipping_status,tracking_code,updated_at::text FROM public.sales_order WHERE id=$1',[id])).rows[0];
  try{
   await q("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");
-  const migration=fs.readFileSync('scripts/database/v1/107_refund_reward_points.sql','utf8').replace(/^BEGIN;/,'').replace('COMMIT;','');
+  const migration=fs.readFileSync('my-server/scripts/database/v1/107_refund_reward_points.sql','utf8').replace(/^BEGIN;/,'').replace('COMMIT;','');
   assert.ok(!/\b(?:BEGIN|COMMIT)\s*;/i.test(migration),'Migration must remain inside rollback');
   await q(migration);
   await q(migration);pass('Migration can be reapplied safely');

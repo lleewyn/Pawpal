@@ -1,5 +1,5 @@
 // Metadata only, scoped to the new member read projections. No business records or Cloud Logs.
-const fs=require('node:fs'),{connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('node:fs'),{connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  const tables=['customer','appointment','appointment_item','sales_order','pet_profile','pet_breed','pet_species','pet_weight_history','paw_point_transaction','customer_membership','membership_tier','payment','refund_transaction'];
  const columns=(await db.query("SELECT table_name,column_name,data_type FROM information_schema.columns WHERE table_schema='public' AND table_name=ANY($1) ORDER BY table_name,ordinal_position",[tables])).rows;

@@ -15,7 +15,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
             body: fs.readFileSync(path.join(process.cwd(), new URL(route.request().url()).pathname), 'utf8')
         }));
         await page.goto('http://localhost:3000/');
-        const html = fs.readFileSync('pages/admin/index.html', 'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+        const html = fs.readFileSync('my-client/pages/admin/index.html', 'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
         await page.setContent(html);
         const sidebarWidth = () => page.locator('#adminSidebar').evaluate(el => Math.round(el.getBoundingClientRect().width));
         const rowPositions = () => page.locator('.sidebar-menu-btn, .btn-sidebar-footer, .admin-sidebar-footer, .btn-sidebar-toggle').evaluateAll(elements => elements.map(el => {

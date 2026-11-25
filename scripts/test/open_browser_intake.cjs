@@ -9,8 +9,8 @@ const STAFF_EMAIL = 'staff.grooming@pawpal.vn';
 const STAFF_PASSWORD = 'Staff@Pawpal2026!';
 const STAFF_ID = '4145890a-4023-4135-8703-274538d4a5d9';
 const BOOKING_ID = 'c1c7d92e-1af7-4230-a907-c14e2faa0541';
-const INTAKE_IMAGE_PATH = path.resolve('assets/images/publics/dogcute8.jpg');
-const HANDOVER_IMAGE_PATH = path.resolve('assets/images/publics/dogcute6.jpg');
+const INTAKE_IMAGE_PATH = path.resolve('my-client/assets/images/publics/dogcute8.jpg');
+const HANDOVER_IMAGE_PATH = path.resolve('my-client/assets/images/publics/dogcute6.jpg');
 
 (async () => {
     console.log('=== KHỞI CHẠY TRÌNH DUYỆT TRỰC QUAN (VISIBLE CHROME) ===');
@@ -132,7 +132,7 @@ const HANDOVER_IMAGE_PATH = path.resolve('assets/images/publics/dogcute6.jpg');
             service: 'Cắt Grooming Chuyên Biệt Mèo',
             intake: {
                 weight: 4.2,
-                image: 'assets/images/publics/dogcute8.jpg',
+                image: 'my-client/assets/images/publics/dogcute8.jpg',
                 status: 'COMPLETED',
                 customerConfirmed: true
             },
@@ -210,7 +210,7 @@ const HANDOVER_IMAGE_PATH = path.resolve('assets/images/publics/dogcute6.jpg');
                 qualityAccepted: true,
                 belongingsReturned: true,
                 customerConfirmed: true,
-                image: 'assets/images/publics/dogcute6.jpg',
+                image: 'my-client/assets/images/publics/dogcute6.jpg',
                 status: 'COMPLETED'
             },
             notes: 'Hoàn thành nghiệm thu STAFF xác nhận bàn giao có đính kèm ảnh thực tế trên giao diện trực quan.'

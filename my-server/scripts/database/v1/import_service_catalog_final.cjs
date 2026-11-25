@@ -17,7 +17,7 @@ function range(text){const n=text.match(/\d+(?:\.\d+)?/g)?.map(Number)||[];asser
 function load(){
  const raw=parse(fs.readFileSync(source,'utf8').replace(/^\uFEFF/,''));assert.equal(raw[0].length,29);const rows=raw.slice(2).filter(r=>r.some(Boolean));
  const groups=new Map();const missing=new Set();const assets=new Map();
- function walk(p){for(const d of fs.readdirSync(p,{withFileTypes:true})){const f=path.join(p,d.name);if(d.isDirectory())walk(f);else if(!assets.has(d.name.toLowerCase()))assets.set(d.name.toLowerCase(),'/'+path.relative(root,f).replaceAll('\\','/'));}}walk(path.join(root,'assets/images/services'));
+ function walk(p){for(const d of fs.readdirSync(p,{withFileTypes:true})){const f=path.join(p,d.name);if(d.isDirectory())walk(f);else if(!assets.has(d.name.toLowerCase()))assets.set(d.name.toLowerCase(),'/'+path.relative(path.join(root,'../my-client'),f).replaceAll('\\','/'));}}walk(path.join(root,'../my-client/assets/images/services'));
  for(const r of rows){assert.equal(r.length,29);assert.match(r[1],/^SVC-(SPA|HTL|TAX)-\d{2}$/);assert.ok(Number(r[23])>=0);assert.equal(r[7],'Đang phục vụ');
   if(!groups.has(r[1]))groups.set(r[1],{code:r[1],rows:[],variants:new Map(),images:[]});const g=groups.get(r[1]);g.rows.push(r);
   if(g.variants.has(r[16])){const old=g.variants.get(r[16]);for(let i=0;i<r.length;i++)if(![0,20].includes(i))assert.equal(r[i],old[i],`Conflicting duplicate ${r[16]} column ${i}`);}else g.variants.set(r[16],r);

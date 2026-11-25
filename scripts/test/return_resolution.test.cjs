@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync('pages/user/modules/orders/return-detail.js','utf8').replace(/^import .*;\r?$/gm,'').replace(/^export /gm,'');
+const source=fs.readFileSync('my-client/pages/user/modules/orders/return-detail.js','utf8').replace(/^import .*;\r?$/gm,'').replace(/^export /gm,'');
 const context={window:{}};vm.createContext(context);vm.runInContext(source+'\nthis.normalize=normalizeReturnRequestRow;this.message=getReturnResolutionMessage;this.escape=escapeHtml;',context);
 test('User keeps own return reason separate from Admin rejection explanation',()=>{
  const data=context.normalize({id:'return',request_status:'rejected',reason:'Customer request',resolution_type:'Admin explanation'});

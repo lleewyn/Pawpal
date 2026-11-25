@@ -5,7 +5,7 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
  const access={state:{user:{id:'owner-a'}}};
  let respond=async()=>({data:{unread:0,items:[]},error:null});
  const context={window:{PawpalAdminAccess:access,getSupabaseClient:()=>({rpc:()=>{calls++;return respond();}}),addEventListener:(name,fn)=>events.set(name,fn)},document:{getElementById:id=>nodes[id],addEventListener(){}},Date:{now:()=>now},setTimeout:(fn,delay)=>{const id=nextTimer++;timers.set(id,{fn,at:now+delay});return id;},clearTimeout:id=>timers.delete(id),location:{hash:''}};
- vm.runInNewContext(fs.readFileSync('pages/admin/complaint-notices.js','utf8'),context);
+ vm.runInNewContext(fs.readFileSync('my-client/pages/admin/complaint-notices.js','utf8'),context);
  const flush=()=>new Promise(resolve=>setImmediate(resolve));
  const advance=async(ms)=>{now+=ms;for(const [id,timer]of [...timers])if(timer.at<=now){timers.delete(id);timer.fn();}await flush();};
  await flush();assert.equal(calls,1);

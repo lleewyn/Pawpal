@@ -1,6 +1,6 @@
 'use strict';
 const test = require('node:test'), assert = require('node:assert/strict');
-const { cleanupMedia } = require('../api/media_cleanup.cjs');
+const { cleanupMedia } = require('../../my-server/scripts/api/media_cleanup.cjs');
 test('cleanup is inert by default and only releases quota after leased physical deletion', async () => {
     let calls = [];
     const claim = { session_id: '10000000-0000-0000-0000-000000000001', lease: '20000000-0000-0000-0000-000000000001', mongo_file_id: 'a'.repeat(24) };

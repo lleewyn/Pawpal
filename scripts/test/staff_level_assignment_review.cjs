@@ -1,4 +1,4 @@
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
  console.log('Levels:',(await db.query('SELECT id,level_code,level_name,rank_order,is_active FROM public.staff_level ORDER BY rank_order')).rows);
  console.log('Staff:',(await db.query(`SELECT s.id,s.full_name,s.job_title,s.specialization,s.staff_level_id,s.service_locked,

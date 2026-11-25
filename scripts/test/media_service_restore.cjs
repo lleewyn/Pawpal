@@ -4,7 +4,7 @@ const normalize=x=>JSON.stringify(x,(key,value)=>['created_at','updated_at'].inc
 (async()=>{let db;try{
  const before=JSON.parse(fs.readFileSync(root+'e2e-before.private.json')),after=JSON.parse(fs.readFileSync(root+'e2e-after.private.json'));
  if(before.id!=='8d8d0107-b113-4dcb-9812-5394de6d0fde'||after.id!==before.id||after.service_image.length!==1||after.service_image[0].media_asset_id!=='cb649c76-4a68-40dd-974e-61f58d3fcd8d')throw Error('SCOPE');
- db=await require('../database/v1/service_import_connection.cjs').connect();await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='3s'");
+ db=await require('../../my-server/scripts/database/v1/service_import_connection.cjs').connect();await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='3s'");
  const current={id:before.id};
  for(const table of ['service','service_image','service_supported_species','service_care_action','service_price_matrix'])current[table]=(await db.query('SELECT * FROM public.'+table+' WHERE '+(table==='service'?'id':'service_id')+'=$1 ORDER BY '+(table==='service_supported_species'?'species_id':table==='service_care_action'?'care_action_id':'id')+' FOR UPDATE',[before.id])).rows;
  if(normalize(current.service)!==normalize(before.service)||normalize(current.service_image)!==normalize(after.service_image)||JSON.stringify(current.service_price_matrix)!==JSON.stringify(before.service_price_matrix))throw Error('CONCURRENT_CHANGE');

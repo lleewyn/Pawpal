@@ -2,7 +2,7 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{createClient}=require('@supabase/supabase-js');
 const mode=process.argv[2],privatePath='D:/Aboutme/Pawpal-infra/browser-check/guest-activation.private.json';
 if(!['setup','link','cleanup'].includes(mode)){console.log('No connection. Specify setup, link or cleanup.');process.exit(0);}
-const {config}=require('../database/v1/cloud_connection.cjs').settings(),db=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}}),ok=async p=>{const r=await p;if(r.error)throw r.error;return r.data;};
+const {config}=require('../../my-server/scripts/database/v1/cloud_connection.cjs').settings(),db=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}}),ok=async p=>{const r=await p;if(r.error)throw r.error;return r.data;};
 (async()=>{
  if(mode==='setup'){
   assert.ok(!fs.existsSync(privatePath),'Clean earlier fixture first');const phone='095'+crypto.randomInt(1000000,10000000);

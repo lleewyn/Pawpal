@@ -1,7 +1,7 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const apply=process.argv.includes('--apply-cloud');if(!apply&&!process.argv.includes('--verify-cloud')){console.log('Use --verify-cloud or --apply-cloud');process.exit(0);}
-const file='scripts/database/v1/123_guest_edit_rotation_retry.sql',source=fs.readFileSync(file,'utf8'),reverse=fs.readFileSync('scripts/database/v1/123_guest_edit_rotation_retry_rollback.sql','utf8'),report='docs/verification/sync/guest-edit-retry-rollback.txt';
+const file='my-server/scripts/database/v1/123_guest_edit_rotation_retry.sql',source=fs.readFileSync(file,'utf8'),reverse=fs.readFileSync('my-server/scripts/database/v1/123_guest_edit_rotation_retry_rollback.sql','utf8'),report='docs/verification/sync/guest-edit-retry-rollback.txt';
 const sha=s=>crypto.createHash('sha256').update(s).digest('hex'),strip=s=>s.replace(/^BEGIN;\s*$/m,'').replace(/^COMMIT;\s*$/m,'');
 const signatures=['public.guest_booking_receipt(text,uuid)','public.guest_sales_receipt(text,uuid)','public.guest_profile_update(text,text,uuid,text,jsonb,jsonb)'];
 (async()=>{const db=await connect(),checks=[];let queries=0;const q=(s,p)=>{queries++;return db.query(s,p);},pass=s=>checks.push(s);try{

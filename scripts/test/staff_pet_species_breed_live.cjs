@@ -1,10 +1,10 @@
 // Real STAFF-scoped RPCs + actual pet modal. All fixture data is rolled back.
 const fs=require('node:fs'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 if(!process.argv.includes('--cloud')&&!process.argv.includes('--apply-cloud'))process.exit(0);
 (async()=>{const db=await connect(),browser=await chromium.launch({channel:'chrome',headless:true});const folder='docs/verification/staff-pet-species-breed';fs.mkdirSync(folder,{recursive:true});const checks=[],pass=s=>{checks.push(s);console.log('PASS',s);};let page;
-const migration=fs.readFileSync('scripts/database/v1/275_staff_pet_species_breed.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
+const migration=fs.readFileSync('my-server/scripts/database/v1/275_staff_pet_species_breed.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,'');
 try{
  await db.query("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");await db.query(migration);await db.query(migration);
  const owner=randomUUID(),customBreed='QA giống tự nhập '+owner.slice(0,8);
@@ -20,10 +20,10 @@ try{
   catch(e){await db.query('ROLLBACK TO SAVEPOINT ui_rpc');await db.query('RELEASE SAVEPOINT ui_rpc');return {data:null,error:{message:e.message,code:e.code}};}
  };
  page=await browser.newPage({viewport:{width:1100,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('http://localhost/',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'}));await page.goto('http://localhost/');await page.setContent('<body class="admin-body admin-ui-standard" style="background:#F4F9F6"><main class="staff-workspace" style="padding:24px"></main></body>');
- for(const file of ['pages/admin/admin.css','pages/admin/admin-components.css','pages/admin/admin-typography.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+ for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/admin-components.css','my-client/pages/admin/admin-typography.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
  await page.exposeFunction('liveRpc',rpc);
  await page.evaluate(()=>{window.PawpalAdminAccess={state:{user:{permissions:['work.pet.write']}},isStaff:()=>true};window.getSupabaseClient=()=>({rpc:(name,args)=>liveRpc(name,args||{})});});
- const source=fs.readFileSync('pages/admin/modules/pets/pets.js','utf8');await page.addScriptTag({content:source.slice(0,source.indexOf('// Role-scoped screens'))});
+ const source=fs.readFileSync('my-client/pages/admin/modules/pets/pets.js','utf8');await page.addScriptTag({content:source.slice(0,source.indexOf('// Role-scoped screens'))});
  await page.evaluate(owner=>PawpalPetsStaff.openPet({customerId:owner,onCreated:id=>window.createdPet=id}),owner);
  const modal=page.locator('#staffPetCreateModal');await page.waitForFunction(()=>document.querySelector('#staffPetowner').readOnly);
  assert.equal(await page.locator('#staffPetspecies').evaluate(e=>e.tagName),'SELECT');assert.equal(await page.locator('#staffPetbreed').getAttribute('role'),null);assert.equal(await modal.locator('[list]').count(),0);
@@ -36,7 +36,7 @@ try{
  const petId=await page.evaluate(()=>createdPet),own=await rpc('get_staff_workspace',{p_kind:'pets',p_query:'',p_id:owner,p_page:1}),profile=await rpc('get_staff_workspace',{p_kind:'pets',p_query:'',p_id:petId,p_page:1});assert.equal(own.data.items.length,1);assert.deepEqual(own.data.items[0],profile.data.items[0]);const pet=profile.data.items[0];assert.equal(pet.customer_id,owner);assert.equal(pet.pet_name,'QA Miu');assert.equal(pet.species_name,'Mèo');assert.equal(pet.breed_name,customBreed);assert.equal(Number(pet.current_weight),3);pass('Customer and pet profile reads agree on owner, name, species, custom breed and 3 kg');
  await page.evaluate(id=>PawpalPetsStaff.editPet({petId:id,onCreated:()=>window.edited=true}),petId);await page.waitForFunction(()=>!document.querySelector('#staffPetname').disabled);assert.equal(await page.locator('#staffPetbreed').inputValue(),customBreed);assert.equal(await page.locator('#staffPetspecies option:checked').textContent(),'Mèo');await modal.locator('.admin-modal-card').screenshot({path:folder+'/02-edit-saved-pet.png'});pass('Reopened edit form restores species and freely editable custom breed');
  await page.getByRole('button',{name:'Lưu thay đổi',exact:true}).click();await page.waitForFunction(()=>window.edited);
- const core=fs.readFileSync('pages/admin/admin.js','utf8');
+ const core=fs.readFileSync('my-client/pages/admin/admin.js','utf8');
  await page.evaluate(()=>{window.PawpalAdminViews={helpers:{},register:(_name,config)=>window.petProfile=config.profiles['pet-profile']};});
  await page.addScriptTag({content:source.slice(source.indexOf('(function registerRoleViews()'),source.indexOf('(function initializeManagementDomain()'))});
  await page.addScriptTag({content:core.split('\n').find(l=>l.includes('const el = (tag,'))+core.slice(core.indexOf('    function card('),core.indexOf('    async function profile('))+'window.renderPet=row=>petProfile.render({el,facts,root:document.querySelector("main"),row,id:row.id,refresh(){}});'});

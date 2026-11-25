@@ -1,6 +1,6 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
-const file='scripts/database/v1/112_guest_commerce_identity.sql',reverseFile='scripts/database/v1/112_guest_commerce_identity_rollback.sql';
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
+const file='my-server/scripts/database/v1/112_guest_commerce_identity.sql',reverseFile='my-server/scripts/database/v1/112_guest_commerce_identity_rollback.sql';
 const source=fs.readFileSync(file,'utf8'),reverse=fs.readFileSync(reverseFile,'utf8');
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 const body=s=>s.replace(/^BEGIN;\s*$/m,'').replace(/^COMMIT;\s*$/m,'');

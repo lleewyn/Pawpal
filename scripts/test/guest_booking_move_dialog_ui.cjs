@@ -3,7 +3,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
 const base='http://localhost:4567';
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const page=await browser.newPage({viewport:{width:1440,height:1000},timezoneId:'UTC'}),errors=[];page.on('pageerror',error=>errors.push(error.message));
- const html=fs.readFileSync('pages/public/return-guest/return-guest.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace('</body>','<script src="/pages/public/return-guest/return-guest.js"></script></body>');
+ const html=fs.readFileSync('my-client/pages/public/return-guest/return-guest.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace('</body>','<script src="/pages/public/return-guest/return-guest.js"></script></body>');
  await page.route('**/*',route=>{
   const url=new URL(route.request().url());if(url.origin!==base)return route.abort();
   if(url.pathname==='/return-guest')return route.fulfill({contentType:'text/html',body:html.replace('https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css','/node_modules/bootstrap/dist/css/bootstrap.min.css')});

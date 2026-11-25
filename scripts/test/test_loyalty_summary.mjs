@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { eligibleSpend, loyaltySummary } from '../shared/loyalty-summary.mjs';
+import { eligibleSpend, loyaltySummary } from '../../my-client/scripts/shared/loyalty-summary.mjs';
 test('gold and diamond thresholds follow the approved spending rule', () => {
     assert.equal(loyaltySummary(4999999).tier, 'Bạc');
     assert.equal(loyaltySummary(5000000).tier, 'Vàng');

@@ -1,8 +1,8 @@
 // Task-only loopback bridge for browser -> real installed SQL, always rollback.
 require('dotenv').config();
 const express=require('express'),fs=require('node:fs'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
-const {createGuestCommerce,cookieConfiguration}=require('../api/guest_commerce');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
+const {createGuestCommerce,cookieConfiguration}=require('../../my-server/scripts/api/guest_commerce');
 if(!process.argv.includes('--bridge')){console.log('Use --bridge for a temporary localhost:4002 rollback bridge.');process.exit(0);}
 (async()=>{
  const db=await connect(),app=express(),petIds=new Set(),bookingIds=new Set(),expectedPets=new Map(),calls={};let queue=Promise.resolve(),server,closing=false,queries=0;

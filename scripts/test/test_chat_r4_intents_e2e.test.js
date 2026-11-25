@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { evaluateToxicAndSentiment, dbTools } = require('../api/chat.js');
+const { evaluateToxicAndSentiment, dbTools } = require('../../my-server/scripts/api/chat.js');
 
 test('R4 - Intent QA-SERVICE_AVAIL: Quy tắc chống ảo giác khi khách hỏi khung giờ còn chỗ', () => {
     // Khi khách hỏi khung giờ cụ thể, bot không được phỏng đoán mà phải hướng dẫn mở trang đặt lịch

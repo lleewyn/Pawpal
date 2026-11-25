@@ -7,13 +7,13 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   if(u.pathname.endsWith('/evidence-gallery.mjs'))return r.fulfill({contentType:'text/javascript',body:'export const createEvidenceGallery=({root})=>({render:async()=>{root.textContent="Chưa có tệp đính kèm.";},clear(){}});'});
   const f=path.join(process.cwd(),u.pathname);if(fs.existsSync(f)&&fs.statSync(f).isFile())return r.fulfill({contentType:f.endsWith('.css')?'text/css':'text/javascript',body:fs.readFileSync(f)});return r.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'});
  });
- await p.goto('http://localhost/');await p.setContent('<link rel="stylesheet" href="/pages/admin/admin.css"><link rel="stylesheet" href="/pages/admin/admin-components.css"><link rel="stylesheet" href="/pages/admin/admin-typography.css"><link rel="stylesheet" href="/pages/admin/modules/complaints/complaints.css">'+fs.readFileSync('pages/admin/modules/complaints/complaints.html','utf8'));
+ await p.goto('http://localhost/');await p.setContent('<link rel="stylesheet" href="/pages/admin/admin.css"><link rel="stylesheet" href="/pages/admin/admin-components.css"><link rel="stylesheet" href="/pages/admin/admin-typography.css"><link rel="stylesheet" href="/pages/admin/modules/complaints/complaints.css">'+fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.html','utf8'));
  await p.evaluate(()=>{document.body.className='admin-body';window.isManager=false;window.calls=[];window.row={id:'10000000-0000-4000-8000-000000000001',ticket_code:'KIEM-THU',subject:'Phiếu kiểm thử giao diện',status:'new',updated_at:'2026-11-13T00:00:00Z',order_id:'20000000-0000-4000-8000-000000000001',appointment_id:null,linked_order_code:'DON-KIEM-THU',approved_amount:null,customer_id:'customer'};
   window.PawpalAdminAccess={isStaff:()=>!isManager,isAdmin:()=>isManager,state:{user:{id:'staff',permissions:['work.complaint.handle']}}};
   window.auditRows=[];window.historyRows=[];
   window.getSupabaseClient=()=>({rpc:async(name,args)=>{calls.push({name,args});return {data:name==='get_staff_workspace'?{items:[structuredClone(row)]}:name==='act_admin_complaint'?row.id:[]};},from(table){const q={select:()=>q,eq:()=>q,order:()=>q,range:async()=>({data:table==='audit_log'?auditRows:table==='support_ticket_message'?historyRows:[]})};return q;}});
  });
- await p.addScriptTag({content:fs.readFileSync('pages/admin/modules/complaints/complaints.js','utf8')});
+ await p.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/complaints/complaints.js','utf8')});
  const open=()=>p.evaluate(()=>PawpalStaffComplaintProposal.open({ticketId:row.id}));
  await open();const option=p.locator('#staffComplaintProposaloption');await option.selectOption('explain');await p.locator('#staffComplaintProposalnote').fill('Giải thích rõ cho khách');await p.click('#staffComplaintProposalSave');
  assert.equal(await p.evaluate(()=>calls.filter(c=>c.name==='act_admin_complaint').at(-1).args.p_action),'resolve');
@@ -29,7 +29,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   window.t={id:'KN-KIEM-THU',rawId:row.id,status:'waiting_manager_approval',customerId:'customer',title:'Đề nghị hoàn tiền cho sản phẩm bị hỏng',customerName:'Khách kiểm thử',phone:'0950000001',orderId:'DON-KIEM-THU',staffAssigned:'Nhân viên kiểm thử',createdAt:'13/11/2026 09:00',content:'Khách phản ánh sản phẩm bị hỏng khi nhận hàng và đề nghị hoàn tiền.',priority:'medium',resolution_type:'refund',resolution_note:'Đề xuất hoàn tiền 23.000 đ sau khi kiểm tra minh chứng.',approved_amount:null};
   window.PawpalComplaints={getDbClient:getSupabaseClient,subtabs:{},state:{serviceComplaints:[],orderComplaints:[t],currentTicketId:t.id,isLoaded:true,cachedOrders:[{id:row.order_id,order_code:t.orderId,customer_id:'customer'}],cachedAppointments:[],cachedStaff:[]},escapeHtml:v=>String(v??''),formatDateTime:String,updateBreadcrumb(){},errorMessage:e=>e.message};
  });
- await p.addScriptTag({content:fs.readFileSync('pages/admin/modules/complaints/subtabs/tab-complaint-detail.js','utf8')});
+ await p.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/complaints/subtabs/tab-complaint-detail.js','utf8')});
  await p.evaluate(()=>PawpalComplaints.subtabs.detail.renderTicketDetail(t.id));assert.equal(await p.locator('#managerApprovalPanel').isVisible(),false);
  await p.evaluate(()=>{window.isManager=true;document.querySelectorAll('.complaints-module .subtab-content').forEach(node=>node.classList.toggle('active',node.id==='subtab-tab-complaint-detail'));});
  await p.evaluate(()=>PawpalComplaints.subtabs.detail.renderTicketDetail(t.id));assert.equal(await p.locator('#btnManagerApproveProposal').isDisabled(),true);

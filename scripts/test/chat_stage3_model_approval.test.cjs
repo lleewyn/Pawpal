@@ -8,7 +8,7 @@ async function check(mode){
   if(file.endsWith('connection.private.txt'))return JSON.stringify({rest:'http://127.0.0.1:18011',auth:'http://127.0.0.1:19991',api:'http://127.0.0.1:18080',jwtSecret:'offline'});
   if(file.endsWith('model-request.txt'))return payload;
   if(file==='api/admin-chat.js')return api;
-  if(file==='scripts/api/chat_model_privacy.js')return privacy;
+  if(file==='my-server/scripts/api/chat_model_privacy.js')return privacy;
   assert.fail('unexpected file read');
  },writeFileSync(file,data){assert.ok(file.endsWith('model-results.txt'));result=JSON.parse(data);}};
  const args=['node','runner',mode==='overwrite'?'--prepare-local':'--local-model','--approved-payload-sha256',mode==='payload'?'0'.repeat(64):hash(payload)];
@@ -17,7 +17,7 @@ async function check(mode){
   if(name==='node:fs')return fakeFs;
   if(name==='node:child_process')return {execFileSync:()=>marker,spawn:()=>assert.fail('must not spawn')};
   if(name==='jsonwebtoken')return {sign:()=> 'offline'};
-  if(name==='../api/chat_model_privacy.js')return {sanitizeModelData:x=>x};
+  if(name==='../../my-server/scripts/api/chat_model_privacy.js')return {sanitizeModelData:x=>x};
   if(['node:path','node:assert/strict','node:crypto'].includes(name))return require(name);
   assert.fail('credential/provider loading before review guard: '+name);
  }};

@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync('pages/public/return-guest/return-guest.js','utf8');
+const source=fs.readFileSync('my-client/pages/public/return-guest/return-guest.js','utf8');
 const context={};vm.createContext(context);
 vm.runInContext(source.slice(source.indexOf('function fmtDate('),source.indexOf('function resolveBookingStatus(')),context);
 test('lookup formats local and ISO dates and rejects invalid dates',()=>{

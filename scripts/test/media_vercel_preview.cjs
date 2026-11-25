@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { randomBytes } = require('node:crypto');
 const { spawn } = require('node:child_process');
-const { readMediaMongoConfig } = require('../api/media_mongodb.cjs');
+const { readMediaMongoConfig } = require('../../my-server/scripts/api/media_mongodb.cjs');
 const dotenv = require('dotenv');
 
 function runCli(cli, args, options = {}) {
@@ -63,9 +63,9 @@ async function main() {
             { file: 'vercel.json', data: JSON.stringify({ framework: null, buildCommand: '', outputDirectory: '.',
                 installCommand: 'npm install --ignore-scripts --no-audit --no-fund',
                 functions: { 'api/media-probe.js': { maxDuration: 15 } } }) },
-            { file: 'index.html', data: '<!doctype html><title>PawPal Preview probe</title><p>Temporary connectivity check.</p>' },
+            { file: 'my-client/index.html', data: '<!doctype html><title>PawPal Preview probe</title><p>Temporary connectivity check.</p>' },
             { file: 'api/media-probe.js', data: imageProbe ? "module.exports=require('../scripts/test/media_vercel_upload_probe.cjs');module.exports.config={api:{bodyParser:false}};" : "module.exports=require('../scripts/test/media_vercel_probe.cjs');" },
-            ...[...(imageProbe?['scripts/test/media_vercel_upload_probe.cjs','scripts/api/media_files.cjs','scripts/api/media_gridfs.cjs']:['scripts/test/media_vercel_probe.cjs']), 'scripts/api/media_mongodb.cjs'].map(file => ({ file, data: fs.readFileSync(file, 'utf8') }))
+            ...[...(imageProbe?['scripts/test/media_vercel_upload_probe.cjs','my-server/scripts/api/media_files.cjs','my-server/scripts/api/media_gridfs.cjs']:['scripts/test/media_vercel_probe.cjs']), 'my-server/scripts/api/media_mongodb.cjs'].map(file => ({ file, data: fs.readFileSync(file, 'utf8') }))
         ];
         for (const file of files) {
             const destination = path.join(artifact, file.file);

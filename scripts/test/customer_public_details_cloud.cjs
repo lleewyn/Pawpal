@@ -1,7 +1,7 @@
 // Disposable customer/order/review/notifications; original catalog is read only. No Cloud Logs.
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {settings,infra}=require('../database/v1/cloud_connection.cjs'),{config}=settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
+const {settings,infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs'),{config}=settings(),options={auth:{persistSession:false,autoRefreshToken:false}};
 const service=createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_SERVICE_ROLE_KEY,options);
 const clientFactory=token=>createClient(config.DESTINATION_SUPABASE_URL,config.DESTINATION_SUPABASE_ANON_KEY,{...options,...(token?{global:{headers:{Authorization:'Bearer '+token}}}:{})});
 const ok=async p=>{const r=await p;if(r.error)throw Error(r.error.message);return r.data;};
@@ -17,8 +17,8 @@ const ok=async p=>{const r=await p;if(r.error)throw Error(r.error.message);retur
  const second=crypto.randomUUID();notices.push(second);await ok(service.from('notification').insert({id:second,customer_id:fixtures[0].cid,notification_type:'verification',title:'Second notice',content:'Second verified content'}));
  browser=await chromium.launch({channel:'chrome',headless:true});page=await browser.newPage({viewport:{width:1440,height:1050}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
  if(!process.argv.includes('--deployed')){
-  for(const path of ['components/header/header.html','components/header/header.js','scripts/api/api.js','pages/shop/product-detail/product-detail.html','pages/shop/product-detail/product-detail.js'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':'application/javascript',body:fs.readFileSync(path,'utf8')}));
-  const handler=require('../api/customer_auth').createCustomerAuth({admin:service,clientFactory,mode:'demo'});
+  for(const path of ['my-client/components/header/header.html','my-client/components/header/header.js','my-client/scripts/api/api.js','my-client/pages/shop/product-detail/product-detail.html','my-client/pages/shop/product-detail/product-detail.js'])await page.route('**/'+path+'*',r=>r.fulfill({contentType:path.endsWith('.html')?'text/html':'application/javascript',body:fs.readFileSync(path,'utf8')}));
+  const handler=require('../../my-server/scripts/api/customer_auth').createCustomerAuth({admin:service,clientFactory,mode:'demo'});
   await page.route('**/api/customer/auth/me',async route=>{const request=route.request();let status=200,body;await handler.me({headers:request.headers(),body:request.postDataJSON()||{}},{setHeader(){},status(code){status=code;return this;},json(value){body=value;}});await route.fulfill({status,contentType:'application/json',body:JSON.stringify(body)});});
  }
  step='login';await page.goto('https://pawpalgr3.vercel.app/login');await page.locator('#loginPhone').fill(fixtures[0].phone);await page.locator('#btnLoginContinue').click();await page.locator('#loginPassword').fill(fixtures[0].password);await page.locator('#btnLoginSubmit').click();await page.waitForURL(/\/user\/?/,{timeout:45000});

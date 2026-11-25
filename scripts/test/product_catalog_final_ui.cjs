@@ -1,10 +1,10 @@
 // Read-only browser checks with cloud data and local UI resource overrides.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const {load}=require('../database/v1/import_product_catalog_final.cjs');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {load}=require('../../my-server/scripts/database/v1/import_product_catalog_final.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const root=path.resolve(__dirname,'../..'),out=path.join(root,'docs/verification/products-final');
-const overrides=['scripts/shared/data-loader.js','pages/shop/shop.js','pages/shop/shop.css','pages/shop/product-detail/product-detail.js','pages/admin/modules/orders/orders.js','pages/admin/modules/orders/orders.html','pages/admin/modules/orders/orders.css','pages/admin/modules/orders/subtabs/tab-order-products.js'];
+const overrides=['my-client/scripts/shared/data-loader.js','my-client/pages/shop/shop.js','my-client/pages/shop/shop.css','my-client/pages/shop/product-detail/product-detail.js','my-client/pages/admin/modules/orders/orders.js','my-client/pages/admin/modules/orders/orders.html','my-client/pages/admin/modules/orders/orders.css','my-client/pages/admin/modules/orders/subtabs/tab-order-products.js'];
 (async()=>{fs.mkdirSync(out,{recursive:true});const source=load();const db=await connect();let held;
  try{held=(await db.query("SELECT v.sku_variant,sum(r.quantity)::integer quantity FROM public.stock_reservation r JOIN public.product_variant v ON v.id=r.product_variant_id WHERE r.status='active' AND r.expires_at>now() AND NOT v.catalog_retired GROUP BY v.sku_variant")).rows;}finally{await db.end();}
  const heldBySku=new Map(held.map(r=>[r.sku_variant,r.quantity]));

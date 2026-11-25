@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { evaluateToxicAndSentiment } = require('../api/chat.js');
+const { evaluateToxicAndSentiment } = require('../../my-server/scripts/api/chat.js');
 
 test('R0 - P0-03: Chủ đề tiêm phòng / vắc xin thông thường KHÔNG bị ép thành ca khẩn cấp level 6', () => {
     const filters = [];

@@ -28,8 +28,8 @@ ALTER TABLE public.media_upload_session DROP CONSTRAINT media_upload_session_che
 ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_purpose_check CHECK(purpose IN ('product_image','care_log_image','product_variant_image','service_image','intake_image','handover_image','adjustment_image','pet_avatar','ticket_image','return_image','review_image','banner_image','blog_thumbnail','chat_image'));
 ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_check CHECK((chat_conversation_id IS NULL AND chat_message_id IS NULL AND (${old.slice(7,-1)})) OR (purpose='chat_image' AND chat_conversation_id IS NOT NULL AND chat_message_id IS NOT NULL AND ${actorFields}));
 `+[manage,cleanup,release,...variants].map(s=>s+';').join('\n')+'\n'+acl.map(([sig,role])=>`REVOKE ALL ON FUNCTION ${sig} FROM PUBLIC,anon,authenticated,service_role;${role?`GRANT EXECUTE ON FUNCTION ${sig} TO ${role};`:''}`).join('\n')+'\nCOMMIT;\n';
-fs.writeFileSync('scripts/database/v1/203_chat_media.sql',sql);
-fs.writeFileSync('scripts/database/v1/203_chat_media.rollback.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/203_chat_media.sql',sql);
+fs.writeFileSync('my-server/scripts/database/v1/203_chat_media.rollback.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 LOCK TABLE public.media_upload_session IN ACCESS EXCLUSIVE MODE;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.media_upload_session WHERE purpose='chat_image') THEN RAISE EXCEPTION 'chat_rollback_requires_no_sessions';END IF;END $$;

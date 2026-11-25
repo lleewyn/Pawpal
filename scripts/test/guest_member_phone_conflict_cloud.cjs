@@ -1,7 +1,7 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect();try{
- const source=fs.readFileSync('scripts/database/v1/273_guest_link_phone_conflict.sql','utf8');
+ const source=fs.readFileSync('my-server/scripts/database/v1/273_guest_link_phone_conflict.sql','utf8');
  await db.query("BEGIN;SET LOCAL statement_timeout='10s';SET LOCAL lock_timeout='3s'");
  const before=(await db.query("SELECT pg_get_functiondef('public.complete_guest_customer_auth(text,uuid,text,text)'::regprocedure) d")).rows[0].d;
  await db.query(source.replace(/^BEGIN;\s*$/m,'').replace(/^COMMIT;\s*$/m,''));

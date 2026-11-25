@@ -1,6 +1,6 @@
-const fs=require('fs'),assert=require('node:assert/strict'),crypto=require('crypto');const{connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('fs'),assert=require('node:assert/strict'),crypto=require('crypto');const{connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 (async()=>{const db=await connect(),q=(s,a)=>db.query(s,a);try{
- await q("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");await q(fs.readFileSync('scripts/database/v1/234_customer_avatar.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
+ await q("BEGIN;SET LOCAL statement_timeout='8s';SET LOCAL lock_timeout='3s'");await q(fs.readFileSync('my-server/scripts/database/v1/234_customer_avatar.sql','utf8').replace(/^BEGIN;/,'').replace(/COMMIT;\s*$/,''));
  if(process.argv.includes('--apply')){await q('COMMIT');console.log('APPLIED account avatar migration');return;}
  const auth=crypto.randomUUID(),other=crypto.randomUUID(),cid=crypto.randomUUID(),request=crypto.randomUUID(),asset=crypto.randomUUID();
  await q('INSERT INTO auth.users(id) VALUES($1),($2)',[auth,other]);await q('INSERT INTO public.customer(id,auth_user_id,customer_code) VALUES($1,$2,$3)',[cid,auth,'AVATAR-'+cid]);await q("INSERT INTO public.customer_profile(customer_id,full_name) VALUES($1,'Avatar rollback') ON CONFLICT(customer_id) DO NOTHING",[cid]);

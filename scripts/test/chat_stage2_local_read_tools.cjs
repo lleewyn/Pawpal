@@ -1,6 +1,6 @@
 // Marker-owned local clone, real Auth/JWT/RPC/API; no Cloud or model calls.
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),crypto=require('node:crypto'),jwt=require('jsonwebtoken'),assert=require('node:assert/strict');
-const {createClient}=require('@supabase/supabase-js'),{createHandler}=require('../../api/admin-chat.js'),{createStaffAuthHandlers}=require('../api/staff_auth.js');
+const {createClient}=require('@supabase/supabase-js'),{createHandler}=require('../../api/admin-chat.js'),{createStaffAuthHandlers}=require('../../my-server/scripts/api/staff_auth.js');
 if(!process.argv.includes('--local-fixtures')){console.log('No connection. Use --local-fixtures.');process.exit(0);}
 const index=process.argv.indexOf('--evidence-dir'),out=index<0?'docs/chatbot/stage2-read-tools-2026-10-28':process.argv[index+1];
 if(!/^docs\/chatbot\/stage2-[a-z0-9-]+$/.test(out))throw Error('invalid_evidence_directory');

@@ -25,7 +25,7 @@ module.exports=async({browser,session,sql,id,authId,origin,folder,pass,serviceCa
  pass('Before-fix control reproduces forbidden DELETE primary keys for both STAFF identities');
  const originalFlags=sql("SELECT pubinsert||','||pubupdate||','||pubdelete||','||pubtruncate FROM pg_publication WHERE pubname='supabase_realtime'");
  const originalDefinitions=sql("SELECT string_agg(pg_get_functiondef(oid),E'\\n' ORDER BY oid) FROM pg_proc WHERE oid IN ('public.get_staff_login_context()'::regprocedure,'public.own_notifications_snapshot()'::regprocedure,'public.own_notifications_snapshot(integer,integer,boolean)'::regprocedure)");
- sql(fs.readFileSync('scripts/database/v1/183_safe_realtime_signals.sql','utf8'));
+ sql(fs.readFileSync('my-server/scripts/database/v1/183_safe_realtime_signals.sql','utf8'));
  assert.equal(sql("SELECT pubinsert AND pubupdate AND NOT pubdelete AND NOT pubtruncate FROM pg_publication WHERE pubname='supabase_realtime'"),'t');
  pass('Migration 183 applies atomically and retains published INSERT/UPDATE while replacing unsafe DELETE/TRUNCATE');
  for(const page of pages)await page.evaluate(async()=>{
@@ -86,7 +86,7 @@ module.exports=async({browser,session,sql,id,authId,origin,folder,pass,serviceCa
  for(const context of contexts)await context.close();
  sql(`UPDATE auth.users SET banned_until=NULL WHERE id='${authId(1)}'`);
  await require('./admin_access_phase4_copilot_ui_cases.cjs')({session,sql,id,authId,origin,folder,pass,serviceCaller,installAssistantHandler,migrationsApplied:true});
- sql(fs.readFileSync('scripts/database/v1/183_safe_realtime_signals.rollback.sql','utf8'));
+ sql(fs.readFileSync('my-server/scripts/database/v1/183_safe_realtime_signals.rollback.sql','utf8'));
  assert.equal(sql("SELECT pubinsert||','||pubupdate||','||pubdelete||','||pubtruncate FROM pg_publication WHERE pubname='supabase_realtime'"),originalFlags);
  assert.equal(sql("SELECT string_agg(pg_get_functiondef(oid),E'\\n' ORDER BY oid) FROM pg_proc WHERE oid IN ('public.get_staff_login_context()'::regprocedure,'public.own_notifications_snapshot()'::regprocedure,'public.own_notifications_snapshot(integer,integer,boolean)'::regprocedure)"),originalDefinitions);
  assert.equal(sql("SELECT to_regclass('public.workspace_signal') IS NULL AND NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname IN ('v183_workspace_signal','v183_auth_signal'))"),'t');

@@ -1,6 +1,6 @@
-const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{connect}=require('../database/v1/service_import_connection.cjs');
+const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const apply=process.argv.includes('--apply-cloud');if(!apply&&!process.argv.includes('--verify-cloud')){console.log('No connection. Use --verify-cloud for rollback tests or --apply-cloud after a matching PASS.');process.exit(0);}
-const file='scripts/database/v1/111_admin_customer_identity.sql',source=fs.readFileSync(file,'utf8').replace(/\ufeff/g,''),hash=crypto.createHash('sha256').update(source).digest('hex'),reportPath='docs/verification/sync/guest-identity-cloud-rollback.txt',signature='public.admin_customer_page(text,text,text,text,integer,integer,text)';
+const file='my-server/scripts/database/v1/111_admin_customer_identity.sql',source=fs.readFileSync(file,'utf8').replace(/\ufeff/g,''),hash=crypto.createHash('sha256').update(source).digest('hex'),reportPath='docs/verification/sync/guest-identity-cloud-rollback.txt',signature='public.admin_customer_page(text,text,text,text,integer,integer,text)';
 (async()=>{const db=await connect(),checks=[];let queries=0;const q=async(s,a)=>{queries++;return db.query(s,a);},pass=name=>checks.push({name,status:'PASS'});try{
  await q("SET statement_timeout='8s';SET lock_timeout='3s'");
  const original=(await q('SELECT pg_get_functiondef($1::regprocedure) definition',[signature])).rows[0].definition;

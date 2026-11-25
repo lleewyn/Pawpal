@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-const source = fs.readFileSync('pages/admin/modules/customers/subtabs/tab-customer-profile.js', 'utf8');
+const source = fs.readFileSync('my-client/pages/admin/modules/customers/subtabs/tab-customer-profile.js', 'utf8');
 const helper = source.slice(source.indexOf('    function openRelatedHistory('), source.indexOf('    function getCust('));
 
 for (const warm of [false, true]) {

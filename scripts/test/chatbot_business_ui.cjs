@@ -15,8 +15,8 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
   return route.fulfill({contentType:'text/html',body:'<!doctype html><html><body></body></html>'});
  });
  await page.goto('http://localhost:3001/',{waitUntil:'domcontentloaded'});
- await page.setContent(fs.readFileSync('pages/admin/modules/chatbot/chatbot.html','utf8'));
- for(const f of ['pages/admin/admin.css','pages/admin/modules/chatbot/chatbot.css'])await page.addStyleTag({content:fs.readFileSync(f,'utf8')});
+ await page.setContent(fs.readFileSync('my-client/pages/admin/modules/chatbot/chatbot.html','utf8'));
+ for(const f of ['my-client/pages/admin/admin.css','my-client/pages/admin/modules/chatbot/chatbot.css'])await page.addStyleTag({content:fs.readFileSync(f,'utf8')});
  await page.evaluate(()=>{
   sessionStorage.clear();localStorage.clear();sessionStorage.setItem('pawpal_admin_active_module','Chatbot');
   window.dbWrites=[];window.notifications=[];
@@ -49,7 +49,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
  await page.locator('#btnConfirmRewardPoints').click();assert.equal(await page.evaluate(()=>dbWrites.length),0,'Switching case must block confirmation');
  await page.evaluate(()=>PawpalChatbot.closeModal('rewardPointsModalOverlay'));
  await page.evaluate(()=>{PawpalChatbot.state.currentConversation=caseA;document.querySelectorAll('.subtab-content').forEach(e=>e.classList.remove('active'));document.getElementById('subtab-tab-ai-copilot').classList.add('active');});
- await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js','utf8')});
+ await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/modules/chatbot/subtabs/tab-chatbot-copilot.js','utf8')});
  await page.waitForFunction(()=>document.getElementById('btnSendCopilot').dataset.copilotBound);
  await page.locator('#copilotInput').fill('Có bao nhiêu SKU dưới ngưỡng?');
  await page.locator('#btnSendCopilot').click();await page.waitForFunction(()=>!document.getElementById('btnSendCopilot').disabled);

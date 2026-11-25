@@ -1,7 +1,7 @@
 // Real User/Admin pages with live Supabase data. No SMS/email/password changes.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {createClient}=require('@supabase/supabase-js');
-const {settings}=require('../database/v1/cloud_connection.cjs');
+const {settings}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');
 const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 const site='http://localhost:4000',folder='docs/verification/guest-member-history';
 const member='11f261a4-a46c-4aa1-b28c-de595964db10',memberAuth='46a00820-9017-47f9-b252-c870c4a55131';

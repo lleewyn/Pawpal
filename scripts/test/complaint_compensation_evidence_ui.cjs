@@ -1,4 +1,4 @@
-const fs=require('fs'),assert=require('node:assert/strict'),{randomUUID}=require('crypto');const {connect}=require('../database/v1/service_import_connection.cjs');const {infra}=require('../database/v1/cloud_connection.cjs');const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
+const fs=require('fs'),assert=require('node:assert/strict'),{randomUUID}=require('crypto');const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');const {infra}=require('../../my-server/scripts/database/v1/cloud_connection.cjs');const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const db=await connect(),uid=randomUUID(),cid=randomUUID(),order=randomUUID(),voucher=randomUUID(),pointsTicket=randomUUID(),voucherTicket=randomUUID(),code='VERIFY-'+voucher.slice(0,8);let browser;
 try{
  await db.query('BEGIN');const actor=(await db.query("select s.id from staff s join staff_role r on r.staff_id=s.id where r.role_code='ADMIN' and s.employment_status='active' and not s.must_change_password limit 1")).rows[0];

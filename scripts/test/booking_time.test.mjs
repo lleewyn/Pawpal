@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {vietnamDateTimeInput,parseVietnamDateTimeInput} from '../shared/booking-time.mjs';
+import {vietnamDateTimeInput,parseVietnamDateTimeInput} from '../../my-client/scripts/shared/booking-time.mjs';
 
 test('Vietnam wall clock maps to fixed UTC instant across midnight and year boundaries',()=>{
     for(const [wall,utc]of [

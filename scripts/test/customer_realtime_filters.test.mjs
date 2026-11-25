@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {watchCustomerTables} from '../shared/customer-realtime.mjs';
+import {watchCustomerTables} from '../../my-client/scripts/shared/customer-realtime.mjs';
 
 test('order children subscribe through RLS without a nonexistent customer_id filter',()=>{
     const subscriptions=[];

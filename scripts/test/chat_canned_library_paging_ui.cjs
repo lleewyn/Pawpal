@@ -1,7 +1,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
- const page=await browser.newPage({viewport:{width:1440,height:1050}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/*',route=>route.fulfill({contentType:'text/html',body:'<body></body>'}));await page.goto('http://localhost:3001/');await page.setContent(fs.readFileSync('pages/admin/modules/chatbot/chatbot.html','utf8'));
- for(const file of ['pages/admin/admin.css','pages/admin/modules/chatbot/chatbot.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+ const page=await browser.newPage({viewport:{width:1440,height:1050}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/*',route=>route.fulfill({contentType:'text/html',body:'<body></body>'}));await page.goto('http://localhost:3001/');await page.setContent(fs.readFileSync('my-client/pages/admin/modules/chatbot/chatbot.html','utf8'));
+ for(const file of ['my-client/pages/admin/admin.css','my-client/pages/admin/modules/chatbot/chatbot.css'])await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
  await page.evaluate(()=>{sessionStorage.setItem('pawpal_admin_active_module','Chatbot');sessionStorage.setItem('pawpal_admin_user',JSON.stringify({id:'staff'}));window.cannedCalls=[];window.failCanned=false;
   const all=Array.from({length:23},(_,i)=>({id:'c-'+i,title:'Mẫu '+i,shortcut:'/mau'+i,content:i===22?'<img src=x onerror="window.injected=true"> Nội dung 22':'Nội dung '+i,category:i<10?'Chủ đề A':'Chủ đề B'}));
   window.getSupabaseClient=()=>({auth:{getSession:async()=>({data:{session:{user:{id:'staff'}}}})},rpc:async(name,args)=>{
@@ -11,7 +11,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=requ
    return {data:[]};},from(table){throw Error('Unexpected direct table read '+table);},channel(){const q={on:()=>q,subscribe:()=>q};return q;},removeChannel(){}
   });
  });
- await page.addScriptTag({content:fs.readFileSync('pages/admin/admin-data-store.js','utf8')});
+ await page.addScriptTag({content:fs.readFileSync('my-client/pages/admin/admin-data-store.js','utf8')});
  for(const file of ['chatbot.js','subtabs/tab-chatbot-live.js'])await page.addScriptTag({content:fs.readFileSync('pages/admin/modules/chatbot/'+file,'utf8')});await page.waitForFunction(()=>PawpalChatbot.state.liveLoaded);
  await page.evaluate(()=>{PawpalChatbot.state.currentConversation=PawpalChatbot.state.liveConversations[0];PawpalChatbot.state.currentConversation.messages=[];PawpalChatbot.subtabs.live.renderCurrentChat();});
  assert.equal(await page.evaluate(()=>cannedCalls.length),0);await page.locator('#chatMessageInput').fill('Bản nháp đang soạn');await page.locator('#btnOpenCannedModal').click();await page.waitForFunction(()=>document.querySelectorAll('#cannedResponsesList .canned-response-card').length===10);

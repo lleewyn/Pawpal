@@ -20,7 +20,7 @@ window.getSupabaseClient=()=>({
  },
  from(table){const query={select(){return query},eq(){return query},async maybeSingle(){failOnce('prior');return {data:null}},async single(){return {data:{id:'${id}',appointment_status:'confirmed',scheduled_start_at:'2026-12-01T03:00:00Z',scheduled_end_at:'2026-12-01T04:00:00Z'}}},then(resolve){resolve({data:[]})}};return query;}
 });`;
-const html=fs.readFileSync('pages/services/booking/booking.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace('</head>',`<script>${fixture}</script><script type="module" src="/pages/services/booking/booking.js"></script></head>`);
+const html=fs.readFileSync('my-client/pages/services/booking/booking.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace('</head>',`<script>${fixture}</script><script type="module" src="/pages/services/booking/booking.js"></script></head>`);
 (async()=>{
  const browser=await chromium.launch({channel:'chrome',headless:true});
  try{

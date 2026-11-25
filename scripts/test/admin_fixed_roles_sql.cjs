@@ -6,7 +6,7 @@ const sql=input=>execFileSync('docker',['exec','-i','supabase-db','psql','-U','s
 assert.equal(sql("SELECT shobj_description(oid,'pg_database') FROM pg_database WHERE datname=current_database()"),env.marker);
 const id=n=>'16500000-0000-4000-8000-'+String(n).padStart(12,'0');
 const a=id(1),b=id(2),admin=id(3),blocked=id(4),customer=id(10),pet=id(11),species=id(12),breed=id(13),tier=id(14),category=id(15),service=id(16),appointment=id(20),otherAppointment=id(21),method=id(22),chat=id(30),otherChat=id(31),queue=id(32);
-const report={capturedAt:new Date().toISOString(),migrationSha256:crypto.createHash('sha256').update(fs.readFileSync('scripts/database/v1/165_admin_fixed_roles.sql')).digest('hex'),scope:'Owned local clone of current Cloud schema; PostgreSQL authenticated/anon roles and claims; no Cloud writes or HTTP Auth JWT tests',checks:[],status:'INCOMPLETE'};
+const report={capturedAt:new Date().toISOString(),migrationSha256:crypto.createHash('sha256').update(fs.readFileSync('my-server/scripts/database/v1/165_admin_fixed_roles.sql')).digest('hex'),scope:'Owned local clone of current Cloud schema; PostgreSQL authenticated/anon roles and claims; no Cloud writes or HTTP Auth JWT tests',checks:[],status:'INCOMPLETE'};
 const check=(name,fn)=>{fn();report.checks.push({name,status:'PASS'});console.log('PASS '+name);};
 let fixtures=`INSERT INTO public.membership_tier(id,tier_name,minimum_expenditure,discount_percent,is_active) VALUES('${tier}','QA',0,0,true);`;
 const actor=(who,statement)=>`BEGIN;${fixtures} SET LOCAL request.jwt.claim.sub='${who}';SET LOCAL ROLE authenticated;${statement};ROLLBACK;`;
@@ -15,7 +15,7 @@ try{
  let applied=sql("SELECT to_regclass('pawpal_private.work_rpc_catalog') IS NOT NULL")==='t';
  if(applied){
   sql(`DELETE FROM public.staff_role WHERE staff_id IN ('${a}','${b}') AND role_code='STAFF';`);
-  sql(fs.readFileSync('scripts/database/v1/165_admin_fixed_roles.rollback.sql','utf8'));
+  sql(fs.readFileSync('my-server/scripts/database/v1/165_admin_fixed_roles.rollback.sql','utf8'));
   check('Rollback restores the original helper and leaves Auth locks intact',()=>{
    assert.equal(sql("SELECT to_regclass('pawpal_private.work_rpc_catalog') IS NULL"),'t');
    assert.equal(sql(`SELECT employment_status FROM public.staff WHERE id='${blocked}'`),'ACTIVE');
@@ -35,7 +35,7 @@ try{
   ('${admin}','${admin}','Quản lý Chi','Kiểm thử','active',false,'0900000003'),
   ('${blocked}','${blocked}','Nhân viên Dung','Kiểm thử','ACTIVE',true,'0900000004') ON CONFLICT(id) DO NOTHING;
   INSERT INTO public.staff_role(staff_id,role_code) VALUES('${admin}','ADMIN') ON CONFLICT DO NOTHING;`);
-  sql(fs.readFileSync('scripts/database/v1/165_admin_fixed_roles.sql','utf8'));
+  sql(fs.readFileSync('my-server/scripts/database/v1/165_admin_fixed_roles.sql','utf8'));
   sql(`INSERT INTO public.staff_role(staff_id,role_code) VALUES('${a}','STAFF'),('${b}','STAFF');`);
  }
  check('Migration and fixed-role account state',()=>{

@@ -1,6 +1,6 @@
 const test = require('node:test'), assert = require('node:assert/strict');
-const B = require('../../pages/admin/modules/dashboard/subtabs/business-metrics.js');
-const O = require('../../pages/admin/modules/dashboard/subtabs/operations-metrics.js');
+const B = require('../../my-client/pages/admin/modules/dashboard/subtabs/business-metrics.js');
+const O = require('../../my-client/pages/admin/modules/dashboard/subtabs/operations-metrics.js');
 const now = new Date('2026-11-21T10:00:00+07:00');
 test('stored SLA overrides old 24/48 hour assumptions, including low priority', () => {
     const base = { status: 'processing', created_at: '2026-11-19T08:00:00+07:00', first_response_at: '2026-11-19T09:00:00+07:00' };

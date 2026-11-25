@@ -19,7 +19,7 @@ const saves=['submit_own_sales_reviews','submit_own_service_reviews'].map(n=>{
  return once(s,'  result:=result||jsonb_build_array(review_id);',"  PERFORM pawpal_private.attach_review_media(review_id,coalesce(item->'media_asset_ids','[]'::jsonb),true);\n  result:=result||jsonb_build_array(review_id);");
 });
 const old=b.constraints.find(c=>c.conname==='media_upload_session_check').definition,scope='product_id IS NULL AND appointment_id IS NULL AND draft_id IS NULL AND variant_id IS NULL AND service_id IS NULL AND record_id IS NULL AND adjustment_id IS NULL AND pet_id IS NULL AND ticket_id IS NULL AND support_message_id IS NULL AND return_id IS NULL AND sales_order_id IS NULL';
-fs.writeFileSync('scripts/database/v1/199_review_media.sql',`BEGIN;\nSET LOCAL lock_timeout='3s';\n`+fs.readFileSync('scripts/test/media_review_core.sql','utf8')+`
+fs.writeFileSync('my-server/scripts/database/v1/199_review_media.sql',`BEGIN;\nSET LOCAL lock_timeout='3s';\n`+fs.readFileSync('scripts/test/media_review_core.sql','utf8')+`
 ALTER TABLE public.media_upload_session DROP CONSTRAINT media_upload_session_check,DROP CONSTRAINT media_upload_session_purpose_check;
 ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_purpose_check CHECK(purpose IN ('product_image','care_log_image','product_variant_image','service_image','intake_image','handover_image','adjustment_image','pet_avatar','ticket_image','return_image','review_image'));
 ALTER TABLE public.media_upload_session ADD CONSTRAINT media_upload_session_check CHECK((review_id IS NULL AND review_line_id IS NULL AND review_kind IS NULL AND (${old.slice(7,-1)})) OR (purpose='review_image' AND review_id IS NOT NULL AND review_line_id IS NOT NULL AND review_kind IS NOT NULL AND review_kind IN ('sales','service') AND ${scope}));
@@ -30,7 +30,7 @@ GRANT EXECUTE ON FUNCTION public.prepare_review_media_upload(uuid,uuid,uuid,text
 COMMIT;
 `);
 console.log('REVIEW_MEDIA_MIGRATION_GENERATED');
-fs.writeFileSync('scripts/database/v1/199_review_media.rollback.sql',`BEGIN;
+fs.writeFileSync('my-server/scripts/database/v1/199_review_media.rollback.sql',`BEGIN;
 SET LOCAL lock_timeout='3s';
 LOCK TABLE public.media_upload_session IN ACCESS EXCLUSIVE MODE;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM public.media_upload_session WHERE purpose='review_image') THEN RAISE EXCEPTION 'review_media_rollback_requires_no_sessions';END IF;END $$;

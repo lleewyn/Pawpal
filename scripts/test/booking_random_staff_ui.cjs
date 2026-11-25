@@ -3,7 +3,7 @@ const {chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/pla
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
  const page=await browser.newPage();
  await page.setContent('<div id="staff"></div><div id="slots"></div>');
- await page.addScriptTag({content:fs.readFileSync('pages/services/booking/booking-staff-slots.mjs','utf8').replace('export function','function')});
+ await page.addScriptTag({content:fs.readFileSync('my-client/pages/services/booking/booking-staff-slots.mjs','utf8').replace('export function','function')});
  await page.evaluate(()=>{
   window.chosen=[];
   window.mount=(slots)=>renderStaffSlots({staffRoot:document.getElementById('staff'),slotsRoot:document.getElementById('slots'),slots,onClear:()=>{},onSelect:async({staff,slot})=>chosen.push({id:staff.id,time:slot.start_at})});

@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {classify,label}=require('../shared/customer-identity.js');
+const {classify,label}=require('../../my-client/scripts/shared/customer-identity.js');
 test('Admin contact uses canonical primary first and marks only self-reported fallback',()=>{
- const {contact}=require('../shared/customer-identity.js');
+ const {contact}=require('../../my-client/scripts/shared/customer-identity.js');
  assert.deepEqual(contact({unverified_contact_phone:'0950000001',customer_phone:[]}),{phone:'0950000001',unverified:true});
  assert.deepEqual(contact({unverified_contact_phone:'0950000001',customer_phone:[{phone_number:'0950000002',is_primary:true}]}),{phone:'0950000002',unverified:false});
  assert.deepEqual(contact({unverified_contact_phone:'0950000001'},'0950000003'),{phone:'0950000003',unverified:false});

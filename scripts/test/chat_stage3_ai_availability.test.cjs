@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {answer}=require('../api/admin_copilot.js');
-const {createReadBudget,prepare,definitions}=require('../api/chat_read_tools.js');
+const {answer}=require('../../my-server/scripts/api/admin_copilot.js');
+const {createReadBudget,prepare,definitions}=require('../../my-server/scripts/api/chat_read_tools.js');
 const lease='11111111-1111-4111-8111-111111111111',now=new Date('2026-10-29T03:00:00Z');
 const facts={intent:'order.lookup',total:1,items:[{code:'ORD-001',status:'pending'}],scope:{query:'ORD-001'},source:'sales_order',as_of:now.toISOString(),limitations:['Chỉ có trang dữ liệu hiện tại.']};
 const permissions=[...definitions['order.lookup'].permissions,'chatbot_knowledge_faq.read'];

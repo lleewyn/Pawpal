@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {plan,format,faqReply,isFollowup}=require('../api/chat_public_guest.js');
+const {plan,format,faqReply,isFollowup}=require('../../my-server/scripts/api/chat_public_guest.js');
 test('all guest needs route to bounded public data, reviewed FAQ or an actionable clarification',()=>{
  const cases=[['PawPal ở đâu?','store'],['Mo cua may gio?','store'],['Tư vấn tắm và cắt tỉa','grooming'],['So sánh Hotel thường và VIP','hotel'],['hotle bao nhiu','hotel'],['Taxi bé 7kg đi 3km','taxi'],['Sản phẩm AA-001','product']];
  for(const [q,kind]of cases)assert.equal(plan(q).request.kind,kind,q);

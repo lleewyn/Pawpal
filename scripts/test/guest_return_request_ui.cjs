@@ -19,7 +19,7 @@ const {chromium} = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/p
                 return route.abort();
             }
             if (url.pathname.endsWith('/guest-phone-lookup.mjs')) return route.fulfill({contentType:'text/javascript',body:'export function mountGuestPhoneLookup() {}'});
-            const file = path.join(process.cwd(), url.pathname === '/' ? 'pages/public/return-guest/return-guest.html' : url.pathname);
+            const file = path.join(process.cwd(), url.pathname === '/' ? 'my-client/pages/public/return-guest/return-guest.html' : url.pathname);
             if (!fs.existsSync(file) || !fs.statSync(file).isFile()) return route.abort();
             let body = fs.readFileSync(file);
             if (file.endsWith('.html')) body = body.toString().replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, tag => tag.includes('/return-guest.js?') ? tag : '');

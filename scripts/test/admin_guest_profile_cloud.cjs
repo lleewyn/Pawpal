@@ -1,7 +1,7 @@
 const fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const {connect}=require('../database/v1/service_import_connection.cjs');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs');
 const apply=process.argv.includes('--apply-cloud');if(!apply&&!process.argv.includes('--verify-cloud')){console.log('Use --verify-cloud or --apply-cloud after matching rollback PASS.');process.exit(0);}
-const source=fs.readFileSync('scripts/database/v1/118_admin_guest_profile_contact.sql','utf8'),baseline=fs.readFileSync('scripts/database/v1/007_update_customer_profile.sql','utf8'),reverse=fs.readFileSync('scripts/database/v1/118_admin_guest_profile_contact_rollback.sql','utf8');
+const source=fs.readFileSync('my-server/scripts/database/v1/118_admin_guest_profile_contact.sql','utf8'),baseline=fs.readFileSync('my-server/scripts/database/v1/007_update_customer_profile.sql','utf8'),reverse=fs.readFileSync('my-server/scripts/database/v1/118_admin_guest_profile_contact_rollback.sql','utf8');
 const body=s=>s.match(/AS \$\$([\s\S]*?)\$\$;/)[1].replaceAll('\r\n','\n').trim(),sha=s=>crypto.createHash('sha256').update(s).digest('hex');
 const signature='public.update_customer_profile(uuid,timestamptz,text,text,text,text,date,uuid,jsonb)',report='docs/verification/sync/admin-guest-profile-rollback.txt';
 (async()=>{const db=await connect(),checks=[];let queries=0;const q=(sql,args)=>{queries++;return db.query(sql,args);},pass=name=>checks.push(name);

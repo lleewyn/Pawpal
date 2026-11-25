@@ -2,17 +2,17 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
 (async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{
  const p=await b.newPage({viewport:{width:1440,height:1000}});await p.route('**/*',r=>r.abort());
- await p.setContent(fs.readFileSync('pages/admin/modules/customers/customers.html','utf8'));
- const shell=fs.readFileSync('pages/admin/index.html','utf8');for(const match of shell.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/[^"?]+)[^"]*"[^>]*>/g))await p.addStyleTag({content:fs.readFileSync(match[1].slice(1),'utf8')});
+ await p.setContent(fs.readFileSync('my-client/pages/admin/modules/customers/customers.html','utf8'));
+ const shell=fs.readFileSync('my-client/pages/admin/index.html','utf8');for(const match of shell.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/[^"?]+)[^"]*"[^>]*>/g))await p.addStyleTag({content:fs.readFileSync(match[1].slice(1),'utf8')});
  await p.evaluate(()=>{
   document.body.className='admin-body';window.PawpalCustomers={state:{customerDatabase:{}},subtabs:{},formatDateTime:String,escapeHtml:s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))};
   const c={id:'CUS-QA',dbId:'customer-qa',_historyStatus:{orders:'loaded'},pets:[{id:'PET-QA',name:'Mochi',species:'Chó',breed:'Corgi',weight:5,status:'active'},{id:'PET-QB',name:'Miu',species:'Mèo',status:'inactive'}]};PawpalCustomers.state.customerDatabase[c.id]=c;
   const scenarios=[['shipped',100,0,100],['shipping',0,0,100],['returned',100,100,100],['cancelled',0,0,100],['packing',50,0,100],['delivered',100,20,100],['completed',0,0,0]];
   window.profilePayload={orders:scenarios.map(([order_status,, ,total_amount],i)=>({id:'order-'+i,order_code:'ORD-'+i,order_status,total_amount,created_at:'2026-10-27'})),payments:scenarios.flatMap(([,amount,refunded],i)=>amount?[{order_id:'order-'+i,amount,transaction_status:'succeeded',refunds:refunded?[{refund_status:'succeeded',refunded_amount:refunded}]:[]}]:[])};
  });
- const core=fs.readFileSync('pages/admin/modules/customers/customers.js','utf8');const start=core.indexOf("            if (kinds.includes('orders')) cust.orders ="),end=core.indexOf("            if (kinds.includes('bookings'))",start);assert.ok(start>=0&&end>start);
+ const core=fs.readFileSync('my-client/pages/admin/modules/customers/customers.js','utf8');const start=core.indexOf("            if (kinds.includes('orders')) cust.orders ="),end=core.indexOf("            if (kinds.includes('bookings'))",start);assert.ok(start>=0&&end>start);
  await p.addScriptTag({content:"(()=>{const PawpalCustomers=window.PawpalCustomers,cust=PawpalCustomers.state.customerDatabase['CUS-QA'],kinds=['orders'],payload=window.profilePayload;"+core.slice(start,end)+'})();'});
- const profile=fs.readFileSync('pages/admin/modules/customers/subtabs/tab-customer-profile.js','utf8');await p.addScriptTag({content:profile.slice(0,profile.lastIndexOf("    if (document.readyState === 'loading')"))+'})();'});
+ const profile=fs.readFileSync('my-client/pages/admin/modules/customers/subtabs/tab-customer-profile.js','utf8');await p.addScriptTag({content:profile.slice(0,profile.lastIndexOf("    if (document.readyState === 'loading')"))+'})();'});
  await p.evaluate(()=>{PawpalCustomers.subtabs.profile.renderDrawerPets('CUS-QA');PawpalCustomers.subtabs.profile.renderDrawerOrders('CUS-QA');document.querySelectorAll('.subtab-content').forEach(el=>el.classList.remove('active'));document.getElementById('subtab-tab-profile').classList.add('active');document.getElementById('customerProfilePlaceholder').hidden=true;document.getElementById('customerProfileData').hidden=false;});
  const rows=await p.locator('#drawerOrdersTbody tr').evaluateAll(rows=>rows.map(r=>({payment:r.cells[3].textContent,status:r.cells[4].textContent,color:getComputedStyle(r.cells[4].firstElementChild).backgroundColor})));
  assert.equal(rows[0].status,'Đang giao');assert.equal(rows[1].status,'Đang giao');assert.equal(rows[0].color,rows[1].color);

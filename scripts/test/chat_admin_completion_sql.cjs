@@ -1,7 +1,7 @@
 // Bounded live-source oracle; reports booleans only. QA staff rolled back, no business writes.
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),{randomUUID,randomInt}=require('node:crypto');
-const {connect}=require('../database/v1/service_import_connection.cjs'),{plan,answer}=require('../api/admin_copilot.js'),tools=require('../api/chat_read_tools.js');
+const {connect}=require('../../my-server/scripts/database/v1/service_import_connection.cjs'),{plan,answer}=require('../../my-server/scripts/api/admin_copilot.js'),tools=require('../../my-server/scripts/api/chat_read_tools.js');
 (async()=>{const db=await connect(),checks=[];try{
  await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='5s';SET LOCAL lock_timeout='1s'");
  const auth=randomUUID(),staff=randomUUID(),now=new Date();

@@ -8,7 +8,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
     await page.route('**/*', route => {
         const u = new URL(route.request().url());
         if (u.pathname === '/components/fab/fab.css') {
-            return route.fulfill({ contentType: 'text/css', body: fs.readFileSync('components/fab/fab.css', 'utf8') });
+            return route.fulfill({ contentType: 'text/css', body: fs.readFileSync('my-client/components/fab/fab.css', 'utf8') });
         }
         return route.fulfill({ contentType: 'text/html', body: '' });
     });
@@ -21,12 +21,12 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
       <link rel="stylesheet" href="/components/fab/fab.css">
     </head>
     <body style="background:#F4FAF6;margin:0;padding:0;min-height:100vh;">
-      ${fs.readFileSync('components/fab/fab.html', 'utf8')}
+      ${fs.readFileSync('my-client/components/fab/fab.html', 'utf8')}
     </body>
     </html>`;
     
     await page.setContent(html);
-    await page.addScriptTag({ content: fs.readFileSync('components/fab/fab.js', 'utf8') });
+    await page.addScriptTag({ content: fs.readFileSync('my-client/components/fab/fab.js', 'utf8') });
     
     // Open chat panel
     await page.click('#fabAiBtn');

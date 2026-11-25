@@ -4,11 +4,11 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=requ
  for(const kind of ['service','sales']){
   const page=await browser.newPage({viewport:{width:1366,height:1000}}),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
-  await page.route('**/*',r=>r.fulfill(r.request().url().endsWith('/scripts/shared/refund-loyalty.mjs')?{contentType:'text/javascript',body:fs.readFileSync('scripts/shared/refund-loyalty.mjs','utf8')}:{contentType:'text/html',body:'<!doctype html><body></body>'}));
+  await page.route('**/*',r=>r.fulfill(r.request().url().endsWith('/scripts/shared/refund-loyalty.mjs')?{contentType:'text/javascript',body:fs.readFileSync('my-client/scripts/shared/refund-loyalty.mjs','utf8')}:{contentType:'text/html',body:'<!doctype html><body></body>'}));
   await page.goto('http://localhost/');
   const base=kind==='sales'?'orders':'services',prefix=kind==='sales'?'salesCashier':'cashier',save=kind==='sales'?'btnSaveSalesMoney':'btnSaveServiceMoney';
   await page.setContent(fs.readFileSync(`pages/admin/modules/${base}/${base}.html`,'utf8'),{waitUntil:'domcontentloaded'});
-  for(const file of ['pages/admin/admin.css',`pages/admin/modules/${base}/${base}.css`])if(fs.existsSync(file))await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
+  for(const file of ['my-client/pages/admin/admin.css',`pages/admin/modules/${base}/${base}.css`])if(fs.existsSync(file))await page.addStyleTag({content:fs.readFileSync(file,'utf8')});
   await page.evaluate(kind=>{
    window.calls=[];window.reads=0;window.fail=true;window.hold=false;
    window.fixture={version:'v1',total:100,collected:100,remaining:0,methods:[{id:'cash',name:'Tiền mặt',requires_reference:false}],payments:[{id:'payment',payment_code:'E2E-PAY',amount:100,eligible_spend_amount:90,transaction_status:'succeeded',refunds:[],loyalty:{reward_points:7,reversed_points:0,points_balance:7,history_conflict:false}}]};

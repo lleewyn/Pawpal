@@ -2,7 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-const source=fs.readFileSync('pages/admin/modules/staff/subtabs/tab-staff-list.js','utf8');
+const source=fs.readFileSync('my-client/pages/admin/modules/staff/subtabs/tab-staff-list.js','utf8');
 const start=source.indexOf("        btnSaveStaff.addEventListener('click',async()=>{");
 const handler=source.slice(start,source.indexOf('\n        });',start)+12);
 for (const fullName of ['', 'Nguyễn @#$% F', 'Nguyễn 123', '<b>Test</b>', '<script>alert(1)</script>']) test('invalid name '+JSON.stringify(fullName)+' reports required fields and preserves form without writes',async()=>{

@@ -32,7 +32,7 @@ function fixture({ user = { id: 'customer-1', phone: '0911223344' }, toggle, loa
             } },
         },
     };
-    const source = fs.readFileSync('scripts/shared/main.js', 'utf8');
+    const source = fs.readFileSync('my-client/scripts/shared/main.js', 'utf8');
     vm.runInNewContext(source.slice(source.indexOf('function setupLandingProductWishlist('), source.indexOf('function setupLandingServiceWishlist(')), context);
     context.window.setupLandingProductWishlist(grid);
     return { button, states, attributes, notices, calls, stored,

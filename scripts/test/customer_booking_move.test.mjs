@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {quoteCustomerBookingMove,moveCustomerBooking} from '../shared/customer-booking.mjs';
+import {quoteCustomerBookingMove,moveCustomerBooking} from '../../my-client/scripts/shared/customer-booking.mjs';
 const booking={_supabaseId:'booking'},user={id:'owner'};
 const quote={id:'booking',version:'price-version',total:300,start_at:'2026-11-01T03:00:00Z',end_at:'2026-11-01T04:00:00Z'};
 const client=rpc=>({auth:{getUser:async()=>({data:{user:{id:'auth'}}})},from(){const q={select(){return q},eq(){return q},maybeSingle:async()=>({data:{id:'owner',customer_status:'active'}})};return q;},rpc});

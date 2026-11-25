@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {createGuestCommerce}=require('../api/guest_commerce');
+const {createGuestCommerce}=require('../../my-server/scripts/api/guest_commerce');
 function fixture({fail=false}={}){
  const calls=[];const handle=createGuestCommerce({admin:{async rpc(name,args){calls.push({name,args});return fail?{error:{code:'XX000',message:'private'}}:{data:true}}},secret:'test-secret-with-at-least-32-bytes-long',origins:['https://pawpal.test'],production:true,limit:async()=>{}});
  async function send(action,cookie){const res={code:200,headers:{},setHeader(k,v){this.headers[k]=v},status(n){this.code=n;return this},json(data){this.data=data;return this}};await handle({method:'POST',headers:{origin:'https://pawpal.test','content-type':'application/json',cookie},body:{}},res,action);return res;}

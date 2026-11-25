@@ -18,7 +18,7 @@ async function actor(role){const id=crypto.randomUUID(),r=await fetch(cfg.auth+'
 async function request(token,route,body){const r=await fetch(cfg.rest+route,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(8000)});const text=await r.text();return {status:r.status,bytes:Buffer.byteLength(text),data:JSON.parse(text||'null')};}
 const rpc=(token,name,args)=>request(token,'/rpc/'+name,args);
 (async()=>{
- sql(fs.readFileSync('scripts/database/v1/136_chat_read_admission.sql','utf8'));sql(fs.readFileSync('scripts/database/v1/137_chat_panel_reads.sql','utf8'));
+ sql(fs.readFileSync('my-server/scripts/database/v1/136_chat_read_admission.sql','utf8'));sql(fs.readFileSync('my-server/scripts/database/v1/137_chat_panel_reads.sql','utf8'));
  const token=await actor('ADMIN'),limited=await actor('limited'),customerToken=await actor(null),customer=crypto.randomUUID(),conversation=crypto.randomUUID(),species=crypto.randomUUID(),breed=crypto.randomUUID(),query='QA-'+customer;
  sql(`INSERT INTO public.customer(id,customer_code,contact_email) VALUES('${customer}','QA-${customer}','qa@example.invalid'); INSERT INTO public.customer_profile(customer_id,full_name) VALUES('${customer}','${query}');
  INSERT INTO public.pet_species(id,species_name) VALUES('${species}','QA-${species}'); INSERT INTO public.pet_breed(id,species_id,breed_name) VALUES('${breed}','${species}','QA breed');

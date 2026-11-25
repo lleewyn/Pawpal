@@ -2,7 +2,7 @@
 const path = require('path');
 const fs = require('fs');
 const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules/playwright');
-const { evaluateToxicAndSentiment } = require('../api/chat_moderation.js');
+const { evaluateToxicAndSentiment } = require('../../my-server/scripts/api/chat_moderation.js');
 
 const ARTIFACT_DIR = path.resolve('C:/Users/QUYEN/.gemini/antigravity-cli/brain/7a76c9d1-504b-4a2d-877e-c42a3920b2f8');
 

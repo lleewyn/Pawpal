@@ -11,7 +11,7 @@ const { chromium } = require('D:/Aboutme/Pawpal-infra/browser-check/node_modules
    return route.fulfill({contentType:'text/html',body:'<html></html>'});
   });
   await page.goto('http://localhost:3000/');
-  await page.setContent(fs.readFileSync('pages/admin/index.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''));
+  await page.setContent(fs.readFileSync('my-client/pages/admin/index.html','utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''));
   const cases = [
    ['customers','user-name-link','user-sub-cell','customer-code-text'],
    ['pets','pet-name-link','pet-sub-cell','pet-code-text'],
