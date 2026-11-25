@@ -193,6 +193,7 @@ function mapSupabaseOrderRow(row) {
         userId: null,
         userPhone: row.receiver_phone_snapshot || '',
         returnGrant: row.return_grant || null,
+        returns: Array.isArray(row.returns) ? row.returns : [],
         cancelGrant: row.cancel_grant || null,
         deliveredAt: row.delivered_at || null,
         status: mapOrderStatus(row.order_status),
@@ -489,12 +490,15 @@ function canReturnOrder(o) {
     if(o._receiptOnly)return false;
     const status = normalizeOrderStatus(o.status);
     if (status !== 'delivered' && status !== 'completed') return false;
-    if (status === 'returned' || o.status === 'return_pending') return false;
+    if (hasOpenGuestReturn(o)) return false;
     
-    const updatedAt = o.updatedAt || o.createdAt;
+    const updatedAt = o.returnGrant ? o.deliveredAt : o.updatedAt || o.createdAt;
     if (!updatedAt) return false;
     const daysDiff = (new Date() - new Date(updatedAt)) / (1000 * 60 * 60 * 24);
     return daysDiff <= 7;
+}
+function hasOpenGuestReturn(order) {
+    return order.status === 'return_pending' || order.returns?.some(row => ['pending', 'approved', 'received'].includes(row.request_status));
 }
 function canConfirmOrder(o) {
     if(o._receiptOnly)return false;
@@ -690,7 +694,7 @@ function buildOrderCard(o) {
         </div>` : ''}
         <div class="rg-actions-bar">
             <div class="rg-actions-bar-right">
-                ${(canCancelOrder(o) || canConfirmOrder(o) || canReturnOrder(o) || o.status === 'return_pending' || (!o._receiptOnly && o.returnGrant)) ? `
+                ${(canCancelOrder(o) || canConfirmOrder(o) || canReturnOrder(o) || hasOpenGuestReturn(o) || o.returns?.length) ? `
                 ${canConfirmOrder(o) ? `
                 <button class="btn-track-order btn-track-primary" onclick="handleGuestConfirmOrder('${esc(o.id)}')">
                     Đã nhận được hàng
@@ -699,10 +703,10 @@ function buildOrderCard(o) {
                 <button type="button" class="btn-track-order" onclick="handleGuestReturnRequest('${esc(o.id)}')">
                     Yêu cầu đổi trả
                 </button>` : ''}
-                ${o.status === 'return_pending' ? `
-                <span class="badge bg-warning text-dark p-2 align-self-center">Chờ duyệt đổi trả</span>` : ''}
-                ${(!o._receiptOnly && o.returnGrant) ? `
-                <button class="btn-track-order" onclick="handleGuestViewReturnGrant('${esc(o.id)}')">
+                ${hasOpenGuestReturn(o) ? `
+                <span class="badge bg-warning text-dark p-2 align-self-center">Đang xử lý đổi trả</span>` : ''}
+                ${o.returns?.length ? `
+                <button type="button" class="btn-track-order" onclick="handleGuestViewReturnGrant('${esc(o.id)}')">
                     Xem phiếu đổi trả
                 </button>` : ''}
                 ${canCancelOrder(o) ? `
@@ -850,8 +854,7 @@ window.handleGuestReturnRequest = function(orderId) {
     }
 
     if (order.returnGrant) {
-        if (!['delivered','completed'].includes(normalizeOrderStatus(order.status)) || !order.deliveredAt ||
-            Date.now() >= Date.parse(order.deliveredAt) + 7*86400000) {
+        if (!canReturnOrder(order)) {
             showToast('Đơn chưa đủ điều kiện trả hàng hoặc đã quá 7 ngày kể từ ngày nhận hàng.', 'error');
             return;
         }
@@ -863,6 +866,29 @@ window.handleGuestReturnRequest = function(orderId) {
     } else {
         window.location.href = `/pages/user/#orders`;
     }
+};
+
+window.handleGuestViewReturnGrant = function(orderId) {
+    const order = rgLastSearchState.orders.find(item => item.id === orderId);
+    if (!order?.returns?.length || document.getElementById('verifiedGuestReturnReceipt')) return;
+    const labels = {pending:'Chờ duyệt',approved:'Đã duyệt',received:'Đã nhận hàng trả',completed:'Đã hoàn tất',rejected:'Đã từ chối',cancelled:'Đã hủy'};
+    const dialog = document.createElement('dialog');
+    dialog.id = 'verifiedGuestReturnReceipt';
+    dialog.setAttribute('aria-labelledby', 'verifiedGuestReturnReceiptTitle');
+    dialog.style.cssText = 'width:min(540px,92vw);margin:auto;padding:24px;border:1px solid #dce6db;border-radius:9px;max-height:90vh;overscroll-behavior:contain';
+    dialog.innerHTML = `
+        <h3 id="verifiedGuestReturnReceiptTitle">Phiếu đổi trả</h3>
+        <p>Đơn hàng <strong>${esc(order.id)}</strong></p>
+        ${[...order.returns].sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at))).map(row=>`
+            <section>
+                <p><strong>${esc(labels[row.request_status] || 'Chưa cập nhật')}</strong> · ${esc(fmtDate(row.created_at))}</p>
+                <ul>${(row.lines || []).map(line=>`<li>${esc(order.products.find(item=>item.id===line.sales_order_detail_id)?.name || 'Sản phẩm đã đặt')} × ${esc(line.quantity)}</li>`).join('')}</ul>
+            </section>`).join('')}
+        <button type="button" class="btn-track-order">Đóng</button>`;
+    dialog.querySelector('button').onclick = () => dialog.close();
+    dialog.addEventListener('close', () => dialog.remove(), {once:true});
+    document.body.append(dialog);
+    dialog.showModal();
 };
 
 function openVerifiedGuestReturn(order) {
@@ -947,7 +973,10 @@ function openVerifiedGuestReturn(order) {
                 id:pending.id,orderId:order._supabaseId,grant:order.returnGrant,lines,reason
             }});
             if (result.returnId !== pending.id) throw Error('Chưa xác nhận được kết quả gửi.');
-            order.status = 'return_pending';
+            order.returns = [...(order.returns || []), {
+                id: result.returnId, request_status: 'pending', created_at: new Date().toISOString(),
+                lines: lines.map(line => ({sales_order_detail_id:line.line_id,quantity:line.quantity}))
+            }];
             dialog.close();
             if (verifiedPhone === rgVerifiedPhone) renderResults(rgLastSearchState.bookings,rgLastSearchState.orders);
             showToast('PawPal đã nhận yêu cầu trả hàng. Yêu cầu đang chờ xử lý.','success');
