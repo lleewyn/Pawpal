@@ -350,7 +350,7 @@ Kịch bản thứ tư kiểm tra khả năng liên kết dữ liệu hồ sơ k
 
 **Hình 8.12.** Kết quả thử nghiệm tổng hợp hồ sơ khách hàng đầy đủ qua Trợ lý Copilot.
 
-Kịch bản thứ năm kiểm tra giải thuật rà soát sản phẩm tồn kho chạm ngưỡng tối thiểu. Khi nhân viên gửi câu lệnh: *“Có bao nhiêu SKU dưới ngưỡng?”*, hệ thống quét các biến thể sản phẩm đang bán có số lượng tồn kho thấp hơn định mức an toàn. Hình 8.13 hiển thị kết quả gồm hai mã sản phẩm thức ăn hạt có số lượng tồn thực tế là 29 và 37 so với mức tồn tối thiểu quy định là 80.
+Kịch bản thứ năm kiểm tra giải thuật rà soát sản phẩm tồn kho chạm ngưỡng tối thiểu. Khi nhân viên gửi câu lệnh: *“Sản phẩm sắp hết hàng”* hoặc *“Có bao nhiêu mã sản phẩm dưới ngưỡng an toàn?”*, hệ thống quét các biến thể sản phẩm đang bán có số lượng tồn kho thấp hơn định mức an toàn. Hình 8.13 hiển thị kết quả gồm hai mã sản phẩm thức ăn hạt có số lượng tồn thực tế là 29 và 37 so với mức tồn tối thiểu quy định là 80.
 
 ![Cảnh báo tồn kho an toàn](figures/chuong-08/hinh-08-13-ton-kho-duoi-nguong.png)
 
