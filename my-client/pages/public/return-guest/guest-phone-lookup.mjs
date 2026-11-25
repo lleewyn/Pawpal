@@ -107,6 +107,7 @@ export function mountGuestPhoneLookup(form,{loadMember,renderMember,clearMember,
                 const data=next.source==='member'?await loadMember(next.phone,page):next.source==='session'?await guestCommerce.request('lookup',{phone:next.phone,page}):await guestCommerce.request('phone-lookup',{phone:next.phone,historyPage:{grant:next.grant,page}});
                 if(expected!==generation)return;
                 const result=next.source==='member'?data:next.source==='session'?mapGuestReceipts(data):mapHistory(data);
+                if(next.source==='phone')result.bookings.forEach(booking=>{booking.moveGrant=data.pagination?.grant||next.grant;});
                 const merge=(a,b)=>[...new Map([...a,...b].map(row=>[row._supabaseId||row.id,row])).values()];
                 loaded={customer:loaded.customer,bookings:merge(loaded.bookings,result.bookings),orders:merge(loaded.orders,result.orders)};
                 continuation={...next,...data.pagination};

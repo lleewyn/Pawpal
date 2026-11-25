@@ -1,6 +1,6 @@
 import {guestCart,isGuestShopper,hydrateGuestCart,GUEST_CART_KEY} from '/scripts/shared/guest-cart.mjs';
 import {showCartNotice} from '/scripts/shared/cart-access.mjs';
-export const SELECTION_KEY='pawpal_guest_checkout_selection_v1';
+import {getGuestCheckoutKeys} from '/scripts/shared/guest-checkout-attempt.mjs';
 const money=value=>Number(value).toLocaleString('vi-VN')+' đ';
 function element(tag,className,text){const node=document.createElement(tag);node.className=className||'';if(text!=null)node.textContent=text;return node;}
 export async function initGuestCartPage(){
@@ -94,12 +94,16 @@ export async function initGuestCartPage(){
   on(document.getElementById('btn-clear-cart'),'click',()=>change(()=>guestCart().clear()));
   on(document.getElementById('select-all-items'),'change',event=>{for(const row of rows)if(event.target.checked&&row.available)selected.add(row.variant_id);else selected.delete(row.variant_id);render();});
   on(checkout,'click',event=>{
-   event.preventDefault();if(busy||!active())return;
+   event.preventDefault();
+   event.stopPropagation(); // The public router must not open the unscoped link as well.
+   if(busy||!active())return;
    try{
     const chosen=rows.filter(r=>r.available&&selected.has(r.variant_id));if(!chosen.length)throw Error('Vui lòng chọn sản phẩm để thanh toán.');
     if(chosen.some(r=>r.quantity>r.variant.stock))throw Error('Vui lòng điều chỉnh số lượng theo tồn kho hiện tại.');
-    sessionStorage.setItem(SELECTION_KEY,JSON.stringify(chosen.map(r=>({variant_id:r.variant_id,quantity:r.quantity}))));
-    window.location.assign('/checkout');
+    const search=new URLSearchParams({cartAttempt:crypto.randomUUID()});
+    const {selectionKey}=getGuestCheckoutKeys(search);
+    sessionStorage.setItem(selectionKey,JSON.stringify(chosen.map(r=>({variant_id:r.variant_id,quantity:r.quantity}))));
+    window.location.assign('/checkout?'+search);
    }catch(e){error(e.message);}
   });
   on(document,'guest_cart_updated',()=>{if(active()&&!busy)void loadAndRender().catch(e=>error(e.message));});

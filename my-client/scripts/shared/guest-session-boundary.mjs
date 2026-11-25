@@ -1,11 +1,19 @@
+import {guestCheckoutSelectionKey,guestOrderJournalKey} from './guest-checkout-attempt.mjs';
+
 export const GUEST_RESET_PENDING='pawpal_guest_reset_pending_v1';
 export const GUEST_IDENTITY_EPOCH='pawpal_guest_identity_epoch_v1';
 const boundaryVersion='pawpal_guest_session_isolation_v1';
-const journals=['pawpal_guest_pet_request_v1','pawpal_guest_booking_request_v1','pawpal_guest_order_request_v1','pawpal_guest_checkout_selection_v1'];
+const journals=['pawpal_guest_pet_request_v1','pawpal_guest_booking_request_v1',guestOrderJournalKey,guestCheckoutSelectionKey];
 
 export function createGuestSessionBoundary({storage,tabStorage,fetcher,locks,publish=()=>{},timeoutMs=15000}){
  let resetting=null;
- function clearJournals(){for(const key of journals)tabStorage.removeItem(key);}
+ function clearJournals(){
+  for(let index=tabStorage.length-1;index>=0;index--){
+   const key=tabStorage.key(index);
+   if(key?.startsWith(guestOrderJournalKey+':')||key?.startsWith(guestCheckoutSelectionKey+':'))tabStorage.removeItem(key);
+  }
+  for(const key of journals)tabStorage.removeItem(key);
+ }
  function mark(){
   const epoch=globalThis.crypto.randomUUID();
   storage.setItem(GUEST_RESET_PENDING,epoch);storage.setItem(GUEST_IDENTITY_EPOCH,epoch);

@@ -1,4 +1,18 @@
 
+.badge-guest-mode,
+.guest-checkout-mode-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 9px;
+    background: #EEF5F1;
+    color: #236B48;
+    font-size: 12px;
+    font-weight: 600;
+}
+.guest-checkout-mode-pill {
+    border: 1px solid #D7E8DE;
+}
 .checkout-page {
   background: #F8FAF9;
   min-height: 80vh;
@@ -896,6 +910,20 @@
 
 
 /* Loading keeps checkout controls unavailable until initialization completes. */
+.badge-guest-mode,
+.guest-checkout-mode-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 9px;
+    background: #EEF5F1;
+    color: #236B48;
+    font-size: 12px;
+    font-weight: 600;
+}
+.guest-checkout-mode-pill {
+    border: 1px solid #D7E8DE;
+}
 .checkout-page { position: relative; }
 .checkout-skeleton { position: absolute; top: 0; left: 0; right: 0; z-index: 1; padding-top: 48px; pointer-events: none; }
 .checkout-page > .checkout-main-container, .checkout-skeleton { transition: opacity 240ms ease, visibility 240ms ease; }

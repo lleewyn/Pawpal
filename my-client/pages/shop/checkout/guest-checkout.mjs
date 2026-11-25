@@ -3,43 +3,82 @@ import {guestCommerce} from '/scripts/shared/guest-commerce-client.mjs';
 import {readGuestCheckoutPreferences,writeGuestCheckoutPreferences,clearGuestCheckoutPreferences} from '/scripts/shared/guest-checkout-preferences.mjs';
 import {renderTransactionReceipt} from '/scripts/shared/transaction-receipt.mjs';
 import {editGuestContact} from '/scripts/shared/guest-contact-editor.mjs';
-const selectionKey='pawpal_guest_checkout_selection_v1',journalKey='pawpal_guest_order_request_v1';
+import {getGuestCheckoutKeys,guestCheckoutSelectionKey} from '/scripts/shared/guest-checkout-attempt.mjs';
 const money=n=>Number(n).toLocaleString('vi-VN')+' đ';
 // Administrative names: https://datafiles.chinhphu.vn/cpp/files/vbpq/2025/6/202qh.signed.pdf
 const provinces=['An Giang','Bắc Ninh','Cà Mau','Cao Bằng','Cần Thơ','Đà Nẵng','Đắk Lắk','Điện Biên','Đồng Nai','Đồng Tháp','Gia Lai','Hà Nội','Hà Tĩnh','Hải Phòng','Hồ Chí Minh','Huế','Hưng Yên','Khánh Hòa','Lai Châu','Lâm Đồng','Lạng Sơn','Lào Cai','Nghệ An','Ninh Bình','Phú Thọ','Quảng Ngãi','Quảng Ninh','Quảng Trị','Sơn La','Tây Ninh','Thái Nguyên','Thanh Hóa','Tuyên Quang','Vĩnh Long'];
 function node(tag,text,className=''){const n=document.createElement(tag);n.className=className;if(text!=null)n.textContent=text;return n;}
 export async function initGuestCheckout(){
+ const {selectionKey,journalKey}=getGuestCheckoutKeys(location.search);
  const page=document.querySelector('.checkout-page');if(!page||page.dataset.guestReady)return;page.dataset.guestReady='true';
  page.classList.remove('checkout-loading');page.setAttribute('aria-busy','false');
  const steps=page.querySelector('.checkout-steps');
  page.innerHTML=`<div class="container-xl py-4 py-md-5 checkout-main-container">
- <div id="guest-checkout-steps"></div><a href="/cart" class="btn-address-link">Quay lại giỏ hàng</a>
- <p id="guest-checkout-feedback" role="status" aria-live="polite"></p>
- <form id="guest-checkout-form"><fieldset id="guest-checkout-fields" class="border-0 p-0"><div class="row g-4">
- <div class="col-lg-7"><section class="checkout-section mb-4"><h2 class="section-title">Thông tin liên hệ</h2><div class="row g-3">
- <div class="col-md-6"><label class="form-label" for="guest-name">Họ và tên <span class="text-danger">*</span></label><input class="form-control" id="guest-name" autocomplete="name" required maxlength="150"></div>
- <div class="col-md-6"><label class="form-label" for="guest-phone">Số điện thoại <span class="text-danger">*</span></label><input class="form-control" id="guest-phone" type="tel" autocomplete="tel" required maxlength="40"></div>
- </div></section>
- <section class="checkout-section mb-4"><h2 class="section-title" id="guest-delivery-heading">Phương thức vận chuyển</h2>
- <div class="delivery-options" id="guest-delivery-choices" role="radiogroup" aria-labelledby="guest-delivery-heading" aria-required="true" aria-describedby="guest-delivery-error"></div>
- <select id="guest-delivery" hidden required><option value=""></option><option value="pickup">Nhận tại cửa hàng</option></select>
- <div id="guest-address-fields" class="mt-3 d-none"><div class="row g-3">
- <div class="col-md-6"><label class="form-label" for="guest-receiver">Tên người nhận <span class="text-danger">*</span></label><input class="form-control" id="guest-receiver" maxlength="300" autocomplete="shipping name"></div>
- <div class="col-md-6"><label class="form-label" for="guest-receiver-phone">Số điện thoại người nhận <span class="text-danger">*</span></label><input class="form-control" id="guest-receiver-phone" type="tel" maxlength="40" autocomplete="shipping tel"></div>
- <div class="col-md-8"><label class="form-label" for="guest-street">Địa chỉ nhận hàng <span class="text-danger">*</span></label><input class="form-control" id="guest-street" maxlength="1000" autocomplete="shipping street-address"></div>
- <div class="col-md-4"><label class="form-label" for="guest-province">Tỉnh hoặc thành phố <span class="text-danger">*</span></label><select class="form-select" id="guest-province" autocomplete="shipping address-level1"><option value="">Chọn tỉnh hoặc thành phố</option>${provinces.map(name=>`<option value="${name}">${name}</option>`).join('')}</select></div></div></div></section>
- <section class="checkout-section"><h2 class="section-title" id="guest-payment-heading">Phương thức thanh toán</h2>
- <div id="guest-payment-choices" class="delivery-options" role="radiogroup" aria-labelledby="guest-payment-heading" aria-required="true" aria-describedby="guest-payment-error"></div>
- <select id="guest-payment" hidden required><option value=""></option></select>
- <label class="form-label mt-3" for="guest-note">Ghi chú</label><textarea class="form-control" id="guest-note" rows="3" maxlength="4000"></textarea></section></div>
- <div class="col-lg-5"><div class="order-summary-sticky"><section class="checkout-section"><h2 class="section-title">Tóm tắt đơn hàng</h2>
- <div id="guest-quote-lines" class="order-items mb-3"><p class="small text-muted mb-0">Kiểm tra đơn hàng để xem chi tiết sản phẩm và tổng tiền.</p></div>
- <div class="voucher-section mb-3"><label class="form-label fw-semibold" for="guest-voucher">Mã giảm giá</label><input class="form-control rounded-3" id="guest-voucher" maxlength="100" placeholder="Nhập mã giảm giá" autocomplete="off"></div>
- <div class="order-totals" aria-live="polite">
- <div id="guest-quote-breakdown" class="d-none"></div><div class="total-row grand-total"><span>Tổng thanh toán</span><span id="guest-quote-total">—</span></div>
+ <div id="guest-checkout-steps"></div>
+ <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <a href="/cart" class="btn-address-link">Quay lại giỏ hàng</a>
+  <span class="guest-checkout-mode-pill">Đặt hàng không cần đăng nhập · Khách vãng lai</span>
  </div>
- <button class="btn btn-secondary w-100 mt-3" type="button" id="guest-quote-button">Kiểm tra đơn hàng</button>
- <button class="btn btn-primary btn-lg w-100 mt-2" type="button" id="guest-place-order" disabled>Đặt hàng</button>
+ <p id="guest-checkout-feedback" role="status" aria-live="polite" class="small text-muted mb-3"></p>
+ <form id="guest-checkout-form"><fieldset id="guest-checkout-fields" class="border-0 p-0"><div class="row g-4">
+ <div class="col-lg-7">
+  <section class="checkout-section mb-4">
+   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+     <h2 class="section-title mb-0">Thông tin liên hệ</h2>
+     <span class="badge-guest-mode">Khách vãng lai</span>
+    </div>
+    <a href="/login" class="btn-address-link">Đăng nhập thành viên</a>
+   </div>
+   <p class="small text-muted mb-3">Đặt hàng nhanh không cần tài khoản. Đăng nhập để dùng sổ địa chỉ, ưu đãi hạng và tích lũy Paw Points.</p>
+   <div class="row g-3">
+    <div class="col-md-6"><label class="form-label" for="guest-name">Họ và tên <span class="required">*</span></label><input class="form-control" id="guest-name" autocomplete="name" required maxlength="150" placeholder="Nhập họ và tên"></div>
+    <div class="col-md-6"><label class="form-label" for="guest-phone">Số điện thoại <span class="required">*</span></label><input class="form-control" id="guest-phone" type="tel" autocomplete="tel" required maxlength="40" placeholder="0xxxxxxxxx"></div>
+   </div>
+  </section>
+  <section class="checkout-section mb-4">
+   <h2 class="section-title" id="guest-delivery-heading">Phương thức vận chuyển</h2>
+   <div class="delivery-options" id="guest-delivery-choices" role="radiogroup" aria-labelledby="guest-delivery-heading" aria-required="true" aria-describedby="guest-delivery-error"></div>
+   <select id="guest-delivery" hidden required><option value=""></option><option value="pickup">Nhận tại cửa hàng</option></select>
+   <div id="guest-address-fields" class="mt-3 d-none">
+    <div class="row g-3">
+     <div class="col-md-6"><label class="form-label" for="guest-receiver">Tên người nhận <span class="required">*</span></label><input class="form-control" id="guest-receiver" maxlength="300" autocomplete="shipping name" placeholder="Tên người nhận hàng"></div>
+     <div class="col-md-6"><label class="form-label" for="guest-receiver-phone">Số điện thoại người nhận <span class="required">*</span></label><input class="form-control" id="guest-receiver-phone" type="tel" maxlength="40" autocomplete="shipping tel" placeholder="0xxxxxxxxx"></div>
+     <div class="col-md-8"><label class="form-label" for="guest-street">Địa chỉ nhận hàng <span class="required">*</span></label><input class="form-control" id="guest-street" maxlength="1000" autocomplete="shipping street-address" placeholder="Số nhà, tên đường, phường/xã"></div>
+     <div class="col-md-4"><label class="form-label" for="guest-province">Tỉnh hoặc thành phố <span class="required">*</span></label><select class="form-select" id="guest-province" autocomplete="shipping address-level1"><option value="">Chọn tỉnh hoặc thành phố</option>${provinces.map(name=>`<option value="${name}">${name}</option>`).join('')}</select></div>
+    </div>
+   </div>
+  </section>
+  <section class="checkout-section mb-4">
+   <h2 class="section-title" id="guest-payment-heading">Phương thức thanh toán</h2>
+   <div id="guest-payment-choices" class="payment-methods" role="radiogroup" aria-labelledby="guest-payment-heading" aria-required="true" aria-describedby="guest-payment-error"></div>
+   <select id="guest-payment" hidden required><option value=""></option></select>
+   <label class="form-label mt-3" for="guest-note">Ghi chú đơn hàng (tùy chọn)</label><textarea class="form-control" id="guest-note" rows="2" maxlength="4000" placeholder="Ví dụ: Giao vào buổi chiều"></textarea>
+  </section>
+  <div class="trust-badges mt-4">
+   <div class="trust-badge"><svg class="trust-icon" width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1 14H9v-2h2v2zm0-4H9V7h2v5z"/></svg><span>Bảo mật SSL</span></div>
+   <div class="trust-badge"><svg class="trust-icon" width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg><span>Đổi trả 30 ngày</span></div>
+   <div class="trust-badge"><svg class="trust-icon" width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Chính hãng</span></div>
+   <div class="trust-badge"><svg class="trust-icon" width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg><span>Hỗ trợ 24/7</span></div>
+  </div>
+ </div>
+ <div class="col-lg-5"><div class="order-summary-sticky"><section class="checkout-section">
+  <h2 class="section-title">Tóm tắt đơn hàng</h2>
+  <div id="guest-quote-lines" class="order-items mb-3"><p class="small text-muted mb-0">Kiểm tra đơn hàng để xem chi tiết sản phẩm và tổng tiền.</p></div>
+  <div class="voucher-section mb-3">
+   <label class="form-label fw-semibold" for="guest-voucher">Mã giảm giá</label>
+   <div class="input-group">
+    <input class="form-control" id="guest-voucher" maxlength="100" placeholder="Nhập mã giảm giá..." autocomplete="off">
+    <button class="btn btn-outline-primary" type="button" id="guest-quote-button" style="white-space:nowrap;">Kiểm tra đơn hàng</button>
+   </div>
+  </div>
+  <div class="order-totals" aria-live="polite">
+   <div id="guest-quote-breakdown" class="d-none"></div>
+   <hr>
+   <div class="total-row grand-total"><span>TỔNG THANH TOÁN:</span><span id="guest-quote-total">—</span></div>
+  </div>
+  <button class="btn btn-primary btn-lg w-100 mt-3" type="button" id="guest-place-order" disabled>Đặt hàng</button>
+  <p class="text-center small text-muted mt-3 mb-0"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" class="ui-element-7"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/></svg> Thanh toán an toàn, bảo mật</p>
  </section></div></div></div></fieldset></form>
  <section id="guest-order-result" class="checkout-section mt-3 d-none" aria-live="polite"></section></div>`;
  if(steps)page.querySelector('#guest-checkout-steps').append(steps);
@@ -132,10 +171,31 @@ export async function initGuestCheckout(){
   result.querySelector('h1').focus();
   window.updateCartBadge?.();
  }
+ function renderPreviewLines(catalogProducts){
+  if(!lines.length)return;
+  const byVariant=new Map();
+  for(const product of catalogProducts||[]){
+   for(const variant of product.variants||[])byVariant.set(variant.id,{product,variant});
+  }
+  get('guest-quote-lines').replaceChildren(...lines.map(line=>{
+   const match=byVariant.get(line.variant_id);
+   const item=node('div',null,'order-item'),info=node('div',null,'order-item-info');
+   const image=node('img',null,'order-item-img');
+   image.src=match?.variant?.images?.[0]||match?.product?.image||'/assets/images/shop/products/placeholder.webp';image.alt='';
+   const title=match?.product?.name||'Sản phẩm đã chọn';
+   info.append(node('h4',title),node('p','Số lượng '+line.quantity,'order-item-qty'));
+   const unitPrice=Number(match?.variant?.price??match?.product?.price);
+   const priceText=Number.isFinite(unitPrice)&&unitPrice>0?money(unitPrice*line.quantity):'Chờ kiểm tra';
+   item.append(image,info,node('span',priceText,'order-item-price'));
+   return item;
+  }));
+ }
+ let previewProducts=[];
  function invalidateQuote(){
   quote=null;submit.disabled=true;get('guest-quote-total').textContent='—';
   get('guest-quote-breakdown').classList.add('d-none');
-  get('guest-quote-lines').replaceChildren(node('p','Kiểm tra đơn hàng để xem chi tiết sản phẩm và tổng tiền.','small text-muted mb-0'));
+  if(previewProducts.length)renderPreviewLines(previewProducts);
+  else get('guest-quote-lines').replaceChildren(node('p','Kiểm tra đơn hàng để xem chi tiết sản phẩm và tổng tiền.','small text-muted mb-0'));
  }
  form.addEventListener('submit',event=>event.preventDefault());
  form.addEventListener('input',invalidateQuote);form.addEventListener('change',invalidateQuote);
@@ -202,7 +262,7 @@ export async function initGuestCheckout(){
  document.addEventListener('auth_state_changed',changed);window.addEventListener('storage',event=>{if(event.key==='pawpal_current_user'||event.key===null)changed();});
  try{
   journal=JSON.parse(sessionStorage.getItem(journalKey)||'null');
-  if(journal?.phase==='confirmed'&&history.state?.guestOrderReceiptId!==journal.id){
+  if(selectionKey===guestCheckoutSelectionKey&&journal?.phase==='confirmed'&&history.state?.guestOrderReceiptId!==journal.id){
    sessionStorage.removeItem(journalKey);
    journal=null;
   }
@@ -213,10 +273,19 @@ export async function initGuestCheckout(){
   }else if(new URLSearchParams(location.search).get('buynow')==='true'){
    mode='buynow';const items=JSON.parse(sessionStorage.getItem('pawpal_buynow_cart')||'[]');lines=normalizeGuestLines(items.map(item=>({variant_id:item.variantId||item.product_variant_id,quantity:Number(item.quantity)})));
   }else{
-   const saved=sessionStorage.getItem(selectionKey);lines=saved?normalizeGuestLines(JSON.parse(saved)):guestCart().read();
+   const saved=sessionStorage.getItem(selectionKey);
+   if(!saved&&selectionKey!==guestCheckoutSelectionKey)throw Error('Phiên thanh toán đã kết thúc. Vui lòng quay lại giỏ hàng để chọn sản phẩm.');
+   lines=saved?normalizeGuestLines(JSON.parse(saved)):guestCart().read();
    const current=guestCart().read();if(lines.some(line=>!current.some(item=>item.variant_id===line.variant_id&&item.quantity>=line.quantity)))throw Error('Giỏ hàng đã thay đổi. Vui lòng quay lại chọn sản phẩm.');
   }
   if(!lines.length)throw Error('Giỏ hàng đang trống. Vui lòng chọn sản phẩm.');
+  if(window.DataLoader?.loadCartProducts){
+   window.DataLoader.loadCartProducts(lines.map(l=>l.variant_id),{fallback:false}).then(products=>{
+    if(!active()||quote)return;
+    previewProducts=products||[];
+    renderPreviewLines(previewProducts);
+   }).catch(()=>{});
+  }
   const preferences=readGuestCheckoutPreferences(sessionStorage,{mode,lines});if(preferences)get('guest-voucher').value=preferences.voucherCode;
   const db=window.getSupabaseClient?.()||window.SupabaseClient;if(!db)throw Error('Chưa kết nối được thông tin nhận hàng.');
   const [{data,error},context]=await Promise.all([db.rpc('customer_shop_options'),guestCommerce.request('context',{page:1})]);if(error)throw error;if(!active())return;

@@ -1,4 +1,5 @@
 import {parseVietnamDateTimeInput,vietnamDateTimeInput} from '/scripts/shared/booking-time.mjs';
+import {bookingMoveError} from '/scripts/shared/customer-booking.mjs?v=20261125_move_error';
 
 export function openGuestBookingMoveDialog(booking,phone,{request,onSaved=()=>{}}){
  const previous=document.getElementById('guestBookingMoveDialog');if(previous){previous.close();previous.remove();}
@@ -17,7 +18,7 @@ export function openGuestBookingMoveDialog(booking,phone,{request,onSaved=()=>{}
  const get=id=>dialog.querySelector('#'+id),start=get('guestMoveStart'),end=get('guestMoveEnd'),reason=get('guestMoveReason'),feedback=get('guestMoveFeedback'),preview=get('guestMovePreview'),save=get('guestMoveSave');
  get('guestMoveContext').textContent=[booking.serviceName||'Lịch hẹn dịch vụ',booking.petName].filter(Boolean).join(' · ');
  const existing=booking.scheduledStartAt?new Date(booking.scheduledStartAt):parseVietnamDateTimeInput(`${booking.date}T${booking.timeStart||booking.time||'09:00'}`);
- start.min=vietnamDateTimeInput(new Date(Date.now()+2*3600000));if(existing&&Number.isFinite(+existing))start.value=vietnamDateTimeInput(existing);
+ start.min=vietnamDateTimeInput(Math.ceil((Date.now()+2*3600000)/60000)*60000);
  if(end){if(booking.scheduledEndAt&&Number.isFinite(Date.parse(booking.scheduledEndAt)))end.value=vietnamDateTimeInput(new Date(booking.scheduledEndAt));end.min=start.value;}
  let quote=null,epoch=0,pending=false,confirming=false,requestId=crypto.randomUUID();
  const dismiss=()=>{if(!confirming)dialog.close();};
@@ -34,6 +35,8 @@ export function openGuestBookingMoveDialog(booking,phone,{request,onSaved=()=>{}
   if(!start.reportValidity()||!reason.reportValidity()||(end&&!end.reportValidity()))return;
   const parsed=parseVietnamDateTimeInput(start.value),parsedEnd=end?parseVietnamDateTimeInput(end.value):null;
   if(!parsed){fail('Vui lòng chọn thời gian bắt đầu mới hợp lệ.');return;}
+  if(+parsed<Date.now()+2*3600000){fail('Giờ mới phải cách hiện tại ít nhất 2 tiếng. Vui lòng chọn giờ khác.');return;}
+  if(existing&&start.value===vietnamDateTimeInput(existing)){fail('Giờ mới trùng với giờ hẹn hiện tại. Vui lòng chọn giờ khác.');return;}
   if(end&&(!parsedEnd||+parsedEnd<=+parsed)){fail('Thời gian trả phòng phải sau thời gian bắt đầu.');return;}
   const current=epoch,commit=!!quote,expectedQuote=quote;
   pending=true;confirming=commit;save.disabled=true;feedback.hidden=true;save.textContent=commit?'Đang đổi lịch…':'Đang xem giá…';
@@ -51,7 +54,12 @@ export function openGuestBookingMoveDialog(booking,phone,{request,onSaved=()=>{}
    get('guestMoveEndPreview').textContent='Kết thúc dự kiến: '+new Date(value.end_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',dateStyle:'short',timeStyle:'short'});
    get('guestMoveTotal').textContent='Tổng tiền mới: '+Number(value.total).toLocaleString('vi-VN')+' đ';
    save.textContent='Xác nhận đổi lịch';
-  }catch(error){if(dialog.isConnected&&current===epoch){quote=null;preview.hidden=true;fail(error.message||'Chưa đổi được lịch hẹn. Vui lòng thử lại.');save.textContent='Xem giá và lịch mới';}}
+  }catch(error){if(dialog.isConnected&&current===epoch){
+   quote=null;preview.hidden=true;
+   const serverCode=error.message?.match(/^Không thể đổi lịch: ([a-z0-9_]+)$/)?.[1];
+   fail(serverCode?bookingMoveError({message:serverCode}).message:error.message||'Chưa đổi được lịch hẹn. Vui lòng thử lại.');
+   save.textContent='Xem giá và lịch mới';
+  }}
   finally{
    pending=false;confirming=false;
    if(dialog.isConnected){dialog.querySelectorAll('button,input,textarea').forEach(node=>node.disabled=false);if(current!==epoch)save.textContent=quote?'Xác nhận đổi lịch':'Xem giá và lịch mới';}

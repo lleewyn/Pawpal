@@ -82,7 +82,7 @@ function initReturnGuestPage() {
     const form=document.getElementById('rg-form');
     if(!form||form.dataset.rgRecovery==='true')return;
     form.dataset.rgRecovery='true';form.hidden=false;
-    import('/pages/public/return-guest/guest-phone-lookup.mjs').then(phone=>{
+    import('/pages/public/return-guest/guest-phone-lookup.mjs?v=20261125_move_grant').then(phone=>{
         phone.mountGuestPhoneLookup(form, {loadMember:loadSupabaseGuestResults,mapHistory:rows=>({customer:rows.customer,bookings:rows.bookings.map(row=>({...mapSupabaseBookingRow(row),_receiptOnly:false})),orders:rows.orders.map(row=>({...mapSupabaseOrderRow(row),_receiptOnly:false}))}), renderMember:(bookings,orders,value,customer)=>{
             const summary=document.getElementById('rg-result-customer');
             if(summary){
@@ -229,7 +229,8 @@ function mapSupabaseBookingRow(row) {
     const normalizedBookingStatus = {
         'cho_xac_nhan': 'pending',
         'da_xac_nhan': 'confirmed',
-        'da_check_in': 'confirmed',
+        'da_check_in': 'accepted',
+        'checked_in': 'accepted',
         'dang_thuc_hien': 'in-progress',
         'da_hoan_tat': 'completed',
         'da_huy': 'cancelled',
@@ -245,8 +246,9 @@ function mapSupabaseBookingRow(row) {
         serviceName: primaryItem.name_snapshot || 'Dịch vụ PawPal',
         date: d ? d.toLocaleDateString('sv-SE',{timeZone:'Asia/Ho_Chi_Minh'}) : '',
         changeCount: row.change_count || 0,
-        time: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
-        timeStart: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+        time: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' }) : '',
+        timeStart: d ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' }) : '',
+        scheduledStartAt: row.scheduled_start_at || null,
         scheduledEndAt: row.scheduled_end_at || null,
         serviceItems: (Array.isArray(row.appointment_item) ? row.appointment_item : row.appointment_item ? [row.appointment_item] : []).map(item => ({ name: item.name_snapshot, quantity: item.quantity })),
         status: normalizedBookingStatus,
@@ -458,9 +460,8 @@ function resolveBookingStatus(booking) {
     try {
         const date = booking.date || '';
         if (!date) return rawStatus === 'confirmed' ? 'accepted' : 'confirmed';
-        const time = booking.timeStart || booking.time || '00:00';
-        const scheduled = new Date(`${date}T${time}:00`);
-        if (isNaN(scheduled.getTime())) return 'confirmed';
+        const scheduled = getBookingScheduledAt(booking);
+        if (!scheduled) return 'confirmed';
         const hoursPast = (Date.now() - scheduled.getTime()) / (1000 * 60 * 60);
         if (hoursPast >= 4)  return 'completed';
         if (hoursPast >= 1)  return 'in-progress';
@@ -510,9 +511,9 @@ function canConfirmOrder(o) {
 }
 
 function getBookingScheduledAt(booking) {
-    if (!booking?.date) return null;
+    if (!booking?.scheduledStartAt && !booking?.date) return null;
     const time = booking.time || booking.timeStart || '09:00';
-    const scheduled = new Date(`${booking.date}T${time}:00`);
+    const scheduled = new Date(booking.scheduledStartAt || `${booking.date}T${time}:00+07:00`);
     return isNaN(scheduled.getTime()) ? null : scheduled;
 }
 
@@ -1518,9 +1519,14 @@ function normalizeOrderStatus(status) {
 async function showChangeScheduleModal(bookingId, phone) {
     const booking=rgLastSearchState.bookings.find(b=>b.id===bookingId);
     if(!booking?.moveGrant){showToast('Vui lòng tra cứu và xác thực OTP lại trước khi đổi lịch.','warning');return;}
+    const scheduled = getBookingScheduledAt(booking);
+    if (!canModifyBooking(booking) || !scheduled || scheduled.getTime() < Date.now() + 2 * 3600000) {
+        showToast('Lịch hẹn hiện không đủ điều kiện tự đổi. Vui lòng liên hệ cửa hàng.','warning');
+        return;
+    }
     try{
         const [{openGuestBookingMoveDialog},{guestCommerce}]=await Promise.all([
-            import('./guest-booking-move-dialog.mjs?v=20261123_guest_move_dialog'),
+            import('./guest-booking-move-dialog.mjs?v=20261125_move_time'),
             import('/scripts/shared/guest-commerce-client.mjs')
         ]);
         return openGuestBookingMoveDialog(booking,phone,{request:(...args)=>guestCommerce.request(...args),onSaved:()=>{

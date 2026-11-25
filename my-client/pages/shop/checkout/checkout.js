@@ -153,7 +153,7 @@ function finishCheckoutLoading() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        if (isGuestShopper()) { const {initGuestCheckout}=await import('./guest-checkout.mjs?v=20261125_guest_receipt'); await initGuestCheckout(); return; }
+        if (isGuestShopper()) { const {initGuestCheckout}=await import('./guest-checkout.mjs?v=20261125_cart_attempt'); await initGuestCheckout(); return; }
         checkoutState.user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (!checkoutState.user?.id || checkoutState.user.is_temporary) { window.location.href='/login'; return; }
         PENDING_POINTS_KEY='pawpal_checkout_points_used:'+checkoutState.user.id;

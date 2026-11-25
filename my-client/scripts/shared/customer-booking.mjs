@@ -1,7 +1,7 @@
 import { resolveAuthenticatedCustomerId } from './customer-identity.mjs';
 import { invalidateCustomerCache } from './customer-cache.mjs';
 
-function bookingMoveError(error) {
+export function bookingMoveError(error) {
     const messages={booking_change_window_closed:'Lịch không còn trong thời gian hoặc số lần được tự đổi. Vui lòng liên hệ cửa hàng.',
         booking_move_status_not_allowed:'Lịch hẹn ở trạng thái hiện tại không cho phép tự đổi. Vui lòng liên hệ cửa hàng.',
         booking_move_limit_reached:'Lịch hẹn đã dùng hết 2 lần đổi trực tuyến. Vui lòng liên hệ cửa hàng.',

@@ -1,17 +1,21 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const load=()=>import('../../my-client/scripts/shared/guest-session-boundary.mjs');
-const storage=initial=>{const map=new Map(Object.entries(initial||{}));return {getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,String(value)),removeItem:key=>map.delete(key)}};
+const storage=initial=>{const map=new Map(Object.entries(initial||{}));return {get length(){return map.size;},key:index=>[...map.keys()][index]??null,getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,String(value)),removeItem:key=>map.delete(key)}};
 const response=(success=true)=>({ok:success,json:async()=>({success})});
 function locks(){let tail=Promise.resolve();return {request(_key,fn){const next=tail.then(fn);tail=next.catch(()=>{});return next}};}
 
 test('identity boundary clears guest journals synchronously, revokes once and keeps a cross-tab epoch',async()=>{
  const {createGuestSessionBoundary,GUEST_RESET_PENDING,GUEST_IDENTITY_EPOCH}=await load();
  const local=storage(),tab=storage({pawpal_guest_pet_request_v1:'pet',pawpal_guest_booking_request_v1:'booking',pawpal_guest_order_request_v1:'order',pawpal_guest_checkout_selection_v1:'selection',unrelated:'keep'});
+ tab.setItem('pawpal_guest_order_request_v1:attempt','previous order');
+ tab.setItem('pawpal_guest_checkout_selection_v1:attempt','previous selection');
  let release,published=0;const sent=[];
  const boundary=createGuestSessionBoundary({storage:local,tabStorage:tab,publish:()=>published++,fetcher:async(url,options)=>{sent.push({url,options});await new Promise(r=>release=r);return response();}});
  const a=boundary.reset(),b=boundary.reset();assert.equal(a,b);assert.equal(published,1);
  for(const key of ['pet','booking','order'])assert.equal(tab.getItem('pawpal_guest_'+key+'_request_v1'),null);
  assert.equal(tab.getItem('pawpal_guest_checkout_selection_v1'),null);assert.equal(tab.getItem('unrelated'),'keep');
+ assert.equal(tab.getItem('pawpal_guest_order_request_v1:attempt'),null);
+ assert.equal(tab.getItem('pawpal_guest_checkout_selection_v1:attempt'),null);
  assert.ok(local.getItem(GUEST_RESET_PENDING));assert.equal(local.getItem(GUEST_RESET_PENDING),local.getItem(GUEST_IDENTITY_EPOCH));
  release();await a;assert.equal(local.getItem(GUEST_RESET_PENDING),null);assert.ok(local.getItem(GUEST_IDENTITY_EPOCH));
  assert.equal(sent.length,1);assert.equal(sent[0].url,'/api/customer/guest/end');assert.equal(sent[0].options.credentials,'same-origin');assert.equal(sent[0].options.headers.Authorization,undefined);
