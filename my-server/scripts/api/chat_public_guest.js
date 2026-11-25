@@ -3,7 +3,8 @@ const catalog=require('./chat_public_catalog.js');
 const fold=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().replace(/\bhotle\b|\bhottel\b/g,'hotel').replace(/\bdatlich\b/g,'dat lich').replace(/\bpawpoints?\b/g,'paw points').replace(/\bbao nhiu\b|\bbn\b/g,'bao nhieu').replace(/\s+/g,' ').trim();
 const group=q=>{
  if(/sau khi (?:tam|cat tia|lam)|sau (?:tam|cat tia)|met moi|bieng an|bo an|ue oai|nam li bi|ngu nhieu|lo qua|non |sot |chay mau|vet thuong|gay chan|co giat|bi dau/.test(q))return null;
- return /hotel|khach san|luu tru|gui be|qua dem/.test(q)?'hotel':/taxi|dua don|dua ruoc/.test(q)?'taxi':/\btam\b|cat tia|grooming|\bspa\b/.test(q)?'grooming':null;
+ const cleaned=q.replace(/\b(?:tam su|tam trang|quan tam|tam thoi|tam biet|yen tam|an tam|luong tam|trung tam)\b/g,' ');
+ return /hotel|khach san|luu tru|gui be|qua dem/.test(cleaned)?'hotel':/taxi|dua don|dua ruoc/.test(cleaned)?'taxi':/\btam\b|cat tia|grooming|\bspa\b/.test(cleaned)?'grooming':null;
 };
 const faq=(question,topic,notice)=>({faq:question,topic,...(notice?{notice}:{})});
 const link=(label,path)=>`[${label}](${path})`;
@@ -73,7 +74,7 @@ function plan(question,recent=[]){
  if(family&&!queries&&!/dich vu|goi tam/.test(q))queries=[family];
  if(queries){if(queries.length>2||queries.some(x=>x.length<2||x.length>120))return {reply:'Bạn gửi tên hoặc SKU của tối đa hai sản phẩm cần xem/so sánh nhé. '+shop,understood:false,topic:'product'};
   return {...advice('product',{queries,...(pet?{pet}:{})}),focused};}
- if(/san pham|thuc an|hat cho|hat meo|hat cho meo|con hang|con size|ban.*(?:gi|nhung gi)/.test(q)&&!kind)return {reply:'Bạn cần thức ăn, đồ chăm sóc, đồ chơi hay phụ kiện? Gửi tên/nhu cầu hoặc mã SKU, hoặc viết “So sánh sản phẩm A và B”. Mình có thể đối chiếu mô tả, giá và tình trạng hàng công khai; không tự suy công dụng điều trị. '+shop,understood:false,topic:'product'};
+ if(/san pham|thuc an|hat cho|hat meo|hat cho meo|con hang|con size|\bban\b.*(?:\bgi\b|nhung gi)/.test(q)&&!kind)return {reply:'Bạn cần thức ăn, đồ chăm sóc, đồ chơi hay phụ kiện? Gửi tên/nhu cầu hoặc mã SKU, hoặc viết “So sánh sản phẩm A và B”. Mình có thể đối chiếu mô tả, giá và tình trạng hàng công khai; không tự suy công dụng điều trị. '+shop,understood:false,topic:'product'};
  if(kind){const request={};if(w)request.weight=w;if(distance)request.distance=distance;if(pet)request.pet=pet;
   if(kind==='hotel'){const labels=(q+' '+fold(previous)).match(/standard plus|standard|daycare|cat condo|deluxe|luxury|presidential|small pet|\bvip\b|thuong/g)||[];const terms=[...new Set(labels.map(t=>t==='thuong'?'standard':t))];if(terms.length>2)return {reply:'Bạn chọn tối đa hai tên loại phòng cần đối chiếu trước nhé. '+booking,understood:false,topic:'clarify'};if(terms.length)request.query=terms.join('|');}
   if(kind==='grooming'&&!/so sanh|khac nhau|cac goi/.test(q)){const source=q+' '+fold(previous),cut=/cat tia/.test(source),bath=/\btam\b/.test(source);if(cut&&!bath)request.query='cắt tỉa';else if(bath&&!cut)request.query='tắm';}

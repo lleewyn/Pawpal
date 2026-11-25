@@ -243,7 +243,7 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     const preliminary=evaluateToxicAndSentiment(question);
     const followupKind=publicContinuity.followupKind(question,preliminary);
     const useTurnHistory=recentConversation&&!assets.length&&
-      (followupKind||publicContinuity.topicFor(question,preliminary));
+      (followupKind||publicContinuity.topicFor(question,preliminary)||preliminary.isDisappointed||preliminary.isImpatient||preliminary.isHighlyUpset);
     const needsSeed=useTurnHistory||guestHelp.isFollowup(question)||memberHelp.isFollowup(question);
     const rules=await service.rpc(needsSeed?'read_public_guest_seed':'read_public_chat_rules',needsSeed?{p_conversation:c.id}:undefined);if(rules.error)throw rules.error;
     if(rules.data.recent_questions!==undefined&&(!Array.isArray(rules.data.recent_questions)||rules.data.recent_questions.length>4||rules.data.recent_questions.some(x=>typeof x!=='string'||x.length>600)))throw Error('invalid_guest_seed');
@@ -270,6 +270,10 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     const urgentHealth=evaluation.riskType==='medical_emergency'||continuation?.topic==='urgent_health';
     const healthConcern=evaluation.riskType==='special_care'||continuation?.topic==='health';
     const continuingSupport=publicContinuity.isSupportTopic(continuation?.topic);
+    const priorUpsetTurn=recentConversation&&(rules.data.recent_questions||[]).some(prev=>{
+     const prevEval=evaluateToxicAndSentiment(prev,rules.data.profanity,rules.data.sentiment);
+     return prevEval.isDisappointed||prevEval.isImpatient||prevEval.isHighlyUpset||prevEval.isImplicitlyUpset;
+    });
     if(urgentHealth){evaluation.detectedLevel=6;evaluation.shouldHandover=true;}
     else if(healthConcern)evaluation.detectedLevel=Math.max(evaluation.detectedLevel,3);
     if(assets.length)evaluation.shouldHandover=true;
@@ -299,10 +303,22 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
        : acknowledgment+' Để bác sĩ thú y nắm tình hình nhanh hơn, khi gọi bạn hãy nói rõ các biểu hiện bắt đầu lúc nào, lần cuối bé ăn hoặc uống và bé có nôn hay không.\n\nNếu bé khó thở, khó đánh thức hoặc không đứng dậy được, hãy đưa bé đến cơ sở cấp cứu thú y ngay.\n\nNếu bạn lo tình trạng này có liên quan đến buổi chăm sóc tại PawPal, bạn có thể gửi mã lịch hẹn để nhân viên kiểm tra lại và đồng hành cùng bạn nhé.';
       if(evaluation.shouldHandover&&!membershipRequired)reply+=' PawPal đã chuyển hội thoại sang chờ nhân viên hỗ trợ thông tin về dịch vụ.';
       if(membershipRequired)evaluation.shouldHandover=false;
-     }else if((evaluation.isHighlyUpset||evaluation.isImplicitlyUpset)&&membershipRequired&&!requestedStaff&&!evaluation.isToxic&&['concern','unresolved'].includes(followupKind)){
-      const acknowledgment=evaluation.isHighlyUpset?supportBoundary.upsetAcknowledgment:supportBoundary.unresolvedAcknowledgment;
+     }else if(priorUpsetTurn&&(evaluation.isHighlyUpset||evaluation.isImplicitlyUpset||evaluation.isDisappointed||evaluation.isImpatient)&&!requestedStaff&&!evaluation.isToxic&&evaluation.riskType==='none'){
+      if(await canHandoff()){
+       evaluation.shouldHandover=true;
+       reply='PawPal rất tiếc vì trải nghiệm chưa làm bạn hài lòng. Bên mình đã chuyển hội thoại sang hàng đợi CSKH để nhân viên trực tiếp lắng nghe và hỗ trợ bạn ngay nhé.';
+      }else{
+       evaluation.shouldHandover=false;
+       reply='PawPal rất tiếc vì trải nghiệm chưa làm bạn hài lòng. Để nhân viên trực tiếp kiểm tra và hỗ trợ ngay cho bạn, bạn [đăng nhập](/login) hoặc gửi thông tin qua mục [Liên hệ](/contact) giúp bên mình nhé.';
+      }
+      understood=false;
+     }else if((evaluation.isHighlyUpset||evaluation.isImplicitlyUpset)&&membershipRequired&&!requestedStaff&&!evaluation.isToxic&&(['concern','unresolved'].includes(followupKind)||evaluation.isDisappointed)){
+      const acknowledgment=evaluation.isHighlyUpset?supportBoundary.upsetAcknowledgment:evaluation.isDisappointed?'PawPal rất tiếc vì trải nghiệm chưa làm bạn hài lòng.':supportBoundary.unresolvedAcknowledgment;
       reply=acknowledgment+' Bạn có thể kể ngắn chuyện vừa xảy ra để bên mình hướng dẫn bước tiếp theo không?';
       evaluation.shouldHandover=false;
+      understood=false;
+     }else if(evaluation.isImpatient&&!requestedStaff&&!evaluation.isToxic&&evaluation.riskType==='none'&&!evaluation.shouldHandover){
+      reply='PawPal xin lỗi vì để bạn phải chờ lâu. Bạn cho PawPal biết bạn đang cần hỗ trợ về đơn hàng, lịch hẹn hay dịch vụ nào để mình kiểm tra ngay nhé?';
       understood=false;
      }else if(evaluation.shouldHandover){
       reply='PawPal đã chuyển cuộc trò chuyện sang hàng đợi hỗ trợ. Khi có nhân viên tiếp nhận, họ có thể đọc phần bạn đã trao đổi.';
@@ -371,6 +387,9 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      }
      }
      if(typeof reply!=='string'||!reply.trim())throw Error('empty_reply');
+     if(evaluation.isMildlyAnxious&&!evaluation.isToxic&&evaluation.riskType==='none'&&!/^(?:PawPal (?:hiểu|rất tiếc|rất vui|xin lỗi)|Bạn yên tâm|Đừng lo|Thấy bé)/iu.test(reply)){
+      reply='Bạn yên tâm nhé, nhiều bé lần đầu đến hoặc hơi nhút nhát cũng thường bỡ ngỡ như vậy, nhân viên PawPal sẽ làm quen nhẹ nhàng với bé.\n\n'+reply;
+     }
      reply=reply.replace(/\s*\((?:Nguồn|Source)\s*:[^)]*\bchatbot_knowledge_faq\b[^)]*\)/giu,'');
      reply=reply.replace(/\b(?:public\.)?chatbot_knowledge_faq\b/gi,'kho thông tin PawPal');
      reply=guestHelp.friendly(reply);
