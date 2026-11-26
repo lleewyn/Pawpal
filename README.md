@@ -42,11 +42,11 @@ Sau lần cài đặt đầu tiên, dùng `npm start` để chạy lại. Lệnh
 
 ### Hướng dẫn đăng nhập
 
-Chọn trang đăng nhập theo vai trò, sau đó nhập tài khoản kiểm thử tương ứng.
+Chọn trang đăng nhập theo vai trò, sau đó nhập thông tin từ các biến tài khoản kiểm thử trong `.env`.
 
-- **Quản trị viên** vào trang đăng nhập quản trị. Email `admin.local@pawpal.test`, mật khẩu `pawpal@123`.
-- **Nhân viên** vào trang đăng nhập quản trị. Email `nguyentest@gmail.com`, mật khẩu `0987412365`.
-- **Khách hàng thành viên** vào trang đăng nhập khách hàng. Tên đăng nhập `0007277387`, mật khẩu `Pawpal@123`.
+- **Quản trị viên** vào trang đăng nhập quản trị. Dùng email `PAWPAL_TEST_ADMIN_EMAIL` và mật khẩu `PAWPAL_TEST_ADMIN_PASSWORD`.
+- **Nhân viên** vào trang đăng nhập quản trị. Dùng email `PAWPAL_TEST_STAFF_EMAIL` và mật khẩu `PAWPAL_TEST_STAFF_PASSWORD`.
+- **Khách hàng thành viên** vào trang đăng nhập khách hàng. Dùng tên đăng nhập `PAWPAL_TEST_CUSTOMER_LOGIN` và mật khẩu `PAWPAL_TEST_CUSTOMER_PASSWORD`.
 
 ### Mẫu cấu hình `.env`
 
