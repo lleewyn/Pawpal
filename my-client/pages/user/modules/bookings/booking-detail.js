@@ -608,6 +608,8 @@ function handleCancelBooking() {
     const id = currentBooking.id;
     openBookingCancelModal(currentBooking, () => loadBookingDetail(id));
 }
+window.handleChangeSchedule = handleChangeSchedule;
+window.handleCancelBooking = handleCancelBooking;
 
 function showErrorBanner() {
     const banner = document.getElementById('errorBanner');

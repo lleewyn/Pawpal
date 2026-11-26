@@ -116,7 +116,7 @@ function renderHold(){
  if(!state.hold)return;
  const banner=document.createElement('p');banner.dataset.bookingHold='';banner.setAttribute('role','status');
  const timer=document.createElement('strong');timer.className='booking-hold-time';timer.setAttribute('role','timer');
- banner.append('Giữ chỗ còn',timer);
+ banner.append('Giữ chỗ còn ',timer);
  placeHoldBanner(banner);
  const tick=()=>{
   const seconds=Math.max(0,Math.ceil((state.hold.deadline-Date.now())/1000));
