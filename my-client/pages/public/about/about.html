@@ -1,192 +1,234 @@
 <!DOCTYPE html>
 
 <html lang="vi">
+
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Về chúng tôi - PawPal</title>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&amp;family=Lora:ital,wght@0,400..700;1,400..700&amp;display=swap" rel="stylesheet"/>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
-<link href="/styles/style.css" rel="stylesheet"/>
-<link href="/pages/public/about/about.css?v=20261112-companions-5" rel="stylesheet"/>
-<script defer="" src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
-<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script defer="" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/scripts/api/supabase-client.js"></script>
-<script src="/scripts/api/api-global.js" type="module"></script>
-<script defer="" src="/scripts/shared/data-loader.js"></script>
-<script defer="" src="/components/header/header.js"></script>
-<script defer="" src="/scripts/shared/components.js"></script>
-<script defer="" src="/scripts/shared/spa-router.js"></script>
-<script src="/scripts/shared/main.js" type="module"></script>
-<script src="/scripts/shared/auth.js" type="module"></script>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Về chúng tôi - PawPal</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&amp;family=Lora:ital,wght@0,400..700;1,400..700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/styles/style.css" rel="stylesheet" />
+    <link href="/pages/public/about/about.css?v=20261112-companions-5" rel="stylesheet" />
+    <script defer="" src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+    <script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script defer="" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/scripts/api/supabase-client.js"></script>
+    <script src="/scripts/api/api-global.js" type="module"></script>
+    <script defer="" src="/scripts/shared/data-loader.js"></script>
+    <script defer="" src="/components/header/header.js"></script>
+    <script defer="" src="/scripts/shared/components.js"></script>
+    <script defer="" src="/scripts/shared/spa-router.js"></script>
+    <script src="/scripts/shared/main.js" type="module"></script>
+    <script src="/scripts/shared/auth.js" type="module"></script>
 </head>
+
 <body class="about-page">
-<header class="main-header" id="mainHeader">
-<!-- Thanh thông báo -->
-<nav class="navbar navbar-expand-custom p-0" data-bs-theme="light">
-<div class="header-container">
-<!-- Bên trái: Logo + Tìm kiếm -->
-<div class="header-left">
-<a class="navbar-brand logo" href="/">
-<img alt="PawPal" src="/assets/images/logo/Logo_pawpal.png"/>
-</a>
-<div class="search-bar">
-<svg class="search-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-<circle cx="11" cy="11" r="8"></circle>
-<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
-</svg>
-<input placeholder="Tìm kiếm..." type="text"/>
-</div>
-</div>
-<!-- Nút đóng/mở Mobile -->
-<button aria-controls="primaryNavigation" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler mobile-nav-toggle" id="mobileNavToggle" type="button">
-<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-<line x1="4" x2="20" y1="12" y2="12"></line>
-<line x1="4" x2="20" y1="6" y2="6"></line>
-<line x1="4" x2="20" y1="18" y2="18"></line>
-</svg>
-</button>
-<div class="nav-menu" id="primaryNavigation">
-<!-- Nav links — mx-auto căn giữa trong collapse -->
-<ul class="navbar-nav mx-auto">
-<li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
-<li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="/services">Dịch vụ<svg class="ui-spacing-3" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
-<ul class="dropdown-menu">
-<li><a class="dropdown-item fw-bold" href="/services">Tất cả dịch vụ</a></li>
-<li><hr class="dropdown-divider"/></li>
-<li><a class="dropdown-item" href="/services?category=spa">Tắm và Cắt tỉa</a></li>
-<li><a class="dropdown-item" href="/services?category=hotel">Khách sạn thú cưng</a></li>
-<li><a class="dropdown-item" href="/services?category=taxi">Đưa rước thú cưng</a></li>
-<li><hr class="dropdown-divider"/></li>
-<li><a class="dropdown-item text-primary fw-bold" href="/booking">Đặt lịch ngay</a></li>
-</ul>
-</li>
-<li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="/shop">Cửa hàng<svg class="ui-spacing-3" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
-<ul class="dropdown-menu">
-<li><a class="dropdown-item fw-bold" href="/shop">Tất cả sản phẩm</a></li>
-<li><hr class="dropdown-divider"/></li>
-<li><a class="dropdown-item" href="/shop?category=food">Thức ăn và Dinh dưỡng</a></li>
-<li><a class="dropdown-item" href="/shop?category=care">Chăm sóc và Vệ sinh</a></li>
-<li><a class="dropdown-item" href="/shop?category=toys">Đồ chơi và Phụ kiện</a></li>
-<li><a class="dropdown-item" href="/shop?category=other">Khác</a></li>
-</ul>
-</li>
-<li class="nav-item"><a class="nav-link active" href="/about">Về chúng tôi</a></li>
-<li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="/blog">Cẩm nang<svg class="ui-spacing-3" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
-<ul class="dropdown-menu">
-<li><a class="dropdown-item fw-bold" href="/blog">Tất cả bài viết</a></li>
-<li><hr class="dropdown-divider"/></li>
-<li><a class="dropdown-item" href="/blog?category=dog">Chăm sóc chó</a></li>
-<li><a class="dropdown-item" href="/blog?category=cat">Chăm sóc mèo</a></li>
-<li><a class="dropdown-item" href="/blog?category=tips">Mẹo vặt và Đời sống</a></li>
-<li><a class="dropdown-item" href="/blog?category=events">Sự kiện và Khuyến mãi</a></li>
-</ul>
-</li>
-<li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
-<!-- Chỉ Mobile - Chung -->
-<li class="nav-item mobile-drawer-only mobile-cta-item">
-<a class="nav-link nav-link-cta-mobile" href="/booking">Đặt lịch ngay</a>
-</li>
-<!-- Chỉ Mobile - Khách -->
-<li class="nav-item mobile-drawer-only mobile-guest-only">
-<a class="nav-link" href="/return-guest">Tra đơn hàng / lịch</a>
-</li>
-<li class="nav-item mobile-drawer-only mobile-guest-only">
-<a class="nav-link" href="/login">Đăng nhập</a>
-</li>
-<li class="nav-item mobile-drawer-only mobile-guest-only">
-<a class="nav-link nav-link-cta-mobile" href="/login#register">Đăng ký</a>
-</li>
-<!-- Chỉ Mobile - Đã đăng nhập -->
-<li class="nav-item mobile-drawer-only mobile-user-only mobile-account-group d-none">
-<button aria-expanded="false" class="nav-link mobile-account-toggle" type="button">
-<span>Tài khoản của tôi</span>
-<svg class="mobile-account-chevron" fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
-<polyline points="6 9 12 15 18 9"></polyline>
-</svg>
-</button>
-<div class="mobile-account-submenu">
-<a class="nav-link mobile-account-child" href="/pages/user/#profile">Hồ sơ cá nhân</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#pets">Hồ sơ bé cưng</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#bookings">Lịch hẹn của tôi</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#orders">Đơn hàng của tôi</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#wishlist">Yêu thích</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#diary">Nhật ký chăm sóc</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#loyalty">Paw Points</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#settings">Cài đặt</a>
-<a class="nav-link mobile-account-child" href="/cart">
+    <header class="main-header" id="mainHeader">
+        <!-- Thanh thông báo -->
+        <nav class="navbar navbar-expand-custom p-0" data-bs-theme="light">
+            <div class="header-container">
+                <!-- Bên trái: Logo + Tìm kiếm -->
+                <div class="header-left">
+                    <a class="navbar-brand logo" href="/">
+                        <img alt="PawPal" src="/assets/images/logo/Logo_pawpal.png" />
+                    </a>
+                    <div class="search-bar">
+                        <svg class="search-icon" fill="none" stroke="currentColor" stroke-linecap="round"
+                            stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+                        </svg>
+                        <input placeholder="Tìm kiếm..." type="text" />
+                    </div>
+                </div>
+                <!-- Nút đóng/mở Mobile -->
+                <button aria-controls="primaryNavigation" aria-expanded="false" aria-label="Toggle navigation"
+                    class="navbar-toggler mobile-nav-toggle" id="mobileNavToggle" type="button">
+                    <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                        stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="4" x2="20" y1="12" y2="12"></line>
+                        <line x1="4" x2="20" y1="6" y2="6"></line>
+                        <line x1="4" x2="20" y1="18" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="nav-menu" id="primaryNavigation">
+                    <!-- Nav links — mx-auto căn giữa trong collapse -->
+                    <ul class="navbar-nav mx-auto">
+                        <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="/services">Dịch vụ<svg class="ui-spacing-3"
+                                    fill="none" height="14" stroke="currentColor" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item fw-bold" href="/services">Tất cả dịch vụ</a></li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li><a class="dropdown-item" href="/services?category=spa">Tắm và Cắt tỉa</a></li>
+                                <li><a class="dropdown-item" href="/services?category=hotel">Khách sạn thú cưng</a></li>
+                                <li><a class="dropdown-item" href="/services?category=taxi">Đưa rước thú cưng</a></li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li><a class="dropdown-item text-primary fw-bold" href="/booking">Đặt lịch ngay</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="/shop">Cửa hàng<svg class="ui-spacing-3"
+                                    fill="none" height="14" stroke="currentColor" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item fw-bold" href="/shop">Tất cả sản phẩm</a></li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li><a class="dropdown-item" href="/shop?category=food">Thức ăn và Dinh dưỡng</a></li>
+                                <li><a class="dropdown-item" href="/shop?category=care">Chăm sóc và Vệ sinh</a></li>
+                                <li><a class="dropdown-item" href="/shop?category=toys">Đồ chơi và Phụ kiện</a></li>
+                                <li><a class="dropdown-item" href="/shop?category=other">Khác</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link active" href="/about">Về chúng tôi</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="/blog">Cẩm nang<svg class="ui-spacing-3"
+                                    fill="none" height="14" stroke="currentColor" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item fw-bold" href="/blog">Tất cả bài viết</a></li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li><a class="dropdown-item" href="/blog?category=dog">Chăm sóc chó</a></li>
+                                <li><a class="dropdown-item" href="/blog?category=cat">Chăm sóc mèo</a></li>
+                                <li><a class="dropdown-item" href="/blog?category=tips">Mẹo vặt và Đời sống</a></li>
+                                <li><a class="dropdown-item" href="/blog?category=events">Sự kiện và Khuyến mãi</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
+                        <!-- Chỉ Mobile - Chung -->
+                        <li class="nav-item mobile-drawer-only mobile-cta-item">
+                            <a class="nav-link nav-link-cta-mobile" href="/booking">Đặt lịch ngay</a>
+                        </li>
+                        <!-- Chỉ Mobile - Khách -->
+                        <li class="nav-item mobile-drawer-only mobile-guest-only">
+                            <a class="nav-link" href="/return-guest">Tra đơn hàng / lịch</a>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-guest-only">
+                            <a class="nav-link" href="/login">Đăng nhập</a>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-guest-only">
+                            <a class="nav-link nav-link-cta-mobile" href="/login#register">Đăng ký</a>
+                        </li>
+                        <!-- Chỉ Mobile - Đã đăng nhập -->
+                        <li class="nav-item mobile-drawer-only mobile-user-only mobile-account-group d-none">
+                            <button aria-expanded="false" class="nav-link mobile-account-toggle" type="button">
+                                <span>Tài khoản của tôi</span>
+                                <svg class="mobile-account-chevron" fill="none" height="14" stroke="currentColor"
+                                    stroke-width="2" viewbox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <div class="mobile-account-submenu">
+                                <a class="nav-link mobile-account-child" href="/pages/user/#profile">Hồ sơ cá nhân</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#pets">Hồ sơ bé cưng</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#bookings">Lịch hẹn của
+                                    tôi</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#orders">Đơn hàng của tôi</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#wishlist">Yêu thích</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#diary">Nhật ký chăm sóc</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#loyalty">Paw Points</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#settings">Cài đặt</a>
+                                <a class="nav-link mobile-account-child" href="/cart">
                                     Giỏ hàng của tôi <span class="cart-badge-mobile cart-badge-mobile-custom"></span>
-</a>
-</div>
-</li>
-<li class="nav-item mobile-drawer-only mobile-user-only mobile-logout-separate d-none">
-<a class="nav-link mobile-logout-btn text-danger-custom" href="#">Đăng xuất</a>
-</li>
-<!-- Chỉ Mobile - Tài khoản tạm thời -->
-<li class="nav-item mobile-drawer-only mobile-temp-only mobile-temp-item-padding">
-<div class="temp-account-warning temp-account-warning-custom">
-<svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
-<circle cx="12" cy="12" r="10"></circle>
-<line x1="12" x2="12" y1="8" y2="12"></line>
-<line x1="12" x2="12.01" y1="16" y2="16"></line>
-</svg>
-<span>Tài khoản tạm</span>
-</div>
-</li>
-<li class="nav-item mobile-drawer-only mobile-temp-only d-none">
-<a class="nav-link nav-link-cta-mobile" href="/pages/public/login/login.html?action=setup-password">Kích hoạt tài khoản</a>
-</li>
-<li class="nav-item mobile-drawer-only mobile-temp-only d-none">
-<a class="nav-link mobile-logout-btn text-danger-custom" href="#">Đăng xuất</a>
-</li>
-</ul>
-</div>
-<!-- Hành động Desktop - ngoài collapse, ngang hàng với logo -->
-<div class="header-actions" id="headerActionsDesktop">
-<!-- Dòng chia cách -->
-<span class="header-divider lookup-divider"></span>
-<!-- Tra đơn hàng / lịch -->
-<a class="lookup-btn" href="/return-guest">
-<svg fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
-<circle cx="11" cy="11" r="8"></circle>
-<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
-</svg>
-<span>Tra đơn hàng / lịch</span>
-</a>
-<!-- Dòng chia cách -->
-<span class="header-divider"></span>
-<!-- Đặt lịch CTA -->
-<a class="btn-header-cta" href="/booking">Đặt lịch</a>
-<div class="auth-actions d-flex align-items-center">
-<a class="cart-btn position-relative me-3" href="/cart" id="headerCartBtn" title="Giỏ hàng của tôi">
-<svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
-<circle cx="9" cy="21" r="1"></circle>
-<circle cx="20" cy="21" r="1"></circle>
-<path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-</svg>
-<span class="cart-badge">0</span>
-</a>
-<a class="login-btn" href="/login">
-<svg fill="none" height="17" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="17" xmlns="http://www.w3.org/2000/svg">
-<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-<circle cx="12" cy="7" r="4"></circle>
-</svg>
-<span>Đăng nhập</span>
-</a>
-<a class="btn-signup" href="/login#register">Đăng ký</a>
-</div>
-</div>
-</div>
-<script>
-                (function() {
+                                </a>
+                            </div>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-user-only mobile-logout-separate d-none">
+                            <a class="nav-link mobile-logout-btn text-danger-custom" href="#">Đăng xuất</a>
+                        </li>
+                        <!-- Chỉ Mobile - Tài khoản tạm thời -->
+                        <li class="nav-item mobile-drawer-only mobile-temp-only mobile-temp-item-padding">
+                            <div class="temp-account-warning temp-account-warning-custom">
+                                <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
+                                    width="16" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" x2="12" y1="8" y2="12"></line>
+                                    <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                                </svg>
+                                <span>Tài khoản tạm</span>
+                            </div>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-temp-only d-none">
+                            <a class="nav-link nav-link-cta-mobile"
+                                href="/pages/public/login/login.html?action=setup-password">Kích hoạt tài khoản</a>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-temp-only d-none">
+                            <a class="nav-link mobile-logout-btn text-danger-custom" href="#">Đăng xuất</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Hành động Desktop - ngoài collapse, ngang hàng với logo -->
+                <div class="header-actions" id="headerActionsDesktop">
+                    <!-- Dòng chia cách -->
+                    <span class="header-divider lookup-divider"></span>
+                    <!-- Tra đơn hàng / lịch -->
+                    <a class="lookup-btn" href="/return-guest">
+                        <svg fill="none" height="15" stroke="currentColor" stroke-linecap="round"
+                            stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="15"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+                        </svg>
+                        <span>Tra đơn hàng / lịch</span>
+                    </a>
+                    <!-- Dòng chia cách -->
+                    <span class="header-divider"></span>
+                    <!-- Đặt lịch CTA -->
+                    <a class="btn-header-cta" href="/booking">Đặt lịch</a>
+                    <div class="auth-actions d-flex align-items-center">
+                        <a class="cart-btn position-relative me-3" href="/cart" id="headerCartBtn"
+                            title="Giỏ hàng của tôi">
+                            <svg fill="none" height="20" stroke="currentColor" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span class="cart-badge">0</span>
+                        </a>
+                        <a class="login-btn" href="/login">
+                            <svg fill="none" height="17" stroke="currentColor" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="17"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Đăng nhập</span>
+                        </a>
+                        <a class="btn-signup" href="/login#register">Đăng ký</a>
+                    </div>
+                </div>
+            </div>
+            <script>
+                (function () {
                     try {
                         var u = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
                         if (u && !u.is_temporary) {
@@ -201,176 +243,211 @@
                             var ld = document.querySelector('.main-header .lookup-divider');
                             if (ld) ld.classList.add('d-none');
                         }
-                    } catch(e) {}
+                    } catch (e) { }
                 })();
             </script>
-</nav>
-</header>
-<main class="page active ap-page" id="aboutEditorial">
-    <section class="ap-opening" aria-labelledby="apHeading">
-        <div class="ap-container ap-opening-grid">
-            <div class="ap-opening-copy">
-                <p class="ap-kicker">PAWPAL STORIES <span class="ap-kicker-line" aria-hidden="true"></span> CÂU CHUYỆN CỦA CHÚNG MÌNH</p>
-                <h1 id="apHeading">Mỗi bé có <em>một thế giới riêng.</em></h1>
-                <p class="ap-opening-lead">Có bé chạy ngay đến làm quen. Có bé chỉ yên tâm khi được chờ thêm một chút. Và có những thói quen nhỏ mà chỉ người thương bé mới hiểu.</p>
-                <p class="ap-opening-note">PawPal được xây dựng từ mong muốn lắng nghe những điều riêng ấy, để hành trình chăm sóc bắt đầu bằng sự thấu hiểu.</p>
-                <a class="ap-story-link" href="#mot-ngay-cua-be">Đi cùng chúng mình qua một ngày của bé <span aria-hidden="true">↘</span></a>
-                <div class="ap-opening-index" aria-hidden="true"><span>01</span><span class="ap-index-bar"></span><span>03</span></div>
-            </div>
-            <div class="ap-opening-visual">
-                <figure class="ap-opening-photo">
-                    <img src="/assets/images/about-editorial/spa_bath.webp" alt="Chú chó vui vẻ, thư giãn trong lúc được tắm và chăm sóc" fetchpriority="high" />
-                    <img class="ap-opening-bird" src="/assets/images/about-editorial/perched-cockatiel.webp" alt="" aria-hidden="true" width="800" height="1000" decoding="async" />
-                    <figcaption>Một khoảnh khắc chăm sóc dịu dàng.</figcaption>
-                </figure>
-                <figure class="ap-opening-mini">
-                    <img src="/assets/images/about-editorial/pet_lu.webp" alt="Chú cún vàng nhỏ bên bữa ăn quen thuộc" loading="lazy" />
-                    <figcaption>Những điều thân quen làm nên cảm giác an tâm.</figcaption>
-                </figure>
-            </div>
-        </div>
-    </section>
-
-    <section class="ap-statement" aria-label="Điều PawPal tin tưởng">
-        <div class="ap-companions-anchor" aria-hidden="true">
-            <img class="ap-companions" src="/assets/images/about-editorial/curious-companions.webp?v=2" alt="" width="1200" height="800" loading="lazy" decoding="async" />
-        </div>
-        <div class="ap-container ap-statement-inner">
-            <p class="ap-kicker ap-kicker-light">ĐIỀU CHÚNG MÌNH TIN</p>
-            <p class="ap-statement-quote">Có những điều bé chưa thể nói thành lời. <em>Nhưng chúng ta luôn có thể dành thời gian để hiểu.</em></p>
-            <span class="ap-statement-signature">— Một chút yêu thương, bắt đầu từ việc lắng nghe.</span>
-        </div>
-    </section>
-
-    <section class="ap-chapter ap-chapter-first" id="mot-ngay-cua-be" aria-labelledby="apChapterOneHeading">
-        <div class="ap-container ap-chapter-grid">
-            <figure class="ap-chapter-visual ap-chapter-photo-puppy">
-                <img src="/assets/images/about-editorial/pet_lu.webp" alt="Chú cún nhỏ ở cạnh chiếc bát ăn trong một khoảnh khắc thường ngày" loading="lazy" />
-                <figcaption>Đôi khi, chuyện quan trọng nhất chỉ là bữa ăn quen thuộc.</figcaption>
-            </figure>
-            <div class="ap-chapter-copy">
-                <p class="ap-kicker">CHƯƠNG MỘT <span class="ap-kicker-line" aria-hidden="true"></span> THẾ GIỚI CỦA BÉ</p>
-                <h2 id="apChapterOneHeading">Thấu hiểu bắt đầu từ <em>những điều rất nhỏ.</em></h2>
-                <p>Một giờ ăn quen. Một món đồ chơi yêu thích. Một góc nằm giúp bé thấy yên tâm. Với người ngoài, đó có thể chỉ là những chi tiết vụn vặt; với bé, đó lại là cả một nhịp sống.</p>
-                <p>Vì vậy, khi sen chia sẻ về thói quen, tính cách hoặc những điều bé còn e dè, PawPal muốn lắng nghe thật kỹ — trước cả khi nói đến một dịch vụ.</p>
-                <span class="ap-margin-quote">“Mỗi bé đều xứng đáng được chăm sóc theo cách phù hợp với chính mình.”</span>
-            </div>
-        </div>
-    </section>
-
-    <section class="ap-chapter ap-chapter-second" aria-labelledby="apChapterTwoHeading">
-        <div class="ap-edge-pet-anchor" aria-hidden="true">
-            <img class="ap-edge-pet ap-standing-hamster" src="/assets/images/about-editorial/seed-hamster.webp" alt="" width="800" height="1000" loading="lazy" decoding="async" />
-            <img class="ap-edge-pet ap-sitting-rabbit" src="/assets/images/about-editorial/sitting-rabbit.webp" alt="" width="1200" height="800" loading="lazy" decoding="async" />
-        </div>
-        <div class="ap-container ap-chapter-grid ap-chapter-reverse">
-            <div class="ap-chapter-copy">
-                <p class="ap-kicker">CHƯƠNG HAI <span class="ap-kicker-line" aria-hidden="true"></span> SỰ DỊU DÀNG</p>
-                <h2 id="apChapterTwoHeading">Chăm sóc không chỉ là <em>làm đủ các bước.</em></h2>
-                <p>Đôi khi, điều một bé cần nhất là một nhịp chậm hơn: một bàn tay nhẹ nhàng, một khoảng nghỉ ngắn, hoặc một người sẵn lòng chú ý khi bé chưa thoải mái.</p>
-                <p>Đó là tinh thần PawPal hướng đến trong từng điểm chạm: thông tin rõ ràng để sen chủ động, và sự quan tâm đến những nhu cầu riêng để bé được chăm sóc với sự tôn trọng.</p>
-                <a class="ap-underlined-link" href="/services">Khám phá cách PawPal chăm sóc bé <span aria-hidden="true">↗</span></a>
-            </div>
-            <figure class="ap-chapter-visual ap-chapter-photo-care">
-                <img src="/assets/images/services/spa/process/spa05.webp" alt="Chú mèo được chăm sóc móng cẩn thận" loading="lazy" />
-                <figcaption>Sự chăm chút nằm trong từng thao tác nhỏ.</figcaption>
-            </figure>
-        </div>
-    </section>
-
-    <section class="ap-photo-essay" aria-labelledby="apEssayHeading">
-        <div class="ap-container">
-            <div class="ap-photo-essay-heading">
-                <div>
-                    <p class="ap-kicker">PET JOURNAL <span class="ap-kicker-line" aria-hidden="true"></span> NHỮNG KHOẢNH KHẮC ĐỜI THƯỜNG</p>
-                    <h2 id="apEssayHeading">Điều đáng nhớ đôi khi <em>rất đỗi bình thường.</em></h2>
+        </nav>
+    </header>
+    <main class="page active ap-page" id="aboutEditorial">
+        <section class="ap-opening" aria-labelledby="apHeading">
+            <div class="ap-container ap-opening-grid">
+                <div class="ap-opening-copy">
+                    <p class="ap-kicker">PAWPAL STORIES <span class="ap-kicker-line" aria-hidden="true"></span> CÂU
+                        CHUYỆN CỦA CHÚNG MÌNH</p>
+                    <h1 id="apHeading">Mỗi bé có <em>một thế giới riêng.</em></h1>
+                    <p class="ap-opening-lead">Có bé chạy ngay đến làm quen. Có bé chỉ yên tâm khi được chờ thêm một
+                        chút. Và có những thói quen nhỏ mà chỉ người thương bé mới hiểu.</p>
+                    <p class="ap-opening-note">PawPal được xây dựng từ mong muốn lắng nghe những điều riêng ấy, để hành
+                        trình chăm sóc bắt đầu bằng sự thấu hiểu.</p>
+                    <a class="ap-story-link" href="#mot-ngay-cua-be">Đi cùng chúng mình qua một ngày của bé <span
+                            aria-hidden="true">↘</span></a>
+                    <div class="ap-opening-index" aria-hidden="true"><span>01</span><span
+                            class="ap-index-bar"></span><span>03</span></div>
                 </div>
-                <p>Không phải lúc nào cũng là một khoảnh khắc thật đặc biệt. Chỉ cần bé ăn ngon, vui vẻ và được quan tâm — như thế đã là một ngày đáng nhớ.</p>
+                <div class="ap-opening-visual">
+                    <figure class="ap-opening-photo">
+                        <img src="/assets/images/about-editorial/spa_bath.webp"
+                            alt="Chú chó vui vẻ, thư giãn trong lúc được tắm và chăm sóc" fetchpriority="high" />
+                        <img class="ap-opening-bird" src="/assets/images/about-editorial/perched-cockatiel.webp" alt=""
+                            aria-hidden="true" width="800" height="1000" decoding="async" />
+                        <figcaption>Một khoảnh khắc chăm sóc dịu dàng.</figcaption>
+                    </figure>
+                    <figure class="ap-opening-mini">
+                        <img src="/assets/images/about-editorial/pet_lu.webp"
+                            alt="Chú cún vàng nhỏ bên bữa ăn quen thuộc" loading="lazy" />
+                        <figcaption>Những điều thân quen làm nên cảm giác an tâm.</figcaption>
+                    </figure>
+                </div>
             </div>
-            <div class="ap-essay-photos">
-                <figure class="ap-essay-photo ap-essay-photo-first">
-                    <img src="/assets/images/services/spa/process/spa03.webp" alt="Bé cún trong một buổi chăm sóc và tắm rửa" loading="lazy" />
-                    <figcaption>Được nâng niu</figcaption>
-                </figure>
-                <figure class="ap-essay-photo ap-essay-photo-second">
-                    <img src="/assets/images/about-editorial/pet_lu.webp" alt="Cún nhỏ trong giờ ăn" loading="lazy" />
-                    <figcaption>Được là chính mình</figcaption>
-                </figure>
-                <figure class="ap-essay-photo ap-essay-photo-third">
-                    <img src="/assets/images/services/spa/process/spa05.webp" alt="Mèo nhỏ được chăm sóc nhẹ nhàng" loading="lazy" />
-                    <figcaption>Được quan tâm</figcaption>
-                </figure>
-            </div>
-            <p class="ap-image-disclaimer">Hình ảnh minh họa từ thư viện PawPal; không đại diện cho một hồ sơ chăm sóc hay khách hàng cụ thể.</p>
-        </div>
-    </section>
+        </section>
 
-    <section class="ap-values" aria-labelledby="apValuesHeading">
-        <div class="ap-edge-pet-anchor" aria-hidden="true">
-            <img class="ap-edge-pet ap-lounging-cat" src="/assets/images/about-editorial/lounging-tabby.webp" alt="" width="1200" height="800" loading="lazy" decoding="async" />
-        </div>
-        <div class="ap-container">
-            <div class="ap-values-header">
-                <p class="ap-kicker">TỪ CÂU CHUYỆN ĐẾN CÁCH LÀM</p>
-                <h2 id="apValuesHeading">Ba điều PawPal muốn <em>giữ trong từng trải nghiệm.</em></h2>
+        <section class="ap-statement" aria-label="Điều PawPal tin tưởng">
+            <div class="ap-companions-anchor" aria-hidden="true">
+                <img class="ap-companions" src="/assets/images/about-editorial/curious-companions.webp?v=2" alt=""
+                    width="1200" height="800" loading="lazy" decoding="async" />
             </div>
-            <div class="ap-value-columns">
-                <article class="ap-value">
-                    <h3>Lắng nghe</h3>
-                    <p>Trân trọng những lưu ý và thói quen sen chia sẻ về bé, kể cả những chi tiết rất nhỏ.</p>
-                </article>
-                <article class="ap-value">
-                    <h3>Rõ ràng</h3>
-                    <p>Giúp sen tìm hiểu dịch vụ, xem thông tin và lựa chọn phù hợp mà không phải đoán.</p>
-                </article>
-                <article class="ap-value">
-                    <h3>Đồng hành</h3>
-                    <p>Giữ kết nối qua lịch hẹn, hồ sơ và những ghi nhận chăm sóc khi có thông tin được cập nhật.</p>
-                </article>
+            <div class="ap-container ap-statement-inner">
+                <p class="ap-kicker ap-kicker-light">ĐIỀU CHÚNG MÌNH TIN</p>
+                <p class="ap-statement-quote">Có những điều bé chưa thể nói thành lời. <em>Nhưng chúng ta luôn có thể
+                        dành thời gian để hiểu.</em></p>
+                <span class="ap-statement-signature">— Một chút yêu thương, bắt đầu từ việc lắng nghe.</span>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section class="ap-explore" aria-labelledby="apExploreHeading">
-        <div class="ap-container ap-explore-grid">
-            <div class="ap-explore-intro">
-                <p class="ap-kicker">HÀNH TRÌNH CÒN TIẾP DIỄN</p>
-                <h2 id="apExploreHeading">Và câu chuyện tiếp theo, <em>là của bé.</em></h2>
-                <p>Chọn điều bé đang cần hôm nay. PawPal ở đây để giúp sen khám phá các lựa chọn chăm sóc và theo dõi những thông tin quan trọng một cách thuận tiện.</p>
+        <section class="ap-chapter ap-chapter-first" id="mot-ngay-cua-be" aria-labelledby="apChapterOneHeading">
+            <div class="ap-container ap-chapter-grid">
+                <figure class="ap-chapter-visual ap-chapter-photo-puppy">
+                    <img src="/assets/images/about-editorial/pet_lu.webp"
+                        alt="Chú cún nhỏ ở cạnh chiếc bát ăn trong một khoảnh khắc thường ngày" loading="lazy" />
+                    <figcaption>Đôi khi, chuyện quan trọng nhất chỉ là bữa ăn quen thuộc.</figcaption>
+                </figure>
+                <div class="ap-chapter-copy">
+                    <p class="ap-kicker">CHƯƠNG MỘT <span class="ap-kicker-line" aria-hidden="true"></span> THẾ GIỚI CỦA
+                        BÉ</p>
+                    <h2 id="apChapterOneHeading">Thấu hiểu bắt đầu từ <em>những điều rất nhỏ.</em></h2>
+                    <p>Một giờ ăn quen. Một món đồ chơi yêu thích. Một góc nằm giúp bé thấy yên tâm. Với người ngoài, đó
+                        có thể chỉ là những chi tiết vụn vặt; với bé, đó lại là cả một nhịp sống.</p>
+                    <p>Vì vậy, khi sen chia sẻ về thói quen, tính cách hoặc những điều bé còn e dè, PawPal muốn lắng
+                        nghe thật kỹ — trước cả khi nói đến một dịch vụ.</p>
+                    <span class="ap-margin-quote">“Mỗi bé đều xứng đáng được chăm sóc theo cách phù hợp với chính
+                        mình.”</span>
+                </div>
             </div>
-            <nav class="ap-explore-list" aria-label="Khám phá PawPal">
-                <a class="ap-explore-item" href="/services">
-                    <span><small>01 / DỊCH VỤ</small><strong>Chọn một buổi chăm sóc phù hợp</strong></span>
-                    <span class="ap-explore-arrow" aria-hidden="true">↗</span>
-                </a>
-                <a class="ap-explore-item" href="/pages/user/#diary">
-                    <span><small>02 / NHẬT KÝ</small><strong>Giữ lại những cập nhật của bé</strong></span>
-                    <span class="ap-explore-arrow" aria-hidden="true">↗</span>
-                </a>
-                <a class="ap-explore-item" href="/shop">
-                    <span><small>03 / CỬA HÀNG</small><strong>Tìm những món đồ cho mỗi ngày</strong></span>
-                    <span class="ap-explore-arrow" aria-hidden="true">↗</span>
-                </a>
-            </nav>
-        </div>
-    </section>
+        </section>
 
-    <section class="ap-closing" aria-labelledby="apClosingHeading">
-        <div class="ap-edge-pet-anchor" aria-hidden="true">
-            <img class="ap-edge-pet ap-closing-dog" src="/assets/images/about-editorial/curious-collie.webp" alt="" width="1200" height="800" loading="lazy" decoding="async" />
-        </div>
-        <div class="ap-container ap-closing-inner">
-            <p class="ap-kicker ap-kicker-light">CÙNG NHAU CHĂM SÓC BÉ</p>
-            <h2 id="apClosingHeading">Một ngày thật vui của bé.<br /><em>Một chút an tâm của sen.</em></h2>
-            <p>Chúng mình mong mỗi lần sen chọn PawPal đều bắt đầu bằng cảm giác: bé được quan tâm, và mình luôn được lắng nghe.</p>
-            <div class="ap-closing-actions">
-                <a class="ap-primary-action" href="/booking">Đặt lịch cho bé <span aria-hidden="true">↗</span></a>
-                <a class="ap-secondary-action" href="/contact">Trò chuyện cùng PawPal <span aria-hidden="true">↗</span></a>
+        <section class="ap-chapter ap-chapter-second" aria-labelledby="apChapterTwoHeading">
+            <div class="ap-edge-pet-anchor" aria-hidden="true">
+                <img class="ap-edge-pet ap-standing-hamster" src="/assets/images/about-editorial/seed-hamster.webp"
+                    alt="" width="800" height="1000" loading="lazy" decoding="async" />
+                <img class="ap-edge-pet ap-sitting-rabbit" src="/assets/images/about-editorial/sitting-rabbit.webp"
+                    alt="" width="1200" height="800" loading="lazy" decoding="async" />
             </div>
-        </div>
-    </section>
-</main>
-<div id="site-footer"></div>
-<div id="site-fab"></div>
+            <div class="ap-container ap-chapter-grid ap-chapter-reverse">
+                <div class="ap-chapter-copy">
+                    <p class="ap-kicker">CHƯƠNG HAI <span class="ap-kicker-line" aria-hidden="true"></span> SỰ DỊU DÀNG
+                    </p>
+                    <h2 id="apChapterTwoHeading">Chăm sóc không chỉ là <em>làm đủ các bước.</em></h2>
+                    <p>Đôi khi, điều một bé cần nhất là một nhịp chậm hơn: một bàn tay nhẹ nhàng, một khoảng nghỉ ngắn,
+                        hoặc một người sẵn lòng chú ý khi bé chưa thoải mái.</p>
+                    <p>Đó là tinh thần PawPal hướng đến trong từng điểm chạm: thông tin rõ ràng để sen chủ động, và sự
+                        quan tâm đến những nhu cầu riêng để bé được chăm sóc với sự tôn trọng.</p>
+                    <a class="ap-underlined-link" href="/services">Khám phá cách PawPal chăm sóc bé <span
+                            aria-hidden="true">↗</span></a>
+                </div>
+                <figure class="ap-chapter-visual ap-chapter-photo-care">
+                    <img src="/assets/images/services/spa/process/spa05.webp" alt="Chú mèo được chăm sóc móng cẩn thận"
+                        loading="lazy" />
+                    <figcaption>Sự chăm chút nằm trong từng thao tác nhỏ.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="ap-photo-essay" aria-labelledby="apEssayHeading">
+            <div class="ap-container">
+                <div class="ap-photo-essay-heading">
+                    <div>
+                        <p class="ap-kicker">PET JOURNAL <span class="ap-kicker-line" aria-hidden="true"></span> NHỮNG
+                            KHOẢNH KHẮC ĐỜI THƯỜNG</p>
+                        <h2 id="apEssayHeading">Điều đáng nhớ đôi khi <em>rất đỗi bình thường.</em></h2>
+                    </div>
+                    <p>Không phải lúc nào cũng là một khoảnh khắc thật đặc biệt. Chỉ cần bé ăn ngon, vui vẻ và được quan
+                        tâm — như thế đã là một ngày đáng nhớ.</p>
+                </div>
+                <div class="ap-essay-photos">
+                    <figure class="ap-essay-photo ap-essay-photo-first">
+                        <img src="/assets/images/services/spa/process/spa03.webp"
+                            alt="Bé cún trong một buổi chăm sóc và tắm rửa" loading="lazy" />
+                        <figcaption>Được nâng niu</figcaption>
+                    </figure>
+                    <figure class="ap-essay-photo ap-essay-photo-second">
+                        <img src="/assets/images/about-editorial/pet_lu.webp" alt="Cún nhỏ trong giờ ăn"
+                            loading="lazy" />
+                        <figcaption>Được là chính mình</figcaption>
+                    </figure>
+                    <figure class="ap-essay-photo ap-essay-photo-third">
+                        <img src="/assets/images/services/spa/process/spa05.webp" alt="Mèo nhỏ được chăm sóc nhẹ nhàng"
+                            loading="lazy" />
+                        <figcaption>Được quan tâm</figcaption>
+                    </figure>
+                </div>
+                <p class="ap-image-disclaimer">Hình ảnh minh họa từ thư viện PawPal; không đại diện cho một hồ sơ chăm
+                    sóc hay khách hàng cụ thể.</p>
+            </div>
+        </section>
+
+        <section class="ap-values" aria-labelledby="apValuesHeading">
+            <div class="ap-edge-pet-anchor" aria-hidden="true">
+                <img class="ap-edge-pet ap-lounging-cat" src="/assets/images/about-editorial/lounging-tabby.webp" alt=""
+                    width="1200" height="800" loading="lazy" decoding="async" />
+            </div>
+            <div class="ap-container">
+                <div class="ap-values-header">
+                    <p class="ap-kicker">TỪ CÂU CHUYỆN ĐẾN CÁCH LÀM</p>
+                    <h2 id="apValuesHeading">Ba điều PawPal muốn <em>giữ trong từng trải nghiệm.</em></h2>
+                </div>
+                <div class="ap-value-columns">
+                    <article class="ap-value">
+                        <h3>Lắng nghe</h3>
+                        <p>Trân trọng những lưu ý và thói quen sen chia sẻ về bé, kể cả những chi tiết rất nhỏ.</p>
+                    </article>
+                    <article class="ap-value">
+                        <h3>Rõ ràng</h3>
+                        <p>Giúp sen tìm hiểu dịch vụ, xem thông tin và lựa chọn phù hợp mà không phải đoán.</p>
+                    </article>
+                    <article class="ap-value">
+                        <h3>Đồng hành</h3>
+                        <p>Giữ kết nối qua lịch hẹn, hồ sơ và những ghi nhận chăm sóc khi có thông tin được cập nhật.
+                        </p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="ap-explore" aria-labelledby="apExploreHeading">
+            <div class="ap-container ap-explore-grid">
+                <div class="ap-explore-intro">
+                    <p class="ap-kicker">HÀNH TRÌNH CÒN TIẾP DIỄN</p>
+                    <h2 id="apExploreHeading">Và câu chuyện tiếp theo, <em>là của bé.</em></h2>
+                    <p>Chọn điều bé đang cần hôm nay. PawPal ở đây để giúp sen khám phá các lựa chọn chăm sóc và theo
+                        dõi những thông tin quan trọng một cách thuận tiện.</p>
+                </div>
+                <nav class="ap-explore-list" aria-label="Khám phá PawPal">
+                    <a class="ap-explore-item" href="/services">
+                        <span><small>01 / DỊCH VỤ</small><strong>Chọn một buổi chăm sóc phù hợp</strong></span>
+                        <span class="ap-explore-arrow" aria-hidden="true">↗</span>
+                    </a>
+                    <a class="ap-explore-item" href="/pages/user/#diary">
+                        <span><small>02 / NHẬT KÝ</small><strong>Giữ lại những cập nhật của bé</strong></span>
+                        <span class="ap-explore-arrow" aria-hidden="true">↗</span>
+                    </a>
+                    <a class="ap-explore-item" href="/shop">
+                        <span><small>03 / CỬA HÀNG</small><strong>Tìm những món đồ cho mỗi ngày</strong></span>
+                        <span class="ap-explore-arrow" aria-hidden="true">↗</span>
+                    </a>
+                </nav>
+            </div>
+        </section>
+
+        <section class="ap-closing" aria-labelledby="apClosingHeading">
+            <div class="ap-edge-pet-anchor" aria-hidden="true">
+                <img class="ap-edge-pet ap-closing-dog" src="/assets/images/about-editorial/curious-collie.webp" alt=""
+                    width="1200" height="800" loading="lazy" decoding="async" />
+            </div>
+            <div class="ap-container ap-closing-inner">
+                <p class="ap-kicker ap-kicker-light">CÙNG NHAU CHĂM SÓC BÉ</p>
+                <h2 id="apClosingHeading">Một ngày thật vui của bé.<br /><em>Một chút an tâm của sen.</em></h2>
+                <p>Chúng mình mong mỗi lần sen chọn PawPal đều bắt đầu bằng cảm giác: bé được quan tâm, và mình luôn
+                    được lắng nghe.</p>
+                <div class="ap-closing-actions">
+                    <a class="ap-primary-action" href="/booking">Đặt lịch cho bé <span aria-hidden="true">↗</span></a>
+                    <a class="ap-secondary-action" href="/contact">Trò chuyện cùng PawPal <span
+                            aria-hidden="true">↗</span></a>
+                </div>
+            </div>
+        </section>
+    </main>
+    <div id="site-footer"></div>
+    <div id="site-fab"></div>
 </body>
+
 </html>

@@ -1,169 +1,221 @@
 <!doctype html>
-<html lang="vi" class="landing-v218"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PawPal — Chăm sóc bằng cả trái tim</title><meta name="description" content="Chọn dịch vụ chăm sóc, lưu trú và đưa đón cho bé. Theo dõi nhật ký chăm sóc và khám phá cửa hàng PawPal.">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="/styles/style.css"><link rel="stylesheet" href="/pages/public/landing/landing.css?v=222-pets">
-<script src="/scripts/vendor/supabase.js"></script><script src="/scripts/api/supabase-client.js"></script>
-<script type="module" src="/scripts/api/api-global.js"></script><script type="module" src="/scripts/shared/auth.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
-<script src="/scripts/shared/data-loader.js" defer></script><script src="/scripts/shared/components.js" defer></script>
-<script src="/components/header/header.js" defer></script><script src="/pages/public/landing/landing.js?v=219-performance" defer></script>
-</head><body class="landing-v218" id="top"><a class="home-skip" href="#services">Chuyển đến dịch vụ</a>
-<header class="main-header" id="mainHeader">
-<!-- Thanh thông báo -->
-<nav class="navbar navbar-expand-custom p-0" data-bs-theme="light">
-<div class="header-container">
-<!-- Bên trái: Logo + Tìm kiếm -->
-<div class="header-left">
-<a class="navbar-brand logo" href="/">
-<img alt="PawPal" src="/assets/images/logo/Logo_pawpal.png"/>
-</a>
-<div class="search-bar">
-<svg class="search-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-<circle cx="11" cy="11" r="8"></circle>
-<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
-</svg>
-<input placeholder="Tìm kiếm..." type="text"/>
-</div>
-</div>
-<!-- Nút đóng/mở Mobile -->
-<button aria-controls="primaryNavigation" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler mobile-nav-toggle" id="mobileNavToggle" type="button">
-<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-<line x1="4" x2="20" y1="12" y2="12"></line>
-<line x1="4" x2="20" y1="6" y2="6"></line>
-<line x1="4" x2="20" y1="18" y2="18"></line>
-</svg>
-</button>
-<div class="nav-menu" id="primaryNavigation">
-<!-- Nav links — mx-auto căn giữa trong collapse -->
-<ul class="navbar-nav mx-auto">
-<li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
-<li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="/services">Dịch vụ<svg class="ui-spacing-3" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
-<ul class="dropdown-menu">
-<li><a class="dropdown-item fw-bold" href="/services">Tất cả dịch vụ</a></li>
-<li><hr class="dropdown-divider"/></li>
-<li><a class="dropdown-item" href="/services?category=spa">Tắm và Cắt tỉa</a></li>
-<li><a class="dropdown-item" href="/services?category=hotel">Khách sạn thú cưng</a></li>
-<li><a class="dropdown-item" href="/services?category=taxi">Đưa rước thú cưng</a></li>
-<li><hr class="dropdown-divider"/></li>
-<li><a class="dropdown-item text-primary fw-bold" href="/booking">Đặt lịch ngay</a></li>
-</ul>
-</li>
-<li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="/shop">Cửa hàng<svg class="ui-spacing-3" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
-<ul class="dropdown-menu">
-<li><a class="dropdown-item fw-bold" href="/shop">Tất cả sản phẩm</a></li>
-<li><hr class="dropdown-divider"/></li>
-<li><a class="dropdown-item" href="/shop?category=food">Thức ăn và Dinh dưỡng</a></li>
-<li><a class="dropdown-item" href="/shop?category=care">Chăm sóc và Vệ sinh</a></li>
-<li><a class="dropdown-item" href="/shop?category=toys">Đồ chơi và Phụ kiện</a></li>
-<li><a class="dropdown-item" href="/shop?category=other">Khác</a></li>
-</ul>
-</li>
-<li class="nav-item"><a class="nav-link" href="/about">Về chúng tôi</a></li>
-<li class="nav-item dropdown">
-<a class="nav-link dropdown-toggle" href="/blog">Cẩm nang<svg class="ui-spacing-3" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
-<ul class="dropdown-menu">
-<li><a class="dropdown-item fw-bold" href="/blog">Tất cả bài viết</a></li>
-<li><hr class="dropdown-divider"/></li>
-<li><a class="dropdown-item" href="/blog?category=dog">Chăm sóc chó</a></li>
-<li><a class="dropdown-item" href="/blog?category=cat">Chăm sóc mèo</a></li>
-<li><a class="dropdown-item" href="/blog?category=tips">Mẹo vặt và Đời sống</a></li>
-<li><a class="dropdown-item" href="/blog?category=events">Sự kiện và Khuyến mãi</a></li>
-</ul>
-</li>
-<li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
-<!-- Chỉ Mobile - Chung -->
-<li class="nav-item mobile-drawer-only mobile-cta-item">
-<a class="nav-link nav-link-cta-mobile" href="/booking">Đặt lịch ngay</a>
-</li>
-<!-- Chỉ Mobile - Khách -->
-<li class="nav-item mobile-drawer-only mobile-guest-only">
-<a class="nav-link" href="/return-guest">Tra đơn hàng / lịch</a>
-</li>
-<li class="nav-item mobile-drawer-only mobile-guest-only">
-<a class="nav-link" href="/login">Đăng nhập</a>
-</li>
-<li class="nav-item mobile-drawer-only mobile-guest-only">
-<a class="nav-link nav-link-cta-mobile" href="/login#register">Đăng ký</a>
-</li>
-<!-- Chỉ Mobile - Đã đăng nhập -->
-<li class="nav-item mobile-drawer-only mobile-user-only mobile-account-group d-none">
-<button aria-expanded="false" class="nav-link mobile-account-toggle" type="button">
-<span>Tài khoản của tôi</span>
-<svg class="mobile-account-chevron" fill="none" height="14" stroke="currentColor" viewbox="0 0 24 24" width="2" xmlns="http://www.w3.org/2000/svg">
-<polyline points="6 9 12 15 18 9"></polyline>
-</svg>
-</button>
-<div class="mobile-account-submenu">
-<a class="nav-link mobile-account-child" href="/pages/user/#profile">Hồ sơ cá nhân</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#pets">Hồ sơ bé cưng</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#bookings">Lịch hẹn của tôi</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#orders">Đơn hàng của tôi</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#wishlist">Yêu thích</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#diary">Nhật ký chăm sóc</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#loyalty">Paw Points</a>
-<a class="nav-link mobile-account-child" href="/pages/user/#settings">Cài đặt</a>
-<a class="nav-link mobile-account-child" href="/cart">
+<html lang="vi" class="landing-v218">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>PawPal — Chăm sóc bằng cả trái tim</title>
+    <meta name="description"
+        content="Chọn dịch vụ chăm sóc, lưu trú và đưa đón cho bé. Theo dõi nhật ký chăm sóc và khám phá cửa hàng PawPal.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="/pages/public/landing/landing.css?v=222-pets">
+    <script src="/scripts/vendor/supabase.js"></script>
+    <script src="/scripts/api/supabase-client.js"></script>
+    <script type="module" src="/scripts/api/api-global.js"></script>
+    <script type="module" src="/scripts/shared/auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="/scripts/shared/data-loader.js" defer></script>
+    <script src="/scripts/shared/components.js" defer></script>
+    <script src="/components/header/header.js" defer></script>
+    <script src="/pages/public/landing/landing.js?v=219-performance" defer></script>
+</head>
+
+<body class="landing-v218" id="top"><a class="home-skip" href="#services">Chuyển đến dịch vụ</a>
+    <header class="main-header" id="mainHeader">
+        <!-- Thanh thông báo -->
+        <nav class="navbar navbar-expand-custom p-0" data-bs-theme="light">
+            <div class="header-container">
+                <!-- Bên trái: Logo + Tìm kiếm -->
+                <div class="header-left">
+                    <a class="navbar-brand logo" href="/">
+                        <img alt="PawPal" src="/assets/images/logo/Logo_pawpal.png" />
+                    </a>
+                    <div class="search-bar">
+                        <svg class="search-icon" fill="none" stroke="currentColor" stroke-linecap="round"
+                            stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+                        </svg>
+                        <input placeholder="Tìm kiếm..." type="text" />
+                    </div>
+                </div>
+                <!-- Nút đóng/mở Mobile -->
+                <button aria-controls="primaryNavigation" aria-expanded="false" aria-label="Toggle navigation"
+                    class="navbar-toggler mobile-nav-toggle" id="mobileNavToggle" type="button">
+                    <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                        stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="4" x2="20" y1="12" y2="12"></line>
+                        <line x1="4" x2="20" y1="6" y2="6"></line>
+                        <line x1="4" x2="20" y1="18" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="nav-menu" id="primaryNavigation">
+                    <!-- Nav links — mx-auto căn giữa trong collapse -->
+                    <ul class="navbar-nav mx-auto">
+                        <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="/services">Dịch vụ<svg class="ui-spacing-3"
+                                    fill="none" height="14" stroke="currentColor" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item fw-bold" href="/services">Tất cả dịch vụ</a></li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li><a class="dropdown-item" href="/services?category=spa">Tắm và Cắt tỉa</a></li>
+                                <li><a class="dropdown-item" href="/services?category=hotel">Khách sạn thú cưng</a></li>
+                                <li><a class="dropdown-item" href="/services?category=taxi">Đưa rước thú cưng</a></li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li><a class="dropdown-item text-primary fw-bold" href="/booking">Đặt lịch ngay</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="/shop">Cửa hàng<svg class="ui-spacing-3"
+                                    fill="none" height="14" stroke="currentColor" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item fw-bold" href="/shop">Tất cả sản phẩm</a></li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li><a class="dropdown-item" href="/shop?category=food">Thức ăn và Dinh dưỡng</a></li>
+                                <li><a class="dropdown-item" href="/shop?category=care">Chăm sóc và Vệ sinh</a></li>
+                                <li><a class="dropdown-item" href="/shop?category=toys">Đồ chơi và Phụ kiện</a></li>
+                                <li><a class="dropdown-item" href="/shop?category=other">Khác</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="/about">Về chúng tôi</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="/blog">Cẩm nang<svg class="ui-spacing-3"
+                                    fill="none" height="14" stroke="currentColor" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item fw-bold" href="/blog">Tất cả bài viết</a></li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li><a class="dropdown-item" href="/blog?category=dog">Chăm sóc chó</a></li>
+                                <li><a class="dropdown-item" href="/blog?category=cat">Chăm sóc mèo</a></li>
+                                <li><a class="dropdown-item" href="/blog?category=tips">Mẹo vặt và Đời sống</a></li>
+                                <li><a class="dropdown-item" href="/blog?category=events">Sự kiện và Khuyến mãi</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
+                        <!-- Chỉ Mobile - Chung -->
+                        <li class="nav-item mobile-drawer-only mobile-cta-item">
+                            <a class="nav-link nav-link-cta-mobile" href="/booking">Đặt lịch ngay</a>
+                        </li>
+                        <!-- Chỉ Mobile - Khách -->
+                        <li class="nav-item mobile-drawer-only mobile-guest-only">
+                            <a class="nav-link" href="/return-guest">Tra đơn hàng / lịch</a>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-guest-only">
+                            <a class="nav-link" href="/login">Đăng nhập</a>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-guest-only">
+                            <a class="nav-link nav-link-cta-mobile" href="/login#register">Đăng ký</a>
+                        </li>
+                        <!-- Chỉ Mobile - Đã đăng nhập -->
+                        <li class="nav-item mobile-drawer-only mobile-user-only mobile-account-group d-none">
+                            <button aria-expanded="false" class="nav-link mobile-account-toggle" type="button">
+                                <span>Tài khoản của tôi</span>
+                                <svg class="mobile-account-chevron" fill="none" height="14" stroke="currentColor"
+                                    viewbox="0 0 24 24" width="2" xmlns="http://www.w3.org/2000/svg">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <div class="mobile-account-submenu">
+                                <a class="nav-link mobile-account-child" href="/pages/user/#profile">Hồ sơ cá nhân</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#pets">Hồ sơ bé cưng</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#bookings">Lịch hẹn của
+                                    tôi</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#orders">Đơn hàng của tôi</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#wishlist">Yêu thích</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#diary">Nhật ký chăm sóc</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#loyalty">Paw Points</a>
+                                <a class="nav-link mobile-account-child" href="/pages/user/#settings">Cài đặt</a>
+                                <a class="nav-link mobile-account-child" href="/cart">
                                     Giỏ hàng của tôi <span class="cart-badge-mobile cart-badge-mobile-custom"></span>
-</a>
-</div>
-</li>
-<li class="nav-item mobile-drawer-only mobile-user-only mobile-logout-separate d-none">
-<a class="nav-link mobile-logout-btn text-danger-custom" href="#">Đăng xuất</a>
-</li>
-<!-- Chỉ Mobile - Tài khoản tạm thời -->
-<li class="nav-item mobile-drawer-only mobile-temp-only mobile-temp-item-padding">
-<div class="temp-account-warning temp-account-warning-custom">
-<svg fill="none" height="16" stroke="currentColor" viewbox="0 0 24 24" width="2" xmlns="http://www.w3.org/2000/svg">
-<circle cx="12" cy="12" r="10"></circle>
-<line x1="12" x2="12" y1="8" y2="12"></line>
-<line x1="12" x2="12.01" y1="16" y2="16"></line>
-</svg>
-<span>Tài khoản tạm</span>
-</div>
-</li>
-<li class="nav-item mobile-drawer-only mobile-temp-only d-none">
-<a class="nav-link nav-link-cta-mobile" href="/pages/public/login/login.html?action=setup-password">Kích hoạt tài khoản</a>
-</li>
-<li class="nav-item mobile-drawer-only mobile-temp-only d-none">
-<a class="nav-link mobile-logout-btn text-danger-custom" href="#">Đăng xuất</a>
-</li>
-</ul>
-</div>
-<!-- Hành động Desktop - ngoài collapse, ngang hàng với logo -->
-<div class="header-actions" id="headerActionsDesktop">
-<!-- Dòng chia cách -->
-<span class="header-divider lookup-divider"></span>
-<!-- Tra đơn hàng / lịch -->
-<a class="lookup-btn" href="/return-guest">
-<svg fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
-<circle cx="11" cy="11" r="8"></circle>
-<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
-</svg>
-<span>Tra đơn hàng / lịch</span>
-</a>
-<!-- Dòng chia cách -->
-<span class="header-divider"></span>
-<!-- Đặt lịch CTA -->
-<a class="btn-header-cta" href="/booking">Đặt lịch</a>
-<div class="auth-actions d-flex align-items-center">
-<a class="login-btn" href="/login">
-<svg fill="none" height="17" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="17" xmlns="http://www.w3.org/2000/svg">
-<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-<circle cx="12" cy="7" r="4"></circle>
-</svg>
-<span>Đăng nhập</span>
-</a>
-<a class="btn-signup" href="/login#register">Đăng ký</a>
-</div>
-</div>
-</div>
-<script>
-                (function() {
+                                </a>
+                            </div>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-user-only mobile-logout-separate d-none">
+                            <a class="nav-link mobile-logout-btn text-danger-custom" href="#">Đăng xuất</a>
+                        </li>
+                        <!-- Chỉ Mobile - Tài khoản tạm thời -->
+                        <li class="nav-item mobile-drawer-only mobile-temp-only mobile-temp-item-padding">
+                            <div class="temp-account-warning temp-account-warning-custom">
+                                <svg fill="none" height="16" stroke="currentColor" viewbox="0 0 24 24" width="2"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" x2="12" y1="8" y2="12"></line>
+                                    <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                                </svg>
+                                <span>Tài khoản tạm</span>
+                            </div>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-temp-only d-none">
+                            <a class="nav-link nav-link-cta-mobile"
+                                href="/pages/public/login/login.html?action=setup-password">Kích hoạt tài khoản</a>
+                        </li>
+                        <li class="nav-item mobile-drawer-only mobile-temp-only d-none">
+                            <a class="nav-link mobile-logout-btn text-danger-custom" href="#">Đăng xuất</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Hành động Desktop - ngoài collapse, ngang hàng với logo -->
+                <div class="header-actions" id="headerActionsDesktop">
+                    <!-- Dòng chia cách -->
+                    <span class="header-divider lookup-divider"></span>
+                    <!-- Tra đơn hàng / lịch -->
+                    <a class="lookup-btn" href="/return-guest">
+                        <svg fill="none" height="15" stroke="currentColor" stroke-linecap="round"
+                            stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="15"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+                        </svg>
+                        <span>Tra đơn hàng / lịch</span>
+                    </a>
+                    <!-- Dòng chia cách -->
+                    <span class="header-divider"></span>
+                    <!-- Đặt lịch CTA -->
+                    <a class="btn-header-cta" href="/booking">Đặt lịch</a>
+                    <div class="auth-actions d-flex align-items-center">
+                        <a class="login-btn" href="/login">
+                            <svg fill="none" height="17" stroke="currentColor" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="17"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Đăng nhập</span>
+                        </a>
+                        <a class="btn-signup" href="/login#register">Đăng ký</a>
+                    </div>
+                </div>
+            </div>
+            <script>
+                (function () {
                     try {
                         var u = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
                         if (u && !u.is_temporary) {
@@ -178,102 +230,372 @@
                             var ld = document.querySelector('.main-header .lookup-divider');
                             if (ld) ld.classList.add('d-none');
                         }
-                    } catch(e) {}
+                    } catch (e) { }
                 })();
             </script>
-</nav>
-</header><main id="homePage">
-<div class="hero-stage"><div class="hero-inner">
-<section aria-label="Giới thiệu PawPal" class="intro"><img class="home-pet home-pet-hero" src="/assets/images/home-pets/optimized/hero-cream-kitten.webp" alt="" aria-hidden="true" width="900" height="600" fetchpriority="low" decoding="async" />
-<div><p class="eyebrow">CHĂM SÓC THÚ CƯNG CÙNG PAWPAL</p><h1>Chăm sóc bằng cả <em>trái tim.</em></h1></div>
-<div class="intro-note">Không phải bé nào cũng giống bé nào. <br/>Chọn cách chăm phù hợp và luôn biết bé đang thế nào.</div>
-</section>
-<section aria-label="Banner chiến dịch" class="campaign is-loading">
-<div class="campaign-meta"><span>ĐỒNG HÀNH CÙNG BÉ</span></div>
-<div class="campaign-slider-stage" id="campaignStage">
-<img class="campaign-img" id="campaignImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1720 540' fill='%23EEF5F1'%3E%3C/svg%3E" width="1720" height="540" alt="Đang tải ưu đãi PawPal..." fetchpriority="high" decoding="async"/>
-</div>
-<div class="campaign-foot">
-<div class="campaign-title"><span class="campaign-num" id="slideNum">01</span><span class="campaign-text" id="slideName">Đang cập nhật ưu đãi…</span></div>
-<div class="campaign-actions"><span class="pager" id="slidePager">— / —</span><div class="campaign-arrows"><button aria-label="Banner trước" class="arrow" disabled="" id="prevSlide">←</button><button aria-label="Banner kế" class="arrow" disabled="" id="nextSlide">→</button></div><a class="book-inline" href="/booking">Đặt lịch ngay ↗</a></div>
-</div>
-</section>
-</div></div>
-<section aria-label="Danh sách dịch vụ" class="services-editorial" id="services"><div class="services-top"><img class="home-pet home-pet-services" src="/assets/images/home-pets/optimized/stretching-cat.webp" alt="" aria-hidden="true" width="900" height="600" loading="lazy" decoding="async" /><div class="services-title"><div class="services-kicker">CHỌN DỊCH VỤ CHO BÉ</div><h2>Dịch vụ <em>PawPal</em></h2></div><a class="services-all" href="/services">Xem tất cả dịch vụ ↗</a></div><nav aria-label="Phân loại dịch vụ" class="service-filter"><button aria-pressed="true" class="filter-link active" data-category="all" type="button">Tất cả</button><button aria-pressed="false" class="filter-link" data-category="spa" type="button">Spa và cắt tỉa</button><button aria-pressed="false" class="filter-link" data-category="hotel" type="button">Pet Hotel</button><button aria-pressed="false" class="filter-link" data-category="taxi" type="button">Pet Taxi</button></nav><div aria-live="polite" class="catalog-grid" id="home-services">Đang tải dịch vụ…</div></section><section aria-label="Những điều riêng của mỗi thú cưng" class="pet-personality" id="moi-be-mot-cau-chuyen">
-<div class="pet-personality-inner"><img class="home-pet home-pet-hamster" src="/assets/images/home-pets/optimized/peeking-hamster.webp" alt="" aria-hidden="true" width="900" height="600" loading="lazy" decoding="async" />
-<div class="pet-personality-main">
-<p class="pet-chapter">PAWPAL / ĐIỀU NHỎ CỦA BÉ</p>
-<h2>Mỗi bé có một<br/><em>tính cách riêng.</em></h2>
-<p class="pet-personality-intro">Một bé thích được vuốt ve, một bé hơi sợ tiếng ồn. Chúng mình muốn việc chăm sóc bắt đầu từ <strong>những điều sen hiểu về bé</strong>.</p>
-<a class="pet-personality-link" href="/services">Chọn dịch vụ phù hợp cho bé <span aria-hidden="true">↗</span></a>
-</div>
-<div class="pet-personality-details">
-<p class="pet-note-label">GỢI Ý ĐIỀU SEN CÓ THỂ CHIA SẺ KHI ĐẶT LỊCH</p>
-<div class="pet-note-line"><span class="pet-note-num">01</span><span><strong>Bé hơi nhút nhát?</strong><small>Cho nhân viên biết điều gì khiến bé thoải mái.</small></span></div>
-<div class="pet-note-line"><span class="pet-note-num">02</span><span><strong>Bé có giờ ăn quen?</strong><small>Trao đổi lịch sinh hoạt và những lưu ý cần thiết.</small></span></div>
-<div class="pet-note-line"><span class="pet-note-num">03</span><span><strong>Bé có đồ vật yêu thích?</strong><small>Hỏi trước về những món đồ bé có thể mang theo.</small></span></div>
-<p class="pet-note-disclaimer">Những ví dụ này giúp bạn chuẩn bị thông tin trao đổi; đây chưa phải biểu mẫu lưu hồ sơ hoặc lời cam kết dịch vụ.</p>
-</div>
-</div>
-</section>
-<section aria-label="Care-Log: Nhật ký chăm sóc mẫu" class="pj-journal" data-chapter="NHẬT KÝ CỦA BÉ" id="carelog">
-<div class="pj-journal-frame">
-<div class="pj-journal-heading">
-<div class="pj-eyebrow">MỘT NGÀY Ở PAWPAL  /  NHẬT KÝ MẪU CỦA BÉ LU</div>
-<h2>Bạn ở xa,<br/><em>nhưng vẫn ở bên bé.</em></h2>
-<p>Không cần đoán hôm nay bé thế nào. Một bữa ăn, một lần tắm, một khoảnh khắc được ghi lại — để bạn luôn có điều gì đó thật gần gũi.</p>
-<p class="pet-journal-opening">Mỗi mốc thời gian là một điều nhỏ để sen an tâm hơn.</p></div>
-<div class="pj-journal-body">
-<figure class="pj-feature">
-<img class="home-pet home-pet-journal" src="/assets/images/home-pets/optimized/journal-dachshund.webp" alt="" aria-hidden="true" width="900" height="600" loading="lazy" decoding="async" />
-<div class="pj-photo-wrap">
-<img alt="Bé Lu đang ăn" decoding="async" height="900" id="pj-active-photo" loading="lazy" src="/assets/images/landing-v218/editorial-6337d0dda3.webp" width="900"/>
-<span class="pj-photo-corner">NHẬT KÝ MẪU · BÉ LU</span>
-</div>
-<figcaption aria-atomic="true" aria-live="polite" id="pj-photo-caption">01 / 03  ·  10:00 — Bé Lu đã ăn xong</figcaption>
-</figure>
-<div class="pj-diary">
-<div class="pj-diary-header"><span>Hôm nay của bé Lu</span><span>03 cập nhật mẫu</span></div>
-<div aria-label="Chọn một mốc nhật ký mẫu" class="pj-entries" role="group">
-<button aria-pressed="true" class="pj-entry is-current" data-entry="0" type="button">
-<span class="pj-entry-num">01</span><span class="pj-entry-content"><span class="pj-time">10:00</span><strong>Bé Lu đã ăn xong</strong><span>Một bữa ăn ngon lành</span></span><span aria-hidden="true" class="pj-entry-arrow">↗</span>
-</button>
-<button aria-pressed="false" class="pj-entry" data-entry="1" type="button">
-<span class="pj-entry-num">02</span><span class="pj-entry-content"><span class="pj-time">14:30</span><strong>Bé Lu bắt đầu tắm</strong><span>Thêm một khoảnh khắc đáng yêu</span></span><span aria-hidden="true" class="pj-entry-arrow">↗</span>
-</button>
-<button aria-pressed="false" class="pj-entry" data-entry="2" type="button">
-<span class="pj-entry-num">03</span><span class="pj-entry-content"><span class="pj-time">15:15</span><strong>Chuẩn bị bàn giao bé</strong><span>Cập nhật tiếp theo trong ngày</span></span><span aria-hidden="true" class="pj-entry-arrow">↗</span>
-</button>
-</div>
-<div class="pj-journal-footer"><a href="/user#diary">Xem nhật ký của bé trong tài khoản ↗</a></div>
-</div>
-</div>
-<div class="pj-understory"><span class="pj-understory-rule"></span><p>Care-Log lưu lại những khoảnh khắc đáng nhớ trong hành trình chăm sóc. Đây là bản xem trước để giới thiệu trải nghiệm, không phải nhật ký khách hàng đang cập nhật trực tiếp.</p></div>
-</div>
-</section>
-<section aria-label="Góc mua sắm PawPal" class="v4-shop" data-version="v2.16" id="shop">
-<div class="v4-wrap v4-shop-layout">
-<div class="v4-shop-lead"><div class="v4-kicker">PAWPAL / CỬA HÀNG</div><h2>Góc mua sắm<br/><em>của PawPal.</em></h2><p>Thức ăn hợp khẩu vị, một chiếc ổ êm và những món đồ bé dùng mỗi ngày — chọn cho bé với sự chăm chút.</p><a class="v4-text-link" href="/shop">Vào cửa hàng PawPal <span aria-hidden="true">↗</span></a><figure aria-label="Ảnh mèo trong thư viện PawPal" class="v216-pawpal-cat"><img alt="Chú mèo giơ chân từ bộ ảnh gốc PawPal" decoding="async" height="390" loading="lazy" src="/assets/images/landing-v218/editorial-5e5b3b95b2.webp" width="390"/></figure><div class="v216-pet-note">Góc nhỏ của bé.</div></div>
-<div class="v4-shop-list"><img class="home-pet home-pet-rabbit" src="/assets/images/home-pets/optimized/resting-rabbit.webp" alt="" aria-hidden="true" width="900" height="600" loading="lazy" decoding="async" /><a aria-label="Khám phá Thức ăn" class="v4-shop-row v210-featured-row" href="/shop?category=food"><span aria-hidden="true" class="v28-shop-index">01</span><figure><img alt="Thức ăn" class="" decoding="async" height="290" loading="lazy" src="/assets/images/landing-v218/editorial-44d94fa165.webp" width="420"/></figure><span class="v4-shop-copy"><strong>Thức ăn</strong><small>Tìm đồ ăn phù hợp cho bé.</small></span><span class="v4-arrow">↗</span></a><a aria-label="Khám phá Đồ dùng &amp; phụ kiện" class="v4-shop-row" href="/shop?category=toys"><span aria-hidden="true" class="v28-shop-index">02</span><figure><img alt="Đồ dùng &amp; phụ kiện" class="" decoding="async" height="290" loading="lazy" src="/assets/images/landing-v218/editorial-10ea0c2ca9.webp" width="420"/></figure><span class="v4-shop-copy"><strong>Đồ dùng và phụ kiện</strong><small>Những vật dụng nhỏ bé dùng mỗi ngày.</small></span><span class="v4-arrow">↗</span></a><a aria-label="Khám phá Vệ sinh &amp; chăm sóc" class="v4-shop-row" href="/shop?category=care"><span aria-hidden="true" class="v28-shop-index">03</span><figure><img alt="Vệ sinh &amp; chăm sóc" class="" decoding="async" height="290" loading="lazy" src="/assets/images/landing-v218/editorial-c5be3c710e.webp" width="420"/></figure><span class="v4-shop-copy"><strong>Vệ sinh và chăm sóc</strong><small>Chăm sóc sạch sẽ từ những điều giản dị.</small></span><span class="v4-arrow">↗</span></a><p class="v4-shop-notice">Khám phá sản phẩm và tình trạng còn hàng trong cửa hàng.</p></div>
-</div></section><section aria-label="Quy trình chăm sóc" class="v4-process" id="process"><img class="home-pet home-pet-spa" src="/assets/images/home-pets/optimized/towel-dog.webp" alt="" aria-hidden="true" width="900" height="600" loading="lazy" decoding="async" /><div class="v4-wrap">
-<header class="v4-section-head v4-process-head"><div><div class="v4-kicker">TỪ LÚC ĐÓN BÉ ĐẾN LÚC VỀ NHÀ</div><h2>Một buổi spa <em>diễn ra thế nào?</em></h2></div><p>Từ lúc tiếp nhận đến lúc bàn giao, mỗi bước đều có thông tin rõ ràng để bạn yên tâm theo dõi.</p></header>
-<div class="v4-step-list"><article class="v4-step"><div class="v4-step-visual"><img alt="Tiếp nhận và kiểm tra" class="" decoding="async" height="390" loading="lazy" src="/assets/images/landing-v218/editorial-4db4d3981b.webp" width="520"/></div><div class="v4-step-content"><span>01</span><h3>Tiếp nhận và kiểm tra</h3><p>Lắng nghe nhu cầu và ghi nhận tình trạng của bé trước khi bắt đầu.</p></div></article><article class="v4-step"><div class="v4-step-visual"><img alt="Tắm sạch và sấy khô" class="" decoding="async" height="390" loading="lazy" src="/assets/images/landing-v218/editorial-f4412de0bf.webp" width="520"/></div><div class="v4-step-content"><span>02</span><h3>Tắm sạch và sấy khô</h3><p>Làm sạch nhẹ nhàng, sấy và chăm sóc bộ lông.</p></div></article><article class="v4-step"><div class="v4-step-visual"><img alt="Cắt tỉa và vệ sinh" class="" decoding="async" height="390" loading="lazy" src="/assets/images/landing-v218/editorial-6615ad282f.webp" width="520"/></div><div class="v4-step-content"><span>03</span><h3>Chăm sóc theo gói đã chọn</h3><p>Thực hiện các bước chăm sóc phù hợp với dịch vụ bạn đã đặt.</p></div></article><article class="v4-step"><div class="v4-step-visual"><img alt="Bàn giao và nhật ký" class="" decoding="async" height="390" loading="lazy" src="/assets/images/landing-v218/editorial-7078e246d0.webp" width="520"/></div><div class="v4-step-content"><span>04</span><h3>Bàn giao và nhật ký</h3><p>Gửi lại những khoảnh khắc trong buổi chăm sóc để chủ nuôi theo dõi.</p></div></article></div>
-<div class="v4-process-foot"><p>Từ lúc đón bé đến lúc bàn giao, những mốc chăm sóc có thể được theo dõi qua Care-Log.</p><a class="v4-dark-link" href="/booking">Xem dịch vụ và đặt lịch ↗</a></div>
-</div></section><section aria-label="Đội ngũ PawPal" class="v4-people" id="people"><div class="v4-wrap">
-<div class="v4-kicker">NHỮNG NGƯỜI Ở BÊN BÉ</div>
-<div class="v4-people-head"><h2>Chăm sóc tốt<br/>đến từ <em>con người.</em></h2><p>Lắng nghe những thói quen nhỏ của bé để chuẩn bị cho buổi chăm sóc.</p></div>
-<div class="v28-team-editorial"><img class="home-pet home-pet-people" src="/assets/images/home-pets/optimized/people-spaniel.webp" alt="" aria-hidden="true" width="900" height="600" loading="lazy" decoding="async" />
-<figure class="v28-team-lead">
-<div class="v28-team-image"><img alt="Hình minh họa hoạt động chăm sóc thú cưng" decoding="async" height="720" loading="lazy" src="/assets/images/landing-v218/editorial-792c40e1a9.webp" width="560"/></div>
-<figcaption><span class="v28-index">01 / GROOMING</span><strong>Chăm chút từng bộ lông</strong></figcaption>
-</figure>
-<div class="v28-team-story">
-<div class="v28-team-pair"><img alt="Hình minh họa hoạt động chăm sóc thú cưng" decoding="async" height="720" loading="lazy" src="/assets/images/landing-v218/editorial-b0cff93365.webp" width="560"/><img alt="Hình minh họa hoạt động chăm sóc thú cưng" decoding="async" height="720" loading="lazy" src="/assets/images/landing-v218/editorial-1b302bd95a.webp" width="560"/></div>
-<div class="v28-team-story-caption"><span class="v28-index">02 / CHĂM SÓC và LƯU TRÚ</span><strong>Đồng hành cùng bé</strong></div>
-<p>Bạn có thể ghi chú về tập tính, dị ứng và những điều bé cần được lưu ý khi đặt lịch.</p>
-</div></div>
-<p class="v4-verification">Hình ảnh minh họa hoạt động chăm sóc, không phải hồ sơ nhân sự.</p>
-</div></section><section aria-label="Nguyên tắc chăm sóc" class="v4-trust"><div class="v4-wrap v4-trust-grid"><div><div class="v4-kicker">ĐIỀU SEN MUỐN BIẾT</div><h2>Gửi bé đi chăm,<br/><em>sen vẫn được an tâm.</em></h2></div><div class="v4-trust-lines"><p><span>01</span> <strong>Biết bé đang làm gì</strong><small>Thông tin hành trình chăm sóc hiển thị qua Care-Log.</small></p><p><span>02</span> <strong>Biết mình đã đặt dịch vụ nào</strong><small>Thời lượng, giá và lịch hẹn cần hiển thị rõ.</small></p><p><span>03</span> <strong>Biết cách liên hệ khi cần</strong><small>Thông tin hỗ trợ và các điều kiện dịch vụ cần dễ tìm.</small></p></div></div></section><section aria-label="Khách hàng thân thiết PawPass" class="v4-member" id="pawpass"><img class="home-pet home-pet-member" src="/assets/images/home-pets/optimized/member-tuxedo.webp" alt="" aria-hidden="true" width="900" height="600" loading="lazy" decoding="async" /><div class="v4-wrap">
-<div class="v4-member-head"><div><div class="v4-kicker">PAWPASS / THÀNH VIÊN</div><h2>Chăm bé hôm nay,<br/><em>tích thêm niềm vui.</em></h2></div><p>Xem các hạng thành viên và mức giảm đang được cấu hình tại PawPal.</p></div>
-<div aria-label="Các hạng thành viên đang áp dụng" class="v210-pawpass-strip" id="home-tiers">Đang tải hạng thành viên…</div>
-<div class="v4-membership-bottom"><p>Quyền lợi áp dụng theo điều kiện của từng giao dịch. Xem điểm và hạng hiện tại trong tài khoản của bạn.</p><a href="/user#loyalty">Tìm hiểu PawPass <span aria-hidden="true">↗</span></a></div></div></section><section aria-label="Đánh giá dịch vụ đã công bố" class="v4-voices" id="reviews"><div class="v4-wrap v29-reviews-wrap"><div class="v29-chapter"><span>PAWPAL / CHUYỆN CỦA SEN</span><span>GÓC CHIA SẺ</span></div><div class="v29-reviews-heading"><h2>Sen kể gì<br/>về PawPal?</h2><p>Những câu chuyện ngắn về việc gửi bé đi chăm sóc và cảm giác an tâm khi nhận bé về.</p></div><div class="v4-quote-box v29-feature-quote"><span aria-hidden="true" class="v4-quote-mark">“</span><blockquote id="v4-quote">Đang tải đánh giá…</blockquote><p id="v4-by"></p><div class="v4-quote-nav"><span id="v4-review-index">—</span><div><button aria-label="Đánh giá trước" data-v4-review="prev" type="button">←</button><button aria-label="Đánh giá tiếp" data-v4-review="next" type="button">→</button></div></div><small>Đánh giá đã được công bố của khách sử dụng dịch vụ.</small></div></div></section><section class="v4-faq" id="faq"><div class="v4-wrap v4-faq-layout v29-faq-wrap"><div class="v29-faq-heading"><img class="home-pet home-pet-bird" src="/assets/images/home-pets/optimized/faq-budgie.webp" alt="" aria-hidden="true" width="800" height="1000" loading="lazy" decoding="async" /><div class="v4-kicker">TRƯỚC KHI BẠN ĐẶT LỊCH</div><h2>Trước khi gửi bé,<br/>bạn cần biết gì?</h2></div><div class="v4-faq-list"><details class="v4-faq-item"><summary>PawPal có nhận chăm sóc mèo không?<span aria-hidden="true">+</span></summary><p>Có mục dịch vụ dành cho mèo trong hệ thống PawPal. Điều kiện cụ thể sẽ hiển thị ở dịch vụ bạn chọn.</p></details><details class="v4-faq-item"><summary>Tôi có cần mang đồ ăn riêng cho bé không?<span aria-hidden="true">+</span></summary><p>Nếu bé có chế độ ăn riêng hoặc cần lưu ý dị ứng, bạn nên ghi rõ khi đặt lịch và trao đổi với nhân viên trước khi bàn giao.</p></details><details class="v4-faq-item"><summary>Nhật ký chăm sóc cập nhật khi nào?<span aria-hidden="true">+</span></summary><p>Care-Log dùng để theo dõi các lần cập nhật trong quá trình chăm sóc. Tần suất thực tế cần căn cứ vào dịch vụ và chính sách đang áp dụng.</p></details><details class="v4-faq-item"><summary>Bé cần chuẩn bị gì trước khi lưu trú?<span aria-hidden="true">+</span></summary><p>Vui lòng xem điều kiện của Pet Hotel và chuẩn bị hồ sơ sức khỏe/tiêm phòng theo yêu cầu cụ thể trước khi đặt chỗ.</p></details><details class="v4-faq-item"><summary>Paw Points có thời hạn sử dụng không?<span aria-hidden="true">+</span></summary><p>Thời hạn và quy định tích/đổi điểm cần kiểm tra trong chính sách PawPass hiện hành trước khi sử dụng.</p></details><details class="v4-faq-item"><summary>Tôi đặt lịch hoặc tra cứu lịch hẹn ở đâu?<span aria-hidden="true">+</span></summary><p>Dùng nút Đặt lịch trên header để chọn dịch vụ; truy cập Tra đơn/lịch để theo dõi thông tin đã đặt.</p></details></div></div></section><section class="v4-closing" id="booking"><div class="v4-wrap v4-closing-layout"><h2>Hẹn bé ở PawPal nhé!</h2><p class="v29-closing-note">Chọn dịch vụ phù hợp rồi đặt lịch chỉ trong vài bước.</p><a href="/booking">Đặt lịch tại PawPal <span aria-hidden="true">↗</span></a></div></section></main><div id="site-footer"></div><div id="site-fab"></div></body></html>
+        </nav>
+    </header>
+    <main id="homePage">
+        <div class="hero-stage">
+            <div class="hero-inner">
+                <section aria-label="Giới thiệu PawPal" class="intro"><img class="home-pet home-pet-hero"
+                        src="/assets/images/home-pets/optimized/hero-cream-kitten.webp" alt="" aria-hidden="true"
+                        width="900" height="600" fetchpriority="low" decoding="async" />
+                    <div>
+                        <p class="eyebrow">CHĂM SÓC THÚ CƯNG CÙNG PAWPAL</p>
+                        <h1>Chăm sóc bằng cả <em>trái tim.</em></h1>
+                    </div>
+                    <div class="intro-note">Không phải bé nào cũng giống bé nào. <br />Chọn cách chăm phù hợp và luôn
+                        biết bé đang thế nào.</div>
+                </section>
+                <section aria-label="Banner chiến dịch" class="campaign is-loading">
+                    <div class="campaign-meta"><span>ĐỒNG HÀNH CÙNG BÉ</span></div>
+                    <div class="campaign-slider-stage" id="campaignStage">
+                        <img class="campaign-img" id="campaignImg"
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1720 540' fill='%23EEF5F1'%3E%3C/svg%3E"
+                            width="1720" height="540" alt="Đang tải ưu đãi PawPal..." fetchpriority="high"
+                            decoding="async" />
+                    </div>
+                    <div class="campaign-foot">
+                        <div class="campaign-title"><span class="campaign-num" id="slideNum">01</span><span
+                                class="campaign-text" id="slideName">Đang cập nhật ưu đãi…</span></div>
+                        <div class="campaign-actions"><span class="pager" id="slidePager">— / —</span>
+                            <div class="campaign-arrows"><button aria-label="Banner trước" class="arrow" disabled=""
+                                    id="prevSlide">←</button><button aria-label="Banner kế" class="arrow" disabled=""
+                                    id="nextSlide">→</button></div><a class="book-inline" href="/booking">Đặt lịch ngay
+                                ↗</a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <section aria-label="Danh sách dịch vụ" class="services-editorial" id="services">
+            <div class="services-top"><img class="home-pet home-pet-services"
+                    src="/assets/images/home-pets/optimized/stretching-cat.webp" alt="" aria-hidden="true" width="900"
+                    height="600" loading="lazy" decoding="async" />
+                <div class="services-title">
+                    <div class="services-kicker">CHỌN DỊCH VỤ CHO BÉ</div>
+                    <h2>Dịch vụ <em>PawPal</em></h2>
+                </div><a class="services-all" href="/services">Xem tất cả dịch vụ ↗</a>
+            </div>
+            <nav aria-label="Phân loại dịch vụ" class="service-filter"><button aria-pressed="true"
+                    class="filter-link active" data-category="all" type="button">Tất cả</button><button
+                    aria-pressed="false" class="filter-link" data-category="spa" type="button">Spa và cắt
+                    tỉa</button><button aria-pressed="false" class="filter-link" data-category="hotel" type="button">Pet
+                    Hotel</button><button aria-pressed="false" class="filter-link" data-category="taxi"
+                    type="button">Pet Taxi</button></nav>
+            <div aria-live="polite" class="catalog-grid" id="home-services">Đang tải dịch vụ…</div>
+        </section>
+        <section aria-label="Những điều riêng của mỗi thú cưng" class="pet-personality" id="moi-be-mot-cau-chuyen">
+            <div class="pet-personality-inner"><img class="home-pet home-pet-hamster"
+                    src="/assets/images/home-pets/optimized/peeking-hamster.webp" alt="" aria-hidden="true" width="900"
+                    height="600" loading="lazy" decoding="async" />
+                <div class="pet-personality-main">
+                    <p class="pet-chapter">PAWPAL / ĐIỀU NHỎ CỦA BÉ</p>
+                    <h2>Mỗi bé có một<br /><em>tính cách riêng.</em></h2>
+                    <p class="pet-personality-intro">Một bé thích được vuốt ve, một bé hơi sợ tiếng ồn. Chúng mình muốn
+                        việc chăm sóc bắt đầu từ <strong>những điều sen hiểu về bé</strong>.</p>
+                    <a class="pet-personality-link" href="/services">Chọn dịch vụ phù hợp cho bé <span
+                            aria-hidden="true">↗</span></a>
+                </div>
+                <div class="pet-personality-details">
+                    <p class="pet-note-label">GỢI Ý ĐIỀU SEN CÓ THỂ CHIA SẺ KHI ĐẶT LỊCH</p>
+                    <div class="pet-note-line"><span class="pet-note-num">01</span><span><strong>Bé hơi nhút
+                                nhát?</strong><small>Cho nhân viên biết điều gì khiến bé thoải mái.</small></span></div>
+                    <div class="pet-note-line"><span class="pet-note-num">02</span><span><strong>Bé có giờ ăn
+                                quen?</strong><small>Trao đổi lịch sinh hoạt và những lưu ý cần thiết.</small></span>
+                    </div>
+                    <div class="pet-note-line"><span class="pet-note-num">03</span><span><strong>Bé có đồ vật yêu
+                                thích?</strong><small>Hỏi trước về những món đồ bé có thể mang theo.</small></span>
+                    </div>
+                    <p class="pet-note-disclaimer">Những ví dụ này giúp bạn chuẩn bị thông tin trao đổi; đây chưa phải
+                        biểu mẫu lưu hồ sơ hoặc lời cam kết dịch vụ.</p>
+                </div>
+            </div>
+        </section>
+        <section aria-label="Care-Log: Nhật ký chăm sóc mẫu" class="pj-journal" data-chapter="NHẬT KÝ CỦA BÉ"
+            id="carelog">
+            <div class="pj-journal-frame">
+                <div class="pj-journal-heading">
+                    <div class="pj-eyebrow">MỘT NGÀY Ở PAWPAL / NHẬT KÝ MẪU CỦA BÉ LU</div>
+                    <h2>Bạn ở xa,<br /><em>nhưng vẫn ở bên bé.</em></h2>
+                    <p>Không cần đoán hôm nay bé thế nào. Một bữa ăn, một lần tắm, một khoảnh khắc được ghi lại — để bạn
+                        luôn có điều gì đó thật gần gũi.</p>
+                    <p class="pet-journal-opening">Mỗi mốc thời gian là một điều nhỏ để sen an tâm hơn.</p>
+                </div>
+                <div class="pj-journal-body">
+                    <figure class="pj-feature">
+                        <img class="home-pet home-pet-journal"
+                            src="/assets/images/home-pets/optimized/journal-dachshund.webp" alt="" aria-hidden="true"
+                            width="900" height="600" loading="lazy" decoding="async" />
+                        <div class="pj-photo-wrap">
+                            <img alt="Bé Lu đang ăn" decoding="async" height="900" id="pj-active-photo" loading="lazy"
+                                src="/assets/images/landing-v218/editorial-6337d0dda3.webp" width="900" />
+                            <span class="pj-photo-corner">NHẬT KÝ MẪU · BÉ LU</span>
+                        </div>
+                        <figcaption aria-atomic="true" aria-live="polite" id="pj-photo-caption">01 / 03  ·  10:00 — Bé
+                            Lu đã ăn xong</figcaption>
+                    </figure>
+                    <div class="pj-diary">
+                        <div class="pj-diary-header"><span>Hôm nay của bé Lu</span><span>03 cập nhật mẫu</span></div>
+                        <div aria-label="Chọn một mốc nhật ký mẫu" class="pj-entries" role="group">
+                            <button aria-pressed="true" class="pj-entry is-current" data-entry="0" type="button">
+                                <span class="pj-entry-num">01</span><span class="pj-entry-content"><span
+                                        class="pj-time">10:00</span><strong>Bé Lu đã ăn xong</strong><span>Một bữa ăn
+                                        ngon lành</span></span><span aria-hidden="true" class="pj-entry-arrow">↗</span>
+                            </button>
+                            <button aria-pressed="false" class="pj-entry" data-entry="1" type="button">
+                                <span class="pj-entry-num">02</span><span class="pj-entry-content"><span
+                                        class="pj-time">14:30</span><strong>Bé Lu bắt đầu tắm</strong><span>Thêm một
+                                        khoảnh khắc đáng yêu</span></span><span aria-hidden="true"
+                                    class="pj-entry-arrow">↗</span>
+                            </button>
+                            <button aria-pressed="false" class="pj-entry" data-entry="2" type="button">
+                                <span class="pj-entry-num">03</span><span class="pj-entry-content"><span
+                                        class="pj-time">15:15</span><strong>Chuẩn bị bàn giao bé</strong><span>Cập nhật
+                                        tiếp theo trong ngày</span></span><span aria-hidden="true"
+                                    class="pj-entry-arrow">↗</span>
+                            </button>
+                        </div>
+                        <div class="pj-journal-footer"><a href="/user#diary">Xem nhật ký của bé trong tài khoản ↗</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="pj-understory"><span class="pj-understory-rule"></span>
+                    <p>Care-Log lưu lại những khoảnh khắc đáng nhớ trong hành trình chăm sóc. Đây là bản xem trước để
+                        giới thiệu trải nghiệm, không phải nhật ký khách hàng đang cập nhật trực tiếp.</p>
+                </div>
+            </div>
+        </section>
+        <section aria-label="Góc mua sắm PawPal" class="v4-shop" data-version="v2.16" id="shop">
+            <div class="v4-wrap v4-shop-layout">
+                <div class="v4-shop-lead">
+                    <div class="v4-kicker">PAWPAL / CỬA HÀNG</div>
+                    <h2>Góc mua sắm<br /><em>của PawPal.</em></h2>
+                    <p>Thức ăn hợp khẩu vị, một chiếc ổ êm và những món đồ bé dùng mỗi ngày — chọn cho bé với sự chăm
+                        chút.</p><a class="v4-text-link" href="/shop">Vào cửa hàng PawPal <span
+                            aria-hidden="true">↗</span></a>
+                    <figure aria-label="Ảnh mèo trong thư viện PawPal" class="v216-pawpal-cat"><img
+                            alt="Chú mèo giơ chân từ bộ ảnh gốc PawPal" decoding="async" height="390" loading="lazy"
+                            src="/assets/images/landing-v218/editorial-5e5b3b95b2.webp" width="390" /></figure>
+                    <div class="v216-pet-note">Góc nhỏ của bé.</div>
+                </div>
+                <div class="v4-shop-list"><img class="home-pet home-pet-rabbit"
+                        src="/assets/images/home-pets/optimized/resting-rabbit.webp" alt="" aria-hidden="true"
+                        width="900" height="600" loading="lazy" decoding="async" /><a aria-label="Khám phá Thức ăn"
+                        class="v4-shop-row v210-featured-row" href="/shop?category=food"><span aria-hidden="true"
+                            class="v28-shop-index">01</span>
+                        <figure><img alt="Thức ăn" class="" decoding="async" height="290" loading="lazy"
+                                src="/assets/images/landing-v218/editorial-44d94fa165.webp" width="420" /></figure><span
+                            class="v4-shop-copy"><strong>Thức ăn</strong><small>Tìm đồ ăn phù hợp cho
+                                bé.</small></span><span class="v4-arrow">↗</span>
+                    </a><a aria-label="Khám phá Đồ dùng &amp; phụ kiện" class="v4-shop-row"
+                        href="/shop?category=toys"><span aria-hidden="true" class="v28-shop-index">02</span>
+                        <figure><img alt="Đồ dùng &amp; phụ kiện" class="" decoding="async" height="290" loading="lazy"
+                                src="/assets/images/landing-v218/editorial-10ea0c2ca9.webp" width="420" /></figure><span
+                            class="v4-shop-copy"><strong>Đồ dùng và phụ kiện</strong><small>Những vật dụng nhỏ bé dùng
+                                mỗi ngày.</small></span><span class="v4-arrow">↗</span>
+                    </a><a aria-label="Khám phá Vệ sinh &amp; chăm sóc" class="v4-shop-row"
+                        href="/shop?category=care"><span aria-hidden="true" class="v28-shop-index">03</span>
+                        <figure><img alt="Vệ sinh &amp; chăm sóc" class="" decoding="async" height="290" loading="lazy"
+                                src="/assets/images/landing-v218/editorial-c5be3c710e.webp" width="420" /></figure><span
+                            class="v4-shop-copy"><strong>Vệ sinh và chăm sóc</strong><small>Chăm sóc sạch sẽ từ những
+                                điều giản dị.</small></span><span class="v4-arrow">↗</span>
+                    </a>
+                    <p class="v4-shop-notice">Khám phá sản phẩm và tình trạng còn hàng trong cửa hàng.</p>
+                </div>
+            </div>
+        </section>
+        <section aria-label="Quy trình chăm sóc" class="v4-process" id="process"><img class="home-pet home-pet-spa"
+                src="/assets/images/home-pets/optimized/towel-dog.webp" alt="" aria-hidden="true" width="900"
+                height="600" loading="lazy" decoding="async" />
+            <div class="v4-wrap">
+                <header class="v4-section-head v4-process-head">
+                    <div>
+                        <div class="v4-kicker">TỪ LÚC ĐÓN BÉ ĐẾN LÚC VỀ NHÀ</div>
+                        <h2>Một buổi spa <em>diễn ra thế nào?</em></h2>
+                    </div>
+                    <p>Từ lúc tiếp nhận đến lúc bàn giao, mỗi bước đều có thông tin rõ ràng để bạn yên tâm theo dõi.</p>
+                </header>
+                <div class="v4-step-list">
+                    <article class="v4-step">
+                        <div class="v4-step-visual"><img alt="Tiếp nhận và kiểm tra" class="" decoding="async"
+                                height="390" loading="lazy" src="/assets/images/landing-v218/editorial-4db4d3981b.webp"
+                                width="520" /></div>
+                        <div class="v4-step-content"><span>01</span>
+                            <h3>Tiếp nhận và kiểm tra</h3>
+                            <p>Lắng nghe nhu cầu và ghi nhận tình trạng của bé trước khi bắt đầu.</p>
+                        </div>
+                    </article>
+                    <article class="v4-step">
+                        <div class="v4-step-visual"><img alt="Tắm sạch và sấy khô" class="" decoding="async"
+                                height="390" loading="lazy" src="/assets/images/landing-v218/editorial-f4412de0bf.webp"
+                                width="520" /></div>
+                        <div class="v4-step-content"><span>02</span>
+                            <h3>Tắm sạch và sấy khô</h3>
+                            <p>Làm sạch nhẹ nhàng, sấy và chăm sóc bộ lông.</p>
+                        </div>
+                    </article>
+                    <article class="v4-step">
+                        <div class="v4-step-visual"><img alt="Cắt tỉa và vệ sinh" class="" decoding="async" height="390"
+                                loading="lazy" src="/assets/images/landing-v218/editorial-6615ad282f.webp"
+                                width="520" /></div>
+                        <div class="v4-step-content"><span>03</span>
+                            <h3>Chăm sóc theo gói đã chọn</h3>
+                            <p>Thực hiện các bước chăm sóc phù hợp với dịch vụ bạn đã đặt.</p>
+                        </div>
+                    </article>
+                    <article class="v4-step">
+                        <div class="v4-step-visual"><img alt="Bàn giao và nhật ký" class="" decoding="async"
+                                height="390" loading="lazy" src="/assets/images/landing-v218/editorial-7078e246d0.webp"
+                                width="520" /></div>
+                        <div class="v4-step-content"><span>04</span>
+                            <h3>Bàn giao và nhật ký</h3>
+                            <p>Gửi lại những khoảnh khắc trong buổi chăm sóc để chủ nuôi theo dõi.</p>
+                        </div>
+                    </article>
+                </div>
+                <div class="v4-process-foot">
+                    <p>Từ lúc đón bé đến lúc bàn giao, những mốc chăm sóc có thể được theo dõi qua Care-Log.</p><a
+                        class="v4-dark-link" href="/booking">Xem dịch vụ và đặt lịch ↗</a>
+                </div>
+            </div>
+        </section>
+        <section aria-label="Đội ngũ PawPal" class="v4-people" id="people">
+            <div class="v4-wrap">
+                <div class="v4-kicker">NHỮNG NGƯỜI Ở BÊN BÉ</div>
+                <div class="v4-people-head">
+                    <h2>Chăm sóc tốt<br />đến từ <em>con người.</em></h2>
+                    <p>Lắng nghe những thói quen nhỏ của bé để chuẩn bị cho buổi chăm sóc.</p>
+                </div>
+                <div class="v28-team-editorial"><img class="home-pet home-pet-people"
+                        src="/assets/images/home-pets/optimized/people-spaniel.webp" alt="" aria-hidden="true"
+                        width="900" height="600" loading="lazy" decoding="async" />
+                    <figure class="v28-team-lead">
+                        <div class="v28-team-image"><img alt="Hình minh họa hoạt động chăm sóc thú cưng"
+                                decoding="async" height="720" loading="lazy"
+                                src="/assets/images/landing-v218/editorial-792c40e1a9.webp" width="560" /></div>
+                        <figcaption><span class="v28-index">01 / GROOMING</span><strong>Chăm chút từng bộ lông</strong>
+                        </figcaption>
+                    </figure>
+                    <div class="v28-team-story">
+                        <div class="v28-team-pair"><img alt="Hình minh họa hoạt động chăm sóc thú cưng" decoding="async"
+                                height="720" loading="lazy" src="/assets/images/landing-v218/editorial-b0cff93365.webp"
+                                width="560" /><img alt="Hình minh họa hoạt động chăm sóc thú cưng" decoding="async"
+                                height="720" loading="lazy" src="/assets/images/landing-v218/editorial-1b302bd95a.webp"
+                                width="560" /></div>
+                        <div class="v28-team-story-caption"><span class="v28-index">02 / CHĂM SÓC và LƯU
+                                TRÚ</span><strong>Đồng hành cùng bé</strong></div>
+                        <p>Bạn có thể ghi chú về tập tính, dị ứng và những điều bé cần được lưu ý khi đặt lịch.</p>
+                    </div>
+                </div>
+                <p class="v4-verification">Hình ảnh minh họa hoạt động chăm sóc, không phải hồ sơ nhân sự.</p>
+            </div>
+        </section>
+        <section aria-label="Nguyên tắc chăm sóc" class="v4-trust">
+            <div class="v4-wrap v4-trust-grid">
+                <div>
+                    <div class="v4-kicker">ĐIỀU SEN MUỐN BIẾT</div>
+                    <h2>Gửi bé đi chăm,<br /><em>sen vẫn được an tâm.</em></h2>
+                </div>
+                <div class="v4-trust-lines">
+                    <p><span>01</span> <strong>Biết bé đang làm gì</strong><small>Thông tin hành trình chăm sóc hiển thị
+                            qua Care-Log.</small></p>
+                    <p><span>02</span> <strong>Biết mình đã đặt dịch vụ nào</strong><small>Thời lượng, giá và lịch hẹn
+                            cần hiển thị rõ.</small></p>
+                    <p><span>03</span> <strong>Biết cách liên hệ khi cần</strong><small>Thông tin hỗ trợ và các điều
+                            kiện dịch vụ cần dễ tìm.</small></p>
+                </div>
+            </div>
+        </section>
+        <section aria-label="Khách hàng thân thiết PawPass" class="v4-member" id="pawpass"><img
+                class="home-pet home-pet-member" src="/assets/images/home-pets/optimized/member-tuxedo.webp" alt=""
+                aria-hidden="true" width="900" height="600" loading="lazy" decoding="async" />
+            <div class="v4-wrap">
+                <div class="v4-member-head">
+                    <div>
+                        <div class="v4-kicker">PAWPASS / THÀNH VIÊN</div>
+                        <h2>Chăm bé hôm nay,<br /><em>tích thêm niềm vui.</em></h2>
+                    </div>
+                    <p>Xem các hạng thành viên và mức giảm đang được cấu hình tại PawPal.</p>
+                </div>
+                <div aria-label="Các hạng thành viên đang áp dụng" class="v210-pawpass-strip" id="home-tiers">Đang tải
+                    hạng thành viên…</div>
+                <div class="v4-membership-bottom">
+                    <p>Quyền lợi áp dụng theo điều kiện của từng giao dịch. Xem điểm và hạng hiện tại trong tài khoản
+                        của bạn.</p><a href="/user#loyalty">Tìm hiểu PawPass <span aria-hidden="true">↗</span></a>
+                </div>
+            </div>
+        </section>
+        <section aria-label="Đánh giá dịch vụ đã công bố" class="v4-voices" id="reviews">
+            <div class="v4-wrap v29-reviews-wrap">
+                <div class="v29-chapter"><span>PAWPAL / CHUYỆN CỦA SEN</span><span>GÓC CHIA SẺ</span></div>
+                <div class="v29-reviews-heading">
+                    <h2>Sen kể gì<br />về PawPal?</h2>
+                    <p>Những câu chuyện ngắn về việc gửi bé đi chăm sóc và cảm giác an tâm khi nhận bé về.</p>
+                </div>
+                <div class="v4-quote-box v29-feature-quote"><span aria-hidden="true" class="v4-quote-mark">“</span>
+                    <blockquote id="v4-quote">Đang tải đánh giá…</blockquote>
+                    <p id="v4-by"></p>
+                    <div class="v4-quote-nav"><span id="v4-review-index">—</span>
+                        <div><button aria-label="Đánh giá trước" data-v4-review="prev" type="button">←</button><button
+                                aria-label="Đánh giá tiếp" data-v4-review="next" type="button">→</button></div>
+                    </div><small>Đánh giá đã được công bố của khách sử dụng dịch vụ.</small>
+                </div>
+            </div>
+        </section>
+        <section class="v4-faq" id="faq">
+            <div class="v4-wrap v4-faq-layout v29-faq-wrap">
+                <div class="v29-faq-heading"><img class="home-pet home-pet-bird"
+                        src="/assets/images/home-pets/optimized/faq-budgie.webp" alt="" aria-hidden="true" width="800"
+                        height="1000" loading="lazy" decoding="async" />
+                    <div class="v4-kicker">TRƯỚC KHI BẠN ĐẶT LỊCH</div>
+                    <h2>Trước khi gửi bé,<br />bạn cần biết gì?</h2>
+                </div>
+                <div class="v4-faq-list">
+                    <details class="v4-faq-item">
+                        <summary>PawPal có nhận chăm sóc mèo không?<span aria-hidden="true">+</span></summary>
+                        <p>Có mục dịch vụ dành cho mèo trong hệ thống PawPal. Điều kiện cụ thể sẽ hiển thị ở dịch vụ bạn
+                            chọn.</p>
+                    </details>
+                    <details class="v4-faq-item">
+                        <summary>Tôi có cần mang đồ ăn riêng cho bé không?<span aria-hidden="true">+</span></summary>
+                        <p>Nếu bé có chế độ ăn riêng hoặc cần lưu ý dị ứng, bạn nên ghi rõ khi đặt lịch và trao đổi với
+                            nhân viên trước khi bàn giao.</p>
+                    </details>
+                    <details class="v4-faq-item">
+                        <summary>Nhật ký chăm sóc cập nhật khi nào?<span aria-hidden="true">+</span></summary>
+                        <p>Care-Log dùng để theo dõi các lần cập nhật trong quá trình chăm sóc. Tần suất thực tế cần căn
+                            cứ vào dịch vụ và chính sách đang áp dụng.</p>
+                    </details>
+                    <details class="v4-faq-item">
+                        <summary>Bé cần chuẩn bị gì trước khi lưu trú?<span aria-hidden="true">+</span></summary>
+                        <p>Vui lòng xem điều kiện của Pet Hotel và chuẩn bị hồ sơ sức khỏe/tiêm phòng theo yêu cầu cụ
+                            thể trước khi đặt chỗ.</p>
+                    </details>
+                    <details class="v4-faq-item">
+                        <summary>Paw Points có thời hạn sử dụng không?<span aria-hidden="true">+</span></summary>
+                        <p>Thời hạn và quy định tích/đổi điểm cần kiểm tra trong chính sách PawPass hiện hành trước khi
+                            sử dụng.</p>
+                    </details>
+                    <details class="v4-faq-item">
+                        <summary>Tôi đặt lịch hoặc tra cứu lịch hẹn ở đâu?<span aria-hidden="true">+</span></summary>
+                        <p>Dùng nút Đặt lịch trên header để chọn dịch vụ; truy cập Tra đơn/lịch để theo dõi thông tin đã
+                            đặt.</p>
+                    </details>
+                </div>
+            </div>
+        </section>
+        <section class="v4-closing" id="booking">
+            <div class="v4-wrap v4-closing-layout">
+                <h2>Hẹn bé ở PawPal nhé!</h2>
+                <p class="v29-closing-note">Chọn dịch vụ phù hợp rồi đặt lịch chỉ trong vài bước.</p><a
+                    href="/booking">Đặt lịch tại PawPal <span aria-hidden="true">↗</span></a>
+            </div>
+        </section>
+    </main>
+    <div id="site-footer"></div>
+    <div id="site-fab"></div>
+</body>
+
+</html>
