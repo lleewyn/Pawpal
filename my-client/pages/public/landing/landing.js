@@ -126,7 +126,23 @@
                     let url,link;
                     const rawImage = b.image_media_asset_id ? ('/api/media?action=read&id=' + encodeURIComponent(b.image_media_asset_id)) : b.image_url;
                     if (!rawImage) continue;
-                    try {url=new URL(rawImage, location.origin);link=new URL(b.link || '/services',location.origin);}catch(_){continue;}
+                    const normalizeBannerLink = (raw) => {
+                        const map = {
+                            '/pages/public/shop': '/shop',
+                            '/pages/public/shop/': '/shop',
+                            '/pages/shop': '/shop',
+                            '/pages/shop/': '/shop',
+                            '/pages/public/booking': '/booking',
+                            '/pages/public/booking/': '/booking',
+                            '/pages/services/booking': '/booking',
+                            '/pages/services/booking/': '/booking',
+                            '/pages/public/services': '/services',
+                            '/pages/public/services/': '/services'
+                        };
+                        const clean = String(raw || '').trim();
+                        return map[clean.toLowerCase()] || clean || '/services';
+                    };
+                    try {url=new URL(rawImage, location.origin);link=new URL(normalizeBannerLink(b.link),location.origin);}catch(_){continue;}
                     if (!['https:','http:'].includes(url.protocol) || /(^|\.)example\.(com|org|net)$/.test(url.hostname) || link.origin !== location.origin) continue;
                     if ((b.start_date && Date.parse(b.start_date)>now) || (b.end_date && Date.parse(b.end_date)<now)) continue;
                     const responsive = b.image_media_asset_id ? [640,1280,1720].map(w=>url.href+'&width='+w+' '+w+'w').join(', ') : '';
@@ -308,6 +324,49 @@
             else loadTiers();
         }),{rootMargin:'200px'});
         observer.observe(grid);observer.observe($('#home-tiers'));observer.observe($('#reviews'));
+
+        // Smooth inertia scroll (Lenis) + subtle below-the-fold reveal
+        const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        if (!reduceMotion && typeof window.Lenis === 'function' && !window.__pawpalLandingLenis) {
+            try {
+                const lenis = new window.Lenis({
+                    duration: 1.05,
+                    easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                    smoothWheel: true,
+                    wheelMultiplier: 0.95,
+                    touchMultiplier: 1.2
+                });
+                window.__pawpalLandingLenis = lenis;
+                const raf = time => {
+                    if (document.body.classList.contains('landing-v218')) {
+                        lenis.raf(time);
+                    }
+                    requestAnimationFrame(raf);
+                };
+                requestAnimationFrame(raf);
+            } catch (_) {}
+        }
+
+        const revealTargets = [...root.querySelectorAll('section:not(.hero):not(.campaign), footer')];
+        if (reduceMotion) {
+            revealTargets.forEach(el => el.classList.remove('landing-reveal'));
+        } else if (revealTargets.length) {
+            const revealObs = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    entry.target.classList.add('is-revealed');
+                    revealObs.unobserve(entry.target);
+                });
+            }, { rootMargin: '0px 0px -40px 0px', threshold: 0.05 });
+            revealTargets.forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight * 0.92) {
+                    el.classList.add('is-revealed');
+                } else {
+                    el.classList.add('landing-reveal');
+                    revealObs.observe(el);
+                }
+            });
+        }
     }
     document.addEventListener('DOMContentLoaded',init);
     document.addEventListener('page_navigated',init);

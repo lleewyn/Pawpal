@@ -50,6 +50,12 @@ app.post('/api/customer/auth/change-password', (req, res) => customerAuth.change
 const legacyRedirectMap = {
     '/pages/public/landing/landing.html': '/',
     '/pages/public/landing/landing': '/',
+    '/pages/public/shop': '/shop',
+    '/pages/public/shop/': '/shop',
+    '/pages/public/booking': '/booking',
+    '/pages/public/booking/': '/booking',
+    '/pages/public/services': '/services',
+    '/pages/public/services/': '/services',
     '/pages/shop/shop.html': '/shop',
     '/pages/shop/shop': '/shop',
     '/pages/shop/cart/cart.html': '/cart',

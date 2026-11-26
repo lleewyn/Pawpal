@@ -1882,3 +1882,27 @@ body.landing-v218 .campaign-slider-stage .campaign-img {
 body.landing-v218 .campaign.is-loading .campaign-slider-stage {
     opacity: 0.88;
 }
+
+html.lenis, html.lenis body {
+    height: auto;
+}
+.lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+}
+body.landing-v218 .landing-reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+}
+body.landing-v218 .landing-reveal.is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+    body.landing-v218 .landing-reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}

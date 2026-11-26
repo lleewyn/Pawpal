@@ -158,6 +158,7 @@ export async function initGuestCheckout(){
   sessionStorage.removeItem(selectionKey);form.classList.add('d-none');
   clearGuestCheckoutPreferences(sessionStorage,{mode:journal.mode,lines:journal.lines});
   const result=get('guest-order-result');result.classList.remove('d-none');document.body.classList.add('checkout-public-page','checkout-receipt-page');
+  if(steps){[...steps.querySelectorAll('.step')].forEach((node,idx)=>{node.classList.toggle('completed',idx<2);node.classList.toggle('active',idx===2);});}
   renderTransactionReceipt(result,{
    title:order.status==='cancelled'?'Đơn hàng đã được hủy':'PawPal đã nhận đơn hàng của bạn!',
    status:({pending:'Chờ xác nhận',confirmed:'Đã xác nhận',completed:'Hoàn tất',cancelled:'Đã hủy',shipping:'Đang giao'}[order.status]||'Đang xử lý'),
