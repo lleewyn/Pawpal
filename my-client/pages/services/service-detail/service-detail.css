@@ -204,8 +204,8 @@
 .sd-nav-next { right: 12px; }
 
 .service-thumbnails-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
+    align-items: center;
     gap: 10px;
 }
 
@@ -1504,7 +1504,7 @@
 .service-detail-page-body .sd-gallery-card{padding:0;border:0;background:transparent;box-shadow:none;gap:16px;height:auto}
 .service-detail-page-body .service-main-image-wrapper{border-radius:9px;aspect-ratio:6/5;height:auto;overflow:hidden;background:#f1f5ed}
 .service-detail-page-body .service-main-image{width:100%;height:100%;object-fit:cover}
-.service-detail-page-body .service-thumbnails-row{gap:10px;overflow-x:auto;padding:0 0 4px}
+.service-detail-page-body .service-thumbnails-row{display:flex;align-items:center;gap:10px;overflow-x:auto;padding:0 0 4px}
 .service-detail-page-body .gallery-thumb{border-radius:7px;flex-shrink:0;box-shadow:none}
 .service-detail-page-body .sd-gallery-actions{padding:4px 0;border:0;flex-wrap:wrap;gap:12px}
 .service-detail-page-body .share-label,.service-detail-page-body .favorite-counter{font-size:12px}
@@ -1524,7 +1524,7 @@
 .service-detail-page-body .sd-price-row{background:#f3f7ee;border:0;border-radius:9px;padding:20px 22px}
 .service-detail-page-body .price-label-small{font-size:12px;font-weight:400}
 .service-detail-page-body .price-main{font-size:28px;color:#315d46;font-weight:600;line-height:1.4;margin-top:5px}
-.service-detail-page-body .btn-book-service-now{background:#214939;border-radius:9px;font-family:Inter,system-ui,sans-serif;font-size:14px;padding:14px 22px;box-shadow:none}
+.service-detail-page-body .btn-book-service-now,.service-detail-page-body .btn-book-service-now:visited,.service-detail-page-body .btn-book-service-now:hover,.service-detail-page-body .btn-book-service-now:focus{background:#214939;color:#fff;border-radius:9px;font-family:Inter,system-ui,sans-serif;font-size:14px;padding:14px 22px;box-shadow:none}
 .service-detail-page-body .sd-trust-perks{background:transparent;border:0;padding:0;gap:12px 18px}
 .service-detail-page-body .trust-perk-item{white-space:normal;font-size:12px;font-weight:400;line-height:1.6;color:#637a69}
 .service-detail-page-body .service-tabs-section{margin-top:48px!important}
@@ -1543,7 +1543,7 @@
 .service-detail-page-body .service-card-title{font-family:Lora,Inter,serif;color:#214939;line-height:1.4}
 .service-detail-page-body .service-card-desc{font-size:13px;line-height:21px;height:42px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 .service-detail-page-body .service-card-actions{padding:0 18px 18px}
-.service-detail-page-body .service-btn-book{background:#214939;box-shadow:none}
+.service-detail-page-body .service-btn-book,.service-detail-page-body .service-btn-book:visited,.service-detail-page-body .service-btn-book:hover,.service-detail-page-body .service-btn-book:focus{background:#214939;color:#fff;box-shadow:none}
 .service-detail-page-body .btn-book-service-now:hover,.service-detail-page-body .config-pill-btn:hover,.service-detail-page-body .gallery-thumb:hover,.service-detail-page-body .service-card:hover,.service-detail-page-body .service-wishlist-btn-large:hover{transform:none;box-shadow:none}
 @media(max-width:1000px){.service-detail-page-body .service-detail-layout{gap:28px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.service-detail-page-body .sd-trust-perks{grid-template-columns:1fr}.service-detail-main .container-xl{padding-left:24px;padding-right:24px}}
 @media(max-width:760px){.service-detail-main .container-xl{padding-left:18px;padding-right:18px}.service-detail-page-body .service-detail-layout{grid-template-columns:1fr;gap:26px}.service-detail-page-body .service-main-image-wrapper{aspect-ratio:4/3}.service-detail-page-body .service-tabs-nav{gap:22px}.service-detail-page-body .service-tabs-section .tab-content{padding:22px 18px}.service-detail-page-body .sd-trust-perks{grid-template-columns:repeat(2,minmax(0,1fr))}.service-detail-page-body .service-tabs-section{margin-top:30px!important}.service-detail-page-body .sd-summary-card{gap:20px}}

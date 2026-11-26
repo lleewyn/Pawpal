@@ -260,7 +260,7 @@ function setupGallery() {
 
     if (thumbsContainer) {
         if (galleryImages.length > 1) {
-            thumbsContainer.style.display = 'grid';
+            thumbsContainer.style.display = 'flex';
             thumbsContainer.innerHTML = rawImages.map((imgUrl, index) => `
                 <div class="gallery-thumb ${index === 0 ? 'active' : ''}" data-index="${index}">
                     <img src="${imgUrl}" alt="Ảnh ${index + 1}" class="gallery-thumb-img" onerror="this.onerror=null; this.src='${fallbackImage}'">
