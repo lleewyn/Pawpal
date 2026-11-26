@@ -29,11 +29,12 @@ export async function loadIntakeStaffPicker({db,bookingId,modal,select,submit}){
   }
   const required=requiredLevels.length?'Cấp độ yêu cầu: '+requiredLevels.join(', ')+'. ':'';
   hint.textContent=candidates.length?required:required+'Chưa có KTV đủ điều kiện tiếp nhận ca. Cần kiểm tra cấp độ chuyên môn và lịch phân công nhân sự.';
-  hint.style.color=candidates.length?'#4f7a65':'#DC2626';select.disabled=!candidates.length;submit.disabled=!select.value;
-  select.onchange=()=>{submit.disabled=!select.value;};
+  hint.style.color=candidates.length?'#4f7a65':'#DC2626';select.disabled=!candidates.length;
   sync();
  }catch(error){
   if(!current())return;select.replaceChildren(option('Không tải được danh sách KTV'));hint.textContent='Không tải được danh sách KTV. Vui lòng thử lại.';hint.style.color='#DC2626';
   sync();
+ }finally{
+  if(current())submit.disabled=false;
  }
 }

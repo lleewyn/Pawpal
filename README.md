@@ -24,7 +24,7 @@ Khi chạy local, Express phục vụ `my-client/` và xử lý các yêu cầu 
 
 1. Cài Node.js từ 22 trở lên và npm. Có thể kiểm tra bằng `node --version` và `npm --version`.
 2. Mở terminal tại thư mục gốc PawPal, nơi có `package.json` và `package-lock.json`.
-3. Tạo tệp `.env` tại thư mục gốc theo mẫu bên dưới. Xin thông tin kết nối và tài khoản kiểm thử từ người quản lý dự án.
+3. Tạo tệp `.env` tại thư mục gốc theo mẫu bên dưới. Xin thông tin kết nối từ người quản lý dự án.
 4. Cài thư viện và khởi động máy chủ.
 
 ```powershell
@@ -39,6 +39,14 @@ Sau lần cài đặt đầu tiên, dùng `npm start` để chạy lại. Lệnh
 - [Cửa hàng](http://localhost:3000/shop)
 - [Đăng nhập khách hàng](http://localhost:3000/login)
 - [Đăng nhập quản trị](http://localhost:3000/admin/login)
+
+### Hướng dẫn đăng nhập
+
+Chọn trang đăng nhập theo vai trò, sau đó nhập tài khoản kiểm thử tương ứng.
+
+- **Quản trị viên** vào trang đăng nhập quản trị. Email `admin.local@pawpal.test`, mật khẩu `pawpal@123`.
+- **Nhân viên** vào trang đăng nhập quản trị. Email `nguyentest@gmail.com`, mật khẩu `0987412365`.
+- **Khách hàng thành viên** vào trang đăng nhập khách hàng. Tên đăng nhập `0007277387`, mật khẩu `Pawpal@123`.
 
 ### Mẫu cấu hình `.env`
 
@@ -56,7 +64,7 @@ PAWPAL_ADMIN_SUPABASE_ANON_KEY=your-public-key
 PAWPAL_ADMIN_SUPABASE_SERVICE_ROLE_KEY=your-server-key
 ```
 
-Nhóm `SUPABASE_*` phục vụ cổng khách hàng và các API, nhóm `PAWPAL_ADMIN_SUPABASE_*` phục vụ quản trị. Khóa đặc quyền chỉ dùng trên máy chủ. Để `.env` thật, `.env.local` và thông tin đăng nhập ngoài Git và gói nộp. Khi chạy local, ứng dụng vẫn dùng Supabase Cloud, nên cần kết nối Internet.
+Nhóm `SUPABASE_*` phục vụ cổng khách hàng và các API, nhóm `PAWPAL_ADMIN_SUPABASE_*` phục vụ quản trị. Khóa đặc quyền chỉ dùng trên máy chủ. Để `.env` thật, `.env.local` và thông tin đăng nhập cá nhân ngoài Git và gói nộp. Khi chạy local, ứng dụng vẫn dùng Supabase Cloud, nên cần kết nối Internet.
 
 ### Cấu hình dịch vụ bổ sung
 

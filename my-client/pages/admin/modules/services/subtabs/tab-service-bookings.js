@@ -26,7 +26,7 @@
         if(id==='newBookingServiceSelect')id='newBookingServiceInput';
         const field=document.getElementById(id);if(!field)return;
         let node=document.getElementById(id+'Error');
-        if(!node){node=document.createElement('p');node.id=id+'Error';node.dataset.serviceError='true';node.setAttribute('role','alert');node.style.cssText='color:#DC2626;font-size:12px;margin:6px 0 0;background:transparent;border:none';const group=field.closest('.intake-check-section'),card=selectedCardForField(field);if(group)group.append(node);else (card|| (field._entityInput?field.parentElement:field.closest('.customer-autocomplete-wrapper')||field.closest('.intake-check-item')||field)).after(node);}
+        if(!node){node=document.createElement('p');node.id=id+'Error';node.dataset.serviceError='true';node.setAttribute('role','alert');node.style.cssText='color:#DC2626;font-size:12px;margin:6px 0 0;background:transparent;border:none';const group=field.closest(id==='intakeStaffSelect'?'.form-group-item':'.intake-check-section'),card=selectedCardForField(field);if(group)group.append(node);else (card|| (field._entityInput?field.parentElement:field.closest('.customer-autocomplete-wrapper')||field.closest('.intake-check-item')||field)).after(node);}
         node.textContent=message;field.setAttribute('aria-invalid','true');field.setAttribute('aria-describedby',node.id);
         if(field._entityInput){field._entityInput.setAttribute('aria-invalid','true');field._entityInput.setAttribute('aria-describedby',node.id);}
     }
@@ -925,10 +925,14 @@
             const generation=crypto.randomUUID();modal.dataset.intakeStaffLoad=generation;
             modal.intakeStaffCandidates=[];staffSelect.replaceChildren(new Option('Đang tải KTV đủ điều kiện…',''));staffSelect.disabled=true;
             if(submitBtn)submitBtn.disabled=true;
-            import('/scripts/shared/intake-staff-picker.mjs').then(({loadIntakeStaffPicker})=>{
+            import('/scripts/shared/intake-staff-picker.mjs?v=20261126_intake_validation').then(({loadIntakeStaffPicker})=>{
                 if(modal.dataset.intakeStaffLoad!==generation)return;
                 return loadIntakeStaffPicker({db:window.getSupabaseClient(),bookingId:booking.dbId,modal,select:staffSelect,submit:submitBtn});
-            }).catch(()=>modalError(modal,'Không tải được danh sách KTV. Đóng và mở lại biên bản để thử lại.'));
+            }).catch(()=>{
+                if(modal.dataset.intakeStaffLoad!==generation)return;
+                if(submitBtn)submitBtn.disabled=false;
+                modalError(modal,'Không tải được danh sách KTV. Đóng và mở lại biên bản để thử lại.');
+            });
         }
 
         // Cân nặng ban đầu & Cân nặng thực tế
@@ -2149,15 +2153,16 @@
         if (btnConfirmIntake) {
             btnConfirmIntake.addEventListener('click', async () => {
                 const modal = document.getElementById('modalEditIntakeInfo') || document.getElementById('modalIntakeSafety');
-                if(btnConfirmIntake.disabled)return;
+                if(!modal||intakeSaving)return;
                 clearModalErrors(modal);
                 const bookingId = modal?.getAttribute('data-booking-id');
                 const bookingsData = PawpalServices.state?.bookingsData || [];
                 const booking = bookingsData.find(b => b.id === bookingId || b.dbId === bookingId);
-                if (!booking) return;
+                if (!booking) {modalError(modal,'Không tìm thấy lịch hẹn. Vui lòng đóng biên bản và tải lại danh sách.');return;}
 
                 const actualWeight = Number(document.getElementById('intakePetWeightInput')?.value);
                 const staff = document.getElementById('intakeStaffSelect')?.value;
+                const customerConfirmed = document.getElementById('intakeCustomerConfirmed')?.checked === true;
 
                 // Lấy thông tin checklist
                 const skinList = [];
@@ -2182,16 +2187,16 @@
                 document.querySelectorAll('.check-belonging-item:checked').forEach(cb => belongings.push(cb.value));
                 const belongingsNote = document.getElementById('intakeBelongingsInput')?.value || '';
 
-                if(!Number.isFinite(actualWeight)||actualWeight<=0)fieldError('intakePetWeightInput','Nhập cân nặng thực tế lớn hơn 0.');
-                if(!staff)fieldError('intakeStaffSelect','Chọn kỹ thuật viên tiếp nhận ca.');
+                if(!Number.isFinite(actualWeight)||actualWeight<=0||actualWeight>1000)fieldError('intakePetWeightInput','Nhập cân nặng thực tế lớn hơn 0 và không quá 1.000 kg.');
+                if(!staff)fieldError('intakeStaffSelect',modal.intakeStaffCandidates?.length?'Chọn kỹ thuật viên tiếp nhận ca.':'Chưa có kỹ thuật viên có thể chọn. Kiểm tra thông báo ở danh sách kỹ thuật viên.');
                 if(!skinList.length)fieldError('checkSkinNormal','Chọn tình trạng da và lông.');
                 else if(document.getElementById('checkSkinNormal')?.checked&&skinList.length>1)fieldError('checkSkinNormal','Không chọn đồng thời da sạch và tình trạng bất thường.');
                 if(!eyesEarsList.length)fieldError('checkEyesEarsNormal','Chọn tình trạng mắt, mũi và tai.');
                 else if(document.getElementById('checkEyesEarsNormal')?.checked&&eyesEarsList.length>1)fieldError('checkEyesEarsNormal','Không chọn đồng thời bình thường và tình trạng bất thường.');
                 if(!woundsStr||woundNone&&document.getElementById('checkWoundExisting')?.checked)fieldError('checkWoundNone','Chọn đúng một tình trạng vết thương.');
                 if(!selectedTemp)fieldError('intakeTemperamentCalm','Chọn tình trạng tâm lý và tính khí.');
-                if(!document.getElementById('intakeCustomerConfirmed')?.checked)fieldError('intakeCustomerConfirmed','Cần khách hàng xác nhận nội dung biên bản trước khi lưu.');
-                if(modal.querySelector('[aria-invalid="true"]')){focusModalError(modal);return;}
+                if(!customerConfirmed)fieldError('intakeCustomerConfirmed','Cần khách hàng xác nhận nội dung biên bản trước khi lưu.');
+                if(modal.querySelector('[data-service-error]')){modalError(modal,'Vui lòng kiểm tra và hoàn tất các mục bắt buộc đang báo đỏ.');focusModalError(modal);return;}
 
                 if(btnConfirmIntake.disabled) return;
                 btnConfirmIntake.disabled=true;intakeSaving=true;
@@ -2220,7 +2225,7 @@
                     if(mediaGeneration!==intakeMediaGeneration||!modal.classList.contains('active'))throw Error('Đã hủy lưu biên bản tiếp nhận.');
                     await PawpalServices.saveBookingRecord(booking,'intake',{
                         mediaRecordId:modal.dataset.mediaRecordId,media_asset_ids:assetIds,
-                        actualWeight,staffId:staffMatches[0].id,staffName:staffMatches[0].full_name,customerConfirmed:!!document.getElementById('intakeCustomerConfirmed')?.checked,
+                        actualWeight,staffId:staffMatches[0].id,staffName:staffMatches[0].full_name,customerConfirmed,
                         skinCoat:skinList.join(', '),eyesEars:eyesEarsList.join(', '),wounds:woundsStr,woundNote,
                         temperament:selectedTemp,belongings:belongings.join(', '),belongingsNote,
                         recordedAt:booking.intakeRecord?.recordedAt||new Date().toISOString(),updatedAt:new Date().toISOString()
@@ -2231,13 +2236,13 @@
                 finally {
                     intakeSaving=false;lockedFields.forEach(([input,disabled])=>input.disabled=disabled);
                     const select=document.getElementById('intakeStaffSelect');
-                    btnConfirmIntake.disabled=!select?.value;
+                    btnConfirmIntake.disabled=false;
                     if(refreshIntakeStaff&&modal.classList.contains('active')&&modal.dataset.bookingId===intakeBookingId){
                         btnConfirmIntake.disabled=true;
                         try{
-                            const {loadIntakeStaffPicker}=await import('/scripts/shared/intake-staff-picker.mjs');
+                            const {loadIntakeStaffPicker}=await import('/scripts/shared/intake-staff-picker.mjs?v=20261126_intake_validation');
                             if(modal.dataset.bookingId===intakeBookingId)await loadIntakeStaffPicker({db:window.getSupabaseClient(),bookingId:booking.dbId,modal,select,submit:btnConfirmIntake});
-                        }catch{modalError(modal,'Không tải được danh sách KTV. Đóng và mở lại biên bản để thử lại.');}
+                        }catch{btnConfirmIntake.disabled=false;modalError(modal,'Không tải được danh sách KTV. Đóng và mở lại biên bản để thử lại.');}
                     }
                 }
                 if (modal) modal.classList.remove('active');
