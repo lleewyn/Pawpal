@@ -1788,6 +1788,8 @@ body.landing-v218 #homePage :is(.intro,.services-top,.pet-personality-inner,.v4-
 body.landing-v218 #homePage .home-pet{position:absolute;z-index:2;display:block;height:auto;max-width:none;pointer-events:none;user-select:none;object-fit:contain;animation:none;filter:none}
 body.landing-v218 #homePage .home-pet-hero{width:120px;right:320px;bottom:-5px}
 body.landing-v218 #homePage .home-pet-services{width:150px;right:30%;bottom:-3px}
+/* The hamster peeks above the section, outside its paint containment box. */
+body.landing-v218 #homePage .pet-personality{content-visibility:visible}
 body.landing-v218 #homePage .home-pet-hamster{width:105px;right:12%;top:-63px}
 body.landing-v218 #homePage .home-pet-rabbit{width:180px;right:0;top:-108px}
 body.landing-v218 #homePage .home-pet-spa{width:140px;right:12%;top:-84px}

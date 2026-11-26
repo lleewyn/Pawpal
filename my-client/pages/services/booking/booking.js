@@ -582,6 +582,7 @@ async function renderBookingReceipt(root,id){
  if(state.guest){
   const {booking,recoveryCode}=await guestCommerce.request('booking-receipt',{requestId:id});
   if(state.disposed||!root.isConnected)return;
+  history.replaceState({...history.state,guestBookingReceiptId:id},'');
   document.title='PawPal - Lịch hẹn của bạn';
   const statusLabel={pending:'Chờ xác nhận',confirmed:'Đã xác nhận',in_progress:'Đang thực hiện',completed:'Hoàn tất',cancelled:'Đã hủy',no_show:'Không đến'}[booking.status]||'Đang xử lý';
   renderTransactionReceipt(root,{
@@ -651,9 +652,17 @@ async function init(){
   window.addEventListener('pagehide',()=>{clearTimeout(availabilityDebounceTimer);clearInterval(holdTimer);clearInterval(availabilityPollTimer);if(bookingChannel)db.removeChannel(bookingChannel);},{once:true});
   db.auth.onAuthStateChange?.((event,session)=>{if((event==='SIGNED_OUT'&&state.authId)||(event==='SIGNED_IN'&&session?.user?.id!==state.authId))discard(false);});
   if((auth.error||!auth.data?.user)&&isGuestShopper()){
-   state.guest=true;const firstStepLabel=document.querySelector('#bookingStepper [data-step="1"] .step-label');if(firstStepLabel)firstStepLabel.textContent='Thông tin đặt lịch';journalKey='pawpal_guest_booking_request_v1';const saved=sessionStorage.getItem(journalKey);requestId=/^[0-9a-f-]{36}$/i.test(saved||'')?saved:crypto.randomUUID();
+   state.guest=true;const firstStepLabel=document.querySelector('#bookingStepper [data-step="1"] .step-label');if(firstStepLabel)firstStepLabel.textContent='Thông tin đặt lịch';journalKey='pawpal_guest_booking_request_v1';
+   const params=new URLSearchParams(location.search);
+   const explicitService=params.get('service')||params.get('serviceId')||params.get('id');
+   let saved=sessionStorage.getItem(journalKey);
+   if(saved && (explicitService || history.state?.guestBookingReceiptId!==saved)){
+    sessionStorage.removeItem(journalKey);
+    saved=null;
+   }
+   requestId=/^[0-9a-f-]{36}$/i.test(saved||'')?saved:crypto.randomUUID();
    draftKey='pawpal_booking_draft:guest:'+initialIdentity;
-   const receiptId=new URLSearchParams(location.search).get('bookingSuccess')||saved;
+   const receiptId=params.get('bookingSuccess')||saved;
    if(receiptId){try{await renderBookingReceipt(root,receiptId);clearBookingDraft();return;}catch(error){if(error.status!==404)throw error;}}
    const data=await startupRead(()=>loadGuestBookingContext(db));if(state.disposed)return;state.catalog=data.catalog;state.breeds=data.breeds;state.species=data.species;state.guestContext=data.context;state.profile=data.context.contact;
    presetServiceFromUrl();
