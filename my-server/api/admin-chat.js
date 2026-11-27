@@ -291,7 +291,7 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      }else if(needsSupportRequest){
       reply=continuingSupport
        ? publicContinuity.supportFollowupReply(continuation.kind,!!customer)
-       : supportBoundary.supportReply({question,...evaluation,signedIn:!!customer});
+       : supportBoundary.supportReply({question,...evaluation,signedIn:!!customer,priorApologized:priorUpsetTurn});
       if(evaluation.shouldHandover&&!membershipRequired)reply+=' Hội thoại đang được chuyển sang chờ CSKH để trao đổi thêm; bạn vẫn cần gửi yêu cầu trong mục Hỗ trợ.';
       if(membershipRequired)evaluation.shouldHandover=false;
      }else if(healthConcern){

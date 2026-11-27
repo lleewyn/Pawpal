@@ -7,19 +7,21 @@ const acknowledgments = {
 const upsetAcknowledgment = 'PawPal rất tiếc vì chuyện này khiến bạn bức xúc.';
 const unresolvedAcknowledgment = 'PawPal rất tiếc vì việc này vẫn chưa được giải quyết.';
 
-function supportReply({question, riskType, isHighlyUpset, isImplicitlyUpset, missedAppointment, signedIn}){
- let acknowledgment = isHighlyUpset
+function supportReply({question, riskType, isHighlyUpset, isImplicitlyUpset, isDisappointed, missedAppointment, signedIn, priorApologized}){
+ let acknowledgment = priorApologized
+  ? 'Bên mình đã ghi nhận phản ánh của bạn và sẽ kiểm tra ngay.'
+  : isHighlyUpset
   ? upsetAcknowledgment + ' Bên mình cần một vài thông tin để kiểm tra chuyện đã xảy ra.'
-  : isImplicitlyUpset ? unresolvedAcknowledgment : acknowledgments[riskType] || 'PawPal sẽ hướng dẫn bạn gửi yêu cầu và theo dõi kết quả nhé.';
+  : (isImplicitlyUpset && !isDisappointed) ? unresolvedAcknowledgment : acknowledgments[riskType] || 'PawPal sẽ hướng dẫn bạn gửi yêu cầu và theo dõi kết quả nhé.';
  let details = 'bạn chọn đơn hàng hoặc lịch hẹn liên quan, mô tả sự việc và đính kèm minh chứng nếu có.';
  if (riskType === 'billing_dispute' && /trừ tiền (?:hai|2) lần/iu.test(question)) {
-  if (!isHighlyUpset && !isImplicitlyUpset) acknowledgment = 'Thấy tiền bị trừ hai lần, bạn lo là điều dễ hiểu. Bạn an tâm nhé, PawPal sẽ hỗ trợ đối soát để bạn không bị thiệt thòi.';
+  if (!priorApologized && !isHighlyUpset && !isImplicitlyUpset) acknowledgment = 'Thấy tiền bị trừ hai lần, bạn lo là điều dễ hiểu. Bạn an tâm nhé, PawPal sẽ hỗ trợ đối soát để bạn không bị thiệt thòi.';
   details = 'bạn chọn đơn hàng và ghi thời điểm của hai giao dịch để bên mình đối soát.';
  } else if (riskType === 'service_complaint' && /trầy (?:da|xước)/iu.test(question)) {
-  if (!isHighlyUpset && !isImplicitlyUpset) acknowledgment = 'PawPal rất tiếc khi biết bé bị trầy. Bên mình hiểu bạn lo khi thấy bé như vậy và xót cho bé nhiều lắm.';
+  if (!priorApologized && !isHighlyUpset && !isImplicitlyUpset) acknowledgment = 'PawPal rất tiếc khi biết bé bị trầy. Bên mình hiểu bạn lo khi thấy bé như vậy và xót cho bé nhiều lắm.';
   details = 'bạn chọn lịch hẹn và mô tả tình trạng của bé để nhân viên kiểm tra lại buổi chăm sóc.';
  } else if (riskType === 'service_complaint' && missedAppointment) {
-  if (!isHighlyUpset) acknowledgment = 'PawPal rất tiếc vì bạn đã phải chờ quá giờ hẹn. Tụi mình thành thật xin lỗi vì sự bất tiện này.';
+  if (!priorApologized && !isHighlyUpset) acknowledgment = 'PawPal rất tiếc vì bạn đã phải chờ quá giờ hẹn. Tụi mình thành thật xin lỗi vì sự bất tiện này.';
   details = 'bạn chọn lịch hẹn liên quan và ghi thời gian đã hẹn cùng lần liên hệ gần nhất để bên mình kiểm tra.';
  }
  const signIn = signedIn ? '' : 'Bạn [đăng nhập](/login) trước nhé. ';

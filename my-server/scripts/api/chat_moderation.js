@@ -93,7 +93,8 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
     const repeatedAttempts = /\b(?:(?:goi|nhan|hoi|lien he|bao)\s+(?:(?:toi|den) )?(?:may|nhieu|hai|ba|[2-9]\d*) lan|lan thu (?:hai|ba|tu|[2-9]\d*) roi)\b/.test(folded);
     const stillUnresolved = /\b(?:van (?:chua|khong) (?:toi|den|don|giao|phan hoi|xu ly|giai quyet|hoan tien|xong)|(?:khong|chua co) ai (?:nghe|tra loi|phan hoi|xu ly|giai quyet))\b/.test(folded);
     const missedAppointment = /\bhen\b[^.!?;]{0,70}\b(?:ma|nhung)\b[^.!?;]{0,65}\b(?:van )?chua (?:toi|den|don)\b|\bqua gio hen\b[^.!?;]{0,60}\b(?:van )?chua (?:toi|den|don)\b/.test(folded);
-    const isDisappointed = /\b(?:that vong|chan (?:that|ghe|qua|lam)|nan (?:qua|ghe|that)|lam an (?:kieu|gi|la)|khong dam quay lai|thoi (?:dep|khoi)(?: di)?)\b/.test(folded);
+    const isDisappointed = /\b(?:that vong|chan (?:that|ghe|qua|lam)|nan (?:qua|ghe|that)|lam an (?:kieu|gi|la|te)|(?:qua te|te qua)|khong dam quay lai|thoi (?:dep|khoi)(?: di)?|ra nong noi)\b/.test(folded)
+        || /\bnghi sao\s+(?:ma|lai|the|vay)\b|\bnghi sao\b[^.!?;]{0,40}\b(?:lam|de|cat|cham|giao)\b/.test(folded);
     const isImpatient = (/^(?:alo|ua|sao lau|co ai|roi sao|lau qua|doi lau)/.test(folded) && (/[?!]{2,}/.test(rawText) || /\b(?:lau (?:qua|the|vay)|co ai (?:o do|tra loi|nghe|ho tro)|doi (?:mai|lau)|khong ai (?:tra loi|ho tro))\b/.test(folded)));
     const isMildlyAnxious = /\b(?:nhut nhat|so nguoi la|lan dau (?:di |den )|so be (?:so|hoang|stress)|hoi roi|khong biet chon gi|so khong quen)\b/.test(folded);
     const isImplicitlyUpset = (stillUnresolved && (repeatedAttempts || missedAppointment)) || isDisappointed;
@@ -113,7 +114,7 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
     } else if (/trừ tiền|chưa nhận được tiền|sai tiền|hoàn tiền|mất tiền|thanh toán lỗi/i.test(lower)) {
         riskType = 'billing_dispute';
         detectedLevel = Math.max(detectedLevel, 4);
-    } else if (missedAppointment || /giao trễ|giao sai|giao nhầm|hỏng hàng|hàng (?:bị )?(?:hỏng|vỡ|lỗi)|trầy (?:xước|da)|vòi tiền|thái độ/i.test(lower)) {
+    } else if (missedAppointment || /giao trễ|giao sai|giao nhầm|hỏng hàng|hàng (?:bị )?(?:hỏng|vỡ|lỗi)|trầy (?:xước|da)|vòi tiền|thái độ/i.test(lower) || /\bra nong noi\b|\blam (?:be|cho|con cho|meo|con meo|thu cung)[^.!?;]{0,40}\b(?:ra (?:nong noi|the nay|vay)|bi thuong|bi tray|bi dau|bi hong|bi hu|xau|te)\b|\b(?:cat|tia|tam) (?:hu|hong|xau|lech|tray)\b/.test(folded)) {
         riskType = 'service_complaint';
         detectedLevel = Math.max(detectedLevel, 4);
     }

@@ -156,6 +156,15 @@ test('multiple contextual clues recognize a frustrated guest without asserting t
  const echoedRes={statusCode:200,setHeader(){},status(n){this.statusCode=n;return this;},json(data){this.data=data;return this;}};
  await echoedHandler({method:'POST',headers:{'x-real-ip':randomUUID()},body:{action:'public_send',conversationId:randomUUID(),requestId:randomUUID(),sessionToken:'g'.repeat(32),question:'Có áp dụng không?',mediaAssetIds:[]}},echoedRes);
  assert.equal(echoedRes.statusCode,200);assert.doesNotMatch(echoedSaved[0].p_reply,/rất tiếc/i);
+ const dogComplaint=await invoke({guest:true,question:'nghĩ sao mà làm con chó tôi ra nông nỗi v',recentQuestions:[]});
+ assert.doesNotMatch(dogComplaint.saved[0].p_reply,/khả dụng|phòng hoặc khung giờ/i);
+ assert.match(dogComplaint.saved[0].p_reply,/\/user#support-create/);
+ assert.equal(dogComplaint.saved[0].p_level,5);
+ const dogComplaintAfterUpset=await invoke({guest:true,question:'nghĩ sao mà làm con chó tôi ra nông nỗi v',recentQuestions:['làm ăn gì kì v']});
+ assert.doesNotMatch(dogComplaintAfterUpset.saved[0].p_reply,/rất tiếc/i);
+ assert.match(dogComplaintAfterUpset.saved[0].p_reply,/\/user#support-create/);
+ const stillChecksRoom=await invoke({guest:true,question:'Spa còn chỗ không?',recentQuestions:[]});
+ assert.match(stillChecksRoom.saved[0].p_reply,/khả dụng/);
  for(const question of ['Đơn hàng của tôi đang ở đâu???','Mình gọi hai lần rồi.']){
   const neutral=await invoke({guest:true,question});
   assert.equal(neutral.saved[0].p_level,2);
