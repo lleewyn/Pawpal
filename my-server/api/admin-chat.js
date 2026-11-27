@@ -322,7 +322,7 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
         : 'Để PawPal hướng dẫn đúng bước cho bạn, bạn cho mình biết sự việc xảy ra với đơn hàng, lịch hẹn hay buổi chăm sóc nào nhé. Nếu muốn gặp nhân viên hoặc gửi yêu cầu hỗ trợ, bạn [đăng nhập](/login) hoặc gửi thông tin qua mục [Liên hệ](/contact).';
       }
       understood=false;
-     }else if((evaluation.isHighlyUpset||evaluation.isImplicitlyUpset)&&membershipRequired&&!requestedStaff&&!evaluation.isToxic&&(['concern','unresolved'].includes(followupKind)||evaluation.isDisappointed)){
+     }else if((evaluation.isDisappointed&&!requestedStaff&&!evaluation.isToxic&&evaluation.riskType==='none'&&!evaluation.shouldHandover)||((evaluation.isHighlyUpset||evaluation.isImplicitlyUpset)&&membershipRequired&&!requestedStaff&&!evaluation.isToxic&&(['concern','unresolved'].includes(followupKind)||evaluation.isDisappointed))){
       const acknowledgment=evaluation.isHighlyUpset?supportBoundary.upsetAcknowledgment:evaluation.isDisappointed?'PawPal rất tiếc vì trải nghiệm chưa làm bạn hài lòng.':supportBoundary.unresolvedAcknowledgment;
       reply=acknowledgment+' Bạn có thể kể ngắn chuyện vừa xảy ra để bên mình hướng dẫn bước tiếp theo không?';
       evaluation.shouldHandover=false;
@@ -342,9 +342,11 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
       }
       if(evaluation.isHighlyUpset)reply=supportBoundary.upsetAcknowledgment+' '+reply;
       else if(evaluation.isImplicitlyUpset)reply=supportBoundary.unresolvedAcknowledgment+' '+reply;
-      else if(evaluation.detectedLevel>=5)reply='PawPal hiểu bạn cần được hỗ trợ sớm. '+reply;
-     }else if(evaluation.detectedLevel===1&&evaluation.socialIntent){
-      if(evaluation.socialIntent==='thanks'){
+      else if(evaluation.detectedLevel>=5&&!evaluation.isToxic)reply='PawPal hiểu bạn cần được hỗ trợ sớm. '+reply;
+     }else if(evaluation.detectedLevel===1&&(evaluation.socialIntent||evaluation.isPraise)){
+      if(evaluation.isPraise){
+       reply='PawPal cảm ơn bạn nhiều nhé! Nghe bạn hài lòng là tụi mình vui lắm, hẹn sớm gặp lại bạn và bé nha.';
+      }else if(evaluation.socialIntent==='thanks'){
        reply=/shop|ad|nhieu/iu.test(question)?'PawPal vui vì được giúp bạn nhé! Khi nào cần xem dịch vụ, sản phẩm hay lịch cho bé cứ nhắn PawPal bất cứ lúc nào.':'PawPal vui vì được giúp bạn. Nếu còn điều gì muốn hỏi về bé, bạn cứ nhắn nhé.';
       }else{
        reply=/^chao pawpal[!.?\s]*$/i.test(guestHelp.fold(question))?'Chào bạn! PawPal có thể giúp gì cho bạn và bé hôm nay?':'Chào bạn! Hôm nay bạn đang cần xem dịch vụ, sản phẩm hay cần hỗ trợ gì cho bé cứ nhắn PawPal nhé.';
