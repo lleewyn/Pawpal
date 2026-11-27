@@ -22,7 +22,7 @@ test('service price bands keep open upper bounds and taxi surcharge without mult
  for(const kind of ['grooming_spa','pet_taxi','pet_hotel']){const r={kind,query:''},d={...r,items:[{name:'QA',price:100,weight_from:0,weight_to:null,distance_from:0,distance_to:5,surcharge:10}],as_of:data.as_of};assert.match(format(d,r).reply,/chưa phải báo giá xác nhận/);}
 });
 test('explicit staff requests recognized without using AI or treating ordinary staff policy as a request',()=>{
- const {requestsStaff}=require('../../my-server/scripts/api/chat_public_catalog.js');for(const q of ['Tôi muốn gặp nhân viên','Chuyen sang chuyen vien','Cần nhân viên hỗ trợ','Tôi muốn nói chuyện trực tiếp với nhân viên'])assert.equal(requestsStaff(q),true);
+ const {requestsStaff}=require('../../my-server/scripts/api/chat_public_catalog.js');for(const q of ['Tôi muốn gặp nhân viên','Chuyen sang chuyen vien','Cần nhân viên hỗ trợ','Tôi muốn nói chuyện trực tiếp với nhân viên','chuyển cho CSKH giúp mình'])assert.equal(requestsStaff(q),true);
  assert.equal(requestsStaff('Nhân viên làm việc mấy giờ?'),false);
  assert.equal(requestsStaff('Không cần nhân viên'),false);
  assert.equal(requestsStaff('Kết nối nhân viên'),true);
@@ -48,6 +48,7 @@ test('guest purchase and booking directions reach their FAQ, and price questions
  assert.equal(guest.plan('Đặt lịch ở đâu?',['Sản phẩm cho mèo']).topic,'booking');
  assert.equal(guest.plan('PawPal ở đâu?').request.kind,'store');
  assert.deepEqual(guest.plan('Giá sản phẩm Sữa tắm yến mạch, còn hàng không?').request,{kind:'product',queries:['Sữa tắm yến mạch']});
+ assert.equal(guest.plan('bé cún 6kg',['gửi hotel qua đêm giá sao']).request.pet,'dog');
  const quote=guest.plan('Bé 7 kg tắm bao nhiêu?');
  const r=guest.format({kind:'grooming',as_of:data.as_of,has_more:false,items:[{name:'Tắm cơ bản',price:170000,weight_from:5,weight_to:10,weight_to_inclusive:false,duration:75,description:'Mô tả quảng cáo',condition:'Chọn theo loài'}]},quote);
  assert.match(r.reply,/7 kg/);
@@ -55,4 +56,8 @@ test('guest purchase and booking directions reach their FAQ, and price questions
  assert.match(r.reply,/75 phút/);
  assert.match(r.reply,/Chọn theo loài/);
  assert.doesNotMatch(r.reply,/Mô tả quảng cáo/);
+ const longNote='Thông tin chăm sóc chi tiết dành cho thú cưng nhạy cảm cần được theo dõi cẩn thận trước khi thực hiện dịch vụ nhằm đảm bảo an toàn tối đa và sự thoải mái xuyên suốt quá trình trải nghiệm tại cửa hàng PawPal cũng như giúp phụ huynh nắm rõ từng bước thực hiện cụ thể cho bé yêu trong suốt buổi tắm sấy và kiểm tra da lông định kỳ.';
+ const clipped=guest.format({kind:'grooming',as_of:data.as_of,has_more:false,items:[{name:'Gói chăm sóc dài',price:200000,weight_from:5,weight_to:10,weight_to_inclusive:false,duration:60,condition:longNote}]},quote);
+ assert.match(clipped.reply,/…/);
+ assert.doesNotMatch(clipped.reply,/đị…|thự…/);
 });

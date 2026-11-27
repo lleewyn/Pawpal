@@ -14,7 +14,7 @@ const lookup=link('Tra cứu đơn và lịch guest','/return-guest');
 const advice=(kind,extra={})=>({request:{kind,...extra},topic:kind});
 function isFollowup(text){const q=fold(text);return q.length<180&&(/^(?:(?:be|cho|meo|nang|khoang|tam|con|loai|gia|vay|the|dat|mua)(?: |$)|[0-9])/.test(q)||/kg|\bkm\b/.test(q))&&!/ho so|doanh thu|mat khau|tai khoan ngan hang/.test(q);}
 function measure(text,unit,max){const m=fold(text).match(new RegExp('(\\d+(?:[.,]\\d+)?)\\s*'+unit+'\\b'));if(!m)return null;const n=Number(m[1].replace(',','.'));return n>0&&n<=max?n:null;}
-function petOf(value){const q=fold(value),cat=/\bmeo\b/.test(q)||/\bcat\b/i.test(String(value||'')),dog=/chó/iu.test(value||'')||/\bdog\b|cho con|cho truong thanh|cho nho|cho lon|cho$/.test(q);return cat===dog?null:cat?'cat':'dog';}
+function petOf(value){const q=fold(value),cat=/\bmeo\b/.test(q)||/\bcat\b/i.test(String(value||'')),dog=/chó|cún/iu.test(value||'')||/\b(?:dog|cun)\b|cho con|cho truong thanh|cho nho|cho lon|cho$/.test(q);return cat===dog?null:cat?'cat':'dog';}
 function plan(question,recent=[]){
  const q=fold(question),old=catalog.plan(question);
  const productQuestion=/\bsan pham\b|\bsku\b|\bsua tam\b/.test(q);
@@ -103,6 +103,7 @@ function friendly(value){
   .replace(/Hướng dẫn này chưa xác nhận/gu,'PawPal chưa có thông tin xác nhận');
 }
 const text=(value,max=600)=>typeof value==='string'?value.slice(0,max).trim():'';
+function clip(value,max=240){const s=typeof value==='string'?value.trim():'';if(s.length<=max)return s;const cut=s.slice(0,max);const space=cut.lastIndexOf(' ');return (space>max*0.6?cut.slice(0,space):cut).trim().replace(/[.,;:]+$/,'')+'…';}
 const num=v=>{if(typeof v!=='number'||!Number.isFinite(v)||v<0)throw Error('invalid_guest_number');return v;};
 const money=v=>num(v).toLocaleString('vi-VN',{maximumFractionDigits:2})+' đ';
 const span=(a,b,inclusive,unit)=>`${num(a)}${b==null?` ${unit} trở lên`:`–${num(b)} ${unit} (${inclusive?'gồm':'không gồm'} cận trên)`}`;
@@ -115,7 +116,7 @@ function format(data,route){
   else if(kind==='grooming'){line+=' — '+span(r.weight_from,r.weight_to,r.weight_to_inclusive,'kg')+': '+money(r.price)+'.';if(Number.isSafeInteger(r.duration)&&r.duration>0)line+=' Thời lượng dự kiến '+r.duration+' phút.';}
   else if(kind==='hotel'){if(!Number.isSafeInteger(r.billing_minutes)||r.billing_minutes<=0)throw Error('invalid_hotel_unit');line+=': '+money(r.price)+'/'+(r.billing_minutes===1440?'24 giờ':r.billing_minutes+' phút')+'.';if(r.capacity!=null)line+=' Sức chứa theo danh mục: '+num(r.capacity)+'.';}
   else{line+=' — '+span(r.distance_from,r.distance_to,r.distance_to_inclusive,'km')+', '+span(r.weight_from,r.weight_to,r.weight_to_inclusive,'kg')+': giá cơ bản '+money(r.price)+', phụ phí hiện công bố '+money(r.surcharge)+'.';}
-  for(const field of route.focused?['condition']:['description','features','condition'])if(text(r[field]))line+=' '+text(r[field],350);
+  for(const field of route.focused?['condition']:['description','features','condition'])if(text(r[field])){const part=clip(r[field],240);line+=(/[.!?…;)]$/.test(line)?' ':'. ')+part;}
   if(kind!=='product'&&/^[0-9a-f-]{36}$/i.test(r.service_id))line+=' '+link('Chọn gói này','/booking?service='+r.service_id);
   return line;
  });

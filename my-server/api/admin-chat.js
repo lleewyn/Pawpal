@@ -38,7 +38,7 @@ function createGenerator({serviceClient,request=requestGemini,environmentKey=()=
    catch{throw Error('ai_environment_key_unavailable');}
   }
   const excluded=[];
-  for(let attempt=0;attempt<Math.min(4,Number(state.data.active_count));attempt++){
+  for(let attempt=0;attempt<Math.min(6,Number(state.data.active_count));attempt++){
    if(deadline-Date.now()<500)break;
    const claimed=await service.rpc('claim_ai_api_key',{p_exclude:excluded});if(claimed.error)throw Error('ai_key_pool_unavailable');
    const candidate=claimed.data?.[0];if(!candidate)break;excluded.push(candidate.id);
@@ -270,10 +270,16 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
     const urgentHealth=evaluation.riskType==='medical_emergency'||continuation?.topic==='urgent_health';
     const healthConcern=evaluation.riskType==='special_care'||continuation?.topic==='health';
     const continuingSupport=publicContinuity.isSupportTopic(continuation?.topic);
-    const priorUpsetTurn=recentConversation&&(rules.data.recent_questions||[]).some(prev=>{
+    const upsetHistory=recentConversation?(rules.data.recent_questions||[]).filter(prev=>{
+     const prevEval=evaluateToxicAndSentiment(prev,rules.data.profanity,rules.data.sentiment);
+     const prevKind=publicContinuity.followupKind(prev,prevEval);
+     return prevEval.isDisappointed||prevEval.isImpatient||prevEval.isHighlyUpset||prevEval.isImplicitlyUpset||prevKind==='concern'||publicContinuity.isNextStepFollowup(prev);
+    }):[];
+    const priorUpsetTurn=upsetHistory.some(prev=>{
      const prevEval=evaluateToxicAndSentiment(prev,rules.data.profanity,rules.data.sentiment);
      return prevEval.isDisappointed||prevEval.isImpatient||prevEval.isHighlyUpset||prevEval.isImplicitlyUpset;
     });
+    const priorUpsetCount=priorUpsetTurn?upsetHistory.length:0;
     if(urgentHealth){evaluation.detectedLevel=6;evaluation.shouldHandover=true;}
     else if(healthConcern)evaluation.detectedLevel=Math.max(evaluation.detectedLevel,3);
     if(assets.length)evaluation.shouldHandover=true;
@@ -306,10 +312,14 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      }else if(priorUpsetTurn&&(evaluation.isHighlyUpset||evaluation.isImplicitlyUpset||evaluation.isDisappointed||evaluation.isImpatient||((followupKind==='concern'||publicContinuity.isNextStepFollowup(question))&&!publicContinuity.topicFor(question,evaluation)))&&!requestedStaff&&!evaluation.isToxic&&evaluation.riskType==='none'){
       if(await canHandoff()){
        evaluation.shouldHandover=true;
-       reply='Bên mình đã chuyển hội thoại sang hàng đợi CSKH để nhân viên trực tiếp kiểm tra và hỗ trợ bạn ngay nhé.';
+       reply=priorUpsetCount>=2
+        ? 'Hội thoại của bạn đang ở hàng đợi CSKH để nhân viên kiểm tra sớm nhất. Nếu có mã đơn hàng hoặc mã lịch hẹn, bạn nhắn thêm vào đây để nhân viên xem trước nhé.'
+        : 'Bên mình đã chuyển hội thoại sang hàng đợi CSKH để nhân viên trực tiếp kiểm tra và hỗ trợ bạn ngay nhé.';
       }else{
        evaluation.shouldHandover=false;
-       reply='Để PawPal hướng dẫn đúng bước cho bạn, bạn cho mình biết sự việc xảy ra với đơn hàng, lịch hẹn hay buổi chăm sóc nào nhé. Nếu muốn gặp nhân viên hoặc gửi yêu cầu hỗ trợ, bạn [đăng nhập](/login) hoặc gửi thông tin qua mục [Liên hệ](/contact).';
+       reply=priorUpsetCount>=2
+        ? 'Nếu bạn chưa tiện nhắn chi tiết lúc này, bạn chỉ cần gửi mã đơn hàng, mã lịch hẹn hoặc tên dịch vụ đã dùng, hoặc [đăng nhập](/login) để trao đổi trực tiếp với nhân viên CSKH nhé.'
+        : 'Để PawPal hướng dẫn đúng bước cho bạn, bạn cho mình biết sự việc xảy ra với đơn hàng, lịch hẹn hay buổi chăm sóc nào nhé. Nếu muốn gặp nhân viên hoặc gửi yêu cầu hỗ trợ, bạn [đăng nhập](/login) hoặc gửi thông tin qua mục [Liên hệ](/contact).';
       }
       understood=false;
      }else if((evaluation.isHighlyUpset||evaluation.isImplicitlyUpset)&&membershipRequired&&!requestedStaff&&!evaluation.isToxic&&(['concern','unresolved'].includes(followupKind)||evaluation.isDisappointed)){
@@ -323,7 +333,13 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
      }else if(evaluation.shouldHandover){
       reply='PawPal đã chuyển cuộc trò chuyện sang hàng đợi hỗ trợ. Khi có nhân viên tiếp nhận, họ có thể đọc phần bạn đã trao đổi.';
       if(assets.length)reply='PawPal đã nhận ảnh và chuyển hội thoại sang chờ nhân viên xem. Trợ lý tự động chưa phân tích nội dung ảnh.';
-      if(membershipRequired){reply=membershipMessage;evaluation.shouldHandover=false;}
+      if(membershipRequired){
+       if(evaluation.isToxic&&!requestedStaff&&evaluation.riskType==='none'){
+        reply='PawPal muốn hiểu rõ sự việc để hỗ trợ bạn. Bạn vui lòng mô tả lại vấn đề bằng lời lẽ lịch sự, hoặc [đăng nhập](/login) nếu cần trao đổi trực tiếp với nhân viên nhé.';
+        understood=false;
+       }else reply=membershipMessage;
+       evaluation.shouldHandover=false;
+      }
       if(evaluation.isHighlyUpset)reply=supportBoundary.upsetAcknowledgment+' '+reply;
       else if(evaluation.isImplicitlyUpset)reply=supportBoundary.unresolvedAcknowledgment+' '+reply;
       else if(evaluation.detectedLevel>=5)reply='PawPal hiểu bạn cần được hỗ trợ sớm. '+reply;

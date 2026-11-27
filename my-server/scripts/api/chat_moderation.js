@@ -74,8 +74,8 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
     });
 
     const folded = lower.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/\s+/g, ' ').trim();
-    const socialIntent = /^(?:(?:xin )?chao(?: ban| pawpal)?|hello|hi)[!.?\s]*$/.test(folded) ? 'greeting'
-        : /^(?:cam on|cam on ban|cam on pawpal)[!.?\s]*$/.test(folded) ? 'thanks' : null;
+    const socialIntent = /^(?:(?:xin )?chao|hello|hi|hey)(?: (?:ban|shop|ad|admin|pawpal|moi nguoi|cua hang|tiem|buoi sang|buoi chieu|buoi toi))?(?: (?:a|nha|nhe|oi))?[!.?\s]*$/.test(folded) ? 'greeting'
+        : /^(?:(?:da|vang|ok|oki|oke|uhm|um|a) ){0,2}(?:cam on|thank you|thanks|tks|thank)(?: (?:ban|shop|ad|admin|pawpal|moi nguoi|cua hang|tiem))?(?: (?:nhieu|qua|lam)){0,2}(?: (?:a|nha|nhe|oi))?[!.?\s]*$/.test(folded) ? 'thanks' : null;
 
     // A standalone greeting starts at level 1. Configured triggers may raise it.
     let detectedLevel = socialIntent ? 1 : 2;
@@ -93,12 +93,14 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
     const repeatedAttempts = /\b(?:(?:goi|nhan|hoi|lien he|bao)\s+(?:(?:toi|den) )?(?:may|nhieu|hai|ba|[2-9]\d*) lan|lan thu (?:hai|ba|tu|[2-9]\d*) roi)\b/.test(folded);
     const stillUnresolved = /\b(?:van (?:chua|khong) (?:toi|den|don|giao|phan hoi|xu ly|giai quyet|hoan tien|xong)|(?:khong|chua co) ai (?:nghe|tra loi|phan hoi|xu ly|giai quyet))\b/.test(folded);
     const missedAppointment = /\bhen\b[^.!?;]{0,70}\b(?:ma|nhung)\b[^.!?;]{0,65}\b(?:van )?chua (?:toi|den|don)\b|\bqua gio hen\b[^.!?;]{0,60}\b(?:van )?chua (?:toi|den|don)\b/.test(folded);
-    const isDisappointed = /\b(?:that vong|chan (?:that|ghe|qua|lam)|nan (?:qua|ghe|that)|lam an (?:kieu|gi|la|te)|(?:qua te|te qua)|khong dam quay lai|thoi (?:dep|khoi)(?: di)?|ra nong noi)\b/.test(folded)
+    const isDisappointed = /\b(?:that vong|chan (?:that|ghe|qua|lam|the)|nan (?:qua|ghe|that)|lam an (?:kieu|gi|la|te)|lam gi (?:ki|ky|ma|the)|sao (?:ki|ky) (?:vay|the)|ki cuc|vo van|(?:qua te|te qua)|khong dam quay lai|thoi (?:dep|khoi)(?: di)?|ra nong noi)\b/.test(folded)
         || /\bnghi sao\s+(?:ma|lai|the|vay)\b|\bnghi sao\b[^.!?;]{0,40}\b(?:lam|de|cat|cham|giao)\b/.test(folded);
     const isImpatient = (/^(?:alo|ua|sao lau|co ai|roi sao|lau qua|doi lau)/.test(folded) && (/[?!]{2,}/.test(rawText) || /\b(?:lau (?:qua|the|vay)|co ai (?:o do|tra loi|nghe|ho tro)|doi (?:mai|lau)|khong ai (?:tra loi|ho tro))\b/.test(folded)));
     const isMildlyAnxious = /\b(?:nhut nhat|so nguoi la|lan dau (?:di |den )|so be (?:so|hoang|stress)|hoi roi|khong biet chon gi|so khong quen)\b/.test(folded);
     const isImplicitlyUpset = (stillUnresolved && (repeatedAttempts || missedAppointment)) || isDisappointed;
 
+    const isPolicyQuestion = /\b(?:chinh sach|quy dinh|dieu kien|nhu the nao|the nao|ra sao|lam sao|duoc khong)\b/.test(folded)
+        && !/\b(?:don (?:hang )?(?:cua )?(?:toi|minh)|toi (?:moi )?nhan|minh (?:moi )?nhan|giao cho (?:toi|minh)|vua nhan|bi vo roi|hong roi)\b/.test(folded);
     // 3. Phân loại loại rủi ro (Risk Type) theo ngữ cảnh thực tế (R0 / P0-03)
     let riskType = 'none';
     if (/\b(?:chay mau|ngo doc|co giat|hap hoi|kho tho|tho doc|tho gap|kho danh thuc|khong dung day duoc|khong the dung day|tai nan|gay chan|nuot di vat|so cuu|bat tinh)\b/.test(folded)) {
@@ -114,7 +116,7 @@ function evaluateToxicAndSentiment(userText, filters = [], triggers = []) {
     } else if (/trừ tiền|chưa nhận được tiền|sai tiền|hoàn tiền|mất tiền|thanh toán lỗi/i.test(lower)) {
         riskType = 'billing_dispute';
         detectedLevel = Math.max(detectedLevel, 4);
-    } else if (missedAppointment || /giao trễ|giao sai|giao nhầm|hỏng hàng|hàng (?:bị )?(?:hỏng|vỡ|lỗi)|trầy (?:xước|da)|vòi tiền|thái độ/i.test(lower) || /\bra nong noi\b|\blam (?:be|cho|con cho|meo|con meo|thu cung)[^.!?;]{0,40}\b(?:ra (?:nong noi|the nay|vay)|bi thuong|bi tray|bi dau|bi hong|bi hu|xau|te)\b|\b(?:cat|tia|tam) (?:hu|hong|xau|lech|tray)\b/.test(folded)) {
+    } else if (missedAppointment || (!isPolicyQuestion && /giao trễ|giao sai|giao nhầm|hỏng hàng|hàng (?:bị )?(?:hỏng|vỡ|lỗi)|trầy (?:xước|da)|vòi tiền|thái độ/i.test(lower)) || /\bra nong noi\b|\blam (?:be|cho|con cho|meo|con meo|thu cung)[^.!?;]{0,40}\b(?:ra (?:nong noi|the nay|vay)|bi thuong|bi tray|bi dau|bi hong|bi hu|xau|te)\b|\b(?:cat|tia|tam) (?:hu|hong|xau|lech|tray)\b/.test(folded)) {
         riskType = 'service_complaint';
         detectedLevel = Math.max(detectedLevel, 4);
     }
