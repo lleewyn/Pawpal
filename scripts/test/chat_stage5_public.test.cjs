@@ -162,6 +162,12 @@ test('multiple contextual clues recognize a frustrated guest without asserting t
  const echoedRes={statusCode:200,setHeader(){},status(n){this.statusCode=n;return this;},json(data){this.data=data;return this;}};
  await echoedHandler({method:'POST',headers:{'x-real-ip':randomUUID()},body:{action:'public_send',conversationId:randomUUID(),requestId:randomUUID(),sessionToken:'g'.repeat(32),question:'Có áp dụng không?',mediaAssetIds:[]}},echoedRes);
  assert.equal(echoedRes.statusCode,200);assert.doesNotMatch(echoedSaved[0].p_reply,/rất tiếc/i);
+ const repeatedText='PawPal rất vui được đón nhận ý kiến của bạn.';
+ const genericRepeatSaved=[],genericRepeatService={auth:{getUser:async()=>({data:{user:{id:'auth'}}})},from(table){const q={select:()=>q,eq:()=>q,is:()=>q,gt:()=>q,maybeSingle:async()=>({data:table==='guest_session'?{id:'guest'}:table==='chat_conversation'?{id:randomUUID(),customer_id:null,guest_session_id:'guest',status:'bot_handling',updated_at:new Date().toISOString()}:null})};return q;},rpc:async(name,args)=>{if(name==='read_public_chat_rules'||name==='read_public_guest_seed')return {data:{profanity:[],sentiment:[],recent_questions:[]}};if(name==='search_public_chat_context')return {data:{faq:[{question:'Dịch vụ',answer:'PawPal hỗ trợ spa và lưu trú.',complete:true}],recent:[{sender_type:'bot',content:repeatedText}],incomplete:false}};if(name==='post_public_chat_message_media'){genericRepeatSaved.push(args);return {data:{}};}assert.fail(name);}};
+ const genericRepeatHandler=createHandler({serviceClient:genericRepeatService,generateReply:async()=>JSON.stringify({reply:repeatedText,understood:true})});
+ const genericRepeatRes={statusCode:200,setHeader(){},status(n){this.statusCode=n;return this;},json(data){this.data=data;return this;}};
+ await genericRepeatHandler({method:'POST',headers:{'x-real-ip':randomUUID()},body:{action:'public_send',conversationId:randomUUID(),requestId:randomUUID(),sessionToken:'g'.repeat(32),question:'Còn câu nào khác không?',mediaAssetIds:[]}},genericRepeatRes);
+ assert.equal(genericRepeatRes.statusCode,200);assert.notEqual(genericRepeatSaved[0].p_reply,repeatedText);
  const dogComplaint=await invoke({guest:true,question:'nghĩ sao mà làm con chó tôi ra nông nỗi v',recentQuestions:[]});
  assert.doesNotMatch(dogComplaint.saved[0].p_reply,/khả dụng|phòng hoặc khung giờ/i);
  assert.match(dogComplaint.saved[0].p_reply,/\/user#support-create/);

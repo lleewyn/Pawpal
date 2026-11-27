@@ -5,6 +5,7 @@ test('all guest needs route to bounded public data, reviewed FAQ or an actionabl
  for(const [q,kind]of cases)assert.equal(plan(q).request.kind,kind,q);
  for(const q of ['Không có tài khoản đặt lịch được không?','Khách vãng lai mua hàng thế nào?','Có giao hàng không?','Paw Points là gì?','Cần bao nhiêu điểm đổi thưởng?','Cần chuẩn bị gì cho bé dị ứng?','Cách tra cứu đơn guest','Tôi muốn đổi trả','Hủy lịch thế nào?'])assert.ok(plan(q).faq,q);
  for(const q of ['Hotel còn phòng không?','Có lịch trống mai không?','Còn hàng không?'])assert.ok(plan(q).reply,q);
+ for(const q of ['sao bạn nói chuyện nghe cứng nhắc giống cái máy vậy','bé mèo nhà mình hay sợ tiếng máy sấy thì bên bạn làm thế nào','bé nhà mình nhút nhát lắm, lần đầu đi spa sợ bị stress'])assert.equal(plan(q),null,q);
 });
 test('followup recovers only bounded own questions and filters prices instead of asking the same question again',()=>{
  assert.equal(isFollowup('Bé 7 kg'),true);

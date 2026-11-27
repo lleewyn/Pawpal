@@ -3,6 +3,7 @@ const catalog=require('./chat_public_catalog.js');
 const fold=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().replace(/\bhotle\b|\bhottel\b/g,'hotel').replace(/\bdatlich\b/g,'dat lich').replace(/\bpawpoints?\b/g,'paw points').replace(/\bbao nhiu\b|\bbn\b/g,'bao nhieu').replace(/\s+/g,' ').trim();
 const group=q=>{
  if(/sau khi (?:tam|cat tia|lam)|sau (?:tam|cat tia)|met moi|bieng an|bo an|ue oai|nam li bi|ngu nhieu|lo qua|non |sot |chay mau|vet thuong|gay chan|co giat|bi dau/.test(q))return null;
+ if(/(?:nhut nhat|be nhat|stress|so tieng|may say|khong hop tac|hung du|hoang|lan dau (?:di |den )?(?:spa|tam|cat tia|hotel))/.test(q)&&!/\bgia\b|bao nhieu|bang gia|cac goi|goi nao|so sanh|\bkg\b/.test(q))return null;
  const cleaned=q.replace(/\b(?:tam su|tam trang|quan tam|tam thoi|tam biet|yen tam|an tam|luong tam|trung tam)\b/g,' ');
  return /hotel|khach san|luu tru|gui be|qua dem/.test(cleaned)?'hotel':/taxi|dua don|dua ruoc/.test(cleaned)?'taxi':/\btam\b|cat tia|grooming|\bspa\b/.test(cleaned)?'grooming':null;
 };
@@ -12,7 +13,7 @@ const booking=link('Chọn dịch vụ và thời gian','/booking');
 const shop=link('Xem sản phẩm','/shop');
 const lookup=link('Tra cứu đơn và lịch guest','/return-guest');
 const advice=(kind,extra={})=>({request:{kind,...extra},topic:kind});
-function isFollowup(text){const q=fold(text);return q.length<180&&(/^(?:(?:be|cho|meo|nang|khoang|tam|con|loai|gia|vay|the|dat|mua)(?: |$)|[0-9])/.test(q)||/kg|\bkm\b/.test(q))&&!/ho so|doanh thu|mat khau|tai khoan ngan hang/.test(q);}
+function isFollowup(text){const q=fold(text),words=q?q.split(' ').length:0;return q.length<180&&!/ho so|doanh thu|mat khau|tai khoan ngan hang/.test(q)&&((/\bkg\b|\bkm\b|\d+\s*(?:kg|km)/.test(q)&&words<=10)||(words<=6&&/^(?:(?:be|cho|meo|cun|nang|khoang|tam|con|loai|gia|vay|the|dat|mua)(?: |$)|[0-9])/.test(q)));}
 function measure(text,unit,max){const m=fold(text).match(new RegExp('(\\d+(?:[.,]\\d+)?)\\s*'+unit+'\\b'));if(!m)return null;const n=Number(m[1].replace(',','.'));return n>0&&n<=max?n:null;}
 function petOf(value){const q=fold(value),cat=/\bmeo\b/.test(q)||/\bcat\b/i.test(String(value||'')),dog=/chó|cún/iu.test(value||'')||/\b(?:dog|cun)\b|cho con|cho truong thanh|cho nho|cho lon|cho$/.test(q);return cat===dog?null:cat?'cat':'dog';}
 function plan(question,recent=[]){
@@ -48,9 +49,9 @@ function plan(question,recent=[]){
  if(/doi tra|tra hang|hang loi/.test(q))return faq('Tôi muốn đổi trả hàng thì làm thế nào?','returns');
  if(/hoan tien/.test(q))return faq('Tôi muốn hoàn tiền thì làm sao?','returns');
  if(/giao hang|phi ship|ship |van chuyen|giao den/.test(q))return faq('Phí giao hàng và phạm vi giao nhận được xác nhận ở đâu?','delivery',/bao lau|may ngay|khi nao/.test(q)?'Hướng dẫn này chưa xác nhận thời gian giao đến địa chỉ của bạn; không mặc định giao trong một số ngày cố định.':null);
- if(/huy|doi ngay|doi gio/.test(q))return faq(/don|hang/.test(q)?'Tôi muốn sửa hoặc hủy đơn hàng thì sao?':'Tôi có thể hủy lịch không?','cancel');
+ if(/\bhuy\b|doi ngay|doi gio/.test(q))return faq(/don|hang/.test(q)?'Tôi muốn sửa hoặc hủy đơn hàng thì sao?':'Tôi có thể hủy lịch không?','cancel');
  if(/tra cuu|theo doi|xem.*(?:don|lich)|(?:khong|chua).*(?:nhan|thay).*(?:bien nhan|ma (?:don|lich|dat))|mat ma khoi phuc/.test(q))return faq('Tôi xem trạng thái đơn hàng ở đâu?','lookup');
- if(/chuan bi|mang theo|di ung|nhut nhat|be nhat|tiem phong|vac.?xin/.test(q))return faq('Tôi cần chuẩn bị gì trước khi đưa bé đến?','prepare','Nếu bé có vấn đề sức khỏe hoặc tập tính cần lưu ý, hãy báo nhân viên trước khi đặt; chat không tự xác nhận bé đủ điều kiện tiếp nhận hoặc thay thế tư vấn thú y.');
+ if((/\b(?:chuan bi|mang theo|di ung|tiem phong)\b|vac.?xin/.test(q)||(/\b(?:nhut nhat|be nhat)\b/.test(q)&&!/may say|stress|lan dau|lam the nao|xu ly/.test(q))))return faq('Tôi cần chuẩn bị gì trước khi đưa bé đến?','prepare','Nếu bé có vấn đề sức khỏe hoặc tập tính cần lưu ý, hãy báo nhân viên trước khi đặt.');
  const multiplePets=/nhieu be|hai be|2 be/.test(q);
  if(/chua.*tai khoan|khong.*tai khoan|khong.*dang nhap|vang lai/.test(q)){
   const buying=/mua|hang|thanh toan/.test(q);
@@ -80,7 +81,7 @@ function plan(question,recent=[]){
   if(kind==='grooming'&&!/so sanh|khac nhau|cac goi/.test(q)){const source=q+' '+fold(previous),cut=/cat tia/.test(source),bath=/\btam\b/.test(source);if(cut&&!bath)request.query='cắt tỉa';else if(bath&&!cut)request.query='tắm';}
   return {...advice(kind,request),focused};
  }
- if(isFollowup(question)||/\b(?:kg|km)\b/.test(q)||/^(?:bao nhieu|dat o dau)/.test(q))return {reply:'Bạn đang hỏi tắm/cắt tỉa, Hotel, Taxi hay sản phẩm nào? Mình cần biết nhu cầu trước để chọn đúng thông tin; bạn không cần gửi hồ sơ cá nhân. '+booking+' · '+shop,understood:false,topic:'clarify'};
+ if((isFollowup(question)&&(/\b(?:kg|km)\b/.test(q)||/^(?:be|cho|meo|cun|gia|bao nhieu|dat o dau|mua o dau|con hang|con size|loai nao)\b/.test(q)))||/\b(?:kg|km)\b/.test(q)||/^(?:bao nhieu|dat o dau)[?!.\s]*$/.test(q))return {reply:'Bạn đang hỏi tắm/cắt tỉa, Hotel, Taxi hay sản phẩm nào? Mình cần biết nhu cầu trước để chọn đúng thông tin; bạn không cần gửi hồ sơ cá nhân. '+booking+' · '+shop,understood:false,topic:'clarify'};
  return old;
 }
 function faqReply(route,rows){
@@ -120,8 +121,8 @@ function format(data,route){
   if(kind!=='product'&&/^[0-9a-f-]{36}$/i.test(r.service_id))line+=' '+link('Chọn gói này','/booking?service='+r.service_id);
   return line;
  });
- let follow=kind==='product'?'Đối chiếu đúng mã/biến thể và mô tả trên; nhiều lựa chọn khớp thì bạn chọn SKU cụ thể để so sánh chính xác. Hàng có thể thay đổi và được kiểm tra lại tại bước mua.':kind==='grooming'?(route.request.weight?'Các mức trên đã lọc theo cân nặng bạn cung cấp. Cần chọn đúng gói và kiểm tra điều kiện nhận loài tại bước đặt.':(route.request.pet?'Bé nặng bao nhiêu kg, cần tắm hay cắt tỉa?':'Bé là chó hay mèo, nặng bao nhiêu kg, cần tắm hay cắt tỉa?')+' Mình sẽ lọc mức phù hợp.') :kind==='hotel'?'Các loại phòng được đối chiếu theo giá/đơn vị tính và mô tả hiện có; mục chưa ghi không được coi là tiện ích đã bao gồm. Bạn gửi ngày/giờ nhận và trả'+(route.request.weight?'':', cân nặng của bé')+' để kiểm tra báo giá ở bước đặt; đây chưa phải xác nhận phòng trống.':(route.request.weight&&route.request.distance?'Các mức đã lọc theo cân nặng và khoảng cách bạn cung cấp. ': 'Bạn cho biết '+(!route.request.weight?'cân nặng của bé':'')+(!route.request.weight&&!route.request.distance?' và ':'')+(!route.request.distance?'khoảng cách km dự kiến':'')+'. ')+'Chọn một chiều/khứ hồi và thời gian tại bước đặt. Các mức trên chưa phải xác nhận chuyến hoặc tổng tiền cho mọi lượt đi/về.';
- if(kind!=='product')follow+=' Giá hiện hành chưa xác nhận giá cho ngày tương lai hoặc mọi phụ phí. '+booking;
+ let follow=kind==='product'?'Bạn bấm vào từng sản phẩm để xem chi tiết, hoặc gửi tên/mã SKU nếu muốn PawPal đối chiếu hai món với nhau nhé (tình trạng hàng được kiểm tra lại tại bước mua).':kind==='grooming'?(route.request.weight?'Các mức trên đã lọc theo cân nặng của bé. Bạn chọn gói phù hợp để xem điều kiện nhận loài và đặt lịch nhé (giá hiện hành, chưa gồm phụ phí phát sinh nếu có).':(route.request.pet?'Bé nặng bao nhiêu kg, cần tắm hay cắt tỉa?':'Bé là chó hay mèo, nặng bao nhiêu kg, cần tắm hay cắt tỉa?')+' Mình sẽ lọc mức phù hợp.'):kind==='hotel'?'Bạn chọn ngày/giờ gửi và đón bé ở bước đặt để xem báo giá theo lịch và phòng còn trống nhé (giá theo mô tả công bố, chưa phải xác nhận phòng trống hay phụ phí phát sinh).':(route.request.weight&&route.request.distance?'Các mức trên đã lọc theo cân nặng và quãng đường bạn gửi. ':'Bạn cho biết '+(!route.request.weight?'cân nặng của bé':'')+(!route.request.weight&&!route.request.distance?' và ':'')+(!route.request.distance?'khoảng cách km dự kiến':'')+'. ')+'Chọn một chiều hoặc khứ hồi và khung giờ đón ở bước đặt để xác nhận chuyến và tổng cước nhé.';
+ if(kind!=='product')follow+=' '+booking;
  if(kind==='hotel'&&route.request.query?.includes('vip')&&!data.items.some(r=>/\bvip\b/.test(fold(r.name))))follow+=' Chưa có mục tên VIP khớp trong kết quả; không tự coi Luxury hoặc Deluxe là VIP để so sánh.';
  const intro=kind==='product'?'PawPal tìm được những lựa chọn này, bạn xem thử nhé:':kind==='hotel'?'PawPal gửi bạn các lựa chọn lưu trú cho bé nhé:':kind==='taxi'?'PawPal gửi bạn các lựa chọn đưa đón để tham khảo nhé:':route.request.weight?`Mức giá gói chăm sóc cho bé ${route.request.weight} kg:`:'PawPal gửi bạn một số gói chăm sóc để tham khảo nhé:';
  return {reply:friendly(intro+'\n\n'+lines.join('\n\n')+'\n\n'+follow+(data.has_more?'\nBạn cho PawPal tên gói hoặc sản phẩm cụ thể để tìm sát nhu cầu hơn nhé.':'')),understood:true};
