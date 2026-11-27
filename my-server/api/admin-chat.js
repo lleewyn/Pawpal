@@ -301,11 +301,14 @@ function createHandler({verify=verifyStaffCaller,generateReply=generate,serviceC
       if(evaluation.shouldHandover&&!membershipRequired)reply+=' Hội thoại đang được chuyển sang chờ CSKH để trao đổi thêm; bạn vẫn cần gửi yêu cầu trong mục Hỗ trợ.';
       if(membershipRequired)evaluation.shouldHandover=false;
      }else if(healthConcern){
+      const pregnancyQuestion=/\b(?:mang thai|co bau|chua de)\b/.test(guestHelp.fold(question))&&!/\b(?:non|bieng an|bo an|met moi|chay mau|co giat)\b/.test(guestHelp.fold(question));
       const acknowledgment=/mệt mỏi/iu.test(question)&&/biếng ăn|bỏ ăn/iu.test(question)&&/sau khi tắm|sau buổi tắm/iu.test(question)
        ? 'PawPal hiểu vì sao bạn lo khi thấy bé mệt và ăn ít sau buổi tắm. Dạ bạn đừng quá lo nhé, sau khi tắm sấy, nhiều bé do lạ chỗ hoặc tiêu hao năng lượng nên sẽ thèm ngủ và hơi lười ăn một chút. Bạn để bé nghỉ ngơi ở góc quen thuộc, đặt sẵn chén nước sạch gần bé nha.'
        : 'Thấy bé có biểu hiện khác thường, bạn lo là điều dễ hiểu.';
       reply=continuation?.topic==='health'
        ? publicContinuity.healthFollowupReply(question)
+       : pregnancyQuestion
+       ? 'Với bé đang mang thai, việc tắm hoặc chăm sóc spa cần hết sức thận trọng để tránh làm bé căng thẳng hoặc ảnh hưởng đến thai kỳ. Bạn nên hỏi ý kiến bác sĩ thú y trước khi đưa bé đi làm dịch vụ, đồng thời trao đổi trước với nhân viên về giai đoạn thai kỳ và sức khỏe hiện tại của bé để tiệm đánh giá khả năng tiếp nhận an toàn nhé.'
        : acknowledgment+' Để bác sĩ thú y nắm tình hình nhanh hơn, khi gọi bạn hãy nói rõ các biểu hiện bắt đầu lúc nào, lần cuối bé ăn hoặc uống và bé có nôn hay không.\n\nNếu bé khó thở, khó đánh thức hoặc không đứng dậy được, hãy đưa bé đến cơ sở cấp cứu thú y ngay.\n\nNếu bạn lo tình trạng này có liên quan đến buổi chăm sóc tại PawPal, bạn có thể gửi mã lịch hẹn để nhân viên kiểm tra lại và đồng hành cùng bạn nhé.';
       if(evaluation.shouldHandover&&!membershipRequired)reply+=' PawPal đã chuyển hội thoại sang chờ nhân viên hỗ trợ thông tin về dịch vụ.';
       if(membershipRequired)evaluation.shouldHandover=false;
