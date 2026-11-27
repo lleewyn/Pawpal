@@ -4,6 +4,10 @@ const {evaluateToxicAndSentiment}=require('./chat_moderation.js');
 const {needsSupportRequest}=require('./chat_support_boundary.js');
 const fold=text=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().replace(/\s+/g,' ').trim();
 
+function isNextStepFollowup(question){
+ const q=fold(question);
+ return q.length<=60&&/^(?:(?:h|gio|bay gio|roi|vay|the|thi|nhu vay|nhu the)\s+)?(?:lam )?sao(?: (?:day|nua|duoc|bay gio|gio|ban|ha|vay|the|chu|ki vay|ky vay))?[?!.\s]*$/.test(q);
+}
 function followupKind(question,evaluation){
  const q=fold(question);
  if(q.length>220)return null;
@@ -88,4 +92,4 @@ function supportFollowupReply(kind,signedIn){
  return 'Bạn đã gửi yêu cầu trong mục Hỗ trợ chưa? Bạn có thể '+openSupport+' để kiểm tra. Nếu chưa gửi, bạn chọn đơn hàng hoặc lịch hẹn liên quan để gửi thông tin cho nhân viên.';
 }
 
-module.exports={followupKind,topicFor,isSupportTopic,findContinuation,healthFollowupReply,supportFollowupReply};
+module.exports={followupKind,isNextStepFollowup,topicFor,isSupportTopic,findContinuation,healthFollowupReply,supportFollowupReply};

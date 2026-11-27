@@ -117,6 +117,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    overscroll-behavior: contain;
     transform: scale(0.9) translateY(20px);
     opacity: 0;
     pointer-events: none;
@@ -262,6 +263,7 @@
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    overflow: hidden;
 }
 
 .fab-chat-history-view {
@@ -325,7 +327,9 @@
 
 .fab-history-list {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 12px 14px;
     display: flex;
     flex-direction: column;
@@ -456,10 +460,10 @@
     gap: 10px;
     flex: 1;
     min-height: 0;
-    overflow-y: scroll;
+    overflow-y: auto;
     overflow-x: hidden;
-    scroll-behavior: smooth;
-    overscroll-behavior-y: contain;
+    scroll-behavior: auto;
+    overscroll-behavior: contain;
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
     will-change: scroll-position;
@@ -783,6 +787,7 @@
     width: 100vw;
     height: 100vh;
     z-index: 999999;
+    overscroll-behavior: contain;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1164,7 +1169,7 @@ body:not(.admin-body) .fab-chat-handover-btn{flex-basis:100%;margin:0 0 4px;back
 body:not(.admin-body) .fab-chat-icon-btn{width:28px;height:28px;border-radius:9px;color:#eef4ed;background:transparent;border:0}
 body:not(.admin-body) .fab-chat-icon-btn:hover{background:#ffffff18}
 body:not(.admin-body) .fab-chat-main-view{min-height:0;flex:1}
-body:not(.admin-body) .fab-chat-messages{background:#fbfcf9;padding:20px;gap:14px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#d3dfce transparent}
+body:not(.admin-body) .fab-chat-messages{background:#fbfcf9;padding:20px;gap:14px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#d3dfce transparent}
 body:not(.admin-body) .fab-chat-welcome{padding:12px 0;color:#526d5b}
 body:not(.admin-body) .fab-welcome-label{font-size:12px;color:#718476}
 body:not(.admin-body) .fab-chat-welcome h3{font:600 25px/1.45 Lora,serif;color:#214939;margin:10px 0 12px}

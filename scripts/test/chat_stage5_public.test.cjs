@@ -140,6 +140,22 @@ test('multiple contextual clues recognize a frustrated guest without asserting t
  assert.doesNotMatch(followed.saved[0].p_reply,/rất tiếc|bức xúc/);
  const lackingTopic=await invoke({guest:true,question:'Lần thứ ba rồi, vẫn không ai xử lý.',recentQuestions:[]});
  assert.match(lackingTopic.saved[0].p_reply,/kể ngắn chuyện vừa xảy ra/);
+ const firstDisappointed=await invoke({guest:true,question:'làm ăn gì kì v',recentQuestions:[]});
+ assert.match(firstDisappointed.saved[0].p_reply,/PawPal rất tiếc/);
+ for(const nextTurn of ['h sao','giờ sao','bực','tức quá']){
+  const repeatCheck=await invoke({guest:true,question:nextTurn,recentQuestions:['làm ăn gì kì v']});
+  assert.doesNotMatch(repeatCheck.saved[0].p_reply,/rất tiếc/i,nextTurn);
+  assert.match(repeatCheck.saved[0].p_reply,/\/login|\/contact/);
+  assert.equal(repeatCheck.models.length,0,nextTurn);
+ }
+ const memberRepeat=await invoke({guest:false,question:'bực quá',recentQuestions:['làm ăn gì kì v']});
+ assert.doesNotMatch(memberRepeat.saved[0].p_reply,/rất tiếc/i);
+ assert.equal(memberRepeat.saved[0].p_handover,true);
+ const echoedService={auth:{getUser:async()=>({data:{user:{id:'auth'}}})},from(table){const q={select:()=>q,eq:()=>q,is:()=>q,gt:()=>q,maybeSingle:async()=>({data:table==='guest_session'?{id:'guest'}:table==='chat_conversation'?{id:randomUUID(),customer_id:null,guest_session_id:'guest',status:'bot_handling',updated_at:new Date().toISOString()}:null})};return q;},rpc:async(name,args)=>{if(name==='read_public_chat_rules'||name==='read_public_guest_seed')return {data:{profanity:[],sentiment:[],recent_questions:[]}};if(name==='search_public_chat_context')return {data:{faq:[{question:'Chính sách',answer:'Áp dụng theo điều kiện.'}],recent:[{sender_type:'bot',content:'PawPal rất tiếc vì trải nghiệm chưa làm bạn hài lòng. Bạn có thể kể ngắn chuyện vừa xảy ra để bên mình hướng dẫn bước tiếp theo không?'}],incomplete:false}};if(name==='post_public_chat_message_media'){echoedSaved.push(args);return {data:{}}; }assert.fail(name);}};
+ const echoedSaved=[],echoedHandler=createHandler({serviceClient:echoedService,generateReply:async()=>JSON.stringify({reply:'PawPal rất tiếc vì trải nghiệm chưa làm bạn hài lòng. Bạn có thể kể ngắn chuyện vừa xảy ra để bên mình hướng dẫn bước tiếp theo không?',understood:false})});
+ const echoedRes={statusCode:200,setHeader(){},status(n){this.statusCode=n;return this;},json(data){this.data=data;return this;}};
+ await echoedHandler({method:'POST',headers:{'x-real-ip':randomUUID()},body:{action:'public_send',conversationId:randomUUID(),requestId:randomUUID(),sessionToken:'g'.repeat(32),question:'Có áp dụng không?',mediaAssetIds:[]}},echoedRes);
+ assert.equal(echoedRes.statusCode,200);assert.doesNotMatch(echoedSaved[0].p_reply,/rất tiếc/i);
  for(const question of ['Đơn hàng của tôi đang ở đâu???','Mình gọi hai lần rồi.']){
   const neutral=await invoke({guest:true,question});
   assert.equal(neutral.saved[0].p_level,2);

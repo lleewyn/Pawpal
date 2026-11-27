@@ -334,7 +334,8 @@
                     easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
                     smoothWheel: true,
                     wheelMultiplier: 0.95,
-                    touchMultiplier: 1.2
+                    touchMultiplier: 1.2,
+                    prevent: node => Boolean(node?.closest?.('#fabChatPanel, #fabImageLightbox, [data-lenis-prevent]'))
                 });
                 window.__pawpalLandingLenis = lenis;
                 const raf = time => {

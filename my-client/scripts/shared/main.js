@@ -90,7 +90,7 @@ function initSharedComponents() {
         .filter(Boolean).length;
     const root = depth <= 1 ? './' : '../'.repeat(depth - 1);
     const script = document.createElement('script');
-    script.src = root + 'scripts/shared/components.js';
+    script.src = root + 'scripts/shared/components.js?v=20261127_chat_scroll_2';
     script.defer = true;
     document.head.appendChild(script);
 }
@@ -1030,8 +1030,8 @@ function initPremiumMotion() {
         console.warn('Lenis is not loaded — skipping smooth scroll.');
     }
 
-    let lenis = null;
-    if (typeof Lenis !== 'undefined') {
+    let lenis = window.__pawpalMainLenis || null;
+    if (typeof Lenis !== 'undefined' && !lenis) {
         try {
             lenis = new Lenis({
                 duration: 0.9,
@@ -1040,7 +1040,9 @@ function initPremiumMotion() {
                 wheelMultiplier: 1,
                 touchMultiplier: 1,
                 syncTouch: false,
+                prevent: (node) => Boolean(node?.closest?.('#fabChatPanel, #fabImageLightbox, [data-lenis-prevent]')),
             });
+            window.__pawpalMainLenis = lenis;
 
             function raf(time) {
                 lenis.raf(time);

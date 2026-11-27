@@ -82,7 +82,7 @@
         var rootPath = getRootPath();
         if (!document.querySelector('script[src*="fab.js"]')) {
             var fabScript = document.createElement('script');
-            fabScript.src = rootPath + 'components/fab/fab.js?v=20261111_member_photo';
+            fabScript.src = rootPath + 'components/fab/fab.js?v=20261127_chat_scroll_2';
             fabScript.defer = true;
             document.head.appendChild(fabScript);
         }
@@ -145,7 +145,7 @@
             return;
         }
 
-        fetch(componentPath)
+        fetch(componentPath, targetId === 'site-fab' ? { cache: 'no-store' } : undefined)
             .then(function (res) {
                 if (!res.ok) throw new Error('HTTP ' + res.status + ' — Cannot load ' + componentPath);
                 return res.text();
@@ -220,7 +220,7 @@
         console.log('[components.js] root detected:', root);
         injectComponent('site-header', root + 'components/header/header.html');
         injectComponent('site-footer', root + 'components/footer/footer.html?v=20261031_store');
-        injectComponent('site-fab', root + 'components/fab/fab.html');
+        injectComponent('site-fab', root + 'components/fab/fab.html?v=20261127_chat_scroll_2');
         injectComponent('user-sidebar', root + 'components/user-sidebar/user-sidebar.html');
         
         initLucideIcons();

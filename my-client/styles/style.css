@@ -1,6 +1,6 @@
 @import url('../components/header/header.css');
 @import url('../components/footer/footer.css');
-@import url('../components/fab/fab.css');
+@import url('../components/fab/fab.css?v=20261127_chat_scroll_2');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 input[type="password"]::-ms-reveal,
